@@ -1,0 +1,3 @@
+# Unofficial stream links allowed in the hobby v1 only
+
+The game panel's watch links include unofficial streaming sites alongside official broadcasters, because v1 is a personal hobby app. To make them useful, ScoreMap finds a per-game stream link automatically by reading those sites, rather than linking to their home pages; we accept that this breaks whenever the sites change. Linking to unlicensed streams is a legal risk for a public product, so these links and the code that finds them must be removed (leaving official services only) before any public launch, along with the provider swap in ADR-0001.

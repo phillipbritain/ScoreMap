@@ -1,5 +1,7 @@
 # ScoreMap
 
+A hobby web app showing live sports games as pins on a globe, with scores that update on their own. The v1 design lives in GitHub issue #1 (the spec) and is broken into tickets #2–#16; domain terms are in `GLOSSARY.md` and key decisions in `docs/adr/`.
+
 ## Agent skills
 
 ### Issue tracker

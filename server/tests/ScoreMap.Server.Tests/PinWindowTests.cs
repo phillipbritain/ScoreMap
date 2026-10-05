@@ -100,7 +100,7 @@ public class PinWindowTests
     private static ScoreMapServer ServerWithLeagueOfPlannedLength2AndAHalfHours()
     {
         var server = new ScoreMapServer();
-        server.AddLeague("test/league", "Test League", "Test sport", TimeSpan.FromMinutes(150));
+        server.AddLeague("test/league", "Test League", "Soccer", TimeSpan.FromMinutes(150));
         return server;
     }
 

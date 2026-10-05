@@ -57,6 +57,18 @@ public class LeagueTests
         ], leagues);
     }
 
+    [Fact]
+    public async Task A_league_configured_with_an_unknown_sport_stops_the_server_from_starting()
+    {
+        await using var server = new ScoreMapServer();
+        server.AddLeague("test/league", "Test League", "Americn football");
+
+        var error = Record.Exception(() => server.CreateClient());
+
+        Assert.NotNull(error);
+        Assert.Contains("Americn football", error.ToString());
+    }
+
     private sealed record LeagueListing(string Name, string Sport);
 
     private static ProviderGame LiveGame(ScoreMapServer server, string id, string leagueKey) => new(

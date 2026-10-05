@@ -140,7 +140,7 @@ public sealed class GameBoard(
         return new Game(
             game.Id,
             league.Name,
-            league.Sport,
+            league.Sport.DisplayName(),
             game.StartTime,
             status,
             game.Status == ProviderStatus.Delayed,

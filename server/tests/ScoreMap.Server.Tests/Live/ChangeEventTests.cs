@@ -82,7 +82,7 @@ public class ChangeEventTests
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.Started, change.Kind);
         Assert.Equal(0, change.Game.Home.Score);
-        Assert.Equal("15:00", change.Game.Clock);
+        Assert.Equal("Q1 15:00", change.Game.Clock);
         Assert.Empty(client.PendingChanges());
     }
 
@@ -117,7 +117,7 @@ public class ChangeEventTests
 
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.Updated, change.Kind);
-        Assert.Equal(("15:00", 4), (change.Game.Clock, change.Game.Period));
+        Assert.Equal(("Q4 15:00", 4), (change.Game.Clock, change.Game.Period));
     }
 
     [Fact]
@@ -166,6 +166,6 @@ public class ChangeEventTests
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 
         var change = await client.NextChangeAsync();
-        Assert.Equal("1:00", change.Game.Clock);
+        Assert.Equal("Q3 1:00", change.Game.Clock);
     }
 }

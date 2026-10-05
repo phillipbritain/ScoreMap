@@ -143,7 +143,8 @@ body {
 }
 
 /* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line.
-   --status-color is set per card; Live stands out most, Upcoming is dimmer, Final fades. */
+   --status-color is set per card; Live stands out most, Upcoming is dimmer, Final fades,
+   Disrupted is greyed out. */
 .score-card {
   display: grid;
   gap: 2px;
@@ -171,6 +172,21 @@ body {
 
 .score-card--final {
   opacity: 0.6;
+}
+
+/* Greyed out: the game isn't being played as scheduled. */
+.score-card--disrupted {
+  opacity: 0.7;
+  background: #e9ebef;
+  color: #6b7280;
+}
+
+.score-card--disrupted .score-card__logo {
+  filter: grayscale(1);
+}
+
+.score-card--disrupted .score-card__clock {
+  font-style: italic;
 }
 
 /* The game whose panel is open, matching the selected small pin's ring. */

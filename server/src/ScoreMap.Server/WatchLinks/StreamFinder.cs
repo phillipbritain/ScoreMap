@@ -44,7 +44,7 @@ public sealed class StreamFinder(
     public IReadOnlyList<StreamLink> LinksFor(Game game)
     {
         var settings = options.Value;
-        if (settings.Sites.Count == 0 || game.Status == GameStatus.Final)
+        if (settings.Sites.Count == 0 || game.Status is not (GameStatus.Upcoming or GameStatus.Live))
             return [];
 
         lock (_lock)

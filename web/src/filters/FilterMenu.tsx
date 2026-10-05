@@ -15,7 +15,10 @@ interface FilterMenuProps {
   onChange: (settings: ViewerSettings) => void
 }
 
-/** The filter menu: "Live only" and "Slow spin", then leagues grouped under their sport with a whole-sport switch. */
+/**
+ * The filter menu: "Live only", "Show Disrupted games" and "Slow spin", then leagues grouped under
+ * their sport with a whole-sport switch.
+ */
 export function FilterMenu({ leagues, settings, onChange }: FilterMenuProps) {
   return (
     <details className="filter-menu">
@@ -27,6 +30,14 @@ export function FilterMenu({ leagues, settings, onChange }: FilterMenuProps) {
           onChange={(event) => onChange({ ...settings, liveOnly: event.target.checked })}
         />
         Live only
+      </label>
+      <label className="filter-switch">
+        <input
+          type="checkbox"
+          checked={settings.showDisrupted}
+          onChange={(event) => onChange({ ...settings, showDisrupted: event.target.checked })}
+        />
+        Show Disrupted games
       </label>
       <label className="filter-switch">
         <input

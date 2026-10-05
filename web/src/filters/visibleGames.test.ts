@@ -11,6 +11,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     startTime: '2026-10-04T17:00:00+00:00',
     status,
     delayed: false,
+    disruption: null,
     endTime: null,
     home: { abbreviation: 'HOM', fullName: 'Home', logoUrl: null, score: null },
     away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null },
@@ -43,6 +44,20 @@ describe('visibleGames', () => {
     const settings = { ...firstVisitSettings, liveOnly: true }
 
     expect(visibleGames([upcoming, nfl, final], settings)).toEqual([nfl])
+  })
+
+  it('shows Disrupted games on a first visit', () => {
+    const postponed = game('postponed', 'NFL', 'American football', 'Disrupted')
+
+    expect(visibleGames([nfl, postponed], firstVisitSettings)).toEqual([nfl, postponed])
+  })
+
+  it('hides Disrupted games when "Show Disrupted games" is off', () => {
+    const postponed = game('postponed', 'NFL', 'American football', 'Disrupted')
+    const upcoming = game('upcoming', 'NFL', 'American football', 'Upcoming')
+    const settings = { ...firstVisitSettings, showDisrupted: false }
+
+    expect(visibleGames([nfl, postponed, upcoming], settings)).toEqual([nfl, upcoming])
   })
 
   it('applies "Live only" and league switches together', () => {

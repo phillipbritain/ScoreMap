@@ -47,19 +47,36 @@ public class GameStatusTests
         Assert.True(game.Delayed);
     }
 
-    // Disrupted games get their own status and pins in ticket #12; until then they get no pin.
     [Theory]
-    [InlineData(ProviderStatus.Postponed)]
-    [InlineData(ProviderStatus.Suspended)]
-    [InlineData(ProviderStatus.Canceled)]
-    public async Task A_disrupted_game_is_not_shown_as_Upcoming_Live_or_Final(ProviderStatus providerStatus)
+    [InlineData(ProviderStatus.Postponed, Disruption.Postponed)]
+    [InlineData(ProviderStatus.Suspended, Disruption.Suspended)]
+    [InlineData(ProviderStatus.Canceled, Disruption.Canceled)]
+    public async Task A_disrupted_game_is_Disrupted_and_says_which_kind(ProviderStatus providerStatus, Disruption expected)
     {
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddHours(1), providerStatus));
 
         await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
 
-        Assert.Empty(await client.NextSnapshotAsync());
+        Assert.Equal(GameStatus.Disrupted, game.Status);
+        Assert.Equal(expected, game.Disruption);
+    }
+
+    [Theory]
+    [InlineData(ProviderStatus.Scheduled)]
+    [InlineData(ProviderStatus.InProgress)]
+    [InlineData(ProviderStatus.Delayed)]
+    [InlineData(ProviderStatus.Final)]
+    public async Task A_game_that_is_not_disrupted_has_no_disruption(ProviderStatus providerStatus)
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddHours(-1), providerStatus));
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Null(game.Disruption);
     }
 
     [Fact]

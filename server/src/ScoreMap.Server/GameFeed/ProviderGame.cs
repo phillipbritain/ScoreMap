@@ -28,10 +28,10 @@ public sealed record ProviderTeam(string Abbreviation, string FullName, string? 
 public sealed record ProviderCity(string Name, string? Region, string? Country);
 
 /// <summary>
-/// The venue as the provider reports it. <see cref="Location"/> is set only when
-/// the provider supplies coordinates (ESPN does not; the venue locator fills the gap).
+/// The venue as the provider reports it. It carries no coordinates (ESPN supplies none); the venue
+/// locator places it.
 /// </summary>
-public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country, Coordinates? Location = null);
+public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country);
 
 public sealed record Coordinates(double Latitude, double Longitude);
 

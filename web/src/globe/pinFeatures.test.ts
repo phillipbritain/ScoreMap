@@ -62,11 +62,23 @@ describe('pinFeatures', () => {
   })
 
   it('marks a Final game as final in place of the clock', () => {
-    const final: Game = { ...arrowhead, status: 'Final', clock: '0:00', endTime: '2026-10-04T20:10:00+00:00' }
+    const final: Game = { ...arrowhead, status: 'Final', clock: null, endTime: '2026-10-04T20:10:00+00:00' }
 
     expect(pinFeatures([final]).features[0].properties).toMatchObject({
       status: 'Final',
       label: 'BUF 17 – 21 KC\nFinal',
     })
+  })
+
+  it("shows the sport's own final line when the server sends one", () => {
+    const afterExtraTime: Game = {
+      ...arrowhead,
+      sport: 'Soccer',
+      status: 'Final',
+      clock: 'AET',
+      endTime: '2026-10-04T20:10:00+00:00',
+    }
+
+    expect(pinFeatures([afterExtraTime]).features[0].properties.label).toBe('BUF 17 – 21 KC\nAET')
   })
 })

@@ -91,7 +91,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
             endTime,
             ToTeam(game.Home),
             ToTeam(game.Away),
-            game.DisplayClock,
+            ClockLine.For(game, league),
             game.Period,
             ToVenue(game.Venue, location),
             game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country)).ToList());

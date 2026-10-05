@@ -50,13 +50,15 @@ export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) 
   const latestGames = useRef(games)
   const latestSelected = useRef(selectedGameId)
   const latestOnSelect = useRef(onSelectGame)
+  const pendingAnimations = useRef<{ game: Game; animation: PinAnimation }[]>([])
 
   useImperativeHandle(
     ref,
     () => ({
+      // Played once the changed games reach the globe (see below), so it's known whether the game still shows.
       showChange: (change) => {
         const animation = pinAnimation(change)
-        if (animation && map.current && cards.current) void animateGame(map.current, cards.current, change.game, animation)
+        if (animation) pendingAnimations.current.push({ game: change.game, animation })
       },
     }),
     [],
@@ -144,6 +146,16 @@ export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) 
     latestGames.current = games
     map.current?.getSource<GeoJSONSource>(pinSource)?.setData(pinFeatures(games))
     cards.current?.setGames(games)
+
+    // Games the globe doesn't show (hidden by the viewer's filters) don't animate.
+    const pending = pendingAnimations.current
+    pendingAnimations.current = []
+    const instance = map.current
+    const scoreCards = cards.current
+    if (!instance || !scoreCards) return
+    for (const { game, animation } of pending) {
+      if (games.some((g) => g.id === game.id)) void animateGame(instance, scoreCards, game, animation)
+    }
   }, [games])
 
   // Only when the selection changes: later snapshots must not pull the camera back.

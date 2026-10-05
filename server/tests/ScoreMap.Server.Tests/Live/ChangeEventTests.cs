@@ -121,6 +121,36 @@ public class ChangeEventTests
     }
 
     [Fact]
+    public async Task A_game_entering_its_pin_window_is_pushed_as_added_without_any_feed_change()
+    {
+        await using var server = new ScoreMapServer();
+        var kickoff = server.Clock.GetUtcNow() + GameBoard.UpcomingWindow + TimeSpan.FromMinutes(1);
+        server.Feed.SetScoreboard(Nfl, Game("401", Nfl, kickoff, ProviderStatus.Scheduled, null, null, null, null));
+        await using var client = await server.ConnectClientAsync();
+        Assert.Empty(await client.NextSnapshotAsync());
+
+        server.Clock.Advance(TimeSpan.FromMinutes(3));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal((GameChangeKind.Added, "401"), (change.Kind, change.Game.Id));
+    }
+
+    [Fact]
+    public async Task A_final_game_leaving_its_pin_window_is_pushed_as_removed()
+    {
+        await using var server = new ScoreMapServer();
+        var live = LiveGame(server.Clock, "401");
+        server.Feed.SetScoreboard(Nfl, live with { Status = ProviderStatus.Final });
+        await using var client = await server.ConnectClientAsync();
+        Assert.Single(await client.NextSnapshotAsync());
+
+        server.Clock.Advance(GameBoard.FinalWindow);
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal((GameChangeKind.Removed, "401"), (change.Kind, change.Game.Id));
+    }
+
+    [Fact]
     public async Task An_unchanged_game_pushes_nothing()
     {
         await using var server = new ScoreMapServer();

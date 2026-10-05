@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
@@ -35,11 +36,38 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
     public string SavedVenueLocationsPath { get; } =
         savedVenueLocationsPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-venues-{Guid.NewGuid():N}.json");
 
+    /// <summary>The owner's venue corrections file: a fresh temp file, written by <see cref="CorrectVenue"/>.</summary>
+    public string VenueCorrectionsPath { get; } =
+        Path.Combine(Path.GetTempPath(), $"scoremap-corrections-{Guid.NewGuid():N}.json");
+
+    private readonly Dictionary<string, Coordinates> _corrections = new();
+
+    /// <summary>Adds an entry to the corrections file, as the owner would by editing it.</summary>
+    public void CorrectVenue(string venueName, Coordinates location)
+    {
+        _corrections[venueName] = location;
+        File.WriteAllText(VenueCorrectionsPath, JsonSerializer.Serialize(_corrections,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    }
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
+
+    private readonly List<(string Key, string Name, string Sport)> _extraLeagues = [];
+
+    /// <summary>Configures one more league alongside those in appsettings.json. Call before connecting.</summary>
+    public void AddLeague(string key, string name, string sport) => _extraLeagues.Add((key, name, sport));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // High indexes so they extend, rather than replace, the configured leagues.
+        for (var i = 0; i < _extraLeagues.Count; i++)
+        {
+            builder.UseSetting($"Leagues:{100 + i}:Key", _extraLeagues[i].Key);
+            builder.UseSetting($"Leagues:{100 + i}:Name", _extraLeagues[i].Name);
+            builder.UseSetting($"Leagues:{100 + i}:Sport", _extraLeagues[i].Sport);
+        }
         builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IGameFeedProvider>();
@@ -56,6 +84,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
         await base.DisposeAsync();
         if (_ownsSavedVenueLocations)
             File.Delete(SavedVenueLocationsPath);
+        File.Delete(VenueCorrectionsPath);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>

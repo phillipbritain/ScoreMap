@@ -2,6 +2,7 @@ using GeoTimeZone;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Venues;
+using ScoreMap.Server.WatchLinks;
 
 namespace ScoreMap.Server.Games;
 
@@ -12,7 +13,8 @@ namespace ScoreMap.Server.Games;
 /// reports what changed, so games entering and leaving their windows come out as added
 /// and removed. Not thread-safe: the poller serializes every call.
 /// </summary>
-public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOptions<List<League>> leagues, TimeProvider clock)
+public sealed class GameBoard(
+    IGameFeedProvider feed, VenueLocator venues, OfficialWatchLinks watchLinks, IOptions<List<League>> leagues, TimeProvider clock)
 {
     /// <summary>An Upcoming game gets its pin this long before its start.</summary>
     public static readonly TimeSpan UpcomingWindow = TimeSpan.FromHours(3);
@@ -95,7 +97,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
         _ => true,
     };
 
-    private static Game ToGame(ProviderGame game, GameStatus status, DateTimeOffset? endTime, League league, VenueLocation location)
+    private Game ToGame(ProviderGame game, GameStatus status, DateTimeOffset? endTime, League league, VenueLocation location)
     {
         return new Game(
             game.Id,
@@ -110,7 +112,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
             ClockLine.For(game, league),
             game.Period,
             ToVenue(game.Venue, location),
-            game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country)).ToList());
+            game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList());
     }
 
     private static GameVenue ToVenue(ProviderVenue? venue, VenueLocation location)

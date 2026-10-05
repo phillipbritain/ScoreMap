@@ -19,4 +19,10 @@ public sealed class League
     /// (e.g. 2 for college basketball's halves). Used only to write the clock line.
     /// </summary>
     public int? RegulationPeriods { get; init; }
+
+    /// <summary>
+    /// How long the league's games are planned to last, start to finish. A Disrupted game keeps the pin
+    /// window of its original schedule, which closes the Final window after this planned end.
+    /// </summary>
+    public TimeSpan PlannedLength { get; init; } = TimeSpan.FromHours(3);
 }

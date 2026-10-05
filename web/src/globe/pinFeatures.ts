@@ -1,8 +1,10 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import type { Game, GameTeam } from '../games/game'
+import type { Game, GameStatus, GameTeam } from '../games/game'
 
 export interface PinProperties {
   gameId: string
+  /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading. */
+  status: GameStatus
   label: string
 }
 
@@ -17,16 +19,26 @@ export function pinFeatures(games: readonly Game[]): FeatureCollection<Point, Pi
         type: 'Feature',
         id: game.id,
         geometry: { type: 'Point', coordinates: [game.venue.longitude, game.venue.latitude] },
-        properties: { gameId: game.id, label: label(game) },
+        properties: { gameId: game.id, status: game.status, label: label(game) },
       }),
     ),
   }
 }
 
-function label({ away, home }: Game): string {
-  return hasScore(away) && hasScore(home)
-    ? `${away.abbreviation} ${away.score} – ${home.score} ${home.abbreviation}`
-    : `${away.abbreviation} @ ${home.abbreviation}`
+function label(game: Game): string {
+  const { away, home } = game
+  const teams =
+    hasScore(away) && hasScore(home)
+      ? `${away.abbreviation} ${away.score} – ${home.score} ${home.abbreviation}`
+      : `${away.abbreviation} @ ${home.abbreviation}`
+  const clock = clockLine(game)
+  return clock ? `${teams}\n${clock}` : teams
+}
+
+function clockLine({ status, delayed, clock }: Game): string | null {
+  if (status === 'Final') return 'Final'
+  if (status === 'Live') return delayed ? 'Delayed' : clock
+  return null
 }
 
 function hasScore(team: GameTeam): boolean {

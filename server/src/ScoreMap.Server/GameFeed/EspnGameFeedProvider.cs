@@ -10,16 +10,55 @@ namespace ScoreMap.Server.GameFeed;
 /// </summary>
 public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : IGameFeedProvider
 {
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
+
     public async Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
         var scoreboard = await http.GetFromJsonAsync<Scoreboard>(
             $"{leagueKey}/scoreboard?dates={EspnDay(clock.GetUtcNow()):yyyyMMdd}", cancellationToken);
 
-        return (scoreboard?.Events ?? [])
-            .Select(e => ToGame(e, leagueKey))
-            .OfType<ProviderGame>()
-            .ToList();
+        var games = new List<ProviderGame>();
+        foreach (var e in scoreboard?.Events ?? [])
+        {
+            if (ToGame(e, leagueKey) is not { } game)
+                continue;
+            // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
+            if (game.Venue is null && HomeTeamId(e) is { } teamId)
+                game = game with { Home = game.Home with { HomeCity = await HomeCityAsync(leagueKey, teamId, cancellationToken) } };
+            games.Add(game);
+        }
+        return games;
     }
+
+    /// <summary>
+    /// The scoreboard doesn't say where a team is based, so ask ESPN's team endpoint, once per team
+    /// (answers are kept for the life of the provider). Prefers the franchise venue's address; teams
+    /// without one (college, soccer) fall back to ESPN's "location", e.g. "Duke", which is a place
+    /// name but not always a city. A failed request is not kept, so it is tried again next time.
+    /// </summary>
+    private async Task<ProviderCity?> HomeCityAsync(string leagueKey, string teamId, CancellationToken cancellationToken)
+    {
+        var key = $"{leagueKey}/teams/{teamId}";
+        if (_homeCities.TryGetValue(key, out var known))
+            return known;
+        try
+        {
+            var team = (await http.GetFromJsonAsync<TeamResponse>(key, cancellationToken))?.Team;
+            var address = team?.Franchise?.Venue?.Address;
+            var city = !string.IsNullOrWhiteSpace(address?.City)
+                ? new ProviderCity(address.City, address.State, address.Country)
+                : !string.IsNullOrWhiteSpace(team?.Location) ? new ProviderCity(team.Location, null, null) : null;
+            return _homeCities[key] = city;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException
+            || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            return null;
+        }
+    }
+
+    private static string? HomeTeamId(Event e) =>
+        e.Competitions?.FirstOrDefault()?.Competitors?.FirstOrDefault(c => c.HomeAway == "home")?.Team?.Id;
 
     /// <summary>ESPN's scoreboard days are US Eastern calendar days.</summary>
     private static DateTime EspnDay(DateTimeOffset now) =>
@@ -91,7 +130,10 @@ public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : 
     private sealed record Competition(DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts);
     private sealed record Competitor(string? HomeAway, Team? Team, string? Score);
-    private sealed record Team(string? Abbreviation, string? DisplayName, string? Logo);
+    private sealed record Team(string? Id, string? Abbreviation, string? DisplayName, string? Logo);
+    private sealed record TeamResponse(TeamDetail? Team);
+    private sealed record TeamDetail(string? Location, Franchise? Franchise);
+    private sealed record Franchise(Venue? Venue);
     private sealed record Status(string? DisplayClock, int? Period, StatusType? Type);
     private sealed record StatusType(string? Name, string? State, bool? Completed);
     private sealed record Venue(string? FullName, Address? Address);

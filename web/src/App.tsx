@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FilterMenu } from './filters/FilterMenu'
 import { useLeagues } from './filters/leagues'
 import { settingsStore } from './filters/settingsStore'
 import { noPinsMessage, visibleGames } from './filters/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
-import { Globe } from './globe/Globe'
+import { Globe, type GlobeHandle } from './globe/Globe'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
 
@@ -17,13 +17,17 @@ export default function App() {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const leagues = useLeagues()
+  const globe = useRef<GlobeHandle>(null)
 
   useEffect(
     () =>
       connectToGames({
         onSnapshot: setGames,
         // The snapshot always comes first; a change before it has nothing to apply to.
-        onChange: (change) => setGames((current) => current && applyChange(current, change)),
+        onChange: (change) => {
+          setGames((current) => current && applyChange(current, change))
+          globe.current?.showChange(change)
+        },
       }),
     [],
   )
@@ -39,7 +43,7 @@ export default function App() {
   return (
     <div className={selectedGame ? 'app app--panel-open' : 'app'}>
       <div className="globe-area">
-        <Globe games={visible} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
+        <Globe ref={globe} games={visible} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
         <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {message && (
           <p className="no-pins" role="status">

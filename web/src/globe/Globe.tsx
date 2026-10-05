@@ -1,10 +1,14 @@
 import { Map as MapLibreMap, setWorkerUrl, type ExpressionSpecification, type GeoJSONSource } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { Point } from 'geojson'
-import { useEffect, useRef } from 'react'
+import type { Feature, Point } from 'geojson'
+import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import type { Game } from '../games/game'
+import type { GameChange } from '../games/gameChange'
+import { animationTarget } from './animationTarget'
+import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
+import { pulse } from './pinPulse'
 import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
@@ -16,7 +20,14 @@ setWorkerUrl(workerUrl)
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
 const selectedPinLayer = 'pin-selected'
 
+/** What the app can ask of the globe beyond drawing its games. */
+export interface GlobeHandle {
+  /** Animates a changed game's pin, or its cluster, if the change is one worth noticing. */
+  showChange: (change: GameChange) => void
+}
+
 interface GlobeProps {
+  ref?: Ref<GlobeHandle>
   games: readonly Game[]
   /** The game whose panel is open: its pin is highlighted and the globe turns to centre it. */
   selectedGameId: string | null
@@ -32,13 +43,26 @@ function selectedPin(gameId: string | null): ExpressionSpecification {
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
  * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster zooms in until it splits.
  */
-export function Globe({ games, selectedGameId, onSelectGame }: GlobeProps) {
+export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const cards = useRef<ScoreCardMarkers | null>(null)
   const latestGames = useRef(games)
   const latestSelected = useRef(selectedGameId)
   const latestOnSelect = useRef(onSelectGame)
+  const pendingAnimations = useRef<{ game: Game; animation: PinAnimation }[]>([])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      // Played once the changed games reach the globe (see below), so it's known whether the game still shows.
+      showChange: (change) => {
+        const animation = pinAnimation(change)
+        if (animation) pendingAnimations.current.push({ game: change.game, animation })
+      },
+    }),
+    [],
+  )
 
   useEffect(() => {
     latestOnSelect.current = onSelectGame
@@ -122,6 +146,16 @@ export function Globe({ games, selectedGameId, onSelectGame }: GlobeProps) {
     latestGames.current = games
     map.current?.getSource<GeoJSONSource>(pinSource)?.setData(pinFeatures(games))
     cards.current?.setGames(games)
+
+    // Games the globe doesn't show (hidden by the viewer's filters) don't animate.
+    const pending = pendingAnimations.current
+    pendingAnimations.current = []
+    const instance = map.current
+    const scoreCards = cards.current
+    if (!instance || !scoreCards) return
+    for (const { game, animation } of pending) {
+      if (games.some((g) => g.id === game.id)) void animateGame(instance, scoreCards, game, animation)
+    }
   }, [games])
 
   // Only when the selection changes: later snapshots must not pull the camera back.
@@ -136,4 +170,31 @@ export function Globe({ games, selectedGameId, onSelectGame }: GlobeProps) {
   }, [selectedGameId])
 
   return <div ref={container} className="globe" />
+}
+
+/**
+ * Plays an animation where a game shows on the globe: its score card when zoomed in, its small pin
+ * when zoomed out, or the cluster it's in. Games not on the map (off screen, or not shown at all) don't animate.
+ */
+async function animateGame(map: MapLibreMap, cards: ScoreCardMarkers, game: Game, animation: PinAnimation): Promise<void> {
+  const source = map.getSource<GeoJSONSource>(pinSource)
+  if (!source || !map.isSourceLoaded(pinSource)) return
+  const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
+  const target = animationTarget(game.id, venue, map.querySourceFeatures(pinSource) as Feature<Point>[])
+  if (!target) return
+
+  if (target.kind === 'pin') {
+    if (pinLayout(map.getZoom()).size === 'card') cards.animate(game.id, animation)
+    else pulse(map, target.lngLat, animation, 'pin')
+    return
+  }
+
+  for (const { clusterId, lngLat } of target.candidates) {
+    // A cluster can be gone by the time it's asked (the data or zoom changed), so skip it.
+    const leaves = await source.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])
+    if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
+      pulse(map, lngLat, animation, 'cluster')
+      return
+    }
+  }
 }

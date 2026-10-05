@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/hubs': { target: server, ws: true },
+      '/api': { target: server },
     },
   },
   test: {

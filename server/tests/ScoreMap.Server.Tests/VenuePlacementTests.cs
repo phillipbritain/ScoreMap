@@ -1,4 +1,5 @@
 using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests;
@@ -120,10 +121,10 @@ public class VenuePlacementTests
         await using var server = new ScoreMapServer();
         server.Places.Add("Tottenham Hotspur Stadium, London", new Coordinates(1, 1));
         server.Feed.SetScoreboard("football/nfl", LondonGame());
-        await using (var first = await server.ConnectClientAsync())
-            await first.NextSnapshotAsync();
+        await server.SnapshotOnceAsync();
 
         server.CorrectVenue("Tottenham Hotspur Stadium", Tottenham);
+        server.Clock.Advance(Poller.QuietInterval); // the correction applies from the next poll
         await using var second = await server.ConnectClientAsync();
         var game = Assert.Single(await second.NextSnapshotAsync());
 

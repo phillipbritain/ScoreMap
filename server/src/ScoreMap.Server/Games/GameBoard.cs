@@ -14,7 +14,12 @@ namespace ScoreMap.Server.Games;
 /// and removed. Not thread-safe: the poller serializes every call.
 /// </summary>
 public sealed class GameBoard(
-    IGameFeedProvider feed, VenueLocator venues, OfficialWatchLinks watchLinks, IOptions<List<League>> leagues, TimeProvider clock)
+    IGameFeedProvider feed,
+    VenueLocator venues,
+    OfficialWatchLinks watchLinks,
+    StreamFinder streams,
+    IOptions<List<League>> leagues,
+    TimeProvider clock)
 {
     /// <summary>An Upcoming game gets its pin this long before its start.</summary>
     public static readonly TimeSpan UpcomingWindow = TimeSpan.FromHours(3);
@@ -49,7 +54,8 @@ public sealed class GameBoard(
                 continue;
             var endTime = status == GameStatus.Final ? stoppedAt : null;
             var location = await venues.LocateAsync(game.Venue, game.Home, cancellationToken);
-            games.Add(ToGame(game, status, endTime, league, location));
+            var added = ToGame(game, status, endTime, league, location);
+            games.Add(added with { StreamLinks = streams.LinksFor(added) });
         }
 
         var before = _games.GetValueOrDefault(league.Key, []);
@@ -135,7 +141,8 @@ public sealed class GameBoard(
             ClockLine.For(game, league),
             game.Period,
             ToVenue(game.Venue, location),
-            game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList());
+            game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList(),
+            StreamLinks: []);
     }
 
     private static GameVenue ToVenue(ProviderVenue? venue, VenueLocation location)

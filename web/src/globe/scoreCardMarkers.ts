@@ -2,6 +2,7 @@ import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
+import type { PinAnimation } from './pinAnimation'
 import { pinSource, statusColors } from './pinLayers'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { pinLayout } from './zoomLevels'
@@ -20,6 +21,8 @@ export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
   private games = new Map<string, Game>()
   private selectedGameId: string | null = null
+  /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
+  private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
   private readonly onSelect: (gameId: string) => void
 
@@ -74,7 +77,7 @@ export class ScoreCardMarkers {
         const element = placed.marker.getElement()
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? 3 : stacking[card.status])
-        drawScoreCard(element.firstElementChild as HTMLElement, card, selected)
+        drawScoreCard(element.firstElementChild as HTMLElement, card, selected, this.animating.get(gameId))
         placed.drawn = drawn
       }
     }
@@ -83,20 +86,47 @@ export class ScoreCardMarkers {
       if (keep.has(gameId)) continue
       marker.remove()
       this.placed.delete(gameId)
+      this.animating.delete(gameId)
     }
+  }
+
+  /** Plays an animation on a game's card. False when the game has no card on screen. */
+  animate(gameId: string, animation: PinAnimation): boolean {
+    const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
+    if (!element) return false
+    const playing = this.animating.get(gameId)
+    if (playing) element.classList.remove(animationClass(playing))
+    // Reading layout between removing and adding the class restarts an animation already playing.
+    void element.offsetWidth
+    this.animating.set(gameId, animation)
+    element.classList.add(animationClass(animation))
+    const ended = (event: AnimationEvent) => {
+      // The score inside flashes too, and its end bubbles up here.
+      if (event.target !== element) return
+      element.removeEventListener('animationend', ended)
+      if (this.animating.get(gameId) !== animation) return
+      this.animating.delete(gameId)
+      element.classList.remove(animationClass(animation))
+    }
+    element.addEventListener('animationend', ended)
+    return true
   }
 
   clear(): void {
     for (const { marker } of this.placed.values()) marker.remove()
     this.placed.clear()
+    this.animating.clear()
   }
 }
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
-function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean): void {
+const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
+
+function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean, animation?: PinAnimation): void {
   element.className = `score-card score-card--${card.status.toLowerCase()}`
   element.classList.toggle('score-card--selected', selected)
+  if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId
   element.style.setProperty('--status-color', statusColors[card.status])
   const clock = span('score-card__clock', card.clockLine)

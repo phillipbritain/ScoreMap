@@ -38,7 +38,7 @@ describe('league switch', () => {
   })
 
   it('leaves "Live only" alone', () => {
-    const settings = { hiddenLeagues: [], liveOnly: true }
+    const settings = { ...firstVisitSettings, liveOnly: true }
 
     expect(withLeague(settings, 'NFL', false).liveOnly).toBe(true)
   })

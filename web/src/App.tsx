@@ -4,6 +4,7 @@ import { useLeagues } from './filters/leagues'
 import { settingsStore } from './filters/settingsStore'
 import { noPinsMessage, visibleGames } from './filters/visibleGames'
 import type { Game } from './games/game'
+import { applyChange } from './games/gameStore'
 import { Globe } from './globe/Globe'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
@@ -17,7 +18,15 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const leagues = useLeagues()
 
-  useEffect(() => connectToGames({ onSnapshot: setGames }), [])
+  useEffect(
+    () =>
+      connectToGames({
+        onSnapshot: setGames,
+        // The snapshot always comes first; a change before it has nothing to apply to.
+        onChange: (change) => setGames((current) => current && applyChange(current, change)),
+      }),
+    [],
+  )
   useEffect(() => store.save(viewerSettings), [viewerSettings])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])

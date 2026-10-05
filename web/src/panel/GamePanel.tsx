@@ -1,6 +1,7 @@
 import type { Game, GameTeam } from '../games/game'
 import { dualTime } from './dualTime'
 import { gameProgress } from './gameProgress'
+import { viewerCountry, watchLinks, type WatchLink } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
@@ -15,7 +16,7 @@ interface GamePanelProps {
 export function GamePanel({ game, onClose }: GamePanelProps) {
   const { venue } = game
   const place = [venue.city, venue.country].filter(Boolean).join(', ')
-  const channels = [...new Set(game.broadcasters.map((b) => b.name))]
+  const links = watchLinks(game.broadcasters, viewerCountry(navigator.languages))
 
   return (
     <aside className="game-panel" aria-label="Game panel">
@@ -51,9 +52,34 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
           </>
         )}
         <dt>Watch</dt>
-        <dd>{channels.length > 0 ? channels.join(', ') : <span className="game-panel__muted">No channels listed</span>}</dd>
+        <dd>
+          <WatchLinks links={links} />
+        </dd>
       </dl>
     </aside>
+  )
+}
+
+/**
+ * Official watch links, as links where the server's watch links file lists the service and
+ * plain names otherwise. Unofficial links (a separate, removable module) belong after these.
+ */
+function WatchLinks({ links }: { links: WatchLink[] }) {
+  if (links.length === 0) return <span className="game-panel__muted">No channels listed</span>
+  return (
+    <ul className="game-panel__watch">
+      {links.map((link) => (
+        <li key={link.name}>
+          {link.url ? (
+            <a href={link.url} target="_blank" rel="noopener noreferrer">
+              {link.name}
+            </a>
+          ) : (
+            link.name
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }
 

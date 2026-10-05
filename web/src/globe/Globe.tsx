@@ -1,22 +1,48 @@
-import { Map as MapLibreMap, type GeoJSONSource } from 'maplibre-gl'
+import { Map as MapLibreMap, setWorkerUrl, type ExpressionSpecification, type GeoJSONSource } from 'maplibre-gl'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { Point } from 'geojson'
 import { useEffect, useRef } from 'react'
 import type { Game } from '../games/game'
 import { pinFeatures } from './pinFeatures'
+import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
+import { ScoreCardMarkers } from './scoreCardMarkers'
+import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
+
+// MapLibre's default worker path doesn't survive Vite's bundling.
+setWorkerUrl(workerUrl)
 
 // Free vector tiles with borders and place labels (ADR-0004).
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
-const pinSource = 'pins'
+const selectedPinLayer = 'pin-selected'
 
 interface GlobeProps {
   games: readonly Game[]
+  /** The game whose panel is open: its pin is highlighted and the globe turns to centre it. */
+  selectedGameId: string | null
+  onSelectGame: (gameId: string) => void
 }
 
-/** MapLibre globe with a pin at each game's venue. */
-export function Globe({ games }: GlobeProps) {
+/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a cluster). */
+function selectedPin(gameId: string | null): ExpressionSpecification {
+  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
+}
+
+/**
+ * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
+ * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster zooms in until it splits.
+ */
+export function Globe({ games, selectedGameId, onSelectGame }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
+  const cards = useRef<ScoreCardMarkers | null>(null)
   const latestGames = useRef(games)
+  const latestSelected = useRef(selectedGameId)
+  const latestOnSelect = useRef(onSelectGame)
+
+  useEffect(() => {
+    latestOnSelect.current = onSelectGame
+  }, [onSelectGame])
 
   useEffect(() => {
     if (!container.current) return
@@ -26,55 +52,88 @@ export function Globe({ games }: GlobeProps) {
       center: [-40, 30],
       zoom: 1.5,
     })
+    const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
+    scoreCards.setGames(latestGames.current)
+    scoreCards.setSelected(latestSelected.current)
+    let clusterRadius = pinLayout(instance.getZoom()).clusterRadius
+
     instance.on('style.load', () => {
       instance.setProjection({ type: 'globe' })
-      instance.addSource(pinSource, { type: 'geojson', data: pinFeatures(latestGames.current) })
+      clusterRadius = pinLayout(instance.getZoom()).clusterRadius
+      instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
+      for (const layer of clusterLayers) instance.addLayer(layer)
+      instance.addLayer(smallPinLayerSpec)
+      // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
       instance.addLayer({
-        id: 'pins',
+        id: selectedPinLayer,
         type: 'circle',
         source: pinSource,
-        // Live stands out most (and draws on top), Upcoming is dimmer, Final fades.
-        layout: { 'circle-sort-key': ['match', ['get', 'status'], 'Live', 2, 'Upcoming', 1, 0] },
+        filter: selectedPin(latestSelected.current),
+        maxzoom: cardZoom,
         paint: {
-          'circle-radius': ['match', ['get', 'status'], 'Live', 9, 'Upcoming', 6, 5],
-          'circle-color': ['match', ['get', 'status'], 'Live', '#e4572e', 'Upcoming', '#f2a541', '#8a8f98'],
-          'circle-opacity': ['match', ['get', 'status'], 'Live', 1, 'Upcoming', 0.8, 0.55],
-          'circle-stroke-width': ['match', ['get', 'status'], 'Live', 2.5, 1.5],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-opacity': ['match', ['get', 'status'], 'Final', 0.55, 1],
-        },
-      })
-      instance.addLayer({
-        id: 'pin-labels',
-        type: 'symbol',
-        source: pinSource,
-        minzoom: 3,
-        layout: {
-          'text-field': ['get', 'label'],
-          'text-font': ['Noto Sans Bold'],
-          'text-size': 13,
-          'text-offset': [0, 1.4],
-          'text-anchor': 'top',
-        },
-        paint: {
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 1.5,
-          'text-opacity': ['match', ['get', 'status'], 'Final', 0.6, 1],
+          'circle-radius': 13,
+          'circle-color': 'rgba(0, 0, 0, 0)',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#2f80ed',
         },
       })
     })
+
+    // Score cards need more room than small pins, so they cluster over a wider radius.
+    instance.on('zoom', () => {
+      const wanted = pinLayout(instance.getZoom()).clusterRadius
+      if (wanted === clusterRadius) return
+      clusterRadius = wanted
+      void instance
+        .getSource<GeoJSONSource>(pinSource)
+        ?.setClusterOptions({ cluster: true, clusterRadius, clusterMaxZoom })
+    })
+
+    // Cards follow the clustered source, which changes as the camera moves and data arrives.
+    instance.on('render', () => scoreCards.sync())
+
+    instance.on('click', clusterLayer, async (event) => {
+      const cluster = event.features?.[0]
+      const source = instance.getSource<GeoJSONSource>(pinSource)
+      if (!cluster || !source) return
+      const zoom = await source.getClusterExpansionZoom(cluster.properties.cluster_id)
+      instance.easeTo({ center: (cluster.geometry as Point).coordinates as [number, number], zoom })
+    })
+    instance.on('click', smallPinLayer, (event) => {
+      const gameId: unknown = event.features?.[0]?.properties?.gameId
+      if (typeof gameId === 'string') latestOnSelect.current(gameId)
+    })
+    for (const layer of [clusterLayer, smallPinLayer]) {
+      instance.on('mouseenter', layer, () => (instance.getCanvas().style.cursor = 'pointer'))
+      instance.on('mouseleave', layer, () => (instance.getCanvas().style.cursor = ''))
+    }
+
     map.current = instance
+    cards.current = scoreCards
     return () => {
+      scoreCards.clear()
       instance.remove()
       map.current = null
+      cards.current = null
     }
   }, [])
 
   useEffect(() => {
     latestGames.current = games
-    const source = map.current?.getSource<GeoJSONSource>(pinSource)
-    source?.setData(pinFeatures(games))
+    map.current?.getSource<GeoJSONSource>(pinSource)?.setData(pinFeatures(games))
+    cards.current?.setGames(games)
   }, [games])
+
+  // Only when the selection changes: later snapshots must not pull the camera back.
+  useEffect(() => {
+    latestSelected.current = selectedGameId
+    cards.current?.setSelected(selectedGameId)
+    const instance = map.current
+    if (!instance) return
+    if (instance.getLayer(selectedPinLayer)) instance.setFilter(selectedPinLayer, selectedPin(selectedGameId))
+    const game = latestGames.current.find((g) => g.id === selectedGameId)
+    if (game) instance.easeTo({ center: [game.venue.longitude, game.venue.latitude], duration: 1200 })
+  }, [selectedGameId])
 
   return <div ref={container} className="globe" />
 }

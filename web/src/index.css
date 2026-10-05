@@ -128,3 +128,78 @@ body {
   font-size: 13px;
   color: #5b6272;
 }
+
+/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line.
+   --status-color is set per card; Live stands out most, Upcoming is dimmer, Final fades. */
+.score-card {
+  display: grid;
+  gap: 2px;
+  min-width: 84px;
+  padding: 4px 8px 4px 6px;
+  border-left: 4px solid var(--status-color);
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  color: #1b1f2a;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.score-card--live {
+  box-shadow:
+    0 0 0 2px var(--status-color),
+    0 1px 6px rgb(0 0 0 / 0.45);
+}
+
+.score-card--upcoming {
+  opacity: 0.85;
+}
+
+.score-card--final {
+  opacity: 0.6;
+}
+
+/* The game whose panel is open, matching the selected small pin's ring. */
+.score-card--selected {
+  outline: 3px solid #2f80ed;
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.score-card__team {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.score-card__logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.score-card__abbreviation {
+  font-weight: 600;
+}
+
+.score-card__score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.score-card__clock {
+  color: #555c6b;
+  font-size: 11px;
+}
+
+.score-card__clock:empty {
+  display: none;
+}
+
+.score-card--live .score-card__clock {
+  color: var(--status-color);
+  font-weight: 600;
+}

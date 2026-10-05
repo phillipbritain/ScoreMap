@@ -18,6 +18,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     period: null,
     venue: { name: null, city: null, country: null, latitude: 0, longitude: 0, timeZone: null },
     broadcasters: [],
+    streamLinks: [],
   }
 }
 

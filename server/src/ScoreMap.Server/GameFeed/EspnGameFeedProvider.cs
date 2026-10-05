@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace ScoreMap.Server.GameFeed;
 
@@ -8,12 +9,19 @@ namespace ScoreMap.Server.GameFeed;
 /// The <see cref="HttpClient"/> base address is the sports root, e.g.
 /// <c>https://site.api.espn.com/apis/site/v2/sports/</c>; league keys are <c>{sport}/{league}</c>.
 /// </summary>
-public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : IGameFeedProvider
+public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : IGameFeedProvider
 {
     public async Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
+        // A league key may carry its own scoreboard options after a '?', e.g. "basketball/mens-college-basketball?groups=50".
+        var (league, options) = leagueKey.Split('?', 2) switch
+        {
+            [var path, var query] => (path, query + "&"),
+            _ => (leagueKey, ""),
+        };
+        // Without a limit ESPN can leave games off busy days such as a college football Saturday.
         var scoreboard = await http.GetFromJsonAsync<Scoreboard>(
-            $"{leagueKey}/scoreboard?dates={EspnDay(clock.GetUtcNow()):yyyyMMdd}", cancellationToken);
+            $"{league}/scoreboard?{options}dates={EspnDay(clock.GetUtcNow()):yyyyMMdd}&limit=500", cancellationToken);
 
         return (scoreboard?.Events ?? [])
             .Select(e => ToGame(e, leagueKey))
@@ -46,7 +54,8 @@ public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : 
             started ? status?.DisplayClock : null,
             started ? status?.Period : null,
             ToVenue(competition!.Venue),
-            ToBroadcasters(competition));
+            ToBroadcasters(competition),
+            status?.Type?.State == "in" ? ToPhase(status.Type) : ProviderPeriodPhase.Playing);
     }
 
     private static ProviderTeam ToTeam(Competitor competitor, bool started) =>
@@ -69,6 +78,32 @@ public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : 
             _ => ProviderStatus.Scheduled,
         };
     }
+
+    /// <summary>
+    /// Baseball's half-inning is only given as text ("Top 7th", "Mid 7th", "Bot 7th", "End 7th"),
+    /// so it is read first; other breaks come from the status name.
+    /// </summary>
+    private static ProviderPeriodPhase ToPhase(StatusType type)
+    {
+        if (InningDetail().Match(type.ShortDetail ?? "") is { Success: true } inning)
+        {
+            return inning.Groups[1].Value switch
+            {
+                "Top" => ProviderPeriodPhase.InningTop,
+                "Mid" => ProviderPeriodPhase.InningMiddle,
+                "Bot" => ProviderPeriodPhase.InningBottom,
+                _ => ProviderPeriodPhase.InningEnd,
+            };
+        }
+
+        var name = type.Name ?? "";
+        if (name.Contains("SHOOTOUT")) return ProviderPeriodPhase.Shootout;
+        if (name.Contains("HALFTIME") || name.Contains("END_PERIOD") || name.Contains("END_OF_")) return ProviderPeriodPhase.Break;
+        return ProviderPeriodPhase.Playing;
+    }
+
+    [GeneratedRegex(@"^(Top|Mid|Bot|End) \d+(st|nd|rd|th)$")]
+    private static partial Regex InningDetail();
 
     private static ProviderVenue? ToVenue(Venue? venue) =>
         venue is null ? null : new ProviderVenue(venue.FullName, venue.Address?.City, venue.Address?.State, venue.Address?.Country);
@@ -93,7 +128,7 @@ public sealed class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : 
     private sealed record Competitor(string? HomeAway, Team? Team, string? Score);
     private sealed record Team(string? Abbreviation, string? DisplayName, string? Logo);
     private sealed record Status(string? DisplayClock, int? Period, StatusType? Type);
-    private sealed record StatusType(string? Name, string? State, bool? Completed);
+    private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail);
     private sealed record Venue(string? FullName, Address? Address);
     private sealed record Address(string? City, string? State, string? Country);
     private sealed record Broadcast(string? Market, List<string>? Names);

@@ -8,5 +8,15 @@ public sealed class League
 
     public required string Name { get; init; }
 
+    /// <summary>
+    /// The sport's display name. The clock line is written in the sport's style for "American football",
+    /// "Basketball", "Baseball", "Hockey" and "Soccer"; any other sport shows the provider's clock as is.
+    /// </summary>
     public required string Sport { get; init; }
+
+    /// <summary>
+    /// How many periods make up a game before overtime, when the league differs from its sport's usual
+    /// (e.g. 2 for college basketball's halves). Used only to write the clock line.
+    /// </summary>
+    public int? RegulationPeriods { get; init; }
 }

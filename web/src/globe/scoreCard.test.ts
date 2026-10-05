@@ -46,8 +46,11 @@ describe('scoreCard', () => {
     })
   })
 
-  it('shows "Delayed" or "Final" in place of the clock', () => {
+  it('shows "Delayed" in place of the clock for a delayed game', () => {
     expect(scoreCard({ ...arrowhead, delayed: true }).clockLine).toBe('Delayed')
-    expect(scoreCard({ ...arrowhead, status: 'Final', clock: '0:00' }).clockLine).toBe('Final')
+  })
+
+  it("shows a Final game's final line in its sport's style", () => {
+    expect(scoreCard({ ...arrowhead, status: 'Final', clock: 'Final/OT' }).clockLine).toBe('Final/OT')
   })
 })

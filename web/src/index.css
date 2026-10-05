@@ -124,6 +124,19 @@ body {
   margin: 0;
 }
 
+.game-panel__watch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-panel__watch a {
+  color: #1a5fd0;
+}
+
 .game-panel__muted {
   font-size: 13px;
   color: #5b6272;

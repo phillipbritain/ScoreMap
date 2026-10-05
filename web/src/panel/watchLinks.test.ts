@@ -15,6 +15,15 @@ describe('watchLinks', () => {
     expect(watchLinks([prime, sky], 'GB')).toEqual([{ name: 'Sky Sports', url: null }])
   })
 
+  it("lists every broadcast when none is for the viewer's country", () => {
+    const tsn: GameBroadcaster = { name: 'TSN', country: 'CA', watchUrl: null }
+
+    expect(watchLinks([prime, tsn], 'DE')).toEqual([
+      { name: 'Prime Video', url: 'https://www.amazon.com/primevideo' },
+      { name: 'TSN', url: null },
+    ])
+  })
+
   it('keeps broadcasts whose country the data leaves out', () => {
     const tsn: GameBroadcaster = { name: 'TSN', country: null, watchUrl: null }
 

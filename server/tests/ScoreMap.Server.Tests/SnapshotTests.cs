@@ -11,6 +11,7 @@ public class SnapshotTests
     public async Task Connecting_client_receives_a_snapshot_of_the_providers_games()
     {
         await using var server = new ScoreMapServer();
+        server.Places.Add("GEHA Field at Arrowhead Stadium, Kansas City", new Coordinates(39.0489, -94.4839));
         var kickoff = server.Clock.GetUtcNow().AddHours(-1);
         server.Feed.SetScoreboard("football/nfl", new ProviderGame(
             Id: "401",
@@ -21,8 +22,7 @@ public class SnapshotTests
             Status: ProviderStatus.InProgress,
             DisplayClock: "4:12",
             Period: 3,
-            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA",
-                new Coordinates(39.0489, -94.4839)),
+            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA"),
             Broadcasters: [new ProviderBroadcaster("CBS", "USA")]));
 
         await using var client = await server.ConnectClientAsync();
@@ -45,9 +45,10 @@ public class SnapshotTests
     public async Task Each_venue_comes_with_its_local_time_zone()
     {
         await using var server = new ScoreMapServer();
+        server.Places.Add("Tottenham Hotspur Stadium, London", new Coordinates(51.6043, -0.0664));
         server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
         {
-            Venue = new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England", new Coordinates(51.6043, -0.0664)),
+            Venue = new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"),
         });
 
         await using var client = await server.ConnectClientAsync();

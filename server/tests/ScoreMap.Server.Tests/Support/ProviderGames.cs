@@ -19,7 +19,6 @@ public static class ProviderGames
             Status: status,
             DisplayClock: clock,
             Period: period,
-            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA",
-                new Coordinates(39.0489, -94.4839)),
+            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA"),
             Broadcasters: []);
 }

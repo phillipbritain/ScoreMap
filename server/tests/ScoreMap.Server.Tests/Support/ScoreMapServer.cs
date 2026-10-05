@@ -93,6 +93,9 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
     public void AddStreamSite(string name, string searchUrl, string linkPattern) =>
         _streamSites.Add((name, searchUrl, linkPattern));
 
+    /// <summary>Stands in for the stream finder behind its seam, when a test sets it.</summary>
+    public IStreamLinkSource? StreamLinkSource { get; init; }
+
     /// <summary>How long a stream site gets to answer, when a test sets it. Set before connecting.</summary>
     public TimeSpan? StreamSiteTimeout { get; set; }
 
@@ -148,6 +151,11 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);
             services.AddHttpClient(StreamFinder.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => StreamSites);
+            if (StreamLinkSource is not null)
+            {
+                services.RemoveAll<IStreamLinkSource>();
+                services.AddSingleton(StreamLinkSource);
+            }
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });

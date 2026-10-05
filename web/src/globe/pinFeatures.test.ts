@@ -44,6 +44,12 @@ describe('pinFeatures', () => {
     })
   })
 
+  it('gives games at the same venue pins of their own, so each can be reached', () => {
+    const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }]).features
+
+    expect(first.geometry.coordinates).not.toEqual(second.geometry.coordinates)
+  })
+
   it('labels a game without scores by its teams', () => {
     const upcoming: Game = {
       ...arrowhead,

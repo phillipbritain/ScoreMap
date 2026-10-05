@@ -27,6 +27,13 @@ export interface GameBroadcaster {
   watchUrl: string | null
 }
 
+/** An unofficial stream for a game, found by the server's stream finder (ADR-0002: hobby v1 only). */
+export interface StreamLink {
+  /** The owner's name for the site the link was found on. */
+  site: string
+  url: string
+}
+
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */
 export type GameStatus = 'Upcoming' | 'Live' | 'Final'
 
@@ -47,4 +54,6 @@ export interface Game {
   period: number | null
   venue: GameVenue
   broadcasters: GameBroadcaster[]
+  /** Unofficial stream links; empty when the stream finder found none or is switched off. */
+  streamLinks: StreamLink[]
 }

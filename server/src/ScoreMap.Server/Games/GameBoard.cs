@@ -19,17 +19,15 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
             var scoreboard = await feed.FetchScoreboardAsync(league.Key, cancellationToken);
             foreach (var game in scoreboard)
             {
-                var location = game.Venue is null ? null : await venues.LocateAsync(game.Venue, cancellationToken);
-                games.Add(ToGame(game, league, location));
+                var location = await venues.LocateAsync(game.Venue, game.Home, cancellationToken);
+                games.Add(ToGame(game, league, location.Location));
             }
         }
         return games;
     }
 
-    private static Game ToGame(ProviderGame game, League league, Coordinates? location)
+    private static Game ToGame(ProviderGame game, League league, Coordinates location)
     {
-        // Until the venue fallbacks arrive, a venue that can't be found sits at 0,0.
-        location ??= new Coordinates(0, 0);
         return new Game(
             game.Id,
             league.Name,

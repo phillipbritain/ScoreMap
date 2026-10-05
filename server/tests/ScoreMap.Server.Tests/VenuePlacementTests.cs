@@ -143,4 +143,41 @@ public class VenuePlacementTests
         Assert.Equal((51.5074, -0.1278), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Equal("Tottenham Hotspur Stadium", game.Venue.Name);
     }
+
+    [Fact]
+    public async Task A_game_with_no_venue_falls_back_to_the_home_teams_city()
+    {
+        await using var server = new ScoreMapServer();
+        server.Places.Add("Charlotte, NC, USA", new Coordinates(35.2272, -80.8431));
+        server.Feed.SetScoreboard("football/nfl", LondonGame() with
+        {
+            Home = new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA")),
+            Venue = null,
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal((35.2272, -80.8431), (game.Venue.Latitude, game.Venue.Longitude));
+    }
+
+    [Fact]
+    public async Task Every_game_gets_a_pin_even_when_nothing_can_be_found()
+    {
+        await using var server = new ScoreMapServer();
+        server.Places.Add("Charlotte, NC, USA", new Coordinates(35.2272, -80.8431));
+        server.Feed.SetScoreboard("football/nfl",
+            LondonGame("unfindable venue"),
+            LondonGame("no venue, home city known") with
+            {
+                Home = new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA")),
+                Venue = null,
+            },
+            LondonGame("nothing known") with { Venue = null });
+
+        await using var client = await server.ConnectClientAsync();
+        var games = await client.NextSnapshotAsync();
+
+        Assert.Equal(["unfindable venue", "no venue, home city known", "nothing known"], games.Select(g => g.Id));
+    }
 }

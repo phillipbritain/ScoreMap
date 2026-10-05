@@ -9,6 +9,7 @@ using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
+using ScoreMap.Server.Venues;
 
 namespace ScoreMap.Server.Tests.Support;
 
@@ -17,21 +18,42 @@ namespace ScoreMap.Server.Tests.Support;
 /// dependencies. Tests drive the fakes and assert only on what a connected
 /// client receives.
 /// </summary>
-public sealed class ScoreMapServer : WebApplicationFactory<Program>
+public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : WebApplicationFactory<Program>
 {
+    private readonly bool _ownsSavedVenueLocations = savedVenueLocationsPath is null;
+
     public FakeGameFeedProvider Feed { get; } = new();
+
+    public FakePlaceSearch Places { get; } = new();
+
+    /// <summary>
+    /// The file the server saves venue lookups to. A fresh temp file unless one is passed in,
+    /// so a second server can be started over the first one's saved lookups.
+    /// </summary>
+    public string SavedVenueLocationsPath { get; } =
+        savedVenueLocationsPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-venues-{Guid.NewGuid():N}.json");
 
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IGameFeedProvider>();
             services.AddSingleton<IGameFeedProvider>(Feed);
+            services.RemoveAll<IPlaceSearch>();
+            services.AddSingleton<IPlaceSearch>(Places);
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (_ownsSavedVenueLocations)
+            File.Delete(SavedVenueLocationsPath);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>

@@ -29,8 +29,9 @@ public sealed class GameBoard(
 
     private readonly Dictionary<string, IReadOnlyList<Game>> _games = new();
 
-    // Providers report no end time, so a game's end is when the board first sees it Final.
-    private readonly Dictionary<(string LeagueKey, string GameId), DateTimeOffset> _endTimes = new();
+    // Providers report no end or suspension time, so a game ends (or is suspended) when the board
+    // first sees it Final (or suspended). Keyed by game; the status says which stop it was.
+    private readonly Dictionary<(string LeagueKey, string GameId), (ProviderStatus Status, DateTimeOffset At)> _stops = new();
 
     public IReadOnlyList<League> Leagues => leagues.Value;
 
@@ -42,15 +43,16 @@ public sealed class GameBoard(
     {
         var scoreboard = await feed.FetchScoreboardAsync(league.Key, cancellationToken);
         var now = clock.GetUtcNow();
-        ForgetEndTimesOfGamesNoLongerReported(league.Key, scoreboard);
+        ForgetStopsOfGamesNoLongerReported(league.Key, scoreboard);
         var games = new List<Game>();
         foreach (var game in scoreboard)
         {
             if (ToStatus(game.Status) is not { } status)
                 continue;
-            var endTime = RecordEndTime(league.Key, game.Id, status, now);
-            if (!IsInPinWindow(game.StartTime, status, endTime, now))
+            var stoppedAt = RecordStop(league.Key, game.Id, game.Status, now);
+            if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
+            var endTime = status == GameStatus.Final ? stoppedAt : null;
             var location = await venues.LocateAsync(game.Venue, game.Home, cancellationToken);
             var added = ToGame(game, status, endTime, league, location);
             games.Add(added with { StreamLinks = streams.LinksFor(added) });
@@ -66,40 +68,60 @@ public sealed class GameBoard(
 
     /// <summary>
     /// Breaks (halftime, intermissions) arrive as in progress; delays stay Live too.
-    /// Disrupted games (postponed, suspended, canceled) have no status yet, so no pin.
+    /// Postponed, suspended and canceled games are Disrupted.
     /// </summary>
     private static GameStatus? ToStatus(ProviderStatus status) => status switch
     {
         ProviderStatus.Scheduled => GameStatus.Upcoming,
         ProviderStatus.InProgress or ProviderStatus.Delayed => GameStatus.Live,
         ProviderStatus.Final => GameStatus.Final,
+        ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled => GameStatus.Disrupted,
         _ => null,
     };
 
-    private DateTimeOffset? RecordEndTime(string leagueKey, string gameId, GameStatus status, DateTimeOffset now)
+    private static Disruption? ToDisruption(ProviderStatus status) => status switch
     {
-        if (status == GameStatus.Final)
+        ProviderStatus.Postponed => Disruption.Postponed,
+        ProviderStatus.Suspended => Disruption.Suspended,
+        ProviderStatus.Canceled => Disruption.Canceled,
+        _ => null,
+    };
+
+    /// <summary>
+    /// For a Final or suspended game, when the board first saw it so (its end or suspension);
+    /// null for any other game.
+    /// </summary>
+    private DateTimeOffset? RecordStop(string leagueKey, string gameId, ProviderStatus status, DateTimeOffset now)
+    {
+        if (status is ProviderStatus.Final or ProviderStatus.Suspended)
         {
-            if (!_endTimes.TryGetValue((leagueKey, gameId), out var endTime))
-                _endTimes[(leagueKey, gameId)] = endTime = now;
-            return endTime;
+            if (!_stops.TryGetValue((leagueKey, gameId), out var stop) || stop.Status != status)
+                _stops[(leagueKey, gameId)] = stop = (status, now);
+            return stop.At;
         }
-        _endTimes.Remove((leagueKey, gameId));
+        _stops.Remove((leagueKey, gameId));
         return null;
     }
 
-    private void ForgetEndTimesOfGamesNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> scoreboard)
+    private void ForgetStopsOfGamesNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> scoreboard)
     {
         var reported = scoreboard.Select(g => g.Id).ToHashSet();
-        foreach (var key in _endTimes.Keys.ToList())
+        foreach (var key in _stops.Keys.ToList())
             if (key.LeagueKey == leagueKey && !reported.Contains(key.GameId))
-                _endTimes.Remove(key);
+                _stops.Remove(key);
     }
 
-    private static bool IsInPinWindow(DateTimeOffset startTime, GameStatus status, DateTimeOffset? endTime, DateTimeOffset now) => status switch
+    private static bool IsInPinWindow(
+        ProviderGame game, GameStatus status, DateTimeOffset? stoppedAt, League league, DateTimeOffset now) => status switch
     {
-        GameStatus.Upcoming => now >= startTime - UpcomingWindow,
-        GameStatus.Final => now < endTime + FinalWindow,
+        GameStatus.Upcoming => now >= game.StartTime - UpcomingWindow,
+        GameStatus.Final => now < stoppedAt + FinalWindow,
+        // A suspended game shows until the Final window has passed since the suspension.
+        GameStatus.Disrupted when game.Status == ProviderStatus.Suspended =>
+            now >= game.StartTime - UpcomingWindow && now < stoppedAt + FinalWindow,
+        // Otherwise the original schedule's windows: from before the planned start until after the planned end.
+        GameStatus.Disrupted =>
+            now >= game.StartTime - UpcomingWindow && now < game.StartTime + league.PlannedLength + FinalWindow,
         _ => true,
     };
 
@@ -112,6 +134,7 @@ public sealed class GameBoard(
             game.StartTime,
             status,
             game.Status == ProviderStatus.Delayed,
+            ToDisruption(game.Status),
             endTime,
             ToTeam(game.Home),
             ToTeam(game.Away),

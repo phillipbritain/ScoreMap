@@ -10,7 +10,12 @@ using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<List<League>>(builder.Configuration.GetSection("Leagues"));
+// Bound league by league at startup, so a misconfigured league (e.g. an unknown sport) stops the
+// server straight away; binding the whole list at once would quietly skip it.
+builder.Services.AddOptions<List<League>>()
+    .Configure(leagues => leagues.AddRange(builder.Configuration.GetSection("Leagues").GetChildren()
+        .Select(section => section.Get<League>() ?? throw new InvalidOperationException($"League {section.Path} is empty"))))
+    .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // Game feed provider: ESPN's unofficial scoreboard (ADR-0001).
@@ -81,7 +86,7 @@ app.MapFallbackToFile("index.html");
 
 // The configured leagues in order, so the browser's filter can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
-    leagues.Value.Select(league => new { league.Name, league.Sport }));
+    leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
 
 app.Run();
 

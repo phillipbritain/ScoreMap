@@ -87,6 +87,36 @@ public class PollingTests
         Assert.Equal(28, Assert.Single(snapshot).Home.Score);
     }
 
+    [Fact]
+    public async Task After_every_browser_leaves_for_hours_the_next_one_gets_fresh_games_and_polling_resumes()
+    {
+        // What an idle host that sleeps sees: everyone goes, a long gap, then someone comes back.
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, UpcomingGame(server.Clock, "401"));
+        var phone = await server.ConnectClientAsync();
+        var laptop = await server.ConnectClientAsync();
+        await phone.NextSnapshotAsync();
+        await laptop.NextSnapshotAsync();
+        await server.DisconnectAsync(phone);
+        await server.DisconnectAsync(laptop);
+
+        server.Clock.Advance(TimeSpan.FromHours(8));
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 7));
+        await Settle();
+        var fetchesWhileAway = server.Feed.Fetches(Nfl);
+
+        await using var returning = await server.ConnectClientAsync();
+        var snapshot = await returning.NextSnapshotAsync();
+        Assert.Equal(7, Assert.Single(snapshot).Home.Score);
+
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 14));
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        var change = await returning.NextChangeAsync();
+
+        Assert.Equal(1, fetchesWhileAway);
+        Assert.Equal(14, change.Game.Home.Score);
+    }
+
     /// <summary>Gives the server real time to act on the clock before asserting that nothing happened.</summary>
     private static Task Settle() => Task.Delay(TimeSpan.FromMilliseconds(300));
 }

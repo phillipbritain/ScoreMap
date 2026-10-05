@@ -50,6 +50,18 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
             new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
     }
 
+    /// <summary>
+    /// The folder of built browser app files the server serves, standing in for wwwroot.
+    /// Unset, the server has no browser app (as in development, where Vite serves it).
+    /// </summary>
+    public string? BrowserAppFolder { get; init; }
+
+    /// <summary>
+    /// Runs the server as Azure App Service would, with HOME set to this folder, and leaves the
+    /// saved venue lookups path unconfigured so the server picks its App Service default.
+    /// </summary>
+    public string? AppServiceHome { get; init; }
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     private readonly List<(string Key, string Name, string Sport)> _extraLeagues = [];
@@ -66,7 +78,17 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
             builder.UseSetting($"Leagues:{100 + i}:Name", _extraLeagues[i].Name);
             builder.UseSetting($"Leagues:{100 + i}:Sport", _extraLeagues[i].Sport);
         }
-        builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        if (BrowserAppFolder is not null)
+            builder.UseWebRoot(BrowserAppFolder);
+        if (AppServiceHome is not null)
+        {
+            builder.UseSetting("WEBSITE_SITE_NAME", "scoremap-test");
+            builder.UseSetting("HOME", AppServiceHome);
+        }
+        else
+        {
+            builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        }
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.ConfigureTestServices(services =>
         {

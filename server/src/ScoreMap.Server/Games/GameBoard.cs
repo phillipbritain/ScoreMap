@@ -1,3 +1,4 @@
+using GeoTimeZone;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
@@ -37,7 +38,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
                 if (!IsInPinWindow(game.StartTime, status, endTime, now))
                     continue;
                 var location = await venues.LocateAsync(game.Venue, game.Home, cancellationToken);
-                games.Add(ToGame(game, status, endTime, league, location.Location));
+                games.Add(ToGame(game, status, endTime, league, location));
             }
         }
         return games;
@@ -78,7 +79,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
         _ => true,
     };
 
-    private static Game ToGame(ProviderGame game, GameStatus status, DateTimeOffset? endTime, League league, Coordinates location)
+    private static Game ToGame(ProviderGame game, GameStatus status, DateTimeOffset? endTime, League league, VenueLocation location)
     {
         return new Game(
             game.Id,
@@ -92,7 +93,17 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
             ToTeam(game.Away),
             ClockLine.For(game, league),
             game.Period,
-            new GameVenue(game.Venue?.Name, game.Venue?.City, game.Venue?.Country, location.Latitude, location.Longitude));
+            ToVenue(game.Venue, location),
+            game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country)).ToList());
+    }
+
+    private static GameVenue ToVenue(ProviderVenue? venue, VenueLocation location)
+    {
+        var (latitude, longitude) = (location.Location.Latitude, location.Location.Longitude);
+        var timeZone = location.FoundBy == LocationSource.Nowhere
+            ? null
+            : TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
+        return new GameVenue(venue?.Name, venue?.City, venue?.Country, latitude, longitude, timeZone);
     }
 
     private static GameTeam ToTeam(ProviderTeam team) =>

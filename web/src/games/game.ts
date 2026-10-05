@@ -14,6 +14,15 @@ export interface GameVenue {
   country: string | null
   latitude: number
   longitude: number
+  /** The venue's IANA time zone, e.g. "America/Chicago"; null when the venue could not be placed. */
+  timeZone: string | null
+}
+
+/** A channel or streaming service showing a game. */
+export interface GameBroadcaster {
+  name: string
+  /** The country it broadcasts to, when known. */
+  country: string | null
 }
 
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */
@@ -35,4 +44,5 @@ export interface Game {
   clock: string | null
   period: number | null
   venue: GameVenue
+  broadcasters: GameBroadcaster[]
 }

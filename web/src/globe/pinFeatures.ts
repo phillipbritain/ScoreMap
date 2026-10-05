@@ -35,7 +35,8 @@ function label(game: Game): string {
   return clock ? `${teams}\n${clock}` : teams
 }
 
-function clockLine({ status, delayed, clock }: Game): string | null {
+/** The short clock line under a game's score: the clock while Live, or "Delayed" or "Final" in its place. */
+export function clockLine({ status, delayed, clock }: Game): string | null {
   if (status === 'Final') return 'Final'
   if (status === 'Live') return delayed ? 'Delayed' : clock
   return null

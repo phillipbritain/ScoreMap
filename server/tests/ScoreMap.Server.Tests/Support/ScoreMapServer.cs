@@ -21,7 +21,8 @@ namespace ScoreMap.Server.Tests.Support;
 /// dependencies. Tests drive the fakes and assert only on what a connected
 /// client receives.
 /// </summary>
-public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : WebApplicationFactory<Program>
+public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool useShippedWatchLinks = false)
+    : WebApplicationFactory<Program>
 {
     private readonly bool _ownsSavedVenueLocations = savedVenueLocationsPath is null;
 
@@ -62,6 +63,23 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
     /// </summary>
     public string? AppServiceHome { get; init; }
 
+    /// <summary>
+    /// The owner's watch links file: a fresh temp file, written by <see cref="AddWatchLink"/>,
+    /// unless the server was started with the watch links file that ships with ScoreMap.
+    /// </summary>
+    public string WatchLinksPath { get; } =
+        Path.Combine(Path.GetTempPath(), $"scoremap-watch-links-{Guid.NewGuid():N}.json");
+
+    private readonly List<object> _watchLinks = [];
+
+    /// <summary>Adds an entry to the watch links file, as the owner would by editing it.</summary>
+    public void AddWatchLink(string url, params string[] names)
+    {
+        _watchLinks.Add(new { names, url });
+        File.WriteAllText(WatchLinksPath, JsonSerializer.Serialize(_watchLinks,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    }
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     private readonly List<(string Key, string Name, string Sport)> _extraLeagues = [];
@@ -90,6 +108,8 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
             builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
         }
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
+        if (!useShippedWatchLinks)
+            builder.UseSetting("WatchLinks:Path", WatchLinksPath);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IGameFeedProvider>();
@@ -107,6 +127,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
         if (_ownsSavedVenueLocations)
             File.Delete(SavedVenueLocationsPath);
         File.Delete(VenueCorrectionsPath);
+        File.Delete(WatchLinksPath);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>

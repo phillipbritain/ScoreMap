@@ -5,6 +5,7 @@ using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
 using ScoreMap.Server.Venues;
+using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,10 @@ builder.Services.AddSingleton<IPlaceSearch>(sp => new NominatimPlaceSearch(
     sp.GetRequiredService<IOptions<NominatimOptions>>()));
 builder.Services.AddSingleton<VenueLocator>();
 
+// Official watch links, from the owner's watch links file.
+builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
+builder.Services.AddSingleton<OfficialWatchLinks>();
+
 builder.Services.AddSingleton<GameBoard>();
 
 // Live updates: the poller fetches while browsers are connected and pushes change events.
@@ -67,6 +72,10 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapHub<GamesHub>(GamesHub.Path);
 app.MapFallbackToFile("index.html");
+
+// The configured leagues in order, so the browser's filter can list every league, even one with no games now.
+app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
+    leagues.Value.Select(league => new { league.Name, league.Sport }));
 
 app.Run();
 

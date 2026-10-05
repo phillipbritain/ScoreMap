@@ -56,6 +56,10 @@ var app = builder.Build();
 app.MapGet("/", () => "ScoreMap server");
 app.MapHub<GamesHub>(GamesHub.Path);
 
+// The configured leagues in order, so the browser's filter can list every league, even one with no games now.
+app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
+    leagues.Value.Select(league => new { league.Name, league.Sport }));
+
 app.Run();
 
 /// <summary>Exposed so tests can start the server with WebApplicationFactory.</summary>

@@ -92,7 +92,7 @@ export class ScoreCardMarkers {
   }
 }
 
-const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0 }
+const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
 function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean): void {
   element.className = `score-card score-card--${card.status.toLowerCase()}`

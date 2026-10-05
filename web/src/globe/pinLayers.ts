@@ -11,28 +11,49 @@ export const pinSource = 'pins'
 export const clusterLayer = 'clusters'
 export const smallPinLayer = 'pins'
 
-/** Live stands out most, Upcoming is dimmer, Final fades. Shared by small pins, clusters and score cards. */
+/**
+ * Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out.
+ * Shared by small pins, clusters and score cards.
+ */
 export const statusColors: Record<GameStatus, string> = {
   Live: '#e4572e',
   Upcoming: '#f2a541',
   Final: '#8a8f98',
+  Disrupted: '#c3c6cc',
 }
 
 const status: ExpressionSpecification = ['get', 'status']
 const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', status, s], 1, 0]]
 
-/** A cluster takes the most prominent status among its games: Live if any is Live, then Upcoming, then Final. */
+/**
+ * A cluster takes the most prominent status among its games: Live if any is Live, then Upcoming,
+ * then Final, and Disrupted only when all its games are.
+ */
 const clusterStatus: ExpressionSpecification = [
   'case',
   ['>', ['get', 'live'], 0],
   'Live',
   ['>', ['get', 'upcoming'], 0],
   'Upcoming',
+  ['>', ['get', 'final'], 0],
   'Final',
+  'Disrupted',
 ]
 
-const byStatus = (s: ExpressionSpecification, live: number, upcoming: number, final: number): ExpressionSpecification =>
-  ['match', s, 'Live', live, 'Upcoming', upcoming, final]
+const byStatus = (
+  s: ExpressionSpecification,
+  values: Record<GameStatus, number>,
+): ExpressionSpecification => [
+  'match',
+  s,
+  'Live',
+  values.Live,
+  'Upcoming',
+  values.Upcoming,
+  'Disrupted',
+  values.Disrupted,
+  values.Final,
+]
 
 const colorFor = (s: ExpressionSpecification): ExpressionSpecification => [
   'match',
@@ -41,6 +62,8 @@ const colorFor = (s: ExpressionSpecification): ExpressionSpecification => [
   statusColors.Live,
   'Upcoming',
   statusColors.Upcoming,
+  'Disrupted',
+  statusColors.Disrupted,
   statusColors.Final,
 ]
 
@@ -51,7 +74,7 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: nu
     cluster: true,
     clusterRadius: pinLayout(zoom).clusterRadius,
     clusterMaxZoom,
-    clusterProperties: { live: countOf('Live'), upcoming: countOf('Upcoming') },
+    clusterProperties: { live: countOf('Live'), upcoming: countOf('Upcoming'), final: countOf('Final') },
   }
 }
 
@@ -61,12 +84,12 @@ export const clusterLayers: [CircleLayerSpecification, SymbolLayerSpecification]
     type: 'circle',
     source: pinSource,
     filter: ['has', 'point_count'],
-    layout: { 'circle-sort-key': byStatus(clusterStatus, 2, 1, 0) },
+    layout: { 'circle-sort-key': byStatus(clusterStatus, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
     paint: {
       'circle-radius': ['step', ['get', 'point_count'], 13, 5, 16, 15, 20],
       'circle-color': colorFor(clusterStatus),
-      'circle-opacity': byStatus(clusterStatus, 1, 0.85, 0.6),
-      'circle-stroke-width': byStatus(clusterStatus, 2.5, 1.5, 1.5),
+      'circle-opacity': byStatus(clusterStatus, { Live: 1, Upcoming: 0.85, Final: 0.6, Disrupted: 0.6 }),
+      'circle-stroke-width': byStatus(clusterStatus, { Live: 2.5, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
       'circle-stroke-color': '#ffffff',
     },
   },
@@ -93,13 +116,13 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
   filter: ['!', ['has', 'point_count']],
   maxzoom: cardZoom,
   // Live draws on top.
-  layout: { 'circle-sort-key': byStatus(status, 2, 1, 0) },
+  layout: { 'circle-sort-key': byStatus(status, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
   paint: {
-    'circle-radius': byStatus(status, 7, 5, 4),
+    'circle-radius': byStatus(status, { Live: 7, Upcoming: 5, Final: 4, Disrupted: 4 }),
     'circle-color': colorFor(status),
-    'circle-opacity': byStatus(status, 1, 0.8, 0.55),
-    'circle-stroke-width': byStatus(status, 2, 1.5, 1.5),
+    'circle-opacity': byStatus(status, { Live: 1, Upcoming: 0.8, Final: 0.55, Disrupted: 0.6 }),
+    'circle-stroke-width': byStatus(status, { Live: 2, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
     'circle-stroke-color': '#ffffff',
-    'circle-stroke-opacity': byStatus(status, 1, 1, 0.55),
+    'circle-stroke-opacity': byStatus(status, { Live: 1, Upcoming: 1, Final: 0.55, Disrupted: 0.6 }),
   },
 }

@@ -20,3 +20,6 @@ Thumbs.db
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Saved venue lookups (server runtime data)
+server/src/ScoreMap.Server/data/

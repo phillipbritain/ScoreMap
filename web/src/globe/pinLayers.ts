@@ -40,9 +40,10 @@ const clusterStatus: ExpressionSpecification = [
   'Disrupted',
 ]
 
+/** A style value picked by the status that `s` evaluates to (a pin's own, or a cluster's). */
 const byStatus = (
   s: ExpressionSpecification,
-  values: Record<GameStatus, number>,
+  values: Record<GameStatus, number | string>,
 ): ExpressionSpecification => [
   'match',
   s,
@@ -53,18 +54,6 @@ const byStatus = (
   'Disrupted',
   values.Disrupted,
   values.Final,
-]
-
-const colorFor = (s: ExpressionSpecification): ExpressionSpecification => [
-  'match',
-  s,
-  'Live',
-  statusColors.Live,
-  'Upcoming',
-  statusColors.Upcoming,
-  'Disrupted',
-  statusColors.Disrupted,
-  statusColors.Final,
 ]
 
 export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number): GeoJSONSourceSpecification {
@@ -87,7 +76,7 @@ export const clusterLayers: [CircleLayerSpecification, SymbolLayerSpecification]
     layout: { 'circle-sort-key': byStatus(clusterStatus, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
     paint: {
       'circle-radius': ['step', ['get', 'point_count'], 13, 5, 16, 15, 20],
-      'circle-color': colorFor(clusterStatus),
+      'circle-color': byStatus(clusterStatus, statusColors),
       'circle-opacity': byStatus(clusterStatus, { Live: 1, Upcoming: 0.85, Final: 0.6, Disrupted: 0.6 }),
       'circle-stroke-width': byStatus(clusterStatus, { Live: 2.5, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
       'circle-stroke-color': '#ffffff',
@@ -119,7 +108,7 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
   layout: { 'circle-sort-key': byStatus(status, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
   paint: {
     'circle-radius': byStatus(status, { Live: 7, Upcoming: 5, Final: 4, Disrupted: 4 }),
-    'circle-color': colorFor(status),
+    'circle-color': byStatus(status, statusColors),
     'circle-opacity': byStatus(status, { Live: 1, Upcoming: 0.8, Final: 0.55, Disrupted: 0.6 }),
     'circle-stroke-width': byStatus(status, { Live: 2, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
     'circle-stroke-color': '#ffffff',

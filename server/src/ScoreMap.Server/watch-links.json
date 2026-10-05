@@ -1,0 +1,27 @@
+// Official watch links: broadcaster names (as ESPN spells them, ignoring case) mapped to the
+// service's official watch page. Broadcasters not listed here show as plain names.
+// Edit freely; changes take effect without a restart.
+[
+  { "names": ["ESPN", "ESPN2", "ESPNU", "ESPNews", "ESPN Unlmtd", "SEC Network", "SECN", "ACC Network", "ACCN"], "url": "https://www.espn.com/watch/" },
+  { "names": ["ESPN+"], "url": "https://plus.espn.com/" },
+  { "names": ["ABC"], "url": "https://abc.com/watch-live" },
+  { "names": ["Disney+"], "url": "https://www.disneyplus.com/" },
+  { "names": ["Hulu"], "url": "https://www.hulu.com/" },
+  { "names": ["FOX", "FS1", "FS2", "FOX Deportes", "BTN", "Big Ten Network"], "url": "https://www.foxsports.com/live" },
+  { "names": ["FOX One"], "url": "https://www.foxone.com/" },
+  { "names": ["CBS", "CBSSN"], "url": "https://www.cbssports.com/watch/" },
+  { "names": ["Paramount+"], "url": "https://www.paramountplus.com/" },
+  { "names": ["NBC", "NBCSN", "USA Net", "CNBC", "SYFY"], "url": "https://www.nbcsports.com/watch" },
+  { "names": ["Peacock"], "url": "https://www.peacocktv.com/" },
+  { "names": ["Telemundo", "Tele", "Universo"], "url": "https://www.telemundo.com/en-vivo" },
+  { "names": ["TNT", "TBS", "truTV"], "url": "https://www.tntsports.com/watch" },
+  { "names": ["HBO Max"], "url": "https://www.hbomax.com/" },
+  { "names": ["Prime Video", "Prime Video (Local)"], "url": "https://www.amazon.com/primevideo" },
+  { "names": ["Apple TV", "Apple TV+", "MLS Season Pass"], "url": "https://tv.apple.com/" },
+  { "names": ["Netflix"], "url": "https://www.netflix.com/" },
+  { "names": ["NFL Net", "NFL Network", "NFL+"], "url": "https://www.nfl.com/plus/" },
+  { "names": ["NBA TV", "NBA League Pass"], "url": "https://www.nba.com/watch" },
+  { "names": ["MLB.TV", "MLB Net", "MLB Network"], "url": "https://www.mlb.com/tv" },
+  { "names": ["NHL Net", "NHL Network", "NHL.TV"], "url": "https://www.nhl.com/tv" },
+  { "names": ["The CW", "CW"], "url": "https://www.cwtv.com/" }
+]

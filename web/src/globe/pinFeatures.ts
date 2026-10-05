@@ -36,7 +36,8 @@ function label(game: Game): string {
 }
 
 function clockLine({ status, delayed, clock }: Game): string | null {
-  if (status === 'Final') return 'Final'
+  // The server writes the final line in the sport's style ("Final/OT", "FT", "AET").
+  if (status === 'Final') return clock ?? 'Final'
   if (status === 'Live') return delayed ? 'Delayed' : clock
   return null
 }

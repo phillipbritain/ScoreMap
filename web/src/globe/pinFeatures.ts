@@ -35,7 +35,8 @@ function label(game: Game): string {
   return clock ? `${teams}\n${clock}` : teams
 }
 
-function clockLine({ status, delayed, clock }: Game): string | null {
+/** The short clock line under a game's score: the clock while Live, "Delayed" in its place, or the final line. */
+export function clockLine({ status, delayed, clock }: Game): string | null {
   // The server writes the final line in the sport's style ("Final/OT", "FT", "AET").
   if (status === 'Final') return clock ?? 'Final'
   if (status === 'Live') return delayed ? 'Delayed' : clock

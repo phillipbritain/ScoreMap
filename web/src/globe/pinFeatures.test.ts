@@ -22,7 +22,7 @@ const arrowhead: Game = {
     longitude: -94.4839,
     timeZone: 'America/Chicago',
   },
-  broadcasters: [{ name: 'CBS', country: 'USA' }],
+  broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
 }
 
 describe('pinFeatures', () => {

@@ -38,7 +38,7 @@ public class SnapshotTests
         Assert.Equal("Q3 4:12", game.Clock);
         Assert.Equal(3, game.Period);
         Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
-        Assert.Equal([new GameBroadcaster("CBS", "USA")], game.Broadcasters);
+        Assert.Equal([new GameBroadcaster("CBS", "USA", null)], game.Broadcasters);
     }
 
     [Fact]

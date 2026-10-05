@@ -33,11 +33,15 @@ export function Globe({ games }: GlobeProps) {
         id: 'pins',
         type: 'circle',
         source: pinSource,
+        // Live stands out most (and draws on top), Upcoming is dimmer, Final fades.
+        layout: { 'circle-sort-key': ['match', ['get', 'status'], 'Live', 2, 'Upcoming', 1, 0] },
         paint: {
-          'circle-radius': 7,
-          'circle-color': '#e4572e',
-          'circle-stroke-width': 2,
+          'circle-radius': ['match', ['get', 'status'], 'Live', 9, 'Upcoming', 6, 5],
+          'circle-color': ['match', ['get', 'status'], 'Live', '#e4572e', 'Upcoming', '#f2a541', '#8a8f98'],
+          'circle-opacity': ['match', ['get', 'status'], 'Live', 1, 'Upcoming', 0.8, 0.55],
+          'circle-stroke-width': ['match', ['get', 'status'], 'Live', 2.5, 1.5],
           'circle-stroke-color': '#ffffff',
+          'circle-stroke-opacity': ['match', ['get', 'status'], 'Final', 0.55, 1],
         },
       })
       instance.addLayer({
@@ -52,7 +56,11 @@ export function Globe({ games }: GlobeProps) {
           'text-offset': [0, 1.4],
           'text-anchor': 'top',
         },
-        paint: { 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 },
+        paint: {
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 1.5,
+          'text-opacity': ['match', ['get', 'status'], 'Final', 0.6, 1],
+        },
       })
     })
     map.current = instance

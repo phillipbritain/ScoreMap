@@ -30,8 +30,17 @@ internal static class GameChanges
             return GameChangeKind.Finished;
         if (before.Home.Score != after.Home.Score || before.Away.Score != after.Away.Score)
             return GameChangeKind.ScoreChanged;
-        if (before != after)
+        if (!Same(before, after))
             return GameChangeKind.Updated;
         return null;
     }
+
+    /// <summary>
+    /// Record equality, except list fields compare by content (records compare lists by
+    /// reference, and every fetch builds new lists). A new list field on <see cref="Game"/>
+    /// must be added here, or every poll reports every game as updated.
+    /// </summary>
+    private static bool Same(Game before, Game after) =>
+        before.Broadcasters.SequenceEqual(after.Broadcasters)
+        && before with { Broadcasters = after.Broadcasters } == after;
 }

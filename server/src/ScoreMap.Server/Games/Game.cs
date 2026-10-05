@@ -16,8 +16,16 @@ public sealed record Game(
     GameTeam Away,
     string? Clock,
     int? Period,
-    GameVenue Venue);
+    GameVenue Venue,
+    IReadOnlyList<GameBroadcaster> Broadcasters);
 
 public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
 
-public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude);
+/// <summary>
+/// Where a game is played. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
+/// or null when the venue could not be placed.
+/// </summary>
+public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude, string? TimeZone);
+
+/// <summary>A channel or streaming service showing a game, and the country it broadcasts to when known.</summary>
+public sealed record GameBroadcaster(string Name, string? Country);

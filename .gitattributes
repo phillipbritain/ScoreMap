@@ -1,0 +1,2 @@
+# Markdown is text whatever editor wrote it, with LF line endings everywhere.
+*.md text eol=lf

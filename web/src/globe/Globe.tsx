@@ -1,4 +1,4 @@
-import { Map as MapLibreMap, type GeoJSONSource } from 'maplibre-gl'
+import { Map as MapLibreMap, type ExpressionSpecification, type GeoJSONSource } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useRef } from 'react'
 import type { Game } from '../games/game'
@@ -7,16 +7,32 @@ import { pinFeatures } from './pinFeatures'
 // Free vector tiles with borders and place labels (ADR-0004).
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
 const pinSource = 'pins'
+const pinLayer = 'pins'
+const selectedPinLayer = 'pin-selected'
 
 interface GlobeProps {
   games: readonly Game[]
+  /** The game whose panel is open: its pin is highlighted and the globe turns to centre it. */
+  selectedGameId: string | null
+  onSelectGame: (gameId: string) => void
+}
+
+/** Matches only the selected game's pin (nothing when no game is selected). */
+function selectedPin(gameId: string | null): ExpressionSpecification {
+  return ['==', ['get', 'gameId'], gameId ?? '']
 }
 
 /** MapLibre globe with a pin at each game's venue. */
-export function Globe({ games }: GlobeProps) {
+export function Globe({ games, selectedGameId, onSelectGame }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const latestGames = useRef(games)
+  const latestSelected = useRef(selectedGameId)
+  const latestOnSelect = useRef(onSelectGame)
+
+  useEffect(() => {
+    latestOnSelect.current = onSelectGame
+  }, [onSelectGame])
 
   useEffect(() => {
     if (!container.current) return
@@ -30,7 +46,7 @@ export function Globe({ games }: GlobeProps) {
       instance.setProjection({ type: 'globe' })
       instance.addSource(pinSource, { type: 'geojson', data: pinFeatures(latestGames.current) })
       instance.addLayer({
-        id: 'pins',
+        id: pinLayer,
         type: 'circle',
         source: pinSource,
         // Live stands out most (and draws on top), Upcoming is dimmer, Final fades.
@@ -62,6 +78,29 @@ export function Globe({ games }: GlobeProps) {
           'text-opacity': ['match', ['get', 'status'], 'Final', 0.6, 1],
         },
       })
+      // A ring around the selected game's pin.
+      instance.addLayer({
+        id: selectedPinLayer,
+        type: 'circle',
+        source: pinSource,
+        filter: selectedPin(latestSelected.current),
+        paint: {
+          'circle-radius': 15,
+          'circle-color': 'rgba(0, 0, 0, 0)',
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#2f80ed',
+        },
+      })
+    })
+    instance.on('click', pinLayer, (event) => {
+      const gameId: unknown = event.features?.[0]?.properties?.gameId
+      if (typeof gameId === 'string') latestOnSelect.current(gameId)
+    })
+    instance.on('mouseenter', pinLayer, () => {
+      instance.getCanvas().style.cursor = 'pointer'
+    })
+    instance.on('mouseleave', pinLayer, () => {
+      instance.getCanvas().style.cursor = ''
     })
     map.current = instance
     return () => {
@@ -75,6 +114,16 @@ export function Globe({ games }: GlobeProps) {
     const source = map.current?.getSource<GeoJSONSource>(pinSource)
     source?.setData(pinFeatures(games))
   }, [games])
+
+  // Only when the selection changes: later snapshots must not pull the camera back.
+  useEffect(() => {
+    latestSelected.current = selectedGameId
+    const instance = map.current
+    if (!instance) return
+    if (instance.getLayer(selectedPinLayer)) instance.setFilter(selectedPinLayer, selectedPin(selectedGameId))
+    const game = latestGames.current.find((g) => g.id === selectedGameId)
+    if (game) instance.easeTo({ center: [game.venue.longitude, game.venue.latitude], duration: 1200 })
+  }, [selectedGameId])
 
   return <div ref={container} className="globe" />
 }

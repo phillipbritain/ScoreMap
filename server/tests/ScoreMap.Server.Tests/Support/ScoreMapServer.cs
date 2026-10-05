@@ -52,6 +52,18 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
     }
 
     /// <summary>
+    /// The folder of built browser app files the server serves, standing in for wwwroot.
+    /// Unset, the server has no browser app (as in development, where Vite serves it).
+    /// </summary>
+    public string? BrowserAppFolder { get; init; }
+
+    /// <summary>
+    /// Runs the server as Azure App Service would, with HOME set to this folder, and leaves the
+    /// saved venue lookups path unconfigured so the server picks its App Service default.
+    /// </summary>
+    public string? AppServiceHome { get; init; }
+
+    /// <summary>
     /// The owner's watch links file: a fresh temp file, written by <see cref="AddWatchLink"/>,
     /// unless the server was started with the watch links file that ships with ScoreMap.
     /// </summary>
@@ -84,7 +96,17 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             builder.UseSetting($"Leagues:{100 + i}:Name", _extraLeagues[i].Name);
             builder.UseSetting($"Leagues:{100 + i}:Sport", _extraLeagues[i].Sport);
         }
-        builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        if (BrowserAppFolder is not null)
+            builder.UseWebRoot(BrowserAppFolder);
+        if (AppServiceHome is not null)
+        {
+            builder.UseSetting("WEBSITE_SITE_NAME", "scoremap-test");
+            builder.UseSetting("HOME", AppServiceHome);
+        }
+        else
+        {
+            builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        }
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);

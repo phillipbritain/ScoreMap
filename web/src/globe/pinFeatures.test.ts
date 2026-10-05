@@ -9,6 +9,7 @@ const arrowhead: Game = {
   startTime: '2026-10-04T17:00:00+00:00',
   status: 'Live',
   delayed: false,
+  disruption: null,
   endTime: null,
   home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: 21 },
   away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: 17 },

@@ -28,7 +28,10 @@ export interface GameBroadcaster {
 }
 
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */
-export type GameStatus = 'Upcoming' | 'Live' | 'Final'
+export type GameStatus = 'Upcoming' | 'Live' | 'Final' | 'Disrupted'
+
+/** Which kind of disruption made a game Disrupted. */
+export type Disruption = 'Postponed' | 'Suspended' | 'Canceled'
 
 export interface Game {
   id: string
@@ -39,6 +42,8 @@ export interface Game {
   status: GameStatus
   /** A Live game paused by a delay, such as a rain delay. */
   delayed: boolean
+  /** Set only when the game is Disrupted. */
+  disruption: Disruption | null
   /** ISO 8601 instant; set once the game is Final. */
   endTime: string | null
   home: GameTeam

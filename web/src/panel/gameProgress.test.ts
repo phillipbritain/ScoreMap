@@ -3,9 +3,10 @@ import type { Game } from '../games/game'
 import { gameProgress } from './gameProgress'
 
 // The server writes the clock line in the sport's style, period included ("Q3 4:12", "Final/OT").
-const live: Pick<Game, 'status' | 'delayed' | 'clock'> = {
+const live: Pick<Game, 'status' | 'delayed' | 'disruption' | 'clock'> = {
   status: 'Live',
   delayed: false,
+  disruption: null,
   clock: 'Q3 4:12',
 }
 
@@ -30,5 +31,13 @@ describe('gameProgress', () => {
 
   it('names an Upcoming game as such', () => {
     expect(gameProgress({ ...live, status: 'Upcoming', clock: null })).toBe('Upcoming')
+  })
+
+  it('says whether a Disrupted game was postponed, suspended or canceled', () => {
+    const disrupted = { ...live, status: 'Disrupted' as const, clock: null }
+
+    expect(gameProgress({ ...disrupted, disruption: 'Postponed' })).toBe('Postponed')
+    expect(gameProgress({ ...disrupted, disruption: 'Suspended' })).toBe('Suspended')
+    expect(gameProgress({ ...disrupted, disruption: 'Canceled' })).toBe('Canceled')
   })
 })

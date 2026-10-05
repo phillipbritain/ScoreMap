@@ -9,6 +9,7 @@ const arrowhead: Game = {
   startTime: '2026-10-04T17:00:00+00:00',
   status: 'Live',
   delayed: false,
+  disruption: null,
   endTime: null,
   home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: 21 },
   away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: 17 },
@@ -53,5 +54,11 @@ describe('scoreCard', () => {
 
   it("shows a Final game's final line in its sport's style", () => {
     expect(scoreCard({ ...arrowhead, status: 'Final', clock: 'Final/OT' }).clockLine).toBe('Final/OT')
+  })
+
+  it('shows which kind of disruption in place of the clock for a Disrupted game', () => {
+    const suspended: Game = { ...arrowhead, status: 'Disrupted', disruption: 'Suspended', clock: null }
+
+    expect(scoreCard(suspended)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
   })
 })

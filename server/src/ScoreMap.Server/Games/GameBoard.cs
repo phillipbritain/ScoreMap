@@ -37,7 +37,7 @@ public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOpti
             game.StartTime,
             ToTeam(game.Home),
             ToTeam(game.Away),
-            game.DisplayClock,
+            ClockLine.For(game, league),
             game.Period,
             new GameVenue(game.Venue?.Name, game.Venue?.City, game.Venue?.Country, location.Latitude, location.Longitude));
     }

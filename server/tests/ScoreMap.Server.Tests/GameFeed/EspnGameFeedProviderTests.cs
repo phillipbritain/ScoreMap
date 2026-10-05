@@ -201,19 +201,72 @@ public class EspnGameFeedProviderTests
         Assert.Equal(phase, game.Phase);
     }
 
-    [Fact]
-    public async Task Asks_for_the_league_scoreboard_of_todays_US_Eastern_day()
+    private static async Task<IReadOnlyList<string>> RequestedUrlsAtAsync(DateTimeOffset now)
     {
-        // 02:00 UTC on 5 Oct is still 4 Oct in New York.
         var handler = StubHttpHandler.Returning("""{"events":[]}""");
         var provider = new EspnGameFeedProvider(
             new HttpClient(handler) { BaseAddress = new Uri("https://espn.test/sports/") },
-            new FakeTimeProvider(new DateTimeOffset(2026, 10, 5, 2, 0, 0, TimeSpan.Zero)));
+            new FakeTimeProvider(now));
 
         await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
 
-        var request = Assert.Single(handler.Requests);
-        Assert.Equal("https://espn.test/sports/football/nfl/scoreboard?dates=20261004&limit=500", request.RequestUri!.ToString());
+        return handler.Requests.Select(r => r.RequestUri!.ToString()).Order().ToList();
+    }
+
+    [Fact]
+    public async Task Asks_for_the_league_scoreboards_of_yesterday_and_today_in_US_Eastern_days()
+    {
+        // 18:00 UTC on 4 Oct is 14:00 in New York; yesterday's games may still be Live, Final or Disrupted.
+        var urls = await RequestedUrlsAtAsync(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal([
+            "https://espn.test/sports/football/nfl/scoreboard?dates=20261003&limit=500",
+            "https://espn.test/sports/football/nfl/scoreboard?dates=20261004&limit=500",
+        ], urls);
+    }
+
+    [Fact]
+    public async Task Within_three_hours_of_US_Eastern_midnight_also_asks_for_tomorrows_scoreboard()
+    {
+        // 02:00 UTC on 5 Oct is still 22:00 on 4 Oct in New York, so games just after midnight are Upcoming.
+        var urls = await RequestedUrlsAtAsync(new DateTimeOffset(2026, 10, 5, 2, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal([
+            "https://espn.test/sports/football/nfl/scoreboard?dates=20261003&limit=500",
+            "https://espn.test/sports/football/nfl/scoreboard?dates=20261004&limit=500",
+            "https://espn.test/sports/football/nfl/scoreboard?dates=20261005&limit=500",
+        ], urls);
+    }
+
+    [Fact]
+    public async Task A_game_listed_on_more_than_one_day_is_reported_once()
+    {
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"));
+        var provider = new EspnGameFeedProvider(
+            new HttpClient(StubHttpHandler.Returning(body)) { BaseAddress = new Uri("https://espn.test/sports/") },
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 5, 2, 0, 0, TimeSpan.Zero)));
+
+        var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
+
+        Assert.Equal(["401872978", "401872965", "401872971", "401872979"], games.Select(g => g.Id));
+    }
+
+    [Fact]
+    public async Task Each_days_scoreboard_contributes_its_games()
+    {
+        static string OneGame(string id) => """
+            {"events":[{"id":"ID","date":"2026-10-04T17:00Z","competitions":[{"venue":{"fullName":"V"},
+              "competitors":[{"homeAway":"home","team":{"abbreviation":"H"}},{"homeAway":"away","team":{"abbreviation":"A"}}],
+              "status":{"type":{"name":"STATUS_FINAL","state":"post"}}}]}]}
+            """.Replace("\"ID\"", $"\"{id}\"");
+        var handler = new StubHttpHandler(r => OneGame(r.RequestUri!.Query.Contains("20261003") ? "yesterday" : "today"));
+        var provider = new EspnGameFeedProvider(
+            new HttpClient(handler) { BaseAddress = new Uri("https://espn.test/sports/") },
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero)));
+
+        var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
+
+        Assert.Equal(["today", "yesterday"], games.Select(g => g.Id).Order());
     }
 
     [Fact]
@@ -227,9 +280,8 @@ public class EspnGameFeedProviderTests
 
         await provider.FetchScoreboardAsync("basketball/mens-college-basketball?groups=50", CancellationToken.None);
 
-        var request = Assert.Single(handler.Requests);
-        Assert.Equal("https://espn.test/sports/basketball/mens-college-basketball/scoreboard?groups=50&dates=20261004&limit=500",
-            request.RequestUri!.ToString());
+        Assert.Contains(handler.Requests, r => r.RequestUri!.ToString()
+            == "https://espn.test/sports/basketball/mens-college-basketball/scoreboard?groups=50&dates=20261004&limit=500");
     }
 
     private const string NoVenueScoreboard = """
@@ -295,7 +347,7 @@ public class EspnGameFeedProviderTests
 
         var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
 
-        Assert.Single(handler.Requests);
+        Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/teams/"));
         Assert.All(games, g => Assert.Null(g.Home.HomeCity));
     }
 

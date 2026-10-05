@@ -42,5 +42,6 @@ internal static class GameChanges
     /// </summary>
     private static bool Same(Game before, Game after) =>
         before.Broadcasters.SequenceEqual(after.Broadcasters)
-        && before with { Broadcasters = after.Broadcasters } == after;
+        && before.StreamLinks.SequenceEqual(after.StreamLinks)
+        && before with { Broadcasters = after.Broadcasters, StreamLinks = after.StreamLinks } == after;
 }

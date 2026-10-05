@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Tests.Support;
 
@@ -32,6 +33,31 @@ public class LeagueTests
             v1Leagues.Select(l => (l.Key, l.League, l.Sport)).OrderBy(l => l.Key),
             snapshot.Select(g => (g.Id, g.League, g.Sport)).OrderBy(g => g.Id));
     }
+
+    [Fact]
+    public async Task The_browser_can_list_every_configured_league_with_its_sport_in_order()
+    {
+        await using var server = new ScoreMapServer();
+        using var http = server.CreateClient();
+
+        var leagues = await http.GetFromJsonAsync<LeagueListing[]>("/api/leagues");
+
+        Assert.Equal(
+        [
+            new LeagueListing("NFL", "American football"),
+            new LeagueListing("NCAA Football", "American football"),
+            new LeagueListing("NBA", "Basketball"),
+            new LeagueListing("NCAA Men's Basketball", "Basketball"),
+            new LeagueListing("MLB", "Baseball"),
+            new LeagueListing("NHL", "Hockey"),
+            new LeagueListing("MLS", "Soccer"),
+            new LeagueListing("Premier League", "Soccer"),
+            new LeagueListing("Champions League", "Soccer"),
+            new LeagueListing("World Cup", "Soccer"),
+        ], leagues);
+    }
+
+    private sealed record LeagueListing(string Name, string Sport);
 
     private static ProviderGame LiveGame(ScoreMapServer server, string id, string leagueKey) => new(
         Id: id,

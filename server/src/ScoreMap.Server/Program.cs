@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
@@ -56,18 +57,10 @@ builder.Services.AddSingleton<VenueLocator>();
 builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
 builder.Services.AddSingleton<OfficialWatchLinks>();
 
-// Unofficial stream finder (ADR-0002: hobby v1 only, remove before any public launch).
-// Off while the owner's site list in "StreamFinder:Sites" is empty, as it ships.
-builder.Services.Configure<StreamFinderOptions>(builder.Configuration.GetSection("StreamFinder"));
-builder.Services.AddHttpClient(StreamFinder.HttpClientName, client =>
-{
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; ScoreMap hobby app)");
-}).ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-{
-    AutomaticDecompression = DecompressionMethods.All,
-    PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-});
-builder.Services.AddSingleton<StreamFinder>();
+// Unofficial stream links: no game has any unless the stream finder is added (ADR-0002: hobby v1
+// only; delete this AddStreamFinder line and the StreamFinder*.cs files before any public launch).
+builder.Services.AddStreamFinder(builder.Configuration);
+builder.Services.TryAddSingleton<IStreamLinkSource, NoStreamLinks>();
 
 builder.Services.AddSingleton<GameBoard>();
 

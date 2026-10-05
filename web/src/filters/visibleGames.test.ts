@@ -47,7 +47,7 @@ describe('visibleGames', () => {
   it('applies "Live only" and league switches together', () => {
     const liveNba = nba
     const upcomingNfl = game('upcoming', 'NFL', 'American football', 'Upcoming')
-    const settings = { hiddenLeagues: ['NBA'], liveOnly: true }
+    const settings = { ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true }
 
     expect(visibleGames([nfl, liveNba, upcomingNfl, epl], settings)).toEqual([nfl, epl])
   })

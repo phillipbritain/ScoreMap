@@ -4,10 +4,35 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The browser app (web/), built into the published wwwroot by PublishBrowserApp. -->
+    <BrowserAppRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', '..', '..', 'web'))</BrowserAppRoot>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GeoTimeZone" Version="6.1.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Saved venue lookups from local runs are runtime data, not part of the app. -->
+    <Content Remove="data\**" />
+    <None Remove="data\**" />
+  </ItemGroup>
+
+  <!--
+    `dotnet publish` builds the browser app with Vite and publishes it as wwwroot, so the
+    publish folder is the whole deployable app. Pass -p:SkipBrowserApp=true to leave it out.
+  -->
+  <Target Name="PublishBrowserApp" AfterTargets="ComputeFilesToPublish" Condition="'$(SkipBrowserApp)' != 'true'">
+    <Exec WorkingDirectory="$(BrowserAppRoot)" Command="npm ci" Condition="!Exists('$(BrowserAppRoot)node_modules')" />
+    <Exec WorkingDirectory="$(BrowserAppRoot)" Command="npm run build" />
+    <ItemGroup>
+      <BrowserAppFiles Include="$(BrowserAppRoot)dist\**" />
+      <ResolvedFileToPublish Include="@(BrowserAppFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 
 </Project>

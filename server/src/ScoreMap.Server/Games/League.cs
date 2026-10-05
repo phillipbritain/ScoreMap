@@ -21,8 +21,9 @@ public sealed class League
     public int? RegulationPeriods { get; init; }
 
     /// <summary>
-    /// How long the league's games are planned to last, start to finish. A Disrupted game keeps the pin
-    /// window of its original schedule, which closes the Final window after this planned end.
+    /// How long the league's games are planned to last, start to finish (ADR-0005). A Disrupted game keeps
+    /// the pin window of its original schedule, which closes the Final window after this planned end; a game
+    /// already Final the first time the board sees it is estimated to have ended at this planned end.
     /// </summary>
     public TimeSpan PlannedLength { get; init; } = TimeSpan.FromHours(3);
 }

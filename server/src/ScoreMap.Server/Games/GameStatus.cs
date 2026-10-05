@@ -9,4 +9,14 @@ public enum GameStatus
     Upcoming,
     Live,
     Final,
+    Disrupted,
+}
+
+/// <summary>Which kind of disruption made a game <see cref="GameStatus.Disrupted"/>. Sent to browsers by name.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<Disruption>))]
+public enum Disruption
+{
+    Postponed,
+    Suspended,
+    Canceled,
 }

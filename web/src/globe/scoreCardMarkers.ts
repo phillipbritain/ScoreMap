@@ -119,7 +119,7 @@ export class ScoreCardMarkers {
   }
 }
 
-const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0 }
+const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 

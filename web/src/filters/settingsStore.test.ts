@@ -12,13 +12,13 @@ function memoryStorage(): SettingsStorage {
 }
 
 describe('settingsStore', () => {
-  it('gives a first-time visitor every league on and "Live only" off', () => {
+  it('gives a first-time visitor every league on, "Live only" off and Disrupted games shown', () => {
     expect(settingsStore(() => memoryStorage()).load()).toEqual(firstVisitSettings)
   })
 
   it('remembers saved settings after a page reload', () => {
     const storage = memoryStorage()
-    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, slowSpin: false }
+    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, showDisrupted: false, slowSpin: false }
 
     settingsStore(() => storage).save(chosen)
     const afterReload = settingsStore(() => storage)
@@ -57,11 +57,23 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual(firstVisitSettings)
   })
 
+  it('shows Disrupted games to a viewer whose settings were saved before that setting existed', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+
+    expect(settingsStore(() => storage).load().showDisrupted).toBe(true)
+  })
+
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes' }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes', showDisrupted: 0 }))
 
-    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+    expect(settingsStore(() => storage).load()).toEqual({
+      hiddenLeagues: ['NBA'],
+      liveOnly: false,
+      showDisrupted: true,
+      slowSpin: false,
+    })
   })
 
   it('gives slow spin its first-visit default (off) to settings saved before it existed', () => {

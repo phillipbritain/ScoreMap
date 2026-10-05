@@ -1,33 +1,56 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { FilterMenu } from './filters/FilterMenu'
+import { useLeagues } from './filters/leagues'
+import { settingsStore } from './filters/settingsStore'
+import { noPinsMessage, visibleGames } from './filters/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
 import { Globe, type GlobeHandle } from './globe/Globe'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
 
+const store = settingsStore(() => window.localStorage)
+
 export default function App() {
-  const [games, setGames] = useState<Game[]>([])
+  // Null until the server's first snapshot arrives.
+  const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const [viewerSettings, setViewerSettings] = useState(store.load)
+  const leagues = useLeagues()
   const globe = useRef<GlobeHandle>(null)
 
   useEffect(
     () =>
       connectToGames({
         onSnapshot: setGames,
+        // The snapshot always comes first; a change before it has nothing to apply to.
         onChange: (change) => {
-          setGames((current) => applyChange(current, change))
+          setGames((current) => current && applyChange(current, change))
           globe.current?.showChange(change)
         },
       }),
     [],
   )
+  useEffect(() => store.save(viewerSettings), [viewerSettings])
 
-  // Looked up in every snapshot, so the panel stays current; it closes if the game's pin goes.
-  const selectedGame = games.find((game) => game.id === selectedGameId) ?? null
+  const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
+  const message = noPinsMessage(games, visible)
+
+  // Looked up among the visible games on every change, so the panel stays current; it closes if
+  // the game's pin goes, whether the game left the pin window or the filters now hide it.
+  const selectedGame = visible.find((game) => game.id === selectedGameId) ?? null
 
   return (
     <div className={selectedGame ? 'app app--panel-open' : 'app'}>
-      <Globe ref={globe} games={games} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
+      <div className="globe-area">
+        <Globe ref={globe} games={visible} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
+        <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
+        {message && (
+          <p className="no-pins" role="status">
+            {message}
+          </p>
+        )}
+      </div>
       {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
     </div>
   )

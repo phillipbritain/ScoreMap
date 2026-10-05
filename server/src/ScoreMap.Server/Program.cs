@@ -5,6 +5,7 @@ using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
 using ScoreMap.Server.Venues;
+using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,10 @@ builder.Services.AddSingleton<IPlaceSearch>(sp => new NominatimPlaceSearch(
     sp.GetRequiredService<TimeProvider>(),
     sp.GetRequiredService<IOptions<NominatimOptions>>()));
 builder.Services.AddSingleton<VenueLocator>();
+
+// Official watch links, from the owner's watch links file.
+builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
+builder.Services.AddSingleton<OfficialWatchLinks>();
 
 builder.Services.AddSingleton<GameBoard>();
 

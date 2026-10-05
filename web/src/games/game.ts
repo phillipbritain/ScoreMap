@@ -16,12 +16,20 @@ export interface GameVenue {
   longitude: number
 }
 
+/** A game's status in ScoreMap's terms (see GLOSSARY.md). */
+export type GameStatus = 'Upcoming' | 'Live' | 'Final'
+
 export interface Game {
   id: string
   league: string
   sport: string
   /** ISO 8601 instant. */
   startTime: string
+  status: GameStatus
+  /** A Live game paused by a delay, such as a rain delay. */
+  delayed: boolean
+  /** ISO 8601 instant; set once the game is Final. */
+  endTime: string | null
   home: GameTeam
   away: GameTeam
   clock: string | null

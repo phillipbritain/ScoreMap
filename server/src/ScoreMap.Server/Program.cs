@@ -27,7 +27,15 @@ builder.Services.AddSingleton<IGameFeedProvider>(sp => new EspnGameFeedProvider(
 
 // Venue locator, with OpenStreetMap Nominatim as its place search. The place search is a
 // singleton so its rate limit holds across the whole app.
-builder.Services.Configure<VenueOptions>(builder.Configuration.GetSection("Venues"));
+builder.Services.AddOptions<VenueOptions>()
+    .Bind(builder.Configuration.GetSection("Venues"))
+    .PostConfigure<IConfiguration>((options, config) =>
+    {
+        // On Azure App Service only HOME (/home) is writable and kept across restarts and
+        // redeploys, so a relative saved-lookups path is taken from there instead.
+        if (config["WEBSITE_SITE_NAME"] is not null && config["HOME"] is { } home)
+            options.SavedLocationsPath = Path.Combine(home, options.SavedLocationsPath);
+    });
 builder.Services.Configure<NominatimOptions>(builder.Configuration.GetSection("Nominatim"));
 builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>
 {
@@ -53,8 +61,12 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-app.MapGet("/", () => "ScoreMap server");
+// The built browser app (wwwroot, filled by `dotnet publish`; in development Vite serves it
+// instead). Any page address that isn't a file or the hub gets index.html.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapHub<GamesHub>(GamesHub.Path);
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

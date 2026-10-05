@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -33,11 +34,26 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
     public string SavedVenueLocationsPath { get; } =
         savedVenueLocationsPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-venues-{Guid.NewGuid():N}.json");
 
+    /// <summary>The owner's venue corrections file: a fresh temp file, written by <see cref="CorrectVenue"/>.</summary>
+    public string VenueCorrectionsPath { get; } =
+        Path.Combine(Path.GetTempPath(), $"scoremap-corrections-{Guid.NewGuid():N}.json");
+
+    private readonly Dictionary<string, Coordinates> _corrections = new();
+
+    /// <summary>Adds an entry to the corrections file, as the owner would by editing it.</summary>
+    public void CorrectVenue(string venueName, Coordinates location)
+    {
+        _corrections[venueName] = location;
+        File.WriteAllText(VenueCorrectionsPath, JsonSerializer.Serialize(_corrections,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
+    }
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IGameFeedProvider>();
@@ -54,6 +70,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
         await base.DisposeAsync();
         if (_ownsSavedVenueLocations)
             File.Delete(SavedVenueLocationsPath);
+        File.Delete(VenueCorrectionsPath);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>

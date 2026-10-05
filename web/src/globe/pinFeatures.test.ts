@@ -7,6 +7,9 @@ const arrowhead: Game = {
   league: 'NFL',
   sport: 'American football',
   startTime: '2026-10-04T17:00:00+00:00',
+  status: 'Live',
+  delayed: false,
+  endTime: null,
   home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: 21 },
   away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: 17 },
   clock: '4:12',
@@ -31,7 +34,7 @@ describe('pinFeatures', () => {
           type: 'Feature',
           id: '401',
           geometry: { type: 'Point', coordinates: [-94.4839, 39.0489] },
-          properties: { gameId: '401', label: 'BUF 17 – 21 KC' },
+          properties: { gameId: '401', status: 'Live', label: 'BUF 17 – 21 KC\n4:12' },
         },
       ],
     })
@@ -40,10 +43,28 @@ describe('pinFeatures', () => {
   it('labels a game without scores by its teams', () => {
     const upcoming: Game = {
       ...arrowhead,
+      status: 'Upcoming',
+      clock: null,
+      period: null,
       home: { ...arrowhead.home, score: null },
       away: { ...arrowhead.away, score: null },
     }
 
     expect(pinFeatures([upcoming]).features[0].properties.label).toBe('BUF @ KC')
+  })
+
+  it('shows "Delayed" in place of the clock for a delayed game', () => {
+    const delayed: Game = { ...arrowhead, delayed: true }
+
+    expect(pinFeatures([delayed]).features[0].properties.label).toBe('BUF 17 – 21 KC\nDelayed')
+  })
+
+  it('marks a Final game as final in place of the clock', () => {
+    const final: Game = { ...arrowhead, status: 'Final', clock: '0:00', endTime: '2026-10-04T20:10:00+00:00' }
+
+    expect(pinFeatures([final]).features[0].properties).toMatchObject({
+      status: 'Final',
+      label: 'BUF 17 – 21 KC\nFinal',
+    })
   })
 })

@@ -17,7 +17,15 @@ public sealed record ProviderGame(
     IReadOnlyList<ProviderBroadcaster> Broadcasters,
     ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing);
 
-public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
+/// <summary>
+/// A team in a game. <see cref="HomeCity"/> is the city the team plays its home games in, when the
+/// provider knows it; the venue locator falls back to it for a home team's game with no venue.
+/// </summary>
+public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score,
+    ProviderCity? HomeCity = null);
+
+/// <summary>A city as the provider names it, e.g. ("Charlotte", "NC", "USA").</summary>
+public sealed record ProviderCity(string Name, string? Region, string? Country);
 
 /// <summary>
 /// The venue as the provider reports it. <see cref="Location"/> is set only when

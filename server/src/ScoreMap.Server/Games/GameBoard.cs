@@ -29,9 +29,10 @@ public sealed class GameBoard(
 
     private readonly Dictionary<string, IReadOnlyList<Game>> _games = new();
 
-    // Providers report no end or suspension time, so a game ends (or is suspended) when the board
-    // first sees it Final (or suspended). Keyed by game; the status says which stop it was.
-    private readonly Dictionary<(string LeagueKey, string GameId), (ProviderStatus Status, DateTimeOffset At)> _stops = new();
+    // Providers report no end or suspension time, so a game ends (or is suspended) when the board sees
+    // it turn Final (or suspended). Keyed by game: the status it was last seen with, and for a stopped
+    // game when it stopped.
+    private readonly Dictionary<(string LeagueKey, string GameId), (ProviderStatus Status, DateTimeOffset? StoppedAt)> _sightings = new();
 
     public IReadOnlyList<League> Leagues => leagues.Value;
 
@@ -43,13 +44,13 @@ public sealed class GameBoard(
     {
         var scoreboard = await feed.FetchScoreboardAsync(league.Key, cancellationToken);
         var now = clock.GetUtcNow();
-        ForgetStopsOfGamesNoLongerReported(league.Key, scoreboard);
+        ForgetGamesNoLongerReported(league.Key, scoreboard);
         var games = new List<Game>();
         foreach (var game in scoreboard)
         {
             if (ToStatus(game.Status) is not { } status)
                 continue;
-            var stoppedAt = RecordStop(league.Key, game.Id, game.Status, now);
+            var stoppedAt = RecordSighting(league, game, now);
             if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
             var endTime = status == GameStatus.Final ? stoppedAt : null;
@@ -88,27 +89,36 @@ public sealed class GameBoard(
     };
 
     /// <summary>
-    /// For a Final or suspended game, when the board first saw it so (its end or suspension);
-    /// null for any other game.
+    /// For a Final or suspended game, when it stopped (its end or suspension); null for any other game.
+    /// A game the board saw turn Final or suspended stopped when the board first saw it so. A game already
+    /// stopped the first time the board sees it (say, after the server slept) stopped at an unknown time,
+    /// estimated as its planned end, or now if that is still to come.
     /// </summary>
-    private DateTimeOffset? RecordStop(string leagueKey, string gameId, ProviderStatus status, DateTimeOffset now)
+    private DateTimeOffset? RecordSighting(League league, ProviderGame game, DateTimeOffset now)
     {
-        if (status is ProviderStatus.Final or ProviderStatus.Suspended)
+        var key = (league.Key, game.Id);
+        var seenBefore = _sightings.TryGetValue(key, out var last);
+        if (game.Status is not (ProviderStatus.Final or ProviderStatus.Suspended))
         {
-            if (!_stops.TryGetValue((leagueKey, gameId), out var stop) || stop.Status != status)
-                _stops[(leagueKey, gameId)] = stop = (status, now);
-            return stop.At;
+            _sightings[key] = (game.Status, null);
+            return null;
         }
-        _stops.Remove((leagueKey, gameId));
-        return null;
+        if (seenBefore && last.Status == game.Status)
+            return last.StoppedAt;
+
+        var stoppedAt = seenBefore ? now : Min(game.StartTime + league.PlannedLength, now);
+        _sightings[key] = (game.Status, stoppedAt);
+        return stoppedAt;
     }
 
-    private void ForgetStopsOfGamesNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> scoreboard)
+    private static DateTimeOffset Min(DateTimeOffset a, DateTimeOffset b) => a < b ? a : b;
+
+    private void ForgetGamesNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> scoreboard)
     {
         var reported = scoreboard.Select(g => g.Id).ToHashSet();
-        foreach (var key in _stops.Keys.ToList())
+        foreach (var key in _sightings.Keys.ToList())
             if (key.LeagueKey == leagueKey && !reported.Contains(key.GameId))
-                _stops.Remove(key);
+                _sightings.Remove(key);
     }
 
     private static bool IsInPinWindow(

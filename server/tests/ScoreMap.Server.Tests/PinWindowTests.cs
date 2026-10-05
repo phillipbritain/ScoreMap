@@ -135,6 +135,58 @@ public class PinWindowTests
         Assert.Empty(await client.NextSnapshotAsync());
     }
 
+    // A game already Final the first time the server sees it (e.g. after the server slept) didn't end then:
+    // its end is estimated as its planned end, or now if that is still to come.
+    [Fact]
+    public async Task A_game_already_Final_when_first_seen_is_estimated_to_have_ended_at_its_planned_end()
+    {
+        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4);
+        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal(start + TimeSpan.FromMinutes(150), game.EndTime);
+    }
+
+    [Fact]
+    public async Task A_game_already_Final_when_first_seen_before_its_planned_end_is_taken_to_have_just_ended()
+    {
+        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(2);
+        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal(server.Clock.GetUtcNow(), game.EndTime);
+    }
+
+    [Fact]
+    public async Task A_game_already_Final_when_first_seen_has_no_pin_2_hours_after_its_planned_end()
+    {
+        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5);
+        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Empty(await client.NextSnapshotAsync());
+    }
+
+    [Fact]
+    public async Task A_game_already_suspended_when_first_seen_has_no_pin_2_hours_after_its_planned_end()
+    {
+        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5);
+        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Suspended));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Empty(await client.NextSnapshotAsync());
+    }
+
     // ESPN reports no suspension time, so a game is suspended when the server first sees it Suspended.
     // The game is seen in progress, then seen suspended `suspendedAfter` into play, which is the test's "now".
     private static async Task SeeGameSuspendAsync(ScoreMapServer server, TimeSpan suspendedAfter)

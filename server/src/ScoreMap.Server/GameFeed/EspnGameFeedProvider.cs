@@ -21,12 +21,14 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             [var path, var query] => (path, query + "&"),
             _ => (leagueKey, ""),
         };
+        // ESPN only answers single days (a date range is refused), so each day is its own request.
         // Without a limit ESPN can leave games off busy days such as a college football Saturday.
-        var scoreboard = await http.GetFromJsonAsync<Scoreboard>(
-            $"{league}/scoreboard?{options}dates={EspnDay(clock.GetUtcNow()):yyyyMMdd}&limit=500", cancellationToken);
+        var scoreboards = await Task.WhenAll(EspnDays(clock.GetUtcNow()).Select(day =>
+            http.GetFromJsonAsync<Scoreboard>($"{league}/scoreboard?{options}dates={day:yyyyMMdd}&limit=500", cancellationToken)));
 
         var games = new List<ProviderGame>();
-        foreach (var e in scoreboard?.Events ?? [])
+        // Today's scoreboard comes first, so a game listed on more than one day is reported as today has it.
+        foreach (var e in scoreboards.SelectMany(s => s?.Events ?? []).DistinctBy(e => e.Id))
         {
             if (ToGame(e, leagueKey) is not { } game)
                 continue;
@@ -68,9 +70,24 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private static string? HomeTeamId(Event e) =>
         e.Competitions?.FirstOrDefault()?.Competitors?.FirstOrDefault(c => c.HomeAway == "home")?.Team?.Id;
 
-    /// <summary>ESPN's scoreboard days are US Eastern calendar days.</summary>
-    private static DateTime EspnDay(DateTimeOffset now) =>
-        TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById("America/New_York")).Date;
+    /// <summary>
+    /// The scoreboard days worth asking for, today's first. ESPN's scoreboard days are US Eastern calendar
+    /// days, so a game that started yesterday evening (still Live, recently Final, or Disrupted) is only on
+    /// yesterday's. Tomorrow's is only asked for within <see cref="TomorrowLookahead"/> of midnight, when
+    /// its first games are near enough to be Upcoming.
+    /// </summary>
+    private static IEnumerable<DateTime> EspnDays(DateTimeOffset now)
+    {
+        var eastern = TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById("America/New_York")).DateTime;
+        var today = eastern.Date;
+        yield return today;
+        yield return today.AddDays(-1);
+        if (today.AddDays(1) - eastern <= TomorrowLookahead)
+            yield return today.AddDays(1);
+    }
+
+    /// <summary>Matches the board's Upcoming window: a game gets its pin this long before its start.</summary>
+    private static readonly TimeSpan TomorrowLookahead = TimeSpan.FromHours(3);
 
     private static ProviderGame? ToGame(Event e, string leagueKey)
     {

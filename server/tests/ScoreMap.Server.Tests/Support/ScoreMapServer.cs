@@ -70,10 +70,11 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
 
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
-    private readonly List<(string Key, string Name, string Sport)> _extraLeagues = [];
+    private readonly List<(string Key, string Name, string Sport, TimeSpan? PlannedLength)> _extraLeagues = [];
 
     /// <summary>Configures one more league alongside those in appsettings.json. Call before connecting.</summary>
-    public void AddLeague(string key, string name, string sport) => _extraLeagues.Add((key, name, sport));
+    public void AddLeague(string key, string name, string sport, TimeSpan? plannedLength = null) =>
+        _extraLeagues.Add((key, name, sport, plannedLength));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -83,6 +84,8 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             builder.UseSetting($"Leagues:{100 + i}:Key", _extraLeagues[i].Key);
             builder.UseSetting($"Leagues:{100 + i}:Name", _extraLeagues[i].Name);
             builder.UseSetting($"Leagues:{100 + i}:Sport", _extraLeagues[i].Sport);
+            if (_extraLeagues[i].PlannedLength is { } plannedLength)
+                builder.UseSetting($"Leagues:{100 + i}:PlannedLength", plannedLength.ToString("c"));
         }
         builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);

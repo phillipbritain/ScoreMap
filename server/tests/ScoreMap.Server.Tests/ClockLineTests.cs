@@ -89,7 +89,7 @@ public class ClockLineTests
             Status: status,
             DisplayClock: clock,
             Period: period,
-            Venue: new ProviderVenue("Stadium", "City", null, "Country", new Coordinates(10, 20)),
+            Venue: new ProviderVenue("Stadium", "City", null, "Country"),
             Broadcasters: [],
             Phase: phase));
 

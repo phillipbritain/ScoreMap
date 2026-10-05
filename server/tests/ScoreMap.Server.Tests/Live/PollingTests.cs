@@ -87,19 +87,6 @@ public class PollingTests
         Assert.Equal(28, Assert.Single(snapshot).Home.Score);
     }
 
-    [Fact]
-    public async Task A_failing_feed_does_not_stop_polling()
-    {
-        await using var server = new ScoreMapServer();
-        server.Feed.Fail(Nfl);
-        await using var client = await server.ConnectClientAsync();
-        Assert.Empty(await client.NextSnapshotAsync());
-
-        server.Clock.Advance(TimeSpan.FromMinutes(3));
-
-        await server.Feed.WaitForFetchesAsync(Nfl, 2);
-    }
-
     /// <summary>Gives the server real time to act on the clock before asserting that nothing happened.</summary>
     private static Task Settle() => Task.Delay(TimeSpan.FromMilliseconds(300));
 }

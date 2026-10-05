@@ -3,7 +3,7 @@ import type { Game, GameStatus, GameTeam } from '../games/game'
 
 export interface PinProperties {
   gameId: string
-  /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading. */
+  /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading, Disrupted greyed out. */
   status: GameStatus
   label: string
 }
@@ -35,11 +35,15 @@ function label(game: Game): string {
   return clock ? `${teams}\n${clock}` : teams
 }
 
-/** The short clock line under a game's score: the clock while Live, "Delayed" in its place, or the final line. */
-export function clockLine({ status, delayed, clock }: Game): string | null {
+/**
+ * The short clock line under a game's score: the clock while Live, "Delayed" in its place, the final
+ * line, or the kind of disruption ("Postponed").
+ */
+export function clockLine({ status, delayed, disruption, clock }: Game): string | null {
   // The server writes the final line in the sport's style ("Final/OT", "FT", "AET").
   if (status === 'Final') return clock ?? 'Final'
   if (status === 'Live') return delayed ? 'Delayed' : clock
+  if (status === 'Disrupted') return disruption
   return null
 }
 

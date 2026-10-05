@@ -12,13 +12,13 @@ function memoryStorage(): SettingsStorage {
 }
 
 describe('settingsStore', () => {
-  it('gives a first-time visitor every league on and "Live only" off', () => {
+  it('gives a first-time visitor every league on, "Live only" off and Disrupted games shown', () => {
     expect(settingsStore(() => memoryStorage()).load()).toEqual(firstVisitSettings)
   })
 
   it('remembers saved settings after a page reload', () => {
     const storage = memoryStorage()
-    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true }
+    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, showDisrupted: false }
 
     settingsStore(() => storage).save(chosen)
     const afterReload = settingsStore(() => storage)
@@ -31,7 +31,7 @@ describe('settingsStore', () => {
       throw new DOMException('The operation is insecure.', 'SecurityError')
     })
 
-    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: false })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -46,7 +46,7 @@ describe('settingsStore', () => {
     }
     const store = settingsStore(() => broken)
 
-    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: false })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -57,10 +57,17 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual(firstVisitSettings)
   })
 
+  it('shows Disrupted games to a viewer whose settings were saved before that setting existed', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+
+    expect(settingsStore(() => storage).load()).toEqual({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: true })
+  })
+
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes' }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes', showDisrupted: 0 }))
 
-    expect(settingsStore(() => storage).load()).toEqual({ hiddenLeagues: ['NBA'], liveOnly: false })
+    expect(settingsStore(() => storage).load()).toEqual({ hiddenLeagues: ['NBA'], liveOnly: false, showDisrupted: true })
   })
 })

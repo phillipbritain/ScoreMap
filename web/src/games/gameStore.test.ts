@@ -10,6 +10,7 @@ function game(id: string, homeScore: number | null = null): Game {
     startTime: '2026-10-04T17:00:00+00:00',
     status: 'Live',
     delayed: false,
+    disruption: null,
     endTime: null,
     home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: homeScore },
     away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: homeScore },

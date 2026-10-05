@@ -48,6 +48,19 @@ builder.Services.AddSingleton<VenueLocator>();
 builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
 builder.Services.AddSingleton<OfficialWatchLinks>();
 
+// Unofficial stream finder (ADR-0002: hobby v1 only, remove before any public launch).
+// Off while the owner's site list in "StreamFinder:Sites" is empty, as it ships.
+builder.Services.Configure<StreamFinderOptions>(builder.Configuration.GetSection("StreamFinder"));
+builder.Services.AddHttpClient(StreamFinder.HttpClientName, client =>
+{
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; ScoreMap hobby app)");
+}).ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+{
+    AutomaticDecompression = DecompressionMethods.All,
+    PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+});
+builder.Services.AddSingleton<StreamFinder>();
+
 builder.Services.AddSingleton<GameBoard>();
 
 // Live updates: the poller fetches while browsers are connected and pushes change events.

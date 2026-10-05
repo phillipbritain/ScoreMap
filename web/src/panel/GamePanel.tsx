@@ -1,6 +1,6 @@
 import type { Game, GameTeam } from '../games/game'
 import { dualTime } from './dualTime'
-import { gameProgress } from './gameProgress'
+import { progressLine } from '../games/progressLine'
 import { UnofficialStreams } from './UnofficialStreams'
 import { viewerCountry, watchLinks, type WatchLink } from './watchLinks'
 
@@ -32,7 +32,7 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
         <TeamRow team={game.away} />
         <TeamRow team={game.home} />
       </div>
-      <p className="game-panel__progress">{gameProgress(game)}</p>
+      <p className="game-panel__progress">{progressLine(game, 'full')}</p>
 
       <dl className="game-panel__details">
         <dt>Venue</dt>

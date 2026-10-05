@@ -17,6 +17,7 @@ const arrowhead: Game = {
   period: 3,
   venue: { name: 'Arrowhead', city: 'Kansas City', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago' },
   broadcasters: [],
+  streamLinks: [],
 }
 
 describe('scoreCard', () => {

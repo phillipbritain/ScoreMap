@@ -24,6 +24,7 @@ const arrowhead: Game = {
     timeZone: 'America/Chicago',
   },
   broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
+  streamLinks: [],
 }
 
 describe('pinFeatures', () => {

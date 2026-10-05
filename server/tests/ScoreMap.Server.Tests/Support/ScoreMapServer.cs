@@ -13,6 +13,7 @@ using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
 using ScoreMap.Server.Venues;
+using ScoreMap.Server.WatchLinks;
 
 namespace ScoreMap.Server.Tests.Support;
 
@@ -80,6 +81,25 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
     }
 
+    /// <summary>Made-up sites the unofficial stream finder reads; see <see cref="AddStreamSite"/>.</summary>
+    public FakeStreamSites StreamSites { get; } = new();
+
+    private readonly List<(string Name, string SearchUrl, string LinkPattern)> _streamSites = [];
+
+    /// <summary>
+    /// Adds a site to the stream finder's site list, as the owner would in configuration.
+    /// Call before connecting.
+    /// </summary>
+    public void AddStreamSite(string name, string searchUrl, string linkPattern) =>
+        _streamSites.Add((name, searchUrl, linkPattern));
+
+    /// <summary>How long a stream site gets to answer, when a test sets it. Set before connecting.</summary>
+    public TimeSpan? StreamSiteTimeout { get; set; }
+
+    /// <summary>Waits until every stream search the server has started has finished.</summary>
+    public Task StreamSearchesFinishedAsync() =>
+        Services.GetRequiredService<StreamFinder>().SearchesFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     private readonly List<(string Key, string Name, string Sport, TimeSpan? PlannedLength)> _extraLeagues = [];
@@ -110,6 +130,14 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
         {
             builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
         }
+        for (var i = 0; i < _streamSites.Count; i++)
+        {
+            builder.UseSetting($"StreamFinder:Sites:{i}:Name", _streamSites[i].Name);
+            builder.UseSetting($"StreamFinder:Sites:{i}:SearchUrl", _streamSites[i].SearchUrl);
+            builder.UseSetting($"StreamFinder:Sites:{i}:LinkPattern", _streamSites[i].LinkPattern);
+        }
+        if (StreamSiteTimeout is { } timeout)
+            builder.UseSetting("StreamFinder:TimeoutSeconds", timeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
@@ -119,6 +147,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             services.AddSingleton<IGameFeedProvider>(Feed);
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);
+            services.AddHttpClient(StreamFinder.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => StreamSites);
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });

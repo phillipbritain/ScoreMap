@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Venues;
 
 namespace ScoreMap.Server.Games;
 
@@ -8,7 +9,7 @@ namespace ScoreMap.Server.Games;
 /// fetches every configured league on demand; statuses, pin windows and change
 /// detection arrive in later tickets.
 /// </summary>
-public sealed class GameBoard(IGameFeedProvider feed, IOptions<List<League>> leagues)
+public sealed class GameBoard(IGameFeedProvider feed, VenueLocator venues, IOptions<List<League>> leagues)
 {
     public async Task<IReadOnlyList<Game>> GetSnapshotAsync(CancellationToken cancellationToken)
     {
@@ -16,14 +17,19 @@ public sealed class GameBoard(IGameFeedProvider feed, IOptions<List<League>> lea
         foreach (var league in leagues.Value)
         {
             var scoreboard = await feed.FetchScoreboardAsync(league.Key, cancellationToken);
-            games.AddRange(scoreboard.Select(game => ToGame(game, league)));
+            foreach (var game in scoreboard)
+            {
+                var location = game.Venue is null ? null : await venues.LocateAsync(game.Venue, cancellationToken);
+                games.Add(ToGame(game, league, location));
+            }
         }
         return games;
     }
 
-    private static Game ToGame(ProviderGame game, League league)
+    private static Game ToGame(ProviderGame game, League league, Coordinates? location)
     {
-        var location = game.Venue?.Location ?? new Coordinates(0, 0);
+        // Until the venue fallbacks arrive, a venue that can't be found sits at 0,0.
+        location ??= new Coordinates(0, 0);
         return new Game(
             game.Id,
             league.Name,

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import type { Game } from './game'
 import { applyChange } from './gameStore'
 
@@ -8,6 +8,9 @@ function game(id: string, homeScore: number | null = null): Game {
     league: 'NFL',
     sport: 'American football',
     startTime: '2026-10-04T17:00:00+00:00',
+    status: 'Live',
+    delayed: false,
+    endTime: null,
     home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: homeScore },
     away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: homeScore },
     clock: null,
@@ -18,18 +21,18 @@ function game(id: string, homeScore: number | null = null): Game {
 
 describe('applyChange', () => {
   it('adds a game that was added', () => {
-    const games = applyChange([game('1')], { kind: 'added', game: game('2') })
+    const games = applyChange([game('1')], { kind: 'Added', game: game('2') })
 
     expect(games.map((g) => g.id)).toEqual(['1', '2'])
   })
 
   it('removes a game that was removed', () => {
-    const games = applyChange([game('1'), game('2')], { kind: 'removed', game: game('1') })
+    const games = applyChange([game('1'), game('2')], { kind: 'Removed', game: game('1') })
 
     expect(games.map((g) => g.id)).toEqual(['2'])
   })
 
-  it.each(['scoreChanged', 'started', 'finished', 'updated'] as const)(
+  it.each(['ScoreChanged', 'Started', 'Finished', 'Updated'] as const)(
     'replaces the game in place when it is %s',
     (kind) => {
       const games = applyChange([game('1', 0), game('2', 0)], { kind, game: game('1', 7) })
@@ -39,13 +42,13 @@ describe('applyChange', () => {
   )
 
   it('adds a changed game it did not have, so a missed event cannot lose a pin', () => {
-    const games = applyChange([], { kind: 'scoreChanged', game: game('1', 7) })
+    const games = applyChange([], { kind: 'ScoreChanged', game: game('1', 7) })
 
     expect(games).toEqual([game('1', 7)])
   })
 
   it('does not duplicate a game added twice', () => {
-    const games = applyChange([game('1', 0)], { kind: 'added', game: game('1', 3) })
+    const games = applyChange([game('1', 0)], { kind: 'Added', game: game('1', 3) })
 
     expect(games).toEqual([game('1', 3)])
   })

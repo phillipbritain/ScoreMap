@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace ScoreMap.Server.Games;
@@ -14,7 +13,7 @@ public sealed record GameChange(GameChangeKind Kind, Game Game);
 /// What happened to a game. Each game gets at most one change per fetch: the first
 /// that applies of Started, Finished, ScoreChanged, then Updated.
 /// </summary>
-[JsonConverter(typeof(CamelCaseEnumConverter<GameChangeKind>))]
+[JsonConverter(typeof(JsonStringEnumConverter<GameChangeKind>))]
 public enum GameChangeKind
 {
     /// <summary>The game is new on the board (or has entered its pin window).</summary>
@@ -35,7 +34,3 @@ public enum GameChangeKind
     /// <summary>Anything else changed, such as the clock or period. Not animated.</summary>
     Updated,
 }
-
-/// <summary>Serializes an enum as its camelCase name, e.g. <c>"scoreChanged"</c>.</summary>
-public sealed class CamelCaseEnumConverter<TEnum>() : JsonStringEnumConverter<TEnum>(JsonNamingPolicy.CamelCase)
-    where TEnum : struct, Enum;

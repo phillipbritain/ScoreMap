@@ -1,4 +1,4 @@
-import type { Game } from './game'
+﻿import type { Game } from './game'
 import type { GameChange } from './gameChange'
 
 /**
@@ -7,7 +7,7 @@ import type { GameChange } from './gameChange'
  * game in place, or adds it if the browser didn't have it.
  */
 export function applyChange(games: readonly Game[], { kind, game }: GameChange): Game[] {
-  if (kind === 'removed') return games.filter((g) => g.id !== game.id)
+  if (kind === 'Removed') return games.filter((g) => g.id !== game.id)
 
   const index = games.findIndex((g) => g.id === game.id)
   if (index === -1) return [...games, game]

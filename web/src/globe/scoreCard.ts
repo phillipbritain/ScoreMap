@@ -1,5 +1,5 @@
 import type { Game, GameStatus, GameTeam } from '../games/game'
-import { clockLine } from './pinFeatures'
+import { progressLine } from '../games/progressLine'
 
 export interface ScoreCardTeam {
   abbreviation: string
@@ -25,7 +25,7 @@ export function scoreCard(game: Game): ScoreCard {
     status: game.status,
     away: cardTeam(game.away),
     home: cardTeam(game.home),
-    clockLine: clockLine(game) ?? '',
+    clockLine: progressLine(game, 'short') ?? '',
   }
 }
 

@@ -21,6 +21,36 @@ public class StreamFinderTests
         </body></html>
         """;
 
+    private sealed class FixedStreamLinks(params StreamLink[] links) : IStreamLinkSource
+    {
+        public IReadOnlyList<StreamLink> LinksFor(Game game) => links;
+    }
+
+    [Fact]
+    public async Task Games_carry_the_links_of_whichever_stream_link_source_the_server_has()
+    {
+        await using var server = new ScoreMapServer { StreamLinkSource = new FixedStreamLinks(new StreamLink("Fixed", "https://fixed.test/401")) };
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Equal([new StreamLink("Fixed", "https://fixed.test/401")], Assert.Single(await client.NextSnapshotAsync()).StreamLinks);
+    }
+
+    [Fact]
+    public async Task With_the_stream_finder_removed_games_have_no_stream_links()
+    {
+        await using var server = new ScoreMapServer { StreamLinkSource = new NoStreamLinks() };
+        server.AddStreamSite("Streams One", "https://streams-one.test/search?q={query}", Anchor);
+        server.StreamSites.Serve("streams-one.test", SearchPage);
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Empty(Assert.Single(await client.NextSnapshotAsync()).StreamLinks);
+        Assert.Empty(server.StreamSites.Requests);
+    }
+
     [Fact]
     public async Task A_link_a_site_has_for_the_game_reaches_the_game_panel_on_the_next_poll()
     {

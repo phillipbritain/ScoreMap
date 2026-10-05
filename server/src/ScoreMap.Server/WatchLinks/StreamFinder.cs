@@ -15,9 +15,11 @@ namespace ScoreMap.Server.WatchLinks;
 /// (including none) are cached per game, and any failure just means no links from that site.
 /// <para>
 /// Hobby v1 only. To switch it off, leave <c>StreamFinder:Sites</c> empty (the default).
-/// To remove it before a public launch, delete this file and <see cref="StreamFinderOptions"/>,
-/// their registration in Program.cs, <see cref="Game.StreamLinks"/> (with its use in
-/// <c>GameBoard</c> and <c>GameChanges</c>) and the browser's unofficial links section.
+/// It sits behind <see cref="IStreamLinkSource"/>, so to remove it before a public launch delete
+/// the <c>StreamFinder*.cs</c> files (this one, its options and its registration) and the
+/// <c>AddStreamFinder</c> line in Program.cs; <see cref="NoStreamLinks"/> then takes over and
+/// every game has no stream links. Optionally also drop <see cref="Game.StreamLinks"/> and the
+/// browser's unofficial links section (<c>streamLinks.ts</c>, <c>UnofficialStreams.tsx</c>).
 /// </para>
 /// </summary>
 public sealed class StreamFinder(
@@ -25,7 +27,7 @@ public sealed class StreamFinder(
     IOptions<StreamFinderOptions> options,
     TimeProvider clock,
     IHostApplicationLifetime lifetime,
-    ILogger<StreamFinder> logger)
+    ILogger<StreamFinder> logger) : IStreamLinkSource
 {
     public const string HttpClientName = nameof(StreamFinder);
 

@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
@@ -9,7 +10,12 @@ using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<List<League>>(builder.Configuration.GetSection("Leagues"));
+// Bound league by league at startup, so a misconfigured league (e.g. an unknown sport) stops the
+// server straight away; binding the whole list at once would quietly skip it.
+builder.Services.AddOptions<List<League>>()
+    .Configure(leagues => leagues.AddRange(builder.Configuration.GetSection("Leagues").GetChildren()
+        .Select(section => section.Get<League>() ?? throw new InvalidOperationException($"League {section.Path} is empty"))))
+    .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
 
 // Game feed provider: ESPN's unofficial scoreboard (ADR-0001).
@@ -56,18 +62,10 @@ builder.Services.AddSingleton<VenueLocator>();
 builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
 builder.Services.AddSingleton<OfficialWatchLinks>();
 
-// Unofficial stream finder (ADR-0002: hobby v1 only, remove before any public launch).
-// Off while the owner's site list in "StreamFinder:Sites" is empty, as it ships.
-builder.Services.Configure<StreamFinderOptions>(builder.Configuration.GetSection("StreamFinder"));
-builder.Services.AddHttpClient(StreamFinder.HttpClientName, client =>
-{
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (compatible; ScoreMap hobby app)");
-}).ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-{
-    AutomaticDecompression = DecompressionMethods.All,
-    PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-});
-builder.Services.AddSingleton<StreamFinder>();
+// Unofficial stream links: no game has any unless the stream finder is added (ADR-0002: hobby v1
+// only; delete this AddStreamFinder line and the StreamFinder*.cs files before any public launch).
+builder.Services.AddStreamFinder(builder.Configuration);
+builder.Services.TryAddSingleton<IStreamLinkSource, NoStreamLinks>();
 
 builder.Services.AddSingleton<GameBoard>();
 
@@ -88,7 +86,7 @@ app.MapFallbackToFile("index.html");
 
 // The configured leagues in order, so the browser's filter can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
-    leagues.Value.Select(league => new { league.Name, league.Sport }));
+    leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
 
 app.Run();
 

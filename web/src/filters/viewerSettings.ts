@@ -7,10 +7,12 @@ export interface ViewerSettings {
   hiddenLeagues: readonly string[]
   /** Hides Upcoming and Final pins. */
   liveOnly: boolean
+  /** Slowly turns the globe while no game is selected and the viewer isn't dragging or zooming. */
+  slowSpin: boolean
 }
 
-/** Every league on and "Live only" off. */
-export const firstVisitSettings: ViewerSettings = { hiddenLeagues: [], liveOnly: false }
+/** Every league on, "Live only" off and slow spin off. */
+export const firstVisitSettings: ViewerSettings = { hiddenLeagues: [], liveOnly: false, slowSpin: false }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {
   return !settings.hiddenLeagues.includes(league)

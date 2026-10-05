@@ -6,11 +6,13 @@ import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
 import type { Game } from '../games/game'
 import type { GameChange } from '../games/gameChange'
 import { animationTarget } from './animationTarget'
+import type { Camera } from './camera'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import { pulse } from './pinPulse'
 import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
 import { ScoreCardMarkers } from './scoreCardMarkers'
+import { shouldSpin, spunLongitude } from './slowSpin'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
@@ -19,6 +21,10 @@ setWorkerUrl(workerUrl)
 // Free vector tiles with borders and place labels (ADR-0004).
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
 const selectedPinLayer = 'pin-selected'
+// Marks the camera moves slow spin makes, to tell them apart from the viewer's own.
+const spinMove = { slowSpin: true }
+// After a long gap between frames (a hidden tab), spin on from where it was rather than jump.
+const maxSpinFrameMs = 100
 
 /** What the app can ask of the globe beyond drawing its games. */
 export interface GlobeHandle {
@@ -32,6 +38,12 @@ interface GlobeProps {
   /** The game whose panel is open: its pin is highlighted and the globe turns to centre it. */
   selectedGameId: string | null
   onSelectGame: (gameId: string) => void
+  /** Where the globe opens. Only read when the globe is created. */
+  startCamera: Camera
+  /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
+  onCameraMove: (camera: Camera) => void
+  /** The "Slow spin" setting. */
+  slowSpin: boolean
 }
 
 /** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a cluster). */
@@ -43,13 +55,16 @@ function selectedPin(gameId: string | null): ExpressionSpecification {
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
  * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster zooms in until it splits.
  */
-export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) {
+export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, onCameraMove, slowSpin }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const cards = useRef<ScoreCardMarkers | null>(null)
   const latestGames = useRef(games)
   const latestSelected = useRef(selectedGameId)
   const latestOnSelect = useRef(onSelectGame)
+  const latestStartCamera = useRef(startCamera)
+  const latestOnCameraMove = useRef(onCameraMove)
+  const latestSlowSpin = useRef(slowSpin)
   const pendingAnimations = useRef<{ game: Game; animation: PinAnimation }[]>([])
 
   useImperativeHandle(
@@ -66,15 +81,17 @@ export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) 
 
   useEffect(() => {
     latestOnSelect.current = onSelectGame
-  }, [onSelectGame])
+    latestOnCameraMove.current = onCameraMove
+    latestSlowSpin.current = slowSpin
+  }, [onSelectGame, onCameraMove, slowSpin])
 
   useEffect(() => {
     if (!container.current) return
     const instance = new MapLibreMap({
       container: container.current,
       style: mapStyle,
-      center: [-40, 30],
-      zoom: 1.5,
+      center: [latestStartCamera.current.longitude, latestStartCamera.current.latitude],
+      zoom: latestStartCamera.current.zoom,
     })
     const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
     scoreCards.setGames(latestGames.current)
@@ -132,9 +149,62 @@ export function Globe({ ref, games, selectedGameId, onSelectGame }: GlobeProps) 
       instance.on('mouseleave', layer, () => (instance.getCanvas().style.cursor = ''))
     }
 
+    // Remember where the viewer leaves the globe. Spin moves aren't saved one by one (that would
+    // write to storage every frame); the camera is saved when spin stops and when the page closes.
+    const saveCamera = () => {
+      const { lng, lat } = instance.getCenter().wrap()
+      latestOnCameraMove.current({ longitude: lng, latitude: lat, zoom: instance.getZoom() })
+    }
+    window.addEventListener('pagehide', saveCamera)
+
+    // The viewer is interacting while holding the globe, and while any move that isn't slow spin
+    // runs: their drag, zoom or its glide afterwards, or a turn to a cluster they selected.
+    let holding = false
+    let moving = false
+    instance.on('movestart', (event) => {
+      if (!('slowSpin' in event)) moving = true
+    })
+    instance.on('moveend', (event) => {
+      if ('slowSpin' in event) return
+      moving = false
+      saveCamera()
+    })
+    const hold = () => (holding = true)
+    const release = () => (holding = false)
+    instance.on('mousedown', hold)
+    instance.on('touchstart', hold)
+    window.addEventListener('mouseup', release)
+    window.addEventListener('touchend', release)
+    window.addEventListener('touchcancel', release)
+
+    let spinning = false
+    let lastFrame: number | null = null
+    let frame = requestAnimationFrame(function spin(now) {
+      const elapsed = Math.min(now - (lastFrame ?? now), maxSpinFrameMs)
+      lastFrame = now
+      const spinNow = shouldSpin({
+        slowSpin: latestSlowSpin.current,
+        gameSelected: latestSelected.current !== null,
+        interacting: holding || moving,
+      })
+      if (spinNow) {
+        const { lng, lat } = instance.getCenter()
+        instance.jumpTo({ center: [spunLongitude(lng, elapsed), lat] }, spinMove)
+      } else if (spinning) {
+        saveCamera()
+      }
+      spinning = spinNow
+      frame = requestAnimationFrame(spin)
+    })
+
     map.current = instance
     cards.current = scoreCards
     return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('pagehide', saveCamera)
+      window.removeEventListener('mouseup', release)
+      window.removeEventListener('touchend', release)
+      window.removeEventListener('touchcancel', release)
       scoreCards.clear()
       instance.remove()
       map.current = null

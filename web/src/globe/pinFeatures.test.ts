@@ -1,0 +1,49 @@
+import { describe, expect, it } from 'vitest'
+import type { Game } from '../games/game'
+import { pinFeatures } from './pinFeatures'
+
+const arrowhead: Game = {
+  id: '401',
+  league: 'NFL',
+  sport: 'American football',
+  startTime: '2026-10-04T17:00:00+00:00',
+  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: 21 },
+  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: 17 },
+  clock: '4:12',
+  period: 3,
+  venue: {
+    name: 'GEHA Field at Arrowhead Stadium',
+    city: 'Kansas City',
+    country: 'USA',
+    latitude: 39.0489,
+    longitude: -94.4839,
+  },
+}
+
+describe('pinFeatures', () => {
+  it('places one pin per game at its venue, longitude first', () => {
+    const collection = pinFeatures([arrowhead])
+
+    expect(collection).toEqual({
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          id: '401',
+          geometry: { type: 'Point', coordinates: [-94.4839, 39.0489] },
+          properties: { gameId: '401', label: 'BUF 17 – 21 KC' },
+        },
+      ],
+    })
+  })
+
+  it('labels a game without scores by its teams', () => {
+    const upcoming: Game = {
+      ...arrowhead,
+      home: { ...arrowhead.home, score: null },
+      away: { ...arrowhead.away, score: null },
+    }
+
+    expect(pinFeatures([upcoming]).features[0].properties.label).toBe('BUF @ KC')
+  })
+})

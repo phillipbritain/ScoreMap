@@ -14,7 +14,8 @@ const arrowhead: Game = {
   away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: 17 },
   clock: '4:12',
   period: 3,
-  venue: { name: 'Arrowhead', city: 'Kansas City', country: 'USA', latitude: 39.0489, longitude: -94.4839 },
+  venue: { name: 'Arrowhead', city: 'Kansas City', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago' },
+  broadcasters: [],
 }
 
 describe('scoreCard', () => {

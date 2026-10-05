@@ -1,0 +1,192 @@
+{
+ "leagues": [
+  {
+   "id": "770",
+   "uid": "s:600~l:770",
+   "name": "MLS",
+   "abbreviation": "MLS",
+   "midsizeName": "USA.1",
+   "slug": "usa.1",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-01-01T10:00Z",
+    "endDate": "2026-12-31T04:59Z",
+    "displayName": "2026 MLS",
+    "type": {
+     "id": "1",
+     "type": 13846,
+     "name": "Regular Season",
+     "abbreviation": "2026 MLS"
+    }
+   },
+   "calendarType": "day",
+   "calendarIsWhitelist": true,
+   "calendarStartDate": "2026-01-01T10:00Z",
+   "calendarEndDate": "2026-12-31T04:59Z"
+  }
+ ],
+ "season": {
+  "type": 13846,
+  "year": 2026
+ },
+ "day": {
+  "date": "2026-10-06"
+ },
+ "events": [
+  {
+   "id": "761660",
+   "uid": "s:600~l:770~e:761660",
+   "date": "2026-10-07T00:30Z",
+   "name": "Vancouver Whitecaps at Chicago Fire FC",
+   "shortName": "VAN @ CHI",
+   "season": {
+    "year": 2026,
+    "type": 13846,
+    "slug": "regular-season"
+   },
+   "competitions": [
+    {
+     "id": "761660",
+     "uid": "s:600~l:770~e:761660~c:761660",
+     "date": "2026-10-07T00:30Z",
+     "startDate": "2026-10-07T00:30Z",
+     "attendance": 0,
+     "timeValid": true,
+     "recent": false,
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0'",
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Tue, October 6th at 8:30 PM EDT",
+       "shortDetail": "Scheduled"
+      }
+     },
+     "venue": {
+      "id": "1452",
+      "fullName": "Soldier Field",
+      "address": {
+       "city": "Chicago, Illinois",
+       "country": "USA"
+      }
+     },
+     "format": {
+      "regulation": {
+       "periods": 2
+      }
+     },
+     "altGameNote": "MLS",
+     "group": {
+      "groupId": "1",
+      "name": "Eastern Conference",
+      "abbreviation": "East"
+     },
+     "notes": [],
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "4",
+        "shortName": "STREAMING"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "Apple TV"
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ],
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "Apple TV"
+       ]
+      }
+     ],
+     "broadcast": "",
+     "competitors": [
+      {
+       "id": "182",
+       "uid": "s:600~t:182",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": false,
+       "form": "WLLDD",
+       "score": "0",
+       "team": {
+        "id": "182",
+        "uid": "s:600~t:182",
+        "abbreviation": "CHI",
+        "displayName": "Chicago Fire FC",
+        "shortDisplayName": "Chicago",
+        "name": "Chicago Fire FC",
+        "location": "Chicago Fire FC",
+        "color": "7ccdef",
+        "alternateColor": "ff0000",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/182.png",
+        "venue": {
+         "id": "1452"
+        }
+       }
+      },
+      {
+       "id": "9727",
+       "uid": "s:600~t:9727",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "form": "DWLWL",
+       "score": "0",
+       "team": {
+        "id": "9727",
+        "uid": "s:600~t:9727",
+        "abbreviation": "VAN",
+        "displayName": "Vancouver Whitecaps",
+        "shortDisplayName": "Vancouver",
+        "name": "Vancouver Whitecaps",
+        "location": "Vancouver Whitecaps",
+        "color": "ffffff",
+        "alternateColor": "12284c",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/9727.png",
+        "venue": {
+         "id": "4370"
+        }
+       }
+      }
+     ],
+     "wasSuspended": false,
+     "playByPlayAvailable": true,
+     "playByPlayAthletes": true
+    }
+   ],
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0'",
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Tue, October 6th at 8:30 PM EDT",
+     "shortDetail": "Scheduled"
+    }
+   },
+   "venue": {
+    "displayName": "Soldier Field"
+   }
+  }
+ ]
+}

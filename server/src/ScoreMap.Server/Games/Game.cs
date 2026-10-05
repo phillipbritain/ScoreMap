@@ -18,7 +18,8 @@ public sealed record Game(
     string? Clock,
     int? Period,
     GameVenue Venue,
-    IReadOnlyList<GameBroadcaster> Broadcasters);
+    IReadOnlyList<GameBroadcaster> Broadcasters,
+    IReadOnlyList<StreamLink> StreamLinks);
 
 public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
 
@@ -33,3 +34,9 @@ public sealed record GameVenue(string? Name, string? City, string? Country, doub
 /// and its official watch link when the owner has listed one.
 /// </summary>
 public sealed record GameBroadcaster(string Name, string? Country, string? WatchUrl);
+
+/// <summary>
+/// An unofficial stream for a game, found by the stream finder on one of the owner's
+/// configured sites (ADR-0002: hobby v1 only).
+/// </summary>
+public sealed record StreamLink(string Site, string Url);

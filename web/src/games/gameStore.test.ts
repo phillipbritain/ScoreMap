@@ -25,6 +25,7 @@ function game(id: string, homeScore: number | null = null): Game {
       timeZone: 'America/Chicago',
     },
     broadcasters: [],
+    streamLinks: [],
   }
 }
 

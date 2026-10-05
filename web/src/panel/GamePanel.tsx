@@ -1,6 +1,7 @@
 import type { Game, GameTeam } from '../games/game'
 import { dualTime } from './dualTime'
 import { gameProgress } from './gameProgress'
+import { UnofficialStreams } from './UnofficialStreams'
 import { viewerCountry, watchLinks, type WatchLink } from './watchLinks'
 
 interface GamePanelProps {
@@ -55,6 +56,7 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
         <dd>
           <WatchLinks links={links} />
         </dd>
+        <UnofficialStreams links={game.streamLinks} />
       </dl>
     </aside>
   )
@@ -62,7 +64,7 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
 
 /**
  * Official watch links, as links where the server's watch links file lists the service and
- * plain names otherwise. Unofficial links (a separate, removable module) belong after these.
+ * plain names otherwise. Unofficial streams (a separate, removable module) follow in their own row.
  */
 function WatchLinks({ links }: { links: WatchLink[] }) {
   if (links.length === 0) return <span className="game-panel__muted">No channels listed</span>

@@ -18,7 +18,7 @@ describe('settingsStore', () => {
 
   it('remembers saved settings after a page reload', () => {
     const storage = memoryStorage()
-    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true }
+    const chosen = { hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, slowSpin: false }
 
     settingsStore(() => storage).save(chosen)
     const afterReload = settingsStore(() => storage)
@@ -31,7 +31,7 @@ describe('settingsStore', () => {
       throw new DOMException('The operation is insecure.', 'SecurityError')
     })
 
-    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -46,7 +46,7 @@ describe('settingsStore', () => {
     }
     const store = settingsStore(() => broken)
 
-    expect(() => store.save({ hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -61,6 +61,67 @@ describe('settingsStore', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes' }))
 
-    expect(settingsStore(() => storage).load()).toEqual({ hiddenLeagues: ['NBA'], liveOnly: false })
+    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+  })
+
+  it('gives slow spin its first-visit default (off) to settings saved before it existed', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+
+    expect(settingsStore(() => storage).load().slowSpin).toBe(false)
+  })
+
+  it('remembers slow spin switched on', () => {
+    const storage = memoryStorage()
+    settingsStore(() => storage).save({ ...firstVisitSettings, slowSpin: true })
+
+    expect(settingsStore(() => storage).load().slowSpin).toBe(true)
+  })
+})
+
+describe('settingsStore camera', () => {
+  it('has no camera for a first-time visitor', () => {
+    expect(settingsStore(() => memoryStorage()).loadCamera()).toBeNull()
+  })
+
+  it('remembers where the viewer left the globe after a page reload', () => {
+    const storage = memoryStorage()
+    const camera = { longitude: 139.7, latitude: 35.7, zoom: 4.2 }
+
+    settingsStore(() => storage).saveCamera(camera)
+
+    expect(settingsStore(() => storage).loadCamera()).toEqual(camera)
+  })
+
+  it('keeps the camera apart from the other settings', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, liveOnly: true })
+    store.saveCamera({ longitude: 10, latitude: 50, zoom: 3 })
+
+    expect(store.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+  })
+
+  it('ignores a damaged saved camera', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.camera', JSON.stringify({ longitude: 'east', latitude: 50, zoom: 3 }))
+
+    expect(settingsStore(() => storage).loadCamera()).toBeNull()
+  })
+
+  it('ignores an unreadable saved camera', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.camera', '{not json')
+
+    expect(settingsStore(() => storage).loadCamera()).toBeNull()
+  })
+
+  it('still works when the browser blocks storage', () => {
+    const store = settingsStore(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    })
+
+    expect(() => store.saveCamera({ longitude: 0, latitude: 0, zoom: 2 })).not.toThrow()
+    expect(store.loadCamera()).toBeNull()
   })
 })

@@ -17,7 +17,7 @@ public sealed class GameBoard(
     IGameFeedProvider feed,
     VenueLocator venues,
     OfficialWatchLinks watchLinks,
-    StreamFinder streams,
+    IStreamLinkSource streams,
     IOptions<List<League>> leagues,
     TimeProvider clock)
 {

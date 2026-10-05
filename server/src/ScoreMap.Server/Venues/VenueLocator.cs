@@ -16,6 +16,7 @@ public sealed class VenueLocator
     private readonly IPlaceSearch _places;
     private readonly ILogger<VenueLocator> _logger;
     private readonly string _savedLocationsPath;
+    private readonly VenueCorrections _corrections;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Dictionary<string, Coordinates?>? _saved;
 
@@ -25,18 +26,40 @@ public sealed class VenueLocator
         _places = places;
         _logger = logger;
         _savedLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.SavedLocationsPath);
+        _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
     /// <summary>The venue's position, or null when it can't be found.</summary>
     public async Task<Coordinates?> LocateAsync(ProviderVenue venue, CancellationToken cancellationToken)
     {
+        if (_corrections.Find(venue.Name) is { } corrected)
+            return corrected;
         if (venue.Location is not null)
             return venue.Location;
-        if (string.IsNullOrWhiteSpace(venue.Name))
-            return null;
 
-        var query = string.IsNullOrWhiteSpace(venue.City) ? venue.Name : $"{venue.Name}, {venue.City}";
+        if (!string.IsNullOrWhiteSpace(venue.Name))
+        {
+            var byName = string.IsNullOrWhiteSpace(venue.City) ? venue.Name : $"{venue.Name}, {venue.City}";
+            if (await LookUpAsync(byName, cancellationToken) is { } found)
+                return found;
+        }
 
+        if (!string.IsNullOrWhiteSpace(venue.City))
+            return await LookUpAsync(PlaceQuery(venue.City, venue.Region, venue.Country), cancellationToken);
+
+        return null;
+    }
+
+    /// <summary>"City, Region, Country", leaving out the parts that are missing.</summary>
+    private static string PlaceQuery(params string?[] parts) =>
+        string.Join(", ", parts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim()));
+
+    /// <summary>
+    /// Looks a query up through the place search, or answers from the saved lookups if it has
+    /// been asked before. Every answer, misses too, is saved; failures are not.
+    /// </summary>
+    private async Task<Coordinates?> LookUpAsync(string query, CancellationToken cancellationToken)
+    {
         // One lookup at a time, so concurrent snapshots never repeat a query.
         await _gate.WaitAsync(cancellationToken);
         try
@@ -53,7 +76,7 @@ public sealed class VenueLocator
             catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 // A failed lookup is not an answer: don't save it, try again next time.
-                _logger.LogWarning(ex, "Place search failed for venue {Query}", query);
+                _logger.LogWarning(ex, "Place search failed for {Query}", query);
                 return null;
             }
 

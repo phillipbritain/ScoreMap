@@ -101,6 +101,18 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null) : Web
         return client;
     }
 
+    /// <summary>
+    /// Connects, takes the snapshot and disconnects, waiting until the server has seen the
+    /// browser go so that no polling happens while the test then moves the clock.
+    /// </summary>
+    public async Task<IReadOnlyList<Game>> SnapshotOnceAsync()
+    {
+        var client = await ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+        await DisconnectAsync(client);
+        return snapshot;
+    }
+
     /// <summary>Closes the browser stand-in and waits until the server has seen it go.</summary>
     public async Task DisconnectAsync(TestClient client)
     {

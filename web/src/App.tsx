@@ -1,19 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
-import { Globe } from './globe/Globe'
+import { Globe, type GlobeHandle } from './globe/Globe'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
 
 export default function App() {
   const [games, setGames] = useState<Game[]>([])
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const globe = useRef<GlobeHandle>(null)
 
   useEffect(
     () =>
       connectToGames({
         onSnapshot: setGames,
-        onChange: (change) => setGames((current) => applyChange(current, change)),
+        onChange: (change) => {
+          setGames((current) => applyChange(current, change))
+          globe.current?.showChange(change)
+        },
       }),
     [],
   )
@@ -23,7 +27,7 @@ export default function App() {
 
   return (
     <div className={selectedGame ? 'app app--panel-open' : 'app'}>
-      <Globe games={games} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
+      <Globe ref={globe} games={games} selectedGameId={selectedGame?.id ?? null} onSelectGame={setSelectedGameId} />
       {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
     </div>
   )

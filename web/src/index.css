@@ -203,3 +203,143 @@ body {
   color: var(--status-color);
   font-weight: 600;
 }
+
+/* Animations for changes worth noticing (see globe/pinAnimation.ts): a lively bounce and flash when
+   the score changes, a pop when a game starts, and a slow, quiet dim when it finishes. */
+.score-card--animate-score {
+  animation: score-card-score 1.4s ease-out;
+}
+
+.score-card--animate-start {
+  animation: score-card-start 1.1s ease-out;
+}
+
+.score-card--animate-finish {
+  animation: score-card-finish 2.4s ease-in-out;
+}
+
+/* The new score itself flashes too. */
+.score-card--animate-score .score-card__score {
+  animation: score-card-score-flash 1.4s ease-out;
+}
+
+@keyframes score-card-score {
+  0% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.3);
+    box-shadow:
+      0 0 0 4px var(--status-color),
+      0 0 18px 6px var(--status-color);
+  }
+  30% {
+    transform: scale(0.95);
+  }
+  45% {
+    transform: scale(1.12);
+  }
+  65% {
+    transform: scale(1);
+  }
+}
+
+@keyframes score-card-score-flash {
+  0%,
+  50% {
+    color: var(--status-color);
+  }
+}
+
+@keyframes score-card-start {
+  0% {
+    transform: scale(0.85);
+    box-shadow: 0 0 0 0 var(--status-color);
+  }
+  35% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 14px transparent,
+      0 1px 6px rgb(0 0 0 / 0.45);
+  }
+}
+
+@keyframes score-card-finish {
+  0%,
+  100% {
+    filter: none;
+  }
+  40% {
+    filter: brightness(0.85) saturate(0.5);
+    box-shadow: 0 0 12px 3px rgb(138 143 152 / 0.6);
+  }
+}
+
+/* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
+.pin-pulse {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 3px solid var(--pulse-color);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.pin-pulse--cluster {
+  width: 36px;
+  height: 36px;
+}
+
+.pin-pulse--score {
+  animation: pin-pulse 0.9s ease-out 3;
+}
+
+.pin-pulse--start {
+  animation: pin-pulse 1.2s ease-out 2;
+}
+
+.pin-pulse--finish {
+  border-width: 2px;
+  animation: pin-pulse-calm 2.6s ease-in-out;
+}
+
+@keyframes pin-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+@keyframes pin-pulse-calm {
+  0% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Changes still show, without the bouncing. */
+@media (prefers-reduced-motion: reduce) {
+  .score-card--animate-score,
+  .score-card--animate-start {
+    animation: score-card-finish 2.4s ease-in-out;
+  }
+
+  .pin-pulse--score,
+  .pin-pulse--start {
+    animation: pin-pulse-calm 2.6s ease-in-out;
+  }
+}

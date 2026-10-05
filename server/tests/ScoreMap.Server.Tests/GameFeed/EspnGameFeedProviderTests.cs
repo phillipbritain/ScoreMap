@@ -87,4 +87,86 @@ public class EspnGameFeedProviderTests
         var request = Assert.Single(handler.Requests);
         Assert.Equal("https://espn.test/sports/football/nfl/scoreboard?dates=20261004", request.RequestUri!.ToString());
     }
+
+    private const string NoVenueScoreboard = """
+        {"events":[{"id":"1","date":"2026-10-04T17:00Z","competitions":[{
+          "competitors":[
+            {"homeAway":"home","team":{"id":"29","abbreviation":"CAR","displayName":"Carolina Panthers"}},
+            {"homeAway":"away","team":{"id":"22","abbreviation":"ARI","displayName":"Arizona Cardinals"}}],
+          "status":{"type":{"name":"STATUS_SCHEDULED","state":"pre"}}}]}]}
+        """;
+
+    private static (EspnGameFeedProvider Provider, StubHttpHandler Handler) ProviderAnswering(string scoreboard, string team)
+    {
+        var handler = new StubHttpHandler(request =>
+            request.RequestUri!.AbsolutePath.Contains("/scoreboard") ? scoreboard : team);
+        var provider = new EspnGameFeedProvider(
+            new HttpClient(handler) { BaseAddress = new Uri("https://espn.test/sports/") },
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero)));
+        return (provider, handler);
+    }
+
+    [Fact]
+    public async Task Game_with_no_venue_carries_the_home_teams_city_from_its_franchise_venue()
+    {
+        var (provider, handler) = ProviderAnswering(NoVenueScoreboard, """
+            {"team":{"id":"29","location":"Carolina","franchise":{"venue":{"fullName":"Bank of America Stadium",
+              "address":{"city":"Charlotte","state":"NC","zipCode":"28202","country":"USA"}}}}}
+            """);
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
+
+        Assert.Null(game.Venue);
+        Assert.Equal(new ProviderCity("Charlotte", "NC", "USA"), game.Home.HomeCity);
+        Assert.Contains(handler.Requests, r => r.RequestUri!.ToString() == "https://espn.test/sports/football/nfl/teams/29");
+    }
+
+    [Fact]
+    public async Task Home_team_without_a_franchise_venue_falls_back_to_its_location_name()
+    {
+        // College and soccer teams have no franchise venue; "location" is the best ESPN offers.
+        var (provider, _) = ProviderAnswering(NoVenueScoreboard, """{"team":{"id":"150","location":"Duke"}}""");
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
+
+        Assert.Equal(new ProviderCity("Duke", null, null), game.Home.HomeCity);
+    }
+
+    [Fact]
+    public async Task Each_home_team_is_looked_up_only_once()
+    {
+        var (provider, handler) = ProviderAnswering(NoVenueScoreboard, """{"team":{"id":"29","location":"Carolina"}}""");
+
+        await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
+        await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
+
+        Assert.Single(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/teams/"));
+    }
+
+    [Fact]
+    public async Task Home_teams_are_not_looked_up_for_games_with_a_venue()
+    {
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"));
+        var (provider, handler) = ProviderAnswering(body, "{}");
+
+        var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
+
+        Assert.Single(handler.Requests);
+        Assert.All(games, g => Assert.Null(g.Home.HomeCity));
+    }
+
+    [Fact]
+    public async Task A_failed_team_lookup_still_reports_the_game()
+    {
+        var handler = new StubHttpHandler(request => request.RequestUri!.AbsolutePath.Contains("/scoreboard")
+            ? NoVenueScoreboard
+            : throw new HttpRequestException("ESPN is down"));
+        var provider = new EspnGameFeedProvider(
+            new HttpClient(handler) { BaseAddress = new Uri("https://espn.test/sports/") },
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero)));
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
+
+        Assert.Null(game.Home.HomeCity);
+    }
 }

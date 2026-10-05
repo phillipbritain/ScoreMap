@@ -27,5 +27,8 @@ public sealed record GameTeam(string Abbreviation, string FullName, string? Logo
 /// </summary>
 public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude, string? TimeZone);
 
-/// <summary>A channel or streaming service showing a game, and the country it broadcasts to when known.</summary>
-public sealed record GameBroadcaster(string Name, string? Country);
+/// <summary>
+/// A channel or streaming service showing a game, the country it broadcasts to when known,
+/// and its official watch link when the owner has listed one.
+/// </summary>
+public sealed record GameBroadcaster(string Name, string? Country, string? WatchUrl);

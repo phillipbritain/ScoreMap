@@ -21,8 +21,10 @@ export interface GameVenue {
 /** A channel or streaming service showing a game. */
 export interface GameBroadcaster {
   name: string
-  /** The country it broadcasts to, when known. */
+  /** The country it broadcasts to (ISO 3166 alpha-2, e.g. "US"), when known. */
   country: string | null
+  /** The service's official watch page, when the server's watch links file lists it. */
+  watchUrl: string | null
 }
 
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */

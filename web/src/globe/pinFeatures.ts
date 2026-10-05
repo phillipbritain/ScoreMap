@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { Game, GameStatus, GameTeam } from '../games/game'
+import { fanOutColocated } from './colocatedPins'
 
 export interface PinProperties {
   gameId: string
@@ -10,19 +11,20 @@ export interface PinProperties {
 
 export type PinFeature = Feature<Point, PinProperties>
 
-/** Turns games into the GeoJSON the globe's pin source draws: one point per game at its venue. */
+/**
+ * Turns games into the GeoJSON the globe's pin source draws: one point per game at its venue,
+ * with games sharing a spot fanned out around it so each stays reachable.
+ */
 export function pinFeatures(games: readonly Game[]): FeatureCollection<Point, PinProperties> {
-  return {
-    type: 'FeatureCollection',
-    features: games.map(
-      (game): PinFeature => ({
-        type: 'Feature',
-        id: game.id,
-        geometry: { type: 'Point', coordinates: [game.venue.longitude, game.venue.latitude] },
-        properties: { gameId: game.id, status: game.status, label: label(game) },
-      }),
-    ),
-  }
+  const atVenues = games.map(
+    (game): PinFeature => ({
+      type: 'Feature',
+      id: game.id,
+      geometry: { type: 'Point', coordinates: [game.venue.longitude, game.venue.latitude] },
+      properties: { gameId: game.id, status: game.status, label: label(game) },
+    }),
+  )
+  return { type: 'FeatureCollection', features: fanOutColocated(atVenues) }
 }
 
 function label(game: Game): string {

@@ -1,6 +1,9 @@
 namespace ScoreMap.Server.GameFeed;
 
-/// <summary>A game as a game feed provider reports it, in provider-neutral terms.</summary>
+/// <summary>
+/// A game as a game feed provider reports it, in provider-neutral terms.
+/// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
+/// </summary>
 public sealed record ProviderGame(
     string Id,
     string LeagueKey,
@@ -11,7 +14,8 @@ public sealed record ProviderGame(
     string? DisplayClock,
     int? Period,
     ProviderVenue? Venue,
-    IReadOnlyList<ProviderBroadcaster> Broadcasters);
+    IReadOnlyList<ProviderBroadcaster> Broadcasters,
+    ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing);
 
 public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
 
@@ -34,4 +38,29 @@ public enum ProviderStatus
     Postponed,
     Suspended,
     Canceled,
+}
+
+/// <summary>Where play stands within the current period (quarter, half, period or inning).</summary>
+public enum ProviderPeriodPhase
+{
+    /// <summary>The period is being played (or the game hasn't started or has finished).</summary>
+    Playing,
+
+    /// <summary>A break after the period: end of a quarter, halftime or an intermission.</summary>
+    Break,
+
+    /// <summary>A shootout (hockey) or penalty shootout (soccer).</summary>
+    Shootout,
+
+    /// <summary>Baseball: the visiting team is batting.</summary>
+    InningTop,
+
+    /// <summary>Baseball: between the top and bottom of the inning.</summary>
+    InningMiddle,
+
+    /// <summary>Baseball: the home team is batting.</summary>
+    InningBottom,
+
+    /// <summary>Baseball: the inning is over.</summary>
+    InningEnd,
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Venues;
 using ScoreMap.Server.WatchLinks;
 
@@ -48,6 +49,11 @@ builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("W
 builder.Services.AddSingleton<OfficialWatchLinks>();
 
 builder.Services.AddSingleton<GameBoard>();
+
+// Live updates: the poller fetches while browsers are connected and pushes change events.
+builder.Services.AddSingleton<BrowserConnections>();
+builder.Services.AddSingleton<Poller>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
 builder.Services.AddSignalR();
 
 var app = builder.Build();

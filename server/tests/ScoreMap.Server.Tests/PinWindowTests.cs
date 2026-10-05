@@ -35,14 +35,12 @@ public class PinWindowTests
     {
         var start = server.Clock.GetUtcNow().AddHours(-3);
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.InProgress));
-        await using (var watching = await server.ConnectClientAsync())
-            await watching.NextSnapshotAsync();
+        await server.SnapshotOnceAsync();
 
         server.Clock.Advance(TimeSpan.FromMinutes(5));
         var end = server.Clock.GetUtcNow();
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Final));
-        await using (var watching = await server.ConnectClientAsync())
-            await watching.NextSnapshotAsync();
+        await server.SnapshotOnceAsync();
         return end;
     }
 

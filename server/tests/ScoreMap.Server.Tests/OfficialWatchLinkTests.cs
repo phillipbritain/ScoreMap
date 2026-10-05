@@ -50,18 +50,19 @@ public class OfficialWatchLinkTests
     }
 
     [Fact]
-    public async Task A_link_added_to_the_file_takes_effect_without_a_restart()
+    public async Task A_link_added_to_the_file_is_pushed_on_the_next_poll_without_a_restart()
     {
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard("football/nfl", GameShownOn(server.Clock.GetUtcNow(), new ProviderBroadcaster("Peacock", "US")));
-        await using (var before = await server.ConnectClientAsync())
-            Assert.Null(Assert.Single(Assert.Single(await before.NextSnapshotAsync()).Broadcasters).WatchUrl);
+        await using var client = await server.ConnectClientAsync();
+        Assert.Null(Assert.Single(Assert.Single(await client.NextSnapshotAsync()).Broadcasters).WatchUrl);
 
         server.AddWatchLink("https://www.peacocktv.com/", "Peacock");
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
 
-        await using var after = await server.ConnectClientAsync();
-        var game = Assert.Single(await after.NextSnapshotAsync());
-        Assert.Equal("https://www.peacocktv.com/", Assert.Single(game.Broadcasters).WatchUrl);
+        var change = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.Updated, change.Kind);
+        Assert.Equal("https://www.peacocktv.com/", Assert.Single(change.Game.Broadcasters).WatchUrl);
     }
 
     [Fact]

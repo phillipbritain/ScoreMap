@@ -19,13 +19,15 @@ const liberty = base([
   { id: 'label_village', type: 'symbol', ...tiles, 'source-layer': 'place' },
   { id: 'label_city', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'class'], 'city'] },
   { id: 'label_state', type: 'symbol', ...tiles, 'source-layer': 'place', minzoom: 5, maxzoom: 8 },
+  { id: 'label_town', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'class'], 'town'] },
+  { id: 'label_city_capital', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'capital'], 2] },
   { id: 'label_country_1', type: 'symbol', ...tiles, 'source-layer': 'place' },
 ])
 
 const layer = (id: string) => globeStyle(liberty).layers.find((l) => l.id === id)
 
 describe('globeStyle', () => {
-  it('keeps only the lines and place names, dropping roads, land cover and points of interest', () => {
+  it('keeps only the lines and place names, dropping roads, land cover, points of interest, towns and villages', () => {
     expect(globeStyle(liberty).layers.map((l) => l.id)).toEqual([
       'background',
       'coastline',
@@ -34,6 +36,7 @@ describe('globeStyle', () => {
       'boundary_disputed',
       'label_city',
       'label_state',
+      'label_city_capital',
       'label_country_1',
     ])
   })
@@ -56,22 +59,30 @@ describe('globeStyle', () => {
     expect(layer('label_state')).toMatchObject({ minzoom: 3, maxzoom: 8 })
   })
 
-  it('names only the larger cities when zoomed out, adding smaller ones as the viewer zooms in', () => {
-    const cities = layer('label_city')
-    const { filter } = featureFilter((cities as { filter: FilterSpecification }).filter, 'label_city.filter')
-    const named = (zoom: number, rank: number) =>
-      filter({ zoom }, { type: 1, properties: { class: 'city', rank } } as never)
-    expect(named(3, 2)).toBe(true) // New York, Chicago
-    expect(named(3, 3)).toBe(false) // Philadelphia, Seattle
-    expect(named(4, 3)).toBe(true)
-    expect(named(5, 5)).toBe(false) // Austin, Orlando
-    expect(named(6, 5)).toBe(true)
-    expect(named(7, 9)).toBe(true)
+  it('names only major cities, capitals included, at every zoom', () => {
+    for (const id of ['label_city', 'label_city_capital']) {
+      const { filter } = featureFilter((layer(id) as { filter: FilterSpecification }).filter, `${id}.filter`)
+      const named = (zoom: number, rank: number) =>
+        filter({ zoom }, { type: 1, properties: { class: 'city', capital: 2, rank } } as never)
+      expect(named(3, 1)).toBe(true) // New York
+      expect(named(3, 4)).toBe(true) // Nashville, Ottawa
+      expect(named(10, 4)).toBe(true)
+      expect(named(10, 5)).toBe(false) // Austin, Orlando
+      expect(named(3, 5)).toBe(false)
+    }
   })
 
-  it("keeps the base style's own city filter", () => {
+  it("keeps the base style's own city filters", () => {
     const { filter } = featureFilter((layer('label_city') as { filter: FilterSpecification }).filter, 'f')
-    expect(filter({ zoom: 7 }, { type: 1, properties: { class: 'town', rank: 1 } } as never)).toBe(false)
+    expect(filter({ zoom: 5 }, { type: 1, properties: { class: 'town', rank: 1 } } as never)).toBe(false)
+  })
+
+  it('places larger cities first, with room around them that a nearby smaller city gives way to', () => {
+    for (const id of ['label_city', 'label_city_capital']) {
+      expect(layer(id)).toMatchObject({
+        layout: { 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99], 'text-padding': 28 },
+      })
+    }
   })
 
   it('makes country names brighter than other place names', () => {

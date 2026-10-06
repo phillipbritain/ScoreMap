@@ -89,7 +89,7 @@ export const clusterLayers: [CircleLayerSpecification, SymbolLayerSpecification]
     filter: ['has', 'point_count'],
     layout: {
       'text-field': ['get', 'point_count_abbreviated'],
-      'text-font': ['Noto Sans Bold'],
+      'text-font': ['Open Sans Bold'],
       'text-size': 12,
       'text-allow-overlap': true,
     },

@@ -6,13 +6,13 @@ ScoreMap runs as one ASP.NET Core app on Azure App Service (Linux). The app serv
 
 ## Choosing a plan
 
-| | Free F1 | Basic B1 |
-|---|---|---|
-| Cost | free | paid, billed hourly |
-| Sleeps when idle | yes, after about 20 minutes with no requests | no (Always On) |
-| CPU | **60 minutes a day** | unlimited |
-| WebSocket connections | **5** | plenty |
-| Address | `https://<app-name>.azurewebsites.net` | can also use a custom domain |
+|                       | Free F1                                      | Basic B1                     |
+| --------------------- | -------------------------------------------- | ---------------------------- |
+| Cost                  | free                                         | paid, billed hourly          |
+| Sleeps when idle      | yes, after about 20 minutes with no requests | no (Always On)               |
+| CPU                   | **60 minutes a day**                         | unlimited                    |
+| WebSocket connections | **5**                                        | plenty                       |
+| Address               | `https://<app-name>.azurewebsites.net`       | can also use a custom domain |
 
 F1 suits ScoreMap. The server only polls ESPN while a browser is connected, so a host that sleeps when idle costs nothing in missed updates. Watch the daily CPU limit: polling every 15 seconds during a busy evening of live games uses some of it. If the app hits the limit it stops until the next day, and moving up to B1 fixes that. A browser beyond the fifth WebSocket falls back to Server-Sent Events or long polling and still works.
 
@@ -22,8 +22,8 @@ You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscr
 
 ```powershell
 $rg = 'scoremap-rg'
-$app = '<app-name>'          # e.g. scoremap-phillip
-$location = 'westeurope'     # any region near you; `az account list-locations -o table`
+$app = 'scoremap'          # must be unique across Azure
+$location = 'centralus'    # any region near you; `az account list-locations -o table`
 
 az login
 
@@ -46,11 +46,11 @@ az webapp config appsettings set --resource-group $rg --name $app --settings SCM
 
 App settings reach the server as environment variables, and `__` separates configuration sections. None are required. These are the ones you are most likely to want:
 
-| Setting | Default | Purpose |
-|---|---|---|
+| Setting                      | Default                                                                                               | Purpose                                                                                                          |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `Venues__SavedLocationsPath` | `data/venue-locations.json`, resolved under `HOME` on App Service (`/home/data/venue-locations.json`) | Where venue lookups are saved. `/home` is the only storage that is writable and survives restarts and redeploys. |
-| `Nominatim__BaseUrl` | `https://nominatim.openstreetmap.org/` | Place search used to locate venues. |
-| `Espn__BaseUrl` | ESPN's scoreboard API | Game feed. |
+| `Nominatim__BaseUrl`         | `https://nominatim.openstreetmap.org/`                                                                | Place search used to locate venues.                                                                              |
+| `Espn__BaseUrl`              | ESPN's scoreboard API                                                                                 | Game feed.                                                                                                       |
 
 The venue corrections file (`venue-corrections.json`) ships with the app. To change a correction, edit the file in the repo and redeploy.
 
@@ -59,10 +59,10 @@ The venue corrections file (`venue-corrections.json`) ships with the app. To cha
 From the repo root, after `az login`:
 
 ```powershell
-./scripts/deploy.ps1 -ResourceGroup scoremap-rg -AppName <app-name>
+./scripts/deploy.ps1 -ResourceGroup scoremap-rg -AppName scoremap
 ```
 
-The script runs `dotnet publish` (building the browser app into `wwwroot`), zips the result with forward-slash paths (`Compress-Archive` in Windows PowerShell writes backslashes, which break on Linux), and runs `az webapp deploy --type zip`. Then open `https://<app-name>.azurewebsites.net` on your phone.
+The script runs `dotnet publish` (building the browser app into `wwwroot`), zips the result with forward-slash paths (`Compress-Archive` in Windows PowerShell writes backslashes, which break on Linux), and runs `az webapp deploy --type zip`. Then open `https://scoremap.azurewebsites.net` on your phone.
 
 To deploy by hand instead:
 
@@ -70,13 +70,13 @@ To deploy by hand instead:
 dotnet publish server/src/ScoreMap.Server -c Release -o publish
 # zip the *contents* of publish/ (not the folder itself), with forward-slash paths
 tar.exe -a -c -f publish.zip -C publish (Get-ChildItem publish | ForEach-Object Name)
-az webapp deploy --resource-group scoremap-rg --name <app-name> --src-path publish.zip --type zip
+az webapp deploy --resource-group scoremap-rg --name scoremap --src-path publish.zip --type zip
 ```
 
 ## Checking it works
 
 - Open the site and wait for pins to appear. During live games, scores should change on their own.
-- Stream the server log with `az webapp log tail --resource-group scoremap-rg --name <app-name>`. For more detail, first run `az webapp log config --resource-group scoremap-rg --name <app-name> --docker-container-logging filesystem`.
+- Stream the server log with `az webapp log tail --resource-group scoremap-rg --name scoremap`. For more detail, first run `az webapp log config --resource-group scoremap-rg --name scoremap --docker-container-logging filesystem`.
 - To check that the app recovers from sleep, leave it idle for more than 20 minutes and open it again. The first request starts the app, which takes a few seconds. The browser connects, gets a freshly fetched snapshot, and polling resumes. A browser that stayed open while the app slept reconnects on its own, retrying with backoff up to every 30 seconds, and catches up the same way.
 
 ## Deploy from GitHub Actions (optional)
@@ -90,6 +90,6 @@ az webapp deploy --resource-group scoremap-rg --name <app-name> --src-path publi
 ## If it doesn't work
 
 - **Blank page or 404 at `/`**: the deploy has no `wwwroot`. Use `scripts/deploy.ps1` or `dotnet publish` without `-p:SkipBrowserApp=true`, and make sure Node.js is installed where you publish.
-- **App won't start**: check the startup command (`dotnet ScoreMap.Server.dll`) and the runtime (`az webapp config show --resource-group scoremap-rg --name <app-name> --query linuxFxVersion`).
+- **App won't start**: check the startup command (`dotnet ScoreMap.Server.dll`) and the runtime (`az webapp config show --resource-group scoremap-rg --name scoremap --query linuxFxVersion`).
 - **Live updates never arrive**: make sure WebSockets are on (`az webapp config show ... --query webSocketsEnabled`). SignalR should fall back to other transports anyway, so check the browser console for connection errors.
 - **App stops for the rest of the day**: the F1 daily CPU limit was hit. Scale up with `az appservice plan update --resource-group scoremap-rg --name scoremap-plan --sku B1`.

@@ -68,7 +68,9 @@ export class ScoreCardMarkers {
           event.stopPropagation()
           this.onSelect(gameId)
         })
-        placed = { marker: new Marker({ element }).setLngLat(lngLat).addTo(this.map), drawn: '' }
+        // Above the venue, its pointer's tip on the spot; the city's name sits below its dot.
+        const marker = new Marker({ element, anchor: 'bottom', offset: [0, -cardPointerPx] })
+        placed = { marker: marker.setLngLat(lngLat).addTo(this.map), drawn: '' }
         this.placed.set(gameId, placed)
       } else {
         placed.marker.setLngLat(lngLat)
@@ -118,6 +120,9 @@ export class ScoreCardMarkers {
     this.animating.clear()
   }
 }
+
+/** How far a card's pointer reaches below the card (see .score-card::after). */
+const cardPointerPx = 6
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 

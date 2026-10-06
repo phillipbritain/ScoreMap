@@ -12,7 +12,7 @@ import { pinFeatures } from './pinFeatures'
 import { pulse } from './pinPulse'
 import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
 import { addGlobeGlow } from './globeGlow'
-import { baseStyleUrl, globeStyle } from './globeStyle'
+import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { shouldSpin, spunLongitude } from './slowSpin'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
@@ -103,22 +103,27 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       instance.setProjection({ type: 'globe' })
       clusterRadius = pinLayout(instance.getZoom()).clusterRadius
       instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
-      for (const layer of clusterLayers) instance.addLayer(layer)
-      instance.addLayer(smallPinLayerSpec)
+      // Beneath the place names, so a pin never hides a city's name.
+      const belowNames = firstPlaceNameLayer(instance.getStyle())
+      for (const layer of clusterLayers) instance.addLayer(layer, belowNames)
+      instance.addLayer(smallPinLayerSpec, belowNames)
       // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
-      instance.addLayer({
-        id: selectedPinLayer,
-        type: 'circle',
-        source: pinSource,
-        filter: selectedPin(latestSelected.current),
-        maxzoom: cardZoom,
-        paint: {
-          'circle-radius': 13,
-          'circle-color': 'rgba(0, 0, 0, 0)',
-          'circle-stroke-width': 3,
-          'circle-stroke-color': '#2f80ed',
+      instance.addLayer(
+        {
+          id: selectedPinLayer,
+          type: 'circle',
+          source: pinSource,
+          filter: selectedPin(latestSelected.current),
+          maxzoom: cardZoom,
+          paint: {
+            'circle-radius': 13,
+            'circle-color': 'rgba(0, 0, 0, 0)',
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#2f80ed',
+          },
         },
-      })
+        belowNames,
+      )
     })
 
     // Score cards need more room than small pins, so they cluster over a wider radius.

@@ -24,6 +24,16 @@ function overlaps(a: CardBox, b: CardBox): boolean {
   return Math.abs(a.x - b.x) < (a.width + b.width) / 2 && Math.abs(a.y - b.y) < (a.height + b.height) / 2
 }
 
+// Samples along the line, which is plenty to catch a crossing at these sizes.
+function lineCrossesCard(x1: number, y1: number, x2: number, y2: number, c: CardBox): boolean {
+  for (let t = 0; t <= 1; t += 0.01) {
+    const x = x1 + (x2 - x1) * t
+    const y = y1 + (y2 - y1) * t
+    if (Math.abs(x - c.x) < c.width / 2 && Math.abs(y - c.y) < c.height / 2) return true
+  }
+  return false
+}
+
 function anyOverlap(cards: CardBox[]): boolean {
   return cards.some((a, i) => cards.slice(i + 1).some((b) => overlaps(a, b)))
 }
@@ -54,6 +64,19 @@ describe('layOutCards', () => {
       for (const venue of crowd) {
         const covers = Math.abs(c.x - venue.venueX) < c.width / 2 && Math.abs(c.y - venue.venueY) < c.height / 2
         expect(covers).toBe(false)
+      }
+    }
+  })
+
+  it('keeps trails clear of cards, moving a card further if its trail would cross another', () => {
+    const crowd = [card('a', 0, 0), card('b', 50, 20), card('c', 100, 0), card('d', 40, -30), card('e', 150, 30)]
+    const after = placed(crowd)
+    const trails = after.filter((c, i) => c.x !== crowd[i].x || c.y !== crowd[i].y)
+    expect(trails.length).toBeGreaterThan(0)
+    for (const moved of trails) {
+      for (const other of after) {
+        if (other === moved) continue
+        expect(lineCrossesCard(moved.x, moved.y, moved.venueX, moved.venueY, other)).toBe(false)
       }
     }
   })

@@ -3,6 +3,8 @@ import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
 import { layOutCards, type CardBox, type CardCrowd, type CardShift } from './cardLayout'
+import { cityNameBox, gameCities, type City, type ScreenBox } from './gameCities'
+import { cityNameLook, gameCitiesState, namedCity, placeTiles } from './globeStyle'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource, statusColors } from './pinLayers'
 import { pulse } from './pinPulse'
@@ -49,6 +51,10 @@ export class ScoreCardMarkers {
   private readonly trails = document.createElementNS(svgNamespace, 'svg')
   /** Counts of games with no room for a card, by the first game in each. */
   private readonly crowds = new Map<string, PlacedCrowd>()
+  /** The cities named for the games (see gameCities), whose names cards and trails keep clear of. */
+  private cities: City[] = []
+  /** True when the games or the map's loaded places have changed since the cities were found. */
+  private citiesStale = true
 
   /** `onSelect` is called with a game's id when its card is selected. */
   constructor(map: MapLibreMap, onSelect: (gameId: string) => void) {
@@ -56,6 +62,9 @@ export class ScoreCardMarkers {
     this.onSelect = onSelect
     this.trails.classList.add('score-card-trails')
     map.getCanvas().after(this.trails)
+    map.on('sourcedata', (event) => {
+      if (event.sourceId === placeTiles.source && event.tile) this.citiesStale = true
+    })
   }
 
   /** Highlights the selected game's card, if it has one. */
@@ -66,11 +75,13 @@ export class ScoreCardMarkers {
 
   setGames(games: readonly Game[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
+    this.citiesStale = true
     this.sync()
   }
 
   /** Places, updates and removes cards to match what the pin source shows at the current zoom. */
   sync(): void {
+    if (this.citiesStale) this.findCities()
     if (!this.map.getSource(pinSource) || !this.map.isSourceLoaded(pinSource)) return
     const wanted =
       pinLayout(this.map.getZoom()).size === 'card'
@@ -160,7 +171,7 @@ export class ScoreCardMarkers {
         rank: this.rank(gameId),
       })
     }
-    const { shifts, crowds } = layOutCards([...boxes.values()])
+    const { shifts, crowds } = layOutCards([...boxes.values()], this.cityNames())
 
     for (const [gameId, placed] of this.placed) {
       const shift = shifts.get(gameId) ?? { dx: 0, dy: 0 }
@@ -180,6 +191,48 @@ export class ScoreCardMarkers {
       drawTrail(placed.trail, box && !crowded ? box : null, shift)
     }
     this.drawCrowds(crowds)
+  }
+
+  /**
+   * Finds the city named for each game among the places loaded so far, and has the map always write
+   * those cities' names (see globeStyle's game city names).
+   */
+  private findCities(): void {
+    if (!this.map.getSource(placeTiles.source)) return
+    this.citiesStale = false
+    const places = new Map<number, City>()
+    for (const { id, properties: p, geometry } of this.map.querySourceFeatures(placeTiles.source, {
+      sourceLayer: placeTiles.sourceLayer,
+      filter: namedCity,
+    })) {
+      if (typeof id !== 'number' || places.has(id) || geometry.type !== 'Point') continue
+      const [longitude, latitude] = geometry.coordinates
+      places.set(id, { id, name: placeName(p), capital: p.capital === 2, longitude, latitude })
+    }
+    const cities = gameCities(
+      [...this.games.values()].map((game) => game.venue),
+      [...places.values()],
+    )
+    const ids = cities.map((city) => city.id).sort((a, b) => a - b)
+    if (ids.join() !== this.cities.map((city) => city.id).sort((a, b) => a - b).join()) {
+      this.map.setGlobalStateProperty(gameCitiesState, ids)
+    }
+    this.cities = cities
+  }
+
+  /** Where the names of the cities named for the games are written on screen, for those on screen (or nearly). */
+  private cityNames(): ScreenBox[] {
+    const canvas = this.map.getCanvas()
+    const zoom = this.map.getZoom()
+    return this.cities.flatMap((city) => {
+      const dot = this.map.project([city.longitude, city.latitude])
+      const nearScreen =
+        dot.x > -offScreenMargin &&
+        dot.x < canvas.clientWidth + offScreenMargin &&
+        dot.y > -offScreenMargin &&
+        dot.y < canvas.clientHeight + offScreenMargin
+      return nearScreen ? [cityNameBox(city, dot, cityNameLook(zoom, city.capital), measureText)] : []
+    })
   }
 
   /** Which cards get room first: the selected game's, then Live, then Upcoming, then the rest. */
@@ -280,6 +333,7 @@ export class ScoreCardMarkers {
     this.crowds.clear()
     this.trails.remove()
     this.placed.clear()
+    this.cities = []
     this.animating.clear()
   }
 }
@@ -307,6 +361,29 @@ function crowdStatus(statuses: readonly GameStatus[]): GameStatus {
 }
 
 const svgNamespace = 'http://www.w3.org/2000/svg'
+
+/** A place's name as the map writes it: in Latin letters, with its own script on a second line when it has one. */
+function placeName(properties: Record<string, unknown>): string {
+  const text = (key: string) => (typeof properties[key] === 'string' ? (properties[key] as string) : undefined)
+  const nonLatin = text('name:nonlatin')
+  if (nonLatin) return `${text('name:latin') ?? ''}
+${nonLatin}`
+  return text('name_en') ?? text('name') ?? ''
+}
+
+const measuring = document.createElement('canvas').getContext('2d')
+
+/**
+ * A line's width in a font, in pixels. The map writes Open Sans from its own glyphs, which the page
+ * doesn't have; the browser's fallback sans-serif measures a little wider, which errs on the side of room.
+ */
+function measureText(text: string, font: string): number {
+  if (!measuring) return text.length * fallbackLetterWidth * parseFloat(font.split(' ')[1])
+  measuring.font = font
+  return measuring.measureText(text).width
+}
+// A letter's width in ems, roughly, where there's no canvas to measure with.
+const fallbackLetterWidth = 0.6
 
 function newTrail(): SVGGElement {
   const trail = document.createElementNS(svgNamespace, 'g')

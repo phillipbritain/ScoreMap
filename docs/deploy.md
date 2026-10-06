@@ -18,7 +18,7 @@ F1 suits ScoreMap. The server only polls ESPN while a browser is connected, so a
 
 ## One-time setup
 
-You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. The plan and the web app are described in `infra/main.bicep`: .NET 10 on Linux, WebSockets on, ARR affinity (sticky sessions) on for SignalR, HTTPS only, and container logs kept for 3 days. The app name and plan size are set in `infra/main.bicepparam`. The app name must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
+You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. The plan, the web app and the identity GitHub Actions deploys as are described in `infra/main.bicep`. The app gets .NET 10 on Linux, WebSockets on, ARR affinity (sticky sessions) on for SignalR, HTTPS only, and container logs kept for 3 days. The app name and plan size are set in `infra/main.bicepparam`. The app name must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
 
 ```powershell
 $rg = 'scoremap-rg'
@@ -32,7 +32,7 @@ az deployment group create --resource-group $rg --template-file infra/main.bicep
 
 The template is scoped to the resource group, which you create first. That keeps the deploy to rights on one resource group, rather than the whole subscription.
 
-Running the deployment again changes nothing unless the template changed, so change settings in the template and redeploy, not in the portal. A setting changed in the portal is put back by the next run. To preview what a run would change, use `az deployment group what-if` with the same arguments. It lists the web app's `siteConfig` settings as created even when they already match, because Azure doesn't return them when reading the app. Set the plan size with `--parameters infra/main.bicepparam sku=B1`.
+Running the deployment again changes nothing unless the template changed, so change settings in the template and redeploy, not in the portal. A setting changed in the portal is put back by the next run. To preview what a run would change, use `az deployment group what-if` with the same arguments. Two changes it lists are always there and harmless. It lists the web app's `siteConfig` settings as created even when they already match, because Azure doesn't return them when reading the app. It also lists the role assignment's `principalId` as modified, because the preview can't work out the identity's ID before a deploy, and it shows the expression instead of the value. Set the plan size with `--parameters infra/main.bicepparam sku=B1`.
 
 ### App settings
 
@@ -75,25 +75,14 @@ az webapp deploy --resource-group scoremap-rg --name scoremap --src-path publish
 
 `.github/workflows/deploy.yml` runs the tests, publishes and deploys on every push to `main`. To deploy by hand, use Actions → deploy → Run workflow, or `gh workflow run deploy`. It skips itself until it is set up. Only runs on `main` can sign in to Azure.
 
-GitHub signs in to Azure as a user-assigned managed identity, with no password stored anywhere. A federated credential tells Azure to trust GitHub's sign-in tokens for this repo's `main` branch, and the identity may only deploy to this one app (Website Contributor on the app). One-time setup, after `az login` and `gh auth login`:
+GitHub signs in to Azure as a user-assigned managed identity, `scoremap-github`, with no password stored anywhere. A federated credential tells Azure to trust GitHub's sign-in tokens for this repo's `main` branch, and the identity may only deploy to this one app (Website Contributor on the app). The template in "One-time setup" creates all three. The trusted token is set by `githubSubject` in `infra/main.bicepparam`. It names the owner and repo with their IDs, which can't be reused if the repo is renamed. For another repo, get it from `gh api repos/<owner>/<repo> --jq '"repo:\(.owner.login)@\(.owner.id)/\(.name)@\(.id)"'` and add `:ref:refs/heads/main`.
+
+What's left is telling GitHub which identity, tenant, subscription and app to use. One-time setup, after the template has run and `gh auth login`:
 
 ```powershell
 $rg = 'scoremap-rg'
 $app = 'scoremap'
 $repo = 'phillipbritain/ScoreMap'
-
-az identity create --resource-group $rg --name scoremap-github
-
-# GitHub's token subject names the owner and repo with their IDs, which can't be reused if the repo
-# is renamed. Get it from: gh api repos/$repo --jq '"repo:\(.owner.login)@\(.owner.id)/\(.name)@\(.id)"'
-$subject = 'repo:phillipbritain@35792740/ScoreMap@1403601772:ref:refs/heads/main'
-az identity federated-credential create --resource-group $rg --identity-name scoremap-github --name github-main `
-  --issuer https://token.actions.githubusercontent.com --subject $subject --audiences api://AzureADTokenExchange
-
-$principalId = az identity show --resource-group $rg --name scoremap-github --query principalId -o tsv
-$appId = az webapp show --resource-group $rg --name $app --query id -o tsv
-az role assignment create --assignee-object-id $principalId --assignee-principal-type ServicePrincipal `
-  --role 'Website Contributor' --scope $appId
 
 gh secret set AZURE_CLIENT_ID -R $repo -b (az identity show --resource-group $rg --name scoremap-github --query clientId -o tsv)
 gh secret set AZURE_TENANT_ID -R $repo -b (az account show --query tenantId -o tsv)
@@ -101,10 +90,12 @@ gh secret set AZURE_SUBSCRIPTION_ID -R $repo -b (az account show --query id -o t
 gh variable set AZURE_WEBAPP_NAME -R $repo -b $app
 ```
 
+The identity keeps its client ID when the template runs again, so the secrets only need setting once. Deleting the identity and creating it again gives it a new client ID, and `AZURE_CLIENT_ID` then needs setting again.
+
 ## If it doesn't work
 
 - **Blank page or 404 at `/`**: the deploy has no `wwwroot`. Use `scripts/deploy.ps1` or `dotnet publish` without `-p:SkipBrowserApp=true`, and make sure Node.js is installed where you publish.
 - **App won't start**: check the startup command (`dotnet ScoreMap.Server.dll`) and the runtime (`az webapp config show --resource-group scoremap-rg --name scoremap --query linuxFxVersion`).
 - **Live updates never arrive**: make sure WebSockets are on (`az webapp config show ... --query webSocketsEnabled`). SignalR should fall back to other transports anyway, so check the browser console for connection errors.
-- **GitHub deploy fails at Azure login with `AADSTS700213`**: the federated credential's subject doesn't match the token. The error shows the subject GitHub sent; update the credential with `az identity federated-credential update` and the same arguments as above. A run from a branch other than `main` always fails here, by design.
+- **GitHub deploy fails at Azure login with `AADSTS700213`**: the federated credential's subject doesn't match the token. The error shows the subject GitHub sent; fix `githubSubject` in `infra/main.bicepparam` and run the template again. A run from a branch other than `main` always fails here, by design.
 - **App stops for the rest of the day**: the F1 daily CPU limit was hit. Scale up by redeploying the template with `sku=B1` (see One-time setup). Scaling with `az appservice plan update` also works, but the next run of the template sets the plan back to F1.

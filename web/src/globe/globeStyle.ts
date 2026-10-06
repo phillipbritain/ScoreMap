@@ -1,8 +1,19 @@
-import type { ExpressionSpecification, LayerSpecification, StyleSpecification } from 'maplibre-gl'
+import type {
+  DataDrivenPropertyValueSpecification,
+  ExpressionSpecification,
+  LayerSpecification,
+  StyleSpecification,
+} from 'maplibre-gl'
 import { cardZoom } from './zoomLevels'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
+
+/**
+ * Free map fonts, Open Sans among them (ADR-0006). OpenFreeMap, the base style's own font source,
+ * only has Noto Sans; this source has that too, for cluster counts.
+ */
+export const glyphsUrl = 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
 
 /** The globe's surface, land and sea alike. */
 export const globeNavy = '#0b1526'
@@ -19,7 +30,7 @@ const droppedNames = new Set(['label_town', 'label_village', 'label_other'])
 
 /**
  * The globe's dark look, made from the base style: a plain navy globe where only thin light lines
- * show coastlines, country borders and state lines, with quiet grey place names. Land and sea are
+ * show coastlines, country borders and state lines, with warm cream place names. Land and sea are
  * the same colour. Everything else in the base style (roads, buildings, land cover) is dropped.
  */
 export function globeStyle(base: StyleSpecification): StyleSpecification {
@@ -39,6 +50,7 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
 
   return {
     ...base,
+    glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
     layers: [
@@ -86,16 +98,80 @@ export function firstPlaceNameLayer(style: StyleSpecification): string | undefin
   return style.layers.find((l) => l.type === 'symbol' && l['source-layer'] === 'place')?.id
 }
 
-/** A place name in the globe's colours: countries brighter than states and cities. */
+// Place names, "warm night": cream on a dark outline, in Open Sans.
+const darkOutline = '#050b16'
+const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number> => [
+  'interpolate',
+  ['exponential', 1.2],
+  ['zoom'],
+  ...stops,
+]
+
+interface NameStyle {
+  font: string
+  size: DataDrivenPropertyValueSpecification<number>
+  color: string
+  /** Spaced capitals, with this much tracking in ems. */
+  capitals?: number
+  outline: { width: number; blur: number }
+}
+
+/** Cities brightest; capitals a touch bolder; states muted gold capitals that sit back; countries spaced capitals. */
+const nameStyles = {
+  city: {
+    font: 'Open Sans Semibold',
+    size: zoomed(4, 12, 7, 14, 11, 18),
+    color: '#f1e6cc',
+    outline: { width: 2, blur: 0.5 },
+  },
+  capital: {
+    font: 'Open Sans Bold',
+    size: zoomed(4, 12.5, 7, 15, 11, 19),
+    color: '#fff4dc',
+    outline: { width: 2, blur: 0.5 },
+  },
+  state: {
+    font: 'Open Sans Regular',
+    size: zoomed(3, 9, 8, 13),
+    color: '#9a8a62',
+    capitals: 0.25,
+    outline: { width: 1.2, blur: 0 },
+  },
+  country: {
+    font: 'Open Sans Bold',
+    size: zoomed(1, 9, 4, 16),
+    color: '#d8c9a4',
+    capitals: 0.12,
+    outline: { width: 2, blur: 0.5 },
+  },
+} satisfies Record<string, NameStyle>
+
+function nameStyle(layerId: string): NameStyle {
+  if (layerId === 'label_city_capital') return nameStyles.capital
+  if (layerId === stateNames) return nameStyles.state
+  if (layerId.startsWith('label_country')) return nameStyles.country
+  return nameStyles.city
+}
+
+/** A place name in the globe's look (see nameStyles). */
 function placeName(layer: LayerSpecification): LayerSpecification {
+  const placed = cityNames.has(layer.id) ? majorCitiesOnly(layer) : layer
+  const style = nameStyle(layer.id)
   const named = {
-    ...(cityNames.has(layer.id) ? majorCitiesOnly(layer) : layer),
+    ...placed,
+    layout: {
+      ...(placed.type === 'symbol' ? placed.layout : {}),
+      'text-font': [style.font],
+      'text-size': style.size,
+      'text-transform': style.capitals === undefined ? 'none' : 'uppercase',
+      'text-letter-spacing': style.capitals ?? 0,
+    },
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
-      'text-color': layer.id.startsWith('label_country') ? '#c9d2e0' : '#8f9bb0',
-      'text-halo-color': globeNavy,
-      'text-halo-width': 1.2,
-      'text-halo-blur': 0,
+      'text-color': style.color,
+      'text-halo-color': darkOutline,
+      'text-halo-width': style.outline.width,
+      'text-halo-blur': style.outline.blur,
     },
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;

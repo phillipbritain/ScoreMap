@@ -1,4 +1,4 @@
-import type { LayerSpecification, StyleSpecification } from 'maplibre-gl'
+import type { ExpressionSpecification, LayerSpecification, StyleSpecification } from 'maplibre-gl'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
@@ -11,6 +11,7 @@ const countryLines = 'boundary_2'
 const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
 const stateNames = 'label_state'
+const cityNames = 'label_city'
 // Place names the globe leaves out: villages and other small places.
 const droppedNames = new Set(['label_village', 'label_other'])
 
@@ -87,5 +88,19 @@ function placeName(layer: LayerSpecification): LayerSpecification {
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;
   // the base style starts them at zoom 5.
-  return layer.id === stateNames ? { ...named, minzoom: 3, maxzoom: 8 } : named
+  if (layer.id === stateNames) return { ...named, minzoom: 3, maxzoom: 8 }
+  if (layer.id === cityNames && layer.type === 'symbol') {
+    return { ...named, filter: ['all', layer.filter ?? true, largeEnoughCity] } as LayerSpecification
+  }
+  return named
 }
+
+/**
+ * Zoomed out, only the larger cities are named, adding smaller ones as the viewer zooms in. Cities
+ * are ranked from 1 (largest) down; national capitals have their own layer and aren't thinned.
+ */
+const largeEnoughCity: ExpressionSpecification = [
+  '<=',
+  ['coalesce', ['get', 'rank'], 99],
+  ['step', ['zoom'], 2, 4, 3, 5, 4, 6, 6, 7, 99],
+]

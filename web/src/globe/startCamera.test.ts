@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Camera } from './camera'
 import { startCamera } from './startCamera'
+import { furthestOutZoom } from './zoomLevels'
 
 /** Checks the camera is centred inside a box drawn around a region on a map. */
 function expectCentredIn(camera: Camera, box: { west: number; east: number; south: number; north: number }) {
@@ -23,11 +24,9 @@ describe('startCamera', () => {
     expectCentredIn(startCamera(null, { timeZone: 'America/New_York', locale: 'en-US' }), easternUs)
   })
 
-  it('zooms a first visit in closer than the whole-world view', () => {
-    const regional = startCamera(null, { timeZone: 'Asia/Tokyo', locale: 'ja-JP' })
-    const noHint = startCamera(null, { timeZone: 'UTC', locale: 'en' })
-
-    expect(regional.zoom).toBeGreaterThan(noHint.zoom)
+  it('opens a first visit as far out as the globe goes', () => {
+    const tokyo = startCamera(null, { timeZone: 'Asia/Tokyo', locale: 'ja-JP' })
+    expect(tokyo.zoom).toBe(furthestOutZoom(tokyo.latitude))
   })
 
   it('finds the region for time zones on other continents', () => {
@@ -69,8 +68,12 @@ describe('startCamera', () => {
     })
   })
 
-  it('shows the whole world when neither time zone nor locale hints at a region', () => {
-    expect(startCamera(null, { timeZone: 'UTC', locale: 'en' })).toEqual({ longitude: -40, latitude: 30, zoom: 1.5 })
-    expect(startCamera(null, { timeZone: 'Etc/GMT+3', locale: 'not a locale!' }).zoom).toBe(1.5)
+  it('looks over the Atlantic when neither time zone nor locale hints at a region', () => {
+    expect(startCamera(null, { timeZone: 'UTC', locale: 'en' })).toEqual({
+      longitude: -40,
+      latitude: 30,
+      zoom: furthestOutZoom(30),
+    })
+    expect(startCamera(null, { timeZone: 'Etc/GMT+3', locale: 'not a locale!' }).longitude).toBe(-40)
   })
 })

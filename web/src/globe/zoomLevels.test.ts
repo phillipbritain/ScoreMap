@@ -2,19 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { furthestOutZoom, minZoom, pinLayout } from './zoomLevels'
 
 describe('pinLayout', () => {
-  it('shows small pins zoomed out further than a country', () => {
-    expect(pinLayout(1.5).size).toBe('small')
+  it('shows small pins zoomed out further than a country, as far out as the globe goes', () => {
+    expect(pinLayout(minZoom).size).toBe('small')
+    expect(pinLayout(furthestOutZoom(60)).size).toBe('small')
   })
 
   it('shows score cards once a country fills the screen', () => {
     expect(pinLayout(2.9).size).toBe('small')
     expect(pinLayout(3).size).toBe('card')
     expect(pinLayout(7).size).toBe('card')
-  })
-
-  it('clusters small pins, but not score cards, which find room among themselves', () => {
-    expect(pinLayout(2).cluster).toBe(true)
-    expect(pinLayout(3).cluster).toBe(false)
   })
 
   it('clusters small pins only when they would overlap: closer than a small pin is wide', () => {

@@ -21,8 +21,12 @@ The marker for one game on the globe, placed at the game's venue.
 _Avoid_: Marker, dot, icon
 
 **Cluster**:
-A group of nearby pins shown as one marker with a count, which splits apart as you zoom in.
+While zoomed out, a group of pins close enough to overlap, shown as one marker with a count. It splits apart as you zoom in, or zooms in until it does when selected.
 _Avoid_: Bubble, group
+
+**Crowd**:
+While zoomed in, the games whose score cards have no room on screen even after nearby cards are moved aside, shown as one count. Selecting it zooms in until it splits. Unlike a cluster, it depends on room for cards, not on how close the pins are.
+_Avoid_: Cluster (zoomed-out pins only), stack, pile
 
 **Game panel**:
 The detailed view of one game, opened by selecting its pin, shown beside the globe (or as a sheet on phones).

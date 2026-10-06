@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cityNameBox, gameCities, type City } from './gameCities'
+import { cityNameBox, cityOfPlace, gameCities, type City } from './gameCities'
 import { cityNameLook } from './globeStyle'
 
 const tampa: City = { id: 1, name: 'Tampa', capital: false, longitude: -82.4584, latitude: 27.9478 }
@@ -21,6 +21,35 @@ describe('gameCities', () => {
 
   it('names no city for a venue far from every city the map names', () => {
     expect(gameCities([disneyWorld], [tampa, miami])).toEqual([])
+  })
+
+  it('names a venue by the nearest place however small, over a bigger city further off', () => {
+    const stPetersburg: City = { id: 3, name: 'St. Petersburg', capital: false, longitude: -82.6403, latitude: 27.7703 }
+    expect(gameCities([tropicanaField], [tampa, stPetersburg])).toEqual([stPetersburg])
+  })
+})
+
+describe('cityOfPlace', () => {
+  const point = (longitude: number, latitude: number) => ({ type: 'Point', coordinates: [longitude, latitude] })
+
+  it("reads a place from the map's tiles, named as the map writes it", () => {
+    expect(
+      cityOfPlace({ id: 9, properties: { name: 'Tampa', name_en: 'Tampa', capital: 4 }, geometry: point(-82.46, 27.95) }),
+    ).toEqual({ id: 9, name: 'Tampa', capital: false, longitude: -82.46, latitude: 27.95 })
+  })
+
+  it('writes a name in another script on a second line, and marks national capitals', () => {
+    const tokyo = cityOfPlace({
+      id: 1,
+      properties: { 'name:latin': 'Tokyo', 'name:nonlatin': '東京都', capital: 2 },
+      geometry: point(139.7, 35.7),
+    })
+    expect(tokyo).toMatchObject({ name: 'Tokyo\n東京都', capital: true })
+  })
+
+  it('skips a place without a numeric id or a single point', () => {
+    expect(cityOfPlace({ id: 'x', properties: {}, geometry: point(0, 0) })).toBeUndefined()
+    expect(cityOfPlace({ id: 1, properties: {}, geometry: { type: 'MultiPoint', coordinates: [] } })).toBeUndefined()
   })
 })
 

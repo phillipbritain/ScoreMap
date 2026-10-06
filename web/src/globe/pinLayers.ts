@@ -22,23 +22,26 @@ export const statusColors: Record<GameStatus, string> = {
   Disrupted: '#c3c6cc',
 }
 
+/** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */
+export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
+
+/**
+ * The status a group of games shows as (a cluster, or a crowd of score cards): the most prominent
+ * among them, so Disrupted only when all its games are.
+ */
+export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
+  return statusProminence.find((s) => statuses.includes(s)) ?? 'Disrupted'
+}
+
 const status: ExpressionSpecification = ['get', 'status']
 const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', status, s], 1, 0]]
 
-/**
- * A cluster takes the most prominent status among its games: Live if any is Live, then Upcoming,
- * then Final, and Disrupted only when all its games are.
- */
+/** groupStatus as a style expression, from the counts of each status the pin source keeps for a cluster. */
 const clusterStatus: ExpressionSpecification = [
   'case',
-  ['>', ['get', 'live'], 0],
-  'Live',
-  ['>', ['get', 'upcoming'], 0],
-  'Upcoming',
-  ['>', ['get', 'final'], 0],
-  'Final',
+  ...statusProminence.slice(0, -1).flatMap((s) => [['>', ['get', s.toLowerCase()], 0], s]),
   'Disrupted',
-]
+] as ExpressionSpecification
 
 /** A style value picked by the status that `s` evaluates to (a pin's own, or a cluster's). */
 const byStatus = (
@@ -57,12 +60,14 @@ const byStatus = (
 ]
 
 export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number): GeoJSONSourceSpecification {
+  const { size, clusterRadius } = pinLayout(zoom)
   return {
     type: 'geojson',
     data,
-    cluster: pinLayout(zoom).cluster,
-    clusterRadius: pinLayout(zoom).clusterRadius,
+    cluster: size === 'small',
+    clusterRadius,
     clusterMaxZoom,
+    // Counts by status, for clusterStatus.
     clusterProperties: { live: countOf('Live'), upcoming: countOf('Upcoming'), final: countOf('Final') },
   }
 }
@@ -121,8 +126,8 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
  * zoomed out. Score cards are page elements MapLibre can't see, and circle layers take no part in
  * label placement, so these give place names something to avoid: a name that would fall under a pin
  * moves to another side of its dot (see globeStyle's city names), or is left out if no side is free.
- * Cluster bubbles have none: a name too close to fit beside one would be lost, so it's written across
- * the bubble instead (place names draw above the pins). Both draw nothing.
+ * Clusters have none: a name too close to fit beside one would be lost, so it's written across the
+ * cluster instead (place names draw above the pins). Both draw nothing.
  */
 export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
 // A Live small pin is the largest: radius 7 plus a 2 px outline.

@@ -3,10 +3,10 @@ import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
 import { layOutCards, type CardBox, type CardCrowd, type CardShift } from './cardLayout'
-import { cityNameBox, gameCities, type City, type ScreenBox } from './gameCities'
-import { cityNameLook, gameCitiesState, namedCity, placeTiles } from './globeStyle'
+import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
+import { cityNameLook, gameCitiesState, gameCityPlaces, placeTiles } from './globeStyle'
 import type { PinAnimation } from './pinAnimation'
-import { pinSource, statusColors } from './pinLayers'
+import { groupStatus, pinSource, statusColors, statusProminence } from './pinLayers'
 import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { maxZoom, pinLayout } from './zoomLevels'
@@ -149,17 +149,11 @@ export class ScoreCardMarkers {
    * there's no room for. Only cards on screen (or nearly) are laid out; the rest stay where they'd sit.
    */
   private layOut(gameIds: ReadonlySet<string>): void {
-    const canvas = this.map.getCanvas()
     const boxes = new Map<string, CardBox>()
     for (const gameId of gameIds) {
       const { marker, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(marker.getLngLat())
-      const nearScreen =
-        venue.x > -offScreenMargin &&
-        venue.x < canvas.clientWidth + offScreenMargin &&
-        venue.y > -offScreenMargin &&
-        venue.y < canvas.clientHeight + offScreenMargin
-      if (!nearScreen) continue
+      if (!this.nearScreen(venue)) continue
       boxes.set(gameId, {
         gameId,
         x: venue.x,
@@ -194,20 +188,19 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * Finds the city named for each game among the places loaded so far, and has the map always write
-   * those cities' names (see globeStyle's game city names).
+   * Finds the place named for each game among the places loaded so far, however small, and has the
+   * map always write those places' names (see globeStyle's game city names).
    */
   private findCities(): void {
     if (!this.map.getSource(placeTiles.source)) return
     this.citiesStale = false
     const places = new Map<number, City>()
-    for (const { id, properties: p, geometry } of this.map.querySourceFeatures(placeTiles.source, {
+    for (const feature of this.map.querySourceFeatures(placeTiles.source, {
       sourceLayer: placeTiles.sourceLayer,
-      filter: namedCity,
+      filter: gameCityPlaces,
     })) {
-      if (typeof id !== 'number' || places.has(id) || geometry.type !== 'Point') continue
-      const [longitude, latitude] = geometry.coordinates
-      places.set(id, { id, name: placeName(p), capital: p.capital === 2, longitude, latitude })
+      const city = cityOfPlace(feature)
+      if (city && !places.has(city.id)) places.set(city.id, city)
     }
     const cities = gameCities(
       [...this.games.values()].map((game) => game.venue),
@@ -222,23 +215,28 @@ export class ScoreCardMarkers {
 
   /** Where the names of the cities named for the games are written on screen, for those on screen (or nearly). */
   private cityNames(): ScreenBox[] {
-    const canvas = this.map.getCanvas()
     const zoom = this.map.getZoom()
     return this.cities.flatMap((city) => {
       const dot = this.map.project([city.longitude, city.latitude])
-      const nearScreen =
-        dot.x > -offScreenMargin &&
-        dot.x < canvas.clientWidth + offScreenMargin &&
-        dot.y > -offScreenMargin &&
-        dot.y < canvas.clientHeight + offScreenMargin
-      return nearScreen ? [cityNameBox(city, dot, cityNameLook(zoom, city.capital), measureText)] : []
+      return this.nearScreen(dot) ? [cityNameBox(city, dot, cityNameLook(zoom, city.capital), measureText)] : []
     })
   }
 
-  /** Which cards get room first: the selected game's, then Live, then Upcoming, then the rest. */
+  /** Whether a point on screen is on it, or near enough that what's drawn there could reach it. */
+  private nearScreen({ x, y }: { x: number; y: number }): boolean {
+    const canvas = this.map.getCanvas()
+    return (
+      x > -offScreenMargin &&
+      x < canvas.clientWidth + offScreenMargin &&
+      y > -offScreenMargin &&
+      y < canvas.clientHeight + offScreenMargin
+    )
+  }
+
+  /** Which cards get room first: the selected game's, then by status, most prominent first (see statusProminence). */
   private rank(gameId: string): number {
     if (gameId === this.selectedGameId) return 0
-    return crowdRank[this.games.get(gameId)?.status ?? 'Final']
+    return 1 + statusProminence.indexOf(this.games.get(gameId)?.status ?? 'Final')
   }
 
   private drawCrowds(crowds: readonly CardCrowd[]): void {
@@ -263,7 +261,7 @@ export class ScoreCardMarkers {
         crowd.marker.setLngLat(at)
         crowd.gameIds = gameIds
       }
-      const status = crowdStatus(gameIds.map((id) => this.games.get(id)?.status ?? 'Final'))
+      const status = groupStatus(gameIds.map((id) => this.games.get(id)?.status ?? 'Final'))
       const drawn = `${status} ${gameIds.length}`
       if (crowd.drawn !== drawn) {
         const count = crowd.marker.getElement().firstElementChild as HTMLElement
@@ -280,7 +278,11 @@ export class ScoreCardMarkers {
     }
   }
 
-  /** Zooms in to fit a crowd's games, where there's room for each to have its card. */
+  /**
+   * Zooms in until a crowd splits: to fit its games, at least a level in, and again from there while
+   * some of them are still crowded (until the globe can zoom no further in). A move by the viewer
+   * along the way stops it.
+   */
   private zoomToCrowd(key: string): void {
     const crowd = this.crowds.get(key)
     if (!crowd) return
@@ -289,11 +291,16 @@ export class ScoreCardMarkers {
       const lngLat = this.placed.get(gameId)?.marker.getLngLat()
       if (lngLat) bounds.extend(lngLat)
     }
-    // At least a level in, so a crowd at a single spot still opens up, and at most a couple: past
-    // that, cards have room to spread and a crowd of games close together would leave the screen empty.
     const fitted = this.map.cameraForBounds(bounds, { padding: crowdZoomPadding })?.zoom ?? 0
-    const zoom = Math.min(maxZoom, this.map.getZoom() + 2, Math.max(this.map.getZoom() + 1, fitted))
-    this.map.easeTo({ center: bounds.getCenter(), zoom })
+    const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
+    const center = bounds.getCenter()
+    this.map.easeTo({ center, zoom })
+    this.map.once('idle', () => {
+      const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
+      if (!arrived || zoom >= maxZoom) return
+      const stillCrowded = [...this.crowds].find(([, c]) => c.gameIds.some((id) => crowd.gameIds.includes(id)))
+      if (stillCrowded) this.zoomToCrowd(stillCrowded[0])
+    })
   }
 
   /**
@@ -343,33 +350,13 @@ const cardPointerPx = 6
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
-const crowdRank: Record<GameStatus, number> = { Live: 1, Upcoming: 2, Final: 3, Disrupted: 3 }
-
 /** Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way. */
 const offScreenMargin = 200
 
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120
 
-/**
- * A crowd takes the most prominent status among its games, as a cluster does: Live if any is Live,
- * then Upcoming, then Final, and Disrupted only when all its games are.
- */
-function crowdStatus(statuses: readonly GameStatus[]): GameStatus {
-  for (const status of ['Live', 'Upcoming', 'Final'] as const) if (statuses.includes(status)) return status
-  return 'Disrupted'
-}
-
 const svgNamespace = 'http://www.w3.org/2000/svg'
-
-/** A place's name as the map writes it: in Latin letters, with its own script on a second line when it has one. */
-function placeName(properties: Record<string, unknown>): string {
-  const text = (key: string) => (typeof properties[key] === 'string' ? (properties[key] as string) : undefined)
-  const nonLatin = text('name:nonlatin')
-  if (nonLatin) return `${text('name:latin') ?? ''}
-${nonLatin}`
-  return text('name_en') ?? text('name') ?? ''
-}
 
 const measuring = document.createElement('canvas').getContext('2d')
 
@@ -405,10 +392,10 @@ function drawTrail(trail: SVGGElement, home: CardBox | null, { dx, dy }: CardShi
   // Where a line from the card's centre to the venue leaves the card.
   const toVenueX = venueX - centreX
   const toVenueY = venueY - centreY
-  const leaves = Math.min(1, (home.width / 2) / Math.abs(toVenueX), (home.height / 2) / Math.abs(toVenueY))
+  const edge = Math.min(1, (home.width / 2) / Math.abs(toVenueX), (home.height / 2) / Math.abs(toVenueY))
   const [line, dot] = trail.children
-  line.setAttribute('x1', String(centreX + toVenueX * leaves))
-  line.setAttribute('y1', String(centreY + toVenueY * leaves))
+  line.setAttribute('x1', String(centreX + toVenueX * edge))
+  line.setAttribute('y1', String(centreY + toVenueY * edge))
   line.setAttribute('x2', String(venueX))
   line.setAttribute('y2', String(venueY))
   dot.setAttribute('cx', String(venueX))

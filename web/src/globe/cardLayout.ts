@@ -1,3 +1,5 @@
+import type { ScreenBox } from './gameCities'
+
 /** One score card where it would sit undisturbed, in screen pixels. */
 export interface CardBox {
   gameId: string
@@ -55,11 +57,12 @@ const crowdRadius = 40
  * Finds room for score cards that would overlap, moving each as little as it can. Cards are placed
  * one at a time, by rank and then game order so the same cards always land the same way: each stays
  * where it would sit if that's clear, or else takes the nearest spot that overlaps no card already
- * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. Of those
+ * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. No card
+ * covers a name in `names`, and no trail crosses one unless it covers the trail's own venue. Of those
  * spots it takes the nearest whose trail crosses no card and that sits on no trail, where there is
  * one. A card with no spot within reach joins a crowd instead.
  */
-export function layOutCards(cards: readonly CardBox[]): CardLayout {
+export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox[] = []): CardLayout {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
   // From each moved card's centre to its venue: the part outside the card is its trail.
@@ -74,6 +77,11 @@ export function layOutCards(cards: readonly CardBox[]): CardLayout {
       Math.abs(y - card.y) < furthest + card.height / 2 + halfHeight
     const cardsNear = placed.filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     const venuesNear = boxes.filter((other) => near(other.venueX, other.venueY, venueRadius, venueRadius))
+    const namesNear = names.filter((name) => near(name.x, name.y, name.width / 2, name.height / 2))
+    // A name over the card's own venue can't be kept clear of its trail.
+    const namesAcrossTrail = namesNear.filter(
+      (name) => Math.abs(card.venueX - name.x) >= name.width / 2 || Math.abs(card.venueY - name.y) >= name.height / 2,
+    )
     const trailsNear = trails.filter(
       (trail) =>
         near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
@@ -86,7 +94,12 @@ export function layOutCards(cards: readonly CardBox[]): CardLayout {
         Math.abs(x - otherX) >= card.width / 2 + halfWidth || Math.abs(y - otherY) >= card.height / 2 + halfHeight
       return (
         cardsNear.every((other) => clearOf(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)) &&
-        venuesNear.every((other) => clearOf(other.venueX, other.venueY, venueRadius, venueRadius))
+        venuesNear.every((other) => clearOf(other.venueX, other.venueY, venueRadius, venueRadius)) &&
+        namesNear.every((name) => clearOf(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)) &&
+        ((dx === 0 && dy === 0) ||
+          namesAcrossTrail.every(
+            (name) => !crosses({ x1: x, y1: y, x2: card.venueX, y2: card.venueY }, name.x, name.y, name.width / 2, name.height / 2),
+          ))
       )
     }
 

@@ -45,9 +45,12 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
   const line = (id: string, changes: Partial<LayerSpecification>): LayerSpecification =>
     ({ ...layer(id), ...changes }) as LayerSpecification
 
-  const placeNames = base.layers
+  const named = base.layers
     .filter((l) => l.type === 'symbol' && l['source-layer'] === 'place' && !droppedNames.has(l.id))
     .map((l) => placeName(l))
+  const placeNames = named.map((l) => (cityNames.has(l.id) ? exceptGameCities(l) : l))
+  // Last, so they're placed first: every other name gives way to them.
+  const gameCityNames = named.filter((l) => cityNames.has(l.id)).map(gameCityName)
   layer(stateNames) // Fails loudly if the base style renames it, rather than silently losing state names.
 
   return {
@@ -55,6 +58,7 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
     glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
+    state: { ...base.state, [gameCitiesState]: { default: [] } },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globeNavy } },
       // Coastlines: the edges of the sea, which is the same colour as the land. Lakes and rivers
@@ -88,6 +92,7 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
         paint: { 'line-color': 'rgba(255, 255, 255, 0.5)', 'line-dasharray': [2, 2], 'line-width': 0.8 },
       }),
       ...placeNames,
+      ...gameCityNames,
     ],
   }
 }
@@ -102,9 +107,13 @@ export function firstPlaceNameLayer(style: StyleSpecification): string | undefin
 
 // Place names, "warm night": cream on a dark outline, in Open Sans.
 const darkOutline = '#050b16'
+// City name sizes in pixels, as zoom, size stops (see zoomed).
+const cityNameSizes = { city: [4, 12, 7, 14, 11, 18], capital: [4, 12.5, 7, 15, 11, 19] }
+const zoomBase = 1.2
+
 const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number> => [
   'interpolate',
-  ['exponential', 1.2],
+  ['exponential', zoomBase],
   ['zoom'],
   ...stops,
 ]
@@ -122,13 +131,13 @@ interface NameStyle {
 const nameStyles = {
   city: {
     font: 'Open Sans Semibold',
-    size: zoomed(4, 12, 7, 14, 11, 18),
+    size: zoomed(...cityNameSizes.city),
     color: '#f1e6cc',
     outline: { width: 2, blur: 0.5 },
   },
   capital: {
     font: 'Open Sans Bold',
-    size: zoomed(4, 12.5, 7, 15, 11, 19),
+    size: zoomed(...cityNameSizes.capital),
     color: '#fff4dc',
     outline: { width: 2, blur: 0.5 },
   },
@@ -184,6 +193,11 @@ function placeName(layer: LayerSpecification): LayerSpecification {
 /** A city ranked 1 (largest) to 4, such as New York, Dallas or Nashville; smaller cities aren't named. */
 const majorCity: ExpressionSpecification = ['<=', ['coalesce', ['get', 'rank'], 99], 4]
 
+/** The cities the map names, among the tiles' places. */
+export const namedCity: ExpressionSpecification = ['all', ['==', ['get', 'class'], 'city'], majorCity]
+/** The tiles' source and layer of places, cities among them. */
+export const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
+
 /**
  * Names only major cities, at every zoom. Where two names would collide, the larger city (lower
  * rank) is placed first, so a nearby smaller city gives way.
@@ -203,7 +217,74 @@ function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
       // Far enough from the dot (in ems) to clear a game's pin on it: a round small pin zoomed out,
       // a score card's pointer zoomed in.
-      'text-radial-offset': ['step', ['zoom'], 1.2, cardZoom, 1],
+      'text-radial-offset': ['step', ['zoom'], cityNameOffset.small, cardZoom, cityNameOffset.card],
     },
   }
+}
+
+// How far a city's name sits from its dot, in ems: clear of a round small pin zoomed out, a score
+// card's pointer zoomed in.
+const cityNameOffset = { small: 1.2, card: 1 }
+
+/**
+ * The global state listing the cities named for their games (see gameCities), by their features' ids.
+ * Their names always show, below their dots, and nothing else is written over them; score cards and
+ * trails are laid out around them.
+ */
+export const gameCitiesState = 'gameCities'
+const isGameCity: ExpressionSpecification = ['in', ['id'], ['global-state', gameCitiesState]]
+
+/** A city name layer's twin for the cities named for their games; the layer itself leaves them out. */
+function gameCityName(layer: LayerSpecification): LayerSpecification {
+  if (layer.type !== 'symbol') return layer
+  return {
+    ...layer,
+    id: `${layer.id}_game`,
+    filter: ['all', layer.filter as ExpressionSpecification, isGameCity],
+    // Always below the dot, where cards are laid out around it, and written whatever else is there.
+    layout: { ...layer.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true },
+  }
+}
+
+/** Leaves the cities named for their games to gameCityName's layers. */
+function exceptGameCities(layer: LayerSpecification): LayerSpecification {
+  if (layer.type !== 'symbol') return layer
+  return { ...layer, filter: ['all', layer.filter as ExpressionSpecification, ['!', isGameCity]] }
+}
+
+/** Where and how big a city's name is written below its dot, so cards can keep clear of it. */
+export interface CityNameLook {
+  /** The font, as a CSS font for measuring the name. */
+  font: string
+  /** The text's size in pixels. */
+  size: number
+  /** How far the name's top sits below the city's dot, in pixels. */
+  offset: number
+  /** The widest a line gets before the name wraps, in pixels. */
+  maxWidth: number
+}
+
+/** How a city's name looks at a zoom level: a capital's or another city's (see nameStyles). */
+export function cityNameLook(zoom: number, capital: boolean): CityNameLook {
+  const size = atZoom(capital ? cityNameSizes.capital : cityNameSizes.city, zoom)
+  return {
+    font: `${capital ? 700 : 600} ${size}px "Open Sans", sans-serif`,
+    size,
+    offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
+    maxWidth: cityNameMaxWidth * size,
+  }
+}
+// The base style wraps city names wider than this many ems.
+const cityNameMaxWidth = 8
+
+/** The value of a zoomed() expression at a zoom level. */
+function atZoom(stops: readonly number[], zoom: number): number {
+  if (zoom <= stops[0]) return stops[1]
+  for (let i = 2; i < stops.length; i += 2) {
+    const [z0, v0, z1, v1] = stops.slice(i - 2, i + 2)
+    if (zoom > z1) continue
+    const t = (zoomBase ** (zoom - z0) - 1) / (zoomBase ** (z1 - z0) - 1)
+    return v0 + (v1 - v0) * t
+  }
+  return stops[stops.length - 1]
 }

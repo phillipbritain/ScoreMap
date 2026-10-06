@@ -15,6 +15,11 @@ const card = (gameId: string, x: number, y: number, rank = 0): CardBox => ({
 
 const spreadCards = (cards: CardBox[]) => layOutCards(cards).shifts
 
+function placed2(cards: CardBox[], names: Parameters<typeof layOutCards>[1]) {
+  const shifts = layOutCards(cards, names).shifts
+  return cards.map((c) => ({ ...c, x: c.x + shifts.get(c.gameId)!.dx, y: c.y + shifts.get(c.gameId)!.dy }))
+}
+
 function placed(cards: CardBox[]) {
   const shifts = spreadCards(cards)
   return cards.map((c) => ({ ...c, x: c.x + shifts.get(c.gameId)!.dx, y: c.y + shifts.get(c.gameId)!.dy }))
@@ -79,6 +84,49 @@ describe('layOutCards', () => {
         expect(lineCrossesCard(moved.x, moved.y, moved.venueX, moved.venueY, other)).toBe(false)
       }
     }
+  })
+
+  describe("with the names of games' cities", () => {
+    const crowd = [card('a', 0, 0), card('b', 50, 20), card('c', 100, 0), card('d', 40, -30), card('e', 150, 30)]
+    // Names below a, around c's venue, and where d's card would go if moved up.
+    const names = [
+      { x: 0, y: 70, width: 80, height: 24 },
+      { x: 100, y: 52, width: 70, height: 20 },
+      { x: 40, y: -110, width: 90, height: 24 },
+    ]
+    const nameCard = (name: (typeof names)[number]) => ({ ...card('name', 0, 0), ...name })
+    const coversVenue = (name: (typeof names)[number], c: CardBox) =>
+      Math.abs(c.venueX - name.x) < name.width / 2 && Math.abs(c.venueY - name.y) < name.height / 2
+
+    function trailsAcrossNames(after: CardBox[]): number {
+      let count = 0
+      for (const [i, c] of after.entries()) {
+        if (c.x === crowd[i].x && c.y === crowd[i].y) continue
+        for (const name of names) {
+          if (!coversVenue(name, c) && lineCrossesCard(c.x, c.y, c.venueX, c.venueY, nameCard(name))) count++
+        }
+      }
+      return count
+    }
+
+    it('keeps cards off them', () => {
+      expect(crowd.some((c) => names.some((name) => overlaps(c, nameCard(name))))).toBe(true)
+      for (const c of placed2(crowd, names)) {
+        for (const name of names) expect(overlaps(c, nameCard(name))).toBe(false)
+      }
+    })
+
+    it("keeps trails off them, unless a name covers the trail's own venue", () => {
+      // Laid out without the names, trails would cross them.
+      expect(trailsAcrossNames(placed(crowd))).toBeGreaterThan(0)
+      expect(trailsAcrossNames(placed2(crowd, names))).toBe(0)
+    })
+
+    it("still gives a card to a game whose venue is under a name, whose trail can't avoid it", () => {
+      const under = [{ x: 0, y: 40, width: 80, height: 20 }]
+      const { shifts } = layOutCards([card('a', 0, 0), card('b', 5, 0)], under)
+      expect(shifts.size).toBe(2)
+    })
   })
 
   it('makes room for several crowded cards', () => {

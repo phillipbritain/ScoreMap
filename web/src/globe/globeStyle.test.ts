@@ -1,7 +1,7 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { firstPlaceNameLayer, globeStyle, glyphsUrl } from './globeStyle'
+import { cityNameLook, firstPlaceNameLayer, gameCitiesState, globeStyle, glyphsUrl } from './globeStyle'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -45,6 +45,8 @@ describe('globeStyle', () => {
       'label_state',
       'label_city_capital',
       'label_country_1',
+      'label_city_game',
+      'label_city_capital_game',
     ])
   })
 
@@ -100,6 +102,32 @@ describe('globeStyle', () => {
       expect(layout).not.toHaveProperty('text-anchor')
       expect(layout).not.toHaveProperty('text-offset')
     }
+  })
+
+  it("names a game's city only in its own layer, placed before every other name and always written below its dot", () => {
+    const cityFeature = { type: 1, id: 42, properties: { class: 'city', capital: 0, rank: 3 } } as never
+    const otherCity = { type: 1, id: 7, properties: { class: 'city', capital: 0, rank: 3 } } as never
+    const state = { [gameCitiesState]: [42] }
+    const named = (id: string, feature: never) =>
+      featureFilter((layer(id) as { filter: FilterSpecification }).filter, 'f', state).filter({ zoom: 5 }, feature)
+    expect(named('label_city_game', cityFeature)).toBe(true)
+    expect(named('label_city', cityFeature)).toBe(false)
+    expect(named('label_city_game', otherCity)).toBe(false)
+    expect(named('label_city', otherCity)).toBe(true)
+
+    const layout = layer('label_city_game')?.layout as Record<string, unknown>
+    expect(layout['text-variable-anchor']).toEqual(['top'])
+    expect(layout['text-allow-overlap']).toBe(true)
+    expect(globeStyle(liberty).state).toEqual({ [gameCitiesState]: { default: [] } })
+  })
+
+  it("gives a city name's size and place at a zoom level, matching the style", () => {
+    expect(cityNameLook(4, false)).toMatchObject({ size: 12, offset: 12 })
+    expect(cityNameLook(7, true)).toMatchObject({ size: 15, offset: 15, maxWidth: 120 })
+    expect(cityNameLook(2, false)).toMatchObject({ size: 12, offset: 1.2 * 12 })
+    expect(cityNameLook(5.5, false).size).toBeGreaterThan(12)
+    expect(cityNameLook(5.5, false).size).toBeLessThan(14)
+    expect(cityNameLook(4, true).font).toMatch(/^700 /)
   })
 
   it('finds the first place-name layer, for pins to go beneath', () => {

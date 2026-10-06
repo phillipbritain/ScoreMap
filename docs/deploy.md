@@ -79,17 +79,40 @@ az webapp deploy --resource-group scoremap-rg --name scoremap --src-path publish
 - Stream the server log with `az webapp log tail --resource-group scoremap-rg --name scoremap`. For more detail, first run `az webapp log config --resource-group scoremap-rg --name scoremap --docker-container-logging filesystem`.
 - To check that the app recovers from sleep, leave it idle for more than 20 minutes and open it again. The first request starts the app, which takes a few seconds. The browser connects, gets a freshly fetched snapshot, and polling resumes. A browser that stayed open while the app slept reconnects on its own, retrying with backoff up to every 30 seconds, and catches up the same way.
 
-## Deploy from GitHub Actions (optional)
+## Deploy from GitHub Actions
 
-`.github/workflows/deploy.yml` runs the tests, publishes and deploys. It only runs when you start it by hand (Actions → deploy → Run workflow), and it skips itself until it is configured:
+`.github/workflows/deploy.yml` runs the tests, publishes and deploys on every push to `main`. To deploy by hand, use Actions → deploy → Run workflow, or `gh workflow run deploy`. It skips itself until it is set up. Only runs on `main` can sign in to Azure.
 
-1. Create an identity GitHub can sign in as. The simplest way: in the Azure portal open the app → Deployment Center → Source: GitHub → Authentication: user-assigned identity. This creates the identity and its federated credential. Discard the workflow file it offers to commit, since the repo already has one.
-2. In the GitHub repo settings, add the secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID` (from that identity) and the variable `AZURE_WEBAPP_NAME` (your app name).
-3. To deploy on every push to `main`, add `push: { branches: [main] }` under `on:` in the workflow.
+GitHub signs in to Azure as a user-assigned managed identity, with no password stored anywhere. A federated credential tells Azure to trust GitHub's sign-in tokens for this repo's `main` branch, and the identity may only deploy to this one app (Website Contributor on the app). One-time setup, after `az login` and `gh auth login`:
+
+```powershell
+$rg = 'scoremap-rg'
+$app = 'scoremap'
+$repo = 'phillipbritain/ScoreMap'
+
+az identity create --resource-group $rg --name scoremap-github
+
+# GitHub's token subject names the owner and repo with their IDs, which can't be reused if the repo
+# is renamed. Get it from: gh api repos/$repo --jq '"repo:\(.owner.login)@\(.owner.id)/\(.name)@\(.id)"'
+$subject = 'repo:phillipbritain@35792740/ScoreMap@1403601772:ref:refs/heads/main'
+az identity federated-credential create --resource-group $rg --identity-name scoremap-github --name github-main `
+  --issuer https://token.actions.githubusercontent.com --subject $subject --audiences api://AzureADTokenExchange
+
+$principalId = az identity show --resource-group $rg --name scoremap-github --query principalId -o tsv
+$appId = az webapp show --resource-group $rg --name $app --query id -o tsv
+az role assignment create --assignee-object-id $principalId --assignee-principal-type ServicePrincipal `
+  --role 'Website Contributor' --scope $appId
+
+gh secret set AZURE_CLIENT_ID -R $repo -b (az identity show --resource-group $rg --name scoremap-github --query clientId -o tsv)
+gh secret set AZURE_TENANT_ID -R $repo -b (az account show --query tenantId -o tsv)
+gh secret set AZURE_SUBSCRIPTION_ID -R $repo -b (az account show --query id -o tsv)
+gh variable set AZURE_WEBAPP_NAME -R $repo -b $app
+```
 
 ## If it doesn't work
 
 - **Blank page or 404 at `/`**: the deploy has no `wwwroot`. Use `scripts/deploy.ps1` or `dotnet publish` without `-p:SkipBrowserApp=true`, and make sure Node.js is installed where you publish.
 - **App won't start**: check the startup command (`dotnet ScoreMap.Server.dll`) and the runtime (`az webapp config show --resource-group scoremap-rg --name scoremap --query linuxFxVersion`).
 - **Live updates never arrive**: make sure WebSockets are on (`az webapp config show ... --query webSocketsEnabled`). SignalR should fall back to other transports anyway, so check the browser console for connection errors.
+- **GitHub deploy fails at Azure login with `AADSTS700213`**: the federated credential's subject doesn't match the token. The error shows the subject GitHub sent; update the credential with `az identity federated-credential update` and the same arguments as above. A run from a branch other than `main` always fails here, by design.
 - **App stops for the rest of the day**: the F1 daily CPU limit was hit. Scale up with `az appservice plan update --resource-group scoremap-rg --name scoremap-plan --sku B1`.

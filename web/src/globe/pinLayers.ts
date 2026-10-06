@@ -60,7 +60,7 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: nu
   return {
     type: 'geojson',
     data,
-    cluster: true,
+    cluster: pinLayout(zoom).cluster,
     clusterRadius: pinLayout(zoom).clusterRadius,
     clusterMaxZoom,
     clusterProperties: { live: countOf('Live'), upcoming: countOf('Upcoming'), final: countOf('Final') },

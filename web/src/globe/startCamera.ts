@@ -1,4 +1,5 @@
 import type { Camera } from './camera'
+import { furthestOutZoom } from './zoomLevels'
 
 /** What the browser says about where the viewer is, without asking for their location. */
 export interface ViewerPlace {
@@ -8,13 +9,13 @@ export interface ViewerPlace {
   locale: string
 }
 
-/** Where the globe opens: where the viewer left it, otherwise centred on their region. */
+/**
+ * Where the globe opens: where the viewer left it, otherwise centred on their region, as far out as
+ * the globe goes. (The map keeps either within its zoom limits.)
+ */
 export function startCamera(saved: Camera | null, place: ViewerPlace): Camera {
   return saved ?? regionCamera(place)
 }
-
-/** Close enough to show the viewer's part of the world while still looking like a globe. */
-const regionZoom = 2
 
 /** [longitude, latitude] roughly at the middle of the region each common time zone covers. */
 const zoneCentres: Record<string, [number, number]> = {
@@ -93,13 +94,14 @@ const countryCentres: Record<string, [number, number]> = {
   NG: [8, 9],
 }
 
-/** The whole-world view used when nothing hints at the viewer's region. */
-const worldView: Camera = { longitude: -40, latitude: 30, zoom: 1.5 }
+/** Where to look when nothing hints at the viewer's region: the Atlantic, between the Americas and Europe. */
+const worldCentre: [number, number] = [-40, 30]
 
 function regionCamera({ timeZone, locale }: ViewerPlace): Camera {
   const centre =
     zoneCentres[timeZone] ?? areaCentres[timeZone.split('/')[0]] ?? countryCentres[countryOf(locale) ?? '']
-  return centre ? { longitude: centre[0], latitude: centre[1], zoom: regionZoom } : worldView
+  const [longitude, latitude] = centre ?? worldCentre
+  return { longitude, latitude, zoom: furthestOutZoom(latitude) }
 }
 
 /** The country (region subtag) in a language tag such as "en-GB", if it has one. */

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { pinLayout } from './zoomLevels'
+import { furthestOutZoom, minZoom, pinLayout } from './zoomLevels'
 
 describe('pinLayout', () => {
-  it('shows small pins at the starting whole-globe zoom', () => {
+  it('shows small pins zoomed out further than a country', () => {
     expect(pinLayout(1.5).size).toBe('small')
   })
 
@@ -28,5 +28,13 @@ describe('pinLayout', () => {
     // In steps, rounded down, so it errs towards clustering and doesn't change every frame.
     expect(pinLayout(6.6).clusterRadius).toBe(pinLayout(6.5).clusterRadius)
     expect(pinLayout(6.99).clusterRadius).toBeGreaterThan(106 / 2)
+  })
+})
+
+describe('furthestOutZoom', () => {
+  it('is the minimum zoom at the equator, and lower towards the poles for the same size of globe on screen', () => {
+    expect(furthestOutZoom(0)).toBe(minZoom)
+    expect(furthestOutZoom(60)).toBeCloseTo(minZoom - 1)
+    expect(furthestOutZoom(-60)).toBeCloseTo(minZoom - 1)
   })
 })

@@ -25,6 +25,7 @@ import {
 import { addGlobeGlow } from './globeGlow'
 import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
+import { addStateNameFit } from './stateNameFit'
 import { shouldSpin, spunLongitude } from './slowSpin'
 import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout } from './zoomLevels'
 
@@ -107,6 +108,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
     })
     instance.setStyle(baseStyleUrl, { transformStyle: (_previous, base) => globeStyle(base) })
     const removeGlow = addGlobeGlow(instance)
+    const removeStateNameFit = addStateNameFit(instance)
     const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
     scoreCards.setGames(latestGames.current)
     scoreCards.setSelected(latestSelected.current)
@@ -230,6 +232,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       window.removeEventListener('touchcancel', release)
       scoreCards.clear()
       removeGlow()
+      removeStateNameFit()
       instance.remove()
       map.current = null
       cards.current = null

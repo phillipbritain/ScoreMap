@@ -24,7 +24,7 @@ export const globeNavy = '#0b1526'
 const countryLines = 'boundary_2'
 const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
-const stateNames = 'label_state'
+export const stateNames = 'label_state'
 // City names, national capitals included; only major cities are named (see majorCity).
 const cityNames = new Set(['label_city', 'label_city_capital'])
 // Place names the globe leaves out: towns, villages and other small places.
@@ -186,8 +186,13 @@ function placeName(layer: LayerSpecification): LayerSpecification {
     },
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;
-  // the base style starts them at zoom 5.
-  return layer.id === stateNames ? { ...named, minzoom: 3, maxzoom: 8 } : named
+  // the base style starts them at zoom 5. Unseen until all of them in view fit (see stateNameFit).
+  return layer.id === stateNames ? hiddenStateNames({ ...named, minzoom: 3, maxzoom: 8 }) : named
+}
+
+function hiddenStateNames(layer: LayerSpecification): LayerSpecification {
+  if (layer.type !== 'symbol') return layer
+  return { ...layer, paint: { ...layer.paint, 'text-opacity': 0, 'text-opacity-transition': { duration: 300 } } }
 }
 
 /** A city ranked 1 (largest) to 4, such as New York, Dallas or Nashville; smaller cities aren't named. */

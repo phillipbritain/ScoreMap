@@ -43,6 +43,14 @@ describe('globeStyle', () => {
     expect(layer('coastline')).toMatchObject({ type: 'line', 'source-layer': 'water' })
   })
 
+  it('outlines only the sea, not lakes or rivers', () => {
+    const { filter } = featureFilter((layer('coastline') as { filter: FilterSpecification }).filter, 'coastline.filter')
+    const outlined = (waterClass: string) => filter({ zoom: 6 }, { type: 3, properties: { class: waterClass } } as never)
+    expect(outlined('ocean')).toBe(true)
+    expect(outlined('lake')).toBe(false)
+    expect(outlined('river')).toBe(false)
+  })
+
   it('shows state lines at every zoom and state names from zoom 3 to 8', () => {
     expect(layer('boundary_3')?.minzoom).toBe(0)
     expect(layer('label_state')).toMatchObject({ minzoom: 3, maxzoom: 8 })

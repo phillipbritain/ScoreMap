@@ -55,12 +55,15 @@ const crowdRadius = 40
  * Finds room for score cards that would overlap, moving each as little as it can. Cards are placed
  * one at a time, by rank and then game order so the same cards always land the same way: each stays
  * where it would sit if that's clear, or else takes the nearest spot that overlaps no card already
- * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. A card with
- * no such spot within reach joins a crowd instead.
+ * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. Of those
+ * spots it takes the nearest whose trail crosses no card and that sits on no trail, where there is
+ * one. A card with no spot within reach joins a crowd instead.
  */
 export function layOutCards(cards: readonly CardBox[]): CardLayout {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
+  // From each moved card's centre to its venue: the part outside the card is its trail.
+  const trails: Segment[] = []
   const shifts = new Map<string, CardShift>()
   const crowds: CardCrowd[] = []
 
@@ -71,6 +74,10 @@ export function layOutCards(cards: readonly CardBox[]): CardLayout {
       Math.abs(y - card.y) < furthest + card.height / 2 + halfHeight
     const cardsNear = placed.filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     const venuesNear = boxes.filter((other) => near(other.venueX, other.venueY, venueRadius, venueRadius))
+    const trailsNear = trails.filter(
+      (trail) =>
+        near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
+    )
 
     const fits = ({ dx, dy }: CardShift) => {
       const x = card.x + dx
@@ -83,10 +90,35 @@ export function layOutCards(cards: readonly CardBox[]): CardLayout {
       )
     }
 
-    const shift = moves.find(fits)
+    // Whether a card moved this way would keep clear of trails: its own crossing no card, and no trail
+    // already drawn crossing it.
+    const trailsClear = ({ dx, dy }: CardShift) => {
+      const x = card.x + dx
+      const y = card.y + dy
+      const halfWidth = card.width / 2 + gap
+      const halfHeight = card.height / 2 + gap
+      if (trailsNear.some((trail) => crosses(trail, x, y, halfWidth, halfHeight))) return false
+      if (dx === 0 && dy === 0) return true
+      const own = { x1: x, y1: y, x2: card.venueX, y2: card.venueY }
+      return cardsNear.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
+    }
+
+    // The nearest spot clear of trails too, or failing that the nearest spot at all.
+    let shift: CardShift | undefined
+    for (const move of moves) {
+      if (!fits(move)) continue
+      if (trailsClear(move)) {
+        shift = move
+        break
+      }
+      shift ??= move
+    }
     if (shift) {
       shifts.set(card.gameId, shift)
-      placed.push({ ...card, x: card.x + shift.dx, y: card.y + shift.dy })
+      const x = card.x + shift.dx
+      const y = card.y + shift.dy
+      placed.push({ ...card, x, y })
+      if (shift.dx !== 0 || shift.dy !== 0) trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
       continue
     }
     const crowd = crowds.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= crowdRadius)
@@ -94,4 +126,33 @@ export function layOutCards(cards: readonly CardBox[]): CardLayout {
     else crowds.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
   }
   return { shifts, crowds }
+}
+
+interface Segment {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+/** Whether a line passes through a box, given by its centre and half its size. */
+function crosses({ x1, y1, x2, y2 }: Segment, x: number, y: number, halfWidth: number, halfHeight: number): boolean {
+  // Narrow down the part of the line within the box one axis at a time.
+  let from = 0
+  let to = 1
+  for (const [start, delta, low, high] of [
+    [x1, x2 - x1, x - halfWidth, x + halfWidth],
+    [y1, y2 - y1, y - halfHeight, y + halfHeight],
+  ]) {
+    if (delta === 0) {
+      if (start <= low || start >= high) return false
+      continue
+    }
+    const a = (low - start) / delta
+    const b = (high - start) / delta
+    from = Math.max(from, Math.min(a, b))
+    to = Math.min(to, Math.max(a, b))
+    if (from >= to) return false
+  }
+  return true
 }

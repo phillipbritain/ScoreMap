@@ -371,6 +371,7 @@ body {
   .pin-pulse--start {
     animation: pin-pulse-calm 2.6s ease-in-out;
   }
+}
 
 /* The globe with the filter menu and the no-pins message laid over it. */
 .globe-area {

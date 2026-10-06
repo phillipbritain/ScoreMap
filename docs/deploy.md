@@ -18,33 +18,25 @@ F1 suits ScoreMap. The server only polls ESPN while a browser is connected, so a
 
 ## One-time setup
 
-You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. Pick an app name, which must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
+You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. The plan and the web app are described in `infra/main.bicep`: .NET 10 on Linux, WebSockets on, ARR affinity (sticky sessions) on for SignalR, HTTPS only, and container logs kept for 3 days. The app name and plan size are set in `infra/main.bicepparam`. The app name must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
 
 ```powershell
 $rg = 'scoremap-rg'
-$app = 'scoremap'          # must be unique across Azure
 $location = 'centralus'    # any region near you; `az account list-locations -o table`
 
 az login
 
 az group create --name $rg --location $location
-az appservice plan create --resource-group $rg --name scoremap-plan --is-linux --sku F1
-
-# Check the runtime string first with: az webapp list-runtimes --os linux
-az webapp create --resource-group $rg --plan scoremap-plan --name $app --runtime 'DOTNETCORE:10.0'
-
-# SignalR: turn WebSockets on, and keep ARR affinity (sticky sessions) on so a browser's
-# requests always reach the instance that holds its connection if the app ever runs on more than one.
-az webapp config set --resource-group $rg --name $app --web-sockets-enabled true --startup-file 'dotnet ScoreMap.Server.dll'
-az webapp update --resource-group $rg --name $app --client-affinity-enabled true --https-only true
-
-# App settings. The deploy uploads an already-built app, so App Service must not build it again.
-az webapp config appsettings set --resource-group $rg --name $app --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+az deployment group create --resource-group $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
 ```
+
+The template is scoped to the resource group, which you create first. That keeps the deploy to rights on one resource group, rather than the whole subscription.
+
+Running the deployment again changes nothing unless the template changed, so change settings in the template and redeploy, not in the portal. A setting changed in the portal is put back by the next run. To preview what a run would change, use `az deployment group what-if` with the same arguments. It lists the web app's `siteConfig` settings as created even when they already match, because Azure doesn't return them when reading the app. Set the plan size with `--parameters infra/main.bicepparam sku=B1`.
 
 ### App settings
 
-App settings reach the server as environment variables, and `__` separates configuration sections. None are required. These are the ones you are most likely to want:
+App settings reach the server as environment variables, and `__` separates configuration sections. None are required. To set one, add it to `appSettings` in `infra/main.bicep` and redeploy the template. A setting added any other way is removed by the next run. These are the ones you are most likely to want:
 
 | Setting                      | Default                                                                                               | Purpose                                                                                                          |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -76,7 +68,7 @@ az webapp deploy --resource-group scoremap-rg --name scoremap --src-path publish
 ## Checking it works
 
 - Open the site and wait for pins to appear. During live games, scores should change on their own.
-- Stream the server log with `az webapp log tail --resource-group scoremap-rg --name scoremap`. For more detail, first run `az webapp log config --resource-group scoremap-rg --name scoremap --docker-container-logging filesystem`.
+- Stream the server log with `az webapp log tail --resource-group scoremap-rg --name scoremap`. The template turns on container logging, so the log includes the app's own output.
 - To check that the app recovers from sleep, leave it idle for more than 20 minutes and open it again. The first request starts the app, which takes a few seconds. The browser connects, gets a freshly fetched snapshot, and polling resumes. A browser that stayed open while the app slept reconnects on its own, retrying with backoff up to every 30 seconds, and catches up the same way.
 
 ## Deploy from GitHub Actions
@@ -115,4 +107,4 @@ gh variable set AZURE_WEBAPP_NAME -R $repo -b $app
 - **App won't start**: check the startup command (`dotnet ScoreMap.Server.dll`) and the runtime (`az webapp config show --resource-group scoremap-rg --name scoremap --query linuxFxVersion`).
 - **Live updates never arrive**: make sure WebSockets are on (`az webapp config show ... --query webSocketsEnabled`). SignalR should fall back to other transports anyway, so check the browser console for connection errors.
 - **GitHub deploy fails at Azure login with `AADSTS700213`**: the federated credential's subject doesn't match the token. The error shows the subject GitHub sent; update the credential with `az identity federated-credential update` and the same arguments as above. A run from a branch other than `main` always fails here, by design.
-- **App stops for the rest of the day**: the F1 daily CPU limit was hit. Scale up with `az appservice plan update --resource-group scoremap-rg --name scoremap-plan --sku B1`.
+- **App stops for the rest of the day**: the F1 daily CPU limit was hit. Scale up by redeploying the template with `sku=B1` (see One-time setup). Scaling with `az appservice plan update` also works, but the next run of the template sets the plan back to F1.

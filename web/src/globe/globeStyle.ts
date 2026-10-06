@@ -77,6 +77,14 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
   }
 }
 
+/**
+ * The globe's first place-name layer. Pins are added beneath it, so place names always draw over
+ * them and stay readable.
+ */
+export function firstPlaceNameLayer(style: StyleSpecification): string | undefined {
+  return style.layers.find((l) => l.type === 'symbol' && l['source-layer'] === 'place')?.id
+}
+
 /** A place name in the globe's colours: countries brighter than states and cities. */
 function placeName(layer: LayerSpecification): LayerSpecification {
   const named = {
@@ -106,6 +114,13 @@ function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
   return {
     ...layer,
     filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
-    layout: { ...layer.layout, 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99], 'text-padding': 28 },
+    layout: {
+      ...layer.layout,
+      'symbol-sort-key': ['coalesce', ['get', 'rank'], 99],
+      'text-padding': 28,
+      // Below the city's dot: a game's score card sits above its venue, so the two don't overlap.
+      'text-anchor': 'top',
+      'text-offset': [0, 0.3],
+    },
   }
 }

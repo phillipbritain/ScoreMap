@@ -176,6 +176,22 @@ body {
   font-size: 12px;
   line-height: 1.2;
   cursor: pointer;
+  position: relative;
+  /* Animations grow the card from its pointer, which stays on the venue. */
+  transform-origin: 50% 100%;
+}
+
+/* A small pointer down to the venue; the card sits above it. */
+.score-card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+  box-shadow: 2px 2px 3px rgb(0 0 0 / 0.2);
 }
 
 .score-card--live {

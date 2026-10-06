@@ -10,8 +10,10 @@ import { cardZoom } from './zoomLevels'
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
 
 /**
- * Free map fonts, Open Sans among them (ADR-0006). OpenFreeMap, the base style's own font source,
- * only has Noto Sans; this source has that too, for cluster counts.
+ * Free map fonts, Open Sans among them (ADR-0006); OpenFreeMap, the base style's own font source,
+ * only has Noto Sans. Every text on the globe, cluster counts included, must use a font this source
+ * has: for one it lacks, it answers with a web page rather than an error, and the text falls back
+ * to a browser font.
  */
 export const glyphsUrl = 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
 

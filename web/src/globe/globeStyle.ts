@@ -11,9 +11,10 @@ const countryLines = 'boundary_2'
 const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
 const stateNames = 'label_state'
-const cityNames = 'label_city'
-// Place names the globe leaves out: villages and other small places.
-const droppedNames = new Set(['label_village', 'label_other'])
+// City names, national capitals included; only major cities are named (see majorCity).
+const cityNames = new Set(['label_city', 'label_city_capital'])
+// Place names the globe leaves out: towns, villages and other small places.
+const droppedNames = new Set(['label_town', 'label_village', 'label_other'])
 
 /**
  * The globe's dark look, made from the base style: a plain navy globe where only thin light lines
@@ -79,7 +80,7 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
 /** A place name in the globe's colours: countries brighter than states and cities. */
 function placeName(layer: LayerSpecification): LayerSpecification {
   const named = {
-    ...layer,
+    ...(cityNames.has(layer.id) ? majorCitiesOnly(layer) : layer),
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
       'text-color': layer.id.startsWith('label_country') ? '#c9d2e0' : '#8f9bb0',
@@ -90,19 +91,21 @@ function placeName(layer: LayerSpecification): LayerSpecification {
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;
   // the base style starts them at zoom 5.
-  if (layer.id === stateNames) return { ...named, minzoom: 3, maxzoom: 8 }
-  if (layer.id === cityNames && layer.type === 'symbol') {
-    return { ...named, filter: ['all', layer.filter ?? true, largeEnoughCity] } as LayerSpecification
-  }
-  return named
+  return layer.id === stateNames ? { ...named, minzoom: 3, maxzoom: 8 } : named
 }
 
+/** A city ranked 1 (largest) to 4, such as New York, Dallas or Nashville; smaller cities aren't named. */
+const majorCity: ExpressionSpecification = ['<=', ['coalesce', ['get', 'rank'], 99], 4]
+
 /**
- * Zoomed out, only the larger cities are named, adding smaller ones as the viewer zooms in. Cities
- * are ranked from 1 (largest) down; national capitals have their own layer and aren't thinned.
+ * Names only major cities, at every zoom. Where two names would collide, the larger city (lower
+ * rank) is placed first, and each name keeps a clear margin, so a nearby smaller city gives way.
  */
-const largeEnoughCity: ExpressionSpecification = [
-  '<=',
-  ['coalesce', ['get', 'rank'], 99],
-  ['step', ['zoom'], 2, 4, 3, 5, 4, 6, 6, 7, 99],
-]
+function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
+  if (layer.type !== 'symbol') return layer
+  return {
+    ...layer,
+    filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
+    layout: { ...layer.layout, 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99], 'text-padding': 28 },
+  }
+}

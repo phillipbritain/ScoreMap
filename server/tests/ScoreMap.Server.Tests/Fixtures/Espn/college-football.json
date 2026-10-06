@@ -1,0 +1,209 @@
+{
+ "leagues": [
+  {
+   "id": "23",
+   "uid": "s:20~l:23",
+   "name": "NCAA - Football",
+   "abbreviation": "NCAAF",
+   "midsizeName": "NCAA Football",
+   "slug": "college-football",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-02-01T08:00Z",
+    "endDate": "2027-01-28T07:59Z",
+    "displayName": "2026",
+    "type": {
+     "id": "2",
+     "type": 2,
+     "name": "Regular Season",
+     "abbreviation": "reg"
+    }
+   },
+   "calendarType": "list",
+   "calendarIsWhitelist": true,
+   "calendarStartDate": "2026-02-01T08:00Z",
+   "calendarEndDate": "2027-01-28T07:59Z"
+  }
+ ],
+ "season": {
+  "type": 2,
+  "year": 2026
+ },
+ "week": {
+  "number": 5
+ },
+ "events": [
+  {
+   "id": "401856705",
+   "uid": "s:20~l:23~e:401856705",
+   "date": "2026-10-03T16:45Z",
+   "name": "Vanderbilt Commodores at Georgia Bulldogs",
+   "shortName": "VAN @ UGA",
+   "season": {
+    "year": 2026,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "week": {
+    "number": 5
+   },
+   "competitions": [
+    {
+     "id": "401856705",
+     "uid": "s:20~l:23~e:401856705~c:401856705",
+     "date": "2026-10-03T16:45Z",
+     "attendance": 93033,
+     "type": {
+      "id": "1",
+      "abbreviation": "STD"
+     },
+     "timeValid": true,
+     "dateValid": true,
+     "neutralSite": false,
+     "conferenceCompetition": true,
+     "playByPlayAvailable": true,
+     "recent": false,
+     "venue": {
+      "id": "3917",
+      "fullName": "Sanford Stadium",
+      "address": {
+       "city": "Athens",
+       "state": "GA",
+       "country": "USA"
+      },
+      "indoor": false
+     },
+     "competitors": [
+      {
+       "id": "61",
+       "uid": "s:20~l:23~t:61",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": true,
+       "team": {
+        "id": "61",
+        "uid": "s:20~l:23~t:61",
+        "location": "Georgia",
+        "name": "Bulldogs",
+        "abbreviation": "UGA",
+        "displayName": "Georgia Bulldogs",
+        "shortDisplayName": "Georgia",
+        "color": "ba0c2f",
+        "alternateColor": "2c2a29",
+        "isActive": true,
+        "venue": {
+         "id": "3917"
+        },
+        "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png",
+        "conferenceId": "8"
+       },
+       "score": "38",
+       "curatedRank": {
+        "current": 2
+       }
+      },
+      {
+       "id": "238",
+       "uid": "s:20~l:23~t:238",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "team": {
+        "id": "238",
+        "uid": "s:20~l:23~t:238",
+        "location": "Vanderbilt",
+        "name": "Commodores",
+        "abbreviation": "VAN",
+        "displayName": "Vanderbilt Commodores",
+        "shortDisplayName": "Vanderbilt",
+        "color": "000000",
+        "alternateColor": "cfae70",
+        "isActive": true,
+        "venue": {
+         "id": "3973"
+        },
+        "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/238.png",
+        "conferenceId": "8"
+       },
+       "score": "14",
+       "curatedRank": {
+        "current": 99
+       }
+      }
+     ],
+     "notes": [],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 4,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "shortDetail": "Final"
+      }
+     },
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "SEC Network"
+       ]
+      }
+     ],
+     "groups": {
+      "id": "8",
+      "name": "Southeastern Conference",
+      "shortName": "SEC",
+      "isConference": true
+     },
+     "format": {
+      "regulation": {
+       "periods": 4
+      }
+     },
+     "startDate": "2026-10-03T16:45Z",
+     "broadcast": "SEC Network",
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "1",
+        "shortName": "TV"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "SEC Network",
+        "logo": "https://a.espncdn.com/guid/4658b4d2-a8e1-3630-9475-13af31514cfe/logos/default.png",
+        "darkLogo": ""
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ]
+    }
+   ],
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0:00",
+    "period": 4,
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final"
+    }
+   }
+  }
+ ]
+}

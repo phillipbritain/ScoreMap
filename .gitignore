@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+
+# Node / Vite
+node_modules/
+dist/
+coverage/
+*.local
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Saved venue lookups (server runtime data)
+server/src/ScoreMap.Server/data/
+
+# Publish output (scripts/deploy.ps1)
+/publish/
+/publish.zip

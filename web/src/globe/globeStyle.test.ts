@@ -68,6 +68,10 @@ describe('globeStyle', () => {
     expect(layer('label_state')).toMatchObject({ minzoom: 3, maxzoom: 8 })
   })
 
+  it('starts state names unseen, until all of them in view fit', () => {
+    expect(layer('label_state')).toMatchObject({ paint: { 'text-opacity': 0 } })
+  })
+
   it('names only major cities, capitals included, at every zoom', () => {
     for (const id of ['label_city', 'label_city_capital']) {
       const { filter } = featureFilter((layer(id) as { filter: FilterSpecification }).filter, `${id}.filter`)

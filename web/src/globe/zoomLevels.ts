@@ -31,10 +31,13 @@ export const maxZoom = 13
  */
 export const clusterMaxZoom = maxZoom - 1
 
-// Pins only cluster when they would overlap: closer on screen than the widest small pin (a Live
-// one, radius 7 plus its 2 px outline, both sides), or than a score card's width with a small margin.
+// Small pins only cluster when they would overlap: closer on screen than the widest small pin (a
+// Live one, radius 7 plus its 2 px outline, both sides). Score cards that would overlap are moved
+// apart instead (see cardSpread), so they only cluster within half a card's width, where they'd
+// have to move too far from their venues.
 const smallPinWidth = 18
 const cardWidth = 106
+const cardClusterWidth = cardWidth / 2
 
 // The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
 // times per zoom level rather than on every frame of a zoom.
@@ -45,11 +48,11 @@ const zoomStep = 0.25
  * MapLibre clusters pins at whole zoom levels only, and shows zoom 3's clusters all the way to 3.99,
  * where pins are nearly twice as far apart on screen. So the radius is shrunk by how far past the
  * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins
- * clustering only when they'd overlap on screen now.
+ * clustering only as close as they'd be on screen now.
  */
 export function pinLayout(zoom: number): PinLayout {
   const size: PinSize = zoom >= cardZoom ? 'card' : 'small'
   const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
-  const onScreen = size === 'card' ? cardWidth : smallPinWidth
+  const onScreen = size === 'card' ? cardClusterWidth : smallPinWidth
   return { size, clusterRadius: Math.round(onScreen / 2 ** pastWholeLevel) }
 }

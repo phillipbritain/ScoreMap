@@ -1,7 +1,7 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { globeStyle } from './globeStyle'
+import { firstPlaceNameLayer, globeStyle } from './globeStyle'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -83,6 +83,20 @@ describe('globeStyle', () => {
         layout: { 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99], 'text-padding': 28 },
       })
     }
+  })
+
+  it("puts city names below their dot, clear of a score card above the venue", () => {
+    for (const id of ['label_city', 'label_city_capital']) {
+      expect(layer(id)).toMatchObject({ layout: { 'text-anchor': 'top' } })
+    }
+  })
+
+  it('finds the first place-name layer, for pins to go beneath', () => {
+    const style = globeStyle(liberty)
+    const first = firstPlaceNameLayer(style)
+    expect(first).toBe('label_city')
+    const lines = style.layers.slice(0, style.layers.findIndex((l) => l.id === first))
+    expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
 
   it('makes country names brighter than other place names', () => {

@@ -20,6 +20,8 @@ setWorkerUrl(workerUrl)
 
 // Free vector tiles with borders and place labels (ADR-0004).
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
+// The style's layer for state, province and other first-level boundaries.
+const stateLinesLayer = 'boundary_3'
 const selectedPinLayer = 'pin-selected'
 // Marks the camera moves slow spin makes, to tell them apart from the viewer's own.
 const spinMove = { slowSpin: true }
@@ -100,6 +102,8 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
 
     instance.on('style.load', () => {
       instance.setProjection({ type: 'globe' })
+      // The style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
+      instance.setLayerZoomRange(stateLinesLayer, 0, 24)
       clusterRadius = pinLayout(instance.getZoom()).clusterRadius
       instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
       for (const layer of clusterLayers) instance.addLayer(layer)

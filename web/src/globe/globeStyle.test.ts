@@ -1,7 +1,7 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { firstPlaceNameLayer, globeStyle } from './globeStyle'
+import { firstPlaceNameLayer, globeStyle, glyphsUrl } from './globeStyle'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -110,9 +110,37 @@ describe('globeStyle', () => {
     expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
 
-  it('makes country names brighter than other place names', () => {
+  it('writes every place name in Open Sans, from a font source that has it', () => {
+    const style = globeStyle(liberty)
+    expect(style.glyphs).toBe(glyphsUrl)
+    for (const l of style.layers.filter((l) => l.type === 'symbol')) {
+      expect((l.layout as Record<string, unknown>)['text-font'], l.id).toEqual([expect.stringMatching(/^Open Sans /)])
+    }
+  })
+
+  it('makes city names the brightest place names, with state names muted behind them', () => {
     const colour = (id: string) => (layer(id)?.paint as Record<string, unknown> | undefined)?.['text-color']
+    expect(colour('label_city')).toBe('#f1e6cc')
+    expect(colour('label_state')).toBe('#9a8a62')
     expect(colour('label_country_1')).not.toBe(colour('label_city'))
+  })
+
+  it('writes state and country names in spaced capitals, city names as they are', () => {
+    const layout = (id: string) => layer(id)?.layout as Record<string, unknown>
+    for (const id of ['label_state', 'label_country_1']) {
+      expect(layout(id)['text-transform'], id).toBe('uppercase')
+      expect(layout(id)['text-letter-spacing'], id).toBeGreaterThan(0)
+    }
+    for (const id of ['label_city', 'label_city_capital']) {
+      expect(layout(id)['text-transform'], id).toBe('none')
+      expect(layout(id)['text-letter-spacing'], id).toBe(0)
+    }
+  })
+
+  it('outlines every place name in dark navy, so it reads over coastlines and borders', () => {
+    for (const l of globeStyle(liberty).layers.filter((l) => l.type === 'symbol')) {
+      expect((l.paint as Record<string, unknown>)['text-halo-color'], l.id).toBe('#050b16')
+    }
   })
 
   it("turns off MapLibre's one-sided atmosphere", () => {

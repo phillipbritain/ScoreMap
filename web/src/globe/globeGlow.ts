@@ -1,6 +1,5 @@
 import type { Map as MapLibreMap } from 'maplibre-gl'
-
-const rad = Math.PI / 180
+import { radians } from './geo'
 
 /**
  * A soft, even blue halo around the globe. MapLibre's own atmosphere is lit from one side and its
@@ -50,16 +49,16 @@ export function addGlobeGlow(map: MapLibreMap): () => void {
 function onScreenRadius(map: MapLibreMap): number {
   const centre = map.getCenter()
   const origin = map.project(centre)
-  const lat1 = centre.lat * rad
-  const lng1 = centre.lng * rad
+  const lat1 = centre.lat * radians
+  const lng1 = centre.lng * radians
   let radius = 0
   for (const bearing of [0, 90, 180, 270]) {
-    const b = bearing * rad
+    const b = bearing * radians
     for (let degrees = 30; degrees <= 120; degrees += 1) {
-      const d = degrees * rad
+      const d = degrees * radians
       const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b))
       const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2))
-      const point = map.project([lng2 / rad, lat2 / rad])
+      const point = map.project([lng2 / radians, lat2 / radians])
       radius = Math.max(radius, Math.hypot(point.x - origin.x, point.y - origin.y))
     }
   }

@@ -44,6 +44,15 @@ function anyOverlap(cards: CardBox[]): boolean {
 }
 
 describe('layOutCards', () => {
+  it('gives games at the same venue a card each, side by side, clear of the venue', () => {
+    const cards = placed([card('a', 0, 0), card('b', 0, 0), card('c', 0, 0)])
+    expect(anyOverlap(cards)).toBe(false)
+    for (const c of cards) {
+      const coversVenue = Math.abs(c.x - c.venueX) < c.width / 2 && Math.abs(c.y - c.venueY) < c.height / 2
+      expect(coversVenue, c.gameId).toBe(false)
+    }
+  })
+
   it('leaves cards that already have room where they are', () => {
     const shifts = spreadCards([card('a', 0, 0), card('b', 200, 0), card('c', 0, 100)])
     for (const shift of shifts.values()) expect(shift).toEqual({ dx: 0, dy: 0 })

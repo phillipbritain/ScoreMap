@@ -1,9 +1,9 @@
 import type { FilterSpecification, Map as MapLibreMap } from 'maplibre-gl'
+import { degreesApart } from './geo'
 import { placeTiles, stateNames } from './globeStyle'
 
 // How often to check, at most: often enough to follow slow spin, rarely enough not to slow it.
 const checkEveryMs = 250
-const rad = Math.PI / 180
 
 /**
  * Shows state names all or none: only while every state name in view fits, clear of every other
@@ -51,7 +51,7 @@ function allStateNamesFit(map: MapLibreMap): boolean {
     if (id === undefined || inView.has(id) || geometry.type !== 'Point') continue
     const [longitude, latitude] = geometry.coordinates
     // On the near side of the globe; the far side projects onto the screen too.
-    if (angleApart(centre.lng, centre.lat, longitude, latitude) >= 90) continue
+    if (degreesApart({ longitude: centre.lng, latitude: centre.lat }, { longitude, latitude }) >= 90) continue
     const { x, y } = map.project([longitude, latitude])
     if (x >= 0 && x <= canvas.clientWidth && y >= 0 && y <= canvas.clientHeight) inView.add(id)
   }
@@ -59,12 +59,4 @@ function allStateNamesFit(map: MapLibreMap): boolean {
 
   const placed = new Set(map.queryRenderedFeatures({ layers: [stateNames] }).map((f) => f.id))
   return [...inView].every((id) => placed.has(id))
-}
-
-/** The angle between two places, seen from the globe's centre, in degrees. */
-function angleApart(lng1: number, lat1: number, lng2: number, lat2: number): number {
-  const cos =
-    Math.sin(lat1 * rad) * Math.sin(lat2 * rad) +
-    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad)
-  return Math.acos(Math.min(1, Math.max(-1, cos))) / rad
 }

@@ -44,10 +44,13 @@ describe('pinFeatures', () => {
     })
   })
 
-  it('gives games at the same venue pins of their own, so each can be reached', () => {
+  it('gives games at the same venue pins of their own, both exactly at the venue', () => {
     const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }]).features
 
-    expect(first.geometry.coordinates).not.toEqual(second.geometry.coordinates)
+    expect(first.properties.gameId).toBe('401')
+    expect(second.properties.gameId).toBe('402')
+    expect(first.geometry.coordinates).toEqual([-94.4839, 39.0489])
+    expect(second.geometry.coordinates).toEqual([-94.4839, 39.0489])
   })
 
   it('labels a game without scores by its teams', () => {

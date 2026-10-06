@@ -1,7 +1,7 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { cityNameLook, firstPlaceNameLayer, gameCitiesState, globeStyle, glyphsUrl } from './globeStyle'
+import { cityNameLook, firstPlaceNameLayer, gameCitiesState, gameCityPlaces, globeStyle, glyphsUrl } from './globeStyle'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -34,7 +34,7 @@ const liberty = base([
 const layer = (id: string) => globeStyle(liberty).layers.find((l) => l.id === id)
 
 describe('globeStyle', () => {
-  it('keeps only the lines and place names, dropping roads, land cover, points of interest, towns and villages', () => {
+  it("keeps only the lines and place names, dropping roads, land cover, points of interest, and towns and villages but for games'", () => {
     expect(globeStyle(liberty).layers.map((l) => l.id)).toEqual([
       'background',
       'coastline',
@@ -45,7 +45,9 @@ describe('globeStyle', () => {
       'label_state',
       'label_city_capital',
       'label_country_1',
+      'label_village_game',
       'label_city_game',
+      'label_town_game',
       'label_city_capital_game',
     ])
   })
@@ -123,6 +125,26 @@ describe('globeStyle', () => {
     expect(layout['text-variable-anchor']).toEqual(['top'])
     expect(layout['text-allow-overlap']).toBe(true)
     expect(globeStyle(liberty).state).toEqual({ [gameCitiesState]: { default: [] } })
+  })
+
+  it("names a game's place however small: a minor city or a town", () => {
+    const state = { [gameCitiesState]: [42] }
+    const named = (id: string, properties: Record<string, unknown>) =>
+      featureFilter((layer(id) as { filter: FilterSpecification }).filter, 'f', state).filter(
+        { zoom: 10 },
+        { type: 1, id: 42, properties } as never,
+      )
+    expect(named('label_city_game', { class: 'city', capital: 0, rank: 9 })).toBe(true) // Tuscaloosa
+    expect(named('label_town_game', { class: 'town', rank: 12 })).toBe(true) // State College
+    expect(named('label_city', { class: 'city', capital: 0, rank: 9 })).toBe(false)
+    expect(layer('label_town_game')).toMatchObject({ layout: { 'text-variable-anchor': ['top'] } })
+  })
+
+  it("finds a game's place among the tiles' cities, towns and villages", () => {
+    const { filter } = featureFilter(gameCityPlaces, 'f')
+    const found = (placeClass: string) => filter({ zoom: 10 }, { type: 1, properties: { class: placeClass } } as never)
+    expect(['city', 'town', 'village'].map(found)).toEqual([true, true, true])
+    expect(['state', 'country', 'suburb'].map(found)).toEqual([false, false, false])
   })
 
   it("gives a city name's size and place at a zoom level, matching the style", () => {

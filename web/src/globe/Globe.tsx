@@ -22,6 +22,8 @@ setWorkerUrl(workerUrl)
 const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
 // The style's layer for state, province and other first-level boundaries.
 const stateLinesLayer = 'boundary_3'
+// The style's layer for state and province names.
+const stateNamesLayer = 'label_state'
 const selectedPinLayer = 'pin-selected'
 // Marks the camera moves slow spin makes, to tell them apart from the viewer's own.
 const spinMove = { slowSpin: true }
@@ -104,6 +106,8 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       instance.setProjection({ type: 'globe' })
       // The style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
       instance.setLayerZoomRange(stateLinesLayer, 0, 24)
+      // Its state names start at zoom 5; zoom 3 is about one country on screen. City names take over past zoom 8.
+      instance.setLayerZoomRange(stateNamesLayer, 3, 8)
       clusterRadius = pinLayout(instance.getZoom()).clusterRadius
       instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
       for (const layer of clusterLayers) instance.addLayer(layer)

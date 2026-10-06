@@ -41,12 +41,14 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
     sky: { 'atmosphere-blend': 0 },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globeNavy } },
-      // Coastlines: the edges of the water areas, which are the same colour as the land.
+      // Coastlines: the edges of the sea, which is the same colour as the land. Lakes and rivers
+      // aren't outlined; at a distance they read as clutter.
       {
         id: 'coastline',
         type: 'line',
         source: 'openmaptiles',
         'source-layer': 'water',
+        filter: ['==', ['get', 'class'], 'ocean'],
         paint: {
           'line-color': 'rgba(255, 255, 255, 0.7)',
           'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 8, 1.2],

@@ -194,6 +194,35 @@ body {
   box-shadow: 2px 2px 3px rgb(0 0 0 / 0.2);
 }
 
+/* Cards moved aside to make room for another (see globe/cardSpread.ts) trail back to their venues
+   instead of pointing down. All trails share one layer above the map and beneath every card. */
+.score-card-trails {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Light, to stand out on the dark map whatever the game's status. */
+.score-card-trails line {
+  stroke: #ffffff;
+  stroke-opacity: 0.85;
+  stroke-width: 1.5;
+}
+
+.score-card-trails circle {
+  r: 4px;
+  fill: var(--status-color);
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+[data-moved] > .score-card::after {
+  display: none;
+}
+
 .score-card--live {
   box-shadow:
     0 0 0 2px var(--status-color),

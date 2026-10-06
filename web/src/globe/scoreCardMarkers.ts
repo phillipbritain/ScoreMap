@@ -2,6 +2,7 @@ import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
+import { spreadCards, type CardBox, type CardShift } from './cardSpread'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource, statusColors } from './pinLayers'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
@@ -11,6 +12,13 @@ interface PlacedCard {
   marker: Marker
   /** The card last drawn into the marker, so unchanged cards aren't redrawn every frame. */
   drawn: string
+  /** The card's size on screen, measured when it's drawn. */
+  width: number
+  height: number
+  /** How far the card is moved from above its venue to make room for others (see cardSpread). */
+  shift: CardShift
+  /** The line and venue dot drawn while the card is moved (see drawTrail). */
+  trail: SVGGElement
 }
 
 /**
@@ -25,11 +33,15 @@ export class ScoreCardMarkers {
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
   private readonly onSelect: (gameId: string) => void
+  /** Trails from moved cards to their venues, in one layer just above the map so no trail crosses over a card. */
+  private readonly trails = document.createElementNS(svgNamespace, 'svg')
 
   /** `onSelect` is called with a game's id when its card is selected. */
   constructor(map: MapLibreMap, onSelect: (gameId: string) => void) {
     this.map = map
     this.onSelect = onSelect
+    this.trails.classList.add('score-card-trails')
+    map.getCanvas().after(this.trails)
   }
 
   /** Highlights the selected game's card, if it has one. */
@@ -70,7 +82,14 @@ export class ScoreCardMarkers {
         })
         // Above the venue, its pointer's tip on the spot; the city's name sits below its dot.
         const marker = new Marker({ element, anchor: 'bottom', offset: [0, -cardPointerPx] })
-        placed = { marker: marker.setLngLat(lngLat).addTo(this.map), drawn: '' }
+        placed = {
+          marker: marker.setLngLat(lngLat).addTo(this.map),
+          drawn: '',
+          width: 0,
+          height: 0,
+          shift: { dx: 0, dy: 0 },
+          trail: this.trails.appendChild(newTrail()),
+        }
         this.placed.set(gameId, placed)
       } else {
         placed.marker.setLngLat(lngLat)
@@ -79,16 +98,51 @@ export class ScoreCardMarkers {
         const element = placed.marker.getElement()
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? 3 : stacking[card.status])
-        drawScoreCard(element.firstElementChild as HTMLElement, card, selected, this.animating.get(gameId))
+        const cardElement = element.firstElementChild as HTMLElement
+        drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
+        placed.trail.style.setProperty('--status-color', statusColors[card.status])
         placed.drawn = drawn
+        placed.width = cardElement.offsetWidth
+        placed.height = cardElement.offsetHeight
       }
     }
 
-    for (const [gameId, { marker }] of this.placed) {
+    this.spread(keep)
+
+    for (const [gameId, { marker, trail }] of this.placed) {
       if (keep.has(gameId)) continue
       marker.remove()
+      trail.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
+    }
+  }
+
+  /** Moves cards that would overlap apart, each with a trail back to its venue. */
+  private spread(gameIds: ReadonlySet<string>): void {
+    const boxes = new Map<string, CardBox>()
+    for (const gameId of gameIds) {
+      const { marker, width, height } = this.placed.get(gameId)!
+      const venue = this.map.project(marker.getLngLat())
+      boxes.set(gameId, {
+        gameId,
+        x: venue.x,
+        y: venue.y - cardPointerPx - height / 2,
+        width,
+        height,
+        venueX: venue.x,
+        venueY: venue.y,
+      })
+    }
+    for (const [gameId, shift] of spreadCards([...boxes.values()])) {
+      const placed = this.placed.get(gameId)!
+      if (shift.dx !== placed.shift.dx || shift.dy !== placed.shift.dy) {
+        placed.shift = shift
+        placed.marker.setOffset([shift.dx, shift.dy - cardPointerPx])
+        placed.marker.getElement().toggleAttribute('data-moved', shift.dx !== 0 || shift.dy !== 0)
+      }
+      // Redrawn every frame: the venue moves on screen as the globe turns.
+      drawTrail(placed.trail, boxes.get(gameId)!, shift)
     }
   }
 
@@ -116,6 +170,7 @@ export class ScoreCardMarkers {
 
   clear(): void {
     for (const { marker } of this.placed.values()) marker.remove()
+    this.trails.remove()
     this.placed.clear()
     this.animating.clear()
   }
@@ -125,6 +180,38 @@ export class ScoreCardMarkers {
 const cardPointerPx = 6
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
+
+const svgNamespace = 'http://www.w3.org/2000/svg'
+
+function newTrail(): SVGGElement {
+  const trail = document.createElementNS(svgNamespace, 'g')
+  trail.append(document.createElementNS(svgNamespace, 'line'), document.createElementNS(svgNamespace, 'circle'))
+  return trail
+}
+
+/**
+ * Points a moved card back at its venue, in place of the card's own short pointer: a line from the
+ * card's edge to a dot on the venue. A card in its usual spot has none.
+ */
+function drawTrail(trail: SVGGElement, home: CardBox, { dx, dy }: CardShift): void {
+  const moved = dx !== 0 || dy !== 0
+  trail.style.display = moved ? '' : 'none'
+  if (!moved) return
+  const { venueX, venueY } = home
+  const centreX = home.x + dx
+  const centreY = home.y + dy
+  // Where a line from the card's centre to the venue leaves the card.
+  const toVenueX = venueX - centreX
+  const toVenueY = venueY - centreY
+  const leaves = Math.min(1, (home.width / 2) / Math.abs(toVenueX), (home.height / 2) / Math.abs(toVenueY))
+  const [line, dot] = trail.children
+  line.setAttribute('x1', String(centreX + toVenueX * leaves))
+  line.setAttribute('y1', String(centreY + toVenueY * leaves))
+  line.setAttribute('x2', String(venueX))
+  line.setAttribute('y2', String(venueY))
+  dot.setAttribute('cx', String(venueX))
+  dot.setAttribute('cy', String(venueY))
+}
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 

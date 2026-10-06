@@ -1,6 +1,7 @@
+import { kmApart, type GlobePoint } from './geo'
 import type { CityNameLook } from './globeStyle'
 
-/** A city the map names, as its tiles give it. */
+/** A city, town or village the map can name, as its tiles give it. */
 export interface City {
   /** The tile feature's id, the same in every tile and at every zoom. */
   id: number
@@ -19,23 +20,39 @@ export interface ScreenBox {
   height: number
 }
 
-/** A game's venue is named by the nearest major city within this distance. */
+/**
+ * A place from the map's tiles as a City: its id, where it is, and its name as the map writes it, in
+ * Latin letters with its own script on a second line when it has one. None for a place without a
+ * numeric id or a single point.
+ */
+export function cityOfPlace(place: {
+  id?: string | number
+  properties: Record<string, unknown>
+  geometry: { type: string; coordinates?: unknown }
+}): City | undefined {
+  const { id, properties, geometry } = place
+  if (typeof id !== 'number' || geometry.type !== 'Point') return undefined
+  const [longitude, latitude] = geometry.coordinates as [number, number]
+  const text = (key: string) => (typeof properties[key] === 'string' ? (properties[key] as string) : undefined)
+  const nonLatin = text('name:nonlatin')
+  const name = nonLatin ? `${text('name:latin') ?? ''}\n${nonLatin}` : (text('name_en') ?? text('name') ?? '')
+  return { id, name, capital: properties.capital === 2, longitude, latitude }
+}
+
+/** A game's venue is named by the nearest place within this distance. */
 const maxCityKm = 50
 
 /**
- * The cities named for the games: for each venue, the nearest city the map names, if it's within
- * reach. A venue far from any named city has none. Each city is listed once, in the order found.
+ * The places named for the games: for each venue, the nearest of `cities`, however small, if it's
+ * within reach. A venue far from all of them has none. Each is listed once, in the order found.
  */
-export function gameCities(
-  venues: readonly { longitude: number; latitude: number }[],
-  cities: readonly City[],
-): City[] {
+export function gameCities(venues: readonly GlobePoint[], cities: readonly City[]): City[] {
   const found = new Map<number, City>()
   for (const venue of venues) {
     let nearest: City | undefined
     let nearestKm = maxCityKm
     for (const city of cities) {
-      const km = distanceKm(venue, city)
+      const km = kmApart(venue, city)
       if (km <= nearestKm) {
         nearest = city
         nearestKm = km
@@ -83,13 +100,3 @@ function wrap(line: string, look: CityNameLook, measure: (text: string, font: st
   }
   return [...lines, current]
 }
-
-function distanceKm(a: { longitude: number; latitude: number }, b: { longitude: number; latitude: number }): number {
-  const radians = Math.PI / 180
-  const dLat = (b.latitude - a.latitude) * radians
-  const dLon = (b.longitude - a.longitude) * radians
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * radians) * Math.cos(b.latitude * radians) * Math.sin(dLon / 2) ** 2
-  return 2 * earthRadiusKm * Math.asin(Math.sqrt(h))
-}
-const earthRadiusKm = 6371

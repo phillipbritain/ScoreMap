@@ -25,15 +25,19 @@ const countryLines = 'boundary_2'
 const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
 export const stateNames = 'label_state'
-// City names, national capitals included; only major cities are named (see majorCity).
+// City names, national capitals included; only major cities are named (see majorCity), and other
+// cities only where a game is (see gameCityName).
 const cityNames = new Set(['label_city', 'label_city_capital'])
-// Place names the globe leaves out: towns, villages and other small places.
-const droppedNames = new Set(['label_town', 'label_village', 'label_other'])
+// Towns and villages, named only where a game is.
+const townNames = new Set(['label_town', 'label_village'])
+// Place names the globe leaves out: towns, villages (but for games') and other small places.
+const droppedNames = new Set([...townNames, 'label_other'])
 
 /**
  * The globe's dark look, made from the base style: a plain navy globe where only thin light lines
  * show coastlines, country borders and state lines, with warm cream place names. Land and sea are
  * the same colour. Everything else in the base style (roads, buildings, land cover) is dropped.
+ * Major cities are named, and also the place where each game is, however small.
  */
 export function globeStyle(base: StyleSpecification): StyleSpecification {
   const byId = new Map(base.layers.map((layer) => [layer.id, layer]))
@@ -42,15 +46,17 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
     if (!found) throw new Error(`The base map style has no layer "${id}"`)
     return found
   }
-  const line = (id: string, changes: Partial<LayerSpecification>): LayerSpecification =>
+  const restyled = (id: string, changes: Partial<LayerSpecification>): LayerSpecification =>
     ({ ...layer(id), ...changes }) as LayerSpecification
 
-  const named = base.layers
+  const placeNames = base.layers
     .filter((l) => l.type === 'symbol' && l['source-layer'] === 'place' && !droppedNames.has(l.id))
     .map((l) => placeName(l))
-  const placeNames = named.map((l) => (cityNames.has(l.id) ? exceptGameCities(l) : l))
+    .map((l) => (cityNames.has(l.id) ? exceptGameCities(majorCitiesOnly(cityNamePlacement(l))) : l))
   // Last, so they're placed first: every other name gives way to them.
-  const gameCityNames = named.filter((l) => cityNames.has(l.id)).map(gameCityName)
+  const gameCityNames = base.layers
+    .filter((l) => cityNames.has(l.id) || townNames.has(l.id))
+    .map((l) => gameCityName(cityNamePlacement(placeName(l))))
   layer(stateNames) // Fails loudly if the base style renames it, rather than silently losing state names.
 
   return {
@@ -75,20 +81,20 @@ export function globeStyle(base: StyleSpecification): StyleSpecification {
         },
       },
       // The base style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
-      line(stateLines, {
+      restyled(stateLines, {
         minzoom: 0,
         paint: {
           'line-color': 'rgba(255, 255, 255, 0.3)',
           'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.5, 8, 1],
         },
       }),
-      line(countryLines, {
+      restyled(countryLines, {
         paint: {
           'line-color': 'rgba(255, 255, 255, 0.7)',
           'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 8, 1.4],
         },
       }),
-      line(disputedLines, {
+      restyled(disputedLines, {
         paint: { 'line-color': 'rgba(255, 255, 255, 0.5)', 'line-dasharray': [2, 2], 'line-width': 0.8 },
       }),
       ...placeNames,
@@ -166,12 +172,11 @@ function nameStyle(layerId: string): NameStyle {
 
 /** A place name in the globe's look (see nameStyles). */
 function placeName(layer: LayerSpecification): LayerSpecification {
-  const placed = cityNames.has(layer.id) ? majorCitiesOnly(layer) : layer
   const style = nameStyle(layer.id)
   const named = {
-    ...placed,
+    ...layer,
     layout: {
-      ...(placed.type === 'symbol' ? placed.layout : {}),
+      ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [style.font],
       'text-size': style.size,
       'text-transform': style.capitals === undefined ? 'none' : 'uppercase',
@@ -198,25 +203,35 @@ function hiddenStateNames(layer: LayerSpecification): LayerSpecification {
 /** A city ranked 1 (largest) to 4, such as New York, Dallas or Nashville; smaller cities aren't named. */
 const majorCity: ExpressionSpecification = ['<=', ['coalesce', ['get', 'rank'], 99], 4]
 
-/** The cities the map names, among the tiles' places. */
-export const namedCity: ExpressionSpecification = ['all', ['==', ['get', 'class'], 'city'], majorCity]
+/** The places a game's venue can be named by, among the tiles' places: cities, towns and villages. */
+export const gameCityPlaces: ExpressionSpecification = ['in', ['get', 'class'], ['literal', ['city', 'town', 'village']]]
 /** The tiles' source and layer of places, cities among them. */
 export const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
 
 /**
  * Names only major cities, at every zoom. Where two names would collide, the larger city (lower
  * rank) is placed first, so a nearby smaller city gives way.
- * The base style's fixed offset for its single anchor is dropped for the radial offset below.
  */
 function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
+  if (layer.type !== 'symbol') return layer
+  return {
+    ...layer,
+    filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
+    layout: { ...layer.layout, 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99] },
+  }
+}
+
+/**
+ * Where a city's name goes around its dot. The base style's fixed offset for its single anchor is
+ * dropped for the radial offset below.
+ */
+function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
   if (layer.type !== 'symbol') return layer
   const { 'text-anchor': _anchor, 'text-offset': _offset, ...layout } = layer.layout ?? {}
   return {
     ...layer,
-    filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
     layout: {
       ...layout,
-      'symbol-sort-key': ['coalesce', ['get', 'rank'], 99],
       // Below the city's dot by preference, clear of its own game's score card above the venue; if
       // another card covers that spot, the name moves to another side (see pinLayers' cardFootprint).
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
@@ -232,14 +247,17 @@ function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
 const cityNameOffset = { small: 1.2, card: 1 }
 
 /**
- * The global state listing the cities named for their games (see gameCities), by their features' ids.
- * Their names always show, below their dots, and nothing else is written over them; score cards and
- * trails are laid out around them.
+ * The global state listing the places named for their games (see gameCities), by their features'
+ * ids: cities, towns or villages. Their names always show, below their dots, and nothing else is
+ * written over them; score cards and trails are laid out around them.
  */
 export const gameCitiesState = 'gameCities'
 const isGameCity: ExpressionSpecification = ['in', ['id'], ['global-state', gameCitiesState]]
 
-/** A city name layer's twin for the cities named for their games; the layer itself leaves them out. */
+/**
+ * A place name layer's twin for the places named for their games, whatever their size; the city
+ * layers themselves leave them out, and town and village names show only here.
+ */
 function gameCityName(layer: LayerSpecification): LayerSpecification {
   if (layer.type !== 'symbol') return layer
   return {

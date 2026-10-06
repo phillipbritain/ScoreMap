@@ -149,10 +149,12 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
     // Small pins cluster, with a radius that changes in steps between whole zoom levels; score
     // cards don't cluster (see pinLayout).
     instance.on('zoom', () => {
-      const { cluster, clusterRadius } = pinLayout(instance.getZoom())
-      if (cluster === clustering.cluster && (!cluster || clusterRadius === clustering.clusterRadius)) return
-      clustering = { ...clustering, cluster, clusterRadius }
-      void instance.getSource<GeoJSONSource>(pinSource)?.setClusterOptions({ cluster, clusterRadius, clusterMaxZoom })
+      const now = pinLayout(instance.getZoom())
+      if (now.size === clustering.size && (now.size === 'card' || now.clusterRadius === clustering.clusterRadius)) return
+      clustering = now
+      void instance
+        .getSource<GeoJSONSource>(pinSource)
+        ?.setClusterOptions({ cluster: now.size === 'small', clusterRadius: now.clusterRadius, clusterMaxZoom })
     })
 
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
@@ -162,7 +164,9 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       const cluster = event.features?.[0]
       const source = instance.getSource<GeoJSONSource>(pinSource)
       if (!cluster || !source) return
-      const zoom = await source.getClusterExpansionZoom(cluster.properties.cluster_id)
+      // Score cards aren't clustered, so a cluster splits by cardZoom at the latest, even one of games
+      // at the same venue (their cards are moved apart on screen, see cardLayout).
+      const zoom = Math.min(await source.getClusterExpansionZoom(cluster.properties.cluster_id), cardZoom)
       instance.easeTo({ center: (cluster.geometry as Point).coordinates as [number, number], zoom })
     })
     instance.on('click', smallPinLayer, (event) => {

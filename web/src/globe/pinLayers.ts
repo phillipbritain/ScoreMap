@@ -115,3 +115,43 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
     'circle-stroke-opacity': byStatus(status, { Live: 1, Upcoming: 1, Final: 0.55, Disrupted: 0.6 }),
   },
 }
+
+/**
+ * Invisible stand-ins for the pins, the size of what each shows: a score card zoomed in, a small pin
+ * zoomed out. Score cards are page elements MapLibre can't see, and circle layers take no part in
+ * label placement, so these give place names something to avoid: a name that would fall under a pin
+ * moves to another side of its dot (see globeStyle's city names), or is left out if no side is free.
+ * Cluster bubbles have none: a name too close to fit beside one would be lost, so it's written across
+ * the bubble instead (place names draw above the pins). Both draw nothing.
+ */
+export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
+// A Live small pin is the largest: radius 7 plus a 2 px outline.
+export const pinFootprint = { image: 'pin-footprint', size: 20 }
+
+/** Where each score card sits: above its venue, the card's size with its pointer and a small margin. */
+export const cardFootprintLayerSpec: SymbolLayerSpecification = {
+  id: 'card-footprints',
+  type: 'symbol',
+  source: pinSource,
+  // Where score cards show: single pins, zoomed in.
+  filter: ['!', ['has', 'point_count']],
+  minzoom: cardZoom,
+  layout: {
+    'icon-image': cardFootprint.image,
+    'icon-anchor': 'bottom',
+    // Always placed, whatever else is there, and still keeps names out.
+    'icon-allow-overlap': true,
+  },
+  paint: { 'icon-opacity': 0 },
+}
+
+/** Each small pin, while zoomed out. */
+export const pinFootprintLayerSpec: SymbolLayerSpecification = {
+  id: 'pin-footprints',
+  type: 'symbol',
+  source: pinSource,
+  filter: ['!', ['has', 'point_count']],
+  maxzoom: cardZoom,
+  layout: { 'icon-image': pinFootprint.image, 'icon-allow-overlap': true },
+  paint: { 'icon-opacity': 0 },
+}

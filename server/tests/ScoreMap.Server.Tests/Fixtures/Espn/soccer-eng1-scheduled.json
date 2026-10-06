@@ -1,0 +1,164 @@
+{
+ "leagues": [
+  {
+   "id": "700",
+   "uid": "s:600~l:700",
+   "name": "English Premier League",
+   "abbreviation": "Premier League",
+   "midsizeName": "ENG.1",
+   "slug": "eng.1",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-06-01T04:00Z",
+    "endDate": "2027-06-01T03:59Z",
+    "displayName": "2026-27 English Premier League",
+    "type": {
+     "id": "1",
+     "type": 14308,
+     "name": "2026-27 English Premier League",
+     "abbreviation": "2026-27 English Premier League"
+    }
+   },
+   "calendarType": "day",
+   "calendarIsWhitelist": true,
+   "calendarStartDate": "2026-06-01T04:00Z",
+   "calendarEndDate": "2027-06-01T03:59Z"
+  }
+ ],
+ "season": {
+  "type": 14308,
+  "year": 2026
+ },
+ "day": {
+  "date": "2026-10-10"
+ },
+ "events": [
+  {
+   "id": "401879268",
+   "uid": "s:600~l:700~e:401879268",
+   "date": "2026-10-10T11:30Z",
+   "name": "Leeds United at Arsenal",
+   "shortName": "LEE @ ARS",
+   "season": {
+    "year": 2026,
+    "type": 14308,
+    "slug": "2026-27-english-premier-league"
+   },
+   "competitions": [
+    {
+     "id": "401879268",
+     "uid": "s:600~l:700~e:401879268~c:401879268",
+     "date": "2026-10-10T11:30Z",
+     "startDate": "2026-10-10T11:30Z",
+     "attendance": 0,
+     "timeValid": true,
+     "recent": false,
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0'",
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Sat, October 10th at 7:30 AM EDT",
+       "shortDetail": "Scheduled"
+      }
+     },
+     "venue": {
+      "id": "2267",
+      "fullName": "Emirates Stadium",
+      "address": {
+       "city": "London",
+       "country": "England"
+      }
+     },
+     "format": {
+      "regulation": {
+       "periods": 2
+      }
+     },
+     "altGameNote": "English Premier League",
+     "notes": [],
+     "geoBroadcasts": [],
+     "broadcasts": [],
+     "broadcast": "",
+     "competitors": [
+      {
+       "id": "359",
+       "uid": "s:600~t:359",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": false,
+       "form": "LWWWW",
+       "score": "0",
+       "team": {
+        "id": "359",
+        "uid": "s:600~t:359",
+        "abbreviation": "ARS",
+        "displayName": "Arsenal",
+        "shortDisplayName": "Arsenal",
+        "name": "Arsenal",
+        "location": "Arsenal",
+        "color": "e20520",
+        "alternateColor": "003399",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png",
+        "venue": {
+         "id": "2267"
+        }
+       }
+      },
+      {
+       "id": "357",
+       "uid": "s:600~t:357",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "form": "DWLDD",
+       "score": "0",
+       "team": {
+        "id": "357",
+        "uid": "s:600~t:357",
+        "abbreviation": "LEE",
+        "displayName": "Leeds United",
+        "shortDisplayName": "Leeds",
+        "name": "Leeds United",
+        "location": "Leeds United",
+        "color": "ffffff",
+        "alternateColor": "FFCD00",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/357.png",
+        "venue": {
+         "id": "190"
+        }
+       }
+      }
+     ],
+     "wasSuspended": false,
+     "playByPlayAvailable": true,
+     "playByPlayAthletes": true
+    }
+   ],
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0'",
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Sat, October 10th at 7:30 AM EDT",
+     "shortDetail": "Scheduled"
+    }
+   },
+   "venue": {
+    "displayName": "Emirates Stadium"
+   }
+  }
+ ]
+}

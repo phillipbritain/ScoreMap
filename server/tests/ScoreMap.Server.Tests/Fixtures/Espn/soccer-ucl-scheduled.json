@@ -1,0 +1,187 @@
+{
+ "leagues": [
+  {
+   "id": "775",
+   "uid": "s:600~l:775",
+   "name": "UEFA Champions League",
+   "abbreviation": "UEFA Champions League",
+   "midsizeName": "UEFA.CHAMPIONS",
+   "slug": "uefa.champions",
+   "season": {
+    "year": 2026,
+    "startDate": "2026-07-01T04:00Z",
+    "endDate": "2027-07-01T03:59Z",
+    "displayName": "2026-27 UEFA Champions League",
+    "type": {
+     "id": "1",
+     "type": 14534,
+     "name": "League Phase",
+     "abbreviation": "League Phase"
+    }
+   },
+   "calendarType": "list",
+   "calendarIsWhitelist": true,
+   "calendarStartDate": "2026-07-01T04:00Z",
+   "calendarEndDate": "2027-07-01T03:59Z"
+  }
+ ],
+ "season": {
+  "type": 14534,
+  "year": 2026
+ },
+ "day": {
+  "date": "2026-10-13"
+ },
+ "events": [
+  {
+   "id": "401915418",
+   "uid": "s:600~l:775~e:401915418",
+   "date": "2026-10-13T16:45Z",
+   "name": "Sporting CP at Lens",
+   "shortName": "SCP @ RCL",
+   "season": {
+    "year": 2026,
+    "type": 14534,
+    "slug": "league-phase"
+   },
+   "competitions": [
+    {
+     "id": "401915418",
+     "uid": "s:600~l:775~e:401915418~c:401915418",
+     "date": "2026-10-13T16:45Z",
+     "startDate": "2026-10-13T16:45Z",
+     "attendance": 0,
+     "timeValid": true,
+     "recent": false,
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0'",
+      "type": {
+       "id": "1",
+       "name": "STATUS_SCHEDULED",
+       "state": "pre",
+       "completed": false,
+       "description": "Scheduled",
+       "detail": "Tue, October 13th at 12:45 PM EDT",
+       "shortDetail": "Scheduled"
+      }
+     },
+     "venue": {
+      "id": "10342",
+      "fullName": "Stade Bollaert-Delelis",
+      "address": {
+       "city": "Lens",
+       "country": "France"
+      }
+     },
+     "format": {
+      "regulation": {
+       "periods": 2
+      }
+     },
+     "altGameNote": "UEFA Champions League, League Phase",
+     "notes": [],
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "4",
+        "shortName": "STREAMING"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "Paramount+"
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ],
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "Paramount+"
+       ]
+      }
+     ],
+     "broadcast": "",
+     "competitors": [
+      {
+       "id": "175",
+       "uid": "s:600~t:175",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": false,
+       "form": "LDWLL",
+       "score": "0",
+       "team": {
+        "id": "175",
+        "uid": "s:600~t:175",
+        "abbreviation": "RCL",
+        "displayName": "Lens",
+        "shortDisplayName": "Lens",
+        "name": "Lens",
+        "location": "Lens",
+        "color": "E91514",
+        "alternateColor": "004c37",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/175.png",
+        "venue": {
+         "id": "10342"
+        }
+       }
+      },
+      {
+       "id": "2250",
+       "uid": "s:600~t:2250",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "form": "DDWWW",
+       "score": "0",
+       "team": {
+        "id": "2250",
+        "uid": "s:600~t:2250",
+        "abbreviation": "SCP",
+        "displayName": "Sporting CP",
+        "shortDisplayName": "Sporting",
+        "name": "Sporting CP",
+        "location": "Sporting CP",
+        "color": "008127",
+        "alternateColor": "ffffff",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/2250.png",
+        "venue": {
+         "id": "2352"
+        }
+       }
+      }
+     ],
+     "wasSuspended": false,
+     "playByPlayAvailable": true,
+     "playByPlayAthletes": true
+    }
+   ],
+   "status": {
+    "clock": 0.0,
+    "displayClock": "0'",
+    "type": {
+     "id": "1",
+     "name": "STATUS_SCHEDULED",
+     "state": "pre",
+     "completed": false,
+     "description": "Scheduled",
+     "detail": "Tue, October 13th at 12:45 PM EDT",
+     "shortDetail": "Scheduled"
+    }
+   },
+   "venue": {
+    "displayName": "Stade Bollaert-Delelis"
+   }
+  }
+ ]
+}

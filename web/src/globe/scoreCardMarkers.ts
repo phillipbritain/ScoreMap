@@ -1,12 +1,13 @@
-import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
+import { LngLatBounds, Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
-import { spreadCards, type CardBox, type CardShift } from './cardSpread'
+import { layOutCards, type CardBox, type CardCrowd, type CardShift } from './cardLayout'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource, statusColors } from './pinLayers'
+import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { pinLayout } from './zoomLevels'
+import { maxZoom, pinLayout } from './zoomLevels'
 
 interface PlacedCard {
   marker: Marker
@@ -15,15 +16,26 @@ interface PlacedCard {
   /** The card's size on screen, measured when it's drawn. */
   width: number
   height: number
-  /** How far the card is moved from above its venue to make room for others (see cardSpread). */
+  /** How far the card is moved from above its venue to make room for others (see cardLayout). */
   shift: CardShift
   /** The line and venue dot drawn while the card is moved (see drawTrail). */
   trail: SVGGElement
+  /** True while there's no room for the card and its game is counted in a crowd instead. */
+  crowded: boolean
+}
+
+interface PlacedCrowd {
+  marker: Marker
+  gameIds: string[]
+  /** The count last drawn, so unchanged crowds aren't redrawn every frame. */
+  drawn: string
 }
 
 /**
- * Zoomed in, shows each unclustered pin as an HTML score card (logos, abbreviations, score, clock line).
- * Clusters stay as map layers; zoomed out, the small-pin layer shows instead and no cards are placed.
+ * Zoomed in, shows each pin as an HTML score card (logos, abbreviations, score, clock line). Cards
+ * that would overlap are moved apart with a trail back to their venue; where there's no room for
+ * them all, the rest are shown as a count, like a cluster. Zoomed out, the small-pin and cluster
+ * layers show instead and no cards are placed.
  */
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
@@ -35,6 +47,8 @@ export class ScoreCardMarkers {
   private readonly onSelect: (gameId: string) => void
   /** Trails from moved cards to their venues, in one layer just above the map so no trail crosses over a card. */
   private readonly trails = document.createElementNS(svgNamespace, 'svg')
+  /** Counts of games with no room for a card, by the first game in each. */
+  private readonly crowds = new Map<string, PlacedCrowd>()
 
   /** `onSelect` is called with a game's id when its card is selected. */
   constructor(map: MapLibreMap, onSelect: (gameId: string) => void) {
@@ -89,6 +103,7 @@ export class ScoreCardMarkers {
           height: 0,
           shift: { dx: 0, dy: 0 },
           trail: this.trails.appendChild(newTrail()),
+          crowded: false,
         }
         this.placed.set(gameId, placed)
       } else {
@@ -107,7 +122,7 @@ export class ScoreCardMarkers {
       }
     }
 
-    this.spread(keep)
+    this.layOut(keep)
 
     for (const [gameId, { marker, trail }] of this.placed) {
       if (keep.has(gameId)) continue
@@ -118,12 +133,22 @@ export class ScoreCardMarkers {
     }
   }
 
-  /** Moves cards that would overlap apart, each with a trail back to its venue. */
-  private spread(gameIds: ReadonlySet<string>): void {
+  /**
+   * Moves cards that would overlap apart, each with a trail back to its venue, and counts the games
+   * there's no room for. Only cards on screen (or nearly) are laid out; the rest stay where they'd sit.
+   */
+  private layOut(gameIds: ReadonlySet<string>): void {
+    const canvas = this.map.getCanvas()
     const boxes = new Map<string, CardBox>()
     for (const gameId of gameIds) {
       const { marker, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(marker.getLngLat())
+      const nearScreen =
+        venue.x > -offScreenMargin &&
+        venue.x < canvas.clientWidth + offScreenMargin &&
+        venue.y > -offScreenMargin &&
+        venue.y < canvas.clientHeight + offScreenMargin
+      if (!nearScreen) continue
       boxes.set(gameId, {
         gameId,
         x: venue.x,
@@ -132,22 +157,103 @@ export class ScoreCardMarkers {
         height,
         venueX: venue.x,
         venueY: venue.y,
+        rank: this.rank(gameId),
       })
     }
-    for (const [gameId, shift] of spreadCards([...boxes.values()])) {
-      const placed = this.placed.get(gameId)!
+    const { shifts, crowds } = layOutCards([...boxes.values()])
+
+    for (const [gameId, placed] of this.placed) {
+      const shift = shifts.get(gameId) ?? { dx: 0, dy: 0 }
+      const box = boxes.get(gameId)
+      const crowded = box !== undefined && !shifts.has(gameId)
       if (shift.dx !== placed.shift.dx || shift.dy !== placed.shift.dy) {
         placed.shift = shift
         placed.marker.setOffset([shift.dx, shift.dy - cardPointerPx])
         placed.marker.getElement().toggleAttribute('data-moved', shift.dx !== 0 || shift.dy !== 0)
       }
+      if (crowded !== placed.crowded) {
+        placed.crowded = crowded
+        // Hidden rather than removed, so the card keeps its size for laying out the next frame.
+        placed.marker.getElement().toggleAttribute('data-crowded', crowded)
+      }
       // Redrawn every frame: the venue moves on screen as the globe turns.
-      drawTrail(placed.trail, boxes.get(gameId)!, shift)
+      drawTrail(placed.trail, box && !crowded ? box : null, shift)
+    }
+    this.drawCrowds(crowds)
+  }
+
+  /** Which cards get room first: the selected game's, then Live, then Upcoming, then the rest. */
+  private rank(gameId: string): number {
+    if (gameId === this.selectedGameId) return 0
+    return crowdRank[this.games.get(gameId)?.status ?? 'Final']
+  }
+
+  private drawCrowds(crowds: readonly CardCrowd[]): void {
+    const keep = new Set<string>()
+    for (const { gameIds } of crowds) {
+      const key = gameIds[0]
+      keep.add(key)
+      const at = this.placed.get(key)!.marker.getLngLat()
+      let crowd = this.crowds.get(key)
+      if (!crowd) {
+        const element = document.createElement('div')
+        element.append(document.createElement('div'))
+        element.addEventListener('click', (event) => {
+          event.stopPropagation()
+          this.zoomToCrowd(key)
+        })
+        // Above every card, so a count is never hidden.
+        element.style.zIndex = '4'
+        crowd = { marker: new Marker({ element }).setLngLat(at).addTo(this.map), gameIds, drawn: '' }
+        this.crowds.set(key, crowd)
+      } else {
+        crowd.marker.setLngLat(at)
+        crowd.gameIds = gameIds
+      }
+      const status = crowdStatus(gameIds.map((id) => this.games.get(id)?.status ?? 'Final'))
+      const drawn = `${status} ${gameIds.length}`
+      if (crowd.drawn !== drawn) {
+        const count = crowd.marker.getElement().firstElementChild as HTMLElement
+        count.className = `score-crowd score-crowd--${status.toLowerCase()}`
+        count.style.setProperty('--status-color', statusColors[status])
+        count.textContent = String(gameIds.length)
+        crowd.drawn = drawn
+      }
+    }
+    for (const [key, { marker }] of this.crowds) {
+      if (keep.has(key)) continue
+      marker.remove()
+      this.crowds.delete(key)
     }
   }
 
-  /** Plays an animation on a game's card. False when the game has no card on screen. */
+  /** Zooms in to fit a crowd's games, where there's room for each to have its card. */
+  private zoomToCrowd(key: string): void {
+    const crowd = this.crowds.get(key)
+    if (!crowd) return
+    const bounds = new LngLatBounds()
+    for (const gameId of crowd.gameIds) {
+      const lngLat = this.placed.get(gameId)?.marker.getLngLat()
+      if (lngLat) bounds.extend(lngLat)
+    }
+    // At least a level in, so a crowd at a single spot still opens up, and at most a couple: past
+    // that, cards have room to spread and a crowd of games close together would leave the screen empty.
+    const fitted = this.map.cameraForBounds(bounds, { padding: crowdZoomPadding })?.zoom ?? 0
+    const zoom = Math.min(maxZoom, this.map.getZoom() + 2, Math.max(this.map.getZoom() + 1, fitted))
+    this.map.easeTo({ center: bounds.getCenter(), zoom })
+  }
+
+  /**
+   * Plays an animation on a game's card, or over the count it's in when there's no room for its
+   * card. False when the game has neither on screen.
+   */
   animate(gameId: string, animation: PinAnimation): boolean {
+    for (const { marker, gameIds } of this.crowds.values()) {
+      if (!gameIds.includes(gameId)) continue
+      const { lng, lat } = marker.getLngLat()
+      pulse(this.map, [lng, lat], animation, 'cluster')
+      return true
+    }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
     if (!element) return false
     const playing = this.animating.get(gameId)
@@ -170,6 +276,8 @@ export class ScoreCardMarkers {
 
   clear(): void {
     for (const { marker } of this.placed.values()) marker.remove()
+    for (const { marker } of this.crowds.values()) marker.remove()
+    this.crowds.clear()
     this.trails.remove()
     this.placed.clear()
     this.animating.clear()
@@ -180,6 +288,23 @@ export class ScoreCardMarkers {
 const cardPointerPx = 6
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
+
+const crowdRank: Record<GameStatus, number> = { Live: 1, Upcoming: 2, Final: 3, Disrupted: 3 }
+
+/** Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way. */
+const offScreenMargin = 200
+
+/** Room left around a crowd's games when zooming in to them. */
+const crowdZoomPadding = 120
+
+/**
+ * A crowd takes the most prominent status among its games, as a cluster does: Live if any is Live,
+ * then Upcoming, then Final, and Disrupted only when all its games are.
+ */
+function crowdStatus(statuses: readonly GameStatus[]): GameStatus {
+  for (const status of ['Live', 'Upcoming', 'Final'] as const) if (statuses.includes(status)) return status
+  return 'Disrupted'
+}
 
 const svgNamespace = 'http://www.w3.org/2000/svg'
 
@@ -193,8 +318,8 @@ function newTrail(): SVGGElement {
  * Points a moved card back at its venue, in place of the card's own short pointer: a line from the
  * card's edge to a dot on the venue. A card in its usual spot has none.
  */
-function drawTrail(trail: SVGGElement, home: CardBox, { dx, dy }: CardShift): void {
-  const moved = dx !== 0 || dy !== 0
+function drawTrail(trail: SVGGElement, home: CardBox | null, { dx, dy }: CardShift): void {
+  const moved = home !== null && (dx !== 0 || dy !== 0)
   trail.style.display = moved ? '' : 'none'
   if (!moved) return
   const { venueX, venueY } = home

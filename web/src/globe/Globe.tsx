@@ -110,11 +110,11 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
     const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
     scoreCards.setGames(latestGames.current)
     scoreCards.setSelected(latestSelected.current)
-    let clusterRadius = pinLayout(instance.getZoom()).clusterRadius
+    let clustering = pinLayout(instance.getZoom())
 
     instance.on('style.load', () => {
       instance.setProjection({ type: 'globe' })
-      clusterRadius = pinLayout(instance.getZoom()).clusterRadius
+      clustering = pinLayout(instance.getZoom())
       instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
       // Beneath the place names, so a pin never hides a city's name.
       const belowNames = firstPlaceNameLayer(instance.getStyle())
@@ -144,15 +144,13 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       instance.addLayer(pinFootprintLayerSpec)
     })
 
-    // The cluster radius changes with zoom: wider for score cards than small pins, and in steps
-    // between whole zoom levels (see pinLayout).
+    // Small pins cluster, with a radius that changes in steps between whole zoom levels; score
+    // cards don't cluster (see pinLayout).
     instance.on('zoom', () => {
-      const wanted = pinLayout(instance.getZoom()).clusterRadius
-      if (wanted === clusterRadius) return
-      clusterRadius = wanted
-      void instance
-        .getSource<GeoJSONSource>(pinSource)
-        ?.setClusterOptions({ cluster: true, clusterRadius, clusterMaxZoom })
+      const { cluster, clusterRadius } = pinLayout(instance.getZoom())
+      if (cluster === clustering.cluster && (!cluster || clusterRadius === clustering.clusterRadius)) return
+      clustering = { ...clustering, cluster, clusterRadius }
+      void instance.getSource<GeoJSONSource>(pinSource)?.setClusterOptions({ cluster, clusterRadius, clusterMaxZoom })
     })
 
     // Cards follow the clustered source, which changes as the camera moves and data arrives.

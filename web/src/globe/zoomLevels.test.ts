@@ -12,22 +12,21 @@ describe('pinLayout', () => {
     expect(pinLayout(7).size).toBe('card')
   })
 
-  it('clusters score cards over a wider radius than small pins, since cards take more room', () => {
-    expect(pinLayout(7).clusterRadius).toBeGreaterThan(pinLayout(1.5).clusterRadius)
+  it('clusters small pins, but not score cards, which find room among themselves', () => {
+    expect(pinLayout(2).cluster).toBe(true)
+    expect(pinLayout(3).cluster).toBe(false)
   })
 
-  it('clusters small pins only when they would overlap, and cards only within half a card width', () => {
+  it('clusters small pins only when they would overlap: closer than a small pin is wide', () => {
     expect(pinLayout(2).clusterRadius).toBe(18)
-    expect(pinLayout(6).clusterRadius).toBe(53)
   })
 
   it("shrinks the radius past a whole zoom level, where MapLibre still shows that level's clusters", () => {
     // Halfway to the next level, pins are about 1.4 times as far apart on screen as when clustered.
-    expect(pinLayout(6.5).clusterRadius).toBe(Math.round(53 / Math.SQRT2))
     expect(pinLayout(2.5).clusterRadius).toBe(Math.round(18 / Math.SQRT2))
     // In steps, rounded down, so it errs towards clustering and doesn't change every frame.
-    expect(pinLayout(6.6).clusterRadius).toBe(pinLayout(6.5).clusterRadius)
-    expect(pinLayout(6.99).clusterRadius).toBeGreaterThan(53 / 2)
+    expect(pinLayout(2.6).clusterRadius).toBe(pinLayout(2.5).clusterRadius)
+    expect(pinLayout(2.99).clusterRadius).toBeGreaterThan(18 / 2)
   })
 })
 

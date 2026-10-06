@@ -223,6 +223,40 @@ body {
   display: none;
 }
 
+/* No room for this card: its game is counted in a crowd instead. */
+[data-crowded] {
+  visibility: hidden;
+}
+
+/* Games with no room for a card, shown as a count like a cluster, coloured by its most prominent game. */
+.score-crowd {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  background: var(--status-color);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.score-crowd--live {
+  border-width: 2.5px;
+}
+
+.score-crowd--upcoming {
+  opacity: 0.85;
+}
+
+.score-crowd--final,
+.score-crowd--disrupted {
+  opacity: 0.6;
+}
+
 .score-card--live {
   box-shadow:
     0 0 0 2px var(--status-color),

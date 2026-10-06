@@ -11,6 +11,8 @@ import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import { pulse } from './pinPulse'
 import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
+import { addGlobeGlow } from './globeGlow'
+import { baseStyleUrl, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { shouldSpin, spunLongitude } from './slowSpin'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
@@ -18,12 +20,6 @@ import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
 
-// Free vector tiles with borders and place labels (ADR-0004).
-const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
-// The style's layer for state, province and other first-level boundaries.
-const stateLinesLayer = 'boundary_3'
-// The style's layer for state and province names.
-const stateNamesLayer = 'label_state'
 const selectedPinLayer = 'pin-selected'
 // Marks the camera moves slow spin makes, to tell them apart from the viewer's own.
 const spinMove = { slowSpin: true }
@@ -93,10 +89,11 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
     if (!container.current) return
     const instance = new MapLibreMap({
       container: container.current,
-      style: mapStyle,
       center: [latestStartCamera.current.longitude, latestStartCamera.current.latitude],
       zoom: latestStartCamera.current.zoom,
     })
+    instance.setStyle(baseStyleUrl, { transformStyle: (_previous, base) => globeStyle(base) })
+    const removeGlow = addGlobeGlow(instance)
     const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
     scoreCards.setGames(latestGames.current)
     scoreCards.setSelected(latestSelected.current)
@@ -104,10 +101,6 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
 
     instance.on('style.load', () => {
       instance.setProjection({ type: 'globe' })
-      // The style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
-      instance.setLayerZoomRange(stateLinesLayer, 0, 24)
-      // Its state names start at zoom 5; zoom 3 is about one country on screen. City names take over past zoom 8.
-      instance.setLayerZoomRange(stateNamesLayer, 3, 8)
       clusterRadius = pinLayout(instance.getZoom()).clusterRadius
       instance.addSource(pinSource, pinSourceSpec(pinFeatures(latestGames.current), instance.getZoom()))
       for (const layer of clusterLayers) instance.addLayer(layer)
@@ -214,6 +207,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       window.removeEventListener('touchend', release)
       window.removeEventListener('touchcancel', release)
       scoreCards.clear()
+      removeGlow()
       instance.remove()
       map.current = null
       cards.current = null

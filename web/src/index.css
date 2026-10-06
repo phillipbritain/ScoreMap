@@ -16,11 +16,29 @@ body {
   height: 100%;
 }
 
+/* Space behind the globe: a near-black sky with a scattering of faint stars, repeated in tiles. */
 .globe {
   position: relative;
   flex: 1;
   min-width: 0;
   min-height: 0;
+  background-color: #03050c;
+  background-image:
+    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.8), transparent),
+    radial-gradient(1px 1px at 97px 130px, rgb(255 255 255 / 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 160px 72px, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 211px 188px, rgb(200 220 255 / 0.7), transparent),
+    radial-gradient(1px 1px at 61px 219px, rgb(255 255 255 / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 132px 11px, rgb(255 240 220 / 0.7), transparent);
+  background-size: 240px 240px;
+}
+
+/* The globe-sized circle behind the map that carries the atmosphere's halo (see globe/globeGlow.ts). */
+.globe-glow {
+  position: absolute;
+  border-radius: 50%;
+  background: #0b1526;
+  pointer-events: none;
 }
 
 .game-panel {

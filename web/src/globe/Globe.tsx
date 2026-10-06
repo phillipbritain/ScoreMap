@@ -142,7 +142,8 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       instance.addLayer(pinFootprintLayerSpec)
     })
 
-    // Score cards need more room than small pins, so they cluster over a wider radius.
+    // The cluster radius changes with zoom: wider for score cards than small pins, and in steps
+    // between whole zoom levels (see pinLayout).
     instance.on('zoom', () => {
       const wanted = pinLayout(instance.getZoom()).clusterRadius
       if (wanted === clusterRadius) return

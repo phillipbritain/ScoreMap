@@ -1,4 +1,4 @@
-/** Small pins when zoomed out; score cards once zoomed in to a region. */
+/** Small pins when zoomed out; score cards once a country fills the screen. */
 export type PinSize = 'small' | 'card'
 
 export interface PinLayout {
@@ -7,8 +7,8 @@ export interface PinLayout {
   clusterRadius: number
 }
 
-/** Zoom at which pins switch from small markers to score cards (about one region of a country on screen). */
-export const cardZoom = 5
+/** Zoom at which pins switch from small markers to score cards (about one country on screen). */
+export const cardZoom = 3
 
 /** Highest zoom at which pins still cluster; past it every game gets its own pin. */
 export const clusterMaxZoom = 14

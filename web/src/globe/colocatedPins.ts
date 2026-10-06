@@ -1,11 +1,12 @@
 import type { Feature, Point } from 'geojson'
 
 /**
- * How far apart games at the same spot are spread, in metres. Past `clusterMaxZoom` (14) pins no
- * longer cluster; at zoom 15 this is well over a score card's width (about 110 px at roughly
- * 2.4 m per pixel), so each game gets a card of its own without the fan-out drifting far from the venue.
+ * How far apart games at the same spot are spread, in metres. Past `clusterMaxZoom` (12) pins no
+ * longer cluster; at zoom 13, the furthest in the globe goes, this is more than a score card's width
+ * (about 110 px at up to 9.6 m per pixel), so each game gets a card of its own without the fan-out
+ * drifting far from the venue.
  */
-export const colocatedSeparationMetres = 400
+export const colocatedSeparationMetres = 1100
 
 const metresPerDegree = 111_320
 

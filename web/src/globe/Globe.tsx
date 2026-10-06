@@ -26,7 +26,7 @@ import { addGlobeGlow } from './globeGlow'
 import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { shouldSpin, spunLongitude } from './slowSpin'
-import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
+import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
@@ -102,6 +102,8 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       container: container.current,
       center: [latestStartCamera.current.longitude, latestStartCamera.current.latitude],
       zoom: latestStartCamera.current.zoom,
+      minZoom,
+      maxZoom,
     })
     instance.setStyle(baseStyleUrl, { transformStyle: (_previous, base) => globeStyle(base) })
     const removeGlow = addGlobeGlow(instance)

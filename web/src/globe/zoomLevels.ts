@@ -10,8 +10,26 @@ export interface PinLayout {
 /** Zoom at which pins switch from small markers to score cards (about one country on screen). */
 export const cardZoom = 3
 
-/** Highest zoom at which pins still cluster; past it every game gets its own pin. */
-export const clusterMaxZoom = 14
+/**
+ * The furthest out the globe zooms, about the whole of the US on screen. MapLibre's globe measures
+ * this at the equator: elsewhere the zoom can go lower while the globe stays the same size on screen
+ * (see furthestOutZoom), so small pins still show looking far north or south of about 50°.
+ */
+export const minZoom = 3.7
+
+/** The zoom MapLibre allows furthest out with the view centred at this latitude. */
+export function furthestOutZoom(latitude: number): number {
+  return minZoom + Math.log2(Math.cos((latitude * Math.PI) / 180))
+}
+
+/** The furthest in the globe zooms: a neighbourhood, a few kilometres across. */
+export const maxZoom = 13
+
+/**
+ * Highest zoom at which pins still cluster; past it every game gets its own pin. One below maxZoom,
+ * so at the limit every game has its own card (games at the same venue are spread apart, see colocatedPins).
+ */
+export const clusterMaxZoom = maxZoom - 1
 
 // Pins only cluster when they would overlap: closer on screen than the widest small pin (a Live
 // one, radius 7 plus its 2 px outline, both sides), or than a score card's width with a small margin.

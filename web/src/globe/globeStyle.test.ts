@@ -17,7 +17,14 @@ const liberty = base([
   { id: 'boundary_disputed', type: 'line', ...tiles, 'source-layer': 'boundary' },
   { id: 'poi', type: 'symbol', ...tiles, 'source-layer': 'poi' },
   { id: 'label_village', type: 'symbol', ...tiles, 'source-layer': 'place' },
-  { id: 'label_city', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'class'], 'city'] },
+  {
+    id: 'label_city',
+    type: 'symbol',
+    ...tiles,
+    'source-layer': 'place',
+    filter: ['==', ['get', 'class'], 'city'],
+    layout: { 'text-anchor': 'bottom', 'text-offset': [0, -0.1] },
+  },
   { id: 'label_state', type: 'symbol', ...tiles, 'source-layer': 'place', minzoom: 5, maxzoom: 8 },
   { id: 'label_town', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'class'], 'town'] },
   { id: 'label_city_capital', type: 'symbol', ...tiles, 'source-layer': 'place', filter: ['==', ['get', 'capital'], 2] },
@@ -77,17 +84,21 @@ describe('globeStyle', () => {
     expect(filter({ zoom: 5 }, { type: 1, properties: { class: 'town', rank: 1 } } as never)).toBe(false)
   })
 
-  it('places larger cities first, with room around them that a nearby smaller city gives way to', () => {
+  it('places larger cities first, so a nearby smaller city gives way', () => {
     for (const id of ['label_city', 'label_city_capital']) {
       expect(layer(id)).toMatchObject({
-        layout: { 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99], 'text-padding': 28 },
+        layout: { 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99] },
       })
     }
   })
 
-  it("puts city names below their dot, clear of a score card above the venue", () => {
+  it('puts city names below their dot by preference, moving to another side when a card is there', () => {
     for (const id of ['label_city', 'label_city_capital']) {
-      expect(layer(id)).toMatchObject({ layout: { 'text-anchor': 'top' } })
+      const layout = layer(id)?.layout as Record<string, unknown>
+      expect(layout['text-variable-anchor']).toEqual(['top', 'bottom', 'left', 'right'])
+      // A fixed anchor or offset would stop the name moving.
+      expect(layout).not.toHaveProperty('text-anchor')
+      expect(layout).not.toHaveProperty('text-offset')
     }
   })
 

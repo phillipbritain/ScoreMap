@@ -1,4 +1,5 @@
 import type { ExpressionSpecification, LayerSpecification, StyleSpecification } from 'maplibre-gl'
+import { cardZoom } from './zoomLevels'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
@@ -107,20 +108,24 @@ const majorCity: ExpressionSpecification = ['<=', ['coalesce', ['get', 'rank'], 
 
 /**
  * Names only major cities, at every zoom. Where two names would collide, the larger city (lower
- * rank) is placed first, and each name keeps a clear margin, so a nearby smaller city gives way.
+ * rank) is placed first, so a nearby smaller city gives way.
+ * The base style's fixed offset for its single anchor is dropped for the radial offset below.
  */
 function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
   if (layer.type !== 'symbol') return layer
+  const { 'text-anchor': _anchor, 'text-offset': _offset, ...layout } = layer.layout ?? {}
   return {
     ...layer,
     filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
     layout: {
-      ...layer.layout,
+      ...layout,
       'symbol-sort-key': ['coalesce', ['get', 'rank'], 99],
-      'text-padding': 28,
-      // Below the city's dot: a game's score card sits above its venue, so the two don't overlap.
-      'text-anchor': 'top',
-      'text-offset': [0, 0.3],
+      // Below the city's dot by preference, clear of its own game's score card above the venue; if
+      // another card covers that spot, the name moves to another side (see pinLayers' cardFootprint).
+      'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+      // Far enough from the dot (in ems) to clear a game's pin on it: a round small pin zoomed out,
+      // a score card's pointer zoomed in.
+      'text-radial-offset': ['step', ['zoom'], 1.2, cardZoom, 1],
     },
   }
 }

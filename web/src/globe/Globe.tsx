@@ -10,7 +10,18 @@ import type { Camera } from './camera'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import { pulse } from './pinPulse'
-import { clusterLayer, clusterLayers, pinSource, pinSourceSpec, smallPinLayer, smallPinLayerSpec } from './pinLayers'
+import {
+  cardFootprint,
+  cardFootprintLayerSpec,
+  pinFootprint,
+  pinFootprintLayerSpec,
+  clusterLayer,
+  clusterLayers,
+  pinSource,
+  pinSourceSpec,
+  smallPinLayer,
+  smallPinLayerSpec,
+} from './pinLayers'
 import { addGlobeGlow } from './globeGlow'
 import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
@@ -124,6 +135,11 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
         },
         belowNames,
       )
+      // On top, so names are placed around the pins' footprints rather than under the pins.
+      addBlankImage(instance, cardFootprint.image, cardFootprint.width, cardFootprint.height)
+      addBlankImage(instance, pinFootprint.image, pinFootprint.size, pinFootprint.size)
+      instance.addLayer(cardFootprintLayerSpec)
+      instance.addLayer(pinFootprintLayerSpec)
     })
 
     // Score cards need more room than small pins, so they cluster over a wider radius.
@@ -247,6 +263,11 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
   }, [selectedGameId])
 
   return <div ref={container} className="globe" />
+}
+
+/** A fully transparent image, for the pins' invisible footprints. */
+function addBlankImage(map: MapLibreMap, name: string, width: number, height: number): void {
+  map.addImage(name, { width, height, data: new Uint8Array(width * height * 4) })
 }
 
 /**

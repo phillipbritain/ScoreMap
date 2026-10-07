@@ -23,9 +23,9 @@ public class ScenarioVenueListTests
     }
 
     [Fact]
-    public void About_150_venues_across_every_continent()
+    public void About_150_venues_across_every_continent_plus_more_around_london()
     {
-        Assert.InRange(Venues.Count, 140, 170);
+        Assert.InRange(Venues.Count, 140, 200);
         Assert.Equal(Venues.Count, Venues.Select(v => VenueLocator.VenueQuery(v.ToProviderVenue())).Distinct().Count());
         // One country per inhabited continent, standing in for it.
         Assert.Superset(new HashSet<string> { "England", "USA", "Brazil", "South Africa", "Japan", "Australia" },
@@ -38,6 +38,9 @@ public class ScenarioVenueListTests
         Assert.All(Venues, v => Assert.Contains("worldwide", v.Groups));
         int InGroup(string group) => Venues.Count(v => v.Groups.Contains(group));
         Assert.InRange(InGroup("london"), 12, 20);
+        Assert.InRange(InGroup("london-and-nearby"), 40, 50);
+        Assert.Superset(Venues.Where(v => v.Groups.Contains("london")).Select(v => v.Name).ToHashSet(),
+            Venues.Where(v => v.Groups.Contains("london-and-nearby")).Select(v => v.Name).ToHashSet());
         Assert.InRange(InGroup("new-york"), 6, 20);
         Assert.InRange(InGroup("los-angeles"), 6, 20);
     }

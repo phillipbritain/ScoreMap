@@ -49,7 +49,7 @@ public sealed class ScoreMapServer(
 
     /// <summary>
     /// The checked-in scenario venue lookups the server reads: a fresh temp path, so tests don't
-    /// see the repo's file. Empty until a test writes it.
+    /// see the repo's file (unless <see cref="UseShippedScenarios"/>). Empty until a test writes it.
     /// </summary>
     public string ScenarioVenueLocationsPath { get; } =
         Path.Combine(Path.GetTempPath(), $"scoremap-scenario-venue-locations-{Guid.NewGuid():N}.json");
@@ -148,8 +148,9 @@ public sealed class ScoreMapServer(
     public string ScenariosFolder { get; } = Path.Combine(Path.GetTempPath(), $"scoremap-scenarios-{Guid.NewGuid():N}");
 
     /// <summary>
-    /// Runs the server on the scenario settings and files that ship with it, rather than
-    /// <see cref="Scenario"/> and <see cref="ScenariosFolder"/>.
+    /// Runs the server on the scenario settings, files and checked-in venue lookups that ship with
+    /// it, rather than <see cref="Scenario"/>, <see cref="ScenariosFolder"/> and
+    /// <see cref="ScenarioVenueLocationsPath"/>.
     /// </summary>
     public bool UseShippedScenarios { get; init; }
 
@@ -195,13 +196,13 @@ public sealed class ScoreMapServer(
         if (StreamSiteTimeout is { } timeout)
             builder.UseSetting("StreamFinder:TimeoutSeconds", timeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
-        builder.UseSetting("Venues:ScenarioLocationsPath", ScenarioVenueLocationsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
         if (!UseShippedScenarios)
         {
             builder.UseSetting("Scenario", Scenario ?? "real");
             builder.UseSetting("Scenarios:Folder", ScenariosFolder);
+            builder.UseSetting("Venues:ScenarioLocationsPath", ScenarioVenueLocationsPath);
         }
         if (Environment is not null)
             builder.UseEnvironment(Environment);

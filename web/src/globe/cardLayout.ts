@@ -1,6 +1,6 @@
 import type { GameStatus } from '../games/game'
 import type { ScreenBox } from './gameCities'
-import { groupStatus, statusProminence } from './pinLayers'
+import { groupStatus, statusProminence } from './statusLook'
 
 /** One game's score card, as the map shows it: its venue on screen and the card's measured size. */
 export interface ScreenCard {

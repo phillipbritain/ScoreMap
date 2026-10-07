@@ -27,6 +27,7 @@ import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { addStateNameFit } from './stateNameFit'
 import { shouldSpin, spunLongitude } from './slowSpin'
+import { selectionColor } from './statusLook'
 import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
@@ -134,7 +135,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
             'circle-radius': 13,
             'circle-color': 'rgba(0, 0, 0, 0)',
             'circle-stroke-width': 3,
-            'circle-stroke-color': '#2f80ed',
+            'circle-stroke-color': selectionColor,
           },
         },
         belowNames,

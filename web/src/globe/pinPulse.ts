@@ -1,12 +1,12 @@
 import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { PinAnimation } from './pinAnimation'
-import { statusColors } from './pinLayers'
+import { statusLooks } from './statusLook'
 
 /** The status a game is in once each animation's change has happened, which colours the pulse. */
 const pulseColors: Record<PinAnimation, string> = {
-  score: statusColors.Live,
-  start: statusColors.Live,
-  finish: statusColors.Final,
+  score: statusLooks.Live.color,
+  start: statusLooks.Live.color,
+  finish: statusLooks.Final.color,
 }
 
 /**

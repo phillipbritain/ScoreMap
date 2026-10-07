@@ -20,6 +20,10 @@ _Avoid_: Match, fixture, event
 The marker for one game on the globe, placed at the game's venue.
 _Avoid_: Marker, dot, icon
 
+**Score card**:
+While zoomed in, the panel a pin shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue.
+_Avoid_: Tile, label, badge, card (alone, outside the globe's code)
+
 **Cluster**:
 While zoomed out, a group of pins close enough to overlap, shown as one marker with a count. It splits apart as you zoom in, or zooms in until it does when selected.
 _Avoid_: Bubble, group

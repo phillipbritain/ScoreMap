@@ -1,4 +1,4 @@
-import { LngLatBounds, Marker, type Map as MapLibreMap } from 'maplibre-gl'
+import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { cardPins } from './cardPins'
@@ -9,7 +9,7 @@ import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { crowdStacking, selectedStacking, statusLooks } from './statusLook'
-import { maxZoom, pinLayout } from './zoomLevels'
+import { pinLayout } from './zoomLevels'
 
 interface PlacedCard {
   marker: Marker
@@ -48,6 +48,7 @@ export class ScoreCardMarkers {
   private readonly map: MapLibreMap
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
+  private readonly onSelectCrowd: (gameIds: readonly string[]) => void
   /** Trails from moved cards to their venues, in one layer just above the map so no trail crosses over a card. */
   private readonly trails = document.createElementNS(svgNamespace, 'svg')
   /** Counts of games with no room for a card, by the first game in each. */
@@ -57,12 +58,18 @@ export class ScoreCardMarkers {
 
   /**
    * `placeNames` gives the names cards and trails keep clear of; `onSelect` is called with a game's
-   * id when its card is selected.
+   * id when its card is selected, and `onSelectCrowd` with a crowd's games when it is.
    */
-  constructor(map: MapLibreMap, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
+  constructor(
+    map: MapLibreMap,
+    placeNames: PlaceNames,
+    onSelect: (gameId: string) => void,
+    onSelectCrowd: (gameIds: readonly string[]) => void,
+  ) {
     this.map = map
     this.placeNames = placeNames
     this.onSelect = onSelect
+    this.onSelectCrowd = onSelectCrowd
     this.trails.classList.add('score-card-trails')
     map.getCanvas().after(this.trails)
   }
@@ -194,7 +201,8 @@ export class ScoreCardMarkers {
         element.append(document.createElement('div'))
         element.addEventListener('click', (event) => {
           event.stopPropagation()
-          this.zoomToCrowd(key)
+          const selected = this.crowds.get(key)
+          if (selected) this.onSelectCrowd(selected.gameIds)
         })
         element.style.zIndex = String(crowdStacking)
         crowd = { marker: new Marker({ element }).setLngLat(at).addTo(this.map), gameIds, drawn: '' }
@@ -218,29 +226,9 @@ export class ScoreCardMarkers {
     }
   }
 
-  /**
-   * Zooms in until a crowd splits: to fit its games, at least a level in, and again from there while
-   * some of them are still crowded (until the globe can zoom no further in). A move by the viewer
-   * along the way stops it.
-   */
-  private zoomToCrowd(key: string): void {
-    const crowd = this.crowds.get(key)
-    if (!crowd) return
-    const bounds = new LngLatBounds()
-    for (const gameId of crowd.gameIds) {
-      const lngLat = this.placed.get(gameId)?.marker.getLngLat()
-      if (lngLat) bounds.extend(lngLat)
-    }
-    const fitted = this.map.cameraForBounds(bounds, { padding: crowdZoomPadding })?.zoom ?? 0
-    const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
-    const center = bounds.getCenter()
-    this.map.easeTo({ center, zoom })
-    this.map.once('idle', () => {
-      const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
-      if (!arrived || zoom >= maxZoom) return
-      const stillCrowded = [...this.crowds].find(([, c]) => c.gameIds.some((id) => crowd.gameIds.includes(id)))
-      if (stillCrowded) this.zoomToCrowd(stillCrowded[0])
-    })
+  /** The games in each crowd on screen now. */
+  crowdedGames(): string[][] {
+    return [...this.crowds.values()].map((crowd) => crowd.gameIds)
   }
 
   /**
@@ -288,9 +276,6 @@ export class ScoreCardMarkers {
 function cardPointer(card: HTMLElement): number {
   return parseFloat(getComputedStyle(card).getPropertyValue('--score-card-pointer')) || 0
 }
-
-/** Room left around a crowd's games when zooming in to them. */
-const crowdZoomPadding = 120
 
 const svgNamespace = 'http://www.w3.org/2000/svg'
 

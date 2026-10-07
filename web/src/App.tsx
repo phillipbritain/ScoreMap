@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FilterMenu } from './filters/FilterMenu'
 import { useLeagues } from './filters/leagues'
 import { settingsStore } from './filters/settingsStore'
 import { noPinsMessage, visibleGames } from './filters/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
-import { Globe, type GlobeHandle } from './globe/Globe'
+import { Globe } from './globe/Globe'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
@@ -27,17 +27,14 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
-  const globe = useRef<GlobeHandle>(null)
 
   useEffect(
     () =>
       connectToGames({
         onSnapshot: setGames,
         // The snapshot always comes first; a change before it has nothing to apply to.
-        onChange: (change) => {
-          setGames((current) => current && applyChange(current, change))
-          globe.current?.showChange(change)
-        },
+        // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
+        onChange: (change) => setGames((current) => current && applyChange(current, change)),
       }),
     [],
   )
@@ -54,7 +51,6 @@ export default function App() {
     <div className={selectedGame ? 'app app--panel-open' : 'app'}>
       <div className="globe-area">
         <Globe
-          ref={globe}
           games={visible}
           selectedGameId={selectedGame?.id ?? null}
           onSelectGame={setSelectedGameId}

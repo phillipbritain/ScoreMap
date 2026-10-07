@@ -5,7 +5,7 @@ import { cardPins } from './cardPins'
 const pin = (gameId: string, coordinates: [number, number]): Feature<Point> => ({
   type: 'Feature',
   geometry: { type: 'Point', coordinates },
-  properties: { gameId, status: 'Live', label: '' },
+  properties: { gameId, status: 'Live' },
 })
 
 const cluster: Feature<Point> = {

@@ -8,7 +8,7 @@ namespace ScoreMap.Server.Tests.Scenarios;
 /// <summary>The venue list and checked-in lookups that ship in the repo (ADR-0009).</summary>
 public class ScenarioVenueListTests
 {
-    private static readonly string ServerProjectFolder = Path.Combine(FindServerFolder(), "src", "ScoreMap.Server");
+    internal static readonly string ServerProjectFolder = Path.Combine(FindServerFolder(), "src", "ScoreMap.Server");
 
     private static readonly IReadOnlyList<ScenarioVenue> Venues =
         ScenarioVenue.ReadList(Path.Combine(ServerProjectFolder, "scenario-venues.json"));

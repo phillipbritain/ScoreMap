@@ -1,63 +1,10 @@
-import type {
-  CircleLayerSpecification,
-  ExpressionSpecification,
-  GeoJSONSourceSpecification,
-  SymbolLayerSpecification,
-} from 'maplibre-gl'
-import type { GameStatus } from '../games/game'
+import type { CircleLayerSpecification, GeoJSONSourceSpecification, SymbolLayerSpecification } from 'maplibre-gl'
+import { byStatus, clusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
 export const pinSource = 'pins'
 export const clusterLayer = 'clusters'
 export const smallPinLayer = 'pins'
-
-/**
- * Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out.
- * Shared by small pins, clusters and score cards.
- */
-export const statusColors: Record<GameStatus, string> = {
-  Live: '#e4572e',
-  Upcoming: '#f2a541',
-  Final: '#8a8f98',
-  Disrupted: '#c3c6cc',
-}
-
-/** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */
-export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
-
-/**
- * The status a group of games shows as (a cluster, or a crowd of score cards): the most prominent
- * among them, so Disrupted only when all its games are.
- */
-export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
-  return statusProminence.find((s) => statuses.includes(s)) ?? 'Disrupted'
-}
-
-const status: ExpressionSpecification = ['get', 'status']
-const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', status, s], 1, 0]]
-
-/** groupStatus as a style expression, from the counts of each status the pin source keeps for a cluster. */
-const clusterStatus: ExpressionSpecification = [
-  'case',
-  ...statusProminence.slice(0, -1).flatMap((s) => [['>', ['get', s.toLowerCase()], 0], s]),
-  'Disrupted',
-] as ExpressionSpecification
-
-/** A style value picked by the status that `s` evaluates to (a pin's own, or a cluster's). */
-const byStatus = (
-  s: ExpressionSpecification,
-  values: Record<GameStatus, number | string>,
-): ExpressionSpecification => [
-  'match',
-  s,
-  'Live',
-  values.Live,
-  'Upcoming',
-  values.Upcoming,
-  'Disrupted',
-  values.Disrupted,
-  values.Final,
-]
 
 export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number): GeoJSONSourceSpecification {
   const { size, clusterRadius } = pinLayout(zoom)
@@ -67,8 +14,8 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: nu
     cluster: size === 'small',
     clusterRadius,
     clusterMaxZoom,
-    // Counts by status, for clusterStatus.
-    clusterProperties: { live: countOf('Live'), upcoming: countOf('Upcoming'), final: countOf('Final') },
+    // Counts by status, for the status a cluster shows as (see statusLook's clusterStatus).
+    clusterProperties: clusterStatusCounts,
   }
 }
 
@@ -78,12 +25,12 @@ export const clusterLayers: [CircleLayerSpecification, SymbolLayerSpecification]
     type: 'circle',
     source: pinSource,
     filter: ['has', 'point_count'],
-    layout: { 'circle-sort-key': byStatus(clusterStatus, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
+    layout: { 'circle-sort-key': byStatus('cluster', (look) => look.stacking) },
     paint: {
       'circle-radius': ['step', ['get', 'point_count'], 13, 5, 16, 15, 20],
-      'circle-color': byStatus(clusterStatus, statusColors),
-      'circle-opacity': byStatus(clusterStatus, { Live: 1, Upcoming: 0.85, Final: 0.6, Disrupted: 0.6 }),
-      'circle-stroke-width': byStatus(clusterStatus, { Live: 2.5, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
+      'circle-color': byStatus('cluster', (look) => look.color),
+      'circle-opacity': byStatus('cluster', (look) => look.groupOpacity),
+      'circle-stroke-width': byStatus('cluster', (look) => look.groupOutline),
       'circle-stroke-color': '#ffffff',
     },
   },
@@ -109,15 +56,14 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
   source: pinSource,
   filter: ['!', ['has', 'point_count']],
   maxzoom: cardZoom,
-  // Live draws on top.
-  layout: { 'circle-sort-key': byStatus(status, { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }) },
+  layout: { 'circle-sort-key': byStatus('pin', (look) => look.stacking) },
   paint: {
-    'circle-radius': byStatus(status, { Live: 7, Upcoming: 5, Final: 4, Disrupted: 4 }),
-    'circle-color': byStatus(status, statusColors),
-    'circle-opacity': byStatus(status, { Live: 1, Upcoming: 0.8, Final: 0.55, Disrupted: 0.6 }),
-    'circle-stroke-width': byStatus(status, { Live: 2, Upcoming: 1.5, Final: 1.5, Disrupted: 1.5 }),
+    'circle-radius': byStatus('pin', (look) => look.pinRadius),
+    'circle-color': byStatus('pin', (look) => look.color),
+    'circle-opacity': byStatus('pin', (look) => look.pinOpacity),
+    'circle-stroke-width': byStatus('pin', (look) => look.pinOutline),
     'circle-stroke-color': '#ffffff',
-    'circle-stroke-opacity': byStatus(status, { Live: 1, Upcoming: 1, Final: 0.55, Disrupted: 0.6 }),
+    'circle-stroke-opacity': byStatus('pin', (look) => look.pinOutlineOpacity),
   },
 }
 
@@ -129,9 +75,11 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
  * Clusters have none: a name too close to fit beside one would be lost, so it's written across the
  * cluster instead (place names draw above the pins). Both draw nothing.
  */
+// A typical score card with its pointer and a small margin. Cards vary with their teams' names and
+// clock line, and a footprint image has one size, so this is an approximation.
 export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
-// A Live small pin is the largest: radius 7 plus a 2 px outline.
-export const pinFootprint = { image: 'pin-footprint', size: 20 }
+// The widest small pin, with a pixel's margin each side.
+export const pinFootprint = { image: 'pin-footprint', size: smallPinWidth + 2 }
 
 /** Where each score card sits: above its venue, the card's size with its pointer and a small margin. */
 export const cardFootprintLayerSpec: SymbolLayerSpecification = {

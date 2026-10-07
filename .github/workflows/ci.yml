@@ -1,0 +1,47 @@
+# Checks every pull request before it's merged: the browser app's lint, types and tests, and the
+# server's tests (which include the convention tests in server/tests/.../Conventions). GitHub runs it
+# on the pull request merged into main, so two PRs that each pass alone are checked together too.
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+# A newer push to the same pull request replaces a check still running on the old one.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc -b
+      - run: npm test
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet test server/ScoreMap.slnx -c Release

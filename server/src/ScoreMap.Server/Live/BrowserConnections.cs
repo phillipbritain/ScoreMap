@@ -10,11 +10,6 @@ public sealed class BrowserConnections
     private readonly HashSet<string> _ids = [];
     private TaskCompletionSource _anyConnected = NewSignal();
 
-    public int Count
-    {
-        get { lock (_ids) return _ids.Count; }
-    }
-
     public void Connected(string connectionId)
     {
         lock (_ids)
@@ -31,6 +26,16 @@ public sealed class BrowserConnections
             if (_ids.Remove(connectionId) && _ids.Count == 0)
                 _anyConnected = NewSignal();
         }
+    }
+
+    /// <summary>
+    /// Whether a browser is counted as connected: from just after the hub sends its snapshot
+    /// until it leaves.
+    /// </summary>
+    public bool IsConnected(string connectionId)
+    {
+        lock (_ids)
+            return _ids.Contains(connectionId);
     }
 
     /// <summary>Completes as soon as at least one browser is connected.</summary>

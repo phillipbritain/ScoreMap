@@ -61,5 +61,5 @@ _Avoid_: Finished, completed, over, ended
 ### Local runs
 
 **Scenario**:
-A named set of made-up games at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally. Fans on the deployed site never see one.
-_Avoid_: Dummy data, fake data, demo, fixture, simulation
+A named set of made-up games at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally.
+_Avoid_: Dummy data, fake data, demo, simulation

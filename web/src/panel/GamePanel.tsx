@@ -1,4 +1,5 @@
-import type { Game, GameTeam } from '../games/game'
+import { useState } from 'react'
+import type { Game, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { progressLine } from '../games/progressLine'
 import { UnofficialStreams } from './UnofficialStreams'
@@ -18,9 +19,20 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
   const { venue } = game
   const place = [venue.city, venue.country].filter(Boolean).join(', ')
   const links = watchLinks(game.broadcasters, viewerCountry(navigator.languages))
+  // A photo that fails to load is left out, with its credit, rather than shown broken.
+  const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
+  const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
 
   return (
     <aside className="game-panel" aria-label="Game panel">
+      {photo && (
+        <img
+          className="game-panel__photo"
+          src={photo.url}
+          alt={venue.name ?? 'The venue'}
+          onError={() => setBrokenPhotoUrl(photo.url)}
+        />
+      )}
       <header className="game-panel__header">
         <span className="game-panel__league">{game.league}</span>
         <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
@@ -58,7 +70,29 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
         </dd>
         <UnofficialStreams links={game.streamLinks} />
       </dl>
+      {photo?.credit && <Credit credit={photo.credit} />}
     </aside>
+  )
+}
+
+/** The credit a Wikimedia Commons photo's licence asks for: its author and licence, linking to the photo's page. */
+function Credit({ credit }: { credit: PhotoCredit }) {
+  return (
+    <p className="game-panel__credit">
+      Photo:{' '}
+      <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
+        {credit.author}
+      </a>
+      ,{' '}
+      {credit.licenceUrl ? (
+        <a href={credit.licenceUrl} target="_blank" rel="noopener noreferrer">
+          {credit.licence}
+        </a>
+      ) : (
+        credit.licence
+      )}
+      , via Wikimedia Commons
+    </p>
   )
 }
 

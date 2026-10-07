@@ -2,11 +2,11 @@ import { LngLatBounds, Marker, type MapSourceDataEvent, type Map as MapLibreMap 
 import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
-import { layOutCards, type CardBox, type CardCrowd, type CardShift } from './cardLayout'
+import { layOutCards, type CardCrowd, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { cityNameLook, gameCitiesState, gameCityPlaces, placeTiles } from './globeStyle'
 import type { PinAnimation } from './pinAnimation'
-import { groupStatus, pinSource, statusColors, statusProminence } from './pinLayers'
+import { pinSource, statusColors } from './pinLayers'
 import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { maxZoom, pinLayout } from './zoomLevels'
@@ -18,8 +18,8 @@ interface PlacedCard {
   /** The card's size on screen, measured when it's drawn. */
   width: number
   height: number
-  /** How far the card is moved from above its venue to make room for others (see cardLayout). */
-  shift: CardShift
+  /** Where the card sits from its venue: just above it, or moved aside to make room for others (see cardLayout). */
+  offset: ScreenOffset
   /** The line and venue dot drawn while the card is moved (see drawTrail). */
   trail: SVGGElement
   /** True while there's no room for the card and its game is counted in a crowd instead. */
@@ -115,7 +115,7 @@ export class ScoreCardMarkers {
           drawn: '',
           width: 0,
           height: 0,
-          shift: { dx: 0, dy: 0 },
+          offset: { dx: 0, dy: -cardPointerPx },
           trail: this.trails.appendChild(newTrail()),
           crowded: false,
         }
@@ -149,35 +149,31 @@ export class ScoreCardMarkers {
 
   /**
    * Moves cards that would overlap apart, each with a trail back to its venue, and counts the games
-   * there's no room for. Only cards on screen (or nearly) are laid out; the rest stay where they'd sit.
+   * there's no room for (see cardLayout).
    */
   private layOut(gameIds: ReadonlySet<string>): void {
-    const boxes = new Map<string, CardBox>()
-    for (const gameId of gameIds) {
+    const cards = [...gameIds].map((gameId): ScreenCard => {
       const { marker, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(marker.getLngLat())
-      if (!this.nearScreen(venue)) continue
-      boxes.set(gameId, {
-        gameId,
-        x: venue.x,
-        y: venue.y - cardPointerPx - height / 2,
-        width,
-        height,
-        venueX: venue.x,
-        venueY: venue.y,
-        rank: this.rank(gameId),
-      })
-    }
-    const { shifts, crowds } = layOutCards([...boxes.values()], this.cityNames())
+      return { gameId, status: this.games.get(gameId)!.status, venueX: venue.x, venueY: venue.y, width, height }
+    })
+    const canvas = this.map.getCanvas()
+    const layout = layOutCards(cards, {
+      width: canvas.clientWidth,
+      height: canvas.clientHeight,
+      pointer: cardPointerPx,
+      names: this.cityNames(),
+      selectedGameId: this.selectedGameId,
+    })
 
     for (const [gameId, placed] of this.placed) {
-      const shift = shifts.get(gameId) ?? { dx: 0, dy: 0 }
-      const box = boxes.get(gameId)
-      const crowded = box !== undefined && !shifts.has(gameId)
-      if (shift.dx !== placed.shift.dx || shift.dy !== placed.shift.dy) {
-        placed.shift = shift
-        placed.marker.setOffset([shift.dx, shift.dy - cardPointerPx])
-        placed.marker.getElement().toggleAttribute('data-moved', shift.dx !== 0 || shift.dy !== 0)
+      const placement = layout.cards.get(gameId)
+      if (!placement) continue
+      const { offset, crowded, trail } = placement
+      if (offset.dx !== placed.offset.dx || offset.dy !== placed.offset.dy) {
+        placed.offset = offset
+        placed.marker.setOffset([offset.dx, offset.dy])
+        placed.marker.getElement().toggleAttribute('data-moved', trail !== null)
       }
       if (crowded !== placed.crowded) {
         placed.crowded = crowded
@@ -185,9 +181,9 @@ export class ScoreCardMarkers {
         placed.marker.getElement().toggleAttribute('data-crowded', crowded)
       }
       // Redrawn every frame: the venue moves on screen as the globe turns.
-      drawTrail(placed.trail, box && !crowded ? box : null, shift)
+      drawTrail(placed.trail, trail)
     }
-    this.drawCrowds(crowds)
+    this.drawCrowds(layout.crowds)
   }
 
   /**
@@ -236,15 +232,9 @@ export class ScoreCardMarkers {
     )
   }
 
-  /** Which cards get room first: the selected game's, then by status, most prominent first (see statusProminence). */
-  private rank(gameId: string): number {
-    if (gameId === this.selectedGameId) return 0
-    return 1 + statusProminence.indexOf(this.games.get(gameId)?.status ?? 'Final')
-  }
-
   private drawCrowds(crowds: readonly CardCrowd[]): void {
     const keep = new Set<string>()
-    for (const { gameIds } of crowds) {
+    for (const { gameIds, status } of crowds) {
       const key = gameIds[0]
       keep.add(key)
       const at = this.placed.get(key)!.marker.getLngLat()
@@ -264,7 +254,6 @@ export class ScoreCardMarkers {
         crowd.marker.setLngLat(at)
         crowd.gameIds = gameIds
       }
-      const status = groupStatus(gameIds.map((id) => this.games.get(id)?.status ?? 'Final'))
       const drawn = `${status} ${gameIds.length}`
       if (crowd.drawn !== drawn) {
         const count = crowd.marker.getElement().firstElementChild as HTMLElement
@@ -382,28 +371,17 @@ function newTrail(): SVGGElement {
   return trail
 }
 
-/**
- * Points a moved card back at its venue, in place of the card's own short pointer: a line from the
- * card's edge to a dot on the venue. A card in its usual spot has none.
- */
-function drawTrail(trail: SVGGElement, home: CardBox | null, { dx, dy }: CardShift): void {
-  const moved = home !== null && (dx !== 0 || dy !== 0)
-  trail.style.display = moved ? '' : 'none'
-  if (!moved) return
-  const { venueX, venueY } = home
-  const centreX = home.x + dx
-  const centreY = home.y + dy
-  // Where a line from the card's centre to the venue leaves the card.
-  const toVenueX = venueX - centreX
-  const toVenueY = venueY - centreY
-  const edge = Math.min(1, (home.width / 2) / Math.abs(toVenueX), (home.height / 2) / Math.abs(toVenueY))
-  const [line, dot] = trail.children
-  line.setAttribute('x1', String(centreX + toVenueX * edge))
-  line.setAttribute('y1', String(centreY + toVenueY * edge))
-  line.setAttribute('x2', String(venueX))
-  line.setAttribute('y2', String(venueY))
-  dot.setAttribute('cx', String(venueX))
-  dot.setAttribute('cy', String(venueY))
+/** Points a moved card back at its venue: a line from the card's edge to a dot on the venue. */
+function drawTrail(element: SVGGElement, trail: Segment | null): void {
+  element.style.display = trail ? '' : 'none'
+  if (!trail) return
+  const [line, dot] = element.children
+  line.setAttribute('x1', String(trail.x1))
+  line.setAttribute('y1', String(trail.y1))
+  line.setAttribute('x2', String(trail.x2))
+  line.setAttribute('y2', String(trail.y2))
+  dot.setAttribute('cx', String(trail.x2))
+  dot.setAttribute('cy', String(trail.y2))
 }
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`

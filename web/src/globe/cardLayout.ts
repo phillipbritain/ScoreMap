@@ -1,7 +1,142 @@
+import type { GameStatus } from '../games/game'
 import type { ScreenBox } from './gameCities'
+import { groupStatus, statusProminence } from './pinLayers'
+
+/** One game's score card, as the map shows it: its venue on screen and the card's measured size. */
+export interface ScreenCard {
+  gameId: string
+  status: GameStatus
+  /** The venue the card points at, in screen pixels. */
+  venueX: number
+  venueY: number
+  width: number
+  height: number
+}
+
+/** What the cards are laid out around. */
+export interface CardScene {
+  /** The map's size on screen. Cards whose venues are well off it aren't laid out. */
+  width: number
+  height: number
+  /** How far a card's pointer reaches below the card, down to its venue. */
+  pointer: number
+  /** Where the names of games' cities are written, which cards and trails keep clear of. */
+  names?: readonly ScreenBox[]
+  /** The selected game, whose card gets room first. */
+  selectedGameId?: string | null
+}
+
+/** A distance on screen, in pixels. */
+export interface ScreenOffset {
+  dx: number
+  dy: number
+}
+
+/** A line on screen, in pixels. */
+export interface Segment {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}
+
+/** Where one card goes. */
+export interface CardPlacement {
+  /** Where the card's bottom centre sits, from its venue: just above it, or moved aside. */
+  offset: ScreenOffset
+  /** True when there's no room for the card and its game is counted in a crowd instead. */
+  crowded: boolean
+  /** From the edge of a moved card to its venue; null for a card that isn't moved. */
+  trail: Segment | null
+}
+
+/** Games with no room for a card, shown as one count at the first one's venue. */
+export interface CardCrowd {
+  gameIds: string[]
+  /** The status the count shows as (see groupStatus). */
+  status: GameStatus
+  x: number
+  y: number
+}
+
+export interface CardLayout {
+  /** Where every card goes, by game. */
+  cards: Map<string, CardPlacement>
+  crowds: CardCrowd[]
+}
+
+/**
+ * Lays out the score cards on screen. Each sits above its venue, its pointer's tip on the spot, unless
+ * that overlaps another card, a venue or a city's name: then it's moved the least it can be, with a
+ * trail back to its venue (see arrange). The selected game's card gets room first, then cards by
+ * status, most prominent first; a card with no room within reach joins a crowd. Cards whose venues are
+ * well off screen stay where they'd sit: nothing on screen can get in their way.
+ */
+export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): CardLayout {
+  const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, crowded: false, trail: null }
+  const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
+  const rank = ({ gameId, status }: ScreenCard) =>
+    gameId === scene.selectedGameId ? 0 : 1 + statusProminence.indexOf(status)
+  const boxes = cards
+    .filter((card) => nearScreen(card, scene))
+    .map(
+      (card): CardBox => ({
+        gameId: card.gameId,
+        x: card.venueX,
+        y: card.venueY - scene.pointer - card.height / 2,
+        width: card.width,
+        height: card.height,
+        venueX: card.venueX,
+        venueY: card.venueY,
+        rank: rank(card),
+      }),
+    )
+  const { shifts, crowds } = arrange(boxes, scene.names ?? [])
+
+  const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
+  for (const box of boxes) {
+    const shift = shifts.get(box.gameId)
+    if (!shift) {
+      placements.set(box.gameId, { ...unmoved, crowded: true })
+      continue
+    }
+    const moved = shift.dx !== 0 || shift.dy !== 0
+    placements.set(box.gameId, {
+      offset: { dx: shift.dx, dy: shift.dy - scene.pointer },
+      crowded: false,
+      trail: moved ? trail(box, shift) : null,
+    })
+  }
+  return {
+    cards: placements,
+    crowds: crowds.map((crowd) => ({ ...crowd, status: groupStatus(crowd.gameIds.map((id) => statuses.get(id)!)) })),
+  }
+}
+
+// Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way.
+const offScreenMargin = 200
+
+function nearScreen({ venueX, venueY }: ScreenCard, { width, height }: CardScene): boolean {
+  return (
+    venueX > -offScreenMargin &&
+    venueX < width + offScreenMargin &&
+    venueY > -offScreenMargin &&
+    venueY < height + offScreenMargin
+  )
+}
+
+/** A moved card's trail: from where a line from the card's centre to its venue leaves the card. */
+function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
+  const centreX = box.x + dx
+  const centreY = box.y + dy
+  const toVenueX = box.venueX - centreX
+  const toVenueY = box.venueY - centreY
+  const edge = Math.min(1, box.width / 2 / Math.abs(toVenueX), box.height / 2 / Math.abs(toVenueY))
+  return { x1: centreX + toVenueX * edge, y1: centreY + toVenueY * edge, x2: box.venueX, y2: box.venueY }
+}
 
 /** One score card where it would sit undisturbed, in screen pixels. */
-export interface CardBox {
+interface CardBox {
   gameId: string
   /** The card's centre, above its venue. */
   x: number
@@ -15,24 +150,11 @@ export interface CardBox {
   rank: number
 }
 
-/** How far a card is moved from where it would sit, in screen pixels. */
-export interface CardShift {
-  dx: number
-  dy: number
-}
-
-/** Games with no room for a card, shown as one count at the first one's venue. */
-export interface CardCrowd {
-  gameIds: string[]
-  x: number
-  y: number
-}
-
-export interface CardLayout {
-  /** How far each card that has room is moved. */
-  shifts: Map<string, CardShift>
+interface Arrangement {
+  /** How far each card that has room is moved from where it would sit. */
+  shifts: Map<string, ScreenOffset>
   /** The rest, grouped with others nearby. */
-  crowds: CardCrowd[]
+  crowds: Omit<CardCrowd, 'status'>[]
 }
 
 // Space left between cards that had to be moved apart.
@@ -43,7 +165,7 @@ const venueRadius = 6
 // the furthest a card is moved, nearest first.
 const step = 4
 const furthest = 160
-const moves: CardShift[] = []
+const moves: ScreenOffset[] = []
 for (let dx = -furthest; dx <= furthest; dx += step) {
   for (let dy = -furthest; dy <= furthest; dy += step) {
     if (Math.hypot(dx, dy) <= furthest) moves.push({ dx, dy })
@@ -62,13 +184,13 @@ const crowdRadius = 40
  * spots it takes the nearest whose trail crosses no card and that sits on no trail, where there is
  * one. A card with no spot within reach joins a crowd instead.
  */
-export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox[] = []): CardLayout {
+function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrangement {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
   // From each moved card's centre to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
-  const shifts = new Map<string, CardShift>()
-  const crowds: CardCrowd[] = []
+  const shifts = new Map<string, ScreenOffset>()
+  const crowds: Omit<CardCrowd, 'status'>[] = []
 
   for (const card of boxes) {
     // Only what's within reach of the card can get in its way.
@@ -87,7 +209,7 @@ export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox
         near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
     )
 
-    const fits = ({ dx, dy }: CardShift) => {
+    const fits = ({ dx, dy }: ScreenOffset) => {
       const x = card.x + dx
       const y = card.y + dy
       const clearOf = (otherX: number, otherY: number, halfWidth: number, halfHeight: number) =>
@@ -105,7 +227,7 @@ export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox
 
     // Whether a card moved this way would keep clear of trails: its own crossing no card, and no trail
     // already drawn crossing it.
-    const trailsClear = ({ dx, dy }: CardShift) => {
+    const trailsClear = ({ dx, dy }: ScreenOffset) => {
       const x = card.x + dx
       const y = card.y + dy
       const halfWidth = card.width / 2 + gap
@@ -117,7 +239,7 @@ export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox
     }
 
     // The nearest spot clear of trails too, or failing that the nearest spot at all.
-    let shift: CardShift | undefined
+    let shift: ScreenOffset | undefined
     for (const move of moves) {
       if (!fits(move)) continue
       if (trailsClear(move)) {
@@ -139,13 +261,6 @@ export function layOutCards(cards: readonly CardBox[], names: readonly ScreenBox
     else crowds.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
   }
   return { shifts, crowds }
-}
-
-interface Segment {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
 }
 
 /** Whether a line passes through a box, given by its centre and half its size. */

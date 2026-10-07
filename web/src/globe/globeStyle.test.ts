@@ -1,7 +1,8 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { cityNameLook, firstPlaceNameLayer, gameCitiesState, gameCityPlaces, globeStyle, glyphsUrl } from './globeStyle'
+import { globeStyle } from './globeStyle'
+import { firstPlaceNameLayer, gameCitiesState, gameCityPlaces, glyphsUrl } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -145,15 +146,6 @@ describe('globeStyle', () => {
     const found = (placeClass: string) => filter({ zoom: 10 }, { type: 1, properties: { class: placeClass } } as never)
     expect(['city', 'town', 'village'].map(found)).toEqual([true, true, true])
     expect(['state', 'country', 'suburb'].map(found)).toEqual([false, false, false])
-  })
-
-  it("gives a city name's size and place at a zoom level, matching the style", () => {
-    expect(cityNameLook(4, false)).toMatchObject({ size: 12, offset: 12 })
-    expect(cityNameLook(7, true)).toMatchObject({ size: 15, offset: 15, maxWidth: 120 })
-    expect(cityNameLook(2, false)).toMatchObject({ size: 12, offset: 1.2 * 12 })
-    expect(cityNameLook(5.5, false).size).toBeGreaterThan(12)
-    expect(cityNameLook(5.5, false).size).toBeLessThan(14)
-    expect(cityNameLook(4, true).font).toMatch(/^700 /)
   })
 
   it('finds the first place-name layer, for pins to go beneath', () => {

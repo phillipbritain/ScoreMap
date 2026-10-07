@@ -253,14 +253,20 @@ describe('animations', () => {
     const other = game('B', { longitude: 40 })
     globe.show([game('A', { home: 0 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'), other)
+    // Every pulse that starts, kept even after it has played and removed itself.
+    const pulses: Element[] = []
+    const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
+    watching.observe(container, { childList: true, subtree: true })
+
     // Hidden by the viewer's filters, then shown again with a new score. Straight after, so the map
     // still has its pin and could animate it: only what the globe last showed rules it out.
     globe.show([other])
     globe.show([game('A', { home: 7 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'))
     await pause(500)
+    watching.disconnect()
 
-    expect(container.querySelector('.pin-pulse')).toBeNull()
+    expect(pulses).toEqual([])
   })
 
   it('does not animate a change that only redraws the game', async () => {

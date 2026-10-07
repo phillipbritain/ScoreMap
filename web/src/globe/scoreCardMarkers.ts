@@ -1,12 +1,11 @@
-import { LngLatBounds, Marker, type MapSourceDataEvent, type Map as MapLibreMap } from 'maplibre-gl'
+import { LngLatBounds, Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { cardPins } from './cardPins'
 import { layOutCards, type CardCrowd, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
-import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
-import { cityNameLook, gameCitiesState, gameCityPlaces, placeTiles } from './globeStyle'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
+import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { crowdStacking, selectedStacking, statusLooks } from './statusLook'
@@ -47,30 +46,25 @@ export class ScoreCardMarkers {
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
+  private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
   /** Trails from moved cards to their venues, in one layer just above the map so no trail crosses over a card. */
   private readonly trails = document.createElementNS(svgNamespace, 'svg')
   /** Counts of games with no room for a card, by the first game in each. */
   private readonly crowds = new Map<string, PlacedCrowd>()
-  /** The cities named for the games (see gameCities), whose names cards and trails keep clear of. */
-  private cities: City[] = []
-  /** True when the games or the map's loaded places have changed since the cities were found. */
-  private citiesStale = true
   /** How far a card's pointer reaches below it, read from the first card drawn (see cardPointer). */
   private pointer = 0
 
-  /** `onSelect` is called with a game's id when its card is selected. */
-  constructor(map: MapLibreMap, onSelect: (gameId: string) => void) {
+  /**
+   * `placeNames` gives the names cards and trails keep clear of; `onSelect` is called with a game's
+   * id when its card is selected.
+   */
+  constructor(map: MapLibreMap, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
     this.map = map
+    this.placeNames = placeNames
     this.onSelect = onSelect
     this.trails.classList.add('score-card-trails')
     map.getCanvas().after(this.trails)
-    map.on('sourcedata', this.onSourceData)
-  }
-
-  /** Marks the cities stale when new place tiles load, as they may hold a game's city. */
-  private readonly onSourceData = (event: MapSourceDataEvent): void => {
-    if (event.sourceId === placeTiles.source && event.tile) this.citiesStale = true
   }
 
   /** Highlights the selected game's card, if it has one. */
@@ -81,13 +75,11 @@ export class ScoreCardMarkers {
 
   setGames(games: readonly Game[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
-    this.citiesStale = true
     this.sync()
   }
 
   /** Places, updates and removes cards to match what the pin source shows at the current zoom. */
   sync(): void {
-    if (this.citiesStale) this.findCities()
     if (!this.map.getSource(pinSource) || !this.map.isSourceLoaded(pinSource)) return
     const wanted =
       pinLayout(this.map.getZoom()).size === 'card'
@@ -166,7 +158,7 @@ export class ScoreCardMarkers {
       width: canvas.clientWidth,
       height: canvas.clientHeight,
       pointer: this.pointer,
-      names: this.cityNames(),
+      names: this.placeNames.nameBoxes(),
       selectedGameId: this.selectedGameId,
     })
 
@@ -188,40 +180,6 @@ export class ScoreCardMarkers {
       drawTrail(placed.trail, trail)
     }
     this.drawCrowds(layout.crowds)
-  }
-
-  /**
-   * Finds the place named for each game among the places loaded so far, however small, and has the
-   * map always write those places' names (see globeStyle's game city names).
-   */
-  private findCities(): void {
-    if (!this.map.getSource(placeTiles.source)) return
-    this.citiesStale = false
-    const places = new Map<number, City>()
-    for (const feature of this.map.querySourceFeatures(placeTiles.source, {
-      sourceLayer: placeTiles.sourceLayer,
-      filter: gameCityPlaces,
-    })) {
-      const city = cityOfPlace(feature)
-      if (city && !places.has(city.id)) places.set(city.id, city)
-    }
-    const cities = gameCities(
-      [...this.games.values()].map((game) => game.venue),
-      [...places.values()],
-    )
-    const ids = cities.map((city) => city.id).sort((a, b) => a - b)
-    if (ids.join() !== this.cities.map((city) => city.id).sort((a, b) => a - b).join()) {
-      this.map.setGlobalStateProperty(gameCitiesState, ids)
-    }
-    this.cities = cities
-  }
-
-  /** Where the names of the cities named for the games are written on screen. */
-  private cityNames(): ScreenBox[] {
-    const zoom = this.map.getZoom()
-    return this.cities.map((city) =>
-      cityNameBox(city, this.map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
-    )
   }
 
   private drawCrowds(crowds: readonly CardCrowd[]): void {
@@ -317,13 +275,11 @@ export class ScoreCardMarkers {
   }
 
   clear(): void {
-    this.map.off('sourcedata', this.onSourceData)
     for (const { marker } of this.placed.values()) marker.remove()
     for (const { marker } of this.crowds.values()) marker.remove()
     this.crowds.clear()
     this.trails.remove()
     this.placed.clear()
-    this.cities = []
     this.animating.clear()
   }
 }
@@ -337,20 +293,6 @@ function cardPointer(card: HTMLElement): number {
 const crowdZoomPadding = 120
 
 const svgNamespace = 'http://www.w3.org/2000/svg'
-
-const measuring = document.createElement('canvas').getContext('2d')
-
-/**
- * A line's width in a font, in pixels. The map writes Open Sans from its own glyphs, which the page
- * doesn't have; the browser's fallback sans-serif measures a little wider, which errs on the side of room.
- */
-function measureText(text: string, font: string): number {
-  if (!measuring) return text.length * fallbackLetterWidth * parseFloat(font.split(' ')[1])
-  measuring.font = font
-  return measuring.measureText(text).width
-}
-// A letter's width in ems, roughly, where there's no canvas to measure with.
-const fallbackLetterWidth = 0.6
 
 function newTrail(): SVGGElement {
   const trail = document.createElementNS(svgNamespace, 'g')

@@ -1,7 +1,8 @@
 import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { cityNameLook, firstPlaceNameLayer, gameCitiesState, gameCityPlaces, globeStyle, glyphsUrl } from './globeStyle'
+import { globeStyle } from './globeStyle'
+import { cityNameLook, firstPlaceNameLayer, gameCitiesState, gameCityPlaces, glyphsUrl } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cityNameBox, cityOfPlace, gameCities, type City } from './gameCities'
-import { cityNameLook } from './globeStyle'
+import { cityNameLook } from './placeNames'
 
 const tampa: City = { id: 1, name: 'Tampa', capital: false, longitude: -82.4584, latitude: 27.9478 }
 const miami: City = { id: 2, name: 'Miami', capital: false, longitude: -80.1937, latitude: 25.7743 }

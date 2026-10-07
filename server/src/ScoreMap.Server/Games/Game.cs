@@ -25,9 +25,24 @@ public sealed record GameTeam(string Abbreviation, string FullName, string? Logo
 
 /// <summary>
 /// Where a game is played. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
-/// or null when the venue could not be placed.
+/// or null when the venue could not be placed. <see cref="Photo"/> is null until a photo of the venue
+/// has been found, and stays null for a venue that has none.
 /// </summary>
-public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude, string? TimeZone);
+public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude, string? TimeZone,
+    VenuePhoto? Photo = null);
+
+/// <summary>
+/// A photo of a venue for the top of the game panel: from outside or of the playing area, whichever
+/// its source gives. <see cref="Credit"/> is set when the photo's licence asks for attribution
+/// (Wikimedia Commons photos); ESPN's photos have none.
+/// </summary>
+public sealed record VenuePhoto(string Url, PhotoCredit? Credit);
+
+/// <summary>
+/// Who took a photo and under what licence, shown under it. <see cref="SourceUrl"/> is the photo's
+/// own page, where its full licence terms are.
+/// </summary>
+public sealed record PhotoCredit(string Author, string Licence, string? LicenceUrl, string SourceUrl);
 
 /// <summary>
 /// A channel or streaming service showing a game, the country it broadcasts to when known,

@@ -1,3 +1,5 @@
+import { smallPinWidth } from './statusLook'
+
 /** Small pins when zoomed out; score cards once a country fills the screen. */
 export type PinSize = 'small' | 'card'
 
@@ -35,16 +37,13 @@ export const maxZoom = 13
  */
 export const clusterMaxZoom = maxZoom - 1
 
-// Small pins only cluster when they would overlap: closer on screen than the widest small pin (a
-// Live one, radius 7 plus its 2 px outline, both sides).
-const smallPinWidth = 18
-
 // The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
 // times per zoom level rather than on every frame of a zoom.
 const zoomStep = 0.25
 
 /**
- * Small pins or score cards, and how close small pins must be to cluster.
+ * Small pins or score cards, and how close small pins must be to cluster: only when they would
+ * overlap, closer on screen than the widest small pin.
  * MapLibre clusters pins at whole zoom levels only, and shows zoom 3's clusters all the way to 3.99,
  * where pins are nearly twice as far apart on screen. So the radius is shrunk by how far past the
  * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins

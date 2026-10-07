@@ -162,7 +162,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private static partial Regex InningDetail();
 
     private static ProviderVenue? ToVenue(Venue? venue) =>
-        venue is null ? null : new ProviderVenue(venue.FullName, venue.Address?.City, venue.Address?.State, venue.Address?.Country);
+        venue is null ? null : new ProviderVenue(venue.FullName, venue.Address?.City, venue.Address?.State, venue.Address?.Country, venue.Id);
 
     private static IReadOnlyList<ProviderBroadcaster> ToBroadcasters(Competition competition)
     {
@@ -188,7 +188,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Franchise(Venue? Venue);
     private sealed record Status(string? DisplayClock, int? Period, StatusType? Type);
     private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail);
-    private sealed record Venue(string? FullName, Address? Address);
+    private sealed record Venue(string? Id, string? FullName, Address? Address);
     private sealed record Address(string? City, string? State, string? Country);
     private sealed record Broadcast(string? Market, List<string>? Names);
     private sealed record GeoBroadcast(GeoBroadcastType? Type, GeoMedia? Media, string? Region);

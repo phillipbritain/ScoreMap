@@ -39,9 +39,12 @@ builder.Services.AddOptions<VenueOptions>()
     .PostConfigure<IConfiguration>((options, config) =>
     {
         // On Azure App Service only HOME (/home) is writable and kept across restarts and
-        // redeploys, so a relative saved-lookups path is taken from there instead.
+        // redeploys, so relative saved-lookups and saved-photos paths are taken from there instead.
         if (config["WEBSITE_SITE_NAME"] is not null && config["HOME"] is { } home)
+        {
             options.SavedLocationsPath = Path.Combine(home, options.SavedLocationsPath);
+            options.SavedPhotosPath = Path.Combine(home, options.SavedPhotosPath);
+        }
     });
 builder.Services.Configure<NominatimOptions>(builder.Configuration.GetSection("Nominatim"));
 builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>
@@ -52,11 +55,25 @@ builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>
 {
     PooledConnectionLifetime = TimeSpan.FromMinutes(5),
 });
-builder.Services.AddSingleton<IPlaceSearch>(sp => new NominatimPlaceSearch(
+builder.Services.AddSingleton(sp => new NominatimPlaceSearch(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NominatimPlaceSearch)),
     sp.GetRequiredService<TimeProvider>(),
     sp.GetRequiredService<IOptions<NominatimOptions>>()));
+builder.Services.AddSingleton<IPlaceSearch>(sp => sp.GetRequiredService<NominatimPlaceSearch>());
 builder.Services.AddSingleton<VenueLocator>();
+
+// Venue photos for the game panel: ESPN's, else Wikidata's from Wikimedia Commons. The Wikidata
+// item comes from Nominatim, through the same place search so its rate limit covers both.
+builder.Services.AddHttpClient(nameof(VenuePhotoSearch), client => client.Timeout = TimeSpan.FromSeconds(10))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        AutomaticDecompression = DecompressionMethods.All,
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+    });
+builder.Services.AddSingleton<IVenuePhotoSearch>(sp => new VenuePhotoSearch(
+    sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(VenuePhotoSearch)),
+    sp.GetRequiredService<NominatimPlaceSearch>()));
+builder.Services.AddSingleton<VenuePhotos>();
 
 // Official watch links, from the owner's watch links file.
 builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));

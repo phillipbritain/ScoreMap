@@ -22,6 +22,7 @@ const arrowhead: Game = {
     latitude: 39.0489,
     longitude: -94.4839,
     timeZone: 'America/Chicago',
+    photo: null,
   },
   broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
   streamLinks: [],

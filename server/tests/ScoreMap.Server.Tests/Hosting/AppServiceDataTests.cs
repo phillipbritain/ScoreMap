@@ -6,7 +6,7 @@ namespace ScoreMap.Server.Tests.Hosting;
 
 /// <summary>
 /// On Azure App Service only HOME (/home) is writable and survives restarts and redeploys, so
-/// that is where the server saves venue lookups unless told otherwise.
+/// that is where the server saves venue lookups and photos unless told otherwise.
 /// </summary>
 public sealed class AppServiceDataTests : IDisposable
 {
@@ -39,6 +39,18 @@ public sealed class AppServiceDataTests : IDisposable
         await client.NextSnapshotAsync();
 
         Assert.True(File.Exists(Path.Combine(_home, "data", "venue-locations.json")));
+    }
+
+    [Fact]
+    public async Task Venue_photos_are_saved_under_home_data_on_app_service()
+    {
+        await using var server = new ScoreMapServer { AppServiceHome = _home };
+        server.Feed.SetScoreboard("football/nfl", LondonGame());
+
+        await server.SnapshotOnceAsync();
+        await server.PhotoSearchesFinishedAsync();
+
+        Assert.True(File.Exists(Path.Combine(_home, "data", "venue-photos.json")));
     }
 
     [Fact]

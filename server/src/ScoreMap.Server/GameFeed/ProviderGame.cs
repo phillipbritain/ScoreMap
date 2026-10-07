@@ -29,9 +29,9 @@ public sealed record ProviderCity(string Name, string? Region, string? Country);
 
 /// <summary>
 /// The venue as the provider reports it. It carries no coordinates (ESPN supplies none); the venue
-/// locator places it.
+/// locator places it. <see cref="Id"/> is the provider's own id for the venue, used to ask it for a photo.
 /// </summary>
-public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country);
+public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country, string? Id = null);
 
 public sealed record Coordinates(double Latitude, double Longitude);
 

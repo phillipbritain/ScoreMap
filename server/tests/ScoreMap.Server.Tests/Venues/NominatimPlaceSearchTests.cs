@@ -70,4 +70,49 @@ public class NominatimPlaceSearchTests
         await second.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(2, handler.Requests.Count);
     }
+
+    private const string StadiumWithTags = """
+        [{"place_id":1,"lat":"51.5550404","lon":"-0.1083997","name":"Emirates Stadium",
+          "extratags":{"sport":"soccer","capacity":"60361","wikidata":"Q163995","wikipedia":"en:Emirates Stadium"}}]
+        """;
+
+    [Fact]
+    public async Task Finds_the_wikidata_item_of_the_best_match_from_its_extra_tags()
+    {
+        var handler = StubHttpHandler.Returning(StadiumWithTags);
+
+        var item = await Search(handler).FindWikidataIdAsync("Emirates Stadium, London", CancellationToken.None);
+
+        Assert.Equal("Q163995", item);
+        Assert.Equal("https://nominatim.test/search?q=Emirates%20Stadium%2C%20London&format=jsonv2&limit=1&extratags=1",
+            Assert.Single(handler.Requests).RequestUri!.AbsoluteUri);
+        Assert.Contains("ScoreMap", handler.Requests[0].Headers.UserAgent.ToString());
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData(StadiumHit)]
+    [InlineData("""[{"lat":"1","lon":"2","extratags":{"sport":"soccer"}}]""")]
+    public async Task Finds_no_wikidata_item_when_there_is_no_match_or_it_has_no_wikidata_tag(string answer)
+    {
+        Assert.Null(await Search(StubHttpHandler.Returning(answer)).FindWikidataIdAsync("Small Field, Smalltown", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Wikidata_lookups_keep_the_same_spacing_as_place_searches()
+    {
+        var handler = StubHttpHandler.Returning(StadiumWithTags);
+        var search = Search(handler);
+
+        await search.SearchAsync("first", CancellationToken.None);
+        var second = search.FindWikidataIdAsync("second", CancellationToken.None);
+
+        _clock.Advance(TimeSpan.FromSeconds(1.9));
+        await Task.Delay(50);
+        Assert.Single(handler.Requests);
+
+        _clock.Advance(TimeSpan.FromSeconds(0.1));
+        await second.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(2, handler.Requests.Count);
+    }
 }

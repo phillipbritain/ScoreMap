@@ -23,9 +23,9 @@ import {
   smallPinLayerSpec,
 } from './pinLayers'
 import { addGlobeGlow } from './globeGlow'
-import { baseStyleUrl, firstPlaceNameLayer, globeStyle } from './globeStyle'
+import { baseStyleUrl, globeStyle } from './globeStyle'
+import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
-import { addStateNameFit } from './stateNameFit'
 import { shouldSpin, spunLongitude } from './slowSpin'
 import { selectionColor } from './statusLook'
 import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout } from './zoomLevels'
@@ -72,6 +72,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const cards = useRef<ScoreCardMarkers | null>(null)
+  const names = useRef<PlaceNames | null>(null)
   const latestGames = useRef(games)
   const latestSelected = useRef(selectedGameId)
   const latestOnSelect = useRef(onSelectGame)
@@ -109,8 +110,9 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
     })
     instance.setStyle(baseStyleUrl, { transformStyle: (_previous, base) => globeStyle(base) })
     const removeGlow = addGlobeGlow(instance)
-    const removeStateNameFit = addStateNameFit(instance)
-    const scoreCards = new ScoreCardMarkers(instance, (gameId) => latestOnSelect.current(gameId))
+    const placeNames = addPlaceNames(instance)
+    placeNames.showGames(latestGames.current)
+    const scoreCards = new ScoreCardMarkers(instance, placeNames, (gameId) => latestOnSelect.current(gameId))
     scoreCards.setGames(latestGames.current)
     scoreCards.setSelected(latestSelected.current)
     let clustering = pinLayout(instance.getZoom())
@@ -229,6 +231,7 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
 
     map.current = instance
     cards.current = scoreCards
+    names.current = placeNames
     return () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('pagehide', saveCamera)
@@ -237,16 +240,19 @@ export function Globe({ ref, games, selectedGameId, onSelectGame, startCamera, o
       window.removeEventListener('touchcancel', release)
       scoreCards.clear()
       removeGlow()
-      removeStateNameFit()
+      placeNames.remove()
       instance.remove()
       map.current = null
       cards.current = null
+      names.current = null
     }
   }, [])
 
   useEffect(() => {
     latestGames.current = games
     map.current?.getSource<GeoJSONSource>(pinSource)?.setData(pinFeatures(games))
+    // Names first: cards are laid out around them.
+    names.current?.showGames(games)
     cards.current?.setGames(games)
 
     // Games the globe doesn't show (hidden by the viewer's filters) don't animate.

@@ -1,5 +1,5 @@
 import { kmApart, type GlobePoint } from './geo'
-import type { CityNameLook } from './globeStyle'
+import type { CityNameLook } from './placeNames'
 
 /** A city, town or village the map can name, as its tiles give it. */
 export interface City {
@@ -64,7 +64,7 @@ export function gameCities(venues: readonly GlobePoint[], cities: readonly City[
 }
 
 /**
- * Where a game city's name is written: centred below its dot at `dot` (see globeStyle's game city
+ * Where a game city's name is written: centred below its dot at `dot` (see placeNames' game city
  * names), wrapped as the map wraps it. `measure` gives a line's width in pixels in the name's font.
  * Its outline and a margin are included, since the box is for keeping cards clear of the name.
  */

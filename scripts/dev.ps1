@@ -8,16 +8,27 @@
             the background, with their output in $env:TEMP\scoremap\. Launching them directly (not
             through `dotnet run` or `npm run dev`) leaves no wrapper process behind whose stopping
             would orphan the real one. Refuses to start while anything from this repo is running.
+            Runs the scenario set in appsettings.Development.json ("Scenario"), unless -Scenario
+            names another, or "real" for real games (ADR-0009).
     stop    Stops every ScoreMap server and Vite process from this repo, including ones started some
             other way (`dotnet run`, `npm run dev`), then confirms nothing still answers.
     status  Lists those processes and whether each port answers. The server is probed at
             /api/leagues, since in development it answers / with 404 (Vite serves the browser app).
 
+.PARAMETER Scenario
+    With start: the scenario to run (a file name in server\src\ScoreMap.Server\Scenarios\Files,
+    without .json), or "real" for real games. Unset, the default scenario from
+    appsettings.Development.json runs.
+
 .EXAMPLE
     ./scripts/dev.ps1 start
+
+.EXAMPLE
+    ./scripts/dev.ps1 start -Scenario real
 #>
 param(
-    [Parameter(Mandatory)] [ValidateSet('start', 'stop', 'status')] [string] $Action
+    [Parameter(Mandatory)] [ValidateSet('start', 'stop', 'status')] [string] $Action,
+    [string] $Scenario
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,9 +104,12 @@ switch ($Action) {
         # The server's content root is its working directory, where it finds appsettings.json and data\.
         $env:ASPNETCORE_ENVIRONMENT = 'Development'
         $env:ASPNETCORE_URLS = 'http://localhost:5147'
+        # Overrides the "Scenario" setting from appsettings.Development.json.
+        if ($Scenario) { $env:Scenario = $Scenario }
         $server = Start-Process -FilePath $serverExe -WorkingDirectory $serverProject -WindowStyle Hidden -PassThru `
             -RedirectStandardOutput (Join-Path $logs 'server.log') -RedirectStandardError (Join-Path $logs 'server.err.log')
         Remove-Item Env:ASPNETCORE_URLS
+        if ($Scenario) { Remove-Item Env:Scenario }
 
         # By absolute path, so its command line names this repo and Get-ScoreMapProcesses finds it.
         $vite = Start-Process -FilePath 'node' -ArgumentList "`"$web\node_modules\vite\bin\vite.js`"", '--strictPort' `

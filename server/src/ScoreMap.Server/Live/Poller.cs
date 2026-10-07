@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 
@@ -7,8 +8,8 @@ namespace ScoreMap.Server.Live;
 /// <summary>
 /// Keeps the game board current while at least one browser is connected, and pushes
 /// the board's change events to every browser. Each league is fetched about every
-/// <see cref="LiveInterval"/> while it has Live games and every <see cref="QuietInterval"/>
-/// otherwise. With no browser connected nothing is fetched; the first browser to connect
+/// <see cref="PollingOptions.LiveInterval"/> while it has Live games and every
+/// <see cref="PollingOptions.QuietInterval"/> otherwise. With no browser connected nothing is fetched; the first browser to connect
 /// again gets a snapshot fetched fresh for any league whose data has gone stale.
 /// </summary>
 public sealed class Poller(
@@ -16,10 +17,11 @@ public sealed class Poller(
     BrowserConnections connections,
     IHubContext<GamesHub> hub,
     TimeProvider clock,
+    IOptions<PollingOptions> polling,
     ILogger<Poller> logger) : BackgroundService
 {
-    public static readonly TimeSpan LiveInterval = TimeSpan.FromSeconds(15);
-    public static readonly TimeSpan QuietInterval = TimeSpan.FromMinutes(3);
+    private readonly TimeSpan _liveInterval = polling.Value.LiveInterval;
+    private readonly TimeSpan _quietInterval = polling.Value.QuietInterval;
 
     // Serializes every use of the board, and keeps a snapshot and the change events
     // around it in order.
@@ -56,7 +58,7 @@ public sealed class Poller(
             try
             {
                 await UpdateDueLeaguesAsync(hub.Clients.All, stoppingToken);
-                next = _nextFetch.Count == 0 ? clock.GetUtcNow() + QuietInterval : _nextFetch.Values.Min();
+                next = _nextFetch.Count == 0 ? clock.GetUtcNow() + _quietInterval : _nextFetch.Values.Min();
             }
             finally
             {
@@ -91,7 +93,7 @@ public sealed class Poller(
                 logger.LogWarning(e, "Could not update {League}; keeping its games as they were", league.Name);
             }
 
-            _nextFetch[league.Key] = clock.GetUtcNow() + (board.HasLiveGames(league) ? LiveInterval : QuietInterval);
+            _nextFetch[league.Key] = clock.GetUtcNow() + (board.HasLiveGames(league) ? _liveInterval : _quietInterval);
         }
     }
 }

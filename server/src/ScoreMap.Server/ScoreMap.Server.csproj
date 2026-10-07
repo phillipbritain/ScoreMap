@@ -16,6 +16,8 @@
     <!-- Saved venue lookups from local runs are runtime data, not part of the app. -->
     <Content Remove="data\**" />
     <None Remove="data\**" />
+    <!-- Scenario files are read from the content root, in Development only (ADR-0009); never shipped. -->
+    <Content Update="Scenarios\Files\**" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <!--

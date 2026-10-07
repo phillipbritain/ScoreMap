@@ -138,7 +138,8 @@ body {
 .game-panel__progress {
   margin: 8px 0 16px;
   font-weight: 600;
-  color: #e4572e;
+  /* Live's colour, as the panel's accent whatever the game's status. */
+  color: var(--live-color);
 }
 
 .game-panel__details {
@@ -185,10 +186,45 @@ body {
   color: #5b6272;
 }
 
-/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line.
-   --status-color is set per card; Live stands out most, Upcoming is dimmer, Final fades,
-   Disrupted is greyed out. */
+/* How each status looks comes from globe/statusLook.ts, which writes it to the page's root
+   (--live-color, --live-group-outline and so on). Score cards, crowds and trails pick theirs by
+   their status class. Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out. */
+.score-card--live,
+.score-crowd--live,
+.score-card-trail--live {
+  --status-color: var(--live-color);
+  --status-group-outline: var(--live-group-outline);
+  --status-group-opacity: var(--live-group-opacity);
+}
+
+.score-card--upcoming,
+.score-crowd--upcoming,
+.score-card-trail--upcoming {
+  --status-color: var(--upcoming-color);
+  --status-group-outline: var(--upcoming-group-outline);
+  --status-group-opacity: var(--upcoming-group-opacity);
+}
+
+.score-card--final,
+.score-crowd--final,
+.score-card-trail--final {
+  --status-color: var(--final-color);
+  --status-group-outline: var(--final-group-outline);
+  --status-group-opacity: var(--final-group-opacity);
+}
+
+.score-card--disrupted,
+.score-crowd--disrupted,
+.score-card-trail--disrupted {
+  --status-color: var(--disrupted-color);
+  --status-group-outline: var(--disrupted-group-outline);
+  --status-group-opacity: var(--disrupted-group-opacity);
+}
+
+/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line. */
 .score-card {
+  /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
+  --score-card-pointer: 6px;
   display: grid;
   gap: 2px;
   min-width: 84px;
@@ -206,14 +242,16 @@ body {
   transform-origin: 50% 100%;
 }
 
-/* A small pointer down to the venue; the card sits above it. */
+/* A small pointer down to the venue; the card sits above it. A square turned on its corner, sized
+   and placed so its tip is --score-card-pointer below the card. */
 .score-card::after {
+  --side: calc(var(--score-card-pointer) * 1.5);
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -5px;
-  width: 9px;
-  height: 9px;
+  bottom: calc(var(--side) * 0.7071 - var(--score-card-pointer) - var(--side) / 2);
+  width: var(--side);
+  height: var(--side);
   background: inherit;
   transform: translateX(-50%) rotate(45deg);
   box-shadow: 2px 2px 3px rgb(0 0 0 / 0.2);
@@ -253,33 +291,22 @@ body {
   visibility: hidden;
 }
 
-/* Games with no room for a card, shown as a count like a cluster, coloured by its most prominent game. */
+/* Games with no room for a card, shown as a count that looks like a cluster, coloured by its most
+   prominent game. */
 .score-crowd {
   display: grid;
   place-items: center;
   box-sizing: border-box;
   width: 26px;
   height: 26px;
-  border: 1.5px solid #ffffff;
+  border: var(--status-group-outline) solid #ffffff;
   border-radius: 50%;
   background: var(--status-color);
+  opacity: var(--status-group-opacity);
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-}
-
-.score-crowd--live {
-  border-width: 2.5px;
-}
-
-.score-crowd--upcoming {
-  opacity: 0.85;
-}
-
-.score-crowd--final,
-.score-crowd--disrupted {
-  opacity: 0.6;
 }
 
 .score-card--live {
@@ -313,7 +340,7 @@ body {
 
 /* The game whose panel is open, matching the selected small pin's ring. */
 .score-card--selected {
-  outline: 3px solid #2f80ed;
+  outline: 3px solid var(--selection-color);
   outline-offset: 2px;
   opacity: 1;
 }

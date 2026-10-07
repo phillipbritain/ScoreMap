@@ -124,7 +124,7 @@ public class VenuePlacementTests
         await server.SnapshotOnceAsync();
 
         server.CorrectVenue("Tottenham Hotspur Stadium", Tottenham);
-        server.Clock.Advance(Poller.QuietInterval); // the correction applies from the next poll
+        server.Clock.Advance(TimeSpan.FromMinutes(3)); // the correction applies from the next poll
         await using var second = await server.ConnectClientAsync();
         var game = Assert.Single(await second.NextSnapshotAsync());
 

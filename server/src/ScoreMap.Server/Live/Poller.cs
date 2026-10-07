@@ -84,7 +84,9 @@ public sealed class Poller(
                 foreach (var change in changes)
                     await recipients.SendAsync(GamesHub.ChangeMessage, change, cancellationToken);
             }
-            catch (Exception e) when (e is not OperationCanceledException)
+            // Judged by the token, not the exception type: an HttpClient timeout is also an
+            // OperationCanceledException, and must count as a failed update, not a cancellation.
+            catch (Exception e) when (!cancellationToken.IsCancellationRequested)
             {
                 logger.LogWarning(e, "Could not update {League}; keeping its games as they were", league.Name);
             }

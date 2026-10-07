@@ -30,6 +30,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private readonly PollingOptions _realPolling;
     private readonly string _folder;
     private readonly IReadOnlyList<League> _leagues;
+    private readonly IReadOnlyList<ScenarioVenue>? _venues;
     private volatile Source _running;
 
     private sealed record Source(string Name, IGameFeedProvider Feed);
@@ -48,6 +49,9 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         _realPolling = configuration.GetSection("Polling").Get<PollingOptions>() ?? new PollingOptions();
         _folder = Path.Combine(environment.ContentRootPath, options.Value.Folder);
         _leagues = leagues.Value;
+        // The venue list fills come from; without it, a scenario with a fill says so when picked.
+        var venueList = Path.Combine(environment.ContentRootPath, options.Value.VenueListPath);
+        _venues = File.Exists(venueList) ? ScenarioVenue.ReadList(venueList) : null;
         _running = Start(startWith);
     }
 
@@ -82,7 +86,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     {
         if (IsRealGames(name))
             return new Source(RealGames, _realGames);
-        var scenario = ScenarioReader.Read(_folder, name, _leagues);
+        var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues);
         return new Source(name, ActivatorUtilities.CreateInstance<ScenarioGameFeedProvider>(_services, scenario));
     }
 

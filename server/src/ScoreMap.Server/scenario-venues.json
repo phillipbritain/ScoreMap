@@ -11,7 +11,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -26,7 +27,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -41,7 +43,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -56,7 +59,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -71,7 +75,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -86,7 +91,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -101,7 +107,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -116,7 +123,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -131,7 +139,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -146,7 +155,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -161,7 +171,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -176,7 +187,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -191,7 +203,8 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -206,7 +219,428 @@
     },
     "groups": [
       "worldwide",
-      "london"
+      "london",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Twickenham Stadium",
+    "city": "Twickenham",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "England",
+      "abbreviation": "ENG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/1.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Twickenham Stoop",
+    "city": "Twickenham",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Harlequins",
+      "abbreviation": "HAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25901.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "StoneX Stadium",
+    "city": "London",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Saracens",
+      "abbreviation": "SAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25909.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Gander Green Lane",
+    "city": "Sutton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Sutton United",
+      "abbreviation": "SUT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3231.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Silverlake Stadium",
+    "city": "Eastleigh",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Eastleigh",
+      "abbreviation": "ELH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3897.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Grosvenor Vale",
+    "city": "Ruislip",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Wealdstone",
+      "abbreviation": "WEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3887.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Meadow Park",
+    "city": "Borehamwood",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Boreham Wood",
+      "abbreviation": "BOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2595.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Vicarage Road",
+    "city": "Watford",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Watford",
+      "abbreviation": "WAT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/395.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kenilworth Road",
+    "city": "Luton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Luton Town",
+      "abbreviation": "LTN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/301.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Select Car Leasing Stadium",
+    "city": "Reading",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Reading",
+      "abbreviation": "REA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/338.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Adams Park",
+    "city": "High Wycombe",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Wycombe Wanderers",
+      "abbreviation": "WYC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/344.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Stadium MK",
+    "city": "Milton Keynes",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Milton Keynes Dons",
+      "abbreviation": "MKD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/390.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kassam Stadium",
+    "city": "Oxford",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Oxford United",
+      "abbreviation": "OXF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/311.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Lamex Stadium",
+    "city": "Stevenage",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Stevenage",
+      "abbreviation": "STE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/285.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Abbey Stadium",
+    "city": "Cambridge",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Cambridge United",
+      "abbreviation": "CAM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/351.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Roots Hall",
+    "city": "Southend-on-Sea",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Southend United",
+      "abbreviation": "SOUT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/310.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Priestfield Stadium",
+    "city": "Gillingham",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Gillingham",
+      "abbreviation": "GIL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/389.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Broadfield Stadium",
+    "city": "Crawley",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Crawley Town",
+      "abbreviation": "CRA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2594.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Recreation Ground",
+    "city": "Aldershot",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Aldershot Town",
+      "abbreviation": "ALD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/632.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kingfield Stadium",
+    "city": "Woking",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Woking",
+      "abbreviation": "WOK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/290.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Colchester Community Stadium",
+    "city": "Colchester",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Colchester United",
+      "abbreviation": "COL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/339.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "American Express Stadium",
+    "city": "Brighton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Brighton & Hove Albion",
+      "abbreviation": "BHA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Portman Road",
+    "city": "Ipswich",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Ipswich Town",
+      "abbreviation": "IPS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Weston Homes Stadium",
+    "city": "Peterborough",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Peterborough United",
+      "abbreviation": "PET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/342.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Sixfields Stadium",
+    "city": "Northampton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Northampton Town",
+      "abbreviation": "NHT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/353.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Franklin's Gardens",
+    "city": "Northampton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Northampton Saints",
+      "abbreviation": "NOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25907.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "St Mary's Stadium",
+    "city": "Southampton",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Southampton",
+      "abbreviation": "SOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/376.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Fratton Park",
+    "city": "Portsmouth",
+    "region": null,
+    "country": "England",
+    "homeTeam": {
+      "name": "Portsmouth",
+      "abbreviation": "POR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/385.png"
+    },
+    "groups": [
+      "worldwide",
+      "london-and-nearby"
     ]
   },
   {

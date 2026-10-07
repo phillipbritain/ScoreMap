@@ -7,7 +7,7 @@ import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
 import { clusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
-import { cardZoom } from './zoomLevels'
+import { cardZoom, maxZoom } from './zoomLevels'
 
 applyStatusLook(document.documentElement)
 
@@ -196,6 +196,21 @@ describe('zooming in to clusters and crowds', () => {
     await cameraSettles(onCameraMove, (camera) => camera.zoom > cardZoom + 1)
     await vi.waitFor(() => expect(container.querySelector('.score-crowd')).toBeNull(), { timeout: 20_000 })
   })
+
+  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', async () => {
+    const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    // Two games half a degree out set how far the first zoom goes; at the venue between them,
+    // more games than there's ever room for stay crowded after it.
+    const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
+    globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
+    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+
+    await userEvent.click(container.querySelector('.score-crowd')!)
+
+    await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom)
+    const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
+    expect(zooms.filter((zoom) => zoom > cardZoom && zoom < maxZoom)).not.toEqual([])
+  })
 })
 
 describe('animations', () => {
@@ -238,10 +253,9 @@ describe('animations', () => {
     const other = game('B', { longitude: 40 })
     globe.show([game('A', { home: 0 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'), other)
-    // Hidden by the viewer's filters.
+    // Hidden by the viewer's filters, then shown again with a new score. Straight after, so the map
+    // still has its pin and could animate it: only what the globe last showed rules it out.
     globe.show([other])
-    await vi.waitFor(() => expect(drawnAt(map, smallPinLayer, game('A'))).toEqual([]))
-
     globe.show([game('A', { home: 7 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'))
     await pause(500)

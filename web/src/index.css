@@ -219,7 +219,7 @@ body {
   box-shadow: 2px 2px 3px rgb(0 0 0 / 0.2);
 }
 
-/* Cards moved aside to make room for another (see globe/cardSpread.ts) trail back to their venues
+/* Cards moved aside to make room for another (see globe/cardLayout.ts) trail back to their venues
    instead of pointing down. All trails share one layer above the map and beneath every card. */
 .score-card-trails {
   position: absolute;

@@ -104,7 +104,7 @@ public sealed class VenuePhotos
             lock (_lock)
                 _failedAt[key] = _clock.GetUtcNow();
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             // The server is stopping.
         }

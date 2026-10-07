@@ -1,5 +1,6 @@
 import type { Feature, Point } from 'geojson'
 import { cardPins } from './cardPins'
+import { degreesApart, type GlobePoint } from './geo'
 
 /** A cluster on screen that might hold the game. */
 export interface ClusterCandidate {
@@ -37,20 +38,12 @@ export function animationTarget(
   }
   if (clusters.size === 0) return null
 
-  const candidates = [...clusters.values()].sort((a, b) => angle(venue, a.lngLat) - angle(venue, b.lngLat))
+  const venuePoint = toGlobePoint(venue)
+  const fromVenue = (c: ClusterCandidate) => degreesApart(venuePoint, toGlobePoint(c.lngLat))
+  const candidates = [...clusters.values()].sort((a, b) => fromVenue(a) - fromVenue(b))
   return { kind: 'cluster', candidates }
 }
 
-/** The angle between two points as seen from the globe's centre, in radians. */
-function angle([lng1, lat1]: [number, number], [lng2, lat2]: [number, number]): number {
-  const a = unit(lng1, lat1)
-  const b = unit(lng2, lat2)
-  const dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-  return Math.acos(Math.min(1, Math.max(-1, dot)))
-}
-
-function unit(lng: number, lat: number): [number, number, number] {
-  const λ = (lng * Math.PI) / 180
-  const φ = (lat * Math.PI) / 180
-  return [Math.cos(φ) * Math.cos(λ), Math.cos(φ) * Math.sin(λ), Math.sin(φ)]
+function toGlobePoint([longitude, latitude]: [number, number]): GlobePoint {
+  return { longitude, latitude }
 }

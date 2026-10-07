@@ -1,6 +1,7 @@
-# Checks every pull request before it's merged: the browser app's lint, types and tests, and the
-# server's tests (which include the convention tests in server/tests/.../Conventions). GitHub runs it
-# on the pull request merged into main, so two PRs that each pass alone are checked together too.
+# Checks every pull request before it's merged: the browser app's lint, types and tests (its unit
+# tests in Node, then the globe map's tests in headless Chromium, see ADR-0008), and the server's
+# tests (which include the convention tests in server/tests/.../Conventions). GitHub runs it on the
+# pull request merged into main, so two PRs that each pass alone are checked together too.
 name: ci
 
 on:
@@ -34,6 +35,20 @@ jobs:
       - run: npm run lint
       - run: npx tsc -b
       - run: npm test
+
+      # Chromium for the browser tests, cached by Playwright's version so it's only downloaded when that changes.
+      - id: playwright
+        run: echo "version=$(npm ls playwright --json | jq -r '.dependencies.playwright.version')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        id: chromium
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.chromium.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - run: npm run test:browser
 
   server:
     runs-on: ubuntu-latest

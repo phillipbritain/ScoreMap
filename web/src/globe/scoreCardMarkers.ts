@@ -1,4 +1,4 @@
-import { LngLatBounds, Marker, type Map as MapLibreMap } from 'maplibre-gl'
+import { LngLatBounds, Marker, type MapSourceDataEvent, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
 import { cardPins } from './cardPins'
@@ -62,9 +62,12 @@ export class ScoreCardMarkers {
     this.onSelect = onSelect
     this.trails.classList.add('score-card-trails')
     map.getCanvas().after(this.trails)
-    map.on('sourcedata', (event) => {
-      if (event.sourceId === placeTiles.source && event.tile) this.citiesStale = true
-    })
+    map.on('sourcedata', this.onSourceData)
+  }
+
+  /** Marks the cities stale when new place tiles load, as they may hold a game's city. */
+  private readonly onSourceData = (event: MapSourceDataEvent): void => {
+    if (event.sourceId === placeTiles.source && event.tile) this.citiesStale = true
   }
 
   /** Highlights the selected game's card, if it has one. */
@@ -335,6 +338,7 @@ export class ScoreCardMarkers {
   }
 
   clear(): void {
+    this.map.off('sourcedata', this.onSourceData)
     for (const { marker } of this.placed.values()) marker.remove()
     for (const { marker } of this.crowds.values()) marker.remove()
     this.crowds.clear()

@@ -9,7 +9,7 @@ namespace ScoreMap.Server.Scenarios;
 /// configured leagues. Anything wrong with the file throws a <see cref="ScenarioFileException"/> that
 /// says what and where, so a bad file stops startup with a clear message.
 /// </summary>
-public static class ScenarioReader
+public static partial class ScenarioReader
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
@@ -47,11 +47,15 @@ public static class ScenarioReader
         if (file is null)
             throw new ScenarioFileException(name, path, "it is empty");
 
+        var ids = new HashSet<string>();
         var games = (file.Games ?? []).Select((entry, i) =>
         {
             try
             {
-                return ReadGame(entry, i, name, leagues);
+                var game = ReadGame(entry, i, name, leagues);
+                if (!ids.Add(game.Id))
+                    throw new InvalidDataException("has the same id as an earlier game; each game needs its own");
+                return game;
             }
             catch (InvalidDataException e)
             {
@@ -59,7 +63,8 @@ public static class ScenarioReader
                 throw new ScenarioFileException(name, path, $"game {i + 1}{id} {e.Message}");
             }
         }).ToList();
-        return new Scenario(name, games);
+        var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
+        return new Scenario(name, games, timeline);
     }
 
     /// <summary>Reads one game written out in full; throws <see cref="InvalidDataException"/> saying what's wrong with it.</summary>
@@ -74,9 +79,7 @@ public static class ScenarioReader
         if (!RelativeTime.TryParse(entry.StartsIn, out var startsIn))
             throw new InvalidDataException(
                 $"has startsIn \"{entry.StartsIn}\", which isn't a time relative to the scenario's start such as \"-40m\" or \"1h30m\"");
-        if (entry.Status is null || !Statuses.TryGetValue(entry.Status, out var status))
-            throw new InvalidDataException(
-                $"has unknown status \"{entry.Status}\"; use one of {string.Join(", ", Statuses.Keys)}");
+        var status = ReadStatus(entry.Status);
         var phase = ReadPhase(entry.Phase);
         if (string.IsNullOrWhiteSpace(entry.Venue?.Name))
             throw new InvalidDataException("has no venue (a venue needs at least a name)");
@@ -93,6 +96,12 @@ public static class ScenarioReader
             Period: entry.Period,
             Phase: phase);
     }
+
+    private static ProviderStatus ReadStatus(string? status) =>
+        status is not null && Statuses.TryGetValue(status, out var read)
+            ? read
+            : throw new InvalidDataException(
+                $"has unknown status \"{status}\"; use one of {string.Join(", ", Statuses.Keys)}");
 
     private static ProviderPeriodPhase ReadPhase(string? phase)
     {
@@ -114,7 +123,7 @@ public static class ScenarioReader
     }
 
     // The file's own shape, kept apart from the model so the format can grow (timelines, fill, random play).
-    private sealed record ScenarioFile(List<GameEntry?>? Games);
+    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline);
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,

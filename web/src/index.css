@@ -138,7 +138,8 @@ body {
 .game-panel__progress {
   margin: 8px 0 16px;
   font-weight: 600;
-  color: #e4572e;
+  /* Live's colour, as the panel's accent whatever the game's status. */
+  color: var(--live-color);
 }
 
 .game-panel__details {

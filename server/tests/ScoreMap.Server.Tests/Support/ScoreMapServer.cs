@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
@@ -30,6 +31,9 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
     public FakeGameFeedProvider Feed { get; } = new();
 
     public FakePlaceSearch Places { get; } = new();
+
+    /// <summary>Everything the server logs.</summary>
+    public CapturedLogs Logs { get; } = new();
 
     /// <summary>
     /// The file the server saves venue lookups to. A fresh temp file unless one is passed in,
@@ -144,6 +148,11 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
+        builder.ConfigureLogging(logging =>
+        {
+            logging.AddProvider(Logs);
+            logging.AddFilter<CapturedLogs>(null, LogLevel.Trace);
+        });
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IGameFeedProvider>();

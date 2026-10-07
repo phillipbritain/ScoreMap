@@ -212,23 +212,11 @@ export class ScoreCardMarkers {
     this.cities = cities
   }
 
-  /** Where the names of the cities named for the games are written on screen, for those on screen (or nearly). */
+  /** Where the names of the cities named for the games are written on screen. */
   private cityNames(): ScreenBox[] {
     const zoom = this.map.getZoom()
-    return this.cities.flatMap((city) => {
-      const dot = this.map.project([city.longitude, city.latitude])
-      return this.nearScreen(dot) ? [cityNameBox(city, dot, cityNameLook(zoom, city.capital), measureText)] : []
-    })
-  }
-
-  /** Whether a point on screen is on it, or near enough that what's drawn there could reach it. */
-  private nearScreen({ x, y }: { x: number; y: number }): boolean {
-    const canvas = this.map.getCanvas()
-    return (
-      x > -offScreenMargin &&
-      x < canvas.clientWidth + offScreenMargin &&
-      y > -offScreenMargin &&
-      y < canvas.clientHeight + offScreenMargin
+    return this.cities.map((city) =>
+      cityNameBox(city, this.map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
     )
   }
 
@@ -342,9 +330,6 @@ export class ScoreCardMarkers {
 const cardPointerPx = 6
 
 const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
-
-/** Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way. */
-const offScreenMargin = 200
 
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120

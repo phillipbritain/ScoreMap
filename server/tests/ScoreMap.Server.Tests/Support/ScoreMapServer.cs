@@ -204,8 +204,13 @@ public sealed class ScoreMapServer(
         });
         builder.ConfigureTestServices(services =>
         {
-            // The fake stands in for ESPN, not for a scenario's own feed.
-            if (!services.Any(d => d.ServiceType == typeof(ScenarioGameFeedProvider)))
+            // The fake stands in for ESPN: behind the scenario switcher, in Development.
+            if (services.Any(d => d.ServiceType == typeof(ScenarioSwitcher)))
+            {
+                services.RemoveAllKeyed<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey);
+                services.AddKeyedSingleton<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey, Feed);
+            }
+            else
             {
                 services.RemoveAll<IGameFeedProvider>();
                 services.AddSingleton<IGameFeedProvider>(Feed);

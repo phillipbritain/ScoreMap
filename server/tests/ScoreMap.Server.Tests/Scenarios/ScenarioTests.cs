@@ -146,8 +146,7 @@ public class ScenarioTests
         var snapshot = await client.NextSnapshotAsync();
 
         Assert.Equal("real-game", Assert.Single(snapshot).Id);
-        Assert.Null(server.Services.GetService<Scenario>());
-        Assert.Null(server.Services.GetService<ScenarioGameFeedProvider>());
+        Assert.Null(server.Services.GetService<ScenarioSwitcher>());
     }
 
     [Fact]

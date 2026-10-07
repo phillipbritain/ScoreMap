@@ -74,11 +74,12 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
  * moves to another side of its dot (see globeStyle's city names), or is left out if no side is free.
  * Clusters have none: a name too close to fit beside one would be lost, so it's written across the
  * cluster instead (place names draw above the pins). Both draw nothing.
+ *
+ * A card's footprint is a typical score card with its pointer and a small margin: cards vary with
+ * their teams' names and clock line, and a footprint image has one size, so it's an approximation.
+ * A small pin's is the widest small pin, with a pixel's margin each side.
  */
-// A typical score card with its pointer and a small margin. Cards vary with their teams' names and
-// clock line, and a footprint image has one size, so this is an approximation.
 export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
-// The widest small pin, with a pixel's margin each side.
 export const pinFootprint = { image: 'pin-footprint', size: smallPinWidth + 2 }
 
 /** Where each score card sits: above its venue, the card's size with its pointer and a small margin. */

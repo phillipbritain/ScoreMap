@@ -187,7 +187,6 @@ export class GlobeMap {
     this.cards.clear()
     this.removeGlow()
     this.names.remove()
-    // Removes the map's own listeners with it.
     this.map.remove()
   }
 

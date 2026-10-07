@@ -65,7 +65,7 @@ public static partial class ScenarioReader
     }
 
     /// <summary>A seed that is the same for a name on every run (unlike <see cref="string.GetHashCode()"/>).</summary>
-    private static int StableSeed(string name)
+    internal static int StableSeed(string name)
     {
         // FNV-1a.
         var hash = 2166136261u;

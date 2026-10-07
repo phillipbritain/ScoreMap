@@ -52,6 +52,16 @@ body {
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.25);
 }
 
+/* The venue photo: a banner across the top of the panel, edge to edge, cropped to fill. */
+.game-panel__photo {
+  display: block;
+  width: calc(100% + 32px);
+  height: 180px;
+  margin: -16px -16px 12px;
+  object-fit: cover;
+  background: #e8ebf0;
+}
+
 @media (max-width: 640px) {
   .app {
     flex-direction: column;
@@ -62,6 +72,11 @@ body {
     max-height: 55%;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Short in the phone sheet, so the scores stay in view below it. */
+  .game-panel__photo {
+    height: 96px;
   }
 }
 
@@ -153,6 +168,16 @@ body {
 
 .game-panel__watch a {
   color: #1a5fd0;
+}
+
+.game-panel__credit {
+  margin: 20px 0 0;
+  font-size: 12px;
+  color: #5b6272;
+}
+
+.game-panel__credit a {
+  color: inherit;
 }
 
 .game-panel__muted {

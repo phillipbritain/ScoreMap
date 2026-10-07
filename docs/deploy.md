@@ -41,6 +41,7 @@ App settings reach the server as environment variables, and `__` separates confi
 | Setting                      | Default                                                                                               | Purpose                                                                                                          |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `Venues__SavedLocationsPath` | `data/venue-locations.json`, resolved under `HOME` on App Service (`/home/data/venue-locations.json`) | Where venue lookups are saved. `/home` is the only storage that is writable and survives restarts and redeploys. |
+| `Venues__SavedPhotosPath` | `data/venue-photos.json`, resolved under `HOME` on App Service (`/home/data/venue-photos.json`) | Where the venue photos found are saved, for the same reason. |
 | `Nominatim__BaseUrl`         | `https://nominatim.openstreetmap.org/`                                                                | Place search used to locate venues.                                                                              |
 | `Espn__BaseUrl`              | ESPN's scoreboard API                                                                                 | Game feed.                                                                                                       |
 

@@ -75,5 +75,21 @@
       "startsIn": "30m",
       "status": "postponed"
     }
-  ]
+  ],
+  // Changes at times relative to the scenario's start. After "length" the scenario starts again
+  // with fresh copies of its games (new ids), so the Final ones come back Live.
+  "timeline": {
+    "length": "5m",
+    "changes": [
+      { "at": "20s", "game": "starter-chiefs-bills", "score": { "home": 17 }, "clock": "6:40" },
+      { "at": "45s", "game": "starter-arsenal-chelsea", "phase": "playing", "period": 2, "clock": "46'" },
+      { "at": "1m", "game": "starter-brazil-argentina", "score": { "away": 2 }, "clock": "27'" },
+      { "at": "1m30s", "game": "starter-chiefs-bills", "score": { "away": 17 }, "clock": "2:05" },
+      { "at": "2m", "game": "starter-yankees-red-sox", "score": { "home": 5 }, "phase": "inningBottom" },
+      { "at": "2m30s", "game": "starter-chiefs-bills", "phase": "break", "clock": "0:00" },
+      { "at": "3m", "game": "starter-arsenal-chelsea", "score": { "home": 2 }, "clock": "61'" },
+      { "at": "3m30s", "game": "starter-brazil-argentina", "status": "suspended" },
+      { "at": "4m", "game": "starter-arsenal-chelsea", "status": "final", "clock": "90'+4" }
+    ]
+  }
 }

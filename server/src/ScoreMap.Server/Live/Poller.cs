@@ -20,13 +20,38 @@ public sealed class Poller(
     IOptions<PollingOptions> polling,
     ILogger<Poller> logger) : BackgroundService
 {
-    private readonly TimeSpan _liveInterval = polling.Value.LiveInterval;
-    private readonly TimeSpan _quietInterval = polling.Value.QuietInterval;
+    private TimeSpan _liveInterval = polling.Value.LiveInterval;
+    private TimeSpan _quietInterval = polling.Value.QuietInterval;
 
     // Serializes every use of the board, and keeps a snapshot and the change events
     // around it in order.
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly Dictionary<string, DateTimeOffset> _nextFetch = new();
+
+    // Completed to cut the wait for the next fetch short.
+    private TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>
+    /// Fetches every league straight away, and from then on at the given intervals: for when the
+    /// game feed provider's source has changed (a scenario switch, ADR-0009).
+    /// </summary>
+    public async Task StartAfreshAsync(PollingOptions intervals, CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            _liveInterval = intervals.LiveInterval;
+            _quietInterval = intervals.QuietInterval;
+            _nextFetch.Clear();
+            var wake = _wake;
+            _wake = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            wake.TrySetResult();
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
 
     /// <summary>
     /// Brings stale leagues up to date, then hands the current games to <paramref name="send"/>.
@@ -54,11 +79,13 @@ public sealed class Poller(
             await connections.WhenAnyConnectedAsync(stoppingToken);
 
             DateTimeOffset next;
+            Task wake;
             await _lock.WaitAsync(stoppingToken);
             try
             {
                 await UpdateDueLeaguesAsync(hub.Clients.All, stoppingToken);
                 next = _nextFetch.Count == 0 ? clock.GetUtcNow() + _quietInterval : _nextFetch.Values.Min();
+                wake = _wake.Task;
             }
             finally
             {
@@ -66,10 +93,14 @@ public sealed class Poller(
             }
 
             // Waiting until a due time (not for a fixed delay) means a late start to the
-            // wait never pushes a fetch back.
+            // wait never pushes a fetch back. Starting afresh cuts the wait short.
             var wait = next - clock.GetUtcNow();
             if (wait > TimeSpan.Zero)
-                await Task.Delay(wait, clock, stoppingToken);
+            {
+                using var waiting = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+                await Task.WhenAny(Task.Delay(wait, clock, waiting.Token), wake);
+                await waiting.CancelAsync();
+            }
         }
     }
 

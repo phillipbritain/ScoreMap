@@ -9,6 +9,7 @@ import { Globe } from './globe/Globe'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
+import { ScenarioPill } from './scenarios/ScenarioPill'
 
 const store = settingsStore(() => window.localStorage)
 
@@ -58,6 +59,8 @@ export default function App() {
           onCameraMove={store.saveCamera}
           slowSpin={viewerSettings.slowSpin}
         />
+        {/* Before the filter menu, so an open filter menu lies over it on a phone. */}
+        <ScenarioPill />
         <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {message && (
           <p className="no-pins" role="status">

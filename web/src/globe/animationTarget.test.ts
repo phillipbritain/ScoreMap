@@ -5,7 +5,7 @@ import { animationTarget } from './animationTarget'
 const pin = (gameId: string, coordinates: [number, number]): Feature<Point> => ({
   type: 'Feature',
   geometry: { type: 'Point', coordinates },
-  properties: { gameId, status: 'Live', label: '' },
+  properties: { gameId, status: 'Live' },
 })
 
 const cluster = (clusterId: number, coordinates: [number, number]): Feature<Point> => ({

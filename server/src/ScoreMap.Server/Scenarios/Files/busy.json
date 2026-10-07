@@ -1,0 +1,6 @@
+// busy: about 60 Live games around the world on random play. Games score, change periods, go to
+// breaks and finish; a finished game soon drops out and a new one takes its place.
+{
+  "fill": { "count": 60, "group": "worldwide" },
+  "play": "random"
+}

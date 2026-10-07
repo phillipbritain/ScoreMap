@@ -7,6 +7,14 @@
     "latitude": 32.7478503,
     "longitude": -97.0928337
   },
+  "Abbey Stadium, Cambridge": {
+    "latitude": 52.2120297,
+    "longitude": 0.1541831
+  },
+  "Adams Park, High Wycombe": {
+    "latitude": 51.6304108,
+    "longitude": -0.8002826
+  },
   "Ajinomoto Stadium, Chōfu": {
     "latitude": 35.6641865,
     "longitude": 139.5270752
@@ -30,6 +38,10 @@
   "Allianz Stadium, Turin": {
     "latitude": 45.1095759,
     "longitude": 7.6421338
+  },
+  "American Express Stadium, Brighton": {
+    "latitude": 50.8615471,
+    "longitude": -0.0836931
   },
   "Amman International Stadium, Amman": {
     "latitude": 31.985153,
@@ -83,6 +95,10 @@
     "latitude": 51.5600713,
     "longitude": -0.0125999
   },
+  "Broadfield Stadium, Crawley": {
+    "latitude": 51.0995727,
+    "longitude": -0.1947428
+  },
   "Bryant-Denny Stadium, Tuscaloosa": {
     "latitude": 33.2077203,
     "longitude": -87.550453
@@ -114,6 +130,10 @@
   "Citi Field, Queens": {
     "latitude": 40.7570308,
     "longitude": -73.8457626
+  },
+  "Colchester Community Stadium, Colchester": {
+    "latitude": 51.9234391,
+    "longitude": 0.8976478
   },
   "CommBank Stadium, Parramatta": {
     "latitude": -33.8086679,
@@ -239,9 +259,25 @@
     "latitude": 42.3464614,
     "longitude": -71.0970999
   },
+  "Franklin's Gardens, Northampton": {
+    "latitude": 52.2394934,
+    "longitude": -0.9195815
+  },
+  "Fratton Park, Portsmouth": {
+    "latitude": 50.7963238,
+    "longitude": -1.0638836
+  },
+  "Gander Green Lane, Sutton": {
+    "latitude": 51.3641973,
+    "longitude": -0.2062369
+  },
   "Go Media Stadium, Auckland": {
     "latitude": -36.9178349,
     "longitude": 174.8122802
+  },
+  "Grosvenor Vale, Ruislip": {
+    "latitude": 51.5683609,
+    "longitude": -0.421121
   },
   "Groupama Stadium, Décines-Charpieu": {
     "latitude": 45.7653624,
@@ -287,13 +323,29 @@
     "latitude": 25.7813595,
     "longitude": -80.1879435
   },
+  "Kassam Stadium, Oxford": {
+    "latitude": 51.7164667,
+    "longitude": -1.2076599
+  },
+  "Kenilworth Road, Luton": {
+    "latitude": 51.8848937,
+    "longitude": -0.4284145
+  },
   "King Fahd International Stadium, Riyadh": {
     "latitude": 24.7885806,
     "longitude": 46.8391449
   },
+  "Kingfield Stadium, Woking": {
+    "latitude": 51.3063222,
+    "longitude": -0.5588831
+  },
   "Lambeau Field, Green Bay": {
     "latitude": 44.5009705,
     "longitude": -88.0619681
+  },
+  "Lamex Stadium, Stevenage": {
+    "latitude": 51.8896479,
+    "longitude": -0.1937405
   },
   "Levi's Stadium, Santa Clara": {
     "latitude": 37.4029867,
@@ -334,6 +386,10 @@
   "Maracanã, Rio de Janeiro": {
     "latitude": -22.9121619,
     "longitude": -43.2311861
+  },
+  "Meadow Park, Borehamwood": {
+    "latitude": 51.6620315,
+    "longitude": -0.2724395
   },
   "Melbourne Cricket Ground, Melbourne": {
     "latitude": -37.819909,
@@ -411,6 +467,14 @@
     "latitude": 51.4299291,
     "longitude": -0.1861732
   },
+  "Portman Road, Ipswich": {
+    "latitude": 52.057277,
+    "longitude": 1.1458453
+  },
+  "Priestfield Stadium, Gillingham": {
+    "latitude": 51.3842253,
+    "longitude": 0.5609658
+  },
   "Prince Moulay Abdellah Stadium, Rabat": {
     "latitude": 33.9598204,
     "longitude": -6.889071
@@ -431,6 +495,10 @@
     "latitude": 37.3846337,
     "longitude": -5.9711558
   },
+  "Recreation Ground, Aldershot": {
+    "latitude": 51.2483133,
+    "longitude": -0.7549202
+  },
   "Riyadh Air Metropolitano, Madrid": {
     "latitude": 40.4360102,
     "longitude": -3.599699
@@ -446,6 +514,10 @@
   "Rogers Place, Edmonton": {
     "latitude": 53.5467936,
     "longitude": -113.4977946
+  },
+  "Roots Hall, Southend-on-Sea": {
+    "latitude": 51.5490442,
+    "longitude": 0.7015486
   },
   "Rose Bowl, Pasadena": {
     "latitude": 34.1613492,
@@ -475,6 +547,10 @@
     "latitude": 43.6434338,
     "longitude": -79.3790777
   },
+  "Select Car Leasing Stadium, Reading": {
+    "latitude": 51.4223346,
+    "longitude": -0.9831238
+  },
   "Selhurst Park, London": {
     "latitude": 51.3982429,
     "longitude": -0.0852551
@@ -486,6 +562,14 @@
   "Signal Iduna Park, Dortmund": {
     "latitude": 51.4924922,
     "longitude": 7.4518549
+  },
+  "Silverlake Stadium, Eastleigh": {
+    "latitude": 50.9524511,
+    "longitude": -1.3719149
+  },
+  "Sixfields Stadium, Northampton": {
+    "latitude": 52.2352633,
+    "longitude": -0.9335741
   },
   "SoFi Stadium, Inglewood": {
     "latitude": 33.9534074,
@@ -510,6 +594,10 @@
   "St James' Park, Newcastle upon Tyne": {
     "latitude": 54.9754693,
     "longitude": -1.6218737
+  },
+  "St Mary's Stadium, Southampton": {
+    "latitude": 50.9058615,
+    "longitude": -1.3908774
   },
   "Stade Abdoulaye Wade, Diamniadio": {
     "latitude": 14.7327572,
@@ -547,6 +635,10 @@
     "latitude": 45.8186879,
     "longitude": 16.0179376
   },
+  "Stadium MK, Milton Keynes": {
+    "latitude": 52.009625,
+    "longitude": -0.7335404
+  },
   "Stamford Bridge, London": {
     "latitude": 51.4816869,
     "longitude": -0.1910336
@@ -554,6 +646,10 @@
   "State Farm Stadium, Glendale": {
     "latitude": 33.5270393,
     "longitude": -112.2617088
+  },
+  "StoneX Stadium, London": {
+    "latitude": 51.6033587,
+    "longitude": -0.2242463
   },
   "Strawberry Arena, Solna": {
     "latitude": 59.3725039,
@@ -583,6 +679,14 @@
     "latitude": 51.604157,
     "longitude": -0.0662604
   },
+  "Twickenham Stadium, Twickenham": {
+    "latitude": 51.4560051,
+    "longitude": -0.3415047
+  },
+  "Twickenham Stoop, Twickenham": {
+    "latitude": 51.4501757,
+    "longitude": -0.3442515
+  },
   "UBS Arena, Elmont": {
     "latitude": 40.7116942,
     "longitude": -73.7259229
@@ -595,6 +699,10 @@
     "latitude": 41.8806831,
     "longitude": -87.6741851
   },
+  "Vicarage Road, Watford": {
+    "latitude": 51.6501435,
+    "longitude": -0.4032499
+  },
   "Villa Park, Birmingham": {
     "latitude": 52.5091264,
     "longitude": -1.8850354
@@ -602,6 +710,10 @@
   "Wembley Stadium, London": {
     "latitude": 51.5560695,
     "longitude": -0.2796034
+  },
+  "Weston Homes Stadium, Peterborough": {
+    "latitude": 52.5644502,
+    "longitude": -0.2400569
   },
   "Workers' Stadium, Beijing": {
     "latitude": 39.9323548,

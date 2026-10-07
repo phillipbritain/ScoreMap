@@ -10,11 +10,6 @@ public sealed class BrowserConnections
     private readonly HashSet<string> _ids = [];
     private TaskCompletionSource _anyConnected = NewSignal();
 
-    public int Count
-    {
-        get { lock (_ids) return _ids.Count; }
-    }
-
     public void Connected(string connectionId)
     {
         lock (_ids)

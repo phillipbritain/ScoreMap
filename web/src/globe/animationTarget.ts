@@ -38,11 +38,12 @@ export function animationTarget(
   }
   if (clusters.size === 0) return null
 
-  const fromVenue = (c: ClusterCandidate) => degreesApart(at(venue), at(c.lngLat))
+  const venuePoint = toGlobePoint(venue)
+  const fromVenue = (c: ClusterCandidate) => degreesApart(venuePoint, toGlobePoint(c.lngLat))
   const candidates = [...clusters.values()].sort((a, b) => fromVenue(a) - fromVenue(b))
   return { kind: 'cluster', candidates }
 }
 
-function at([longitude, latitude]: [number, number]): GlobePoint {
+function toGlobePoint([longitude, latitude]: [number, number]): GlobePoint {
   return { longitude, latitude }
 }

@@ -1,4 +1,4 @@
-import type { GameChange, GameChangeKind } from '../games/gameChange'
+import type { Game } from '../games/game'
 
 /**
  * How a pin (or the cluster it's in) draws attention to a change: a lively burst when the score
@@ -6,13 +6,14 @@ import type { GameChange, GameChangeKind } from '../games/gameChange'
  */
 export type PinAnimation = 'score' | 'start' | 'finish'
 
-const animations: Partial<Record<GameChangeKind, PinAnimation>> = {
-  ScoreChanged: 'score',
-  Started: 'start',
-  Finished: 'finish',
-}
-
-/** Which animation a change plays on its game's pin; null for changes that only redraw it. */
-export function pinAnimation(change: GameChange): PinAnimation | null {
-  return animations[change.kind] ?? null
+/**
+ * Which animation a game plays, going from how the globe last showed it to how it is now; null for
+ * changes that only redraw it (the clock, the period, a delay). A game that starts or finishes
+ * plays that, even if its score changed in the same update.
+ */
+export function pinAnimation(before: Game, after: Game): PinAnimation | null {
+  if (before.status === 'Upcoming' && after.status === 'Live') return 'start'
+  if (before.status === 'Live' && after.status === 'Final') return 'finish'
+  if (before.home.score !== after.home.score || before.away.score !== after.away.score) return 'score'
+  return null
 }

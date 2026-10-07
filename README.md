@@ -29,6 +29,8 @@ npm --prefix web run dev   # browser app on http://localhost:5173
 
 Open http://localhost:5173. The Vite dev server proxies `/hubs` (SignalR) to the server.
 
+Or, on Windows, run both in the background with `./scripts/dev.ps1 start`, and `./scripts/dev.ps1 stop` when you're done (`status` says what's running). Logs go to `%TEMP%\scoremap\`.
+
 The server reads each league's games from ESPN's scoreboards for yesterday and today (and, within 3 hours of midnight, tomorrow), in US Eastern days as ESPN keeps them, and looks each venue up once through OpenStreetMap Nominatim, saving the results to `server/src/ScoreMap.Server/data/venue-locations.json` (git-ignored; delete it to look venues up again). It also finds each venue's photo once, for the game panel: ESPN's own, or else the venue's Wikidata image from Wikimedia Commons with its author and licence. These are saved to `server/src/ScoreMap.Server/data/venue-photos.json` (also git-ignored; delete it to search again).
 
 Venue lookups can be wrong (e.g. a stadium placed in a same-named town). To fix a pin, add the venue's name and the right position to `server/src/ScoreMap.Server/venue-corrections.json`, for example `"Lincoln Financial Field": { "latitude": 39.9008, "longitude": -75.1675 }`. Corrections override any lookup and take effect from the next poll, without a restart. When a venue can't be found, its pin goes to the centre of its city; when a game has no venue, to the home team's city.

@@ -137,7 +137,48 @@ public class ScenarioTests
         Assert.Equal(14, added.Game.Home.Score);
     }
 
+    [Fact]
+    public async Task A_browser_gets_every_filled_game_at_a_different_venue_in_the_group_with_its_home_team()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", """{ "fill": { "count": 10, "group": "london", "mix": { "live": 4, "upcoming": 2, "final": 2, "disrupted": 2 } } }""");
+        var london = ShippedVenues().Where(v => v.Groups.Contains("london")).ToList();
+
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        Assert.Equal(10, snapshot.Count);
+        Assert.Equal(10, snapshot.Select(g => g.Venue.Name).Distinct().Count());
+        Assert.All(snapshot, game =>
+        {
+            var venue = Assert.Single(london, v => v.Name == game.Venue.Name);
+            Assert.Equal(venue.HomeTeam.Name, game.Home.FullName);
+        });
+        Assert.Equal(
+            [(GameStatus.Upcoming, 2), (GameStatus.Live, 4), (GameStatus.Final, 2), (GameStatus.Disrupted, 2)],
+            snapshot.GroupBy(g => g.Status).OrderBy(g => g.Key).Select(g => (g.Key, g.Count())));
+    }
+
+    [Fact]
+    public async Task Every_game_filled_from_the_whole_venue_list_shows_in_every_status()
+    {
+        var count = ShippedVenues().Count(v => v.Groups.Contains("worldwide"));
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", $$"""{ "fill": { "count": {{count}}, "group": "worldwide", "mix": { "live": 1, "upcoming": 1, "final": 1, "disrupted": 1 } } }""");
+
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        Assert.Equal(count, snapshot.Count);
+        Assert.Equal(4, snapshot.Select(g => g.Status).Distinct().Count());
+    }
+
+    private static IReadOnlyList<ScenarioVenue> ShippedVenues() =>
+        ScenarioVenue.ReadList(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-venues.json"));
+
     [Theory]
+    [InlineData("""{ "fill": { "count": 2, "group": "atlantis" } }""", "fill", "unknown group \"atlantis\"")]
+    [InlineData("""{ "fill": { "count": 1000, "group": "london" } }""", "fill", "asks for 1000 games from \"london\"")]
     [InlineData("""{ "games": [ { "league": "NFLL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "venue": { "name": "Somewhere", "city": "Town" }, "startsIn": "0", "status": "upcoming" } ] }""",
         "game 1", "unknown league \"NFLL\"")]
     [InlineData("""{ "games": [ { "league": "NFL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "startsIn": "0", "status": "upcoming" } ] }""",

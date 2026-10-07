@@ -29,7 +29,11 @@ public static partial class ScenarioReader
         ["canceled"] = ProviderStatus.Canceled,
     };
 
-    public static Scenario Read(string folder, string name, IReadOnlyList<League> leagues)
+    /// <summary>
+    /// Reads scenario <paramref name="name"/> from <paramref name="folder"/>. A <c>fill</c> takes its
+    /// games from <paramref name="venues"/>, the venue list.
+    /// </summary>
+    public static Scenario Read(string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null)
     {
         var path = Path.GetFullPath(Path.Combine(folder, $"{name}.json"));
         if (!File.Exists(path))
@@ -63,6 +67,16 @@ public static partial class ScenarioReader
                 throw new ScenarioFileException(name, path, $"game {i + 1}{id} {e.Message}");
             }
         }).ToList();
+        if (file.Fill is not null)
+        {
+            foreach (var game in ReadFill(file.Fill, name, path, leagues, venues))
+            {
+                if (!ids.Add(game.Id))
+                    throw new ScenarioFileException(name, path,
+                        $"a written-out game has the id \"{game.Id}\", which fill gives to one of its games; pick another");
+                games.Add(game);
+            }
+        }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
         return new Scenario(name, games, timeline);
     }
@@ -123,7 +137,7 @@ public static partial class ScenarioReader
     }
 
     // The file's own shape, kept apart from the model so the format can grow (timelines, fill, random play).
-    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline);
+    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill);
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,

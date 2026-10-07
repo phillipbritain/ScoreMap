@@ -225,17 +225,27 @@ public sealed class ScoreMapServer(
         return snapshot;
     }
 
-    /// <summary>Closes the browser stand-in and waits until the server has seen it go.</summary>
+    /// <summary>
+    /// Closes the browser stand-in and waits until the server has seen it go. Call it once the
+    /// client has its snapshot.
+    /// </summary>
     public async Task DisconnectAsync(TestClient client)
     {
         var connections = Services.GetRequiredService<BrowserConnections>();
-        var before = connections.Count;
+        var id = client.ConnectionId;
+        // The hub counts a browser only once it has sent its snapshot, which the client can have first.
+        await WaitUntilAsync(() => connections.IsConnected(id), "The server did not see the client connect");
         await client.DisposeAsync();
+        await WaitUntilAsync(() => !connections.IsConnected(id), "The server did not see the client disconnect");
+    }
+
+    private static async Task WaitUntilAsync(Func<bool> condition, string timeoutMessage)
+    {
         var deadline = DateTime.UtcNow.AddSeconds(10);
-        while (connections.Count >= before)
+        while (!condition())
         {
             if (DateTime.UtcNow > deadline)
-                throw new TimeoutException("The server did not see the client disconnect");
+                throw new TimeoutException(timeoutMessage);
             await Task.Delay(10);
         }
     }
@@ -250,6 +260,10 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
+
+    /// <summary>The connection's id, the same as the hub's for it once started.</summary>
+    public string ConnectionId =>
+        connection.ConnectionId ?? throw new InvalidOperationException("The client hasn't connected");
 
     internal async Task StartAsync()
     {

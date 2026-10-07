@@ -78,7 +78,8 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
-        return new Scenario(name, games, timeline);
+        var play = file.Play is null ? null : ReadPlay(file, name, path, leagues, venues);
+        return new Scenario(name, games, timeline, play);
     }
 
     /// <summary>Reads one game written out in full; throws <see cref="InvalidDataException"/> saying what's wrong with it.</summary>
@@ -136,8 +137,8 @@ public static partial class ScenarioReader
         return new ProviderTeam(team.Abbreviation, team.Name, team.Logo, team.Score);
     }
 
-    // The file's own shape, kept apart from the model so the format can grow (timelines, fill, random play).
-    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill);
+    // The file's own shape, kept apart from the model so the format can grow.
+    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, string? Play);
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,

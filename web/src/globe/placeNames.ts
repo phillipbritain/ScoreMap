@@ -12,9 +12,6 @@ import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from 
 import { degreesApart } from './geo'
 import { cardZoom } from './zoomLevels'
 
-// The globe's place names: how they look (in the map's style), which places are named for the
-// games, when state names show, and where game cities' names are written so cards can keep clear.
-
 /**
  * Free map fonts, Open Sans among them (ADR-0006); OpenFreeMap, the base style's own font source,
  * only has Noto Sans. Every text on the globe, cluster counts included, must use one of mapFonts,
@@ -43,7 +40,7 @@ const townNames = new Set(['label_town', 'label_village'])
 const droppedNames = new Set([...townNames, 'label_other'])
 
 /** The tiles' source and layer of places, cities among them. */
-export const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
+const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
 
 /**
  * The base style's place names in the globe's look: warm cream names on a dark outline. Major cities
@@ -76,8 +73,6 @@ export function firstPlaceNameLayer(style: StyleSpecification): string | undefin
 
 // Place names, "warm night": cream on a dark outline, in Open Sans.
 const darkOutline = '#050b16'
-// City name sizes in pixels, as zoom, size stops (see zoomed).
-const cityNameSizes = { city: [4, 12, 7, 14, 11, 18], capital: [4, 12.5, 7, 15, 11, 19] }
 const zoomBase = 1.2
 
 const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number> => [
@@ -89,7 +84,8 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 
 interface NameStyle {
   font: MapFont
-  size: DataDrivenPropertyValueSpecification<number>
+  /** Text size in pixels, as zoom, size stops (see zoomed). */
+  sizes: readonly number[]
   color: string
   /** Spaced capitals, with this much tracking in ems. */
   capitals?: number
@@ -100,26 +96,26 @@ interface NameStyle {
 const nameStyles = {
   city: {
     font: mapFonts.semibold,
-    size: zoomed(...cityNameSizes.city),
+    sizes: [4, 12, 7, 14, 11, 18],
     color: '#f1e6cc',
     outline: { width: 2, blur: 0.5 },
   },
   capital: {
     font: mapFonts.bold,
-    size: zoomed(...cityNameSizes.capital),
+    sizes: [4, 12.5, 7, 15, 11, 19],
     color: '#fff4dc',
     outline: { width: 2, blur: 0.5 },
   },
   state: {
     font: mapFonts.regular,
-    size: zoomed(3, 9, 8, 13),
+    sizes: [3, 9, 8, 13],
     color: '#9a8a62',
     capitals: 0.25,
     outline: { width: 1.2, blur: 0 },
   },
   country: {
     font: mapFonts.bold,
-    size: zoomed(1, 9, 4, 16),
+    sizes: [1, 9, 4, 16],
     color: '#d8c9a4',
     capitals: 0.12,
     outline: { width: 2, blur: 0.5 },
@@ -141,7 +137,7 @@ function placeName(layer: LayerSpecification): LayerSpecification {
     layout: {
       ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [style.font.name],
-      'text-size': style.size,
+      'text-size': zoomed(...style.sizes),
       'text-transform': style.capitals === undefined ? 'none' : 'uppercase',
       'text-letter-spacing': style.capitals ?? 0,
     },
@@ -257,7 +253,7 @@ export interface CityNameLook {
  */
 export function cityNameLook(zoom: number, capital: boolean): CityNameLook {
   const style = capital ? nameStyles.capital : nameStyles.city
-  const size = atZoom(capital ? cityNameSizes.capital : cityNameSizes.city, zoom)
+  const size = atZoom(style.sizes, zoom)
   return {
     font: `${style.font.weight} ${size}px ${cssFamily}`,
     size,

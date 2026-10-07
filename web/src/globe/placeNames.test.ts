@@ -46,6 +46,10 @@ describe('cityNameLook', () => {
     }
   })
 
+  it('wraps a name wider than 8 ems, as the base style does', () => {
+    expect(cityNameLook(7, true)).toMatchObject({ size: 15, maxWidth: 120 })
+  })
+
   it('measures a name in the weight of the font the map writes it in', () => {
     const fonts = Object.values(mapFonts)
     for (const [id, capital] of [

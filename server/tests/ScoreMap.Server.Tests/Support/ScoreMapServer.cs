@@ -13,6 +13,7 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Venues;
 using ScoreMap.Server.WatchLinks;
 
@@ -130,6 +131,31 @@ public sealed class ScoreMapServer(
     public void AddLeague(string key, string name, string sport, TimeSpan? plannedLength = null) =>
         _extraLeagues.Add((key, name, sport, plannedLength));
 
+    /// <summary>
+    /// The scenario the server runs (ADR-0009), from <see cref="ScenariosFolder"/>. Unset, the server
+    /// runs on real games (here, <see cref="Feed"/>) whatever appsettings.Development.json says.
+    /// </summary>
+    public string? Scenario { get; init; }
+
+    /// <summary>The folder the server reads scenario files from: a fresh temp folder, written by <see cref="WriteScenario"/>.</summary>
+    public string ScenariosFolder { get; } = Path.Combine(Path.GetTempPath(), $"scoremap-scenarios-{Guid.NewGuid():N}");
+
+    /// <summary>
+    /// Runs the server on the scenario settings and files that ship with it, rather than
+    /// <see cref="Scenario"/> and <see cref="ScenariosFolder"/>.
+    /// </summary>
+    public bool UseShippedScenarios { get; init; }
+
+    /// <summary>The hosting environment to run in, when not Development (the default).</summary>
+    public string? Environment { get; init; }
+
+    /// <summary>Writes a scenario file, as the owner would. Call before connecting.</summary>
+    public void WriteScenario(string name, string json)
+    {
+        Directory.CreateDirectory(ScenariosFolder);
+        File.WriteAllText(Path.Combine(ScenariosFolder, $"{name}.json"), json);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // High indexes so they extend, rather than replace, the configured leagues.
@@ -164,6 +190,13 @@ public sealed class ScoreMapServer(
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
+        if (!UseShippedScenarios)
+        {
+            builder.UseSetting("Scenario", Scenario ?? "real");
+            builder.UseSetting("Scenarios:Folder", ScenariosFolder);
+        }
+        if (Environment is not null)
+            builder.UseEnvironment(Environment);
         builder.ConfigureLogging(logging =>
         {
             logging.AddProvider(Logs);
@@ -171,8 +204,12 @@ public sealed class ScoreMapServer(
         });
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveAll<IGameFeedProvider>();
-            services.AddSingleton<IGameFeedProvider>(Feed);
+            // The fake stands in for ESPN, not for a scenario's own feed.
+            if (!services.Any(d => d.ServiceType == typeof(ScenarioGameFeedProvider)))
+            {
+                services.RemoveAll<IGameFeedProvider>();
+                services.AddSingleton<IGameFeedProvider>(Feed);
+            }
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);
             services.RemoveAll<IVenuePhotoSearch>();
@@ -197,6 +234,8 @@ public sealed class ScoreMapServer(
             File.Delete(SavedVenuePhotosPath);
         File.Delete(VenueCorrectionsPath);
         File.Delete(WatchLinksPath);
+        if (Directory.Exists(ScenariosFolder))
+            Directory.Delete(ScenariosFolder, recursive: true);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>

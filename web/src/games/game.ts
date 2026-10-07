@@ -16,6 +16,24 @@ export interface GameVenue {
   longitude: number
   /** The venue's IANA time zone, e.g. "America/Chicago"; null when the venue could not be placed. */
   timeZone: string | null
+  /** A photo of the venue (from outside or of the playing area); null until the server finds one, and for venues with none. */
+  photo: VenuePhoto | null
+}
+
+/** A photo of a venue, for the top of the game panel. */
+export interface VenuePhoto {
+  url: string
+  /** Set when the photo's licence asks for attribution (Wikimedia Commons photos). */
+  credit: PhotoCredit | null
+}
+
+/** Who took a photo and under what licence. */
+export interface PhotoCredit {
+  author: string
+  licence: string
+  licenceUrl: string | null
+  /** The photo's own page, with its full licence terms. */
+  sourceUrl: string
 }
 
 /** A channel or streaming service showing a game. */

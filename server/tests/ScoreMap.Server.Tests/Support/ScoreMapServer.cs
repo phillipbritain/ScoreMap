@@ -22,10 +22,12 @@ namespace ScoreMap.Server.Tests.Support;
 /// dependencies. Tests drive the fakes and assert only on what a connected
 /// client receives.
 /// </summary>
-public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool useShippedWatchLinks = false)
+public sealed class ScoreMapServer(
+    string? savedVenueLocationsPath = null, bool useShippedWatchLinks = false, string? savedVenuePhotosPath = null)
     : WebApplicationFactory<Program>
 {
     private readonly bool _ownsSavedVenueLocations = savedVenueLocationsPath is null;
+    private readonly bool _ownsSavedVenuePhotos = savedVenuePhotosPath is null;
 
     public FakeGameFeedProvider Feed { get; } = new();
 
@@ -37,6 +39,19 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
     /// </summary>
     public string SavedVenueLocationsPath { get; } =
         savedVenueLocationsPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-venues-{Guid.NewGuid():N}.json");
+
+    public FakeVenuePhotoSearch Photos { get; } = new();
+
+    /// <summary>
+    /// The file the server saves venue photos to. A fresh temp file unless one is passed in,
+    /// so a second server can be started over the first one's saved photos.
+    /// </summary>
+    public string SavedVenuePhotosPath { get; } =
+        savedVenuePhotosPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
+
+    /// <summary>Waits until every venue photo search the server has started has finished.</summary>
+    public Task PhotoSearchesFinishedAsync() =>
+        Services.GetRequiredService<VenuePhotos>().SearchesFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
 
     /// <summary>The owner's venue corrections file: a fresh temp file, written by <see cref="CorrectVenue"/>.</summary>
     public string VenueCorrectionsPath { get; } =
@@ -60,7 +75,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
 
     /// <summary>
     /// Runs the server as Azure App Service would, with HOME set to this folder, and leaves the
-    /// saved venue lookups path unconfigured so the server picks its App Service default.
+    /// saved venue lookups and photos paths unconfigured so the server picks its App Service defaults.
     /// </summary>
     public string? AppServiceHome { get; init; }
 
@@ -132,6 +147,7 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
         else
         {
             builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+            builder.UseSetting("Venues:SavedPhotosPath", SavedVenuePhotosPath);
         }
         for (var i = 0; i < _streamSites.Count; i++)
         {
@@ -150,6 +166,8 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
             services.AddSingleton<IGameFeedProvider>(Feed);
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);
+            services.RemoveAll<IVenuePhotoSearch>();
+            services.AddSingleton<IVenuePhotoSearch>(Photos);
             services.AddHttpClient(StreamFinder.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => StreamSites);
             if (StreamLinkSource is not null)
             {
@@ -166,6 +184,8 @@ public sealed class ScoreMapServer(string? savedVenueLocationsPath = null, bool 
         await base.DisposeAsync();
         if (_ownsSavedVenueLocations)
             File.Delete(SavedVenueLocationsPath);
+        if (_ownsSavedVenuePhotos)
+            File.Delete(SavedVenuePhotosPath);
         File.Delete(VenueCorrectionsPath);
         File.Delete(WatchLinksPath);
     }

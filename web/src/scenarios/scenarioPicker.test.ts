@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { pickerEntries, pillLabel, showsPill, togglesPill } from './scenarioPicker'
 
-const local = { running: 'starter', scenarios: ['edge-cases', 'starter', 'worldwide'] }
+const local = { running: 'crowded', scenarios: ['crowded', 'edge-cases', 'worldwide'] }
 // What the deployed server says: no scenarios.
 const deployed = { running: 'real', scenarios: [] }
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {
     expect(showsPill(local, { hidden: false })).toBe(true)
-    expect(pillLabel(local)).toBe('Scenario: starter')
+    expect(pillLabel(local)).toBe('Scenario: crowded')
   })
 
   it('shows "Real games" when real games are running', () => {
@@ -24,8 +24,8 @@ describe('the scenario pill', () => {
 describe('the scenario list', () => {
   it('lists every scenario, then "Real games", marking the running one', () => {
     expect(pickerEntries(local)).toEqual([
+      { name: 'crowded', label: 'crowded', running: true },
       { name: 'edge-cases', label: 'edge-cases', running: false },
-      { name: 'starter', label: 'starter', running: true },
       { name: 'worldwide', label: 'worldwide', running: false },
       { name: 'real', label: 'Real games', running: false },
     ])

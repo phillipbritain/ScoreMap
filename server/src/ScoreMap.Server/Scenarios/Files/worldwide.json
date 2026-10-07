@@ -1,0 +1,9 @@
+// worldwide (the default): about 150 games at venues on every continent, in a mix of Upcoming,
+// Live, Final and Disrupted. For the globe as a whole: pins everywhere, clusters, every status.
+{
+  "fill": {
+    "count": 150,
+    "group": "worldwide",
+    "mix": { "live": 4, "upcoming": 3, "final": 2, "disrupted": 1 }
+  }
+}

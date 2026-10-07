@@ -77,6 +77,8 @@ function openGlobe(startCamera: Camera) {
  * the whole canvas, the globe projection leaves out circle layers.
  */
 function drawnAt(map: MapLibreMap, layer: string, { venue }: Game) {
+  // Nothing yet, until the style has loaded and the pins' layers are added.
+  if (!map.getLayer(layer)) return []
   const { x, y } = map.project([venue.longitude, venue.latitude])
   return map.queryRenderedFeatures(
     [
@@ -102,10 +104,12 @@ async function cardShown(gameId: string) {
 }
 
 /** The camera as GlobeMap last reported it, once it reports one that passes the check. */
-async function cameraSettles(onCameraMove: ReturnType<typeof vi.fn<(camera: Camera) => void>>, check: (camera: Camera) => boolean) {
-  await vi.waitFor(() => expect(onCameraMove.mock.calls.some(([camera]) => check(camera))).toBe(true), {
-    timeout: 15_000,
-  })
+async function cameraSettles(
+  onCameraMove: ReturnType<typeof vi.fn<(camera: Camera) => void>>,
+  check: (camera: Camera) => boolean,
+  timeout = 15_000,
+) {
+  await vi.waitFor(() => expect(onCameraMove.mock.calls.some(([camera]) => check(camera))).toBe(true), { timeout })
 }
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -197,7 +201,8 @@ describe('zooming in to clusters and crowds', () => {
     await vi.waitFor(() => expect(container.querySelector('.score-crowd')).toBeNull(), { timeout: 20_000 })
   })
 
-  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', async () => {
+  // Five or so zooms one after another: about 10 seconds in CI.
+  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', { timeout: 30_000 }, async () => {
     const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     // Two games half a degree out set how far the first zoom goes; at the venue between them,
     // more games than there's ever room for stay crowded after it.
@@ -207,7 +212,7 @@ describe('zooming in to clusters and crowds', () => {
 
     await userEvent.click(container.querySelector('.score-crowd')!)
 
-    await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom)
+    await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
     const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
     expect(zooms.filter((zoom) => zoom > cardZoom && zoom < maxZoom)).not.toEqual([])
   })

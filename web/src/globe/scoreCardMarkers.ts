@@ -1,14 +1,15 @@
 import { LngLatBounds, Marker, type MapSourceDataEvent, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
-import type { Game, GameStatus } from '../games/game'
+import type { Game } from '../games/game'
 import { cardPins } from './cardPins'
 import { layOutCards, type CardCrowd, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { cityNameLook, gameCitiesState, gameCityPlaces, placeTiles } from './globeStyle'
 import type { PinAnimation } from './pinAnimation'
-import { pinSource, statusColors } from './pinLayers'
+import { pinSource } from './pinLayers'
 import { pulse } from './pinPulse'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
+import { crowdStacking, selectedStacking, statusLooks } from './statusLook'
 import { maxZoom, pinLayout } from './zoomLevels'
 
 interface PlacedCard {
@@ -55,6 +56,8 @@ export class ScoreCardMarkers {
   private cities: City[] = []
   /** True when the games or the map's loaded places have changed since the cities were found. */
   private citiesStale = true
+  /** How far a card's pointer reaches below it, read from the first card drawn (see cardPointer). */
+  private pointer = 0
 
   /** `onSelect` is called with a game's id when its card is selected. */
   constructor(map: MapLibreMap, onSelect: (gameId: string) => void) {
@@ -108,14 +111,14 @@ export class ScoreCardMarkers {
           event.stopPropagation()
           this.onSelect(gameId)
         })
-        // Above the venue, its pointer's tip on the spot; the city's name sits below its dot.
-        const marker = new Marker({ element, anchor: 'bottom', offset: [0, -cardPointerPx] })
+        // Above the venue, its pointer's tip on the spot (see layOut); the city's name sits below its dot.
+        const marker = new Marker({ element, anchor: 'bottom' })
         placed = {
           marker: marker.setLngLat(lngLat).addTo(this.map),
           drawn: '',
           width: 0,
           height: 0,
-          offset: { dx: 0, dy: -cardPointerPx },
+          offset: { dx: 0, dy: 0 },
           trail: this.trails.appendChild(newTrail()),
           crowded: false,
         }
@@ -126,10 +129,11 @@ export class ScoreCardMarkers {
       if (placed.drawn !== drawn) {
         const element = placed.marker.getElement()
         // Live cards draw on top, as Live small pins do; the selected card above all.
-        element.style.zIndex = String(selected ? 3 : stacking[card.status])
+        element.style.zIndex = String(selected ? selectedStacking : statusLooks[card.status].stacking)
         const cardElement = element.firstElementChild as HTMLElement
         drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
-        placed.trail.style.setProperty('--status-color', statusColors[card.status])
+        this.pointer ||= cardPointer(cardElement)
+        placed.trail.setAttribute('class', `score-card-trail--${card.status.toLowerCase()}`)
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -161,7 +165,7 @@ export class ScoreCardMarkers {
     const layout = layOutCards(cards, {
       width: canvas.clientWidth,
       height: canvas.clientHeight,
-      pointer: cardPointerPx,
+      pointer: this.pointer,
       names: this.cityNames(),
       selectedGameId: this.selectedGameId,
     })
@@ -234,8 +238,7 @@ export class ScoreCardMarkers {
           event.stopPropagation()
           this.zoomToCrowd(key)
         })
-        // Above every card, so a count is never hidden.
-        element.style.zIndex = '4'
+        element.style.zIndex = String(crowdStacking)
         crowd = { marker: new Marker({ element }).setLngLat(at).addTo(this.map), gameIds, drawn: '' }
         this.crowds.set(key, crowd)
       } else {
@@ -246,7 +249,6 @@ export class ScoreCardMarkers {
       if (crowd.drawn !== drawn) {
         const count = crowd.marker.getElement().firstElementChild as HTMLElement
         count.className = `score-crowd score-crowd--${status.toLowerCase()}`
-        count.style.setProperty('--status-color', statusColors[status])
         count.textContent = String(gameIds.length)
         crowd.drawn = drawn
       }
@@ -326,10 +328,10 @@ export class ScoreCardMarkers {
   }
 }
 
-/** How far a card's pointer reaches below the card (see .score-card::after). */
-const cardPointerPx = 6
-
-const stacking: Record<GameStatus, number> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
+/** How far a card's pointer reaches below the card, as its CSS draws it (see .score-card). */
+function cardPointer(card: HTMLElement): number {
+  return parseFloat(getComputedStyle(card).getPropertyValue('--score-card-pointer')) || 0
+}
 
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120
@@ -376,7 +378,6 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean,
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId
-  element.style.setProperty('--status-color', statusColors[card.status])
   const clock = span('score-card__clock', card.clockLine)
   element.replaceChildren(team(card.away), team(card.home), clock)
 }

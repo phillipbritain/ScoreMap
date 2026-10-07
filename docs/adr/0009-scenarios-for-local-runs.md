@@ -1,0 +1,15 @@
+# Scenarios for local runs: a fake feed in the server, picked in the app, at real venues
+
+Run locally, ScoreMap shows a scenario by default rather than real games, so its look and its live updates can be checked at any time without waiting for real games to start; real ESPN data matters mostly on the deployed site, and stays one choice in the app. Scenarios exist only when the server runs in Development, so the deployed site can never show made-up scores.
+
+The made-up games come from a fake game feed provider in the server, in place of ESPN's (ADR-0001), rather than from a fake ESPN server or from fakes in the browser. Everything after the feed (the game board's statuses, windows and change events, the venue locator, the poller and the hub, and the browser app) is the real code, and scenarios are JSON files in ScoreMap's own terms rather than in ESPN's unofficial response shape. Games are written out one by one, apart from three shorthands kept deliberately few: `fill` (N games from a named group of venues), a status mix for filled games, and `"play": "random"`. Fake games can be in any configured league at any venue, so the filter menu stays the same as in production.
+
+The default scenario (`worldwide`) is the `Scenario` setting in `appsettings.Development.json`, overridden by `scripts/dev.ps1 start -Scenario <name>` (`real` for real games). A floating pill over the globe switches between scenarios, and to real games, while running. Because the server holds one set of games for every browser, it runs one scenario at a time, and switching it in one tab switches it in all of them; a scenario per tab would have needed a game board per connection, for testing alone.
+
+Scenarios use real venues, from a hand-written list in the repo, so pin placement is tested on real places. Their lookups are made once by a script and checked into the repo as `scenario-venue-locations.json`, which the venue locator checks before its saved lookups, rather than made through Nominatim at runtime: at one lookup every 1.5 s, the default scenario's 150 venues would take nearly 4 minutes on every new machine. The price is a file to regenerate when the venue list changes, and scenario pins seldom exercise a live Nominatim lookup (only the edge-cases scenario's deliberately unfindable venue does).
+
+## Consequences
+
+- With the poller's real intervals (15 s while a league has Live games, 3 min otherwise) a scripted change would show up to minutes late, so in scenario mode every league is fetched every second. The intervals become settings, but the poller's logic doesn't change.
+- A looping script restarts with fresh copies of its games under new ids, and the old copies drop out of the feed, so no game ever goes back from Final to Live. Random play likewise lets a Final game stay a short while, then replaces it with a new game, rather than letting games run forever.
+- Scenario times are relative to when the scenario starts, on the real clock; the server's `TimeProvider` is never sped up, since the poller, the Nominatim rate limit and the pin windows all share it.

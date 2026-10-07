@@ -1,5 +1,6 @@
 // ScoreMap on Azure App Service (Linux): the plan and the web app that scripts/deploy.ps1 and the
-// GitHub Actions workflow deploy to. Deploy into an existing resource group, see docs/deploy.md.
+// GitHub Actions workflow deploy to, and the identity GitHub Actions signs in as. Deploy into an
+// existing resource group, see docs/deploy.md.
 // Running it again changes nothing. Settings changed in the portal are put back to what's here.
 
 @description('Name of the web app. Must be unique across Azure; the app is served at https://<appName>.azurewebsites.net.')
@@ -13,6 +14,12 @@ param sku string = 'F1'
 
 @description('Name of the App Service plan.')
 param planName string = 'scoremap-plan'
+
+@description('Name of the managed identity GitHub Actions signs in to Azure as.')
+param githubIdentityName string = 'scoremap-github'
+
+@description('Subject of the GitHub token Azure trusts, naming the repo and branch. See docs/deploy.md.')
+param githubSubject string
 
 resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: planName
@@ -76,4 +83,39 @@ resource logs 'Microsoft.Web/sites/config@2024-11-01' = {
   }
 }
 
+// GitHub Actions signs in as this identity, with no password stored anywhere: the federated
+// credential tells Azure to trust GitHub's tokens for runs matching githubSubject.
+resource githubIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: githubIdentityName
+  location: location
+}
+
+resource githubMain 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
+  parent: githubIdentity
+  name: 'github-main'
+  properties: {
+    issuer: 'https://token.actions.githubusercontent.com'
+    subject: githubSubject
+    audiences: [
+      'api://AzureADTokenExchange'
+    ]
+  }
+}
+
+// Website Contributor, on this one app only: enough to deploy code, nothing else.
+var websiteContributor = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772')
+
+resource githubCanDeploy 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(app.id, githubIdentity.id, websiteContributor)
+  scope: app
+  properties: {
+    roleDefinitionId: websiteContributor
+    principalId: githubIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 output url string = 'https://${app.properties.defaultHostName}'
+
+// For the GitHub secret AZURE_CLIENT_ID.
+output githubClientId string = githubIdentity.properties.clientId

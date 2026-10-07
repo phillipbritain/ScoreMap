@@ -33,7 +33,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(ProviderStatus.Final, london.Status);
         Assert.Equal("0:00", london.DisplayClock);
         Assert.Equal(4, london.Period);
-        Assert.Equal(new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"), london.Venue);
+        Assert.Equal(new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England", "5534"), london.Venue);
         Assert.Equal([new ProviderBroadcaster("NFL Net", "US")], london.Broadcasters);
     }
 
@@ -48,7 +48,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(19, game.Away.Score);
         Assert.Equal("4:28", game.DisplayClock);
         Assert.Equal(3, game.Period);
-        Assert.Equal(new ProviderVenue("Bank of America Stadium", "Charlotte", "NC", "USA"), game.Venue);
+        Assert.Equal(new ProviderVenue("Bank of America Stadium", "Charlotte", "NC", "USA", "3628"), game.Venue);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(ProviderPeriodPhase.InningTop, game.Phase);
         Assert.Equal(1, game.Home.Score);
         Assert.Equal(2, game.Away.Score);
-        Assert.Equal(new ProviderVenue("Dodger Stadium", "Los Angeles", "California", null), game.Venue);
+        Assert.Equal(new ProviderVenue("Dodger Stadium", "Los Angeles", "California", null, "19"), game.Venue);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class EspnGameFeedProviderTests
         var game = Assert.Single(games);
         Assert.Equal("basketball/mens-college-basketball?groups=50", game.LeagueKey);
         Assert.Equal(ProviderStatus.Scheduled, game.Status);
-        Assert.Equal(new ProviderVenue("Palazzo dello Sport", "Rome", "Italy", null), game.Venue);
+        Assert.Equal(new ProviderVenue("Palazzo dello Sport", "Rome", "Italy", null, "3282"), game.Venue);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(("NFO", 1), (game.Home.Abbreviation, game.Home.Score));
         Assert.Equal(("MNC", 0), (game.Away.Abbreviation, game.Away.Score));
         Assert.Equal(2, game.Period);
-        Assert.Equal(new ProviderVenue("The City Ground", "Nottingham", null, "England"), game.Venue);
+        Assert.Equal(new ProviderVenue("The City Ground", "Nottingham", null, "England", "131"), game.Venue);
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public class EspnGameFeedProviderTests
         Assert.Null(game.Home.Score);
         Assert.Null(game.DisplayClock);
         Assert.Null(game.Period);
-        Assert.Equal(new ProviderVenue("Soldier Field", "Chicago, Illinois", null, "USA"), game.Venue);
+        Assert.Equal(new ProviderVenue("Soldier Field", "Chicago, Illinois", null, "USA", "1452"), game.Venue);
     }
 
     [Theory]

@@ -16,6 +16,7 @@ namespace ScoreMap.Server.Games;
 public sealed class GameBoard(
     IGameFeedProvider feed,
     VenueLocator venues,
+    VenuePhotos photos,
     OfficialWatchLinks watchLinks,
     IStreamLinkSource streams,
     IOptions<List<League>> leagues,
@@ -150,7 +151,7 @@ public sealed class GameBoard(
             ToTeam(game.Away),
             ClockLine.For(game, league),
             game.Period,
-            ToVenue(game.Venue, location),
+            ToVenue(game.Venue, location) with { Photo = photos.PhotoFor(league.Key, game.Venue) },
             game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList(),
             StreamLinks: []);
     }

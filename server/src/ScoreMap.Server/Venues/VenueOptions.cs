@@ -10,6 +10,12 @@ public sealed class VenueOptions
     public string SavedLocationsPath { get; set; } = "data/venue-locations.json";
 
     /// <summary>
+    /// File the venue photos found are saved to. Relative paths resolve as for
+    /// <see cref="SavedLocationsPath"/> (on App Service, by default /home/data/venue-photos.json).
+    /// </summary>
+    public string SavedPhotosPath { get; set; } = "data/venue-photos.json";
+
+    /// <summary>
     /// The owner's corrections file, relative to the content root: venue names mapped to the
     /// position their pin should use. Overrides any lookup; re-read whenever it changes.
     /// </summary>

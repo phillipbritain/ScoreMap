@@ -1,4 +1,5 @@
 import type { CircleLayerSpecification, GeoJSONSourceSpecification, SymbolLayerSpecification } from 'maplibre-gl'
+import { mapFonts } from './placeNames'
 import { byStatus, clusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
@@ -41,7 +42,7 @@ export const clusterLayers: [CircleLayerSpecification, SymbolLayerSpecification]
     filter: ['has', 'point_count'],
     layout: {
       'text-field': ['get', 'point_count_abbreviated'],
-      'text-font': ['Open Sans Bold'],
+      'text-font': [mapFonts.bold.name],
       'text-size': 12,
       'text-allow-overlap': true,
     },
@@ -71,7 +72,7 @@ export const smallPinLayerSpec: CircleLayerSpecification = {
  * Invisible stand-ins for the pins, the size of what each shows: a score card zoomed in, a small pin
  * zoomed out. Score cards are page elements MapLibre can't see, and circle layers take no part in
  * label placement, so these give place names something to avoid: a name that would fall under a pin
- * moves to another side of its dot (see globeStyle's city names), or is left out if no side is free.
+ * moves to another side of its dot (see placeNames' city names), or is left out if no side is free.
  * Clusters have none: a name too close to fit beside one would be lost, so it's written across the
  * cluster instead (place names draw above the pins). Both draw nothing.
  *

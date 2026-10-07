@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { layOutCards, type CardLayout, type CardScene, type ScreenCard } from './cardLayout'
+import { layOutCards, type CardLayout, type CardScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import type { ScreenBox } from './gameCities'
 
 const pointer = 6
@@ -21,6 +21,7 @@ const games = (prefix: string, count: number, x: number, y: number, status: Game
 
 /** A card where it ends up on screen, by its centre. */
 interface Box extends ScreenBox {
+  gameId: string
   venueX: number
   venueY: number
 }
@@ -28,8 +29,8 @@ interface Box extends ScreenBox {
 const lay = (cards: ScreenCard[], names: ScreenBox[] = []) => layOutCards(cards, { ...scene, names })
 
 /** How far each card that has room is moved from where it would sit. */
-function shiftsOf({ cards }: CardLayout): Map<string, { dx: number; dy: number }> {
-  const shifts = new Map<string, { dx: number; dy: number }>()
+function shiftsOf({ cards }: CardLayout): Map<string, ScreenOffset> {
+  const shifts = new Map<string, ScreenOffset>()
   for (const [gameId, { offset, crowded }] of cards) {
     if (!crowded) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + pointer })
   }
@@ -79,7 +80,7 @@ describe('layOutCards', () => {
     expect(anyOverlap(cards)).toBe(false)
     for (const c of cards) {
       const coversVenue = Math.abs(c.x - c.venueX) < c.width / 2 && Math.abs(c.y - c.venueY) < c.height / 2
-      expect(coversVenue, c.venueX.toString()).toBe(false)
+      expect(coversVenue, c.gameId).toBe(false)
     }
   })
 

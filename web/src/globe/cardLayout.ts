@@ -78,7 +78,7 @@ export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): Car
   const rank = ({ gameId, status }: ScreenCard) =>
     gameId === scene.selectedGameId ? 0 : 1 + statusProminence.indexOf(status)
   const boxes = cards
-    .filter((card) => nearScreen(card, scene))
+    .filter((card) => nearScreen(card.venueX, card.venueY, scene))
     .map(
       (card): CardBox => ({
         gameId: card.gameId,
@@ -91,7 +91,8 @@ export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): Car
         rank: rank(card),
       }),
     )
-  const { shifts, crowds } = arrange(boxes, scene.names ?? [])
+  const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
+  const { shifts, crowds } = arrange(boxes, names)
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
@@ -116,13 +117,9 @@ export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): Car
 // Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way.
 const offScreenMargin = 200
 
-function nearScreen({ venueX, venueY }: ScreenCard, { width, height }: CardScene): boolean {
-  return (
-    venueX > -offScreenMargin &&
-    venueX < width + offScreenMargin &&
-    venueY > -offScreenMargin &&
-    venueY < height + offScreenMargin
-  )
+/** Whether a point is on screen, or near enough that what's drawn there could reach it. */
+function nearScreen(x: number, y: number, { width, height }: CardScene): boolean {
+  return x > -offScreenMargin && x < width + offScreenMargin && y > -offScreenMargin && y < height + offScreenMargin
 }
 
 /** A moved card's trail: from where a line from the card's centre to its venue leaves the card. */

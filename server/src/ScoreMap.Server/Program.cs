@@ -110,6 +110,9 @@ app.MapFallbackToFile("index.html");
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
     leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
 
+// The scenario picker's list and switch (ADR-0009); in Development only.
+app.MapScenarios();
+
 app.Run();
 
 /// <summary>Exposed so tests can start the server with WebApplicationFactory.</summary>

@@ -7,7 +7,7 @@ import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
 import { clusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
-import { cardZoom } from './zoomLevels'
+import { cardZoom, maxZoom } from './zoomLevels'
 
 applyStatusLook(document.documentElement)
 
@@ -77,6 +77,8 @@ function openGlobe(startCamera: Camera) {
  * the whole canvas, the globe projection leaves out circle layers.
  */
 function drawnAt(map: MapLibreMap, layer: string, { venue }: Game) {
+  // Nothing yet, until the style has loaded and the pins' layers are added.
+  if (!map.getLayer(layer)) return []
   const { x, y } = map.project([venue.longitude, venue.latitude])
   return map.queryRenderedFeatures(
     [
@@ -102,10 +104,12 @@ async function cardShown(gameId: string) {
 }
 
 /** The camera as GlobeMap last reported it, once it reports one that passes the check. */
-async function cameraSettles(onCameraMove: ReturnType<typeof vi.fn<(camera: Camera) => void>>, check: (camera: Camera) => boolean) {
-  await vi.waitFor(() => expect(onCameraMove.mock.calls.some(([camera]) => check(camera))).toBe(true), {
-    timeout: 15_000,
-  })
+async function cameraSettles(
+  onCameraMove: ReturnType<typeof vi.fn<(camera: Camera) => void>>,
+  check: (camera: Camera) => boolean,
+  timeout = 15_000,
+) {
+  await vi.waitFor(() => expect(onCameraMove.mock.calls.some(([camera]) => check(camera))).toBe(true), { timeout })
 }
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -196,6 +200,22 @@ describe('zooming in to clusters and crowds', () => {
     await cameraSettles(onCameraMove, (camera) => camera.zoom > cardZoom + 1)
     await vi.waitFor(() => expect(container.querySelector('.score-crowd')).toBeNull(), { timeout: 20_000 })
   })
+
+  // Five or so zooms one after another: about 10 seconds in CI.
+  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', { timeout: 30_000 }, async () => {
+    const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    // Two games half a degree out set how far the first zoom goes; at the venue between them,
+    // more games than there's ever room for stay crowded after it.
+    const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
+    globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
+    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+
+    await userEvent.click(container.querySelector('.score-crowd')!)
+
+    await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
+    const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
+    expect(zooms.filter((zoom) => zoom > cardZoom && zoom < maxZoom)).not.toEqual([])
+  })
 })
 
 describe('animations', () => {
@@ -238,15 +258,20 @@ describe('animations', () => {
     const other = game('B', { longitude: 40 })
     globe.show([game('A', { home: 0 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'), other)
-    // Hidden by the viewer's filters.
-    globe.show([other])
-    await vi.waitFor(() => expect(drawnAt(map, smallPinLayer, game('A'))).toEqual([]))
+    // Every pulse that starts, kept even after it has played and removed itself.
+    const pulses: Element[] = []
+    const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
+    watching.observe(container, { childList: true, subtree: true })
 
+    // Hidden by the viewer's filters, then shown again with a new score. Straight after, so the map
+    // still has its pin and could animate it: only what the globe last showed rules it out.
+    globe.show([other])
     globe.show([game('A', { home: 7 }), other])
     await pinsDrawn(map, smallPinLayer, game('A'))
     await pause(500)
+    watching.disconnect()
 
-    expect(container.querySelector('.pin-pulse')).toBeNull()
+    expect(pulses).toEqual([])
   })
 
   it('does not animate a change that only redraws the game', async () => {

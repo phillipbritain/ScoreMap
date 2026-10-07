@@ -173,6 +173,23 @@ public class ScenarioTests
         Assert.Equal(4, snapshot.Select(g => g.Status).Distinct().Count());
     }
 
+    [Fact]
+    public async Task With_random_play_a_browser_sees_live_games_score_by_themselves()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", """{ "fill": { "count": 20, "group": "worldwide" }, "play": "random" }""");
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        server.Clock.Advance(TimeSpan.FromSeconds(30));
+
+        GameChange change;
+        do change = await client.NextChangeAsync();
+        while (change.Kind != GameChangeKind.ScoreChanged);
+        var before = snapshot.Single(g => g.Id == change.Game.Id);
+        Assert.True(change.Game.Home.Score + change.Game.Away.Score > before.Home.Score + before.Away.Score);
+    }
+
     private static IReadOnlyList<ScenarioVenue> ShippedVenues() =>
         ScenarioVenue.ReadList(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-venues.json"));
 

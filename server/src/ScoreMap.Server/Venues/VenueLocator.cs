@@ -24,6 +24,8 @@ public enum LocationSource
 /// <summary>
 /// Resolves where a game's pin goes (see <see cref="LocateAsync"/>). Every place-search query is
 /// asked once and its answer (misses too) saved to a file, so later runs never repeat a lookup.
+/// Queries in the checked-in scenario venue lookups (ADR-0009) are answered from those, before the
+/// saved lookups, and never reach the place search.
 /// </summary>
 public sealed class VenueLocator
 {
@@ -33,8 +35,10 @@ public sealed class VenueLocator
     private readonly ILogger<VenueLocator> _logger;
     private readonly string _savedLocationsPath;
     private readonly VenueCorrections _corrections;
+    private readonly string _scenarioLocationsPath;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Dictionary<string, Coordinates?>? _saved;
+    private Dictionary<string, Coordinates>? _scenarioLocations;
 
     public VenueLocator(IPlaceSearch places, IOptions<VenueOptions> options, IHostEnvironment environment,
         ILogger<VenueLocator> logger)
@@ -42,6 +46,7 @@ public sealed class VenueLocator
         _places = places;
         _logger = logger;
         _savedLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.SavedLocationsPath);
+        _scenarioLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.ScenarioLocationsPath);
         _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
@@ -58,8 +63,7 @@ public sealed class VenueLocator
 
         if (!string.IsNullOrWhiteSpace(venue?.Name))
         {
-            var byName = string.IsNullOrWhiteSpace(venue.City) ? venue.Name : $"{venue.Name}, {venue.City}";
-            if (await LookUpAsync(byName, cancellationToken) is { } found)
+            if (await LookUpAsync(VenueQuery(venue), cancellationToken) is { } found)
                 return new(found, LocationSource.Venue);
         }
 
@@ -76,13 +80,18 @@ public sealed class VenueLocator
         return new(new Coordinates(0, 0), LocationSource.Nowhere);
     }
 
+    /// <summary>The place-search query for a venue by name: "Name, City", or just the name when the city is missing.</summary>
+    public static string VenueQuery(ProviderVenue venue) =>
+        string.IsNullOrWhiteSpace(venue.City) ? venue.Name! : $"{venue.Name}, {venue.City}";
+
     /// <summary>"City, Region, Country", leaving out the parts that are missing.</summary>
     private static string PlaceQuery(params string?[] parts) =>
         string.Join(", ", parts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim()));
 
     /// <summary>
-    /// Looks a query up through the place search, or answers from the saved lookups if it has
-    /// been asked before. Every answer, misses too, is saved; failures are not.
+    /// Looks a query up through the place search, or answers from the checked-in scenario venue
+    /// lookups, or from the saved lookups if it has been asked before. Every answer, misses too, is
+    /// saved; failures are not.
     /// </summary>
     private async Task<Coordinates?> LookUpAsync(string query, CancellationToken cancellationToken)
     {
@@ -90,6 +99,10 @@ public sealed class VenueLocator
         await _gate.WaitAsync(cancellationToken);
         try
         {
+            _scenarioLocations ??= await LoadScenarioLocationsAsync(cancellationToken);
+            if (_scenarioLocations.TryGetValue(query, out var checkedIn))
+                return checkedIn;
+
             _saved ??= await LoadAsync(cancellationToken);
             if (_saved.TryGetValue(query, out var saved))
                 return saved;
@@ -123,6 +136,15 @@ public sealed class VenueLocator
         await using var file = File.OpenRead(_savedLocationsPath);
         return await JsonSerializer.DeserializeAsync<Dictionary<string, Coordinates?>>(file, Json, cancellationToken)
             ?? new Dictionary<string, Coordinates?>();
+    }
+
+    private async Task<Dictionary<string, Coordinates>> LoadScenarioLocationsAsync(CancellationToken cancellationToken)
+    {
+        if (!File.Exists(_scenarioLocationsPath))
+            return new Dictionary<string, Coordinates>();
+        await using var file = File.OpenRead(_scenarioLocationsPath);
+        return await JsonSerializer.DeserializeAsync<Dictionary<string, Coordinates>>(file, Json, cancellationToken)
+            ?? new Dictionary<string, Coordinates>();
     }
 
     private async Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken)

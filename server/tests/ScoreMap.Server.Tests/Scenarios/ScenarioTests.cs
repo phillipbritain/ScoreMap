@@ -96,6 +96,47 @@ public class ScenarioTests
         Assert.True(snapshot.Select(g => g.Status).Distinct().Count() >= 3, "games in at least 3 statuses");
     }
 
+    [Fact]
+    public async Task A_browser_gets_each_scripted_change_at_its_time_and_fresh_games_when_the_timeline_starts_again()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", OneLiveGame.TrimEnd().TrimEnd('}') + """
+            ,
+              "timeline": {
+                "length": "30s",
+                "changes": [
+                  { "at": "10s", "game": "chiefs-bills", "score": { "home": 21 } },
+                  { "at": "20s", "game": "chiefs-bills", "status": "final" }
+                ]
+              }
+            }
+            """);
+        await using var client = await server.ConnectClientAsync();
+        Assert.Equal(14, Assert.Single(await client.NextSnapshotAsync()).Home.Score);
+
+        server.Clock.Advance(TimeSpan.FromSeconds(9));
+        await Task.Delay(100);
+        Assert.Empty(client.PendingChanges());
+        server.Clock.Advance(TimeSpan.FromSeconds(1));
+        var scored = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.ScoreChanged, scored.Kind);
+        Assert.Equal(21, scored.Game.Home.Score);
+
+        server.Clock.Advance(TimeSpan.FromSeconds(10));
+        var finished = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.Finished, finished.Kind);
+        Assert.Equal("chiefs-bills", finished.Game.Id);
+
+        server.Clock.Advance(TimeSpan.FromSeconds(10));
+        var restarted = new[] { await client.NextChangeAsync(), await client.NextChangeAsync() };
+        var removed = Assert.Single(restarted, c => c.Kind == GameChangeKind.Removed);
+        Assert.Equal("chiefs-bills", removed.Game.Id);
+        var added = Assert.Single(restarted, c => c.Kind == GameChangeKind.Added);
+        Assert.NotEqual("chiefs-bills", added.Game.Id);
+        Assert.Equal(GameStatus.Live, added.Game.Status);
+        Assert.Equal(14, added.Game.Home.Score);
+    }
+
     [Theory]
     [InlineData("""{ "games": [ { "league": "NFLL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "venue": { "name": "Somewhere", "city": "Town" }, "startsIn": "0", "status": "upcoming" } ] }""",
         "game 1", "unknown league \"NFLL\"")]
@@ -110,6 +151,8 @@ public class ScenarioTests
         "game 1", "unknown status \"playing\"")]
     [InlineData("""{ "games": [ { "league": "NFL", "away": { "name": "B", "abbreviation": "B" }, "venue": { "name": "Somewhere", "city": "Town" }, "startsIn": "0", "status": "upcoming" } ] }""",
         "game 1", "no home team")]
+    [InlineData("""{ "games": [], "timeline": { "length": "1m", "changes": [ { "at": "10s", "game": "nobody", "status": "live" } ] } }""",
+        "timeline change 1", "unknown game \"nobody\"")]
     public async Task A_bad_scenario_file_stops_the_server_from_starting_with_a_clear_message(string json, params string[] messageParts)
     {
         await using var server = new ScoreMapServer { Scenario = "bad" };

@@ -20,10 +20,19 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hu
 
     public override async Task OnConnectedAsync()
     {
-        await poller.SendSnapshotAsync(
-            Context.ConnectionId,
-            games => Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted),
-            Context.ConnectionAborted);
+        try
+        {
+            await poller.SendSnapshotAsync(
+                Context.ConnectionId,
+                games => Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted),
+                Context.ConnectionAborted);
+        }
+        catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
+        {
+            // The browser left (closed or reloaded the page) before its snapshot was ready. Nothing
+            // went wrong, so return quietly rather than let SignalR log it as an error.
+            return;
+        }
         connections.Connected(Context.ConnectionId);
         await base.OnConnectedAsync();
     }

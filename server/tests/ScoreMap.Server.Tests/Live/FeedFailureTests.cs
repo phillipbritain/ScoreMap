@@ -59,4 +59,32 @@ public class FeedFailureTests
 
         await server.Feed.WaitForFetchesAsync(Nfl, 2);
     }
+
+    [Fact]
+    public async Task A_league_whose_feed_times_out_does_not_stop_other_leagues_showing()
+    {
+        await using var server = new ScoreMapServer();
+        server.AddLeague(Nba, "NBA", "Basketball");
+        server.Feed.TimeOut(Nfl);
+        server.Feed.SetScoreboard(Nba, LiveGame(server.Clock, "501", leagueKey: Nba));
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Equal("501", Assert.Single(await client.NextSnapshotAsync()).Id);
+    }
+
+    [Fact]
+    public async Task A_feed_that_times_out_does_not_stop_polling()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        server.Feed.TimeOut(Nfl);
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        await server.Feed.WaitForFetchesAsync(Nfl, 2);
+        server.Clock.Advance(TimeSpan.FromMinutes(3));
+
+        await server.Feed.WaitForFetchesAsync(Nfl, 3);
+    }
 }

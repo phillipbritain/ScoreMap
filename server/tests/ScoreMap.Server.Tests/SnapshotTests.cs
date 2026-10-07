@@ -71,4 +71,20 @@ public class SnapshotTests
 
         Assert.Null(game.Venue.TimeZone);
     }
+
+    [Fact]
+    public async Task A_browser_that_leaves_before_its_snapshot_arrives_is_not_an_error()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.Hold(TestGames.Nfl);
+        var client = await server.ConnectClientAsync();
+        await server.Feed.WaitForFetchesAsync(TestGames.Nfl, 1);
+
+        await client.DisposeAsync();
+        await server.Feed.HeldFetchCancelledAsync();
+        // The hub deals with the cancelled snapshot straight after; give an error the moment it would take to be logged.
+        await Task.Delay(500);
+
+        Assert.Empty(server.Logs.Errors);
+    }
 }

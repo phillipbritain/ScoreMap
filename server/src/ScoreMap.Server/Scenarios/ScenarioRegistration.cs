@@ -22,11 +22,16 @@ public static class ScenarioRegistration
 
         var services = builder.Services;
         services.Configure<ScenarioOptions>(builder.Configuration.GetSection("Scenarios"));
-        services.AddSingleton(sp => ScenarioReader.Read(
-            Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath,
-                sp.GetRequiredService<IOptions<ScenarioOptions>>().Value.Folder),
-            name,
-            sp.GetRequiredService<IOptions<List<League>>>().Value));
+        services.AddSingleton(sp =>
+        {
+            var contentRoot = sp.GetRequiredService<IHostEnvironment>().ContentRootPath;
+            var options = sp.GetRequiredService<IOptions<ScenarioOptions>>().Value;
+            return ScenarioReader.Read(
+                Path.Combine(contentRoot, options.Folder),
+                name,
+                sp.GetRequiredService<IOptions<List<League>>>().Value,
+                ScenarioVenue.ReadList(Path.Combine(contentRoot, options.VenueListPath)));
+        });
         services.AddSingleton<ScenarioGameFeedProvider>();
         services.Replace(ServiceDescriptor.Singleton<IGameFeedProvider>(sp => sp.GetRequiredService<ScenarioGameFeedProvider>()));
         // Every league every second, so scripted changes show up straight away.

@@ -105,17 +105,13 @@ export function byStatus(
   status: 'pin' | 'cluster',
   value: (look: StatusLook) => number | string,
 ): ExpressionSpecification {
+  // A match needs a fallback; every status has its own arm, so it's never used.
   return [
     'match',
     status === 'pin' ? pinStatus : clusterStatus,
-    'Live',
-    value(statusLooks.Live),
-    'Upcoming',
-    value(statusLooks.Upcoming),
-    'Disrupted',
-    value(statusLooks.Disrupted),
+    ...statusProminence.flatMap((s) => [s, value(statusLooks[s])]),
     value(statusLooks.Final),
-  ]
+  ] as ExpressionSpecification
 }
 
 /**

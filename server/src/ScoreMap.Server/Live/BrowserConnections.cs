@@ -33,6 +33,16 @@ public sealed class BrowserConnections
         }
     }
 
+    /// <summary>
+    /// Whether a browser is counted as connected: from just after the hub sends its snapshot
+    /// until it leaves.
+    /// </summary>
+    public bool IsConnected(string connectionId)
+    {
+        lock (_ids)
+            return _ids.Contains(connectionId);
+    }
+
     /// <summary>Completes as soon as at least one browser is connected.</summary>
     public Task WhenAnyConnectedAsync(CancellationToken cancellationToken)
     {

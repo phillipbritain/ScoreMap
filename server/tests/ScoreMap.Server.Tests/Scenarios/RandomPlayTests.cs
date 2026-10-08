@@ -5,8 +5,10 @@ using ScoreMap.Server.Scenarios;
 namespace ScoreMap.Server.Tests.Scenarios;
 
 /// <summary>
-/// Random play (<c>"play": "random"</c>), read from a scenario file and played second by second
-/// from the scenario's start with a fixed random seed.
+/// Random play (<c>"play": "random"</c>), read from a scenario file and played from the scenario's
+/// start with a fixed random seed. Most tests watch it as a browser does at 6× (the feed every second
+/// of real time, so every 6 s on the scenario clock), where a busy globe has a score every few seconds
+/// and games finish (and new ones arrive) every few minutes.
 /// </summary>
 public sealed class RandomPlayTests : IDisposable
 {
@@ -53,7 +55,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void Live_games_score_change_periods_go_to_breaks_and_finish()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(10));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(10));
 
         var byGame = feed.SelectMany(games => games).GroupBy(game => game.Id).ToList();
         Assert.Contains(byGame, game => game.Select(Points).Distinct().Count() > 1);
@@ -65,7 +67,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void Across_60_live_games_a_score_changes_every_few_seconds()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(10));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(10));
 
         var scoredAt = new List<int>();
         for (var s = 1; s < feed.Count; s++)
@@ -82,7 +84,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void Scores_stay_believable_for_each_sport()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(30));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(30));
 
         var leagues = Leagues.ToDictionary(league => league.Key);
         Assert.All(feed.SelectMany(games => games), game =>
@@ -96,7 +98,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void Games_in_sports_without_draws_dont_finish_level()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(30));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(30));
 
         var leagues = Leagues.ToDictionary(league => league.Key);
         var finals = feed.SelectMany(games => games)
@@ -109,13 +111,14 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void A_final_game_drops_out_after_a_short_while_and_a_new_game_takes_its_place_at_a_venue_from_the_group()
     {
-        var feed = EverySecond(Read("""{ "fill": { "count": 5, "group": "london" }, "play": "random" }"""), TimeSpan.FromMinutes(30));
+        // At 1×, so the feed is every second of scenario time.
+        var feed = Watched(Read("""{ "fill": { "count": 5, "group": "london" }, "play": "random" }"""), TimeSpan.FromHours(3), speed: 1);
 
         var firstFinal = feed.FindIndex(games => games.Any(game => game.Status == ProviderStatus.Final));
         Assert.True(firstFinal > 0, "a game finished");
         var finished = feed[firstFinal].First(game => game.Status == ProviderStatus.Final).Id;
         var goneAt = feed.FindIndex(games => games.All(game => game.Id != finished));
-        Assert.InRange(goneAt - firstFinal, 30, 120);
+        Assert.Equal(RandomPlayGames.FinalStays, TimeSpan.FromSeconds(goneAt - firstFinal));
 
         var newGame = Assert.Single(feed[goneAt], game => feed[goneAt - 1].All(before => before.Id != game.Id));
         Assert.Contains(newGame.Status, new[] { ProviderStatus.Scheduled, ProviderStatus.InProgress });
@@ -127,7 +130,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void The_number_of_live_games_stays_roughly_steady_over_10_minutes()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(10));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(10));
 
         var finished = feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Final).Select(game => game.Id).Distinct();
         Assert.True(finished.Count() >= 10, $"only {finished.Count()} games finished");
@@ -137,7 +140,7 @@ public sealed class RandomPlayTests : IDisposable
     [Fact]
     public void No_game_goes_back_from_final_or_has_a_score_that_goes_down()
     {
-        var feed = EverySecond(Read(Busy), TimeSpan.FromMinutes(30));
+        var feed = Watched(Read(Busy), TimeSpan.FromMinutes(30));
 
         foreach (var game in feed.SelectMany(games => games).GroupBy(game => game.Id))
         {
@@ -172,7 +175,7 @@ public sealed class RandomPlayTests : IDisposable
             }
             """);
 
-        var feed = EverySecond(scenario, TimeSpan.FromMinutes(5));
+        var feed = Watched(scenario, TimeSpan.FromMinutes(5));
 
         Assert.All(feed.Select(games => games.Single(g => g.Id == "goal-fest")), game => Assert.Equal((9, 7), (game.Home.Score, game.Away.Score)));
     }
@@ -202,6 +205,27 @@ public sealed class RandomPlayTests : IDisposable
         Assert.Equal(everySecond.GamesAt(at).Select(Describe), once.GamesAt(at).Select(Describe));
     }
 
+    [Fact]
+    public void With_the_same_seed_the_games_at_a_time_are_the_same_whatever_speed_changes_were_made()
+    {
+        var scenario = Read(Busy);
+        var atOneSpeed = new RandomPlayGames(scenario, StartedAt, new Random(3));
+        var changingSpeed = new RandomPlayGames(scenario, StartedAt, new Random(3));
+        var at = StartedAt + TimeSpan.FromMinutes(30);
+        // Fetched every 250 ms of real time at 1×, then 16×, then 64×, then 2×.
+        var reading = StartedAt;
+        foreach (var (speed, fetches) in new[] { (1, 400), (16, 100), (64, 50), (2, 200) })
+            for (var i = 0; i < fetches && reading < at; i++)
+            {
+                reading += TimeSpan.FromMilliseconds(250) * speed;
+                changingSpeed.GamesAt(reading);
+            }
+        for (var s = 1; s <= (at - StartedAt).TotalSeconds; s++)
+            atOneSpeed.GamesAt(StartedAt + TimeSpan.FromSeconds(s));
+
+        Assert.Equal(atOneSpeed.GamesAt(at).Select(Describe), changingSpeed.GamesAt(at).Select(Describe));
+    }
+
     [Theory]
     [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": "wild" }""", "play is \"wild\"", "\"random\"")]
     [InlineData("""{ "games": [], "play": "random" }""", "play is random, which needs a fill")]
@@ -219,12 +243,15 @@ public sealed class RandomPlayTests : IDisposable
     private static string Describe(ProviderGame game) =>
         $"{game.Id} {game.Status} {game.Home.Score}-{game.Away.Score} {game.Period} {game.DisplayClock} {game.Phase} {game.Venue?.Name}";
 
-    /// <summary>The feed every second from the scenario's start, for <paramref name="length"/>.</summary>
-    private static List<IReadOnlyList<ProviderGame>> EverySecond(Scenario scenario, TimeSpan length, int seed = 7)
+    /// <summary>
+    /// The feed every second of real time from the scenario's start, for <paramref name="length"/> of real
+    /// time, with the scenario clock at <paramref name="speed"/>.
+    /// </summary>
+    private static List<IReadOnlyList<ProviderGame>> Watched(Scenario scenario, TimeSpan length, int speed = 6, int seed = 7)
     {
         var play = new RandomPlayGames(scenario, StartedAt, new Random(seed));
         return Enumerable.Range(0, (int)length.TotalSeconds + 1)
-            .Select(s => play.GamesAt(StartedAt + TimeSpan.FromSeconds(s)))
+            .Select(s => play.GamesAt(StartedAt + TimeSpan.FromSeconds(s) * speed))
             .ToList();
     }
 

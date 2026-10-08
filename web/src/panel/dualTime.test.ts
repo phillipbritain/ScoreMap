@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dualTime } from './dualTime'
+import { clockTime, dualTime } from './dualTime'
 
 const kickoff = '2026-10-04T17:00:00+00:00'
 
@@ -26,5 +26,13 @@ describe('dualTime', () => {
     const time = dualTime(kickoff, null, { timeZone: 'Asia/Tokyo', locale: 'en-US' })
 
     expect(time).toEqual({ viewer: 'Mon, Oct 5, 2:00 AM GMT+9', venue: null })
+  })
+})
+
+describe('clockTime', () => {
+  it("shows a time to the second in the viewer's time, in the same format", () => {
+    const time = clockTime(new Date('2026-10-04T17:47:12Z'), { timeZone: 'America/New_York', locale: 'en-US' })
+
+    expect(time).toBe('Sun, Oct 4, 1:47:12 PM EDT')
   })
 })

@@ -4,9 +4,9 @@ using ScoreMap.Server.Games;
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// How a game in a league plays out under random play: the stretches of play and the breaks it goes
-/// through from start to finish, and how often and by how much a team scores, so a whole game ends
-/// at roughly the sport's usual margins.
+/// How a game in a league plays out in a scenario: its periods and their length and clock, and under
+/// random play the stretches of play and the breaks it goes through from start to finish, and how often
+/// and by how much a team scores, so a whole game ends at roughly the sport's usual margins.
 /// </summary>
 internal sealed class SportPlay
 {
@@ -35,6 +35,13 @@ internal sealed class SportPlay
             Sport.Soccer => 2,
             _ => 4,
         };
+        PeriodMinutes = league.Sport switch
+        {
+            Sport.AmericanFootball => 15,
+            Sport.Basketball => Regulation == 2 ? 20 : 12,
+            Sport.Soccer => 45,
+            _ => 20,
+        };
         _segments = Segments(league.Sport, Regulation);
         _totalWeight = _segments.Sum(s => s.Weight);
         _playingShare = _segments.Where(s => s.Playing).Sum(s => s.Weight) / _totalWeight;
@@ -54,6 +61,21 @@ internal sealed class SportPlay
 
     /// <summary>The periods in a game before overtime.</summary>
     public int Regulation { get; }
+
+    /// <summary>
+    /// How long a period lasts on the game clock (a half in soccer); not used in baseball, which has no
+    /// clock.
+    /// </summary>
+    public int PeriodMinutes { get; }
+
+    /// <summary>How long soccer's halftime lasts.</summary>
+    public const int SoccerHalftimeMinutes = 15;
+
+    /// <summary>A soccer clock: the minute of the game, such as <c>67'</c>.</summary>
+    public static string SoccerClock(int minute) => $"{minute}'";
+
+    /// <summary>A period's clock counting down, with <paramref name="left"/> to go, such as <c>8:05</c>.</summary>
+    public static string Countdown(TimeSpan left) => $"{(int)left.TotalMinutes}:{left.Seconds:00}";
 
     /// <summary>The most points a team gets in a game; it scores no more once it has them.</summary>
     public int MostPoints => _scoring.Most;
@@ -87,25 +109,12 @@ internal sealed class SportPlay
         string? clock = _sport switch
         {
             Sport.Baseball => null,
-            Sport.Soccer => segment.Playing
-                ? $"{(segment.Period - 1) * 45 + Math.Min(45, (int)(done * 45) + 1)}'"
-                : $"{segment.Period * 45}'",
-            _ => Countdown(segment.Playing ? 1 - done : 0),
+            Sport.Soccer => SoccerClock(segment.Playing
+                ? (segment.Period - 1) * PeriodMinutes + Math.Min(PeriodMinutes, (int)(done * PeriodMinutes) + 1)
+                : segment.Period * PeriodMinutes),
+            _ => Countdown(TimeSpan.FromSeconds(Math.Floor((segment.Playing ? 1 - done : 0) * PeriodMinutes * 60))),
         };
         return (segment.Period, clock, segment.Phase);
-    }
-
-    /// <summary>A period's clock counting down, with <paramref name="left"/> of the period to go.</summary>
-    private string Countdown(double left)
-    {
-        var periodMinutes = _sport switch
-        {
-            Sport.AmericanFootball => 15,
-            Sport.Basketball => Regulation == 2 ? 20 : 12,
-            _ => 20,
-        };
-        var time = TimeSpan.FromSeconds(Math.Floor(left * periodMinutes * 60));
-        return $"{(int)time.TotalMinutes}:{time.Seconds:00}";
     }
 
     /// <summary>The segment a game <paramref name="through"/> of the way through is in, and how far through that segment.</summary>
@@ -143,7 +152,7 @@ internal sealed class SportPlay
                 {
                     segments.Add(new(half, ProviderPeriodPhase.Playing, 1, true));
                     if (half < regulation)
-                        segments.Add(new(half, ProviderPeriodPhase.Break, 1.0 / 3, false));
+                        segments.Add(new(half, ProviderPeriodPhase.Break, SoccerHalftimeMinutes / 45.0, false));
                 }
                 break;
             default:

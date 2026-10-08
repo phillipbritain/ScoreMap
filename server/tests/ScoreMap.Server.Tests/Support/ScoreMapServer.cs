@@ -315,6 +315,8 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
 
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
 
+    private readonly Channel<string> _scenarioSwitches = Channel.CreateUnbounded<string>();
+
     /// <summary>The connection's id, the same as the hub's for it once started.</summary>
     public string ConnectionId =>
         connection.ConnectionId ?? throw new InvalidOperationException("The client hasn't connected");
@@ -323,8 +325,13 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
     {
         connection.On<IReadOnlyList<Game>>(GamesHub.SnapshotMessage, games => _snapshot.TrySetResult(games));
         connection.On<GameChange>(GamesHub.ChangeMessage, change => _changes.Writer.TryWrite(change));
+        connection.On<string>(GamesHub.ScenarioSwitchedMessage, name => _scenarioSwitches.Writer.TryWrite(name));
         await connection.StartAsync();
     }
+
+    /// <summary>The name of the scenario (or "real") the server next said it had switched to.</summary>
+    public async Task<string> NextScenarioSwitchAsync() =>
+        await _scenarioSwitches.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
 
     public Task<IReadOnlyList<Game>> NextSnapshotAsync() => _snapshot.Task.WaitAsync(Timeout);
 

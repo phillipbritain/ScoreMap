@@ -43,7 +43,7 @@ Scripted times count from when the scenario starts or is switched to, on the rea
 To switch while running:
 
 - **The pill** at the top right ("Scenario: <name> ▾") lists the scenarios and "Real games"; picking one switches every open tab. `Shift+S` hides and shows it, for clean screenshots.
-- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`. Pills in open tabs show the new name once reloaded or opened.
+- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`. The pill in every open tab shows the new name straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 

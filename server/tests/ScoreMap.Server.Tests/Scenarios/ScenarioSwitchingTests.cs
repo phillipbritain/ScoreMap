@@ -16,7 +16,7 @@ public class ScenarioSwitchingTests
               "league": "NFL",
               "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "score": 14 },
               "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
-              "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+              "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
               "startsIn": "-40m",
               "status": "{{status}}"
             }
@@ -65,6 +65,26 @@ public class ScenarioSwitchingTests
                 changes.Select(c => (c.Kind, c.Game.Id)));
         }
         Assert.Equal("second", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+    }
+
+    [Fact]
+    public async Task Every_browser_is_told_which_scenario_is_now_running_so_its_pill_follows()
+    {
+        await using var server = new ScoreMapServer { Scenario = "first" };
+        server.WriteScenario("first", OneGame("a"));
+        server.WriteScenario("second", OneGame("b"));
+        using var http = server.CreateClient();
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+        await using var other = await server.ConnectClientAsync();
+        await other.NextSnapshotAsync();
+
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" })).EnsureSuccessStatusCode();
+        Assert.Equal("second", await client.NextScenarioSwitchAsync());
+        Assert.Equal("second", await other.NextScenarioSwitchAsync());
+
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        Assert.Equal("real", await other.NextScenarioSwitchAsync());
     }
 
     [Fact]

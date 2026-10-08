@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.SignalR;
+using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
 
 namespace ScoreMap.Server.Scenarios;
@@ -23,9 +25,11 @@ public static class ScenarioEndpoints
                 : new ScenarioListing(ScenarioSwitcher.RealGames, []));
 
         // Switches every browser: the poller fetches every league from the new source straight away,
-        // and the change events take the old games away and bring the new ones.
+        // and the change events take the old games away and bring the new ones. Every browser is
+        // told what is running now, so each one's pill follows.
         app.MapPut("/api/scenarios/running", async (
-            ScenarioSwitch request, IServiceProvider services, Poller poller, CancellationToken cancellationToken) =>
+            ScenarioSwitch request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
+            CancellationToken cancellationToken) =>
         {
             if (services.GetService<ScenarioSwitcher>() is not { } switcher)
                 return Results.NotFound("Scenarios are only available when ScoreMap runs locally");
@@ -40,6 +44,7 @@ public static class ScenarioEndpoints
                 return Results.Problem(e.Message, statusCode: StatusCodes.Status422UnprocessableEntity);
             }
             await poller.StartAfreshAsync(switcher.Polling, cancellationToken);
+            await hub.Clients.All.SendAsync(GamesHub.ScenarioSwitchedMessage, switcher.Running, cancellationToken);
             return Results.Ok(Listing(switcher));
         });
         return app;

@@ -5,8 +5,9 @@ namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
 /// A real venue scenarios can put games at, from the hand-written venue list (ADR-0009), with its
-/// real home team and the named groups it belongs to (every venue is in <c>worldwide</c>; some are
-/// also in <c>london</c>, <c>new-york</c> or <c>los-angeles</c>).
+/// real home team and the named groups it belongs to (<c>worldwide</c>, <c>london</c>,
+/// <c>london-and-nearby</c>, <c>new-york</c> or <c>los-angeles</c>; every venue is in <c>worldwide</c>
+/// but those only near London, which would crowd it).
 /// </summary>
 public sealed record ScenarioVenue(
     string Name,

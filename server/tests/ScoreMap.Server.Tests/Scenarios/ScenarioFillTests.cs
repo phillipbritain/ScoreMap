@@ -111,7 +111,7 @@ public sealed class ScenarioFillTests : IDisposable
                   "league": "NFL",
                   "home": { "name": "Kansas City Chiefs", "abbreviation": "KC" },
                   "away": { "name": "Buffalo Bills", "abbreviation": "BUF" },
-                  "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City" },
+                  "venue": { "name": "Madison Square Garden", "city": "New York" },
                   "startsIn": "1h",
                   "status": "upcoming"
                 }

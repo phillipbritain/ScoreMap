@@ -91,31 +91,26 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, IReadOnlyLi
     /// <summary>Where a game <paramref name="minutesIn"/> minutes in stands, in its sport's terms.</summary>
     private static (int Period, string? Clock, ProviderPeriodPhase Phase) Clock(League league, int minutesIn, double played, Random random)
     {
-        var regulation = Regulation(league);
+        var play = new SportPlay(league);
+        var regulation = play.Regulation;
         switch (league.Sport)
         {
             case Sport.Soccer:
-                // 45 minutes, a 15-minute halftime, then the second half, with stoppage time at 90'.
-                if (minutesIn <= 45)
-                    return (1, $"{minutesIn}'", ProviderPeriodPhase.Playing);
-                if (minutesIn <= 60)
-                    return (1, "45'", ProviderPeriodPhase.Break);
-                return (2, $"{Math.Min(90, minutesIn - 15)}'", ProviderPeriodPhase.Playing);
+                // The first half, halftime, then the second half, with stoppage time at 90'.
+                var half = play.PeriodMinutes;
+                if (minutesIn <= half)
+                    return (1, SportPlay.SoccerClock(minutesIn), ProviderPeriodPhase.Playing);
+                if (minutesIn <= half + SportPlay.SoccerHalftimeMinutes)
+                    return (1, SportPlay.SoccerClock(half), ProviderPeriodPhase.Break);
+                return (2, SportPlay.SoccerClock(Math.Min(2 * half, minutesIn - SportPlay.SoccerHalftimeMinutes)), ProviderPeriodPhase.Playing);
             case Sport.Baseball:
                 var inning = Math.Min(regulation, (int)(played * regulation) + 1);
                 return (inning, null, random.Next(2) == 0 ? ProviderPeriodPhase.InningTop : ProviderPeriodPhase.InningBottom);
             default:
                 // A running clock counting down each period, as far through the periods as the game is through its length.
-                var periodMinutes = league.Sport switch
-                {
-                    Sport.AmericanFootball => 15,
-                    Sport.Basketball => regulation == 2 ? 20 : 12,
-                    _ => 20,
-                };
                 var through = played * regulation;
                 var period = Math.Min(regulation, (int)through + 1);
-                var left = TimeSpan.FromMinutes(Math.Max(0, period - through) * periodMinutes);
-                return (period, $"{(int)left.TotalMinutes}:{left.Seconds:00}", ProviderPeriodPhase.Playing);
+                return (period, SportPlay.Countdown(TimeSpan.FromMinutes(Math.Max(0, period - through) * play.PeriodMinutes)), ProviderPeriodPhase.Playing);
         }
     }
 
@@ -133,13 +128,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, IReadOnlyLi
         };
     }
 
-    private static int Regulation(League league) => league.RegulationPeriods ?? league.Sport switch
-    {
-        Sport.Baseball => 9,
-        Sport.Hockey => 3,
-        Sport.Soccer => 2,
-        _ => 4,
-    };
+    private static int Regulation(League league) => new SportPlay(league).Regulation;
 
     private static TimeSpan Minutes(int minutes) => TimeSpan.FromMinutes(minutes);
 

@@ -92,15 +92,34 @@ public sealed class Poller(
                 _lock.Release();
             }
 
-            // Waiting until a due time (not for a fixed delay) means a late start to the
-            // wait never pushes a fetch back. Starting afresh cuts the wait short.
-            var wait = next - clock.GetUtcNow();
-            if (wait > TimeSpan.Zero)
-            {
-                using var waiting = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-                await Task.WhenAny(Task.Delay(wait, clock, waiting.Token), wake);
-                await waiting.CancelAsync();
-            }
+            await WaitUntilAsync(next, wake, stoppingToken);
+        }
+    }
+
+    // How far the clock may move while a wait is being set up before it is set up again.
+    private static readonly TimeSpan ClockSlack = TimeSpan.FromMilliseconds(1);
+
+    /// <summary>
+    /// Waits until <paramref name="due"/>, or until <paramref name="wake"/> completes. Waiting until a
+    /// due time (not for a fixed delay) means a late start to the wait never pushes a fetch back.
+    /// </summary>
+    private async Task WaitUntilAsync(DateTimeOffset due, Task wake, CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var now = clock.GetUtcNow();
+            if (due <= now)
+                return;
+            using var waiting = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+            var delay = Task.Delay(due - now, clock, waiting.Token);
+            // The delay counts from when it was made, not from now: if the clock moved in between
+            // (as a test's fake clock can), it would end late, so make it again.
+            var moved = clock.GetUtcNow() - now > ClockSlack;
+            if (!moved)
+                await Task.WhenAny(delay, wake);
+            await waiting.CancelAsync();
+            if (!moved)
+                return;
         }
     }
 
@@ -108,7 +127,8 @@ public sealed class Poller(
     {
         foreach (var league in board.Leagues)
         {
-            if (_nextFetch.TryGetValue(league.Key, out var due) && due > clock.GetUtcNow())
+            var startedAt = clock.GetUtcNow();
+            if (_nextFetch.TryGetValue(league.Key, out var due) && due > startedAt)
                 continue;
 
             try
@@ -124,7 +144,9 @@ public sealed class Poller(
                 logger.LogWarning(e, "Could not update {League}; keeping its games as they were", league.Name);
             }
 
-            _nextFetch[league.Key] = clock.GetUtcNow() + (board.HasLiveGames(league) ? _liveInterval : _quietInterval);
+            // Counted from when the fetch began, so time spent fetching (or the clock moving
+            // meanwhile) never pushes the next fetch back.
+            _nextFetch[league.Key] = startedAt + (board.HasLiveGames(league) ? _liveInterval : _quietInterval);
         }
     }
 }

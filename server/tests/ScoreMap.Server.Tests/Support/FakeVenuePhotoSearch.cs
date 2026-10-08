@@ -17,6 +17,18 @@ public sealed class FakeVenuePhotoSearch : IVenuePhotoSearch
         get { lock (_searches) return _searches.ToList(); }
     }
 
+    /// <summary>Waits (in real time, briefly) until there have been at least <paramref name="count"/> searches.</summary>
+    public async Task WaitForSearchesAsync(int count)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while (Searches.Count < count)
+        {
+            if (DateTime.UtcNow > deadline)
+                throw new TimeoutException($"{Searches.Count} photo searches, expected {count}");
+            await Task.Delay(10);
+        }
+    }
+
     public void Add(string venueName, VenuePhoto photo)
     {
         lock (_searches)

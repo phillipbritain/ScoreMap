@@ -162,7 +162,7 @@ public sealed class RandomPlayTests : IDisposable
                   "league": "Premier League",
                   "home": { "name": "Arsenal", "abbreviation": "ARS", "score": 9 },
                   "away": { "name": "Chelsea", "abbreviation": "CHE", "score": 7 },
-                  "venue": { "name": "Emirates Stadium", "city": "London" },
+                  "venue": { "name": "Stadium 50", "city": "City 50" },
                   "startsIn": "-30m",
                   "status": "live"
                 }

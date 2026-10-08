@@ -1,7 +1,8 @@
 // edge-cases: things that are rare in real games but must still look right.
 // - A venue that can't be found: "Imaginary Fields Arena" is made up, and deliberately not in the
 //   venue list or its lookups, so its pin falls back to its city (Reykjavík). It is the one
-//   scenario venue looked up through Nominatim at runtime.
+//   scenario venue looked up through Nominatim at runtime. "notInVenueList" says it is made up on
+//   purpose; any other venue missing from the list stops startup, so a misspelt one can't slip by.
 // - A tied score, long team names, missing logos and three-digit scores.
 {
   "games": [
@@ -10,7 +11,7 @@
       "league": "World Cup",
       "home": { "name": "Iceland", "abbreviation": "ISL", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/isl.png", "score": 1 },
       "away": { "name": "Faroe Islands", "abbreviation": "FRO", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/fro.png", "score": 0 },
-      "venue": { "name": "Imaginary Fields Arena", "city": "Reykjavík", "country": "Iceland" },
+      "venue": { "name": "Imaginary Fields Arena", "city": "Reykjavík", "country": "Iceland", "notInVenueList": true },
       "startsIn": "-30m",
       "status": "live",
       "clock": "30'",

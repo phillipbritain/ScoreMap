@@ -6,6 +6,8 @@ A hobby web app showing live sports games as pins on a globe, with scores that u
 
 ### Pull requests
 
+Commit work on a branch named for the issue, created from `main`: pushes to `main` are blocked, and the user merges every pull request.
+
 ### Issue tracker
 
 Issues are tracked in GitHub Issues for phillipbritain/ScoreMap, using the `gh` CLI. See `docs/agents/issue-tracker.md`.

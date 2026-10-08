@@ -1,0 +1,4 @@
+// empty: no games at all, for the globe on its own and the "no games" message.
+{
+  "games": []
+}

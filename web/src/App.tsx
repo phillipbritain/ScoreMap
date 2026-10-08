@@ -9,6 +9,8 @@ import { Globe } from './globe/Globe'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
+import { ScenarioPill } from './scenarios/ScenarioPill'
+import { withRunning, type ScenarioListing } from './scenarios/scenarioPicker'
 
 const store = settingsStore(() => window.localStorage)
 
@@ -27,6 +29,8 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
+  // What the scenario pill shows; null until the server has said.
+  const [scenarios, setScenarios] = useState<ScenarioListing | null>(null)
 
   useEffect(
     () =>
@@ -35,6 +39,8 @@ export default function App() {
         // The snapshot always comes first; a change before it has nothing to apply to.
         // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
         onChange: (change) => setGames((current) => current && applyChange(current, change)),
+        // A switch made in any browser: every pill follows.
+        onScenarioSwitched: (running) => setScenarios((current) => withRunning(current, running)),
       }),
     [],
   )
@@ -58,6 +64,8 @@ export default function App() {
           onCameraMove={store.saveCamera}
           slowSpin={viewerSettings.slowSpin}
         />
+        {/* Before the filter menu, so an open filter menu lies over it on a phone. */}
+        <ScenarioPill listing={scenarios} setListing={setScenarios} />
         <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {message && (
           <p className="no-pins" role="status">

@@ -575,17 +575,23 @@ body {
   font-weight: 600;
 }
 
-/* The scenario picker (local runs only): a pill at the top right, clear of the filter menu at the
-   top left and of the game panel, which sits beside the globe or, on a phone, below it. */
-.scenario-pill {
+/* The scenario pill and the speed pill (local runs only), at the bottom left, clear of the filter
+   menu at the top left and of the game panel, which sits beside the globe or, on a phone, below it.
+   Their lists open upwards. */
+.scenario-pills {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  left: 12px;
+  bottom: 12px;
   z-index: 1;
-  /* Leaves room for the closed filter menu on a phone. */
-  max-width: calc(100% - 120px);
-  max-height: calc(100% - 24px);
-  overflow-y: auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+}
+
+.scenario-pill {
+  position: relative;
+  min-width: 0;
   border-radius: 18px;
   background: rgba(11, 16, 32, 0.85);
   color: #ffffff;
@@ -607,14 +613,27 @@ body {
   display: none;
 }
 
-.scenario-pill[open] {
+.scenario-pill ul {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  min-width: 100%;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px;
   border-radius: 12px;
+  background: rgba(11, 16, 32, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  list-style: none;
+  white-space: nowrap;
 }
 
-.scenario-pill ul {
-  margin: 0;
-  padding: 0 6px 6px;
-  list-style: none;
+/* While real games run, the speed shows but can't be changed. */
+.speed-pill[aria-disabled='true'] summary {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .scenario-pill button {
@@ -642,16 +661,57 @@ body {
   content: '✓ ';
 }
 
-.no-pins {
+/* At the bottom centre: the no-pins message, and below it the clock (local runs only). */
+.bottom-centre {
   position: absolute;
   left: 50%;
   bottom: 32px;
   transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.bottom-centre--scenario {
+  bottom: 12px;
+}
+
+/* Too narrow for the clock beside the pills: it stacks above them. */
+@media (max-width: 800px) {
+  .bottom-centre--scenario {
+    bottom: 60px;
+  }
+}
+
+/* On a phone the map's attribution spreads across the bottom, so the pills and the clock sit above it. */
+@media (max-width: 640px) {
+  .scenario-pills {
+    bottom: 64px;
+  }
+
+  .bottom-centre--scenario {
+    bottom: 112px;
+  }
+}
+
+.no-pins {
   margin: 0;
   padding: 10px 16px;
   border-radius: 8px;
   background: rgba(11, 16, 32, 0.85);
   color: #ffffff;
-  pointer-events: none;
-  z-index: 1;
+}
+
+.scenario-clock {
+  padding: 8px 14px;
+  border-radius: 18px;
+  background: rgba(11, 16, 32, 0.85);
+  color: #ffffff;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }

@@ -32,14 +32,17 @@ public sealed class Poller(
     private TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>
-    /// Fetches every league straight away, and from then on at the given intervals: for when the
-    /// game feed provider's source has changed (a scenario switch, ADR-0009).
+    /// Makes <paramref name="change"/> to the game feed provider's source (a scenario switch or a change
+    /// of speed, ADR-0009) while no league is being fetched, so no fetch, and no use of the board, sees
+    /// it half made. Then fetches every league straight away, and from then on at the intervals
+    /// <paramref name="change"/> returns. If <paramref name="change"/> throws, polling carries on as it was.
     /// </summary>
-    public async Task StartAfreshAsync(PollingOptions intervals, CancellationToken cancellationToken)
+    public async Task StartAfreshAsync(Func<PollingOptions> change, CancellationToken cancellationToken)
     {
         await _lock.WaitAsync(cancellationToken);
         try
         {
+            var intervals = change();
             _liveInterval = intervals.LiveInterval;
             _quietInterval = intervals.QuietInterval;
             _nextFetch.Clear();

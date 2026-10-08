@@ -18,6 +18,12 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hu
     /// <summary>Client method that receives one change event (a <see cref="Games.GameChange"/>).</summary>
     public const string ChangeMessage = "GameChanged";
 
+    /// <summary>
+    /// Client method that receives the name of the scenario now running (or "real") after a switch,
+    /// so every browser's scenario pill follows (ADR-0009). Sent only when ScoreMap runs locally.
+    /// </summary>
+    public const string ScenarioSwitchedMessage = "ScenarioSwitched";
+
     public override async Task OnConnectedAsync()
     {
         try

@@ -12,16 +12,24 @@ async function readListing(response: Response): Promise<ScenarioListing> {
 
 /**
  * The scenario picker (ADR-0009): a pill over the globe naming the running scenario, opening a list of
- * every scenario plus "Real games". Picking one switches the server, and so every browser. Shows only
- * when the server has scenarios, which is never on the deployed site. Shift+S hides and shows it.
+ * every scenario plus "Real games". Picking one switches the server, and so every browser: the server
+ * then tells every browser what is running over the games hub, and the app passes that on in
+ * `listing` (see `withRunning`), so each pill follows. Shows only when the server has scenarios,
+ * which is never on the deployed site. Shift+S hides and shows it.
  */
-export function ScenarioPill() {
-  const [listing, setListing] = useState<ScenarioListing | null>(null)
+export function ScenarioPill({
+  listing,
+  setListing,
+}: {
+  listing: ScenarioListing | null
+  setListing: (listing: ScenarioListing) => void
+}) {
   const [hidden, setHidden] = useState(false)
   const [switching, setSwitching] = useState(false)
   const details = useRef<HTMLDetailsElement>(null)
 
-  // Fetched again on opening the list and on coming back to the tab, since another tab may have switched.
+  // Fetched again on opening the list and on coming back to the tab, to pick up new scenario files
+  // (and anything missed while disconnected from the games hub).
   const refresh = useCallback((signal?: AbortSignal) => {
     fetch(scenariosPath, { signal })
       .then(readListing)
@@ -29,7 +37,7 @@ export function ScenarioPill() {
       .catch((error: unknown) => {
         if (!signal?.aborted) console.error('Could not load the scenario list', error)
       })
-  }, [])
+  }, [setListing])
 
   useEffect(() => {
     const abort = new AbortController()

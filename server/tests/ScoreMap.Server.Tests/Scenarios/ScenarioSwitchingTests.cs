@@ -68,6 +68,26 @@ public class ScenarioSwitchingTests
     }
 
     [Fact]
+    public async Task Every_browser_is_told_which_scenario_is_now_running_so_its_pill_follows()
+    {
+        await using var server = new ScoreMapServer { Scenario = "first" };
+        server.WriteScenario("first", OneGame("a"));
+        server.WriteScenario("second", OneGame("b"));
+        using var http = server.CreateClient();
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+        await using var other = await server.ConnectClientAsync();
+        await other.NextSnapshotAsync();
+
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" })).EnsureSuccessStatusCode();
+        Assert.Equal("second", await client.NextScenarioSwitchAsync());
+        Assert.Equal("second", await other.NextScenarioSwitchAsync());
+
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        Assert.Equal("real", await other.NextScenarioSwitchAsync());
+    }
+
+    [Fact]
     public async Task Switching_to_real_games_fetches_them_at_the_real_intervals_and_switching_back_starts_the_scenario_afresh()
     {
         await using var server = new ScoreMapServer { Scenario = "first" };

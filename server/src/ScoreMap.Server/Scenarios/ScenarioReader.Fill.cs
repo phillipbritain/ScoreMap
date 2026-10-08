@@ -38,7 +38,7 @@ public static partial class ScenarioReader
             throw Problem(e.Message);
         }
 
-        var random = new Random(StableSeed(scenario));
+        var random = new Random(Scenario.StableSeed(scenario));
         var maker = new ScenarioGameMaker(leagues, venues);
         random.Shuffle(inGroup);
         var statuses = mix.Split(entry.Count, random);
@@ -62,16 +62,6 @@ public static partial class ScenarioReader
         if (shares.Values.Sum() <= 0)
             throw new InvalidDataException("has a mix that gives no games to any status");
         return new StatusMix(shares);
-    }
-
-    /// <summary>A seed that is the same for a name on every run (unlike <see cref="string.GetHashCode()"/>).</summary>
-    internal static int StableSeed(string name)
-    {
-        // FNV-1a.
-        var hash = 2166136261u;
-        foreach (var c in name)
-            hash = unchecked((hash ^ c) * 16777619u);
-        return unchecked((int)hash);
     }
 
     private sealed record FillEntry(int Count, string? Group, Dictionary<string, double>? Mix);

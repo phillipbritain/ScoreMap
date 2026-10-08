@@ -1,0 +1,65 @@
+// edge-cases: things that are rare in real games but must still look right.
+// - A venue that can't be found: "Imaginary Fields Arena" is made up, and deliberately not in the
+//   venue list or its lookups, so its pin falls back to its city (Reykjavík). It is the one
+//   scenario venue looked up through Nominatim at runtime. "notInVenueList" says it is made up on
+//   purpose; any other venue missing from the list stops startup, so a misspelt one can't slip by.
+// - A tied score, long team names, missing logos and three-digit scores.
+{
+  "games": [
+    {
+      "id": "edge-unfindable-venue",
+      "league": "World Cup",
+      "home": { "name": "Iceland", "abbreviation": "ISL", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/isl.png", "score": 1 },
+      "away": { "name": "Faroe Islands", "abbreviation": "FRO", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/fro.png", "score": 0 },
+      "venue": { "name": "Imaginary Fields Arena", "city": "Reykjavík", "country": "Iceland", "notInVenueList": true },
+      "startsIn": "-30m",
+      "status": "live",
+      "clock": "30'",
+      "period": 1
+    },
+    {
+      "id": "edge-tied-score",
+      "league": "Champions League",
+      "home": { "name": "Bayern Munich", "abbreviation": "MUN", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/132.png", "score": 2 },
+      "away": { "name": "Borussia Dortmund", "abbreviation": "DOR", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/124.png", "score": 2 },
+      "venue": { "name": "Allianz Arena", "city": "Munich", "country": "Germany" },
+      "startsIn": "-1h20m",
+      "status": "live",
+      "clock": "78'",
+      "period": 2
+    },
+    {
+      "id": "edge-long-names",
+      "league": "NCAA Men's Basketball",
+      "home": { "name": "Texas A&M-Corpus Christi Islanders", "abbreviation": "AMCC", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/357.png", "score": 31 },
+      "away": { "name": "Arkansas-Pine Bluff Golden Lions", "abbreviation": "UAPB", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2029.png", "score": 29 },
+      "venue": { "name": "United Center", "city": "Chicago", "region": "IL", "country": "USA" },
+      "startsIn": "-50m",
+      "status": "live",
+      "clock": "14:20",
+      "period": 2
+    },
+    {
+      "id": "edge-missing-logos",
+      "league": "NHL",
+      "home": { "name": "Edmonton Oilers", "abbreviation": "EDM", "score": 1 },
+      "away": { "name": "Calgary Flames", "abbreviation": "CGY", "score": 0 },
+      "venue": { "name": "Rogers Place", "city": "Edmonton", "region": "AB", "country": "Canada" },
+      "startsIn": "-25m",
+      "status": "live",
+      "clock": "4:15",
+      "period": 1
+    },
+    {
+      "id": "edge-three-digit-scores",
+      "league": "NBA",
+      "home": { "name": "Golden State Warriors", "abbreviation": "GS", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png", "score": 118 },
+      "away": { "name": "Los Angeles Lakers", "abbreviation": "LAL", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png", "score": 121 },
+      "venue": { "name": "Chase Center", "city": "San Francisco", "region": "CA", "country": "USA" },
+      "startsIn": "-2h10m",
+      "status": "live",
+      "clock": "0:48",
+      "period": 4
+    }
+  ]
+}

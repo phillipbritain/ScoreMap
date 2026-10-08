@@ -63,3 +63,11 @@ _Avoid_: Finished, completed, over, ended
 **Scenario**:
 A named set of made-up games at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally.
 _Avoid_: Dummy data, fake data, demo, simulation
+
+**Scenario clock**:
+The time a scenario's games are on. It reads the real time when the scenario starts, then runs at the scenario's speed, so it moves ahead of the real time at any speed above 1×.
+_Avoid_: Game clock (the clock within a game, such as 67'), fake time, virtual time
+
+**Speed**:
+How many times faster than real time the scenario clock runs, from 1× (real time) up. One speed applies to whichever scenario is running.
+_Avoid_: Pace, play speed, playback rate

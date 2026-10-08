@@ -12,6 +12,14 @@ public sealed class ScenarioReaderTests : IDisposable
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer },
     ];
 
+    // A slice of the venue list: venues are known by name and city, as the venue locator looks them up.
+    private static readonly ScenarioVenue[] Venues =
+    [
+        Venue("Arrowhead Stadium", "Kansas City", "MO", "USA"),
+        Venue("Allianz Stadium", "Turin", null, "Italy"),
+        Venue("Allianz Stadium", "Sydney", "NSW", "Australia"),
+    ];
+
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-scenario-reader-{Guid.NewGuid():N}");
 
     public ScenarioReaderTests() => Directory.CreateDirectory(_folder);
@@ -86,18 +94,71 @@ public sealed class ScenarioReaderTests : IDisposable
         Assert.Contains("unknown phase \"nap\"", error.Message);
     }
 
+    [Theory]
+    [InlineData("""{ "name": "Arrowhed Stadium", "city": "Kansas City" }""", "unknown venue \"Arrowhed Stadium\" in Kansas City")]
+    [InlineData("""{ "name": "Allianz Stadium", "city": "Melbourne" }""", "unknown venue \"Allianz Stadium\" in Melbourne", "Turin, Sydney")]
+    [InlineData("""{ "name": "Arrowhead Stadium", "city": "Kansas City", "country": "Canada" }""", "Arrowhead Stadium", "country \"Canada\"", "\"USA\"")]
+    [InlineData("""{ "name": "Arrowhead Stadium", "city": "Kansas City", "notInVenueList": true }""", "Arrowhead Stadium", "is in the venue list", "notInVenueList")]
+    public void A_venue_not_as_the_venue_list_has_it_is_rejected(string venue, params string[] messageParts)
+    {
+        var error = Assert.Throws<ScenarioFileException>(() => Read(Game(venue: venue)));
+
+        Assert.Contains("game 1", error.Message);
+        foreach (var part in messageParts)
+            Assert.Contains(part, error.Message);
+    }
+
+    [Fact]
+    public void An_unknown_venue_says_how_to_keep_it_deliberately()
+    {
+        var error = Assert.Throws<ScenarioFileException>(() => Read(Game(venue: """{ "name": "Nowhere Park", "city": "Reykjavík" }""")));
+
+        Assert.Contains("\"notInVenueList\": true", error.Message);
+    }
+
+    [Fact]
+    public void A_venue_marked_as_deliberately_not_in_the_venue_list_is_kept()
+    {
+        var scenario = Read(Game(venue: """{ "name": "Imaginary Fields Arena", "city": "Reykjavík", "country": "Iceland", "notInVenueList": true }"""));
+
+        Assert.Equal(new ProviderVenue("Imaginary Fields Arena", "Reykjavík", null, "Iceland"), Assert.Single(scenario.Games).Venue);
+    }
+
+    [Fact]
+    public void A_venue_from_the_list_can_be_written_with_just_its_name_and_city()
+    {
+        var scenario = Read(Game(venue: """{ "name": "Allianz Stadium", "city": "Sydney" }"""));
+
+        Assert.Equal(new ProviderVenue("Allianz Stadium", "Sydney", "NSW", "Australia"), Assert.Single(scenario.Games).Venue);
+    }
+
+    [Fact]
+    public void Written_out_games_need_the_venue_list_to_check_their_venues_against()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""{ "games": [ {{Game()}} ] }""");
+
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues));
+
+        Assert.Contains("no venue list", error.Message);
+    }
+
     private Scenario Read(params string[] games)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""{ "games": [ {{string.Join(", ", games)}} ] }""");
-        return ScenarioReader.Read(_folder, "sample", Leagues);
+        return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
     }
 
-    private static string Game(string league = "NFL", string startsIn = "0", string status = "upcoming", string extra = "") => $$"""
+    private static ScenarioVenue Venue(string name, string city, string? region, string country) =>
+        new(name, city, region, country, new ScenarioTeam("Home", "HOM", null), ["worldwide"]);
+
+    private const string Arrowhead = """{ "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" }""";
+
+    private static string Game(string league = "NFL", string startsIn = "0", string status = "upcoming", string extra = "", string venue = Arrowhead) => $$"""
         {
           "league": "{{league}}",
           "home": { "name": "Kansas City Chiefs", "abbreviation": "KC" },
           "away": { "name": "Buffalo Bills", "abbreviation": "BUF" },
-          "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+          "venue": {{venue}},
           "startsIn": "{{startsIn}}",
           "status": "{{status}}"{{extra}}
         }

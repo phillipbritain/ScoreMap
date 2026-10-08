@@ -16,7 +16,7 @@ public class ScenarioTests
               "league": "NFL",
               "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "logo": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "score": 14 },
               "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
-              "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+              "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
               "startsIn": "-40m",
               "status": "live",
               "clock": "8:12",
@@ -42,7 +42,7 @@ public class ScenarioTests
         Assert.Equal(GameStatus.Live, game.Status);
         Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", 14), game.Home);
         Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, 10), game.Away);
-        Assert.Equal("GEHA Field at Arrowhead Stadium", game.Venue.Name);
+        Assert.Equal("Arrowhead Stadium", game.Venue.Name);
         Assert.Equal("Kansas City", game.Venue.City);
         Assert.Equal(2, game.Period);
         Assert.Equal(server.Clock.GetUtcNow().AddMinutes(-40), game.StartTime);
@@ -202,6 +202,8 @@ public class ScenarioTests
         "game 1", "no venue")]
     [InlineData("""{ "games": [ { "league": "NFL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "venue": { "city": "Town" }, "startsIn": "0", "status": "upcoming" } ] }""",
         "game 1", "no venue")]
+    [InlineData("""{ "games": [ { "league": "NFL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "venue": { "name": "Arowhead Stadium", "city": "Kansas City" }, "startsIn": "0", "status": "upcoming" } ] }""",
+        "game 1", "unknown venue \"Arowhead Stadium\"", "notInVenueList")]
     [InlineData("""{ "games": [ { "league": "NFL", """, "isn't valid JSON")]
     [InlineData("""{ "games": [ { "league": "NFL", "home": { "name": "A", "abbreviation": "A" }, "away": { "name": "B", "abbreviation": "B" }, "venue": { "name": "Somewhere", "city": "Town" }, "startsIn": "soon", "status": "upcoming" } ] }""",
         "game 1", "startsIn \"soon\"")]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickerEntries, pillLabel, showsPill, togglesPill } from './scenarioPicker'
+import { pickerEntries, pillLabel, showsPill, togglesPill, withRunning } from './scenarioPicker'
 
 const local = { running: 'crowded', scenarios: ['crowded', 'edge-cases', 'worldwide'] }
 // What the deployed server says: no scenarios.
@@ -18,6 +18,17 @@ describe('the scenario pill', () => {
   it('never shows when the server has no scenarios, or before it has said', () => {
     expect(showsPill(deployed, { hidden: false })).toBe(false)
     expect(showsPill(null, { hidden: false })).toBe(false)
+  })
+})
+
+describe('a switch made in another browser', () => {
+  it('moves the pill to the scenario now running, keeping the list', () => {
+    expect(withRunning(local, 'worldwide')).toEqual({ running: 'worldwide', scenarios: local.scenarios })
+    expect(pillLabel(withRunning(local, 'real') ?? local)).toBe('Scenario: Real games')
+  })
+
+  it('leaves a pill that has no list yet to the list when it comes', () => {
+    expect(withRunning(null, 'worldwide')).toBeNull()
   })
 })
 

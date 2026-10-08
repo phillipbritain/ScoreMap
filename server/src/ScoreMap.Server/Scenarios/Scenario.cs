@@ -30,6 +30,19 @@ public sealed record Scenario(string Name, IReadOnlyList<ScenarioGame> Games, Sc
             .ToList();
     }
 
+    /// <summary>
+    /// The seed for a scenario's random choices (its fill, and its random play), the same for a name on
+    /// every run (unlike <see cref="string.GetHashCode()"/>), so a scenario plays the same way each start.
+    /// </summary>
+    internal static int StableSeed(string name)
+    {
+        // FNV-1a.
+        var hash = 2166136261u;
+        foreach (var c in name)
+            hash = unchecked((hash ^ c) * 16777619u);
+        return unchecked((int)hash);
+    }
+
     /// <summary>The id of a game's copy in a loop: as written the first time round, then <c>&lt;id&gt;-loop2</c>, and so on.</summary>
     private static string CopyId(string id, long loop) => loop == 0 ? id : $"{id}-loop{loop + 1}";
 }

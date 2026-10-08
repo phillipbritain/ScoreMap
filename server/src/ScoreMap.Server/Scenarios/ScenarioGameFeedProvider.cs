@@ -21,7 +21,7 @@ public sealed class ScenarioGameFeedProvider : IGameFeedProvider
         _clock = clock;
         _startedAt = clock.GetUtcNow();
         if (scenario.Play is not null)
-            _randomPlay = new RandomPlayGames(scenario, _startedAt, new Random(ScenarioReader.StableSeed(scenario.Name)));
+            _randomPlay = new RandomPlayGames(scenario, _startedAt, new Random(Scenario.StableSeed(scenario.Name)));
     }
 
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)

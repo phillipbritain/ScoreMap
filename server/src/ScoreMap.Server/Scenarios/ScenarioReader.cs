@@ -30,8 +30,9 @@ public static partial class ScenarioReader
     };
 
     /// <summary>
-    /// Reads scenario <paramref name="name"/> from <paramref name="folder"/>. A <c>fill</c> takes its
-    /// games from <paramref name="venues"/>, the venue list.
+    /// Reads scenario <paramref name="name"/> from <paramref name="folder"/>. Written-out games must be
+    /// at venues in <paramref name="venues"/>, the venue list, unless marked <c>notInVenueList</c>, and
+    /// a <c>fill</c> takes its games from it.
     /// </summary>
     public static Scenario Read(string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null)
     {
@@ -56,7 +57,7 @@ public static partial class ScenarioReader
         {
             try
             {
-                var game = ReadGame(entry, i, name, leagues);
+                var game = ReadGame(entry, i, name, leagues, venues);
                 if (!ids.Add(game.Id))
                     throw new InvalidDataException("has the same id as an earlier game; each game needs its own");
                 return game;
@@ -83,7 +84,8 @@ public static partial class ScenarioReader
     }
 
     /// <summary>Reads one game written out in full; throws <see cref="InvalidDataException"/> saying what's wrong with it.</summary>
-    private static ScenarioGame ReadGame(GameEntry? entry, int index, string scenario, IReadOnlyList<League> leagues)
+    private static ScenarioGame ReadGame(
+        GameEntry? entry, int index, string scenario, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
     {
         if (entry is null)
             throw new InvalidDataException("is empty");
@@ -96,20 +98,60 @@ public static partial class ScenarioReader
                 $"has startsIn \"{entry.StartsIn}\", which isn't a time relative to the scenario's start such as \"-40m\" or \"1h30m\"");
         var status = ReadStatus(entry.Status);
         var phase = ReadPhase(entry.Phase);
-        if (string.IsNullOrWhiteSpace(entry.Venue?.Name))
-            throw new InvalidDataException("has no venue (a venue needs at least a name)");
+        var home = ReadTeam(entry.Home, "home");
+        var away = ReadTeam(entry.Away, "away");
+        var venue = ReadVenue(entry.Venue, venues);
 
         return new ScenarioGame(
             Id: entry.Id ?? $"{scenario}-{index + 1}",
             LeagueKey: league.Key,
             StartsIn: startsIn,
-            Home: ReadTeam(entry.Home, "home"),
-            Away: ReadTeam(entry.Away, "away"),
-            Venue: new ProviderVenue(entry.Venue.Name, entry.Venue.City, entry.Venue.Region, entry.Venue.Country),
+            Home: home,
+            Away: away,
+            Venue: venue,
             Status: status,
             Clock: entry.Clock,
             Period: entry.Period,
             Phase: phase);
+    }
+
+    /// <summary>
+    /// A written-out game's venue, which must be in the venue list (known by name and city, as the
+    /// venue locator looks it up), so a misspelt one can't quietly go to Nominatim. A venue made up on
+    /// purpose says so with <c>"notInVenueList": true</c>. Parts of a listed venue left out are taken
+    /// from the list; parts written must agree with it.
+    /// </summary>
+    private static ProviderVenue ReadVenue(VenueEntry? entry, IReadOnlyList<ScenarioVenue>? venues)
+    {
+        if (entry is null || string.IsNullOrWhiteSpace(entry.Name))
+            throw new InvalidDataException("has no venue (a venue needs at least a name)");
+        var written = $"\"{entry.Name}\" in {entry.City ?? "no city"}";
+        if (venues is null)
+            throw new InvalidDataException(
+                $"has venue {written}, but there is no venue list to check it against");
+        var listed = venues.SingleOrDefault(v => v.Name == entry.Name && v.City == entry.City);
+        if (entry.NotInVenueList)
+        {
+            if (listed is not null)
+                throw new InvalidDataException(
+                    $"has venue {written}, which is in the venue list; drop \"notInVenueList\"");
+            return new ProviderVenue(entry.Name, entry.City, entry.Region, entry.Country);
+        }
+        if (listed is null)
+        {
+            var cities = venues.Where(v => v.Name == entry.Name).Select(v => v.City).ToList();
+            throw new InvalidDataException(
+                $"has unknown venue {written}"
+                + (cities.Count > 0 ? $"; the venue list has it in {string.Join(", ", cities)}" : "; it isn't in the venue list")
+                + ". Use a venue from the list, or mark one made up on purpose with \"notInVenueList\": true");
+        }
+        if (entry.Region is not null && entry.Region != listed.Region)
+            throw new InvalidDataException(
+                $"has venue {written} with region \"{entry.Region}\", but the venue list has \"{listed.Region}\"");
+        if (entry.Country is not null && entry.Country != listed.Country)
+            throw new InvalidDataException(
+                $"has venue {written} with country \"{entry.Country}\", but the venue list has \"{listed.Country}\"");
+        return listed.ToProviderVenue();
     }
 
     private static ProviderStatus ReadStatus(string? status) =>
@@ -146,7 +188,7 @@ public static partial class ScenarioReader
 
     private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score);
 
-    private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country);
+    private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country, bool NotInVenueList = false);
 }
 
 /// <summary>A scenario file that can't be used, and why.</summary>

@@ -21,6 +21,21 @@ public class PollingTests
     }
 
     [Fact]
+    public async Task A_slow_fetch_does_not_push_the_leagues_next_fetch_back()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        server.Feed.TakeTime(Nfl, server.Clock, TimeSpan.FromSeconds(5));
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        // The first fetch began at 0 s and ended at 5 s; the next is due 15 s after it began.
+        server.Clock.Advance(TimeSpan.FromSeconds(10));
+
+        await server.Feed.WaitForFetchesAsync(Nfl, 2);
+    }
+
+    [Fact]
     public async Task A_league_without_live_games_is_polled_every_3_minutes()
     {
         await using var server = new ScoreMapServer();

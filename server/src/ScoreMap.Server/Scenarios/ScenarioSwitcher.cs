@@ -38,7 +38,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public ScenarioSwitcher(
         IServiceProvider services,
         [FromKeyedServices(RealGamesKey)] IGameFeedProvider realGames,
-        IConfiguration configuration,
+        IOptions<PollingOptions> realPolling,
         IHostEnvironment environment,
         IOptions<ScenarioOptions> options,
         IOptions<List<League>> leagues,
@@ -46,7 +46,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     {
         _services = services;
         _realGames = realGames;
-        _realPolling = configuration.GetSection("Polling").Get<PollingOptions>() ?? new PollingOptions();
+        _realPolling = realPolling.Value;
         _folder = Path.Combine(environment.ContentRootPath, options.Value.Folder);
         _leagues = leagues.Value;
         // The venue list fills come from; without it, a scenario with a fill says so when picked.

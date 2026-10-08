@@ -126,7 +126,8 @@ public class VenuePhotoTests
         Assert.Single(server.Photos.Searches);
 
         server.Clock.Advance(VenuePhotos.RetryAfterFailure);
-        await server.Feed.WaitForFetchesAsync(Nfl, 3);
+        // The fetch comes before the search it starts, so wait for the search itself.
+        await server.Photos.WaitForSearchesAsync(2);
         await server.PhotoSearchesFinishedAsync();
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 

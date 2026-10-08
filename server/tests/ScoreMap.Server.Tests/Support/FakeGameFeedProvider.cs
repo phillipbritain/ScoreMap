@@ -12,6 +12,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private readonly HashSet<string> _timingOut = [];
     private readonly HashSet<string> _holding = [];
     private readonly Dictionary<string, (FakeTimeProvider Clock, TimeSpan Takes)> _slow = new();
+    private readonly Dictionary<string, TaskCompletionSource> _gates = new();
     private readonly TaskCompletionSource _heldFetchCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public void SetScoreboard(string leagueKey, params ProviderGame[] games)
@@ -57,6 +58,26 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
             _slow[leagueKey] = (clock, takes);
     }
 
+    /// <summary>
+    /// Makes fetches of the league wait until <see cref="Release"/> is called, then answer as usual: a
+    /// fetch under way for as long as a test needs.
+    /// </summary>
+    public void HoldUntilReleased(string leagueKey)
+    {
+        lock (_scoreboards)
+            _gates[leagueKey] = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
+    /// <summary>Lets fetches of the league waiting since <see cref="HoldUntilReleased"/> go on, and later ones through.</summary>
+    public void Release(string leagueKey)
+    {
+        lock (_scoreboards)
+        {
+            if (_gates.Remove(leagueKey, out var gate))
+                gate.TrySetResult();
+        }
+    }
+
     /// <summary>Waits (in real time, briefly) until a held fetch has been cancelled.</summary>
     public Task HeldFetchCancelledAsync() => _heldFetchCancelled.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
@@ -96,9 +117,22 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
                 return Task.FromException<IReadOnlyList<ProviderGame>>(new TaskCanceledException(
                     "The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
                     new TimeoutException("The operation was canceled.")));
-            return Task.FromResult(_scoreboards.TryGetValue(leagueKey, out var games) ? games : []);
+            if (_gates.TryGetValue(leagueKey, out var gate))
+                return AnswerOnceReleasedAsync(leagueKey, gate.Task, cancellationToken);
+            return Task.FromResult(Scoreboard(leagueKey));
         }
     }
+
+    private async Task<IReadOnlyList<ProviderGame>> AnswerOnceReleasedAsync(string leagueKey, Task release, CancellationToken cancellationToken)
+    {
+        await release.WaitAsync(cancellationToken);
+        lock (_scoreboards)
+            return Scoreboard(leagueKey);
+    }
+
+    // Call holding the lock on _scoreboards.
+    private IReadOnlyList<ProviderGame> Scoreboard(string leagueKey) =>
+        _scoreboards.TryGetValue(leagueKey, out var games) ? games : [];
 
     private async Task<IReadOnlyList<ProviderGame>> HangUntilCancelledAsync(CancellationToken cancellationToken)
     {

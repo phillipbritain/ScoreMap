@@ -20,4 +20,11 @@ public sealed class VenueOptions
     /// position their pin should use. Overrides any lookup; re-read whenever it changes.
     /// </summary>
     public string CorrectionsPath { get; set; } = "venue-corrections.json";
+
+    /// <summary>
+    /// The checked-in scenario venue lookups (ADR-0009), relative to the content root: venue queries
+    /// ("Name, City") mapped to their position, made by scripts/lookup-scenario-venues.cs from
+    /// scenario-venues.json. Used before the saved lookups; a missing file means none.
+    /// </summary>
+    public string ScenarioLocationsPath { get; set; } = "scenario-venue-locations.json";
 }

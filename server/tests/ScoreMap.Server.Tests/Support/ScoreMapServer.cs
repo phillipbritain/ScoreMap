@@ -13,6 +13,7 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Venues;
 using ScoreMap.Server.WatchLinks;
 
@@ -45,6 +46,13 @@ public sealed class ScoreMapServer(
         savedVenueLocationsPath ?? Path.Combine(Path.GetTempPath(), $"scoremap-venues-{Guid.NewGuid():N}.json");
 
     public FakeVenuePhotoSearch Photos { get; } = new();
+
+    /// <summary>
+    /// The checked-in scenario venue lookups the server reads: a fresh temp path, so tests don't
+    /// see the repo's file (unless <see cref="UseShippedScenarios"/>). Empty until a test writes it.
+    /// </summary>
+    public string ScenarioVenueLocationsPath { get; } =
+        Path.Combine(Path.GetTempPath(), $"scoremap-scenario-venue-locations-{Guid.NewGuid():N}.json");
 
     /// <summary>
     /// The file the server saves venue photos to. A fresh temp file unless one is passed in,
@@ -130,6 +138,32 @@ public sealed class ScoreMapServer(
     public void AddLeague(string key, string name, string sport, TimeSpan? plannedLength = null) =>
         _extraLeagues.Add((key, name, sport, plannedLength));
 
+    /// <summary>
+    /// The scenario the server runs (ADR-0009), from <see cref="ScenariosFolder"/>. Unset, the server
+    /// runs on real games (here, <see cref="Feed"/>) whatever appsettings.Development.json says.
+    /// </summary>
+    public string? Scenario { get; init; }
+
+    /// <summary>The folder the server reads scenario files from: a fresh temp folder, written by <see cref="WriteScenario"/>.</summary>
+    public string ScenariosFolder { get; } = Path.Combine(Path.GetTempPath(), $"scoremap-scenarios-{Guid.NewGuid():N}");
+
+    /// <summary>
+    /// Runs the server on the scenario settings, files and checked-in venue lookups that ship with
+    /// it, rather than <see cref="Scenario"/>, <see cref="ScenariosFolder"/> and
+    /// <see cref="ScenarioVenueLocationsPath"/>.
+    /// </summary>
+    public bool UseShippedScenarios { get; init; }
+
+    /// <summary>The hosting environment to run in, when not Development (the default).</summary>
+    public string? Environment { get; init; }
+
+    /// <summary>Writes a scenario file, as the owner would. Call before connecting.</summary>
+    public void WriteScenario(string name, string json)
+    {
+        Directory.CreateDirectory(ScenariosFolder);
+        File.WriteAllText(Path.Combine(ScenariosFolder, $"{name}.json"), json);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // High indexes so they extend, rather than replace, the configured leagues.
@@ -164,6 +198,14 @@ public sealed class ScoreMapServer(
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
+        if (!UseShippedScenarios)
+        {
+            builder.UseSetting("Scenario", Scenario ?? "real");
+            builder.UseSetting("Scenarios:Folder", ScenariosFolder);
+            builder.UseSetting("Venues:ScenarioLocationsPath", ScenarioVenueLocationsPath);
+        }
+        if (Environment is not null)
+            builder.UseEnvironment(Environment);
         builder.ConfigureLogging(logging =>
         {
             logging.AddProvider(Logs);
@@ -171,8 +213,17 @@ public sealed class ScoreMapServer(
         });
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveAll<IGameFeedProvider>();
-            services.AddSingleton<IGameFeedProvider>(Feed);
+            // The fake stands in for ESPN: behind the scenario switcher, in Development.
+            if (services.Any(d => d.ServiceType == typeof(ScenarioSwitcher)))
+            {
+                services.RemoveAllKeyed<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey);
+                services.AddKeyedSingleton<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey, Feed);
+            }
+            else
+            {
+                services.RemoveAll<IGameFeedProvider>();
+                services.AddSingleton<IGameFeedProvider>(Feed);
+            }
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);
             services.RemoveAll<IVenuePhotoSearch>();
@@ -196,7 +247,10 @@ public sealed class ScoreMapServer(
         if (_ownsSavedVenuePhotos)
             File.Delete(SavedVenuePhotosPath);
         File.Delete(VenueCorrectionsPath);
+        File.Delete(ScenarioVenueLocationsPath);
         File.Delete(WatchLinksPath);
+        if (Directory.Exists(ScenariosFolder))
+            Directory.Delete(ScenariosFolder, recursive: true);
     }
 
     /// <summary>Connects a browser stand-in to the games hub.</summary>
@@ -261,6 +315,8 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
 
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
 
+    private readonly Channel<string> _scenarioSwitches = Channel.CreateUnbounded<string>();
+
     /// <summary>The connection's id, the same as the hub's for it once started.</summary>
     public string ConnectionId =>
         connection.ConnectionId ?? throw new InvalidOperationException("The client hasn't connected");
@@ -269,8 +325,13 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
     {
         connection.On<IReadOnlyList<Game>>(GamesHub.SnapshotMessage, games => _snapshot.TrySetResult(games));
         connection.On<GameChange>(GamesHub.ChangeMessage, change => _changes.Writer.TryWrite(change));
+        connection.On<string>(GamesHub.ScenarioSwitchedMessage, name => _scenarioSwitches.Writer.TryWrite(name));
         await connection.StartAsync();
     }
+
+    /// <summary>The name of the scenario (or "real") the server next said it had switched to.</summary>
+    public async Task<string> NextScenarioSwitchAsync() =>
+        await _scenarioSwitches.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
 
     public Task<IReadOnlyList<Game>> NextSnapshotAsync() => _snapshot.Task.WaitAsync(Timeout);
 

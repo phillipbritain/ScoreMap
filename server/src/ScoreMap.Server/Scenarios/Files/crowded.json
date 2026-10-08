@@ -1,0 +1,9 @@
+// crowded: about 40 games packed into London and nearby, to bring out Clusters zoomed out and
+// Crowds (score cards with no room) zoomed in.
+{
+  "fill": {
+    "count": 40,
+    "group": "london-and-nearby",
+    "mix": { "live": 3, "upcoming": 1, "final": 1 }
+  }
+}

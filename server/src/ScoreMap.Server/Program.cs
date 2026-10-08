@@ -5,6 +5,7 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Venues;
 using ScoreMap.Server.WatchLinks;
 
@@ -87,10 +88,14 @@ builder.Services.TryAddSingleton<IStreamLinkSource, NoStreamLinks>();
 builder.Services.AddSingleton<GameBoard>();
 
 // Live updates: the poller fetches while browsers are connected and pushes change events.
+builder.Services.Configure<PollingOptions>(builder.Configuration.GetSection("Polling"));
 builder.Services.AddSingleton<BrowserConnections>();
 builder.Services.AddSingleton<Poller>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
 builder.Services.AddSignalR();
+
+// Scenarios (ADR-0009): made-up games in place of real ones, in Development only.
+builder.AddScenarios();
 
 var app = builder.Build();
 
@@ -104,6 +109,9 @@ app.MapFallbackToFile("index.html");
 // The configured leagues in order, so the browser's filter can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
     leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
+
+// The scenario picker's list and switch (ADR-0009); in Development only.
+app.MapScenarios();
 
 app.Run();
 

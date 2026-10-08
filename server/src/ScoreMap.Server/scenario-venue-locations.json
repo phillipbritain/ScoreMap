@@ -1,0 +1,734 @@
+{
+  "AAMI Park, Melbourne": {
+    "latitude": -37.8251046,
+    "longitude": 144.983743
+  },
+  "AT&T Stadium, Arlington": {
+    "latitude": 32.7478503,
+    "longitude": -97.0928337
+  },
+  "Abbey Stadium, Cambridge": {
+    "latitude": 52.2120297,
+    "longitude": 0.1541831
+  },
+  "Adams Park, High Wycombe": {
+    "latitude": 51.6304108,
+    "longitude": -0.8002826
+  },
+  "Ajinomoto Stadium, Chōfu": {
+    "latitude": 35.6641865,
+    "longitude": 139.5270752
+  },
+  "Al-Awwal Park, Riyadh": {
+    "latitude": 24.7291958,
+    "longitude": 46.6237712
+  },
+  "Allianz Arena, Munich": {
+    "latitude": 48.2187901,
+    "longitude": 11.6236227
+  },
+  "Allianz Parque, São Paulo": {
+    "latitude": -23.5274971,
+    "longitude": -46.6785281
+  },
+  "Allianz Stadium, Sydney": {
+    "latitude": -33.8891571,
+    "longitude": 151.2251352
+  },
+  "Allianz Stadium, Turin": {
+    "latitude": 45.1095759,
+    "longitude": 7.6421338
+  },
+  "American Express Stadium, Brighton": {
+    "latitude": 50.8615471,
+    "longitude": -0.0836931
+  },
+  "Amman International Stadium, Amman": {
+    "latitude": 31.985153,
+    "longitude": 35.9027482
+  },
+  "Anfield, Liverpool": {
+    "latitude": 53.4309011,
+    "longitude": -2.9609719
+  },
+  "Angel Stadium, Anaheim": {
+    "latitude": 33.8002599,
+    "longitude": -117.8817426
+  },
+  "Arena do Grêmio, Porto Alegre": {
+    "latitude": -29.9740429,
+    "longitude": -51.1951073
+  },
+  "Arrowhead Stadium, Kansas City": {
+    "latitude": 39.0489358,
+    "longitude": -94.4839993
+  },
+  "Audi Field, Washington": {
+    "latitude": 38.8682612,
+    "longitude": -77.0126092
+  },
+  "Azadi Stadium, Tehran": {
+    "latitude": 35.7244962,
+    "longitude": 51.2755487
+  },
+  "BMO Field, Toronto": {
+    "latitude": 43.6333414,
+    "longitude": -79.4185614
+  },
+  "BMO Stadium, Los Angeles": {
+    "latitude": 34.0127678,
+    "longitude": -118.2833417
+  },
+  "Baba Yara Stadium, Kumasi": {
+    "latitude": 6.68217,
+    "longitude": -1.6050642
+  },
+  "Barclays Center, Brooklyn": {
+    "latitude": 40.6825106,
+    "longitude": -73.9752519
+  },
+  "Bell Centre, Montreal": {
+    "latitude": 45.4960358,
+    "longitude": -73.5692029
+  },
+  "Brisbane Road, London": {
+    "latitude": 51.5600713,
+    "longitude": -0.0125999
+  },
+  "Broadfield Stadium, Crawley": {
+    "latitude": 51.0995727,
+    "longitude": -0.1947428
+  },
+  "Bryant-Denny Stadium, Tuscaloosa": {
+    "latitude": 33.2077203,
+    "longitude": -87.550453
+  },
+  "Caesars Superdome, New Orleans": {
+    "latitude": 29.9510489,
+    "longitude": -90.0823076
+  },
+  "Cairo International Stadium, Cairo": {
+    "latitude": 30.0690313,
+    "longitude": 31.3122096
+  },
+  "Cardiff City Stadium, Cardiff": {
+    "latitude": 51.4728209,
+    "longitude": -3.2029602
+  },
+  "Celtic Park, Glasgow": {
+    "latitude": 55.8501815,
+    "longitude": -4.2068227
+  },
+  "Chase Center, San Francisco": {
+    "latitude": 37.7679001,
+    "longitude": -122.3874223
+  },
+  "Chase Stadium, Fort Lauderdale": {
+    "latitude": 26.1932426,
+    "longitude": -80.16068
+  },
+  "Citi Field, Queens": {
+    "latitude": 40.7570308,
+    "longitude": -73.8457626
+  },
+  "Colchester Community Stadium, Colchester": {
+    "latitude": 51.9234391,
+    "longitude": 0.8976478
+  },
+  "CommBank Stadium, Parramatta": {
+    "latitude": -33.8086679,
+    "longitude": 151.0007291
+  },
+  "Coopers Stadium, Adelaide": {
+    "latitude": -34.9075037,
+    "longitude": 138.5689336
+  },
+  "Craven Cottage, London": {
+    "latitude": 51.4749218,
+    "longitude": -0.2217448
+  },
+  "Crypto.com Arena, Los Angeles": {
+    "latitude": 34.0429979,
+    "longitude": -118.2671352
+  },
+  "Dignity Health Sports Park, Carson": {
+    "latitude": 33.8623767,
+    "longitude": -118.2629113
+  },
+  "Dodger Stadium, Los Angeles": {
+    "latitude": 34.0736255,
+    "longitude": -118.2398452
+  },
+  "Eden Park, Auckland": {
+    "latitude": -36.8750352,
+    "longitude": 174.7440567
+  },
+  "Emirates Stadium, London": {
+    "latitude": 51.5550404,
+    "longitude": -0.1083997
+  },
+  "Empower Field at Mile High, Denver": {
+    "latitude": 39.743952,
+    "longitude": -105.0192228
+  },
+  "Enyimba International Stadium, Aba": {
+    "latitude": 5.1020862,
+    "longitude": 7.375854
+  },
+  "Ernst-Happel-Stadion, Vienna": {
+    "latitude": 48.2071894,
+    "longitude": 16.4209171
+  },
+  "Estadio Akron, Zapopan": {
+    "latitude": 20.6818469,
+    "longitude": -103.4626718
+  },
+  "Estadio Alberto J. Armando, Buenos Aires": {
+    "latitude": -34.6355171,
+    "longitude": -58.3649163
+  },
+  "Estadio Atanasio Girardot, Medellín": {
+    "latitude": 6.2568267,
+    "longitude": -75.5901467
+  },
+  "Estadio Azteca, Mexico City": {
+    "latitude": 19.3029794,
+    "longitude": -99.15047
+  },
+  "Estadio BBVA, Guadalupe": {
+    "latitude": 25.6691106,
+    "longitude": -100.2444506
+  },
+  "Estadio Centenario, Montevideo": {
+    "latitude": -34.8945392,
+    "longitude": -56.1526841
+  },
+  "Estadio Defensores del Chaco, Asunción": {
+    "latitude": -25.2919551,
+    "longitude": -57.6574164
+  },
+  "Estadio El Campín, Bogotá": {
+    "latitude": 4.6459495,
+    "longitude": -74.0776054
+  },
+  "Estadio Mario Alberto Kempes, Córdoba": {
+    "latitude": -31.3688468,
+    "longitude": -64.2461451
+  },
+  "Estadio Monumental David Arellano, Santiago": {
+    "latitude": -33.5064746,
+    "longitude": -70.6049202
+  },
+  "Estadio Monumental, Buenos Aires": {
+    "latitude": -34.5452932,
+    "longitude": -58.4497385
+  },
+  "Estadio Rodrigo Paz Delgado, Quito": {
+    "latitude": -0.1077231,
+    "longitude": -78.4890768
+  },
+  "Estadio Rommel Fernández, Panamá": {
+    "latitude": 9.0358692,
+    "longitude": -79.4694726
+  },
+  "Estadio Universitario, San Nicolás de los Garza": {
+    "latitude": 25.7226067,
+    "longitude": -100.3119863
+  },
+  "Estádio Nacional de Cabo Verde, Praia": {
+    "latitude": 14.9759284,
+    "longitude": -23.5307956
+  },
+  "Estádio da Luz, Lisbon": {
+    "latitude": 38.7526893,
+    "longitude": -9.1846899
+  },
+  "Estádio do Dragão, Porto": {
+    "latitude": 41.1618235,
+    "longitude": -8.5837492
+  },
+  "Etihad Stadium, Manchester": {
+    "latitude": 53.4831448,
+    "longitude": -2.2005273
+  },
+  "FNB Stadium, Johannesburg": {
+    "latitude": -26.2347063,
+    "longitude": 27.9826439
+  },
+  "Fenway Park, Boston": {
+    "latitude": 42.3464614,
+    "longitude": -71.0970999
+  },
+  "Franklin's Gardens, Northampton": {
+    "latitude": 52.2394934,
+    "longitude": -0.9195815
+  },
+  "Fratton Park, Portsmouth": {
+    "latitude": 50.7963238,
+    "longitude": -1.0638836
+  },
+  "Gander Green Lane, Sutton": {
+    "latitude": 51.3641973,
+    "longitude": -0.2062369
+  },
+  "Go Media Stadium, Auckland": {
+    "latitude": -36.9178349,
+    "longitude": 174.8122802
+  },
+  "Grosvenor Vale, Ruislip": {
+    "latitude": 51.5683609,
+    "longitude": -0.421121
+  },
+  "Groupama Stadium, Décines-Charpieu": {
+    "latitude": 45.7653624,
+    "longitude": 4.9820543
+  },
+  "Gtech Community Stadium, London": {
+    "latitude": 51.490713,
+    "longitude": -0.2889802
+  },
+  "Hard Rock Stadium, Miami Gardens": {
+    "latitude": 25.9579032,
+    "longitude": -80.2388497
+  },
+  "Honda Center, Anaheim": {
+    "latitude": 33.8078316,
+    "longitude": -117.876534
+  },
+  "Ibrox Stadium, Glasgow": {
+    "latitude": 55.8532207,
+    "longitude": -4.3093239
+  },
+  "Intuit Dome, Inglewood": {
+    "latitude": 33.9442586,
+    "longitude": -118.3421719
+  },
+  "Jan Breydelstadion, Bruges": {
+    "latitude": 51.1933461,
+    "longitude": 3.1805853
+  },
+  "Jawaharlal Nehru Stadium, Ernakulam": {
+    "latitude": 9.9980608,
+    "longitude": 76.3004362
+  },
+  "Johan Cruijff ArenA, Amsterdam": {
+    "latitude": 52.314353,
+    "longitude": 4.9428431
+  },
+  "Karaiskakis Stadium, Piraeus": {
+    "latitude": 37.9464689,
+    "longitude": 23.6644117
+  },
+  "Kaseya Center, Miami": {
+    "latitude": 25.7813595,
+    "longitude": -80.1879435
+  },
+  "Kassam Stadium, Oxford": {
+    "latitude": 51.7164667,
+    "longitude": -1.2076599
+  },
+  "Kenilworth Road, Luton": {
+    "latitude": 51.8848937,
+    "longitude": -0.4284145
+  },
+  "King Fahd International Stadium, Riyadh": {
+    "latitude": 24.7885806,
+    "longitude": 46.8391449
+  },
+  "Kingfield Stadium, Woking": {
+    "latitude": 51.3063222,
+    "longitude": -0.5588831
+  },
+  "Lambeau Field, Green Bay": {
+    "latitude": 44.5009705,
+    "longitude": -88.0619681
+  },
+  "Lamex Stadium, Stevenage": {
+    "latitude": 51.8896479,
+    "longitude": -0.1937405
+  },
+  "Levi's Stadium, Santa Clara": {
+    "latitude": 37.4029867,
+    "longitude": -121.9696489
+  },
+  "Lincoln Financial Field, Philadelphia": {
+    "latitude": 39.9009099,
+    "longitude": -75.1674892
+  },
+  "Loftus Road Stadium, London": {
+    "latitude": 51.5094016,
+    "longitude": -0.2321136
+  },
+  "Loftus Versfeld Stadium, Pretoria": {
+    "latitude": -25.7532347,
+    "longitude": 28.2229327
+  },
+  "London Stadium, London": {
+    "latitude": 51.5386207,
+    "longitude": -0.0166238
+  },
+  "Los Angeles Memorial Coliseum, Los Angeles": {
+    "latitude": 34.0139159,
+    "longitude": -118.2877996
+  },
+  "Lumen Field, Seattle": {
+    "latitude": 47.5953459,
+    "longitude": -122.3316443
+  },
+  "Lusail Stadium, Lusail": {
+    "latitude": 25.4131991,
+    "longitude": 51.4942435
+  },
+  "Madison Square Garden, New York": {
+    "latitude": 40.7505129,
+    "longitude": -73.9935159
+  },
+  "Maracanã, Rio de Janeiro": {
+    "latitude": -22.9121619,
+    "longitude": -43.2311861
+  },
+  "Meadow Park, Borehamwood": {
+    "latitude": 51.6620315,
+    "longitude": -0.2724395
+  },
+  "Melbourne Cricket Ground, Melbourne": {
+    "latitude": -37.819909,
+    "longitude": 144.983225
+  },
+  "Mercedes-Benz Stadium, Atlanta": {
+    "latitude": 33.7554123,
+    "longitude": -84.4008493
+  },
+  "MetLife Stadium, East Rutherford": {
+    "latitude": 40.8135071,
+    "longitude": -74.0743442
+  },
+  "Michigan Stadium, Ann Arbor": {
+    "latitude": 42.2658285,
+    "longitude": -83.7478267
+  },
+  "Milliy Stadium, Tashkent": {
+    "latitude": 41.2797405,
+    "longitude": 69.2126208
+  },
+  "Mineirão, Belo Horizonte": {
+    "latitude": -19.865962,
+    "longitude": -43.9711239
+  },
+  "Moses Mabhida Stadium, Durban": {
+    "latitude": -29.8290201,
+    "longitude": 31.0313741
+  },
+  "National Stadium, Tokyo": {
+    "latitude": 35.677954,
+    "longitude": 139.7147442
+  },
+  "Nissan Stadium, Yokohama": {
+    "latitude": 35.5099882,
+    "longitude": 139.6063825
+  },
+  "Noevir Stadium Kobe, Kobe": {
+    "latitude": 34.6566966,
+    "longitude": 135.16976
+  },
+  "Ohio Stadium, Columbus": {
+    "latitude": 40.0016458,
+    "longitude": -83.0197374
+  },
+  "Old Trafford, Manchester": {
+    "latitude": 53.4631096,
+    "longitude": -2.2913865
+  },
+  "Oracle Park, San Francisco": {
+    "latitude": 37.7786059,
+    "longitude": -122.3894716
+  },
+  "Orange Vélodrome, Marseille": {
+    "latitude": 43.2698474,
+    "longitude": 5.3959082
+  },
+  "Orlando Stadium, Johannesburg": {
+    "latitude": -26.2317243,
+    "longitude": 27.9227989
+  },
+  "Panasonic Stadium Suita, Suita": {
+    "latitude": 34.8026074,
+    "longitude": 135.5381257
+  },
+  "Parc des Princes, Paris": {
+    "latitude": 48.8413634,
+    "longitude": 2.2530693
+  },
+  "Philips Stadion, Eindhoven": {
+    "latitude": 51.4417077,
+    "longitude": 5.4674257
+  },
+  "Plough Lane, London": {
+    "latitude": 51.4299291,
+    "longitude": -0.1861732
+  },
+  "Portman Road, Ipswich": {
+    "latitude": 52.057277,
+    "longitude": 1.1458453
+  },
+  "Priestfield Stadium, Gillingham": {
+    "latitude": 51.3842253,
+    "longitude": 0.5609658
+  },
+  "Prince Moulay Abdellah Stadium, Rabat": {
+    "latitude": 33.9598204,
+    "longitude": -6.889071
+  },
+  "Providence Park, Portland": {
+    "latitude": 45.5215291,
+    "longitude": -122.6918185
+  },
+  "Prudential Center, Newark": {
+    "latitude": 40.7334302,
+    "longitude": -74.1711482
+  },
+  "RAMS Park, Istanbul": {
+    "latitude": 41.103369,
+    "longitude": 28.9909522
+  },
+  "Ramón Sánchez-Pizjuán, Seville": {
+    "latitude": 37.3846337,
+    "longitude": -5.9711558
+  },
+  "Recreation Ground, Aldershot": {
+    "latitude": 51.2483133,
+    "longitude": -0.7549202
+  },
+  "Riyadh Air Metropolitano, Madrid": {
+    "latitude": 40.4360102,
+    "longitude": -3.599699
+  },
+  "Rogers Arena, Vancouver": {
+    "latitude": 49.2779085,
+    "longitude": -123.1089417
+  },
+  "Rogers Centre, Toronto": {
+    "latitude": 43.6416598,
+    "longitude": -79.3891976
+  },
+  "Rogers Place, Edmonton": {
+    "latitude": 53.5467936,
+    "longitude": -113.4977946
+  },
+  "Roots Hall, Southend-on-Sea": {
+    "latitude": 51.5490442,
+    "longitude": 0.7015486
+  },
+  "Rose Bowl, Pasadena": {
+    "latitude": 34.1613492,
+    "longitude": -118.1676674
+  },
+  "Saitama Stadium 2002, Saitama": {
+    "latitude": 35.9030742,
+    "longitude": 139.7176057
+  },
+  "Salt Lake Stadium, Kolkata": {
+    "latitude": 22.5731115,
+    "longitude": 88.4030891
+  },
+  "San Mamés, Bilbao": {
+    "latitude": 43.264204,
+    "longitude": -2.9493915
+  },
+  "San Siro, Milan": {
+    "latitude": 45.4782003,
+    "longitude": 9.123964
+  },
+  "Santiago Bernabéu, Madrid": {
+    "latitude": 40.4523667,
+    "longitude": -3.6907254
+  },
+  "Scotiabank Arena, Toronto": {
+    "latitude": 43.6434338,
+    "longitude": -79.3790777
+  },
+  "Select Car Leasing Stadium, Reading": {
+    "latitude": 51.4223346,
+    "longitude": -0.9831238
+  },
+  "Selhurst Park, London": {
+    "latitude": 51.3982429,
+    "longitude": -0.0852551
+  },
+  "Seoul World Cup Stadium, Seoul": {
+    "latitude": 37.5683021,
+    "longitude": 126.8972477
+  },
+  "Signal Iduna Park, Dortmund": {
+    "latitude": 51.4924922,
+    "longitude": 7.4518549
+  },
+  "Silverlake Stadium, Eastleigh": {
+    "latitude": 50.9524511,
+    "longitude": -1.3719149
+  },
+  "Sixfields Stadium, Northampton": {
+    "latitude": 52.2352633,
+    "longitude": -0.9335741
+  },
+  "SoFi Stadium, Inglewood": {
+    "latitude": 33.9534074,
+    "longitude": -118.3390098
+  },
+  "Soldier Field, Chicago": {
+    "latitude": 41.8623356,
+    "longitude": -87.6176477
+  },
+  "Sports Illustrated Stadium, Harrison": {
+    "latitude": 40.7368897,
+    "longitude": -74.1502625
+  },
+  "Spotify Camp Nou, Barcelona": {
+    "latitude": 41.3808806,
+    "longitude": 2.1228182
+  },
+  "Sree Kanteerava Stadium, Bengaluru": {
+    "latitude": 12.9693497,
+    "longitude": 77.592661
+  },
+  "St James' Park, Newcastle upon Tyne": {
+    "latitude": 54.9754693,
+    "longitude": -1.6218737
+  },
+  "St Mary's Stadium, Southampton": {
+    "latitude": 50.9058615,
+    "longitude": -1.3908774
+  },
+  "Stade Abdoulaye Wade, Diamniadio": {
+    "latitude": 14.7327572,
+    "longitude": -17.2014923
+  },
+  "Stade Nelson Mandela, Algiers": {
+    "latitude": 36.6939429,
+    "longitude": 3.1220307
+  },
+  "Stade Olympique Alassane Ouattara, Abidjan": {
+    "latitude": 5.4804988,
+    "longitude": -4.0745027
+  },
+  "Stade Olympique de Radès, Radès": {
+    "latitude": 36.7477717,
+    "longitude": 10.27314
+  },
+  "Stade des Martyrs, Kinshasa": {
+    "latitude": -4.3301897,
+    "longitude": 15.3103635
+  },
+  "Stadio Diego Armando Maradona, Naples": {
+    "latitude": 40.8279773,
+    "longitude": 14.192889
+  },
+  "Stadio Olimpico, Rome": {
+    "latitude": 41.9387659,
+    "longitude": 12.458134
+  },
+  "Stadion An der Alten Försterei, Berlin": {
+    "latitude": 52.4569741,
+    "longitude": 13.5680789
+  },
+  "Stadion Maksimir, Zagreb": {
+    "latitude": 45.8186879,
+    "longitude": 16.0179376
+  },
+  "Stadium MK, Milton Keynes": {
+    "latitude": 52.009625,
+    "longitude": -0.7335404
+  },
+  "Stamford Bridge, London": {
+    "latitude": 51.4816869,
+    "longitude": -0.1910336
+  },
+  "State Farm Stadium, Glendale": {
+    "latitude": 33.5270393,
+    "longitude": -112.2617088
+  },
+  "StoneX Stadium, London": {
+    "latitude": 51.6033587,
+    "longitude": -0.2242463
+  },
+  "Strawberry Arena, Solna": {
+    "latitude": 59.3725039,
+    "longitude": 18.0016672
+  },
+  "Suncorp Stadium, Brisbane": {
+    "latitude": -27.4648602,
+    "longitude": 153.0096055
+  },
+  "TD Garden, Boston": {
+    "latitude": 42.3662986,
+    "longitude": -71.0621622
+  },
+  "The Den, London": {
+    "latitude": 51.4859656,
+    "longitude": -0.0509103
+  },
+  "The Hive Stadium, London": {
+    "latitude": 51.6026364,
+    "longitude": -0.2917085
+  },
+  "The Valley, London": {
+    "latitude": 51.4863915,
+    "longitude": 0.0361585
+  },
+  "Tottenham Hotspur Stadium, London": {
+    "latitude": 51.604157,
+    "longitude": -0.0662604
+  },
+  "Twickenham Stadium, Twickenham": {
+    "latitude": 51.4560051,
+    "longitude": -0.3415047
+  },
+  "Twickenham Stoop, Twickenham": {
+    "latitude": 51.4501757,
+    "longitude": -0.3442515
+  },
+  "UBS Arena, Elmont": {
+    "latitude": 40.7116942,
+    "longitude": -73.7259229
+  },
+  "Ullevaal Stadion, Oslo": {
+    "latitude": 59.949136,
+    "longitude": 10.7343487
+  },
+  "United Center, Chicago": {
+    "latitude": 41.8806831,
+    "longitude": -87.6741851
+  },
+  "Vicarage Road, Watford": {
+    "latitude": 51.6501435,
+    "longitude": -0.4032499
+  },
+  "Villa Park, Birmingham": {
+    "latitude": 52.5091264,
+    "longitude": -1.8850354
+  },
+  "Wembley Stadium, London": {
+    "latitude": 51.5560695,
+    "longitude": -0.2796034
+  },
+  "Weston Homes Stadium, Peterborough": {
+    "latitude": 52.5644502,
+    "longitude": -0.2400569
+  },
+  "Workers' Stadium, Beijing": {
+    "latitude": 39.9323548,
+    "longitude": 116.4442038
+  },
+  "Wrigley Field, Chicago": {
+    "latitude": 41.9481846,
+    "longitude": -87.655559
+  },
+  "Yankee Stadium, Bronx": {
+    "latitude": 40.8295828,
+    "longitude": -73.9265212
+  },
+  "Şükrü Saracoğlu Stadium, Istanbul": {
+    "latitude": 40.9875807,
+    "longitude": 29.0369773
+  }
+}

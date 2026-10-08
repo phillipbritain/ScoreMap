@@ -16,7 +16,7 @@ public class ScenarioSwitchingTests
               "league": "NFL",
               "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "score": 14 },
               "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
-              "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+              "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
               "startsIn": "-40m",
               "status": "{{status}}"
             }

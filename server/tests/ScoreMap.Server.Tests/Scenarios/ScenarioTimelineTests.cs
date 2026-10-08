@@ -13,6 +13,9 @@ public sealed class ScenarioTimelineTests : IDisposable
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer },
     ];
 
+    private static readonly ScenarioVenue[] Venues =
+        [new("Arrowhead Stadium", "Kansas City", "MO", "USA", new ScenarioTeam("Kansas City Chiefs", "KC", null), ["worldwide"])];
+
     private static readonly DateTimeOffset StartedAt = new(2026, 10, 4, 18, 0, 0, TimeSpan.Zero);
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-scenario-timeline-{Guid.NewGuid():N}");
@@ -102,7 +105,7 @@ public sealed class ScenarioTimelineTests : IDisposable
     public void A_scenario_without_a_timeline_never_changes_or_starts_again()
     {
         File.WriteAllText(Path.Combine(_folder, "still.json"), $$"""{ "games": [ {{Game("kc-buf")}} ] }""");
-        var scenario = ScenarioReader.Read(_folder, "still", Leagues);
+        var scenario = ScenarioReader.Read(_folder, "still", Leagues, Venues);
 
         var game = Single(scenario, "10h");
         Assert.Equal("kc-buf", game.Id);
@@ -195,7 +198,7 @@ public sealed class ScenarioTimelineTests : IDisposable
     {
         var games = string.Join(", ", [Game("kc-buf"), .. extraGames]);
         File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""{ "games": [ {{games}} ], "timeline": { {{timeline}} } }""");
-        return ScenarioReader.Read(_folder, "sample", Leagues);
+        return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
     }
 
     private static string Game(string id, string status = "live", string startsIn = "-40m") => $$"""
@@ -204,7 +207,7 @@ public sealed class ScenarioTimelineTests : IDisposable
           "league": "NFL",
           "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "score": 14 },
           "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
-          "venue": { "name": "GEHA Field at Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+          "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
           "startsIn": "{{startsIn}}",
           "status": "{{status}}",
           "clock": "8:12",

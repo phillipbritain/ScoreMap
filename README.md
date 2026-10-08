@@ -5,7 +5,7 @@ A globe showing live sports games as pins at their venues, with scores that upda
 ## Layout
 
 - `server/` — C# ASP.NET Core server (`ScoreMap.slnx`)
-  - `src/ScoreMap.Server/` — the server: game feed provider (`GameFeed/`), game board (`Games/`), venue locator (`Venues/`), SignalR hub (`Hubs/`)
+  - `src/ScoreMap.Server/` — the server: game feed provider (`GameFeed/`), game board (`Games/`), poller (`Live/`), SignalR hub (`Hubs/`), venue locator and photos (`Venues/`), watch and stream links (`WatchLinks/`), scenarios for local runs (`Scenarios/`)
   - `tests/ScoreMap.Server.Tests/` — server seam tests: the real server with fake provider and clock
 - `web/` — React + TypeScript browser app built with Vite, MapLibre globe, Vitest unit tests
 
@@ -27,9 +27,11 @@ npm --prefix web install   # first time only
 npm --prefix web run dev   # browser app on http://localhost:5173
 ```
 
-Open http://localhost:5173. The Vite dev server proxies `/hubs` (SignalR) to the server.
+Open http://localhost:5173. The Vite dev server proxies `/hubs` (SignalR) and `/api` to the server.
 
 Or, on Windows, run both in the background with `./scripts/dev.ps1 start`, and `./scripts/dev.ps1 stop` when you're done (`status` says what's running). Logs go to `%TEMP%\scoremap\`.
+
+Run locally, the app shows a **scenario** (made-up games at real venues, ADR-0009) rather than real games: `worldwide` by default, set by `Scenario` in `appsettings.Development.json` or `./scripts/dev.ps1 start -Scenario <name>` (`real` for real ESPN games). A scenario's games run on a scenario clock at a speed from 1× (real time) up to 64×, set by `ScenarioSpeed` or `-Speed <n>`. Pills at the bottom left of the globe switch the scenario and the speed while it runs, for every open tab, and the scenario clock shows at the bottom centre; Shift+S hides them. Scenario files are in `server/src/ScoreMap.Server/Scenarios/Files/`.
 
 The server reads each league's games from ESPN's scoreboards for yesterday and today (and, within 3 hours of midnight, tomorrow), in US Eastern days as ESPN keeps them, and looks each venue up once through OpenStreetMap Nominatim, saving the results to `server/src/ScoreMap.Server/data/venue-locations.json` (git-ignored; delete it to look venues up again). It also finds each venue's photo once, for the game panel: ESPN's own, or else the venue's Wikidata image from Wikimedia Commons with its author and licence. These are saved to `server/src/ScoreMap.Server/data/venue-photos.json` (also git-ignored; delete it to search again).
 
@@ -49,9 +51,14 @@ The game panel can also show unofficial stream links (hobby v1 only, ADR-0002). 
 
 ```sh
 dotnet test server/ScoreMap.slnx
-npm --prefix web test
+npm --prefix web run lint
+npx --prefix web tsc -b web
+npm --prefix web test               # unit tests, in Node
+npm --prefix web run test:browser   # the globe map's tests, in headless Chromium (ADR-0008)
 ```
+
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request.
 
 ## Deploy
 
-ScoreMap runs on Azure App Service. `dotnet publish` also builds the browser app into the published `wwwroot`, so the server serves the whole app; after a one-time setup, `./scripts/deploy.ps1 -ResourceGroup <group> -AppName <app>` publishes and deploys. See [docs/deploy.md](docs/deploy.md).
+ScoreMap runs on Azure App Service. `dotnet publish` also builds the browser app into the published `wwwroot`, so the server serves the whole app. After a one-time setup, `.github/workflows/deploy.yml` tests, publishes and deploys on every push to `main`; `./scripts/deploy.ps1 -ResourceGroup <group> -AppName <app>` deploys by hand. See [docs/deploy.md](docs/deploy.md).

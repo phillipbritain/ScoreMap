@@ -6,27 +6,33 @@ namespace ScoreMap.Server.Scenarios;
 
 public static class ScenarioEndpoints
 {
-    /// <summary>What the browser's scenario picker shows: the running scenario (or "real") and every scenario file.</summary>
-    public sealed record ScenarioListing(string Running, IReadOnlyList<string> Scenarios);
+    /// <summary>
+    /// What the browser's scenario pill, speed pill and clock show: the running scenario (or "real") and
+    /// every scenario file, the speed and the speeds to choose from, and where the clock games are on
+    /// is (the scenario clock, or the real time while real games run), for the browser to run forward.
+    /// </summary>
+    public sealed record ScenarioListing(
+        string Running, IReadOnlyList<string> Scenarios, int Speed, IReadOnlyList<int> Speeds, ClockAnchor Clock);
 
     /// <summary>A switch: a scenario's name, or "real" for real games.</summary>
     public sealed record ScenarioSwitch(string? Name);
 
+    /// <summary>A change of speed.</summary>
+    public sealed record SpeedChange(int Speed);
+
     /// <summary>
-    /// The scenario picker's endpoints (ADR-0009): the listing, and a switch of the server's one
-    /// source of games. Outside Development there is no switcher, so the server lists no scenarios
-    /// and refuses a switch.
+    /// The scenario pill's and speed pill's endpoints (ADR-0009): the listing, a switch of the server's
+    /// one source of games, and a change of the scenario clock's speed. Outside Development there is no
+    /// switcher, so the server lists no scenarios and refuses a switch or a change of speed.
     /// </summary>
     public static WebApplication MapScenarios(this WebApplication app)
     {
         app.MapGet("/api/scenarios", (IServiceProvider services) =>
             services.GetService<ScenarioSwitcher>() is { } switcher
                 ? Listing(switcher)
-                : new ScenarioListing(ScenarioSwitcher.RealGames, []));
+                : new ScenarioListing(ScenarioSwitcher.RealGames, [], 1, [], ClockAnchor.RealTime(services.GetRequiredService<TimeProvider>())));
 
-        // Switches every browser: the poller fetches every league from the new source straight away,
-        // and the change events take the old games away and bring the new ones. Every browser is
-        // told what is running now, so each one's pill follows.
+        // Switches every browser: the change events take the old games away and bring the new ones.
         app.MapPut("/api/scenarios/running", async (
             ScenarioSwitch request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
             CancellationToken cancellationToken) =>
@@ -43,12 +49,45 @@ public static class ScenarioEndpoints
             {
                 return Results.Problem(e.Message, statusCode: StatusCodes.Status422UnprocessableEntity);
             }
-            await poller.StartAfreshAsync(switcher.Polling, cancellationToken);
-            await hub.Clients.All.SendAsync(GamesHub.ScenarioSwitchedMessage, switcher.Running, cancellationToken);
-            return Results.Ok(Listing(switcher));
+            return Results.Ok(await StartAfreshAsync(switcher, poller, hub, cancellationToken));
+        });
+
+        // Carries on from where the running scenario is, at the new speed, in every browser.
+        app.MapPut("/api/scenarios/speed", async (
+            SpeedChange request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
+            CancellationToken cancellationToken) =>
+        {
+            if (services.GetService<ScenarioSwitcher>() is not { } switcher)
+                return Results.NotFound("Scenarios are only available when ScoreMap runs locally");
+            if (!ScenarioClock.IsSpeed(request.Speed))
+                return Results.BadRequest($"There is no speed {request.Speed}; it must be one of {ScenarioClock.SpeedList}");
+            try
+            {
+                switcher.ChangeSpeed(request.Speed);
+            }
+            catch (InvalidOperationException e)
+            {
+                return Results.Conflict(e.Message);
+            }
+            return Results.Ok(await StartAfreshAsync(switcher, poller, hub, cancellationToken));
         });
         return app;
     }
 
-    private static ScenarioListing Listing(ScenarioSwitcher switcher) => new(switcher.Running, switcher.Scenarios);
+    /// <summary>
+    /// After a switch or a change of speed: the poller fetches every league straight away, at the
+    /// intervals for what is running now, and every browser is told the new listing, so each one's
+    /// pills and clock follow.
+    /// </summary>
+    private static async Task<ScenarioListing> StartAfreshAsync(
+        ScenarioSwitcher switcher, Poller poller, IHubContext<GamesHub> hub, CancellationToken cancellationToken)
+    {
+        await poller.StartAfreshAsync(switcher.Polling, cancellationToken);
+        var listing = Listing(switcher);
+        await hub.Clients.All.SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
+        return listing;
+    }
+
+    private static ScenarioListing Listing(ScenarioSwitcher switcher) =>
+        new(switcher.Running, switcher.Scenarios, switcher.Speed, ScenarioClock.Speeds, switcher.Clock);
 }

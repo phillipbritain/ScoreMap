@@ -80,11 +80,11 @@ public class ScenarioSwitchingTests
         await other.NextSnapshotAsync();
 
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" })).EnsureSuccessStatusCode();
-        Assert.Equal("second", await client.NextScenarioSwitchAsync());
-        Assert.Equal("second", await other.NextScenarioSwitchAsync());
+        Assert.Equal("second", (await client.NextScenarioChangeAsync()).Running);
+        Assert.Equal("second", (await other.NextScenarioChangeAsync()).Running);
 
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
-        Assert.Equal("real", await other.NextScenarioSwitchAsync());
+        Assert.Equal("real", (await other.NextScenarioChangeAsync()).Running);
     }
 
     [Fact]

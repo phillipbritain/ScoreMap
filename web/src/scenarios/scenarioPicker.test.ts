@@ -1,13 +1,30 @@
 import { describe, expect, it } from 'vitest'
-import { pickerEntries, pillLabel, showsPill, togglesPill, withRunning } from './scenarioPicker'
+import {
+  clockReading,
+  pickerEntries,
+  pillLabel,
+  showsScenarioControls,
+  speedEntries,
+  speedChangeable,
+  speedLabel,
+  togglesScenarioControls,
+  type ScenarioListing,
+} from './scenarioPicker'
 
-const local = { running: 'crowded', scenarios: ['crowded', 'edge-cases', 'worldwide'] }
+const clock = { at: '2026-10-04T18:00:00Z', reads: '2026-10-04T20:00:00Z' }
+const local: ScenarioListing = {
+  running: 'crowded',
+  scenarios: ['crowded', 'edge-cases', 'worldwide'],
+  speed: 16,
+  speeds: [1, 2, 4, 8, 16, 32, 64],
+  clock,
+}
 // What the deployed server says: no scenarios.
-const deployed = { running: 'real', scenarios: [] }
+const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 1, speeds: [], clock }
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {
-    expect(showsPill(local, { hidden: false })).toBe(true)
+    expect(showsScenarioControls(local, { hidden: false })).toBe(true)
     expect(pillLabel(local)).toBe('Scenario: crowded')
   })
 
@@ -16,19 +33,8 @@ describe('the scenario pill', () => {
   })
 
   it('never shows when the server has no scenarios, or before it has said', () => {
-    expect(showsPill(deployed, { hidden: false })).toBe(false)
-    expect(showsPill(null, { hidden: false })).toBe(false)
-  })
-})
-
-describe('a switch made in another browser', () => {
-  it('moves the pill to the scenario now running, keeping the list', () => {
-    expect(withRunning(local, 'worldwide')).toEqual({ running: 'worldwide', scenarios: local.scenarios })
-    expect(pillLabel(withRunning(local, 'real') ?? local)).toBe('Scenario: Real games')
-  })
-
-  it('leaves a pill that has no list yet to the list when it comes', () => {
-    expect(withRunning(null, 'worldwide')).toBeNull()
+    expect(showsScenarioControls(deployed, { hidden: false })).toBe(false)
+    expect(showsScenarioControls(null, { hidden: false })).toBe(false)
   })
 })
 
@@ -49,29 +55,66 @@ describe('the scenario list', () => {
   })
 })
 
+describe('the speed pill', () => {
+  it('shows the speed', () => {
+    expect(speedLabel(16)).toBe('16×')
+  })
+
+  it("lists the server's speeds, marking the current one", () => {
+    expect(speedEntries({ ...local, speeds: [1, 2, 16] })).toEqual([
+      { speed: 1, label: '1×', current: false },
+      { speed: 2, label: '2×', current: false },
+      { speed: 16, label: '16×', current: true },
+    ])
+  })
+
+  it('can change the speed while a scenario runs, but not while real games run', () => {
+    expect(speedChangeable(local)).toBe(true)
+    expect(speedChangeable({ ...local, running: 'real' })).toBe(false)
+  })
+})
+
+describe('the clock', () => {
+  const at = Date.parse(clock.at)
+
+  it('reads what the server said at the time it said it', () => {
+    expect(clockReading(local, at)).toEqual(new Date(clock.reads))
+  })
+
+  it('runs forward at the speed while a scenario runs', () => {
+    expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:02:40Z'))
+  })
+
+  it('runs at real time while real games run, whatever the speed', () => {
+    const real = { ...local, running: 'real', clock: { at: clock.at, reads: clock.at } }
+
+    expect(clockReading(real, at + 10_000)).toEqual(new Date('2026-10-04T18:00:10Z'))
+  })
+})
+
 describe('Shift+S', () => {
   const shiftS = { key: 'S', shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, target: null }
 
-  it('hides and shows the pill', () => {
-    expect(togglesPill(shiftS)).toBe(true)
-    expect(showsPill(local, { hidden: true })).toBe(false)
+  it('hides and shows the pills and the clock', () => {
+    expect(togglesScenarioControls(shiftS)).toBe(true)
+    expect(showsScenarioControls(local, { hidden: true })).toBe(false)
   })
 
   it('does nothing while typing in a text field', () => {
-    expect(togglesPill({ ...shiftS, target: { tagName: 'INPUT', isContentEditable: false } })).toBe(false)
-    expect(togglesPill({ ...shiftS, target: { tagName: 'TEXTAREA', isContentEditable: false } })).toBe(false)
-    expect(togglesPill({ ...shiftS, target: { tagName: 'SELECT', isContentEditable: false } })).toBe(false)
-    expect(togglesPill({ ...shiftS, target: { tagName: 'DIV', isContentEditable: true } })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'INPUT', isContentEditable: false } })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'TEXTAREA', isContentEditable: false } })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'SELECT', isContentEditable: false } })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'DIV', isContentEditable: true } })).toBe(false)
   })
 
   it('works with the focus on a button', () => {
-    expect(togglesPill({ ...shiftS, target: { tagName: 'BUTTON', isContentEditable: false } })).toBe(true)
+    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'BUTTON', isContentEditable: false } })).toBe(true)
   })
 
   it('is only S with Shift alone', () => {
-    expect(togglesPill({ ...shiftS, key: 's', shiftKey: false })).toBe(false)
-    expect(togglesPill({ ...shiftS, ctrlKey: true })).toBe(false)
-    expect(togglesPill({ ...shiftS, altKey: true })).toBe(false)
-    expect(togglesPill({ ...shiftS, metaKey: true })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, key: 's', shiftKey: false })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, ctrlKey: true })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, altKey: true })).toBe(false)
+    expect(togglesScenarioControls({ ...shiftS, metaKey: true })).toBe(false)
   })
 })

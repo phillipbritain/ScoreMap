@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 
 namespace ScoreMap.Server.Tests.Support;
@@ -10,6 +11,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private readonly HashSet<string> _failing = [];
     private readonly HashSet<string> _timingOut = [];
     private readonly HashSet<string> _holding = [];
+    private readonly Dictionary<string, (FakeTimeProvider Clock, TimeSpan Takes)> _slow = new();
     private readonly TaskCompletionSource _heldFetchCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public void SetScoreboard(string leagueKey, params ProviderGame[] games)
@@ -45,6 +47,16 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
             _holding.Add(leagueKey);
     }
 
+    /// <summary>
+    /// Makes every fetch of the league take <paramref name="takes"/> on <paramref name="clock"/>, as a
+    /// slow source would (or as a test moving the clock while a fetch is under way does).
+    /// </summary>
+    public void TakeTime(string leagueKey, FakeTimeProvider clock, TimeSpan takes)
+    {
+        lock (_scoreboards)
+            _slow[leagueKey] = (clock, takes);
+    }
+
     /// <summary>Waits (in real time, briefly) until a held fetch has been cancelled.</summary>
     public Task HeldFetchCancelledAsync() => _heldFetchCancelled.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
@@ -69,6 +81,10 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
 
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
+        (FakeTimeProvider Clock, TimeSpan Takes) slow;
+        lock (_scoreboards)
+            _slow.TryGetValue(leagueKey, out slow);
+        slow.Clock?.Advance(slow.Takes);
         lock (_scoreboards)
         {
             _fetches[leagueKey] = _fetches.GetValueOrDefault(leagueKey) + 1;

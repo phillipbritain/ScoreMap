@@ -21,6 +21,15 @@ export function pillLabel(listing: ScenarioListing): string {
   return `Scenario: ${displayName(listing.running)}`
 }
 
+/**
+ * The listing once the server has said (over the games hub) that `running` is now running, as after
+ * a switch made in any browser. Before the pill has its listing there is nothing to change: the
+ * listing, when it comes, says what is running.
+ */
+export function withRunning(listing: ScenarioListing | null, running: string): ScenarioListing | null {
+  return listing && { ...listing, running }
+}
+
 export interface PickerEntry {
   /** What to switch the server to. */
   name: string

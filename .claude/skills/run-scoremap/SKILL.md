@@ -25,7 +25,7 @@ Finish every run with `stop`. Done means it printed `stopped: no ScoreMap proces
 
 Run locally, the app shows a **scenario** (made-up games at real venues, see `GLOSSARY.md` and ADR-0009) in place of real games, so checking a change never waits for real games to be on. It starts on `worldwide`; `./scripts/dev.ps1 start -Scenario <name>` starts on another, and `-Scenario real` on real ESPN games.
 
-A scenario's games run on the **scenario clock**, at a **speed** of 1× (real time) up to 64×. It starts at 1×; `./scripts/dev.ps1 start -Speed <n>` starts at another (1, 2, 4, 8, 16, 32 or 64).
+A scenario's games run on the **scenario clock**, at a **speed** of 1× (real time) up to 64×. It starts at 1×; `./scripts/dev.ps1 start -Speed <n>` starts at another of the speeds in `ScenarioClock.Speeds`.
 
 Pick the scenario that brings out what you're checking, and you know what should be on screen:
 
@@ -60,6 +60,7 @@ With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scor
 3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
 4. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
 5. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
+6. **Clear the map's attribution.** Below 640px MapLibre's attribution spans the bottom ~55px of the globe, so anything laid over the bottom must sit above it; check at 390×844.
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
 

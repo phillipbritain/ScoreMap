@@ -22,9 +22,9 @@
     appsettings.Development.json runs.
 
 .PARAMETER Speed
-    With start: the speed the scenario clock starts at, one of the speeds in ScenarioClock.Speeds
-    (1, 2, 4, 8, 16, 32 or 64). Unset, the speed from appsettings.Development.json. The server refuses to
-    start on any other, and its error is shown.
+    With start: the speed the scenario clock starts at, one of the speeds in ScenarioClock.Speeds.
+    Unset, the speed from appsettings.Development.json. The server refuses to start on any other, and
+    its error (which lists the speeds) is shown.
 
 .EXAMPLE
     ./scripts/dev.ps1 start
@@ -138,7 +138,16 @@ switch ($Action) {
             -RedirectStandardOutput (Join-Path $logs 'web.log') -RedirectStandardError (Join-Path $logs 'web.err.log')
 
         Write-Output "started server (pid $($server.Id)) and Vite (pid $($vite.Id)); logs in $logs"
-        Wait-Until-Answers $serverUrl 'server' $server (Join-Path $logs 'server.log') 60
-        Wait-Until-Answers $webUrl 'web' $vite (Join-Path $logs 'web.log') 30
+        try {
+            Wait-Until-Answers $serverUrl 'server' $server (Join-Path $logs 'server.log') 60
+            Wait-Until-Answers $webUrl 'web' $vite (Join-Path $logs 'web.log') 30
+        } catch {
+            # A failed start leaves nothing running, so the next start isn't refused.
+            foreach ($p in @($server, $vite)) {
+                if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+            }
+            Write-Output 'stopped what this start had started'
+            throw
+        }
     }
 }

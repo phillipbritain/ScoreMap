@@ -141,6 +141,32 @@ public class ScenarioSwitchingTests
         Assert.Equal((GameChangeKind.Added, "later"), (added.Kind, added.Game.Id));
     }
 
+    [Fact]
+    public async Task A_switch_waits_for_a_fetch_under_way_so_no_fetch_sees_it_half_made()
+    {
+        await using var server = new ScoreMapServer();
+        server.WriteScenario("first", OneGame("a"));
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
+        using var http = server.CreateClient();
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+        // The next fetch of real games is under way, and stays so until the feed releases it.
+        server.Feed.HoldUntilReleased(Nfl);
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        await server.Feed.WaitForFetchesAsync(Nfl, 2);
+
+        var switching = http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" });
+        await Task.Delay(200);
+        Assert.False(switching.IsCompleted, "the switch was made while a fetch was under way");
+        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        server.Feed.Release(Nfl);
+
+        (await switching.WaitAsync(TimeSpan.FromSeconds(10))).EnsureSuccessStatusCode();
+        Assert.Equivalent(
+            new[] { (GameChangeKind.Removed, "real-game"), (GameChangeKind.Added, "a") },
+            new[] { await client.NextChangeAsync(), await client.NextChangeAsync() }.Select(c => (c.Kind, c.Game.Id)));
+    }
+
     [Theory]
     [InlineData("missing", HttpStatusCode.NotFound, "no scenario \\\"missing\\\"")]
     [InlineData("../first", HttpStatusCode.NotFound, "no scenario")]

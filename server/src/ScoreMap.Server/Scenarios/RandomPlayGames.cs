@@ -4,28 +4,26 @@ using ScoreMap.Server.Games;
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// A scenario's games under random play (ADR-0009), as they stand at any time after it started.
+/// A scenario's games under random play (ADR-0009), as they stand at any time on the scenario clock
+/// after it started.
 /// Live games move on by themselves: they score at roughly their sport's margins, the clock and
 /// period move forward, and they go to breaks and finish. A game that has been Final for
 /// <see cref="FinalStays"/> drops out, and a new game takes its place at a random venue, Upcoming
 /// or straight into Live, so the number of Live games stays roughly steady.
 /// </summary>
 /// <remarks>
-/// Play moves on in steps of <see cref="Step"/> counted from the scenario's start, so with the same
-/// seed the games at a given time are the same however often they are asked for. Games play
-/// <see cref="Pace"/> times faster than real games, so there's a score every few seconds across a
-/// busy globe and games finish (and new ones arrive) every few minutes. <see cref="GamesAt"/> takes
-/// a lock, so the poller and a newly connected browser can ask at once.
+/// Play moves on in steps of <see cref="Step"/> of scenario time counted from the scenario's start, so
+/// with the same seed the games at a given reading of the scenario clock are the same however often
+/// they are asked for, whatever speed changes were made on the way. Games play as fast as real
+/// games: the scenario clock's speed is what makes them play faster. <see cref="GamesAt"/> takes a
+/// lock, so the poller and a newly connected browser can ask at once.
 /// </remarks>
 public sealed class RandomPlayGames
 {
-    /// <summary>How often play moves on.</summary>
+    /// <summary>How often play moves on, in scenario time.</summary>
     public static readonly TimeSpan Step = TimeSpan.FromSeconds(1);
 
-    /// <summary>How many times faster than a real game a game plays.</summary>
-    public const double Pace = 6;
-
-    /// <summary>How long a Final game stays before a new game takes its place.</summary>
+    /// <summary>How long a Final game stays before a new game takes its place, in scenario time.</summary>
     public static readonly TimeSpan FinalStays = TimeSpan.FromMinutes(1);
 
     /// <summary>The share of new games that start Upcoming (soon) rather than straight into Live.</summary>
@@ -49,7 +47,10 @@ public sealed class RandomPlayGames
         _games = scenario.Games.Select(game => Begin(game, startedAt)).ToList();
     }
 
-    /// <summary>The games as the feed reports them at <paramref name="now"/>. Time never goes back: an earlier time gives the games as they last were.</summary>
+    /// <summary>
+    /// The games as the feed reports them when the scenario clock reads <paramref name="now"/>. Time never
+    /// goes back: an earlier time gives the games as they last were.
+    /// </summary>
     public IReadOnlyList<ProviderGame> GamesAt(DateTimeOffset now)
     {
         lock (_lock)
@@ -95,7 +96,7 @@ public sealed class RandomPlayGames
     private void Play(PlayedGame played, DateTimeOffset at)
     {
         var sport = played.Sport;
-        var step = Pace * Step / played.League.PlannedLength;
+        var step = Step / played.League.PlannedLength;
         if (sport.IsPlaying(played.Through))
         {
             played.Game = played.Game with

@@ -34,6 +34,20 @@ export function dualTime(instant: string, venueTimeZone: string | null, viewer: 
   return { ...shown, venue: venueDay === viewerDay ? venueTime : `${venueDay}, ${venueTime}` }
 }
 
+/** An instant to the second in the viewer's time, in `dualTime`'s format, e.g. "Sun, Oct 4, 1:47:12 PM EDT". */
+export function clockTime(date: Date, viewer: Viewer = {}): string {
+  const { locale } = viewer
+  const zone = viewer.timeZone ?? new Intl.DateTimeFormat().resolvedOptions().timeZone
+  const seconds = format(date, locale, {
+    timeZone: zone,
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short',
+  })
+  return `${day(date, zone, locale)}, ${seconds}`
+}
+
 function day(date: Date, timeZone: string, locale?: string): string {
   return format(date, locale, { timeZone, weekday: 'short', month: 'short', day: 'numeric' })
 }

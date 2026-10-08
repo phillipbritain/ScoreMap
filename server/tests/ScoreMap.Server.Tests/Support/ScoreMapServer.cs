@@ -144,6 +144,9 @@ public sealed class ScoreMapServer(
     /// </summary>
     public string? Scenario { get; init; }
 
+    /// <summary>The speed the scenario clock starts at (the "ScenarioSpeed" setting), when a test sets it.</summary>
+    public string? ScenarioSpeed { get; init; }
+
     /// <summary>The folder the server reads scenario files from: a fresh temp folder, written by <see cref="WriteScenario"/>.</summary>
     public string ScenariosFolder { get; } = Path.Combine(Path.GetTempPath(), $"scoremap-scenarios-{Guid.NewGuid():N}");
 
@@ -204,6 +207,8 @@ public sealed class ScoreMapServer(
             builder.UseSetting("Scenarios:Folder", ScenariosFolder);
             builder.UseSetting("Venues:ScenarioLocationsPath", ScenarioVenueLocationsPath);
         }
+        if (ScenarioSpeed is not null)
+            builder.UseSetting("ScenarioSpeed", ScenarioSpeed);
         if (Environment is not null)
             builder.UseEnvironment(Environment);
         builder.ConfigureLogging(logging =>
@@ -315,7 +320,8 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
 
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
 
-    private readonly Channel<string> _scenarioSwitches = Channel.CreateUnbounded<string>();
+    private readonly Channel<ScenarioEndpoints.ScenarioListing> _scenarioChanges =
+        Channel.CreateUnbounded<ScenarioEndpoints.ScenarioListing>();
 
     /// <summary>The connection's id, the same as the hub's for it once started.</summary>
     public string ConnectionId =>
@@ -325,13 +331,13 @@ public sealed class TestClient(HubConnection connection) : IAsyncDisposable
     {
         connection.On<IReadOnlyList<Game>>(GamesHub.SnapshotMessage, games => _snapshot.TrySetResult(games));
         connection.On<GameChange>(GamesHub.ChangeMessage, change => _changes.Writer.TryWrite(change));
-        connection.On<string>(GamesHub.ScenarioSwitchedMessage, name => _scenarioSwitches.Writer.TryWrite(name));
+        connection.On<ScenarioEndpoints.ScenarioListing>(GamesHub.ScenarioChangedMessage, listing => _scenarioChanges.Writer.TryWrite(listing));
         await connection.StartAsync();
     }
 
-    /// <summary>The name of the scenario (or "real") the server next said it had switched to.</summary>
-    public async Task<string> NextScenarioSwitchAsync() =>
-        await _scenarioSwitches.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
+    /// <summary>What the server next said about scenarios, after a switch or a change of speed.</summary>
+    public async Task<ScenarioEndpoints.ScenarioListing> NextScenarioChangeAsync() =>
+        await _scenarioChanges.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
 
     public Task<IReadOnlyList<Game>> NextSnapshotAsync() => _snapshot.Task.WaitAsync(Timeout);
 

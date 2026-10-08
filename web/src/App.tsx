@@ -9,8 +9,10 @@ import { Globe } from './globe/Globe'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
+import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
-import { withRunning, type ScenarioListing } from './scenarios/scenarioPicker'
+import { SpeedPill } from './scenarios/SpeedPill'
+import { useScenarioControls } from './scenarios/useScenarioControls'
 
 const store = settingsStore(() => window.localStorage)
 
@@ -29,8 +31,9 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
-  // What the scenario pill shows; null until the server has said.
-  const [scenarios, setScenarios] = useState<ScenarioListing | null>(null)
+  // The scenario pill, speed pill and clock (local runs only).
+  const scenarios = useScenarioControls()
+  const { setListing: setScenarioListing } = scenarios
 
   useEffect(
     () =>
@@ -39,10 +42,10 @@ export default function App() {
         // The snapshot always comes first; a change before it has nothing to apply to.
         // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
         onChange: (change) => setGames((current) => current && applyChange(current, change)),
-        // A switch made in any browser: every pill follows.
-        onScenarioSwitched: (running) => setScenarios((current) => withRunning(current, running)),
+        // A switch or a change of speed made in any browser: every pill and clock follows.
+        onScenarioChanged: setScenarioListing,
       }),
-    [],
+    [setScenarioListing],
   )
   useEffect(() => store.save(viewerSettings), [viewerSettings])
 
@@ -64,14 +67,23 @@ export default function App() {
           onCameraMove={store.saveCamera}
           slowSpin={viewerSettings.slowSpin}
         />
-        {/* Before the filter menu, so an open filter menu lies over it on a phone. */}
-        <ScenarioPill listing={scenarios} setListing={setScenarios} />
-        <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
-        {message && (
-          <p className="no-pins" role="status">
-            {message}
-          </p>
+        {/* Before the filter menu, so an open filter menu lies over them on a phone. */}
+        {scenarios.shown && scenarios.listing && (
+          <div className="scenario-pills">
+            <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
+            <SpeedPill listing={scenarios.listing} setListing={setScenarioListing} />
+          </div>
         )}
+        <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
+        {/* The no-pins message sits above the clock. */}
+        <div className={scenarios.shown ? 'bottom-centre bottom-centre--scenario' : 'bottom-centre'}>
+          {message && (
+            <p className="no-pins" role="status">
+              {message}
+            </p>
+          )}
+          {scenarios.shown && scenarios.listing && <ScenarioClock listing={scenarios.listing} />}
+        </div>
       </div>
       {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
     </div>

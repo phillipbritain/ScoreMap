@@ -25,6 +25,8 @@ Finish every run with `stop`. Done means it printed `stopped: no ScoreMap proces
 
 Run locally, the app shows a **scenario** (made-up games at real venues, see `GLOSSARY.md` and ADR-0009) in place of real games, so checking a change never waits for real games to be on. It starts on `worldwide`; `./scripts/dev.ps1 start -Scenario <name>` starts on another, and `-Scenario real` on real ESPN games.
 
+A scenario's games run on the **scenario clock**, at a **speed** of 1× (real time) up to 64×. It starts at 1×; `./scripts/dev.ps1 start -Speed <n>` starts at another (1, 2, 4, 8, 16, 32 or 64).
+
 Pick the scenario that brings out what you're checking, and you know what should be on screen:
 
 | Scenario | What it shows | Use it for |
@@ -32,18 +34,18 @@ Pick the scenario that brings out what you're checking, and you know what should
 | `worldwide` | ~150 games on every continent: Upcoming, Live, Final, Disrupted | the globe as a whole, clusters, every status |
 | `crowded` | ~40 games in and around London | a Cluster zoomed out; score cards and a Crowd zoomed in over London |
 | `live-scoring` | 5 Live games (NFL, NBA, NHL, soccer, MLB, around New York and London); a score every ~3 s, the first at 3 s; soccer to HT at 30 s and back at 1m33s; MLB Final at 45 s; loops every 2 min | score cards and their animations |
-| `busy` | ~60 Live games on random play: scoring, breaks, finishes, new games arriving | the app under steady change |
+| `busy` | ~60 Live games on random play: scoring, breaks, finishes, new games arriving (at 1×, a score every ~15 s and a finish every few minutes; faster at higher speeds) | the app under steady change |
 | `lifecycle` | one game at the Bernabéu: Upcoming, Live at 15 s, HT at 45 s, Live at 1m5s, Final at 1m35s; loops every 2 min | status changes on one pin, card and panel |
 | `disrupted` | postponed, suspended and canceled games beside Upcoming, Live and Final ones, in New York and London | greyed-out Disrupted pins and cards |
 | `empty` | no games | the bare globe and the "No games right now." message |
 | `edge-cases` | an unfindable venue pinned at its city (Reykjavík), a 2–2 tie (Munich), long team names (Chicago), missing logos (Edmonton), three-digit scores (San Francisco) | layout at the extremes |
 
-Scripted times count from when the scenario starts or is switched to, on the real clock; switching to the running scenario starts it afresh.
+Scripted times count from when the scenario starts or is switched to, on the scenario clock, so at 16× a change written at 1m comes after 3.75 s. Switching to the running scenario starts it afresh; switching keeps the speed.
 
 To switch while running:
 
-- **The pill** at the top right ("Scenario: <name> ▾") lists the scenarios and "Real games"; picking one switches every open tab. `Shift+S` hides and shows it, for clean screenshots.
-- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`. The pill in every open tab shows the new name straight away.
+- **The pills** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the speed pill ("16× ▾") lists the speeds; picking one changes every open tab. A speed change carries on from where the scenario is. The speed pill is disabled while real games run. The scenario clock shows at the bottom centre (the real time while real games run). `Shift+S` hides and shows the pills and the clock, for clean screenshots.
+- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`, or `.../api/scenarios/speed` with `'{"speed":16}'`. The pills and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 

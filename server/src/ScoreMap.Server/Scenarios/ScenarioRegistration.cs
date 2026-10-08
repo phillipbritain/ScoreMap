@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Live;
 
@@ -26,12 +27,10 @@ public static class ScenarioRegistration
         services.Add(Keyed(realGames, ScenarioSwitcher.RealGamesKey));
         services.AddSingleton(sp => ActivatorUtilities.CreateInstance<ScenarioSwitcher>(sp, startWith));
         services.Replace(ServiceDescriptor.Singleton<IGameFeedProvider>(sp => sp.GetRequiredService<ScenarioSwitcher>()));
-        if (!startWith.Equals(ScenarioSwitcher.RealGames, StringComparison.OrdinalIgnoreCase))
-            services.PostConfigure<PollingOptions>(polling =>
-            {
-                polling.LiveInterval = ScenarioSwitcher.ScenarioPolling.LiveInterval;
-                polling.QuietInterval = ScenarioSwitcher.ScenarioPolling.QuietInterval;
-            });
+        // The poller starts at the intervals for what the switcher starts on: a scenario's, or the
+        // configured ones for real games, which the switcher goes back to on a switch to them.
+        services.Replace(ServiceDescriptor.Singleton(sp => ActivatorUtilities.CreateInstance<Poller>(
+            sp, Options.Create(sp.GetRequiredService<ScenarioSwitcher>().Polling))));
         return builder;
     }
 

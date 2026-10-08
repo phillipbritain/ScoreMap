@@ -1,6 +1,8 @@
 // PreToolUse hook for the Bash and PowerShell tools: blocks git commands that push to main,
-// force-push, or throw away local work. Exits 2 with a message on stderr to block; 0 to allow.
-// It matches command text, so it's an early warning, not a barrier: the branch rule on GitHub is that.
+// force-push, or throw away local work, and gh commands that merge a pull request (only the user
+// merges, after reviewing on GitHub). Exits 2 with a message on stderr to block; 0 to allow.
+// It matches command text, so it's an early warning, not a barrier. Nor is GitHub's branch rule
+// for Claude: commands run as the user, whose admin role can bypass it.
 import { execFileSync } from 'node:child_process'
 
 const PROTECTED_BRANCH = 'main'
@@ -14,7 +16,7 @@ for (const segment of command.split(/&&|\|\||[;|\n]/)) {
   if (reason) {
     process.stderr.write(
       `BLOCKED: \`${segment.trim()}\` ${reason}. The user has prevented you from doing this. ` +
-        'Push a feature branch and open a pull request instead, or ask the user to run it.\n',
+        'Push a feature branch and open a pull request for the user to review and merge, or ask the user to run it.\n',
     )
     process.exit(2)
   }
@@ -22,6 +24,9 @@ for (const segment of command.split(/&&|\|\||[;|\n]/)) {
 process.exit(0)
 
 function blockReason(words) {
+  const gh = words.indexOf('gh')
+  const merge = gh === -1 ? null : ghReason(words.slice(gh + 1))
+  if (merge) return merge
   const git = words.indexOf('git')
   if (git === -1) return null
   const { subcommand, args, dir } = gitSubcommand(words.slice(git + 1))
@@ -46,6 +51,14 @@ function blockReason(words) {
     default:
       return null
   }
+}
+
+// gh pr merge, or the REST/GraphQL merge through gh api.
+function ghReason(args) {
+  if (args[0] === 'pr' && args[1] === 'merge') return 'merges a pull request'
+  if (args[0] === 'api' && args.some((a) => /\/pulls\/\d+\/merge\b|mergePullRequest|enablePullRequestAutoMerge/.test(a)))
+    return 'merges a pull request'
+  return null
 }
 
 function pushReason(args, dir) {

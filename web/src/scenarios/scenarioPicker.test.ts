@@ -63,29 +63,29 @@ describe('the scenario list', () => {
 
 describe('the media keys', () => {
   it('light Play at Normal, Pause when paused, and Fast-forward at Fast and Faster', () => {
-    expect(litKey({ ...local, speed: 'Normal' })).toBe('play')
-    expect(litKey({ ...local, speed: 'Paused' })).toBe('pause')
-    expect(litKey({ ...local, speed: 'Fast' })).toBe('fastForward')
-    expect(litKey({ ...local, speed: 'Faster' })).toBe('fastForward')
+    expect(litKey('Normal')).toBe('play')
+    expect(litKey('Paused')).toBe('pause')
+    expect(litKey('Fast')).toBe('fastForward')
+    expect(litKey('Faster')).toBe('fastForward')
   })
 
   it('go to Normal on Play and pause on Pause, from any speed', () => {
-    for (const speed of ['Paused', 'Normal', 'Fast', 'Faster']) {
-      expect(pressedSpeed({ ...local, speed }, 'play')).toBe('Normal')
-      expect(pressedSpeed({ ...local, speed }, 'pause')).toBe('Paused')
+    for (const speed of ['Paused', 'Normal', 'Fast', 'Faster'] as const) {
+      expect(pressedSpeed(speed, 'play')).toBe('Normal')
+      expect(pressedSpeed(speed, 'pause')).toBe('Paused')
     }
   })
 
   it('go to Fast on Fast-forward, and flip between Fast and Faster when pressed again', () => {
-    expect(pressedSpeed({ ...local, speed: 'Paused' }, 'fastForward')).toBe('Fast')
-    expect(pressedSpeed({ ...local, speed: 'Normal' }, 'fastForward')).toBe('Fast')
-    expect(pressedSpeed({ ...local, speed: 'Fast' }, 'fastForward')).toBe('Faster')
-    expect(pressedSpeed({ ...local, speed: 'Faster' }, 'fastForward')).toBe('Fast')
+    expect(pressedSpeed('Paused', 'fastForward')).toBe('Fast')
+    expect(pressedSpeed('Normal', 'fastForward')).toBe('Fast')
+    expect(pressedSpeed('Fast', 'fastForward')).toBe('Faster')
+    expect(pressedSpeed('Faster', 'fastForward')).toBe('Fast')
   })
 
   it("grow Fast-forward's third triangle only at Faster", () => {
-    expect(showsFasterIcon({ ...local, speed: 'Faster' })).toBe(true)
-    for (const speed of ['Paused', 'Normal', 'Fast']) expect(showsFasterIcon({ ...local, speed })).toBe(false)
+    expect(showsFasterIcon('Faster')).toBe(true)
+    for (const speed of ['Paused', 'Normal', 'Fast'] as const) expect(showsFasterIcon(speed)).toBe(false)
   })
 
   it('can change the speed while a scenario runs, but not while real games run', () => {

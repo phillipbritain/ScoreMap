@@ -686,17 +686,6 @@ body {
   }
 }
 
-/* On a phone the map's attribution spreads across the bottom, so the pills and the clock sit above it. */
-@media (max-width: 640px) {
-  .scenario-pills {
-    bottom: 64px;
-  }
-
-  .bottom-centre--scenario {
-    bottom: 112px;
-  }
-}
-
 .no-pins {
   margin: 0;
   padding: 10px 16px;

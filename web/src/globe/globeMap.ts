@@ -32,7 +32,6 @@ import {
 import { pulse } from './pinPulse'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
-import { shouldSpin, spunLongitude } from './slowSpin'
 import { selectionColor } from './statusLook'
 import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout, type PinLayout } from './zoomLevels'
 
@@ -56,18 +55,13 @@ export interface GlobeMapOptions {
 }
 
 export const selectedPinLayer = 'pin-selected'
-// Marks the camera moves slow spin makes, to tell them apart from the viewer's own.
-const spinMove = { slowSpin: true }
-// After a long gap between frames (a hidden tab), spin on from where it was rather than jump.
-const maxSpinFrameMs = 100
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120
 
 /**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
  * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster or a crowd
- * zooms in until it splits. When nothing is selected and the viewer leaves it be, the globe can
- * turn slowly on its own (slow spin).
+ * zooms in until it splits.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
@@ -79,15 +73,7 @@ export class GlobeMap {
   /** The games as the globe last showed them, which tells what has changed in the next ones. */
   private shown = new Map<string, Game>()
   private selectedGameId: string | null = null
-  private slowSpin = false
   private clustering: PinLayout
-  // The viewer is interacting while holding the globe, and while any move that isn't slow spin
-  // runs: their drag, zoom or its glide afterwards, or a turn to a cluster they selected.
-  private holding = false
-  private moving = false
-  private spinning = false
-  private lastFrame: number | null = null
-  private frame: number
   private destroyed = false
 
   constructor(container: HTMLElement, { style, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
@@ -125,24 +111,16 @@ export class GlobeMap {
       map.on('mouseleave', layer, this.stopPointing)
     }
 
-    // Remember where the viewer leaves the globe. Spin moves aren't saved one by one (that would
-    // write to storage every frame); the camera is saved when spin stops and when the page closes.
-    map.on('movestart', this.moveStarted)
-    map.on('moveend', this.moveEnded)
+    // Remember where the viewer leaves the globe.
+    map.on('moveend', this.saveCamera)
     window.addEventListener('pagehide', this.saveCamera)
-    map.on('mousedown', this.hold)
-    map.on('touchstart', this.hold)
-    window.addEventListener('mouseup', this.release)
-    window.addEventListener('touchend', this.release)
-    window.addEventListener('touchcancel', this.release)
-    this.frame = requestAnimationFrame(this.spin)
   }
 
   /**
    * Shows these games, and animates the ones that changed since they were last shown (see
    * pinAnimation): the app hands over whole lists of games, so the globe finds what changed itself.
    * Only a game shown both times can animate. A game coming into view (a new game, or one the
-   * viewer's filters showed again) appears without one, and so does a game shown after a
+   * viewer's settings showed again) appears without one, and so does a game shown after a
    * reconnection if nothing about it worth noticing changed while the app was away.
    */
   show(games: readonly Game[]): void {
@@ -173,11 +151,6 @@ export class GlobeMap {
     if (game) this.map.easeTo({ center: [game.venue.longitude, game.venue.latitude], duration: 1200 })
   }
 
-  /** The "Slow spin" setting. */
-  setSlowSpin(on: boolean): void {
-    this.slowSpin = on
-  }
-
   /** The "Card style" setting. */
   setCardStyle(style: CardStyle): void {
     this.cards.setStyle(style)
@@ -186,11 +159,7 @@ export class GlobeMap {
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     this.destroyed = true
-    cancelAnimationFrame(this.frame)
     window.removeEventListener('pagehide', this.saveCamera)
-    window.removeEventListener('mouseup', this.release)
-    window.removeEventListener('touchend', this.release)
-    window.removeEventListener('touchcancel', this.release)
     this.cards.clear()
     this.removeGlow()
     this.names.remove()
@@ -327,37 +296,6 @@ export class GlobeMap {
   private readonly saveCamera = () => {
     const { lng, lat } = this.map.getCenter().wrap()
     this.onCameraMove({ longitude: lng, latitude: lat, zoom: this.map.getZoom() })
-  }
-
-  private readonly moveStarted = (event: object) => {
-    if (!('slowSpin' in event)) this.moving = true
-  }
-
-  private readonly moveEnded = (event: object) => {
-    if ('slowSpin' in event) return
-    this.moving = false
-    this.saveCamera()
-  }
-
-  private readonly hold = () => (this.holding = true)
-  private readonly release = () => (this.holding = false)
-
-  private readonly spin = (now: number) => {
-    const elapsed = Math.min(now - (this.lastFrame ?? now), maxSpinFrameMs)
-    this.lastFrame = now
-    const spinNow = shouldSpin({
-      slowSpin: this.slowSpin,
-      gameSelected: this.selectedGameId !== null,
-      interacting: this.holding || this.moving,
-    })
-    if (spinNow) {
-      const { lng, lat } = this.map.getCenter()
-      this.map.jumpTo({ center: [spunLongitude(lng, elapsed), lat] }, spinMove)
-    } else if (this.spinning) {
-      this.saveCamera()
-    }
-    this.spinning = spinNow
-    this.frame = requestAnimationFrame(this.spin)
   }
 }
 

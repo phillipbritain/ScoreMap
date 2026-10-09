@@ -263,7 +263,7 @@ describe('animations', () => {
     const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
     watching.observe(container, { childList: true, subtree: true })
 
-    // Hidden by the viewer's filters, then shown again with a new score. Straight after, so the map
+    // Hidden by the viewer's settings, then shown again with a new score. Straight after, so the map
     // still has its pin and could animate it: only what the globe last showed rules it out.
     globe.show([other])
     globe.show([game('A', { home: 7 }), other])
@@ -284,46 +284,6 @@ describe('animations', () => {
     await pause(300)
 
     expect(card('A')!.className).not.toContain('score-card--animate')
-  })
-})
-
-describe('slow spin', () => {
-  it('turns the globe west, and saves the camera when it stops', async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 10, zoom: 2 })
-    await vi.waitFor(() => expect(map.loaded()).toBe(true), { timeout: 10_000 })
-
-    globe.setSlowSpin(true)
-    await pause(500)
-    globe.setSlowSpin(false)
-
-    await cameraSettles(onCameraMove, (camera) => camera.longitude < -0.3 && camera.latitude === 10)
-  })
-
-  it('does not turn the globe while a game is selected', async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    const a = game('A', { longitude: 20 })
-    globe.show([a])
-    await pinsDrawn(map, smallPinLayer, a)
-    globe.select('A')
-    await cameraSettles(onCameraMove, (camera) => Math.abs(camera.longitude - 20) < 0.1)
-
-    globe.setSlowSpin(true)
-    await pause(500)
-
-    expect(map.getCenter().lng).toBeCloseTo(20)
-  })
-
-  it('does not turn the globe while the viewer holds it', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    await vi.waitFor(() => expect(map.loaded()).toBe(true), { timeout: 10_000 })
-    map.getCanvasContainer().dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: 400, clientY: 300 }))
-
-    globe.setSlowSpin(true)
-    await pause(500)
-    expect(map.getCenter().lng).toBeCloseTo(0)
-
-    window.dispatchEvent(new MouseEvent('mouseup'))
-    await vi.waitFor(() => expect(map.getCenter().lng).toBeLessThan(-0.1))
   })
 })
 

@@ -4,6 +4,7 @@ import {
   isLeagueOn,
   leaguesBySport,
   sportSwitch,
+  withAllLeagues,
   withLeague,
   withSport,
 } from './viewerSettings'
@@ -66,5 +67,24 @@ describe('whole-sport switch', () => {
     const mixed = withLeague(firstVisitSettings, 'MLS', false)
 
     expect(sportSwitch(withSport(mixed, soccer, true), soccer)).toBe('on')
+  })
+})
+
+describe('all-leagues switch', () => {
+  const leagues = [nfl, ncaaf, nba, mls, epl]
+
+  it('switches every league off, keeping the other settings', () => {
+    const settings = { ...firstVisitSettings, liveOnly: true }
+    const off = withAllLeagues(settings, leagues, false)
+
+    expect(leagues.filter((league) => isLeagueOn(off, league.name))).toEqual([])
+    expect(off.liveOnly).toBe(true)
+  })
+
+  it('switches every league back on, including ones switched off one by one', () => {
+    const someOff = withLeague(withSport(firstVisitSettings, { sport: 'Soccer', leagues: [mls, epl] }, false), 'NFL', false)
+    const on = withAllLeagues(someOff, leagues, true)
+
+    expect(leagues.every((league) => isLeagueOn(on, league.name))).toBe(true)
   })
 })

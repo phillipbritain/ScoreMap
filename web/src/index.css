@@ -19,6 +19,9 @@ body {
 /* Space behind the globe: a near-black sky with a scattering of faint stars, repeated in tiles. */
 .globe {
   position: relative;
+  /* Keeps the score cards' stacking among themselves, so the menus and messages laid over the
+     globe stay above every card. */
+  isolation: isolate;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -828,7 +831,7 @@ body {
   }
 }
 
-/* The globe with the filter menu and the no-pins message laid over it. */
+/* The globe with the settings menu and the no-pins message laid over it. */
 .globe-area {
   position: relative;
   display: flex;
@@ -837,59 +840,186 @@ body {
   min-height: 0;
 }
 
-.filter-menu {
+/* Above the scenario pills and the bottom-centre message and clock, which an open menu can reach
+   down to. */
+.settings-menu {
   position: absolute;
   top: 12px;
   left: 12px;
-  z-index: 1;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
   max-height: calc(100% - 24px);
+}
+
+/* Just the gear, standing on the globe without a panel: gold like the country names, on a dark
+   outline like theirs, and without the disclosure triangle. */
+.settings-menu summary {
+  display: flex;
+  color: #d8c9a4;
+  cursor: pointer;
+  list-style: none;
+  filter: drop-shadow(0 0 2px #050b16);
+}
+
+.settings-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-menu__icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* The panel below the gear, the dark navy of the scenario pills but solid, so score cards
+   behind it don't show through. */
+.settings-menu__panel {
+  width: 320px;
+  max-width: calc(100vw - 24px);
   overflow-y: auto;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #1a1f2e;
+  border-radius: 12px;
+  background: rgb(11, 16, 32);
+  color: #ffffff;
   font-size: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.filter-menu summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.filter-menu[open] summary {
-  margin-bottom: 8px;
-}
-
-.filter-switch {
+.settings-tabs {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* A setting with several choices: its name, then a list to pick from. */
-.filter-choice {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-}
-
-.filter-sport {
-  margin: 8px 0 0;
-  padding: 0 0 0 18px;
+.settings-tab {
+  flex: 1;
+  padding: 10px;
   border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.filter-sport legend {
-  margin-left: -18px;
-  padding: 0;
+.settings-tab[aria-selected='true'] {
+  border-bottom-color: #d8c9a4;
+  color: #d8c9a4;
+}
+
+.settings-tab-body {
+  padding: 12px;
+}
+
+.settings-heading {
+  margin: 14px 0 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
   font-weight: 600;
 }
 
-/* The scenario pill and the speed pill (local runs only), at the bottom left, clear of the filter
+.settings-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.settings-chip {
+  padding: 5px 11px;
+  border: 1px solid rgba(216, 201, 164, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: #d8c9a4;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Filled in, not bolder: bold text would widen the chip and shift the chips after it. */
+.settings-chip[aria-pressed='true'] {
+  border-color: #d8c9a4;
+  background: #d8c9a4;
+  color: #0b1020;
+}
+
+/* "All leagues", above the sports: a bigger chip, dashed while only some leagues are on. */
+.settings-master {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-master__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 8px 0 10px;
+  font-size: 14px;
+}
+
+/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
+.settings-master__mark {
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  margin-right: -4px;
+  text-align: center;
+}
+
+.settings-master__chip--mixed {
+  border-style: dashed;
+  border-color: #d8c9a4;
+}
+
+/* How many leagues are on, as a badge that reads on the gold chip and on the dark one alike. */
+.settings-master__count {
+  min-width: 3.2em;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(216, 201, 164, 0.15);
+  text-align: center;
+  color: #d8c9a4;
+  font-size: 12px;
+}
+
+.settings-master__chip--on .settings-master__count {
+  background: #0b1020;
+}
+
+.settings-master__hint {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+}
+
+.settings-sport + .settings-sport {
+  margin-top: 12px;
+}
+
+.settings-sport__name {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* How many of the sport's leagues are on, such as 2/2. */
+.settings-sport__count {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+
+/* The scenario pill and the speed pill (local runs only), at the bottom left, clear of the settings
    menu at the top left and of the game panel, which sits beside the globe or, on a phone, below it.
    Their lists open upwards. */
 .scenario-pills {

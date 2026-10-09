@@ -106,7 +106,7 @@ app.UseStaticFiles();
 app.MapHub<GamesHub>(GamesHub.Path);
 app.MapFallbackToFile("index.html");
 
-// The configured leagues in order, so the browser's filter can list every league, even one with no games now.
+// The configured leagues in order, so the browser's settings menu can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
     leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
 

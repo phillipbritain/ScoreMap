@@ -22,7 +22,6 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA', 'MLS'],
       liveOnly: true,
       showDisrupted: false,
-      slowSpin: false,
       cardStyle: 'neon' as const,
     }
 
@@ -78,23 +77,8 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA'],
       liveOnly: false,
       showDisrupted: true,
-      slowSpin: false,
       cardStyle: 'hud',
     })
-  })
-
-  it('gives slow spin its first-visit default (off) to settings saved before it existed', () => {
-    const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
-
-    expect(settingsStore(() => storage).load().slowSpin).toBe(false)
-  })
-
-  it('remembers slow spin switched on', () => {
-    const storage = memoryStorage()
-    settingsStore(() => storage).save({ ...firstVisitSettings, slowSpin: true })
-
-    expect(settingsStore(() => storage).load().slowSpin).toBe(true)
   })
 
   it('gives score cards the HUD style when settings were saved before the style could be picked', () => {

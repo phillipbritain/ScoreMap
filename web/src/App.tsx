@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FilterMenu } from './filters/FilterMenu'
-import { useLeagues } from './filters/leagues'
-import { settingsStore } from './filters/settingsStore'
-import { noPinsMessage, visibleGames } from './filters/visibleGames'
+import { SettingsMenu } from './settings/SettingsMenu'
+import { useLeagues } from './settings/leagues'
+import { settingsStore } from './settings/settingsStore'
+import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
 import { Globe } from './globe/Globe'
@@ -53,7 +53,7 @@ export default function App() {
   const message = noPinsMessage(games, visible)
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
-  // the game's pin goes, whether the game left the pin window or the filters now hide it.
+  // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const selectedGame = visible.find((game) => game.id === selectedGameId) ?? null
 
   return (
@@ -65,17 +65,16 @@ export default function App() {
           onSelectGame={setSelectedGameId}
           startCamera={camera}
           onCameraMove={store.saveCamera}
-          slowSpin={viewerSettings.slowSpin}
           cardStyle={viewerSettings.cardStyle}
         />
-        {/* Before the filter menu, so an open filter menu lies over them on a phone. */}
+        {/* Before the settings menu, so an open settings menu lies over them on a phone. */}
         {scenarios.shown && scenarios.listing && (
           <div className="scenario-pills">
             <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
             <SpeedPill listing={scenarios.listing} setListing={setScenarioListing} />
           </div>
         )}
-        <FilterMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
+        <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {/* The no-pins message sits above the clock. */}
         <div className={scenarios.shown ? 'bottom-centre bottom-centre--scenario' : 'bottom-centre'}>
           {message && (

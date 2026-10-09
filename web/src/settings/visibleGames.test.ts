@@ -78,8 +78,8 @@ describe('noPinsMessage', () => {
     expect(noPinsMessage(null, [])).toBeNull()
   })
 
-  it('says so when games exist but none match the filters', () => {
-    expect(noPinsMessage([nfl, nba], [])).toBe('No games match your filters.')
+  it('says so when games exist but none match the settings', () => {
+    expect(noPinsMessage([nfl, nba], [])).toBe('No games match your settings.')
   })
 
   it('says so when there are no games at all', () => {

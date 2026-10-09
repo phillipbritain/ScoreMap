@@ -364,8 +364,8 @@ function measureText(text: string, font: string): number {
 // A letter's width in ems, roughly, where there's no canvas to measure with.
 const fallbackLetterWidth = 0.6
 
-// How often to check whether state names fit, at most: often enough to follow slow spin, rarely
-// enough not to slow it.
+// How often to check whether state names fit, at most: often enough to follow the globe as it
+// turns, rarely enough not to slow it.
 const checkEveryMs = 250
 
 /**

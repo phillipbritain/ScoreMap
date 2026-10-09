@@ -297,6 +297,24 @@ describe('animations', () => {
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--cluster.pin-pulse--score')).not.toBeNull())
   })
 
+  // Looking at 0°, 0° zoomed out, a game 90° east is behind the globe, but still in the map's
+  // loaded tiles, so it would be found to animate.
+  it('does not play over a small pin on the far side of the globe', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const near = game('NEAR', { home: 0 })
+    globe.show([near, game('FAR', { longitude: 90, home: 0 })])
+    await pinsDrawn(map, smallPinLayer, near)
+    const pulses: Element[] = []
+    const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
+    watching.observe(container, { childList: true, subtree: true })
+
+    globe.show([near, game('FAR', { longitude: 90, home: 7 })])
+    await pause(500)
+    watching.disconnect()
+
+    expect(pulses).toEqual([])
+  })
+
   it('does not animate a change the globe did not show, while the game was hidden', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const other = game('B', { longitude: 40 })

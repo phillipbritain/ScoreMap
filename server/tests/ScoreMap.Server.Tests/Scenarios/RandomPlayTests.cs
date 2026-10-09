@@ -226,8 +226,85 @@ public sealed class RandomPlayTests : IDisposable
         Assert.Equal(atOneSpeed.GamesAt(at).Select(Describe), changingSpeed.GamesAt(at).Select(Describe));
     }
 
+    // Live play: written-out games beside each other in every status that live play leaves alone.
+    private const string LivePlay = """
+        {
+          "games": [
+            { "id": "live", "league": "Premier League", "home": { "name": "Arsenal", "abbreviation": "ARS", "score": 1 },
+              "away": { "name": "Chelsea", "abbreviation": "CHE", "score": 0 }, "venue": { "name": "Stadium 1", "city": "City 1" },
+              "startsIn": "-30m", "status": "live" },
+            { "id": "upcoming", "league": "NBA", "home": { "name": "Knicks", "abbreviation": "NY" }, "away": { "name": "Celtics", "abbreviation": "BOS" },
+              "venue": { "name": "Stadium 2", "city": "City 2" }, "startsIn": "5m", "status": "upcoming" },
+            { "id": "final", "league": "NHL", "home": { "name": "Leafs", "abbreviation": "TOR", "score": 3 },
+              "away": { "name": "Canadiens", "abbreviation": "MTL", "score": 2 }, "venue": { "name": "Stadium 3", "city": "City 3" },
+              "startsIn": "-3h", "status": "final" },
+            { "id": "postponed", "league": "MLB", "home": { "name": "Yankees", "abbreviation": "NYY" }, "away": { "name": "Red Sox", "abbreviation": "BOS" },
+              "venue": { "name": "Stadium 4", "city": "City 4" }, "startsIn": "45m", "status": "postponed" }
+          ],
+          "play": "live"
+        }
+        """;
+
+    [Fact]
+    public void Live_play_moves_live_games_on_and_leaves_every_other_game_as_it_is()
+    {
+        var feed = Watched(Read(LivePlay), TimeSpan.FromMinutes(10));
+
+        var live = feed.Select(games => games.Single(game => game.Id == "live")).ToList();
+        Assert.All(live, game => Assert.Equal(ProviderStatus.InProgress, game.Status));
+        Assert.True(live.Select(game => game.DisplayClock).Distinct().Count() > 30, "the clock runs");
+        Assert.True(live.Select(Points).Distinct().Count() > 1, "the game scores");
+        foreach (var id in new[] { "upcoming", "final", "postponed" })
+            Assert.Single(feed.Select(games => Describe(games.Single(game => game.Id == id))).Distinct());
+        Assert.All(feed, games => Assert.Equal(4, games.Count));
+    }
+
     [Theory]
-    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": "wild" }""", "play is \"wild\"", "\"random\"")]
+    [InlineData("Premier League", "63'", 2, "64'")]
+    [InlineData("NHL", "9:40", 2, "9:3")]
+    [InlineData("NBA", "5:10", 2, "5:0")]
+    public void A_written_out_live_game_plays_on_from_its_written_period_and_clock(string league, string clock, int period, string soon)
+    {
+        // Started long enough ago to be at halftime by its start time alone: the written clock wins.
+        // Watched for two minutes, as at 1× soccer's clock moves on a minute in about one and a half.
+        var scenario = Read($$"""
+            {
+              "games": [
+                { "id": "live", "league": "{{league}}", "home": { "name": "Home", "abbreviation": "HOM" }, "away": { "name": "Away", "abbreviation": "AWY" },
+                  "venue": { "name": "Stadium 1", "city": "City 1" }, "startsIn": "-1h5m", "status": "live", "clock": "{{clock}}", "period": {{period}} }
+              ],
+              "play": "live"
+            }
+            """);
+
+        var feed = Watched(scenario, TimeSpan.FromMinutes(2), speed: 1);
+
+        Assert.Equal((period, clock), (feed[0][0].Period, feed[0][0].DisplayClock));
+        Assert.Contains(feed, games => games[0].DisplayClock!.StartsWith(soon) && games[0].Period == period);
+    }
+
+    [Fact]
+    public void Under_live_play_a_game_at_the_end_starts_over_as_a_new_game_rather_than_finishing()
+    {
+        // Two and a half hours in: nearly through a 2-hour game, so it reaches the end within minutes.
+        var scenario = Read(LivePlay.Replace("\"-30m\"", "\"-2h30m\""));
+
+        var feed = Watched(scenario, TimeSpan.FromMinutes(5), speed: 16);
+
+        var startedOver = feed.FindIndex(games => games.All(game => game.Id != "live"));
+        Assert.True(startedOver > 0, "the game started over");
+        Assert.All(feed.Take(startedOver), games => Assert.Equal(ProviderStatus.InProgress, games.Single(game => game.Id == "live").Status));
+        var again = feed[startedOver].Single(game => game.Id == "live-loop2");
+        Assert.Equal((ProviderStatus.InProgress, 1, 0, 0), (again.Status, again.Period, again.Home.Score, again.Away.Score));
+        Assert.Equal(("Arsenal", "Chelsea", "Stadium 1"), (again.Home.FullName, again.Away.FullName, again.Venue!.Name));
+        Assert.Equal(StartedAt + TimeSpan.FromSeconds(startedOver) * 16, again.StartTime, TimeSpan.FromSeconds(16));
+        Assert.All(feed, games => Assert.Equal(4, games.Count));
+    }
+
+    [Theory]
+    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": "wild" }""", "play is \"wild\"", "\"random\"", "\"live\"")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": "live", "timeline": { "length": "1m", "changes": [] } }""",
+        "can't have a timeline as well")]
     [InlineData("""{ "games": [], "play": "random" }""", "play is random, which needs a fill")]
     [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": "random", "timeline": { "length": "1m", "changes": [] } }""",
         "can't have a timeline as well")]

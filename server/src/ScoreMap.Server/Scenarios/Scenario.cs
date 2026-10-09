@@ -6,7 +6,7 @@ namespace ScoreMap.Server.Scenarios;
 /// A named set of made-up games at real venues, shown in place of real games when ScoreMap runs
 /// locally (ADR-0009). Read from a scenario file by <see cref="ScenarioReader"/>, checked against
 /// the configured leagues. With a <see cref="Timeline"/>, its games change as the script says; with
-/// <see cref="RandomPlay"/>, they play out at random (see <see cref="Scenarios.RandomPlay"/>).
+/// <see cref="RandomPlay"/>, they play out at random, under random or live play (see <see cref="Scenarios.RandomPlay"/>).
 /// </summary>
 public sealed record Scenario(string Name, IReadOnlyList<ScenarioGame> Games, ScenarioTimeline? Timeline = null, RandomPlaySettings? RandomPlay = null)
 {

@@ -72,6 +72,8 @@ export class GlobeMap {
   private readonly onCameraMove: (camera: Camera) => void
   /** The games as the globe last showed them, which tells what has changed in the next ones. */
   private shown = new Map<string, Game>()
+  /** The pins last given to the pin source, so it's reloaded only when they change. */
+  private pinsKey = ''
   private selectedGameId: string | null = null
   private clustering: PinLayout
   private destroyed = false
@@ -126,7 +128,14 @@ export class GlobeMap {
   show(games: readonly Game[]): void {
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
-    this.map.getSource<GeoJSONSource>(pinSource)?.setData(pinFeatures(games))
+    // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
+    // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
+    const pins = pinFeatures(games)
+    const pinsKey = JSON.stringify(pins)
+    if (pinsKey !== this.pinsKey) {
+      this.pinsKey = pinsKey
+      this.map.getSource<GeoJSONSource>(pinSource)?.setData(pins)
+    }
     // Names first: cards are laid out around them.
     this.names.showGames(games)
     this.cards.setGames(games)

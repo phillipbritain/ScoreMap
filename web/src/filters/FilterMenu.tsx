@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { cardStyles, type CardStyle } from '../globe/cardStyle'
 import {
   isLeagueOn,
   leaguesBySport,
@@ -16,8 +17,8 @@ interface FilterMenuProps {
 }
 
 /**
- * The filter menu: "Live only", "Show Disrupted games" and "Slow spin", then leagues grouped under
- * their sport with a whole-sport switch.
+ * The filter menu: "Live only", "Show Disrupted games", "Slow spin" and "Card style", then leagues
+ * grouped under their sport with a whole-sport switch.
  */
 export function FilterMenu({ leagues, settings, onChange }: FilterMenuProps) {
   return (
@@ -46,6 +47,19 @@ export function FilterMenu({ leagues, settings, onChange }: FilterMenuProps) {
           onChange={(event) => onChange({ ...settings, slowSpin: event.target.checked })}
         />
         Slow spin
+      </label>
+      <label className="filter-choice">
+        Card style
+        <select
+          value={settings.cardStyle}
+          onChange={(event) => onChange({ ...settings, cardStyle: event.target.value as CardStyle })}
+        >
+          {cardStyles.map((style) => (
+            <option key={style.key} value={style.key}>
+              {style.name}
+            </option>
+          ))}
+        </select>
       </label>
       {leaguesBySport(leagues).map((group) => (
         <fieldset key={group.sport} className="filter-sport">

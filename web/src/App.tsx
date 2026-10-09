@@ -66,6 +66,7 @@ export default function App() {
           startCamera={camera}
           onCameraMove={store.saveCamera}
           slowSpin={viewerSettings.slowSpin}
+          cardStyle={viewerSettings.cardStyle}
         />
         {/* Before the filter menu, so an open filter menu lies over them on a phone. */}
         {scenarios.shown && scenarios.listing && (

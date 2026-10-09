@@ -13,6 +13,7 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
+import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
@@ -174,6 +175,11 @@ export class GlobeMap {
   /** The "Slow spin" setting. */
   setSlowSpin(on: boolean): void {
     this.slowSpin = on
+  }
+
+  /** The "Card style" setting. */
+  setCardStyle(style: CardStyle): void {
+    this.cards.setStyle(style)
   }
 
   /** Removes the globe from the page, with everything it listens to. */

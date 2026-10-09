@@ -1,4 +1,4 @@
-// Unofficial stream links (ADR-0002: hobby v1 only). Remove this file, UnofficialStreams.tsx
+// Unofficial stream links (ADR-0002: hobby v1 only). Remove this file, the streamLinks line in GamePanel.tsx
 // and Game.streamLinks together with the server's stream finder before any public launch.
 import type { StreamLink } from '../games/game'
 

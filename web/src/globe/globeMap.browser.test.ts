@@ -264,24 +264,33 @@ describe('score cards', () => {
 })
 
 describe('place names', () => {
-  // The test style has no fonts, so a layer of dots stands in for the place names: MapLibre places
-  // both the same way.
+  // The test style has no glyphs, so a layer of plain squares stands in for the place names: MapLibre
+  // places both the same way. Unlike the other tests, this one adds to the map itself, as GlobeMap
+  // has no place names of its own to show here.
   it('stops writing a name the moment the globe turns it over the horizon', async () => {
     const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2.5 })
+    const standIn = 'place-name-stand-in'
+    const place: [number, number] = [50, 0]
     await new Promise((resolve) => map.once('load', resolve))
-    map.addImage('dot', { width: 8, height: 8, data: new Uint8Array(8 * 8 * 4).fill(255) })
-    map.addSource('names', {
-      type: 'geojson',
-      data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [50, 0] } },
-    })
-    map.addLayer({ id: 'names', type: 'symbol', source: 'names', layout: { 'icon-image': 'dot' } })
-    await vi.waitFor(() => expect(map.queryRenderedFeatures({ layers: ['names'] })).toHaveLength(1))
+    map.addImage(standIn, { width: 8, height: 8, data: new Uint8Array(8 * 8 * 4).fill(255) })
+    map.addSource(standIn, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: place } } })
+    map.addLayer({ id: standIn, type: 'symbol', source: standIn, layout: { 'icon-image': standIn } })
+    const written = () => map.queryRenderedFeatures({ layers: [standIn] })
+    await vi.waitFor(() => expect(written()).toHaveLength(1))
 
-    // Turned a step a frame, as a drag turns it, until the name is well over the horizon.
-    for (let longitude = 0; longitude >= -45; longitude -= 5) {
+    // Turned a step a frame, as a drag turns it: from just this side of the horizon, so it crosses
+    // on the very next frame, well within a fade (the time names were left where they were placed).
+    const turnTo = async (longitude: number) => {
       map.jumpTo({ center: [longitude, 0] })
       await new Promise((resolve) => map.once('render', resolve))
-      if (isBehindGlobe(map, [50, 0])) expect(map.queryRenderedFeatures({ layers: ['names'] }), `turned to ${longitude}°`).toEqual([])
+    }
+    await turnTo(-20)
+    expect(isBehindGlobe(map, place)).toBe(false)
+    expect(written()).toHaveLength(1)
+    for (const longitude of [-25, -30, -35, -40, -45]) {
+      await turnTo(longitude)
+      expect(isBehindGlobe(map, place), `turned to ${longitude}°`).toBe(true)
+      expect(written(), `turned to ${longitude}°`).toEqual([])
     }
   })
 })

@@ -1133,7 +1133,7 @@ body {
   font-weight: 400;
 }
 
-/* The scenario pill, the speed pill and the clock (local runs only), at the bottom left, clear of
+/* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
    the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
@@ -1187,12 +1187,6 @@ body {
   white-space: nowrap;
 }
 
-/* While real games run, the speed shows but can't be changed. */
-.speed-pill[aria-disabled='true'] summary {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .scenario-pill button {
   display: block;
   width: 100%;
@@ -1216,6 +1210,69 @@ body {
 
 .scenario-pill button[aria-current='true']::before {
   content: '✓ ';
+}
+
+/* The media keys: Pause, Play and Fast-forward in the scenario pill's navy. The lit key, white, is the speed. */
+.speed-keys {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 21px;
+  background: rgba(11, 16, 32, 0.85);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.speed-keys button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 17px;
+  background: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  transition: width 0.15s ease;
+}
+
+.speed-keys button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+}
+
+.speed-keys button[aria-pressed='true'],
+.speed-keys button[aria-pressed='true']:hover {
+  background: #ffffff;
+  color: #0b1020;
+  opacity: 1;
+}
+
+.speed-keys svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* At Faster, Fast-forward widens for its third triangle. */
+.speed-keys .speed-keys__fast-forward--faster {
+  width: 42px;
+}
+
+.speed-keys .speed-keys__wide-icon {
+  width: 20px;
+}
+
+/* While real games run, the keys show but can't be pressed. */
+.speed-keys[aria-disabled='true'] {
+  opacity: 0.6;
+}
+
+.speed-keys button:disabled {
+  cursor: not-allowed;
 }
 
 /* Along the bottom of the globe: the no-pins message centred, and below it the scenario pills and

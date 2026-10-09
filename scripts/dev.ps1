@@ -22,15 +22,15 @@
     appsettings.Development.json runs.
 
 .PARAMETER Speed
-    With start: the speed the scenario clock starts at, one of the speeds in ScenarioClock.Speeds.
-    Unset, the speed from appsettings.Development.json. The server refuses to start on any other, and
-    its error (which lists the speeds) is shown.
+    With start: the speed the scenario clock starts at, by name: Paused, Normal, Fast or Faster (the
+    speeds in Speed.All), in any case. Unset, the speed from appsettings.Development.json. The server
+    refuses to start on any other, and its error (which lists the speeds) is shown.
 
 .EXAMPLE
     ./scripts/dev.ps1 start
 
 .EXAMPLE
-    ./scripts/dev.ps1 start -Scenario busy -Speed 16
+    ./scripts/dev.ps1 start -Scenario busy -Speed Faster
 
 .EXAMPLE
     ./scripts/dev.ps1 start -Scenario real
@@ -38,7 +38,7 @@
 param(
     [Parameter(Mandatory)] [ValidateSet('start', 'stop', 'status')] [string] $Action,
     [string] $Scenario,
-    [int] $Speed
+    [string] $Speed
 )
 
 $ErrorActionPreference = 'Stop'

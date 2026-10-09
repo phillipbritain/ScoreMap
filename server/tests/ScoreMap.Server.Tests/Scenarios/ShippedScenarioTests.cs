@@ -144,7 +144,24 @@ public class ShippedScenarioTests
 
         Assert.InRange(snapshot.Count, 55, 65);
         Assert.All(snapshot, g => Assert.Equal(GameStatus.Live, g.Status));
-        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(10));
+        // At 1×, busy scores every ~15 s or so (see the run-scoremap skill).
+        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
+    }
+
+    [Theory]
+    [InlineData("worldwide")]
+    [InlineData("crowded")]
+    [InlineData("disrupted")]
+    public async Task Live_games_move_on_by_themselves_and_no_game_starts_or_finishes(string name)
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var client = await StartAsync(server, name);
+        await client.NextSnapshotAsync();
+
+        var changes = await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Live,
+            within: TimeSpan.FromSeconds(10));
+
+        Assert.DoesNotContain(changes, c => c.Kind is GameChangeKind.Started or GameChangeKind.Finished);
     }
 
     [Fact]

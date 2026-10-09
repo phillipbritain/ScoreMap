@@ -1,5 +1,5 @@
 // disrupted: postponed, suspended and canceled games (greyed-out pins) next to normal Upcoming,
-// Live and Final ones, in New York and in London.
+// Live and Final ones, in New York and in London. Live games play on but no game changes status.
 {
   "games": [
     {
@@ -103,5 +103,6 @@
       "clock": "63'",
       "period": 2
     }
-  ]
+  ],
+  "play": "live"
 }

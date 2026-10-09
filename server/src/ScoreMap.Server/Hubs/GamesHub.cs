@@ -20,7 +20,7 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hu
 
     /// <summary>
     /// Client method that receives the scenario listing (a <see cref="Scenarios.ScenarioEndpoints.ScenarioListing"/>)
-    /// after a switch or a change of speed, so every browser's scenario pill, speed pill and clock follow
+    /// after a switch or a change of speed, so every browser's scenario pill, media keys and clock follow
     /// (ADR-0009). Sent only when ScoreMap runs locally.
     /// </summary>
     public const string ScenarioChangedMessage = "ScenarioChanged";

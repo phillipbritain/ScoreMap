@@ -10,7 +10,7 @@ body {
   font-family: system-ui, sans-serif;
 }
 
-/* The globe fills the screen; an open game panel sits beside it (or below it on phones). */
+/* The globe fills the screen; an open game panel lies over the bottom of it. */
 .app {
   display: flex;
   height: 100%;
@@ -44,149 +44,254 @@ body {
   pointer-events: none;
 }
 
+/* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
+   status colour (--status-color, set on the panel). One size whatever the game, so it never jumps
+   from one game to the next: the score block, the details and the photo each have a fixed width,
+   and every line of text is clipped to its slot. */
 .game-panel {
-  box-sizing: border-box;
-  width: 360px;
-  flex-shrink: 0;
-  overflow-y: auto;
-  padding: 16px;
-  background: #ffffff;
-  color: #1b1f2a;
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.25);
-}
-
-/* The venue photo: a banner across the top of the panel, edge to edge, cropped to fill. */
-.game-panel__photo {
-  display: block;
-  width: calc(100% + 32px);
-  height: 180px;
-  margin: -16px -16px 12px;
-  object-fit: cover;
-  background: #e8ebf0;
-}
-
-@media (max-width: 640px) {
-  .app {
-    flex-direction: column;
-  }
-
-  .game-panel {
-    width: auto;
-    max-height: 55%;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
-  }
-
-  /* Short in the phone sheet, so the scores stay in view below it. */
-  .game-panel__photo {
-    height: 96px;
-  }
-}
-
-.game-panel__header {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.game-panel__league {
+  box-sizing: border-box;
+  width: min(940px, calc(100% - 24px));
+  height: 127px;
+  border-top: 3px solid var(--status-color);
+  background: linear-gradient(180deg, rgb(18 28 56 / 0.98), rgb(8 12 26 / 0.98));
+  color: #ffffff;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  transform: translateX(-50%);
+  box-shadow:
+    0 8px 30px rgb(0 0 0 / 0.6),
+    0 -2px 14px color-mix(in srgb, var(--status-color) 35%, transparent);
+  /* The bottom left corner cut off, like a broadcast graphic. */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+/* Clear of the scenario pills and clock (local runs only). */
+.bottom-stack--scenario ~ .game-panel {
+  bottom: 60px;
+}
+
+/* The score block at the left, slanted on its right edge. One column that can't grow past the
+   block, so a long team name is clipped rather than pushing its score out. */
+.game-panel__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 290px;
+  flex-shrink: 0;
+  padding: 10px 26px 10px 16px;
+  background: linear-gradient(180deg, #1d2d55, #121c38);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+}
+
+/* Gold and tracked out, like the country names on the globe. */
+.game-panel__league,
+.game-panel__label {
+  color: #d8c9a4;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #5b6272;
 }
 
-.game-panel__close {
-  border: none;
-  background: none;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  color: inherit;
-  padding: 4px 8px;
-}
-
-.game-panel__teams {
-  margin-top: 12px;
+.game-panel__label {
+  margin-bottom: 3px;
+  font-size: 10px;
 }
 
 .game-panel__team {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 0;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .game-panel__team img,
 .game-panel__logo {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .game-panel__team-name {
   flex: 1;
-  font-size: 17px;
-  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.game-panel__score {
-  font-size: 24px;
-  font-weight: 700;
+/* Wide enough for three digits, so a score of 100 doesn't move anything. */
+.game-panel__team-score {
+  box-sizing: border-box;
+  width: 2.6em;
+  flex-shrink: 0;
+  background: #ffffff;
+  color: #0b1020;
+  font-size: 18px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
+  text-align: center;
+  transform: skewX(-10deg);
 }
 
 .game-panel__progress {
-  margin: 8px 0 16px;
-  font-weight: 600;
-  /* Live's colour, as the panel's accent whatever the game's status. */
-  color: var(--live-color);
+  justify-self: start;
+  max-width: calc(100% - 8px);
+  margin-top: 4px;
+  padding: 1px 10px;
+  overflow: hidden;
+  background: var(--status-color);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transform: skewX(-14deg);
 }
 
+/* Venue, start (or end) and watch links, in three equal columns. */
 .game-panel__details {
+  flex: 1;
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px 16px;
-  margin: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+  padding: 12px 16px;
+  overflow: hidden;
 }
 
-.game-panel__details dt {
-  font-size: 13px;
-  color: #5b6272;
+/* Two lines at most for a venue or time, and room for two even when it takes one. */
+.game-panel__value {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  min-height: 2.6em;
+  overflow: hidden;
+  line-height: 1.3;
 }
 
-.game-panel__details dd {
-  margin: 0;
+.game-panel__muted {
+  color: rgb(255 255 255 / 0.55);
+  font-size: 12px;
+}
+
+/* One line under a venue or time, kept even when empty. */
+.game-panel__details > div > .game-panel__muted {
+  min-height: 1.3em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .game-panel__watch {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+  display: grid;
+  gap: 1px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.game-panel__watch a {
-  color: #1a5fd0;
+.game-panel__watch li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
+.game-panel__watch a {
+  color: #8fc1ff;
+}
+
+.game-panel__unofficial {
+  color: rgb(255 255 255 / 0.45);
+  font-size: 11px;
+}
+
+/* The venue photo at the right, fading in from the details. A faint glow holds its place when
+   there's no photo. */
+.game-panel__photo {
+  position: relative;
+  width: 180px;
+  margin: 0;
+  flex-shrink: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgb(42 62 112 / 0.5), transparent 70%);
+}
+
+.game-panel__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mask-image: linear-gradient(90deg, transparent, #000000 35%);
+}
+
+/* Along the foot of the photo, always shown, as its licence asks. */
 .game-panel__credit {
-  margin: 20px 0 0;
-  font-size: 12px;
-  color: #5b6272;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 2px 6px;
+  overflow: hidden;
+  background: rgb(0 0 0 / 0.6);
+  color: rgb(255 255 255 / 0.75);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .game-panel__credit a {
   color: inherit;
 }
 
-.game-panel__muted {
-  font-size: 13px;
-  color: #5b6272;
+.game-panel__close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* On a phone: the score block above the details, and no photo. */
+@media (max-width: 640px) {
+  .game-panel {
+    flex-direction: column;
+    height: 236px;
+    clip-path: none;
+  }
+
+  /* The pills and the clock wrap to two rows on a phone. */
+  .bottom-stack--scenario ~ .game-panel {
+    bottom: 104px;
+  }
+
+  .game-panel__score {
+    width: auto;
+    clip-path: none;
+  }
+
+  .game-panel__details {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .game-panel__photo {
+    display: none;
+  }
 }
 
 /* How each status looks comes from globe/statusLook.ts, which writes it to the page's root
@@ -1023,8 +1128,7 @@ body {
 }
 
 /* The scenario pill, the speed pill and the clock (local runs only), at the bottom left, clear of
-   the settings menu at the top left and of the game panel, which sits beside the globe or, on a
-   phone, below it. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
+   the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
   align-self: flex-start;

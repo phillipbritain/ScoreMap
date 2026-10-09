@@ -37,7 +37,7 @@ While zoomed in, the games whose score cards have no room on screen even after n
 _Avoid_: Cluster (zoomed-out pins only), stack, pile
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown beside the globe (or as a sheet on phones).
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.
 _Avoid_: Popup, detail page, modal
 
 **Venue**:

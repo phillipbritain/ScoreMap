@@ -1,7 +1,7 @@
 import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
-import { cardPins } from './cardPins'
+import { cardPins, type CardPin } from './cardPins'
 import { defaultCardStyle, type CardStyle } from './cardStyle'
 import { layOutCards, type CardCrowd, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import type { PinAnimation } from './pinAnimation'
@@ -98,11 +98,15 @@ export class ScoreCardMarkers {
 
   /** Places, updates and removes cards to match what the pin source shows at the current zoom. */
   sync(): void {
-    if (!this.map.getSource(pinSource) || !this.map.isSourceLoaded(pinSource)) return
-    const wanted =
-      pinLayout(this.map.getZoom()).size === 'card'
+    if (!this.map.getSource(pinSource)) return
+    const wanted = this.map.isSourceLoaded(pinSource)
+      ? pinLayout(this.map.getZoom()).size === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
+      : // The source reloads after every change of games, and can't be read until it has. Live games
+        // can change faster than it loads, so meanwhile the cards placed stay put but still show
+        // each change.
+        this.placedPins()
 
     const keep = new Set<string>()
     for (const { gameId, lngLat } of wanted) {
@@ -159,6 +163,11 @@ export class ScoreCardMarkers {
       this.placed.delete(gameId)
       this.animating.delete(gameId)
     }
+  }
+
+  /** Where the cards placed now are. */
+  private placedPins(): CardPin[] {
+    return [...this.placed].map(([gameId, { marker }]) => ({ gameId, lngLat: marker.getLngLat().toArray() }))
   }
 
   /**

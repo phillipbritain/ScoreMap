@@ -11,7 +11,7 @@ public static class ScenarioRegistration
     /// <summary>
     /// In Development, puts a <see cref="ScenarioSwitcher"/> in front of the real game feed provider
     /// (ADR-0009), starting on the scenario named by the "Scenario" setting, or on real games when it is
-    /// unset or "real", with the scenario clock at the "ScenarioSpeed" setting (1× when unset). The game
+    /// unset or "real", with the scenario clock at the speed named by the "ScenarioSpeed" setting (Normal when unset). The game
     /// board then takes the switcher's clock, so a scenario's pin windows and end times are on the
     /// scenario clock. Anywhere else nothing scenario-related is registered and the settings are ignored.
     /// Call after the real game feed provider and the game board are registered.
@@ -22,10 +22,9 @@ public static class ScenarioRegistration
             return builder;
         var name = builder.Configuration["Scenario"];
         var startWith = string.IsNullOrWhiteSpace(name) ? ScenarioSwitcher.RealGames : name;
-        var speed = builder.Configuration.GetValue<int?>("ScenarioSpeed") ?? 1;
-        if (!ScenarioClock.IsSpeed(speed))
-            throw new InvalidOperationException(
-                $"The ScenarioSpeed setting is {speed}, which isn't a speed; it must be one of {ScenarioClock.SpeedList}");
+        var speedName = builder.Configuration["ScenarioSpeed"];
+        var speed = string.IsNullOrWhiteSpace(speedName) ? Speed.Normal : Speed.Named(speedName) ?? throw new InvalidOperationException(
+            $"The ScenarioSpeed setting is \"{speedName}\", which isn't a speed; it must be one of {Speed.List}");
 
         var services = builder.Services;
         services.Configure<ScenarioOptions>(builder.Configuration.GetSection("Scenarios"));

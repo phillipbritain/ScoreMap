@@ -25,7 +25,7 @@ Finish every run with `stop`. Done means it printed `stopped: no ScoreMap proces
 
 Run locally, the app shows a **scenario** (made-up games at real venues, see `GLOSSARY.md` and ADR-0009) in place of real games, so checking a change never waits for real games to be on. It starts on `worldwide`; `./scripts/dev.ps1 start -Scenario <name>` starts on another, and `-Scenario real` on real ESPN games.
 
-A scenario's games run on the **scenario clock**, at a **speed** of 1× (real time) up to 64×. It starts at 1×; `./scripts/dev.ps1 start -Speed <n>` starts at another of the speeds in `ScenarioClock.Speeds`.
+A scenario's games run on the **scenario clock**, at a **speed**: Paused (the clock stands still), Normal (real time), Fast (2×) or Faster (8×). It starts at Normal; `./scripts/dev.ps1 start -Speed <name>` starts at another (any case, e.g. `-Speed Faster`).
 
 Pick the scenario that brings out what you're checking, and you know what should be on screen:
 
@@ -40,12 +40,12 @@ Pick the scenario that brings out what you're checking, and you know what should
 | `empty` | no games | the bare globe and the "No games right now." message |
 | `edge-cases` | an unfindable venue pinned at its city (Reykjavík), a 2–2 tie (Munich), long team names (Chicago), missing logos (Edmonton), three-digit scores (San Francisco); nothing changes, so they stay that way | layout at the extremes |
 
-Scripted times count from when the scenario starts or is switched to, on the scenario clock, so at 16× a change written at 1m comes after 3.75 s. Switching to the running scenario starts it afresh; switching keeps the speed.
+Scripted times count from when the scenario starts or is switched to, on the scenario clock, so at Faster (8×) a change written at 1m comes after 7.5 s. Switching to the running scenario starts it afresh; switching keeps the speed.
 
 To switch while running:
 
-- **The pills** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the speed pill ("16× ▾") lists the speeds; picking one changes every open tab. A speed change carries on from where the scenario is. The speed pill is disabled while real games run. The scenario clock shows beside them, or above them where the row is too narrow (the real time while real games run). `Shift+S` hides and shows the pills and the clock, for clean screenshots.
-- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`, or `.../api/scenarios/speed` with `'{"speed":16}'`. The pills and clock in every open tab follow straight away.
+- **The controls** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the **media keys** set the speed: Play is Normal, Pause pauses, and Fast-forward goes to Fast and, pressed again, flips between Fast and Faster. The lit key is the speed (Fast-forward grows a third triangle at Faster), and there's no label. Picking a scenario or pressing a key changes every open tab. A speed change carries on from where the scenario is. The keys are disabled while real games run. The scenario clock shows beside them, or above them where the row is too narrow (the real time while real games run). `Shift+S` hides and shows the pill, the keys and the clock, for clean screenshots.
+- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`, or `.../api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 

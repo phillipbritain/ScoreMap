@@ -11,7 +11,7 @@ import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
-import { SpeedPill } from './scenarios/SpeedPill'
+import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
 
 const store = settingsStore(() => window.localStorage)
@@ -31,7 +31,7 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
-  // The scenario pill, speed pill and clock (local runs only).
+  // The scenario pill, media keys and clock (local runs only).
   const scenarios = useScenarioControls()
   const { setListing: setScenarioListing } = scenarios
 
@@ -78,7 +78,7 @@ export default function App() {
           {scenarios.shown && scenarios.listing && (
             <div className="scenario-pills">
               <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
-              <SpeedPill listing={scenarios.listing} setListing={setScenarioListing} />
+              <SpeedKeys listing={scenarios.listing} setListing={setScenarioListing} />
               <ScenarioClock listing={scenarios.listing} />
             </div>
           )}

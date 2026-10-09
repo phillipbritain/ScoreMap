@@ -73,5 +73,5 @@ The time a scenario's games are on. It reads the real time when the scenario sta
 _Avoid_: Game clock (the clock within a game, such as 67'), fake time, virtual time
 
 **Speed**:
-How many times faster than real time the scenario clock runs, from 1× (real time) up. One speed applies to whichever scenario is running.
+How fast the scenario clock runs, by name: Paused (it stands still), Normal (real time), Fast (2×) or Faster (8×). One speed applies to whichever scenario is running.
 _Avoid_: Pace, play speed, playback rate

@@ -1212,7 +1212,7 @@ body {
   content: '✓ ';
 }
 
-/* The media keys: Play, Pause and Fast-forward in the scenario pill's navy. The lit key, white, is the speed. */
+/* The media keys: Pause, Play and Fast-forward in the scenario pill's navy. The lit key, white, is the speed. */
 .speed-keys {
   display: flex;
   gap: 2px;

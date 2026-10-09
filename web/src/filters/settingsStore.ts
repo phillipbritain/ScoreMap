@@ -1,4 +1,5 @@
 import type { Camera } from '../globe/camera'
+import { isCardStyle } from '../globe/cardStyle'
 import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -71,7 +72,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, liveOnly, showDisrupted, slowSpin } = fields
+  const { hiddenLeagues, liveOnly, showDisrupted, slowSpin, cardStyle } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
@@ -79,5 +80,6 @@ function fromSaved(saved: unknown): ViewerSettings {
     liveOnly: typeof liveOnly === 'boolean' ? liveOnly : firstVisitSettings.liveOnly,
     showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
     slowSpin: typeof slowSpin === 'boolean' ? slowSpin : firstVisitSettings.slowSpin,
+    cardStyle: isCardStyle(cardStyle) ? cardStyle : firstVisitSettings.cardStyle,
   }
 }

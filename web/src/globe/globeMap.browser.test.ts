@@ -14,7 +14,7 @@ applyStatusLook(document.documentElement)
 
 /**
  * A plain style with nothing to fetch: no tiles, no place names, and no glyphs, so cluster counts
- * aren't drawn (the tests look for the clusters themselves).
+ * aren't drawn (the tests look for the clusters themselves). The place-name test adds a stand-in.
  */
 const plainStyle: StyleSpecification = {
   version: 8,

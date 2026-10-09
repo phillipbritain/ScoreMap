@@ -1,89 +1,107 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { progressLine } from '../games/progressLine'
-import { UnofficialStreams } from './UnofficialStreams'
-import { viewerCountry, watchLinks, type WatchLink } from './watchLinks'
+import { streamLinks } from './streamLinks'
+import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
   onClose: () => void
 }
 
+/** A link in the panel's Watch column: an official channel or service, or an unofficial stream. */
+interface PanelLink {
+  name: string
+  url: string | null
+  unofficial: boolean
+}
+
 /**
- * The game panel: details of the selected game. Beside the globe on wide screens,
- * a bottom sheet on phones (see .game-panel in index.css). Re-renders with each new
- * snapshot, so it stays current while open.
+ * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
+ * (see .game-panel in index.css). It keeps one size whatever the game, so selecting one game after
+ * another doesn't make it jump: long text is clipped, with the full text on hover. Re-renders with
+ * each new snapshot, so it stays current while open.
  */
 export function GamePanel({ game, onClose }: GamePanelProps) {
   const { venue } = game
   const place = [venue.city, venue.country].filter(Boolean).join(', ')
-  const links = watchLinks(game.broadcasters, viewerCountry(navigator.languages))
+  const venueName = venue.name ?? 'Unknown venue'
+  const progress = progressLine(game, 'full')
+  // A Final game shows when it ended; any other, when it starts.
+  const endTime = game.status === 'Final' ? game.endTime : null
+  const time = dualTime(endTime ?? game.startTime, venue.timeZone)
+  const links: PanelLink[] = [
+    ...watchLinks(game.broadcasters, viewerCountry(navigator.languages)).map((link) => ({ ...link, unofficial: false })),
+    // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
+    ...streamLinks(game.streamLinks).map((link) => ({ name: link.site, url: link.url, unofficial: true })),
+  ]
   // A photo that fails to load is left out, with its credit, rather than shown broken.
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
+  // Lit in the game's status colour, as its score card is.
+  const statusStyle = { '--status-color': `var(--${game.status.toLowerCase()}-color)` } as CSSProperties
 
   return (
-    <aside className="game-panel" aria-label="Game panel">
-      {photo && (
-        <img
-          className="game-panel__photo"
-          src={photo.url}
-          alt={venue.name ?? 'The venue'}
-          onError={() => setBrokenPhotoUrl(photo.url)}
-        />
-      )}
-      <header className="game-panel__header">
-        <span className="game-panel__league">{game.league}</span>
-        <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
-          ×
-        </button>
-      </header>
-
-      <div className="game-panel__teams">
+    <aside className="game-panel" style={statusStyle} aria-label="Game panel">
+      <div className="game-panel__score">
+        <div className="game-panel__league">{game.league}</div>
         <TeamRow team={game.away} />
         <TeamRow team={game.home} />
+        {progress && <div className="game-panel__progress">{progress}</div>}
       </div>
-      <p className="game-panel__progress">{progressLine(game, 'full')}</p>
 
-      <dl className="game-panel__details">
-        <dt>Venue</dt>
-        <dd>
-          {venue.name ?? 'Unknown venue'}
-          {place && <div className="game-panel__muted">{place}</div>}
-        </dd>
-        <dt>Start</dt>
-        <dd>
-          <Time instant={game.startTime} timeZone={venue.timeZone} />
-        </dd>
-        {game.status === 'Final' && game.endTime && (
+      <div className="game-panel__details">
+        <div>
+          <div className="game-panel__label">Venue</div>
+          <div className="game-panel__value" title={venueName}>
+            {venueName}
+          </div>
+          <div className="game-panel__muted" title={place}>
+            {place}
+          </div>
+        </div>
+        <div>
+          <div className="game-panel__label">{endTime ? 'Ended' : 'Start'}</div>
+          <div className="game-panel__value" title={time.viewer}>
+            {time.viewer}
+          </div>
+          <div className="game-panel__muted">{time.venue && `${time.venue} local`}</div>
+        </div>
+        <div>
+          <div className="game-panel__label">Watch</div>
+          <WatchLinks links={links} />
+        </div>
+      </div>
+
+      {/* Kept when there's no photo, so the details keep their width. */}
+      <figure className="game-panel__photo">
+        {photo && (
           <>
-            <dt>End</dt>
-            <dd>
-              <Time instant={game.endTime} timeZone={venue.timeZone} />
-            </dd>
+            <img src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
+            {photo.credit && <Credit credit={photo.credit} />}
           </>
         )}
-        <dt>Watch</dt>
-        <dd>
-          <WatchLinks links={links} />
-        </dd>
-        <UnofficialStreams links={game.streamLinks} />
-      </dl>
-      {photo?.credit && <Credit credit={photo.credit} />}
+      </figure>
+
+      <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
+        ×
+      </button>
     </aside>
   )
 }
 
-/** The credit a Wikimedia Commons photo's licence asks for: its author and licence, linking to the photo's page. */
+/**
+ * The credit a Wikimedia Commons photo's licence asks for: its author, linking to the photo's page,
+ * and its licence. Shown over the photo on hover.
+ */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (
-    <p className="game-panel__credit">
-      Photo:{' '}
+    <figcaption className="game-panel__credit" title={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`}>
       <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
         {credit.author}
       </a>
-      ,{' '}
+      {' · '}
       {credit.licenceUrl ? (
         <a href={credit.licenceUrl} target="_blank" rel="noopener noreferrer">
           {credit.licence}
@@ -91,30 +109,40 @@ function Credit({ credit }: { credit: PhotoCredit }) {
       ) : (
         credit.licence
       )}
-      , via Wikimedia Commons
-    </p>
+    </figcaption>
   )
 }
 
 /**
- * Official watch links, as links where the server's watch links file lists the service and
- * plain names otherwise. Unofficial streams (a separate, removable module) follow in their own row.
+ * Official watch links, then unofficial streams, as links where there's a web address and plain
+ * names otherwise. The first few are listed; the rest are named on hover over "+N more".
  */
-function WatchLinks({ links }: { links: WatchLink[] }) {
-  if (links.length === 0) return <span className="game-panel__muted">No channels listed</span>
+function WatchLinks({ links }: { links: PanelLink[] }) {
+  if (links.length === 0) return <div className="game-panel__muted">No channels listed</div>
+  const { listed, folded } = listedWatchLinks(links)
   return (
     <ul className="game-panel__watch">
-      {links.map((link) => (
-        <li key={link.name}>
+      {listed.map((link) => (
+        <li key={`${link.name} ${link.url}`} title={link.unofficial ? `${link.name} (unofficial stream)` : link.name}>
           {link.url ? (
-            <a href={link.url} target="_blank" rel="noopener noreferrer">
+            <a
+              href={link.url}
+              target="_blank"
+              rel={link.unofficial ? 'noopener noreferrer nofollow' : 'noopener noreferrer'}
+            >
               {link.name}
             </a>
           ) : (
             link.name
           )}
+          {link.unofficial && <span className="game-panel__unofficial"> · unofficial</span>}
         </li>
       ))}
+      {folded.length > 0 && (
+        <li className="game-panel__muted" title={folded.map((link) => link.name).join(', ')}>
+          +{folded.length} more
+        </li>
+      )}
     </ul>
   )
 }
@@ -122,19 +150,11 @@ function WatchLinks({ links }: { links: WatchLink[] }) {
 function TeamRow({ team }: { team: GameTeam }) {
   return (
     <div className="game-panel__team">
-      {team.logoUrl ? <img src={team.logoUrl} alt="" width={40} height={40} /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name">{team.fullName}</span>
-      <span className="game-panel__score">{team.score ?? ''}</span>
+      {team.logoUrl ? <img src={team.logoUrl} alt="" width={28} height={28} /> : <span className="game-panel__logo" />}
+      <span className="game-panel__team-name" title={team.fullName}>
+        {team.fullName}
+      </span>
+      <span className="game-panel__team-score">{team.score ?? '–'}</span>
     </div>
-  )
-}
-
-function Time({ instant, timeZone }: { instant: string; timeZone: string | null }) {
-  const time = dualTime(instant, timeZone)
-  return (
-    <>
-      {time.viewer}
-      {time.venue && <div className="game-panel__muted">{time.venue} at the venue</div>}
-    </>
   )
 }

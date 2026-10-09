@@ -57,7 +57,7 @@ export default function App() {
   const selectedGame = visible.find((game) => game.id === selectedGameId) ?? null
 
   return (
-    <div className={selectedGame ? 'app app--panel-open' : 'app'}>
+    <div className="app">
       <div className="globe-area">
         <Globe
           games={visible}
@@ -83,9 +83,11 @@ export default function App() {
             </div>
           )}
         </div>
+        {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
+            settings menu, so an open settings menu lies over it on a phone. */}
+        {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
       </div>
-      {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
     </div>
   )
 }

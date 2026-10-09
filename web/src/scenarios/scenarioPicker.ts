@@ -1,6 +1,11 @@
+/** The server's names for its speeds. */
+export const speedNames = { paused: 'Paused', normal: 'Normal', fast: 'Fast', faster: 'Faster' } as const
+
+export type SpeedName = (typeof speedNames)[keyof typeof speedNames]
+
 /** A speed the scenario clock can run at, by name: it runs `times` times faster than real time. */
 export interface Speed {
-  name: string
+  name: SpeedName
   times: number
 }
 
@@ -12,7 +17,7 @@ export interface Speed {
 export interface ScenarioListing {
   running: string
   scenarios: string[]
-  speed: string
+  speed: SpeedName
   speeds: Speed[]
   /** The clock `reads` this at the real time `at` (both ISO 8601); from here it runs at the speed. */
   clock: { at: string; reads: string }
@@ -54,32 +59,36 @@ export function pickerEntries(listing: ScenarioListing): PickerEntry[] {
   }))
 }
 
-/** The server's names for its speeds. */
-export const speeds = { paused: 'Paused', normal: 'Normal', fast: 'Fast', faster: 'Faster' } as const
-
 /** The media keys: Play, Pause and Fast-forward. */
 export type MediaKey = 'play' | 'pause' | 'fastForward'
 
-/** The media key lit for the speed: Play at Normal, Pause when paused, Fast-forward at Fast and Faster. */
-export function litKey(listing: ScenarioListing): MediaKey {
-  if (listing.speed === speeds.paused) return 'pause'
-  if (listing.speed === speeds.fast || listing.speed === speeds.faster) return 'fastForward'
-  return 'play'
+/**
+ * How the media keys show and change each speed: the key lit, where Fast-forward goes (Fast, and
+ * pressed again, flipping between Fast and Faster), and whether its icon grows a third triangle.
+ * A new speed doesn't typecheck until it has a row.
+ */
+const mediaKeys: Record<SpeedName, { lit: MediaKey; fastForwardTo: SpeedName; fasterIcon: boolean }> = {
+  Paused: { lit: 'pause', fastForwardTo: speedNames.fast, fasterIcon: false },
+  Normal: { lit: 'play', fastForwardTo: speedNames.fast, fasterIcon: false },
+  Fast: { lit: 'fastForward', fastForwardTo: speedNames.faster, fasterIcon: false },
+  Faster: { lit: 'fastForward', fastForwardTo: speedNames.fast, fasterIcon: true },
 }
 
-/**
- * The speed a media key goes to: Normal on Play, paused on Pause, and Fast on Fast-forward, which
- * pressed again flips between Fast and Faster.
- */
-export function pressedSpeed(listing: ScenarioListing, key: MediaKey): string {
-  if (key === 'play') return speeds.normal
-  if (key === 'pause') return speeds.paused
-  return listing.speed === speeds.fast ? speeds.faster : speeds.fast
+/** The media key lit for the speed: Play at Normal, Pause when paused, Fast-forward at Fast and Faster. */
+export function litKey(speed: SpeedName): MediaKey {
+  return mediaKeys[speed].lit
+}
+
+/** The speed a media key goes to: Normal on Play, paused on Pause, and on Fast-forward as `mediaKeys` says. */
+export function pressedSpeed(speed: SpeedName, key: MediaKey): SpeedName {
+  if (key === 'play') return speedNames.normal
+  if (key === 'pause') return speedNames.paused
+  return mediaKeys[speed].fastForwardTo
 }
 
 /** Whether Fast-forward shows its Faster icon, with a third triangle: only at Faster. */
-export function showsFasterIcon(listing: ScenarioListing): boolean {
-  return listing.speed === speeds.faster
+export function showsFasterIcon(speed: SpeedName): boolean {
+  return mediaKeys[speed].fasterIcon
 }
 
 /** Whether the speed can be changed: while a scenario runs, not while real games (which play in real time) do. */

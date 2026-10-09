@@ -46,6 +46,8 @@ public class ScenarioSpeedTests
         var listing = await ListingAsync(http);
 
         Assert.Equal("Normal", listing.Speed);
+        // The browser's media keys know these names too (speedNames in web/src/scenarios/scenarioPicker.ts):
+        // renaming one here means renaming it there.
         Assert.Equal([new("Paused", 0), new("Normal", 1), new("Fast", 2), new("Faster", 8)], listing.Speeds);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.At);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.Reads);

@@ -22,8 +22,8 @@ public static class ScenarioRegistration
             return builder;
         var name = builder.Configuration["Scenario"];
         var startWith = string.IsNullOrWhiteSpace(name) ? ScenarioSwitcher.RealGames : name;
-        var speedName = builder.Configuration["ScenarioSpeed"];
-        var speed = string.IsNullOrWhiteSpace(speedName) ? Speed.Normal : Speed.Named(speedName) ?? throw new InvalidOperationException(
+        var speedName = builder.Configuration["ScenarioSpeed"] is { Length: > 0 } setting ? setting : Speed.Normal.Name;
+        var speed = Speed.Named(speedName) ?? throw new InvalidOperationException(
             $"The ScenarioSpeed setting is \"{speedName}\", which isn't a speed; it must be one of {Speed.List}");
 
         var services = builder.Services;

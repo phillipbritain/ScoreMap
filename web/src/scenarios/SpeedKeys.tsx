@@ -17,10 +17,12 @@ export function SpeedKeys({
 }) {
   const [changing, setChanging] = useState(false)
   const changeable = speedChangeable(listing)
-  const lit = litKey(listing)
+  const lit = litKey(listing.speed)
 
   const press = (key: MediaKey) => {
-    const speed = pressedSpeed(listing, key)
+    const speed = pressedSpeed(listing.speed, key)
+    // A lit Play or Pause is already the speed.
+    if (speed === listing.speed) return
     setChanging(true)
     putScenarios('speed', { speed })
       .then(setListing)
@@ -28,7 +30,7 @@ export function SpeedKeys({
       .finally(() => setChanging(false))
   }
 
-  const key = (name: MediaKey, title: string, icon: ReactNode, className?: string) => (
+  const keyButton = (name: MediaKey, title: string, icon: ReactNode, className?: string) => (
     <button
       type="button"
       className={className}
@@ -42,14 +44,14 @@ export function SpeedKeys({
     </button>
   )
 
-  const faster = showsFasterIcon(listing)
+  const faster = showsFasterIcon(listing.speed)
   return (
     <div className="speed-keys" role="group" aria-label="Scenario speed" aria-disabled={!changeable}>
-      {key('play', 'Play', <PlayIcon />)}
-      {key('pause', 'Pause', <PauseIcon />)}
-      {key(
+      {keyButton('play', 'Play', <PlayIcon />)}
+      {keyButton('pause', 'Pause', <PauseIcon />)}
+      {keyButton(
         'fastForward',
-        `Fast-forward to ${pressedSpeed(listing, 'fastForward')}`,
+        `Fast-forward to ${pressedSpeed(listing.speed, 'fastForward')}`,
         faster ? <FasterIcon /> : <FastForwardIcon />,
         faster ? 'speed-keys__fast-forward speed-keys__fast-forward--faster' : 'speed-keys__fast-forward',
       )}

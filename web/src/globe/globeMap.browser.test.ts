@@ -232,6 +232,34 @@ describe('score cards', () => {
       await pause(20)
     }
   })
+
+  // Looking at 0°, 0° at cardZoom, the horizon is about 65° away: a game 100° east is behind the
+  // globe, yet on screen, about where one 37° east is.
+  it('shows no card for a game on the far side of the globe', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    globe.show([game('NEAR'), game('FAR', { longitude: 100 })])
+    await cardShown('NEAR')
+    await pause(500)
+
+    expect(card('FAR')).toBeNull()
+  })
+
+  it('does not move a card aside for a game on the far side', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    const near = game('NEAR', { longitude: 37 })
+    const far = game('FAR', { longitude: 100 })
+    globe.show([near, far])
+    const nearCard = await cardShown('NEAR')
+    await pause(500)
+    // The test only means something while the far game would sit under the near one's card.
+    const [a, b] = [near, far].map(({ venue }) => map.project([venue.longitude, venue.latitude]))
+    expect(Math.abs(a.x - b.x)).toBeLessThan(20)
+
+    expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
+    expect(container.querySelector('.score-crowd')).toBeNull()
+    const trails = [...container.querySelectorAll<SVGGElement>('.score-card-trails g')]
+    expect(trails.filter((trail) => trail.style.display !== 'none')).toEqual([])
+  })
 })
 
 describe('animations', () => {

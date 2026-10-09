@@ -11,13 +11,19 @@ interface StatusLook {
   color: string
   /** Which draws on top where pins or score cards overlap: highest first. */
   stacking: number
-  /** A small pin's radius and the width of its white outline, in pixels, and how opaque each is. */
-  pinRadius: number
-  pinOutline: number
-  pinOpacity: number
-  pinOutlineOpacity: number
-  /** A group's (a cluster's or a crowd's) outline and opacity, when it shows as this status. */
-  groupOutline: number
+  /**
+   * A small pin is a bright core in a soft glow of the status colour, like a city's lights seen
+   * from orbit. The core's radius, colour and opacity, and the width of the ring of status colour
+   * around it, in pixels.
+   */
+  coreRadius: number
+  coreColor: string
+  coreOpacity: number
+  coreRing: number
+  /** The glow's radius in pixels, out to where it has faded to nothing, and how opaque it is at its middle. */
+  glowRadius: number
+  glowOpacity: number
+  /** A group's (a cluster's or a crowd's) opacity, when it shows as this status. */
   groupOpacity: number
 }
 
@@ -25,44 +31,57 @@ export const statusLooks: Record<GameStatus, StatusLook> = {
   Live: {
     color: '#e4572e',
     stacking: 2,
-    pinRadius: 7,
-    pinOutline: 2,
-    pinOpacity: 1,
-    pinOutlineOpacity: 1,
-    groupOutline: 2.5,
+    // Hottest at the middle.
+    coreRadius: 3.5,
+    coreColor: '#ffd9c8',
+    coreOpacity: 1,
+    coreRing: 1.5,
+    glowRadius: 15,
+    glowOpacity: 0.7,
     groupOpacity: 1,
   },
   Upcoming: {
     color: '#f2a541',
     stacking: 1,
-    pinRadius: 5,
-    pinOutline: 1.5,
-    pinOpacity: 0.8,
-    pinOutlineOpacity: 1,
-    groupOutline: 1.5,
+    coreRadius: 3,
+    coreColor: '#f2a541',
+    coreOpacity: 0.8,
+    coreRing: 0,
+    glowRadius: 10,
+    glowOpacity: 0.45,
     groupOpacity: 0.85,
   },
   Final: {
     color: '#8a8f98',
     stacking: 0,
-    pinRadius: 4,
-    pinOutline: 1.5,
-    pinOpacity: 0.55,
-    pinOutlineOpacity: 0.55,
-    groupOutline: 1.5,
+    coreRadius: 2.5,
+    coreColor: '#8a8f98',
+    coreOpacity: 0.55,
+    coreRing: 0,
+    glowRadius: 7,
+    glowOpacity: 0.25,
     groupOpacity: 0.6,
   },
   Disrupted: {
     color: '#c3c6cc',
     stacking: 0,
-    pinRadius: 4,
-    pinOutline: 1.5,
-    pinOpacity: 0.6,
-    pinOutlineOpacity: 0.6,
-    groupOutline: 1.5,
+    coreRadius: 2.5,
+    coreColor: '#c3c6cc',
+    coreOpacity: 0.6,
+    coreRing: 0,
+    glowRadius: 7,
+    glowOpacity: 0.25,
     groupOpacity: 0.6,
   },
 }
+
+/**
+ * A group (a cluster, or a crowd of score cards) is a dark disc like a HUD score card, outlined and
+ * lit in its status colour: this fill, an outline this wide, and a glow this much of its opacity.
+ */
+export const groupFill = 'rgba(6, 12, 24, 0.88)'
+export const groupOutline = 1.5
+export const groupGlowOpacity = 0.45
 
 /** The selected game's small pin ring and score card outline. */
 export const selectionColor = '#2f80ed'
@@ -71,8 +90,11 @@ export const selectionColor = '#2f80ed'
 export const selectedStacking = Math.max(...Object.values(statusLooks).map((look) => look.stacking)) + 1
 export const crowdStacking = selectedStacking + 1
 
-/** The widest small pin, outline included: a Live one. */
-export const smallPinWidth = Math.max(...Object.values(statusLooks).map((look) => 2 * (look.pinRadius + look.pinOutline)))
+/**
+ * How far across the widest small pin (a Live one) shows. Its glow is blurred to nothing at its
+ * edge, so only about the inner 60% of it shows.
+ */
+export const smallPinWidth = Math.round(2 * 0.6 * Math.max(...Object.values(statusLooks).map((look) => look.glowRadius)))
 
 /** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */
 export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
@@ -116,14 +138,16 @@ export function byStatus(
 
 /**
  * Writes the looks to CSS custom properties on the page's root, for score cards, crowds and trails:
- * --live-color, --live-group-outline and --live-group-opacity for Live, and so on, and --selection-color.
+ * --live-color and --live-group-opacity for Live, and so on, --group-fill and --group-outline, and
+ * --selection-color.
  */
 export function applyStatusLook(root: { style: Pick<CSSStyleDeclaration, 'setProperty'> }): void {
   for (const [status, look] of Object.entries(statusLooks)) {
     const name = status.toLowerCase()
     root.style.setProperty(`--${name}-color`, look.color)
-    root.style.setProperty(`--${name}-group-outline`, `${look.groupOutline}px`)
     root.style.setProperty(`--${name}-group-opacity`, String(look.groupOpacity))
   }
+  root.style.setProperty('--group-fill', groupFill)
+  root.style.setProperty('--group-outline', `${groupOutline}px`)
   root.style.setProperty('--selection-color', selectionColor)
 }

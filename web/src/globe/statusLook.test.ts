@@ -7,6 +7,8 @@ import {
   clusterStatus,
   clusterStatusCounts,
   crowdStacking,
+  groupFill,
+  groupOutline,
   groupStatus,
   selectedStacking,
   selectionColor,
@@ -58,7 +60,7 @@ describe('the status a group of games shows as', () => {
 describe('byStatus', () => {
   it("picks a pin's value by its own status", () => {
     for (const status of statusProminence) {
-      expect(evaluate(byStatus('pin', (look) => look.pinRadius), { status })).toBe(statusLooks[status].pinRadius)
+      expect(evaluate(byStatus('pin', (look) => look.coreRadius), { status })).toBe(statusLooks[status].coreRadius)
     }
   })
 
@@ -75,18 +77,23 @@ describe('the status look', () => {
     expect(crowdStacking).toBeGreaterThan(selectedStacking)
   })
 
-  it('makes a Live small pin the widest, outline and all', () => {
-    expect(smallPinWidth).toBe(2 * (statusLooks.Live.pinRadius + statusLooks.Live.pinOutline))
+  it("measures a small pin by a Live one's glow, the widest, of which the inner part shows", () => {
+    expect(smallPinWidth).toBe(Math.round(2 * 0.6 * statusLooks.Live.glowRadius))
+    for (const look of Object.values(statusLooks)) {
+      expect(look.glowRadius).toBeLessThanOrEqual(statusLooks.Live.glowRadius)
+      expect(smallPinWidth).toBeGreaterThan(2 * (look.coreRadius + look.coreRing))
+    }
   })
 
-  it("writes each status's look, and the selection colour, for the page's CSS", () => {
+  it("writes each status's look, the groups' fill and outline, and the selection colour, for the page's CSS", () => {
     const properties = new Map<string, string>()
     applyStatusLook({ style: { setProperty: (name: string, value: string | null) => properties.set(name, value!) } })
 
     expect(properties.get('--live-color')).toBe(statusLooks.Live.color)
-    expect(properties.get('--upcoming-group-outline')).toBe(`${statusLooks.Upcoming.groupOutline}px`)
     expect(properties.get('--disrupted-group-opacity')).toBe(String(statusLooks.Disrupted.groupOpacity))
+    expect(properties.get('--group-fill')).toBe(groupFill)
+    expect(properties.get('--group-outline')).toBe(`${groupOutline}px`)
     expect(properties.get('--selection-color')).toBe(selectionColor)
-    expect(properties.size).toBe(3 * statusProminence.length + 1)
+    expect(properties.size).toBe(2 * statusProminence.length + 3)
   })
 })

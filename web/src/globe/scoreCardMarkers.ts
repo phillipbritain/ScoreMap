@@ -22,7 +22,7 @@ interface PlacedCard {
   height: number
   /** Where the card sits from its venue: just above it, or moved aside to make room for others (see cardLayout). */
   offset: ScreenOffset
-  /** The line and venue dot drawn while the card is moved (see drawTrail). */
+  /** The line and venue point drawn while the card is moved (see drawTrail). */
   trail: SVGGElement
   /** True while there's no room for the card and its game is counted in a crowd instead. */
   crowded: boolean
@@ -308,21 +308,27 @@ const svgNamespace = 'http://www.w3.org/2000/svg'
 
 function newTrail(): SVGGElement {
   const trail = document.createElementNS(svgNamespace, 'g')
-  trail.append(document.createElementNS(svgNamespace, 'line'), document.createElementNS(svgNamespace, 'circle'))
+  const point = document.createElementNS(svgNamespace, 'circle')
+  point.classList.add('score-card-trail__point')
+  const ring = document.createElementNS(svgNamespace, 'circle')
+  ring.classList.add('score-card-trail__ring')
+  trail.append(document.createElementNS(svgNamespace, 'line'), point, ring)
   return trail
 }
 
-/** Points a moved card back at its venue: a line from the card's edge to a dot on the venue. */
+/** Points a moved card back at its venue: a line from the card's edge to a ringed point on the venue. */
 function drawTrail(element: SVGGElement, trail: Segment | null): void {
   element.style.display = trail ? '' : 'none'
   if (!trail) return
-  const [line, dot] = element.children
+  const [line, point, ring] = element.children
   line.setAttribute('x1', String(trail.x1))
   line.setAttribute('y1', String(trail.y1))
   line.setAttribute('x2', String(trail.x2))
   line.setAttribute('y2', String(trail.y2))
-  dot.setAttribute('cx', String(trail.x2))
-  dot.setAttribute('cy', String(trail.y2))
+  for (const circle of [point, ring]) {
+    circle.setAttribute('cx', String(trail.x2))
+    circle.setAttribute('cy', String(trail.y2))
+  }
 }
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`

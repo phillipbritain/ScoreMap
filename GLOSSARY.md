@@ -5,11 +5,11 @@ A globe showing sports games happening around the world, with live scores, so fa
 ## Language
 
 **Sport**:
-A kind of game, such as American football, basketball or soccer. Sports group leagues in the filter.
+A kind of game, such as American football, basketball or soccer. Sports group leagues in the settings menu.
 _Avoid_: Football (ambiguous between American football and soccer)
 
 **League**:
-A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users filter on.
+A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users show or hide in the settings menu.
 _Avoid_: Competition, tournament, conference, governing body (e.g. "NCAA" or "FIFA" alone)
 
 **Game**:
@@ -25,7 +25,7 @@ While zoomed in, the panel a pin shows as, above the game's venue, with the team
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Card style**:
-The look a viewer picks for every score card in the filter menu: HUD (the default), LED scoreboard, Broadcast bug, Tactical or Neon sign. It changes only how cards look, not what they show or where they go.
+The look a viewer picks for every score card in the settings menu: HUD (the default), LED scoreboard, Broadcast bug, Tactical or Neon sign. It changes only how cards look, not what they show or where they go.
 _Avoid_: Theme, skin, card look
 
 **Cluster**:

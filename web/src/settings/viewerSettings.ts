@@ -11,18 +11,15 @@ export interface ViewerSettings {
   liveOnly: boolean
   /** "Show Disrupted games": shows postponed, suspended and canceled games. */
   showDisrupted: boolean
-  /** Slowly turns the globe while no game is selected and the viewer isn't dragging or zooming. */
-  slowSpin: boolean
   /** "Card style": how score cards look. */
   cardStyle: CardStyle
 }
 
-/** Every league on, "Live only" off, Disrupted games shown, slow spin off and HUD score cards. */
+/** Every league on, "Live only" off, Disrupted games shown and HUD score cards. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   liveOnly: false,
   showDisrupted: true,
-  slowSpin: false,
   cardStyle: defaultCardStyle,
 }
 
@@ -51,6 +48,15 @@ export function withSport(settings: ViewerSettings, group: SportGroup, on: boole
   )
 }
 
+/** The settings with every league switched on or off at once. */
+export function withAllLeagues(settings: ViewerSettings, leagues: readonly League[], on: boolean): ViewerSettings {
+  return withLeagues(
+    settings,
+    leagues.map((league) => league.name),
+    on,
+  )
+}
+
 function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: boolean): ViewerSettings {
   const others = settings.hiddenLeagues.filter((hidden) => !leagues.includes(hidden))
   return { ...settings, hiddenLeagues: on ? others : [...others, ...leagues] }
@@ -67,7 +73,7 @@ export interface SportGroup {
   leagues: League[]
 }
 
-/** Groups leagues under their sport for the filter menu, keeping the configured order. */
+/** Groups leagues under their sport for the settings menu, keeping the configured order. */
 export function leaguesBySport(leagues: readonly League[]): SportGroup[] {
   const groups = new Map<string, League[]>()
   for (const league of leagues) {

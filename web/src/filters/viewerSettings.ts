@@ -1,3 +1,5 @@
+import { defaultCardStyle, type CardStyle } from '../globe/cardStyle'
+
 /** What a viewer has chosen to see. Saved in the browser by the settings store. */
 export interface ViewerSettings {
   /**
@@ -11,14 +13,17 @@ export interface ViewerSettings {
   showDisrupted: boolean
   /** Slowly turns the globe while no game is selected and the viewer isn't dragging or zooming. */
   slowSpin: boolean
+  /** "Card style": how score cards look. */
+  cardStyle: CardStyle
 }
 
-/** Every league on, "Live only" off, Disrupted games shown and slow spin off. */
+/** Every league on, "Live only" off, Disrupted games shown, slow spin off and HUD score cards. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   liveOnly: false,
   showDisrupted: true,
   slowSpin: false,
+  cardStyle: defaultCardStyle,
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {

@@ -221,19 +221,13 @@ body {
   --status-group-opacity: var(--disrupted-group-opacity);
 }
 
-/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line. */
+/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line. How it looks
+   is the viewer's "Card style" (see globe/cardStyle.ts); each style's rules are further down. */
 .score-card {
   /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
   --score-card-pointer: 6px;
   display: grid;
   gap: 2px;
-  min-width: 84px;
-  padding: 4px 8px 4px 6px;
-  border-left: 4px solid var(--status-color);
-  border-radius: 6px;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
-  color: #1b1f2a;
   font-size: 12px;
   line-height: 1.2;
   cursor: pointer;
@@ -309,12 +303,6 @@ body {
   cursor: pointer;
 }
 
-.score-card--live {
-  box-shadow:
-    0 0 0 2px var(--status-color),
-    0 1px 6px rgb(0 0 0 / 0.45);
-}
-
 .score-card--upcoming {
   opacity: 0.85;
 }
@@ -326,8 +314,6 @@ body {
 /* Greyed out: the game isn't being played as scheduled. */
 .score-card--disrupted {
   opacity: 0.7;
-  background: #e9ebef;
-  color: #6b7280;
 }
 
 .score-card--disrupted .score-card__logo {
@@ -369,7 +355,6 @@ body {
 }
 
 .score-card__clock {
-  color: #555c6b;
   font-size: 11px;
 }
 
@@ -377,9 +362,330 @@ body {
   display: none;
 }
 
-.score-card--live .score-card__clock {
+/* HUD: an instrument readout; a glowing status outline, a header strip with a status light. */
+
+.score-card.score-card--style-hud {
+  gap: 2px;
+  min-width: 92px;
+  padding: 0 0 4px;
+  border: 1px solid var(--status-color);
+  border-radius: 3px;
+  background: rgb(6 12 24 / 0.85);
+  color: #d9f0ff;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--status-color) 45%, transparent),
+    inset 0 0 10px color-mix(in srgb, var(--status-color) 15%, transparent);
+}
+
+.score-card.score-card--style-hud::after {
+  background: var(--status-color);
+  box-shadow: none;
+}
+
+.score-card__hud-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+  padding: 2px 6px;
+  border-bottom: 1px solid var(--status-color);
+  background: color-mix(in srgb, var(--status-color) 28%, transparent);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.score-card__hud-light {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-color);
+  box-shadow: 0 0 6px var(--status-color);
+}
+
+.score-card--live .score-card__hud-light {
+  animation: score-card-hud-light 1.6s ease-in-out infinite;
+}
+
+@keyframes score-card-hud-light {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.score-card.score-card--style-hud .score-card__team {
+  padding: 0 6px;
+}
+
+.score-card.score-card--style-hud .score-card__logo {
+  width: 16px;
+  height: 16px;
+}
+
+.score-card.score-card--disrupted.score-card--style-hud {
+  background: rgb(12 14 20 / 0.85);
+  color: #8b93a3;
+}
+
+/* LED scoreboard: a stadium board; amber dot-matrix digits in dark cells, the clock lit above. */
+
+.score-card.score-card--style-led {
+  gap: 3px;
+  min-width: 86px;
+  padding: 4px 6px 5px;
+  border: 2px solid #2a2a2a;
+  border-top: 3px solid var(--status-color);
+  border-radius: 2px;
+  background:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.2px) 0 0 / 3px 3px,
+    #0a0a0a;
+  color: #ffb000;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: 0 0 4px rgb(255 176 0 / 0.7);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.7);
+}
+
+.score-card.score-card--style-led::after {
+  background: #2a2a2a;
+  box-shadow: none;
+}
+
+.score-card.score-card--style-led .score-card__clock {
+  justify-self: center;
+  padding: 0 6px;
+  background: #000000;
   color: var(--status-color);
-  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 5px var(--status-color);
+}
+
+.score-card.score-card--style-led .score-card__team {
+  grid-template-columns: 14px 1fr auto;
+}
+
+.score-card.score-card--style-led .score-card__logo {
+  width: 14px;
+  height: 14px;
+}
+
+.score-card.score-card--style-led .score-card__score {
+  min-width: 2.2ch;
+  padding: 0 3px;
+  border: 1px solid #262626;
+  background: #000000;
+  color: #ff3b1f;
+  font-size: 13px;
+  text-align: center;
+  text-shadow: 0 0 6px rgb(255 59 31 / 0.9);
+}
+
+.score-card.score-card--disrupted.score-card--style-led {
+  background: #0a0a0a;
+  color: #6b6b6b;
+  text-shadow: none;
+}
+
+/* Broadcast bug: a TV score strip; slanted blocks for each team and the clock. */
+
+.score-card.score-card--style-broadcast {
+  display: flex;
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.7));
+}
+
+.score-card.score-card--style-broadcast::after {
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.score-card__broadcast-team,
+.score-card.score-card--style-broadcast .score-card__clock {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  transform: skewX(-14deg);
+}
+
+.score-card__broadcast-team > *,
+.score-card.score-card--style-broadcast .score-card__clock > * {
+  transform: skewX(14deg);
+}
+
+.score-card__broadcast-team--away {
+  background: linear-gradient(180deg, #1d2d55, #121c38);
+}
+
+.score-card__broadcast-team--home {
+  background: linear-gradient(180deg, #2a3e70, #1a2850);
+}
+
+.score-card__broadcast-team .score-card__score {
+  min-width: 1.4ch;
+  padding: 0 4px;
+  background: #ffffff;
+  color: #0b1020;
+}
+
+.score-card.score-card--style-broadcast .score-card__logo {
+  width: 16px;
+  height: 16px;
+}
+
+.score-card.score-card--style-broadcast .score-card__clock {
+  background: var(--status-color);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.score-card.score-card--disrupted.score-card--style-broadcast {
+  background: transparent;
+  color: #a0a6b2;
+}
+
+.score-card.score-card--disrupted.score-card--style-broadcast .score-card__broadcast-team {
+  background: #2a2e38;
+}
+
+/* Tactical: corner brackets in the status colour, no box, dotted leaders to each score. */
+
+.score-card.score-card--style-tactical {
+  --corner: 7px;
+  gap: 1px;
+  min-width: 96px;
+  padding: 5px 8px;
+  border-radius: 0;
+  background:
+    linear-gradient(var(--status-color), var(--status-color)) top left / var(--corner) 1.5px,
+    linear-gradient(var(--status-color), var(--status-color)) top left / 1.5px var(--corner),
+    linear-gradient(var(--status-color), var(--status-color)) top right / var(--corner) 1.5px,
+    linear-gradient(var(--status-color), var(--status-color)) top right / 1.5px var(--corner),
+    linear-gradient(var(--status-color), var(--status-color)) bottom left / var(--corner) 1.5px,
+    linear-gradient(var(--status-color), var(--status-color)) bottom left / 1.5px var(--corner),
+    linear-gradient(var(--status-color), var(--status-color)) bottom right / var(--corner) 1.5px,
+    linear-gradient(var(--status-color), var(--status-color)) bottom right / 1.5px var(--corner),
+    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 3px),
+    rgb(4 10 20 / 0.72);
+  background-repeat: no-repeat;
+  color: #cfe3ff;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+.score-card.score-card--style-tactical::after {
+  --side: 6px;
+  background: var(--status-color);
+  box-shadow: none;
+}
+
+.score-card.score-card--style-tactical .score-card__team {
+  grid-template-columns: 14px auto 1fr auto;
+}
+
+.score-card__leader {
+  align-self: end;
+  margin-bottom: 4px;
+  border-bottom: 1px dotted rgb(207 227 255 / 0.35);
+}
+
+.score-card.score-card--style-tactical .score-card__logo {
+  width: 14px;
+  height: 14px;
+}
+
+.score-card.score-card--style-tactical .score-card__clock {
+  margin-top: 2px;
+  color: var(--status-color);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.score-card.score-card--style-tactical .score-card__clock::before {
+  content: '> ';
+}
+
+.score-card.score-card--disrupted.score-card--style-tactical {
+  color: #7d8594;
+}
+
+/* Neon sign: a glowing tube outline, the score lit large in the middle, names beneath. */
+
+.score-card.score-card--style-neon {
+  justify-items: center;
+  gap: 0;
+  min-width: 90px;
+  padding: 4px 10px 5px;
+  border: 1.5px solid var(--status-color);
+  border-radius: 14px;
+  background: rgb(10 6 24 / 0.82);
+  color: #ffffff;
+  box-shadow:
+    0 0 6px var(--status-color),
+    0 0 16px color-mix(in srgb, var(--status-color) 50%, transparent),
+    inset 0 0 8px color-mix(in srgb, var(--status-color) 40%, transparent);
+}
+
+.score-card.score-card--style-neon::after {
+  background: var(--status-color);
+  box-shadow: 0 0 6px var(--status-color);
+}
+
+.score-card__neon-score {
+  font-size: 18px;
+  font-weight: 800;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 4px #ffffff,
+    0 0 10px var(--status-color),
+    0 0 18px var(--status-color);
+}
+
+.score-card__neon-teams {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #6ee7ff;
+  text-shadow: 0 0 6px #22d3ee;
+}
+
+.score-card.score-card--style-neon .score-card__logo {
+  width: 14px;
+  height: 14px;
+}
+
+.score-card.score-card--style-neon .score-card__clock {
+  color: #ff7ce5;
+  font-size: 10px;
+  font-weight: 700;
+  text-shadow: 0 0 6px #ff2fd1;
+}
+
+.score-card.score-card--disrupted.score-card--style-neon {
+  background: rgb(14 14 20 / 0.85);
+  color: #8b93a3;
+  box-shadow: none;
 }
 
 /* Animations for changes worth noticing (see globe/pinAnimation.ts): a lively bounce and flash when
@@ -561,6 +867,14 @@ body {
   gap: 6px;
   padding: 2px 0;
   cursor: pointer;
+}
+
+/* A setting with several choices: its name, then a list to pick from. */
+.filter-choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
 }
 
 .filter-sport {

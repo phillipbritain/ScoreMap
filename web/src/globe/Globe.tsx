@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Game } from '../games/game'
 import type { Camera } from './camera'
+import type { CardStyle } from './cardStyle'
 import { GlobeMap } from './globeMap'
 import { baseStyleUrl, globeStyle } from './globeStyle'
 
@@ -15,10 +16,20 @@ interface GlobeProps {
   onCameraMove: (camera: Camera) => void
   /** The "Slow spin" setting. */
   slowSpin: boolean
+  /** The "Card style" setting. */
+  cardStyle: CardStyle
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ games, selectedGameId, onSelectGame, startCamera, onCameraMove, slowSpin }: GlobeProps) {
+export function Globe({
+  games,
+  selectedGameId,
+  onSelectGame,
+  startCamera,
+  onCameraMove,
+  slowSpin,
+  cardStyle,
+}: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, startCamera })
@@ -46,6 +57,7 @@ export function Globe({ games, selectedGameId, onSelectGame, startCamera, onCame
   useEffect(() => globe.current?.show(games), [games])
   useEffect(() => globe.current?.select(selectedGameId), [selectedGameId])
   useEffect(() => globe.current?.setSlowSpin(slowSpin), [slowSpin])
+  useEffect(() => globe.current?.setCardStyle(cardStyle), [cardStyle])
 
   return <div ref={container} className="globe" />
 }

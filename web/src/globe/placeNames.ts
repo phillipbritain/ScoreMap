@@ -10,6 +10,7 @@ import type {
 import type { Game } from '../games/game'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { degreesApart } from './geo'
+import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
 
 /**
@@ -280,7 +281,10 @@ function atZoom(stops: readonly number[], zoom: number): number {
 export interface PlaceNames {
   /** Names the places where these games are, however small (see gameCities). */
   showGames(games: readonly Game[]): void
-  /** Where the names of the games' places are written on screen, for cards to keep clear of. */
+  /**
+   * Where the names of the games' places are written on screen, for cards to keep clear of: those on
+   * the side of the globe facing the viewer, as MapLibre writes no others.
+   */
   nameBoxes(): ScreenBox[]
   remove(): void
 }
@@ -336,9 +340,11 @@ export function addPlaceNames(map: MapLibreMap): PlaceNames {
     },
     nameBoxes() {
       const zoom = map.getZoom()
-      return cities.map((city) =>
-        cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
-      )
+      return cities
+        .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
+        .map((city) =>
+          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
+        )
     },
     remove() {
       map.off('sourcedata', onSourceData)

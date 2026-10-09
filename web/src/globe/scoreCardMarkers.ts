@@ -8,6 +8,7 @@ import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
+import { isBehindGlobe } from './horizon'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { crowdStacking, selectedStacking, statusLooks } from './statusLook'
 import { pinLayout } from './zoomLevels'
@@ -96,10 +97,13 @@ export class ScoreCardMarkers {
     this.sync()
   }
 
-  /** Places, updates and removes cards to match what the pin source shows at the current zoom. */
+  /**
+   * Places, updates and removes cards to match what the pin source shows at the current zoom, on the
+   * side of the globe facing the viewer.
+   */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
-    const wanted = this.map.isSourceLoaded(pinSource)
+    const pins = this.map.isSourceLoaded(pinSource)
       ? pinLayout(this.map.getZoom()).size === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
@@ -107,6 +111,9 @@ export class ScoreCardMarkers {
         // can change faster than it loads, so meanwhile the cards placed stay put but still show
         // each change.
         this.placedPins()
+    // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
+    // room in the layout with it): cards pop in and out as their venues cross the horizon.
+    const wanted = pins.filter(({ lngLat }) => !isBehindGlobe(this.map, lngLat))
 
     const keep = new Set<string>()
     for (const { gameId, lngLat } of wanted) {

@@ -60,7 +60,6 @@ With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scor
 3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
 4. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
 5. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
-6. **Clear the map's attribution.** Below 640px MapLibre's attribution spans the bottom ~55px of the globe, so anything laid over the bottom must sit above it; check at 390×844.
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
 

@@ -4,9 +4,10 @@ import {
   pickerEntries,
   pillLabel,
   showsScenarioControls,
-  speedEntries,
+  litKey,
+  pressedSpeed,
+  showsFasterIcon,
   speedChangeable,
-  speedLabel,
   togglesScenarioControls,
   type ScenarioListing,
 } from './scenarioPicker'
@@ -15,12 +16,17 @@ const clock = { at: '2026-10-04T18:00:00Z', reads: '2026-10-04T20:00:00Z' }
 const local: ScenarioListing = {
   running: 'crowded',
   scenarios: ['crowded', 'edge-cases', 'worldwide'],
-  speed: 16,
-  speeds: [1, 2, 4, 8, 16, 32, 64],
+  speed: 'Faster',
+  speeds: [
+    { name: 'Paused', times: 0 },
+    { name: 'Normal', times: 1 },
+    { name: 'Fast', times: 2 },
+    { name: 'Faster', times: 8 },
+  ],
   clock,
 }
 // What the deployed server says: no scenarios.
-const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 1, speeds: [], clock }
+const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 'Normal', speeds: [], clock }
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {
@@ -55,17 +61,31 @@ describe('the scenario list', () => {
   })
 })
 
-describe('the speed pill', () => {
-  it('shows the speed', () => {
-    expect(speedLabel(16)).toBe('16×')
+describe('the media keys', () => {
+  it('light Play at Normal, Pause when paused, and Fast-forward at Fast and Faster', () => {
+    expect(litKey('Normal')).toBe('play')
+    expect(litKey('Paused')).toBe('pause')
+    expect(litKey('Fast')).toBe('fastForward')
+    expect(litKey('Faster')).toBe('fastForward')
   })
 
-  it("lists the server's speeds, marking the current one", () => {
-    expect(speedEntries({ ...local, speeds: [1, 2, 16] })).toEqual([
-      { speed: 1, label: '1×', current: false },
-      { speed: 2, label: '2×', current: false },
-      { speed: 16, label: '16×', current: true },
-    ])
+  it('go to Normal on Play and pause on Pause, from any speed', () => {
+    for (const speed of ['Paused', 'Normal', 'Fast', 'Faster'] as const) {
+      expect(pressedSpeed(speed, 'play')).toBe('Normal')
+      expect(pressedSpeed(speed, 'pause')).toBe('Paused')
+    }
+  })
+
+  it('go to Fast on Fast-forward, and flip between Fast and Faster when pressed again', () => {
+    expect(pressedSpeed('Paused', 'fastForward')).toBe('Fast')
+    expect(pressedSpeed('Normal', 'fastForward')).toBe('Fast')
+    expect(pressedSpeed('Fast', 'fastForward')).toBe('Faster')
+    expect(pressedSpeed('Faster', 'fastForward')).toBe('Fast')
+  })
+
+  it("grow Fast-forward's third triangle only at Faster", () => {
+    expect(showsFasterIcon('Faster')).toBe(true)
+    for (const speed of ['Paused', 'Normal', 'Fast'] as const) expect(showsFasterIcon(speed)).toBe(false)
   })
 
   it('can change the speed while a scenario runs, but not while real games run', () => {
@@ -82,7 +102,11 @@ describe('the clock', () => {
   })
 
   it('runs forward at the speed while a scenario runs', () => {
-    expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:02:40Z'))
+    expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:01:20Z'))
+  })
+
+  it('stands still while paused', () => {
+    expect(clockReading({ ...local, speed: 'Paused' }, at + 10_000)).toEqual(new Date(clock.reads))
   })
 
   it('runs at real time while real games run, whatever the speed', () => {

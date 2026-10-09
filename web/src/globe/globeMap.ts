@@ -98,6 +98,7 @@ export class GlobeMap {
       zoom: startCamera.zoom,
       minZoom,
       maxZoom,
+      attributionControl: false,
     })
     this.map = map
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })

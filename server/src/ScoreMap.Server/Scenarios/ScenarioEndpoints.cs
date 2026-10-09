@@ -32,7 +32,14 @@ public static class ScenarioEndpoints
                 ? Listing(switcher)
                 : new ScenarioListing(ScenarioSwitcher.RealGames, [], 1, [], ClockAnchor.RealTime(services.GetRequiredService<TimeProvider>())));
 
-        // Switches every browser: the change events take the old games away and bring the new ones.
+        // Switches every browser's games, in order:
+        // 1. Under the poller's lock, between its fetches, the switcher starts the new source and hands
+        //    back its polling intervals. Outside the lock a fetch could read the old scenario on the new
+        //    scenario clock, and its games would come out wrong (#53).
+        // 2. The poller, woken, fetches every league straight away on its own loop; the change events it
+        //    sends take the old games away and bring the new ones.
+        // 3. Meanwhile (the switch doesn't wait for that fetch), every browser gets the new listing, so
+        //    each one's scenario pill, speed pill and clock follow.
         app.MapPut("/api/scenarios/running", async (
             ScenarioSwitch request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
             CancellationToken cancellationToken) =>
@@ -43,7 +50,7 @@ public static class ScenarioEndpoints
                 return Results.NotFound($"There is no scenario \"{request.Name}\"");
             try
             {
-                await poller.StartAfreshAsync(ThenPolling(switcher, () => switcher.SwitchTo(name)), cancellationToken);
+                await poller.StartAfreshAsync(() => switcher.SwitchTo(name), cancellationToken);
             }
             catch (ScenarioFileException e)
             {
@@ -52,7 +59,8 @@ public static class ScenarioEndpoints
             return Results.Ok(await TellEveryBrowserAsync(switcher, hub, cancellationToken));
         });
 
-        // Carries on from where the running scenario is, at the new speed, in every browser.
+        // Carries on from where the running scenario is, at the new speed, in every browser: in the same
+        // order as a switch, and under the poller's lock for the same reason.
         app.MapPut("/api/scenarios/speed", async (
             SpeedChange request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
             CancellationToken cancellationToken) =>
@@ -63,7 +71,7 @@ public static class ScenarioEndpoints
                 return Results.BadRequest($"There is no speed {request.Speed}; it must be one of {ScenarioClock.SpeedList}");
             try
             {
-                await poller.StartAfreshAsync(ThenPolling(switcher, () => switcher.ChangeSpeed(request.Speed)), cancellationToken);
+                await poller.StartAfreshAsync(() => switcher.ChangeSpeed(request.Speed), cancellationToken);
             }
             catch (InvalidOperationException e)
             {
@@ -73,17 +81,6 @@ public static class ScenarioEndpoints
         });
         return app;
     }
-
-    /// <summary>
-    /// A switch or a change of speed, then the polling intervals for what is running now: for the poller
-    /// to make between its fetches, so none reads the old scenario on the new clock, and then fetch every
-    /// league straight away at those intervals. A change that throws leaves everything as it was.
-    /// </summary>
-    private static Func<PollingOptions> ThenPolling(ScenarioSwitcher switcher, Action change) => () =>
-    {
-        change();
-        return switcher.Polling;
-    };
 
     /// <summary>Tells every browser the new listing, after a switch or a change of speed, so each one's pills and clock follow.</summary>
     private static async Task<ScenarioListing> TellEveryBrowserAsync(

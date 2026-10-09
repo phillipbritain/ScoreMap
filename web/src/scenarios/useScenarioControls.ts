@@ -25,7 +25,7 @@ export interface ScenarioControls {
   setListing: (listing: ScenarioListing) => void
   /** Fetches the listing again, to pick up new scenario files. */
   refresh: () => void
-  /** Whether the scenario pill, the speed pill and the clock show. */
+  /** Whether the scenario pill, the media keys and the clock show. */
   shown: boolean
 }
 

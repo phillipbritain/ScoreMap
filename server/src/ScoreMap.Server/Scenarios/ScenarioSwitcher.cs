@@ -43,7 +43,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         IOptions<List<League>> leagues,
         TimeProvider realTime,
         string startWith,
-        int speed)
+        Speed speed)
     {
         _realGames = realGames;
         _realPolling = realPolling.Value;
@@ -65,6 +65,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// How often the poller should fetch for the running source: for a scenario, every league every
     /// second of real time divided by the speed, so scripted changes show up straight away and don't
     /// arrive bunched together at high speeds, but no more often than <see cref="FastestPolling"/>.
+    /// Paused, it fetches as at Normal.
     /// </summary>
     public PollingOptions Polling
     {
@@ -72,15 +73,15 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         {
             if (IsRealGames(_running.Name))
                 return _realPolling;
-            var interval = TimeSpan.FromSeconds(1) / _clock.Speed;
+            var interval = TimeSpan.FromSeconds(1) / Math.Max(_clock.Speed.Times, Speed.Normal.Times);
             if (interval < FastestPolling)
                 interval = FastestPolling;
             return new PollingOptions { LiveInterval = interval, QuietInterval = interval };
         }
     }
 
-    /// <summary>How many times faster than real time the scenario clock runs, kept while real games run.</summary>
-    public int Speed => _clock.Speed;
+    /// <summary>How fast the scenario clock runs, kept while real games run.</summary>
+    public Speed Speed => _clock.Speed;
 
     /// <summary>The time games are on now: the scenario clock while a scenario runs, else the real time.</summary>
     public ClockAnchor Clock
@@ -124,7 +125,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// carries on from where it is, and returns the <see cref="Polling"/> for that speed. Throws an
     /// <see cref="InvalidOperationException"/> while real games run, which play in real time.
     /// </summary>
-    public PollingOptions ChangeSpeed(int speed)
+    public PollingOptions ChangeSpeed(Speed speed)
     {
         if (IsRealGames(_running.Name))
             throw new InvalidOperationException("Real games play in real time, so their speed can't be changed");

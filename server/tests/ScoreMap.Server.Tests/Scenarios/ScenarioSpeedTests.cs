@@ -37,7 +37,7 @@ public class ScenarioSpeedTests
     private const string SpeedPath = "/api/scenarios/speed";
 
     [Fact]
-    public async Task The_listing_says_the_speed_the_speeds_to_choose_from_and_where_the_scenario_clock_is()
+    public async Task The_listing_names_the_speed_lists_the_named_speeds_and_says_where_the_scenario_clock_is()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", ScoresAtOneMinute);
@@ -45,8 +45,10 @@ public class ScenarioSpeedTests
 
         var listing = await ListingAsync(http);
 
-        Assert.Equal(1, listing.Speed);
-        Assert.Equal([1, 2, 4, 8, 16, 32, 64], listing.Speeds);
+        Assert.Equal("Normal", listing.Speed);
+        // The browser's media keys know these names too (speedNames in web/src/scenarios/scenarioPicker.ts):
+        // renaming one here means renaming it there.
+        Assert.Equal([new("Paused", 0), new("Normal", 1), new("Fast", 2), new("Faster", 8)], listing.Speeds);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.At);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.Reads);
     }
@@ -54,7 +56,7 @@ public class ScenarioSpeedTests
     [Fact]
     public async Task At_a_higher_speed_a_scripted_change_comes_that_many_times_sooner()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "8" };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
         server.WriteScenario("test", ScoresAtOneMinute);
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
@@ -82,19 +84,19 @@ public class ScenarioSpeedTests
         await other.NextSnapshotAsync();
         server.Clock.Advance(TimeSpan.FromSeconds(20));
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = 4 });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Faster" });
 
         response.EnsureSuccessStatusCode();
         var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
         Assert.NotNull(listing);
-        Assert.Equal(4, listing.Speed);
+        Assert.Equal("Faster", listing.Speed);
         Assert.Equal((server.Clock.GetUtcNow(), startedAt.AddSeconds(20)), (listing.Clock.At, listing.Clock.Reads));
         foreach (var browser in new[] { client, other })
             Assert.Equal(listing, await browser.NextScenarioChangeAsync(), ListingComparer.Instance);
-        Assert.Equal(4, (await ListingAsync(http)).Speed);
+        Assert.Equal("Faster", (await ListingAsync(http)).Speed);
 
-        // The other 40 s to the score take 10 s at 4×, and the game carries on rather than starting again.
-        server.Clock.Advance(TimeSpan.FromSeconds(9.75));
+        // The other 40 s to the score take 5 s at 8×, and the game carries on rather than starting again.
+        server.Clock.Advance(TimeSpan.FromSeconds(4.75));
         await Task.Delay(100);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(0.25));
@@ -104,9 +106,41 @@ public class ScenarioSpeedTests
     }
 
     [Fact]
+    public async Task Paused_holds_the_scenario_and_its_clock_and_Normal_carries_on_from_the_same_reading()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        var startedAt = server.Clock.GetUtcNow();
+        using var http = server.CreateClient();
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+        server.Clock.Advance(TimeSpan.FromSeconds(20));
+
+        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Paused" })).EnsureSuccessStatusCode();
+
+        // Long past the score on the real clock, nothing changes and the scenario clock still reads 20 s in.
+        server.Clock.Advance(TimeSpan.FromMinutes(5));
+        await Task.Delay(100);
+        Assert.Empty(client.PendingChanges());
+        var paused = await ListingAsync(http);
+        Assert.Equal("Paused", paused.Speed);
+        Assert.Equal((server.Clock.GetUtcNow(), startedAt.AddSeconds(20)), (paused.Clock.At, paused.Clock.Reads));
+
+        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Normal" })).EnsureSuccessStatusCode();
+
+        // The other 40 s to the score, at 1×.
+        server.Clock.Advance(TimeSpan.FromSeconds(39));
+        await Task.Delay(100);
+        Assert.Empty(client.PendingChanges());
+        server.Clock.Advance(TimeSpan.FromSeconds(1));
+        var scored = await client.NextChangeAsync();
+        Assert.Equal((GameChangeKind.ScoreChanged, "chiefs-bills"), (scored.Kind, scored.Game.Id));
+    }
+
+    [Fact]
     public async Task Switching_scenarios_or_picking_the_running_one_again_keeps_the_speed_and_starts_the_clock_at_the_real_time()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "16" };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
         server.WriteScenario("test", ScoresAtOneMinute);
         server.WriteScenario("other", ScoresAtOneMinute.Replace("chiefs-bills", "other-game"));
         using var http = server.CreateClient();
@@ -118,7 +152,7 @@ public class ScenarioSpeedTests
 
             var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
             Assert.NotNull(listing);
-            Assert.Equal(16, listing.Speed);
+            Assert.Equal("Faster", listing.Speed);
             Assert.Equal((server.Clock.GetUtcNow(), server.Clock.GetUtcNow()), (listing.Clock.At, listing.Clock.Reads));
         }
     }
@@ -126,8 +160,8 @@ public class ScenarioSpeedTests
     [Fact]
     public async Task Game_starts_and_pin_windows_are_on_the_scenario_clock()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "64" };
-        // Upcoming games get their pin 3 h before their start: this one 64 s in, 1 s of real time at 64×.
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
+        // Upcoming games get their pin 3 h before their start: this one 8 s in, 1 s of real time at 8×.
         server.WriteScenario("test", """
             {
               "games": [
@@ -137,7 +171,7 @@ public class ScenarioSpeedTests
                   "home": { "name": "Arsenal", "abbreviation": "ARS" },
                   "away": { "name": "Chelsea", "abbreviation": "CHE" },
                   "venue": { "name": "Emirates Stadium", "city": "London", "country": "England" },
-                  "startsIn": "3h1m4s",
+                  "startsIn": "3h8s",
                   "status": "upcoming"
                 }
               ]
@@ -154,22 +188,22 @@ public class ScenarioSpeedTests
         var added = await client.NextChangeAsync();
 
         Assert.Equal((GameChangeKind.Added, "later"), (added.Kind, added.Game.Id));
-        Assert.Equal(startedAt + new TimeSpan(3, 1, 4), added.Game.StartTime);
+        Assert.Equal(startedAt + new TimeSpan(3, 0, 8), added.Game.StartTime);
     }
 
     [Fact]
     public async Task A_game_ends_at_the_scenario_clocks_time()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "4" };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Fast" };
         server.WriteScenario("test", ScoresAtOneMinute);
         var startedAt = server.Clock.GetUtcNow();
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        // 2m at 4× is 30 s: a fetch just before (which sees the score at 1m), then one on the dot.
-        server.Clock.Advance(TimeSpan.FromSeconds(29.75));
+        // 2m at 2× is 60 s: a fetch just before (which sees the score at 1m), then one on the dot.
+        server.Clock.Advance(TimeSpan.FromSeconds(59.5));
         await client.NextChangeAsync();
-        server.Clock.Advance(TimeSpan.FromSeconds(0.25));
+        server.Clock.Advance(TimeSpan.FromSeconds(0.5));
         var finished = await client.NextChangeAsync();
 
         Assert.Equal(GameChangeKind.Finished, finished.Kind);
@@ -177,14 +211,12 @@ public class ScenarioSpeedTests
     }
 
     [Theory]
-    [InlineData(1, 1000)]
-    [InlineData(2, 500)]
-    [InlineData(4, 250)]
-    [InlineData(8, 250)]
-    [InlineData(64, 250)]
-    public async Task A_scenario_is_fetched_every_second_divided_by_the_speed_but_no_more_often_than_every_250_ms(int speed, int everyMs)
+    [InlineData("Normal", 1000)]
+    [InlineData("Fast", 500)]
+    [InlineData("Faster", 250)]
+    public async Task A_scenario_is_fetched_every_second_divided_by_the_speed_but_no_more_often_than_every_250_ms(string speed, int everyMs)
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = speed.ToString() };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = speed };
         server.WriteScenario("test", ScoresAtOneMinute.Replace("\"1m\"", "\"1s\""));
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
@@ -200,25 +232,25 @@ public class ScenarioSpeedTests
     [Fact]
     public async Task While_real_games_run_the_speed_cant_be_changed_and_the_clock_reads_the_real_time()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "8" };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
         server.WriteScenario("test", ScoresAtOneMinute);
         using var http = server.CreateClient();
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
         server.Clock.Advance(TimeSpan.FromSeconds(10));
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = 2 });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Contains("real time", await response.Content.ReadAsStringAsync());
         var listing = await ListingAsync(http);
-        Assert.Equal(8, listing.Speed);
+        Assert.Equal("Faster", listing.Speed);
         Assert.Equal((server.Clock.GetUtcNow(), server.Clock.GetUtcNow()), (listing.Clock.At, listing.Clock.Reads));
     }
 
     [Fact]
     public async Task While_real_games_run_their_times_are_on_the_real_clock_whatever_the_speed()
     {
-        await using var server = new ScoreMapServer { ScenarioSpeed = "64" };
+        await using var server = new ScoreMapServer { ScenarioSpeed = "Faster" };
         server.Feed.SetScoreboard(Nfl, UpcomingGame(server.Clock, "real-game") with { StartTime = server.Clock.GetUtcNow().AddHours(3).AddMinutes(4) });
         await using var client = await server.ConnectClientAsync();
         Assert.Empty(await client.NextSnapshotAsync());
@@ -231,11 +263,25 @@ public class ScenarioSpeedTests
         Assert.Empty(client.PendingChanges());
     }
 
+    [Fact]
+    public async Task A_speed_is_named_in_any_case()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "fast" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        using var http = server.CreateClient();
+        Assert.Equal("Fast", (await ListingAsync(http)).Speed);
+
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "FASTER" });
+
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("Faster", (await ListingAsync(http)).Speed);
+    }
+
     [Theory]
-    [InlineData(3)]
-    [InlineData(0)]
-    [InlineData(128)]
-    public async Task A_speed_not_in_the_list_is_refused(int speed)
+    [InlineData("Slow")]
+    [InlineData("64")]
+    [InlineData("")]
+    public async Task A_speed_not_in_the_list_is_refused(string speed)
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", ScoresAtOneMinute);
@@ -244,8 +290,8 @@ public class ScenarioSpeedTests
         var response = await http.PutAsJsonAsync(SpeedPath, new { speed });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("1, 2, 4, 8, 16, 32, 64", await response.Content.ReadAsStringAsync());
-        Assert.Equal(1, (await ListingAsync(http)).Speed);
+        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync());
+        Assert.Equal("Normal", (await ListingAsync(http)).Speed);
     }
 
     [Fact]
@@ -255,7 +301,7 @@ public class ScenarioSpeedTests
         server.WriteScenario("test", ScoresAtOneMinute);
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = 2 });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -263,13 +309,13 @@ public class ScenarioSpeedTests
     [Fact]
     public async Task A_starting_speed_not_in_the_list_stops_the_server_from_starting()
     {
-        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "5" };
+        await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "64" };
         server.WriteScenario("test", ScoresAtOneMinute);
 
         var error = await Assert.ThrowsAnyAsync<Exception>(() => server.ConnectClientAsync());
 
         Assert.Contains("ScenarioSpeed", error.ToString());
-        Assert.Contains("1, 2, 4, 8, 16, 32, 64", error.ToString());
+        Assert.Contains("Paused, Normal, Fast, Faster", error.ToString());
     }
 
     private static async Task<ScenarioEndpoints.ScenarioListing> ListingAsync(HttpClient http) =>

@@ -218,6 +218,22 @@ describe('zooming in to clusters and crowds', () => {
   })
 })
 
+describe('score cards', () => {
+  it('shows each change to a game straight away, however often games change', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A', { clock: '15:00' })])
+    await cardShown('A')
+
+    // Every change reloads the pin source; changes coming faster than it loads mustn't hold cards back.
+    for (let second = 59; second >= 40; second--) {
+      const clock = `14:${second}`
+      globe.show([game('A', { clock })])
+      expect(card('A')!.textContent).toContain(clock)
+      await pause(20)
+    }
+  })
+})
+
 describe('animations', () => {
   it.each([
     ['score', game('A', { home: 0 }), game('A', { home: 7 })],

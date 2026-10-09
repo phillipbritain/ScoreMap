@@ -232,7 +232,7 @@ body {
   mask-image: linear-gradient(90deg, transparent, #000000 35%);
 }
 
-/* Along the foot of the photo, always shown, as its licence asks. */
+/* Along the foot of the photo, shown on hover. */
 .game-panel__credit {
   position: absolute;
   right: 0;
@@ -245,6 +245,12 @@ body {
   font-size: 10px;
   white-space: nowrap;
   text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.game-panel__photo:hover .game-panel__credit {
+  opacity: 1;
 }
 
 .game-panel__credit a {

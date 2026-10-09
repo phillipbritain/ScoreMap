@@ -93,7 +93,7 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
 
 /**
  * The credit a Wikimedia Commons photo's licence asks for: its author, linking to the photo's page,
- * and its licence. Shown over the photo, with the full credit on hover.
+ * and its licence. Shown over the photo on hover.
  */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (

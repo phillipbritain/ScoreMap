@@ -5,6 +5,7 @@ import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
+import { isBehindGlobe } from './horizon'
 import { clusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
 import { cardZoom, maxZoom } from './zoomLevels'
@@ -259,6 +260,29 @@ describe('score cards', () => {
     expect(container.querySelector('.score-crowd')).toBeNull()
     const trails = [...container.querySelectorAll<SVGGElement>('.score-card-trails g')]
     expect(trails.filter((trail) => trail.style.display !== 'none')).toEqual([])
+  })
+})
+
+describe('place names', () => {
+  // The test style has no fonts, so a layer of dots stands in for the place names: MapLibre places
+  // both the same way.
+  it('stops writing a name the moment the globe turns it over the horizon', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2.5 })
+    await new Promise((resolve) => map.once('load', resolve))
+    map.addImage('dot', { width: 8, height: 8, data: new Uint8Array(8 * 8 * 4).fill(255) })
+    map.addSource('names', {
+      type: 'geojson',
+      data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [50, 0] } },
+    })
+    map.addLayer({ id: 'names', type: 'symbol', source: 'names', layout: { 'icon-image': 'dot' } })
+    await vi.waitFor(() => expect(map.queryRenderedFeatures({ layers: ['names'] })).toHaveLength(1))
+
+    // Turned a step a frame, as a drag turns it, until the name is well over the horizon.
+    for (let longitude = 0; longitude >= -45; longitude -= 5) {
+      map.jumpTo({ center: [longitude, 0] })
+      await new Promise((resolve) => map.once('render', resolve))
+      if (isBehindGlobe(map, [50, 0])) expect(map.queryRenderedFeatures({ layers: ['names'] }), `turned to ${longitude}°`).toEqual([])
+    }
   })
 })
 

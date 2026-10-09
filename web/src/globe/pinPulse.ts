@@ -1,4 +1,5 @@
 import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
+import { isBehindGlobe } from './horizon'
 import type { PinAnimation } from './pinAnimation'
 import { statusLooks } from './statusLook'
 
@@ -12,8 +13,10 @@ const pulseColors: Record<PinAnimation, string> = {
 /**
  * Plays an animation over a small pin or a cluster. They're drawn by map layers, which can't run
  * CSS animations, so a short-lived HTML marker draws expanding rings over them and then removes itself.
+ * Nothing plays on the far side of the globe, where MapLibre hides the pins but would only fade the marker.
  */
 export function pulse(map: MapLibreMap, lngLat: [number, number], animation: PinAnimation, over: 'pin' | 'cluster'): void {
+  if (isBehindGlobe(map, lngLat)) return
   const element = document.createElement('div')
   element.style.pointerEvents = 'none'
   const ring = document.createElement('div')

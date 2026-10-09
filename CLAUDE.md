@@ -6,7 +6,7 @@ A hobby web app showing live sports games as pins on a globe, with scores that u
 
 ### Pull requests
 
-Commit work on a branch named for the issue, created from `main`: pushes to `main` are blocked, and the user merges every pull request.
+Commit work on a branch named for the issue, created from `main`: pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
 
 ### Issue tracker
 

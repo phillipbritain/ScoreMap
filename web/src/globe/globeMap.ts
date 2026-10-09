@@ -88,6 +88,10 @@ export class GlobeMap {
       minZoom,
       maxZoom,
       attributionControl: false,
+      // Place names are placed afresh every frame, not once each fade has played: between placements
+      // they turn with the globe, so names gone over the horizon were still written at its edge.
+      // They pop in and out as score cards do.
+      fadeDuration: 0,
     })
     this.map = map
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })

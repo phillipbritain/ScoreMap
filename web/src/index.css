@@ -190,13 +190,12 @@ body {
 }
 
 /* How each status looks comes from globe/statusLook.ts, which writes it to the page's root
-   (--live-color, --live-group-outline and so on). Score cards, crowds and trails pick theirs by
+   (--live-color, --live-group-opacity and so on). Score cards, crowds and trails pick theirs by
    their status class. Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out. */
 .score-card--live,
 .score-crowd--live,
 .score-card-trail--live {
   --status-color: var(--live-color);
-  --status-group-outline: var(--live-group-outline);
   --status-group-opacity: var(--live-group-opacity);
 }
 
@@ -204,7 +203,6 @@ body {
 .score-crowd--upcoming,
 .score-card-trail--upcoming {
   --status-color: var(--upcoming-color);
-  --status-group-outline: var(--upcoming-group-outline);
   --status-group-opacity: var(--upcoming-group-opacity);
 }
 
@@ -212,7 +210,6 @@ body {
 .score-crowd--final,
 .score-card-trail--final {
   --status-color: var(--final-color);
-  --status-group-outline: var(--final-group-outline);
   --status-group-opacity: var(--final-group-opacity);
 }
 
@@ -220,7 +217,6 @@ body {
 .score-crowd--disrupted,
 .score-card-trail--disrupted {
   --status-color: var(--disrupted-color);
-  --status-group-outline: var(--disrupted-group-outline);
   --status-group-opacity: var(--disrupted-group-opacity);
 }
 
@@ -265,18 +261,24 @@ body {
   overflow: visible;
 }
 
-/* Light, to stand out on the dark map whatever the game's status. */
+/* A thin line lit in the game's status colour, like the HUD card's outline, to a point ringed in it. */
 .score-card-trails line {
-  stroke: #ffffff;
-  stroke-opacity: 0.85;
-  stroke-width: 1.5;
+  stroke: var(--status-color);
+  stroke-opacity: 0.9;
+  stroke-width: 1.25;
+  filter: drop-shadow(0 0 2px var(--status-color));
 }
 
-.score-card-trails circle {
-  r: 4px;
+.score-card-trails .score-card-trail__point {
+  r: 2px;
   fill: var(--status-color);
-  stroke: #ffffff;
-  stroke-width: 1.5;
+}
+
+.score-card-trails .score-card-trail__ring {
+  r: 5.5px;
+  fill: none;
+  stroke: var(--status-color);
+  stroke-width: 1;
 }
 
 [data-moved] > .score-card::after {
@@ -288,21 +290,22 @@ body {
   visibility: hidden;
 }
 
-/* Games with no room for a card, shown as a count that looks like a cluster, coloured by its most
-   prominent game. */
+/* Games with no room for a card, shown as a count that looks like a cluster: a dark disc outlined
+   and lit in the colour of its most prominent game (see groupFill in globe/statusLook.ts). */
 .score-crowd {
   display: grid;
   place-items: center;
   box-sizing: border-box;
   width: 26px;
   height: 26px;
-  border: var(--status-group-outline) solid #ffffff;
+  border: var(--group-outline) solid var(--status-color);
   border-radius: 50%;
-  background: var(--status-color);
+  background: var(--group-fill);
   opacity: var(--status-group-opacity);
-  color: #ffffff;
-  font-size: 12px;
+  color: var(--status-color);
+  font-size: 11px;
   font-weight: 700;
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--status-color) 45%, transparent);
   cursor: pointer;
 }
 

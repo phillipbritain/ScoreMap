@@ -27,7 +27,7 @@ import {
   pinSource,
   pinSourceSpec,
   smallPinLayer,
-  smallPinLayerSpec,
+  smallPinLayerSpecs,
 } from './pinLayers'
 import { pulse } from './pinPulse'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
@@ -187,7 +187,7 @@ export class GlobeMap {
     // Beneath the place names, so a pin never hides a city's name.
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of clusterLayers) map.addLayer(layer, belowNames)
-    map.addLayer(smallPinLayerSpec, belowNames)
+    for (const layer of smallPinLayerSpecs) map.addLayer(layer, belowNames)
     // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
     map.addLayer(
       {

@@ -112,25 +112,21 @@ public sealed class RandomPlayGames
             return;
         }
 
-        // A game that would end level, in a sport without draws, is settled by one more score.
         var game = played.Game;
-        if (sport.SettlingScore is { } settle && game.Home.Score == game.Away.Score)
+        var (home, away) = sport.Settled(game.Home.Score ?? 0, game.Away.Score ?? 0, _random);
+        played.Game = game with
         {
-            game = _random.Next(2) == 0
-                ? game with { Home = game.Home with { Score = game.Home.Score + settle } }
-                : game with { Away = game.Away with { Score = game.Away.Score + settle } };
-        }
-        played.Game = game with { Status = ProviderStatus.Final, Period = sport.Regulation, Phase = ProviderPeriodPhase.Playing };
+            Home = game.Home with { Score = home },
+            Away = game.Away with { Score = away },
+            Status = ProviderStatus.Final,
+            Period = sport.Regulation,
+            Phase = ProviderPeriodPhase.Playing,
+        };
         played.FinalAt = at;
     }
 
-    private ProviderTeam Score(ProviderTeam team, SportPlay sport, double step)
-    {
-        var score = team.Score ?? 0;
-        if (_random.NextDouble() >= sport.ChanceToScore(step) || score >= sport.MostPoints)
-            return team;
-        return team with { Score = Math.Min(sport.MostPoints, score + sport.Points(_random)) };
-    }
+    private ProviderTeam Score(ProviderTeam team, SportPlay sport, double step) =>
+        team with { Score = sport.ScoreStep(team.Score ?? 0, step, _random) };
 
     private static ProviderGame Position(PlayedGame played)
     {

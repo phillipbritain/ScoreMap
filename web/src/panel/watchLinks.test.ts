@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameBroadcaster } from '../games/game'
-import { viewerCountry, watchLinks } from './watchLinks'
+import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 const prime: GameBroadcaster = { name: 'Prime Video', country: 'US', watchUrl: 'https://www.amazon.com/primevideo' }
 
@@ -50,5 +50,14 @@ describe('viewerCountry', () => {
 
   it('is unknown when no locale names a country', () => {
     expect(viewerCountry(['en', 'fr'])).toBeNull()
+  })
+})
+describe('listedWatchLinks', () => {
+  it('lists up to three links', () => {
+    expect(listedWatchLinks(['a', 'b', 'c'])).toEqual({ listed: ['a', 'b', 'c'], folded: [] })
+  })
+
+  it('folds the links after the third, in order', () => {
+    expect(listedWatchLinks(['a', 'b', 'c', 'd', 'e'])).toEqual({ listed: ['a', 'b', 'c'], folded: ['d', 'e'] })
   })
 })

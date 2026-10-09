@@ -3,7 +3,7 @@ import { litKey, pressedSpeed, showsFasterIcon, speedChangeable, type MediaKey, 
 import { putScenarios } from './useScenarioControls'
 
 /**
- * The media keys (ADR-0009): Play, Pause and Fast-forward for the scenario clock's speed, with no
+ * The media keys (ADR-0009): Pause, Play and Fast-forward for the scenario clock's speed, with no
  * label: the lit key is the speed, and Fast-forward grows a third triangle at Faster. Pressing one
  * changes the server's speed, and so every browser's, carrying on from where the scenario is. While
  * real games run they show but are disabled.
@@ -47,8 +47,8 @@ export function SpeedKeys({
   const faster = showsFasterIcon(listing.speed)
   return (
     <div className="speed-keys" role="group" aria-label="Scenario speed" aria-disabled={!changeable}>
-      {keyButton('play', 'Play', <PlayIcon />)}
       {keyButton('pause', 'Pause', <PauseIcon />)}
+      {keyButton('play', 'Play', <PlayIcon />)}
       {keyButton(
         'fastForward',
         `Fast-forward to ${pressedSpeed(listing.speed, 'fastForward')}`,

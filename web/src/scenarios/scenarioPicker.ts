@@ -59,7 +59,7 @@ export function pickerEntries(listing: ScenarioListing): PickerEntry[] {
   }))
 }
 
-/** The media keys: Play, Pause and Fast-forward. */
+/** The media keys: Pause, Play and Fast-forward. */
 export type MediaKey = 'play' | 'pause' | 'fastForward'
 
 /**

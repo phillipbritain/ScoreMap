@@ -18,5 +18,5 @@ export function visibleGames(games: readonly Game[], settings: ViewerSettings): 
  */
 export function noPinsMessage(games: readonly Game[] | null, visible: readonly Game[]): string | null {
   if (games === null || visible.length > 0) return null
-  return games.length === 0 ? 'No games right now.' : 'No games match your filters.'
+  return games.length === 0 ? 'No games right now.' : 'No games match your settings.'
 }

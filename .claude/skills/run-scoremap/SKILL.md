@@ -54,7 +54,7 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`):
 
 1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file: `agent-browser open http://localhost:5173 > /tmp/ab.txt 2>&1`. Later commands can be piped.
-2. **Reset to the start view.** The app saves the camera and filters to localStorage, including on `pagehide`, so clearing storage and then reloading the app writes them straight back. Clear it from a page that doesn't run the app:
+2. **Reset to the start view.** The app saves the camera and settings to localStorage, including on `pagehide`, so clearing storage and then reloading the app writes them straight back. Clear it from a page that doesn't run the app:
    `open http://localhost:5173/favicon.svg`, `eval "localStorage.clear()"`, then `open http://localhost:5173`.
    A dark, empty globe is usually a saved camera zoomed in over ocean; reset.
 3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.

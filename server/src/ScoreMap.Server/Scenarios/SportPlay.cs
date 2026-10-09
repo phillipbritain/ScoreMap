@@ -149,6 +149,46 @@ internal sealed class SportPlay
         return (segment.Period, clock, segment.Phase);
     }
 
+    /// <summary>
+    /// How far through a game is that stands at this period, clock and phase, as a scenario writes them
+    /// out: the other way round from <see cref="Position"/>. A clock that can't be read counts as the
+    /// start of its period (or break). Null for a period the game doesn't have, such as overtime.
+    /// </summary>
+    public double? Through(int period, string? clock, ProviderPeriodPhase phase)
+    {
+        var before = 0.0;
+        foreach (var segment in _segments)
+        {
+            if (segment.Period == period && segment.Phase == phase)
+                return (before + segment.Weight * (segment.Playing ? DoneAt(period, clock) : 0)) / _totalWeight;
+            before += segment.Weight;
+        }
+        return null;
+    }
+
+    /// <summary>How far through a period of play its clock is, from 0 to 1.</summary>
+    private double DoneAt(int period, string? clock)
+    {
+        switch (_sport)
+        {
+            case Sport.Baseball:
+                return 0;
+            case Sport.Soccer:
+                // The minute of the game, such as 67' (or 90'+3, in added time): halfway through it, as
+                // its very start could round down to the minute before.
+                var digits = new string((clock ?? "").TakeWhile(char.IsAsciiDigit).ToArray());
+                return int.TryParse(digits, out var minute)
+                    ? Math.Clamp((minute - 0.5 - (period - 1) * PeriodMinutes) / PeriodMinutes, 0, 1)
+                    : 0;
+            default:
+                // Time left in the period, counting down, such as 8:05.
+                var parts = (clock ?? "").Split(':');
+                return parts.Length == 2 && int.TryParse(parts[0], out var minutes) && int.TryParse(parts[1], out var seconds)
+                    ? Math.Clamp(1 - (minutes * 60 + seconds) / (PeriodMinutes * 60.0), 0, 1)
+                    : 0;
+        }
+    }
+
     /// <summary>The segment a game <paramref name="through"/> of the way through is in, and how far through that segment.</summary>
     private (Segment Segment, double Done) SegmentAt(double through)
     {

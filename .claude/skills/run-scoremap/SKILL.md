@@ -31,14 +31,14 @@ Pick the scenario that brings out what you're checking, and you know what should
 
 | Scenario | What it shows | Use it for |
 | --- | --- | --- |
-| `worldwide` | ~150 games on every continent: Upcoming, Live, Final, Disrupted | the globe as a whole, clusters, every status |
-| `crowded` | ~40 games in and around London | a Cluster zoomed out; score cards and a Crowd zoomed in over London |
+| `worldwide` | ~150 games on every continent: Upcoming, Live, Final, Disrupted; Live games play on, but no game starts or finishes | the globe as a whole, clusters, every status |
+| `crowded` | ~40 games in and around London; Live games play on, but no game starts or finishes | a Cluster zoomed out; score cards and a Crowd zoomed in over London |
 | `live-scoring` | 5 Live games (NFL, NBA, NHL, soccer, MLB, around New York and London); a score every ~3 s, the first at 3 s; soccer to HT at 30 s and back at 1m33s; MLB Final at 45 s; loops every 2 min | score cards and their animations |
 | `busy` | ~60 Live games on random play: scoring, breaks, finishes, new games arriving (at 1×, a score every ~15 s and a finish every few minutes; faster at higher speeds) | the app under steady change |
 | `lifecycle` | one game at the Bernabéu: Upcoming, Live at 15 s, HT at 45 s, Live at 1m5s, Final at 1m35s; loops every 2 min | status changes on one pin, card and panel |
-| `disrupted` | postponed, suspended and canceled games beside Upcoming, Live and Final ones, in New York and London | greyed-out Disrupted pins and cards |
+| `disrupted` | postponed, suspended and canceled games beside Upcoming, Live and Final ones, in New York and London; Live games play on, but no game starts or finishes | greyed-out Disrupted pins and cards |
 | `empty` | no games | the bare globe and the "No games right now." message |
-| `edge-cases` | an unfindable venue pinned at its city (Reykjavík), a 2–2 tie (Munich), long team names (Chicago), missing logos (Edmonton), three-digit scores (San Francisco) | layout at the extremes |
+| `edge-cases` | an unfindable venue pinned at its city (Reykjavík), a 2–2 tie (Munich), long team names (Chicago), missing logos (Edmonton), three-digit scores (San Francisco); nothing changes, so they stay that way | layout at the extremes |
 
 Scripted times count from when the scenario starts or is switched to, on the scenario clock, so at 16× a change written at 1m comes after 3.75 s. Switching to the running scenario starts it afresh; switching keeps the speed.
 

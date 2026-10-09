@@ -4,7 +4,7 @@ import type { League } from './viewerSettings'
 // Served by the server from its "Leagues" configuration (Program.cs).
 const leaguesPath = '/api/leagues'
 
-/** The configured leagues in order, for the filter menu. Empty until they load. */
+/** The configured leagues in order, for the settings menu. Empty until they load. */
 export function useLeagues(): League[] {
   const [leagues, setLeagues] = useState<League[]>([])
   useEffect(() => {

@@ -14,8 +14,6 @@ interface GlobeProps {
   startCamera: Camera
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
-  /** The "Slow spin" setting. */
-  slowSpin: boolean
   /** The "Card style" setting. */
   cardStyle: CardStyle
 }
@@ -27,7 +25,6 @@ export function Globe({
   onSelectGame,
   startCamera,
   onCameraMove,
-  slowSpin,
   cardStyle,
 }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
@@ -56,7 +53,6 @@ export function Globe({
   // In this order, so the selected game is among the games shown when the globe turns to it.
   useEffect(() => globe.current?.show(games), [games])
   useEffect(() => globe.current?.select(selectedGameId), [selectedGameId])
-  useEffect(() => globe.current?.setSlowSpin(slowSpin), [slowSpin])
   useEffect(() => globe.current?.setCardStyle(cardStyle), [cardStyle])
 
   return <div ref={container} className="globe" />

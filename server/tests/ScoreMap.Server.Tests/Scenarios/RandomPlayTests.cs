@@ -118,7 +118,7 @@ public sealed class RandomPlayTests : IDisposable
         Assert.True(firstFinal > 0, "a game finished");
         var finished = feed[firstFinal].First(game => game.Status == ProviderStatus.Final).Id;
         var goneAt = feed.FindIndex(games => games.All(game => game.Id != finished));
-        Assert.Equal(RandomPlayGames.FinalStays, TimeSpan.FromSeconds(goneAt - firstFinal));
+        Assert.Equal(RandomPlay.FinalStays, TimeSpan.FromSeconds(goneAt - firstFinal));
 
         var newGame = Assert.Single(feed[goneAt], game => feed[goneAt - 1].All(before => before.Id != game.Id));
         Assert.Contains(newGame.Status, new[] { ProviderStatus.Scheduled, ProviderStatus.InProgress });
@@ -184,7 +184,7 @@ public sealed class RandomPlayTests : IDisposable
     public void An_upcoming_game_goes_live_at_its_start_from_nil_nil()
     {
         var scenario = Read("""{ "fill": { "count": 3, "group": "london", "mix": { "upcoming": 1 } }, "play": "random" }""");
-        var play = new RandomPlayGames(scenario, StartedAt, new Random(7));
+        var play = new RandomPlay(scenario, StartedAt, new Random(7));
         var game = scenario.Games[0];
 
         Assert.Equal(ProviderStatus.Scheduled, play.GamesAt(StartedAt + game.StartsIn - TimeSpan.FromSeconds(1)).Single(g => g.Id == game.Id).Status);
@@ -196,8 +196,8 @@ public sealed class RandomPlayTests : IDisposable
     public void With_the_same_seed_the_games_at_a_time_are_the_same_however_often_they_are_asked_for()
     {
         var scenario = Read(Busy);
-        var everySecond = new RandomPlayGames(scenario, StartedAt, new Random(3));
-        var once = new RandomPlayGames(scenario, StartedAt, new Random(3));
+        var everySecond = new RandomPlay(scenario, StartedAt, new Random(3));
+        var once = new RandomPlay(scenario, StartedAt, new Random(3));
         var at = StartedAt + TimeSpan.FromMinutes(5);
         for (var s = 0; s < 300; s++)
             everySecond.GamesAt(StartedAt + TimeSpan.FromSeconds(s));
@@ -209,8 +209,8 @@ public sealed class RandomPlayTests : IDisposable
     public void With_the_same_seed_the_games_at_a_time_are_the_same_whatever_speed_changes_were_made()
     {
         var scenario = Read(Busy);
-        var atOneSpeed = new RandomPlayGames(scenario, StartedAt, new Random(3));
-        var changingSpeed = new RandomPlayGames(scenario, StartedAt, new Random(3));
+        var atOneSpeed = new RandomPlay(scenario, StartedAt, new Random(3));
+        var changingSpeed = new RandomPlay(scenario, StartedAt, new Random(3));
         var at = StartedAt + TimeSpan.FromMinutes(30);
         // Fetched every 250 ms of real time at 1×, then 16×, then 64×, then 2×.
         var reading = StartedAt;
@@ -249,7 +249,7 @@ public sealed class RandomPlayTests : IDisposable
     /// </summary>
     private static List<IReadOnlyList<ProviderGame>> Watched(Scenario scenario, TimeSpan length, int speed = 6, int seed = 7)
     {
-        var play = new RandomPlayGames(scenario, StartedAt, new Random(seed));
+        var play = new RandomPlay(scenario, StartedAt, new Random(seed));
         return Enumerable.Range(0, (int)length.TotalSeconds + 1)
             .Select(s => play.GamesAt(StartedAt + TimeSpan.FromSeconds(s) * speed))
             .ToList();

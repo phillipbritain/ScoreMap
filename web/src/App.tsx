@@ -67,23 +67,23 @@ export default function App() {
           onCameraMove={store.saveCamera}
           cardStyle={viewerSettings.cardStyle}
         />
-        {/* Before the settings menu, so an open settings menu lies over them on a phone. */}
-        {scenarios.shown && scenarios.listing && (
-          <div className="scenario-pills">
-            <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
-            <SpeedPill listing={scenarios.listing} setListing={setScenarioListing} />
-          </div>
-        )}
-        <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
-        {/* The no-pins message sits above the clock. */}
-        <div className={scenarios.shown ? 'bottom-centre bottom-centre--scenario' : 'bottom-centre'}>
+        {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
+            settings menu, so an open settings menu lies over them on a phone. */}
+        <div className={scenarios.shown ? 'bottom-stack bottom-stack--scenario' : 'bottom-stack'}>
           {message && (
             <p className="no-pins" role="status">
               {message}
             </p>
           )}
-          {scenarios.shown && scenarios.listing && <ScenarioClock listing={scenarios.listing} />}
+          {scenarios.shown && scenarios.listing && (
+            <div className="scenario-pills">
+              <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
+              <SpeedPill listing={scenarios.listing} setListing={setScenarioListing} />
+              <ScenarioClock listing={scenarios.listing} />
+            </div>
+          )}
         </div>
+        <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
       </div>
       {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
     </div>

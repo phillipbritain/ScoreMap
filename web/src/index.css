@@ -840,7 +840,7 @@ body {
   min-height: 0;
 }
 
-/* Above the scenario pills and the bottom-centre message and clock, which an open menu can reach
+/* Above the scenario pills, the clock and the no-pins message along the bottom, which an open menu can reach
    down to. */
 .settings-menu {
   position: absolute;
@@ -1019,18 +1019,18 @@ body {
   font-weight: 400;
 }
 
-/* The scenario pill and the speed pill (local runs only), at the bottom left, clear of the settings
-   menu at the top left and of the game panel, which sits beside the globe or, on a phone, below it.
-   Their lists open upwards. */
+/* The scenario pill, the speed pill and the clock (local runs only), at the bottom left, clear of
+   the settings menu at the top left and of the game panel, which sits beside the globe or, on a
+   phone, below it. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
+   the pills rather than squeezing them. */
 .scenario-pills {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  z-index: 1;
+  align-self: flex-start;
   display: flex;
+  flex-wrap: wrap-reverse;
   align-items: flex-end;
   gap: 8px;
-  max-width: calc(100% - 24px);
+  max-width: 100%;
+  pointer-events: auto;
 }
 
 .scenario-pill {
@@ -1105,12 +1105,13 @@ body {
   content: '✓ ';
 }
 
-/* At the bottom centre: the no-pins message, and below it the clock (local runs only). */
-.bottom-centre {
+/* Along the bottom of the globe: the no-pins message centred, and below it the scenario pills and
+   clock at the left (local runs only). */
+.bottom-stack {
   position: absolute;
-  left: 50%;
+  right: 12px;
   bottom: 32px;
-  transform: translateX(-50%);
+  left: 12px;
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -1119,15 +1120,8 @@ body {
   pointer-events: none;
 }
 
-.bottom-centre--scenario {
+.bottom-stack--scenario {
   bottom: 12px;
-}
-
-/* Too narrow for the clock beside the pills: it stacks above them. */
-@media (max-width: 800px) {
-  .bottom-centre--scenario {
-    bottom: 60px;
-  }
 }
 
 .no-pins {

@@ -44,7 +44,7 @@ Scripted times count from when the scenario starts or is switched to, on the sce
 
 To switch while running:
 
-- **The pills** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the speed pill ("16× ▾") lists the speeds; picking one changes every open tab. A speed change carries on from where the scenario is. The speed pill is disabled while real games run. The scenario clock shows at the bottom centre (the real time while real games run). `Shift+S` hides and shows the pills and the clock, for clean screenshots.
+- **The pills** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the speed pill ("16× ▾") lists the speeds; picking one changes every open tab. A speed change carries on from where the scenario is. The speed pill is disabled while real games run. The scenario clock shows beside them, or above them where the row is too narrow (the real time while real games run). `Shift+S` hides and shows the pills and the clock, for clean screenshots.
 - **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`, or `.../api/scenarios/speed` with `'{"speed":16}'`. The pills and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.

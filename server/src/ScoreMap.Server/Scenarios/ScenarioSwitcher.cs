@@ -88,7 +88,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         get
         {
             if (!IsRealGames(_running.Name))
-                return _clock.Anchor;
+                return _clock.Anchor;
             return ClockAnchor.RealTime(_realTime);
         }
     }
@@ -109,21 +109,27 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public bool Has(string name) => IsRealGames(name) || Scenarios.Contains(name);
 
     /// <summary>
-    /// Switches to the scenario <paramref name="name"/>, started afresh, or to real games. A bad scenario
-    /// file throws a <see cref="ScenarioFileException"/> and leaves the running source as it was.
+    /// Switches to the scenario <paramref name="name"/>, started afresh, or to real games, and returns the
+    /// <see cref="Polling"/> for it. A bad scenario file throws a <see cref="ScenarioFileException"/> and
+    /// leaves the running source as it was.
     /// </summary>
-    public void SwitchTo(string name) => _running = Start(name);
+    public PollingOptions SwitchTo(string name)
+    {
+        _running = Start(name);
+        return Polling;
+    }
 
     /// <summary>
     /// Runs the scenario clock at <paramref name="speed"/> from its reading now, so the running scenario
-    /// carries on from where it is. Throws an <see cref="InvalidOperationException"/> while real games run,
-    /// which play in real time.
+    /// carries on from where it is, and returns the <see cref="Polling"/> for that speed. Throws an
+    /// <see cref="InvalidOperationException"/> while real games run, which play in real time.
     /// </summary>
-    public void ChangeSpeed(int speed)
+    public PollingOptions ChangeSpeed(int speed)
     {
         if (IsRealGames(_running.Name))
             throw new InvalidOperationException("Real games play in real time, so their speed can't be changed");
         _clock.ChangeSpeed(speed);
+        return Polling;
     }
 
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>

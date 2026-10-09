@@ -4,13 +4,15 @@ using ScoreMap.Server.Games;
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// How a game in a league plays out in a scenario: its periods and their length and clock, and under
-/// random play the stretches of play and the breaks it goes through from start to finish, and how often
-/// and by how much a team scores, so a whole game ends at roughly the sport's usual margins.
+/// How a game in a league plays out in a scenario, for every made-up game (fill's and random play's): the
+/// stretches of play and the breaks it goes through from start to finish, with their periods and clock,
+/// and how often and by how much a team scores, so a whole game ends at roughly the sport's usual margins.
+/// How far through a game is runs from 0 (just started) to 1 (finished), across its planned length.
 /// </summary>
 internal sealed class SportPlay
 {
     private readonly Sport _sport;
+    private readonly double _plannedMinutes;
     private readonly IReadOnlyList<Segment> _segments;
     private readonly double _totalWeight;
     private readonly double _playingShare;
@@ -28,6 +30,7 @@ internal sealed class SportPlay
     public SportPlay(League league)
     {
         _sport = league.Sport;
+        _plannedMinutes = league.PlannedLength.TotalMinutes;
         Regulation = league.RegulationPeriods ?? league.Sport switch
         {
             Sport.Baseball => 9,
@@ -66,31 +69,60 @@ internal sealed class SportPlay
     /// How long a period lasts on the game clock (a half in soccer); not used in baseball, which has no
     /// clock.
     /// </summary>
-    public int PeriodMinutes { get; }
+    private int PeriodMinutes { get; }
 
     /// <summary>How long soccer's halftime lasts.</summary>
-    public const int SoccerHalftimeMinutes = 15;
+    private const int SoccerHalftimeMinutes = 15;
 
     /// <summary>A soccer clock: the minute of the game, such as <c>67'</c>.</summary>
-    public static string SoccerClock(int minute) => $"{minute}'";
+    private static string SoccerClock(int minute) => $"{minute}'";
 
     /// <summary>A period's clock counting down, with <paramref name="left"/> to go, such as <c>8:05</c>.</summary>
-    public static string Countdown(TimeSpan left) => $"{(int)left.TotalMinutes}:{left.Seconds:00}";
-
-    /// <summary>The most points a team gets in a game; it scores no more once it has them.</summary>
-    public int MostPoints => _scoring.Most;
-
-    /// <summary>The score that settles a game that would end level, in a sport without draws; none in soccer.</summary>
-    public int? SettlingScore => _scoring.Settling;
+    private static string Countdown(TimeSpan left) => $"{(int)left.TotalMinutes}:{left.Seconds:00}";
 
     /// <summary>Whether a game <paramref name="through"/> of the way through is being played (not on a break).</summary>
     public bool IsPlaying(double through) => SegmentAt(through).Segment.Playing;
 
-    /// <summary>The chance a team scores in a step that takes the game <paramref name="step"/> further through.</summary>
-    public double ChanceToScore(double step) => _scoring.PerGame * step / _playingShare;
+    /// <summary>
+    /// A team's score after a step of play that takes the game <paramref name="step"/> further through:
+    /// it may score, but never past the most a team gets in a game.
+    /// </summary>
+    public int ScoreStep(int score, double step, Random random)
+    {
+        if (random.NextDouble() >= _scoring.PerGame * step / _playingShare || score >= _scoring.Most)
+            return score;
+        return Math.Min(_scoring.Most, score + Points(random));
+    }
+
+    /// <summary>
+    /// A team's score <paramref name="through"/> of the way through a game: its play so far, scored a
+    /// minute of planned length at a time as random play scores it.
+    /// </summary>
+    public int ScoreAt(double through, Random random)
+    {
+        var score = 0;
+        var step = 1 / _plannedMinutes;
+        for (var minute = 0; minute < through * _plannedMinutes; minute++)
+        {
+            if (IsPlaying(minute * step))
+                score = ScoreStep(score, step, random);
+        }
+        return score;
+    }
+
+    /// <summary>
+    /// The final score of a game that ends <paramref name="home"/>-<paramref name="away"/>: in a sport
+    /// without draws, a level game is settled by one more score, to either team.
+    /// </summary>
+    public (int Home, int Away) Settled(int home, int away, Random random)
+    {
+        if (_scoring.Settling is not { } settle || home != away)
+            return (home, away);
+        return random.Next(2) == 0 ? (home + settle, away) : (home, away + settle);
+    }
 
     /// <summary>The points a score is worth.</summary>
-    public int Points(Random random)
+    private int Points(Random random)
     {
         var roll = random.NextDouble();
         foreach (var (points, chance) in _scoring.Points)

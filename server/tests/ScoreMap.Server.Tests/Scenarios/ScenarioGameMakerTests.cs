@@ -56,23 +56,25 @@ public sealed class ScenarioGameMakerTests
         {
             Assert.Equal(ProviderStatus.InProgress, game.Status);
             Assert.InRange(game.StartsIn, -league.PlannedLength, -TimeSpan.FromMinutes(1));
-            var played = -game.StartsIn / league.PlannedLength;
-            Assert.InRange(game.Home.Score!.Value, 0, Math.Ceiling(MostPoints[league.Sport] * played));
-            Assert.InRange(game.Away.Score!.Value, 0, Math.Ceiling(MostPoints[league.Sport] * played));
+            Assert.InRange(game.Home.Score!.Value, 0, MostPoints[league.Sport]);
+            Assert.InRange(game.Away.Score!.Value, 0, MostPoints[league.Sport]);
             AssertClockFits(game, league);
         }
     }
 
     [Fact]
-    public void A_soccer_game_40_minutes_in_is_in_the_40th_minute_and_one_70_minutes_in_is_in_the_second_half()
+    public void A_soccer_game_early_in_its_planned_length_is_in_the_first_half_and_one_late_in_it_in_the_second()
     {
         var soccer = Leagues.Single(l => l.Sport == Sport.Soccer);
         var games = Make(soccer.Key, GameStatus.Live).Select(made => made.Game).ToList();
 
+        // Two 45-minute halves and halftime are spread across the planned 2 hours.
         Assert.All(games.Where(g => -g.StartsIn <= TimeSpan.FromMinutes(45)), game =>
-            Assert.Equal(((int)Math.Ceiling(-game.StartsIn.TotalMinutes), 1), (Minute(game), game.Period)));
-        Assert.All(games.Where(g => -g.StartsIn > TimeSpan.FromMinutes(62)), game =>
-            Assert.Equal(2, game.Period));
+            Assert.Equal((1, ProviderPeriodPhase.Playing), (game.Period, game.Phase)));
+        Assert.All(games.Where(g => -g.StartsIn > TimeSpan.FromMinutes(75)), game =>
+            Assert.Equal((2, ProviderPeriodPhase.Playing), (game.Period, game.Phase)));
+        Assert.Contains(games, game => -game.StartsIn <= TimeSpan.FromMinutes(45));
+        Assert.Contains(games, game => -game.StartsIn > TimeSpan.FromMinutes(75));
     }
 
     [Theory]
@@ -88,6 +90,17 @@ public sealed class ScenarioGameMakerTests
             Assert.InRange(game.Away.Score!.Value, 0, MostPoints[league.Sport]);
             Assert.Equal(league.RegulationPeriods ?? Regulation(league.Sport), game.Period);
         }
+    }
+
+    [Theory]
+    [MemberData(nameof(LeagueKeys))]
+    public void A_final_game_in_a_sport_without_draws_never_ends_level(string leagueKey)
+    {
+        var games = Make(leagueKey, GameStatus.Final).ToList();
+        if (games[0].League.Sport == Sport.Soccer)
+            return;
+
+        Assert.All(games, made => Assert.NotEqual(made.Game.Home.Score, made.Game.Away.Score));
     }
 
     [Theory]
@@ -141,15 +154,20 @@ public sealed class ScenarioGameMakerTests
         {
             case Sport.Baseball:
                 Assert.Null(game.Clock);
-                Assert.Contains(game.Phase, new[] { ProviderPeriodPhase.InningTop, ProviderPeriodPhase.InningBottom });
+                Assert.Contains(game.Phase, new[]
+                {
+                    ProviderPeriodPhase.InningTop, ProviderPeriodPhase.InningMiddle,
+                    ProviderPeriodPhase.InningBottom, ProviderPeriodPhase.InningEnd,
+                });
                 break;
             case Sport.Soccer:
                 Assert.InRange(Minute(game), 1, 90);
                 Assert.True(Minute(game) <= Math.Ceiling(-game.StartsIn.TotalMinutes), $"minute {game.Clock} {-game.StartsIn} in");
+                Assert.Contains(game.Phase, new[] { ProviderPeriodPhase.Playing, ProviderPeriodPhase.Break });
                 break;
             default:
                 Assert.Matches(@"^\d{1,2}:\d{2}$", game.Clock);
-                Assert.Equal(ProviderPeriodPhase.Playing, game.Phase);
+                Assert.Contains(game.Phase, new[] { ProviderPeriodPhase.Playing, ProviderPeriodPhase.Break });
                 break;
         }
     }

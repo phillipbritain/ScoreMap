@@ -1,3 +1,4 @@
+using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
 namespace ScoreMap.Server.Scenarios;
@@ -9,18 +10,23 @@ public static partial class ScenarioReader
 
     /// <summary>
     /// Expands a <c>fill</c> (ADR-0009): <c>count</c> games, each at a different venue from the named
-    /// group of the venue list, with that venue's home team: <paramref name="disruptedShare"/> of them
-    /// Disrupted (the scenario's <c>"disrupted"</c>), the rest in statuses shared out by the <c>mix</c>
+    /// group of the venue list, between teams from the team list that no other game (filled or written
+    /// out in <paramref name="writtenOut"/>) has: <paramref name="disruptedShare"/> of them
+    /// Disrupted (the scenario's <c>"disrupted"</c>), postponed, suspended and canceled in turn so a
+    /// few of them show every kind, the rest in statuses shared out by the <c>mix</c>
     /// (all Live without one). The same scenario file gives the same games each time, since every
     /// choice is seeded by the scenario's name. Filled games are numbered <c>&lt;scenario&gt;-fill-&lt;n&gt;</c>.
     /// </summary>
     private static IReadOnlyList<ScenarioGame> ReadFill(
-        FillEntry entry, double disruptedShare, string scenario, string path, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
+        FillEntry entry, double disruptedShare, IReadOnlyList<ScenarioGame> writtenOut, string scenario, string path,
+        IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues, ScenarioTeamList? teams)
     {
         ScenarioFileException Problem(string problem) => new(scenario, path, $"fill {problem}");
 
         if (venues is null)
             throw Problem("needs the venue list, but there is no venue list to fill from");
+        if (teams is null)
+            throw Problem("needs the team list, but there is no team list to fill from");
         if (entry.Count < 1)
             throw Problem($"has count {entry.Count}; ask for at least 1 game");
         if (string.IsNullOrWhiteSpace(entry.Group))
@@ -43,12 +49,27 @@ public static partial class ScenarioReader
         }
 
         var random = new Random(Scenario.StableSeed(scenario));
-        var maker = new ScenarioGameMaker(leagues, venues);
+        var maker = new ScenarioGameMaker(leagues, teams);
         random.Shuffle(inGroup);
         var statuses = mix.WithDisrupted(disruptedShare).Split(entry.Count, random);
-        return inGroup.Take(entry.Count)
-            .Select((venue, i) => maker.Make($"{scenario}-fill-{i + 1}", venue, statuses[i], random))
-            .ToList();
+        var filled = new List<ScenarioGame>();
+        var disrupted = 0;
+        try
+        {
+            foreach (var (venue, i) in inGroup.Take(entry.Count).Select((venue, i) => (venue, i)))
+            {
+                var disruption = statuses[i] == GameStatus.Disrupted
+                    ? ScenarioGameMaker.Disruptions[disrupted++ % ScenarioGameMaker.Disruptions.Count]
+                    : (ProviderStatus?)null;
+                var playing = ScenarioGameMaker.Playing(writtenOut.Concat(filled));
+                filled.Add(maker.Make($"{scenario}-fill-{i + 1}", venue, statuses[i], playing, random, disruption));
+            }
+        }
+        catch (NotEnoughTeamsException e)
+        {
+            throw Problem($"asks for {entry.Count} games, more than the team list has teams for: {e.Message}");
+        }
+        return filled;
     }
 
     private static StatusMix ReadMix(Dictionary<string, double> entry)

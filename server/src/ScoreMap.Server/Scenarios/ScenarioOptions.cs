@@ -8,4 +8,7 @@ public sealed class ScenarioOptions
 
     /// <summary>The venue list scenarios fill from, relative to the content root.</summary>
     public string VenueListPath { get; set; } = "scenario-venues.json";
+
+    /// <summary>The team list scenarios fill from, relative to the content root.</summary>
+    public string TeamListPath { get; set; } = "scenario-teams.json";
 }

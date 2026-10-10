@@ -1,4 +1,3 @@
-using System.Globalization;
 using ScoreMap.Server.GameFeed;
 
 namespace ScoreMap.Server.Games;
@@ -26,25 +25,6 @@ public static class ClutchTime
 
         if (period > league.Regulation)
             return true;
-        return period == league.Regulation && Left(game.DisplayClock) is { } left && left <= LastMinutes;
-    }
-
-    /// <summary>
-    /// The time left in the period from the provider's clock: "4:28", or "12.4" (seconds) in the last minute;
-    /// null when it can't be read.
-    /// </summary>
-    private static TimeSpan? Left(string? clock)
-    {
-        if (clock is null)
-            return null;
-        var parts = clock.Split(':');
-        var seconds = 0.0;
-        foreach (var part in parts)
-        {
-            if (!double.TryParse(part, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value))
-                return null;
-            seconds = seconds * 60 + value;
-        }
-        return parts.Length <= 2 ? TimeSpan.FromSeconds(seconds) : null;
+        return period == league.Regulation && PeriodClock.TimeLeft(game.DisplayClock) <= LastMinutes;
     }
 }

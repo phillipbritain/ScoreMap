@@ -11,14 +11,20 @@ export interface Speed {
 
 /**
  * What the server says about scenarios (ADR-0009): the running one ("real" for real games) and every
- * scenario file, the scenario clock's speed (by name) and the speeds there are, and where the clock
- * games are on stands (the scenario clock, or the real time while real games run).
+ * scenario file, the scenario clock's speed (by name) and the speeds there are, whether play can be
+ * controlled, and where the clock games are on stands (the scenario clock, or the real time while real
+ * games run).
  */
 export interface ScenarioListing {
   running: string
   scenarios: string[]
   speed: SpeedName
   speeds: Speed[]
+  /**
+   * Whether the speed can be changed: false with real games and with a scenario whose games stand
+   * still, where the media keys and the clock hide.
+   */
+  canControlPlay: boolean
   /** The clock `reads` this at the real time `at` (both ISO 8601); from here it runs at the speed. */
   clock: { at: string; reads: string }
 }
@@ -31,8 +37,8 @@ function displayName(name: string) {
 }
 
 /**
- * Whether the scenario pill, the media keys and the clock show: only when the server has scenarios
- * (never on the deployed site), and not hidden.
+ * Whether the scenario controls show: only when the server has scenarios (never on the deployed site),
+ * and not hidden. The media keys and the clock among them show only where play can be controlled.
  */
 export function showsScenarioControls(listing: ScenarioListing | null, controls: { hidden: boolean }): boolean {
   return listing !== null && listing.scenarios.length > 0 && !controls.hidden
@@ -91,15 +97,9 @@ export function showsFasterIcon(speed: SpeedName): boolean {
   return mediaKeys[speed].fasterIcon
 }
 
-/** Whether the speed can be changed: while a scenario runs, not while real games (which play in real time) do. */
-export function speedChangeable(listing: ScenarioListing): boolean {
-  return listing.running !== realGames
-}
-
-/** What the clock reads at the real time `now` (ms since the epoch): run forward from the server's anchor. */
+/** What the clock reads at the real time `now` (ms since the epoch): run forward from the server's anchor at the speed. */
 export function clockReading(listing: ScenarioListing, now: number): Date {
-  // Real games are on the real time, whatever the speed the server keeps for scenarios.
-  const times = speedChangeable(listing) ? (listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1) : 1
+  const times = listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
   const { at, reads } = listing.clock
   return new Date(Date.parse(reads) + (now - Date.parse(at)) * times)
 }

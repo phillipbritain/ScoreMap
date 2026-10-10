@@ -13,7 +13,7 @@ public class ShippedScenarioTests
 {
     private static readonly string ShippedFolder = Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "Scenarios", "Files");
 
-    private sealed record ScenarioListing(string Running, string[] Scenarios);
+    private sealed record ScenarioListing(string Running, string[] Scenarios, bool CanControlPlay);
 
     [Fact]
     public async Task Every_scenario_file_in_the_repo_loads_and_worldwide_is_the_default()
@@ -31,6 +31,21 @@ public class ShippedScenarioTests
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
             Assert.True(response.IsSuccessStatusCode, $"{name}: {await response.Content.ReadAsStringAsync()}");
         }
+    }
+
+    [Theory]
+    [InlineData("crowded", true)]
+    [InlineData("worldwide", true)]
+    [InlineData("edge-cases", false)]
+    [InlineData("empty", false)]
+    public async Task Play_can_be_controlled_only_in_the_scenarios_that_play(string name, bool canControlPlay)
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        using var http = server.CreateClient();
+
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+
+        Assert.Equal(canControlPlay, (await response.Content.ReadFromJsonAsync<ScenarioListing>())?.CanControlPlay);
     }
 
     public static TheoryData<string> ScenariosAtListedVenues => new(

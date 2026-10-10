@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react'
-import { litKey, pressedSpeed, showsFasterIcon, speedChangeable, type MediaKey, type ScenarioListing } from './scenarioPicker'
+import { litKey, pressedSpeed, showsFasterIcon, type MediaKey, type ScenarioListing } from './scenarioPicker'
 import { putScenarios } from './useScenarioControls'
 
 /**
  * The media keys (ADR-0009): Pause, Play and Fast-forward for the scenario clock's speed, with no
  * label: the lit key is the speed, and Fast-forward grows a third triangle at Faster. Pressing one
- * changes the server's speed, and so every browser's, carrying on from where the scenario is. While
- * real games run they show but are disabled.
+ * changes the server's speed, and so every browser's, carrying on from where the scenario is. Shown
+ * only where play can be controlled.
  */
 export function SpeedKeys({
   listing,
@@ -16,7 +16,6 @@ export function SpeedKeys({
   setListing: (listing: ScenarioListing) => void
 }) {
   const [changing, setChanging] = useState(false)
-  const changeable = speedChangeable(listing)
   const lit = litKey(listing.speed)
 
   const press = (key: MediaKey) => {
@@ -36,8 +35,8 @@ export function SpeedKeys({
       className={className}
       aria-label={title}
       aria-pressed={lit === name}
-      title={changeable ? title : 'Real games play in real time'}
-      disabled={changing || !changeable}
+      title={title}
+      disabled={changing}
       onClick={() => press(name)}
     >
       {icon}
@@ -46,7 +45,7 @@ export function SpeedKeys({
 
   const faster = showsFasterIcon(listing.speed)
   return (
-    <div className="speed-keys" role="group" aria-label="Scenario speed" aria-disabled={!changeable}>
+    <div className="speed-keys" role="group" aria-label="Scenario speed">
       {keyButton('pause', 'Pause', <PauseIcon />)}
       {keyButton('play', 'Play', <PlayIcon />)}
       {keyButton(

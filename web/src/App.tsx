@@ -31,7 +31,7 @@ export default function App() {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
-  // The scenario pill, media keys and clock (local runs only).
+  // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls()
   const { setListing: setScenarioListing } = scenarios
 
@@ -78,8 +78,12 @@ export default function App() {
           {scenarios.shown && scenarios.listing && (
             <div className="scenario-pills">
               <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
-              <SpeedKeys listing={scenarios.listing} setListing={setScenarioListing} />
-              <ScenarioClock listing={scenarios.listing} />
+              {scenarios.listing.canControlPlay && (
+                <>
+                  <SpeedKeys listing={scenarios.listing} setListing={setScenarioListing} />
+                  <ScenarioClock listing={scenarios.listing} />
+                </>
+              )}
             </div>
           )}
         </div>

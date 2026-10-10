@@ -1,10 +1,10 @@
-// crowded: about 40 games packed into London and nearby, to bring out Clusters zoomed out and
-// Crowds (score cards with no room) zoomed in. The games play like real games, as in worldwide;
-// new ones come from around London too.
+// crowded: about 40 games packed into the world's biggest cities (New York, Los Angeles and Miami,
+// London, Paris, Tokyo and more), to bring out Clusters zoomed out and Crowds (score cards with no
+// room) zoomed in. The games play like real games, as in worldwide; new ones come from those cities too.
 {
   "fill": {
     "count": 40,
-    "group": "london-and-nearby",
+    "group": "big-cities",
     "mix": { "live": 3, "upcoming": 1, "final": 1 }
   },
   "play": true,

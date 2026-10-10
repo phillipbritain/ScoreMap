@@ -105,7 +105,7 @@ public sealed class ScenarioPlay
                     Play(played, at);
                     break;
                 case var status when (status == ProviderStatus.Final || IsDisrupted(status)) && at - played.StoppedAt >= DropsOutAfter:
-                    _games[i] = NewGame(at);
+                    _games[i] = NewGame(at, replacing: played);
                     break;
             }
         }
@@ -181,21 +181,27 @@ public sealed class ScenarioPlay
         return played.Game with { Period = period, DisplayClock = clock, Phase = phase };
     }
 
-    /// <summary>A new game at a venue no game is at (if there is one), Upcoming and starting soon, or straight into Live.</summary>
-    private PlayedGame NewGame(DateTimeOffset at)
+    /// <summary>
+    /// A new game at a venue no game is at (if there is one), between teams in no other game showing,
+    /// Upcoming and starting soon, or straight into Live. The teams of the game it is
+    /// <paramref name="replacing"/> are free again, so a scenario filled with as many games as its teams
+    /// have room for can still bring new ones on.
+    /// </summary>
+    private PlayedGame NewGame(DateTimeOffset at, PlayedGame replacing)
     {
         var inUse = _games.Select(game => game.Game.Venue?.Name).ToHashSet();
         var free = _settings.Venues.Where(venue => !inUse.Contains(venue.Name)).ToList();
         var venues = free.Count > 0 ? free : _settings.Venues;
         var venue = venues[_random.Next(venues.Count)];
         var id = $"{_scenario}-play-{++_newGames}";
+        var playing = ScenarioGameMaker.Playing(_games.Where(game => game != replacing).Select(game => game.Game)).ToList();
         if (_random.NextDouble() < UpcomingShare)
         {
-            var upcoming = _settings.Maker.Make(id, venue, GameStatus.Upcoming, _random)
+            var upcoming = _settings.Maker.Make(id, venue, GameStatus.Upcoming, playing, _random)
                 with { StartsIn = TimeSpan.FromSeconds(_random.Next(60, 181)) };
             return Begin(upcoming, at);
         }
-        return Begin(_settings.Maker.Make(id, venue, GameStatus.Live, _random), at);
+        return Begin(_settings.Maker.Make(id, venue, GameStatus.Live, playing, _random), at);
     }
 
     /// <summary>

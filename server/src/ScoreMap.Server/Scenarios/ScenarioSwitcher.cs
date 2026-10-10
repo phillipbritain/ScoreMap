@@ -29,6 +29,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private readonly string _folder;
     private readonly IReadOnlyList<League> _leagues;
     private readonly IReadOnlyList<ScenarioVenue>? _venues;
+    private readonly ScenarioTeamList? _teams;
     private readonly TimeProvider _realTime;
     private readonly ScenarioClock _clock;
     private volatile Source _running;
@@ -52,6 +53,9 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         // The venue list fills come from; without it, a scenario with a fill says so when picked.
         var venueList = Path.Combine(environment.ContentRootPath, options.Value.VenueListPath);
         _venues = File.Exists(venueList) ? ScenarioVenue.ReadList(venueList) : null;
+        // Likewise the team list fills make their games between.
+        var teamList = Path.Combine(environment.ContentRootPath, options.Value.TeamListPath);
+        _teams = File.Exists(teamList) ? ScenarioTeamList.Read(teamList) : null;
         _realTime = realTime;
         _clock = new ScenarioClock(realTime, speed);
         BoardClock = new BoardTime(this);
@@ -150,7 +154,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     {
         if (IsRealGames(name))
             return new Source(RealGames, _realGames, CanControlPlay: false);
-        var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues);
+        var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues, _teams);
         _clock.Restart();
         return new Source(name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime);
     }

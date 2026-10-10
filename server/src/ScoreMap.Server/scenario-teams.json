@@ -1,0 +1,2728 @@
+{
+  "NFL": [
+    {
+      "name": "Arizona Cardinals",
+      "abbreviation": "ARI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png"
+    },
+    {
+      "name": "Atlanta Falcons",
+      "abbreviation": "ATL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png"
+    },
+    {
+      "name": "Baltimore Ravens",
+      "abbreviation": "BAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/bal.png"
+    },
+    {
+      "name": "Buffalo Bills",
+      "abbreviation": "BUF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png"
+    },
+    {
+      "name": "Carolina Panthers",
+      "abbreviation": "CAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/car.png"
+    },
+    {
+      "name": "Chicago Bears",
+      "abbreviation": "CHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png"
+    },
+    {
+      "name": "Cincinnati Bengals",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/cin.png"
+    },
+    {
+      "name": "Cleveland Browns",
+      "abbreviation": "CLE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/cle.png"
+    },
+    {
+      "name": "Dallas Cowboys",
+      "abbreviation": "DAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png"
+    },
+    {
+      "name": "Denver Broncos",
+      "abbreviation": "DEN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/den.png"
+    },
+    {
+      "name": "Detroit Lions",
+      "abbreviation": "DET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/det.png"
+    },
+    {
+      "name": "Green Bay Packers",
+      "abbreviation": "GB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png"
+    },
+    {
+      "name": "Houston Texans",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png"
+    },
+    {
+      "name": "Indianapolis Colts",
+      "abbreviation": "IND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png"
+    },
+    {
+      "name": "Jacksonville Jaguars",
+      "abbreviation": "JAX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png"
+    },
+    {
+      "name": "Kansas City Chiefs",
+      "abbreviation": "KC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png"
+    },
+    {
+      "name": "Las Vegas Raiders",
+      "abbreviation": "LV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png"
+    },
+    {
+      "name": "Los Angeles Chargers",
+      "abbreviation": "LAC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png"
+    },
+    {
+      "name": "Los Angeles Rams",
+      "abbreviation": "LAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png"
+    },
+    {
+      "name": "Miami Dolphins",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png"
+    },
+    {
+      "name": "Minnesota Vikings",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/min.png"
+    },
+    {
+      "name": "New England Patriots",
+      "abbreviation": "NE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png"
+    },
+    {
+      "name": "New Orleans Saints",
+      "abbreviation": "NO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/no.png"
+    },
+    {
+      "name": "New York Giants",
+      "abbreviation": "NYG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png"
+    },
+    {
+      "name": "New York Jets",
+      "abbreviation": "NYJ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png"
+    },
+    {
+      "name": "Philadelphia Eagles",
+      "abbreviation": "PHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png"
+    },
+    {
+      "name": "Pittsburgh Steelers",
+      "abbreviation": "PIT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png"
+    },
+    {
+      "name": "San Francisco 49ers",
+      "abbreviation": "SF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png"
+    },
+    {
+      "name": "Seattle Seahawks",
+      "abbreviation": "SEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png"
+    },
+    {
+      "name": "Tampa Bay Buccaneers",
+      "abbreviation": "TB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/tb.png"
+    },
+    {
+      "name": "Tennessee Titans",
+      "abbreviation": "TEN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png"
+    },
+    {
+      "name": "Washington Commanders",
+      "abbreviation": "WSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png"
+    }
+  ],
+  "NCAA Football": [
+    {
+      "name": "Alabama Crimson Tide",
+      "abbreviation": "ALA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png"
+    },
+    {
+      "name": "Arizona State Sun Devils",
+      "abbreviation": "ASU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/9.png"
+    },
+    {
+      "name": "Arizona Wildcats",
+      "abbreviation": "ARIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/12.png"
+    },
+    {
+      "name": "Arkansas Razorbacks",
+      "abbreviation": "ARK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/8.png"
+    },
+    {
+      "name": "Auburn Tigers",
+      "abbreviation": "AUB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2.png"
+    },
+    {
+      "name": "BYU Cougars",
+      "abbreviation": "BYU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/252.png"
+    },
+    {
+      "name": "Baylor Bears",
+      "abbreviation": "BAY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/239.png"
+    },
+    {
+      "name": "Boston College Eagles",
+      "abbreviation": "BC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/103.png"
+    },
+    {
+      "name": "California Golden Bears",
+      "abbreviation": "CAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/25.png"
+    },
+    {
+      "name": "Cincinnati Bearcats",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2132.png"
+    },
+    {
+      "name": "Clemson Tigers",
+      "abbreviation": "CLEM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/228.png"
+    },
+    {
+      "name": "Colorado Buffaloes",
+      "abbreviation": "COLO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/38.png"
+    },
+    {
+      "name": "Duke Blue Devils",
+      "abbreviation": "DUKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/150.png"
+    },
+    {
+      "name": "Florida Gators",
+      "abbreviation": "FLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/57.png"
+    },
+    {
+      "name": "Florida State Seminoles",
+      "abbreviation": "FSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/52.png"
+    },
+    {
+      "name": "Georgia Bulldogs",
+      "abbreviation": "UGA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png"
+    },
+    {
+      "name": "Georgia Tech Yellow Jackets",
+      "abbreviation": "GT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/59.png"
+    },
+    {
+      "name": "Houston Cougars",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/248.png"
+    },
+    {
+      "name": "Illinois Fighting Illini",
+      "abbreviation": "ILL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/356.png"
+    },
+    {
+      "name": "Indiana Hoosiers",
+      "abbreviation": "IU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/84.png"
+    },
+    {
+      "name": "Iowa Hawkeyes",
+      "abbreviation": "IOWA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png"
+    },
+    {
+      "name": "Iowa State Cyclones",
+      "abbreviation": "ISU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/66.png"
+    },
+    {
+      "name": "Kansas Jayhawks",
+      "abbreviation": "KU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png"
+    },
+    {
+      "name": "Kansas State Wildcats",
+      "abbreviation": "KSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2306.png"
+    },
+    {
+      "name": "Kentucky Wildcats",
+      "abbreviation": "UK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/96.png"
+    },
+    {
+      "name": "LSU Tigers",
+      "abbreviation": "LSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png"
+    },
+    {
+      "name": "Louisville Cardinals",
+      "abbreviation": "LOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/97.png"
+    },
+    {
+      "name": "Maryland Terrapins",
+      "abbreviation": "MD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/120.png"
+    },
+    {
+      "name": "Miami Hurricanes",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png"
+    },
+    {
+      "name": "Michigan State Spartans",
+      "abbreviation": "MSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/127.png"
+    },
+    {
+      "name": "Michigan Wolverines",
+      "abbreviation": "MICH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/130.png"
+    },
+    {
+      "name": "Minnesota Golden Gophers",
+      "abbreviation": "MINN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/135.png"
+    },
+    {
+      "name": "Mississippi State Bulldogs",
+      "abbreviation": "MSST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/344.png"
+    },
+    {
+      "name": "Missouri Tigers",
+      "abbreviation": "MIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/142.png"
+    },
+    {
+      "name": "NC State Wolfpack",
+      "abbreviation": "NCSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/152.png"
+    },
+    {
+      "name": "Nebraska Cornhuskers",
+      "abbreviation": "NEB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/158.png"
+    },
+    {
+      "name": "North Carolina Tar Heels",
+      "abbreviation": "UNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/153.png"
+    },
+    {
+      "name": "Northwestern Wildcats",
+      "abbreviation": "NU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/77.png"
+    },
+    {
+      "name": "Notre Dame Fighting Irish",
+      "abbreviation": "ND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/87.png"
+    },
+    {
+      "name": "Ohio State Buckeyes",
+      "abbreviation": "OSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/194.png"
+    },
+    {
+      "name": "Oklahoma Sooners",
+      "abbreviation": "OU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/201.png"
+    },
+    {
+      "name": "Oklahoma State Cowboys",
+      "abbreviation": "OKST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/197.png"
+    },
+    {
+      "name": "Ole Miss Rebels",
+      "abbreviation": "MISS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/145.png"
+    },
+    {
+      "name": "Oregon Ducks",
+      "abbreviation": "ORE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2483.png"
+    },
+    {
+      "name": "Penn State Nittany Lions",
+      "abbreviation": "PSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/213.png"
+    },
+    {
+      "name": "Pittsburgh Panthers",
+      "abbreviation": "PITT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/221.png"
+    },
+    {
+      "name": "Purdue Boilermakers",
+      "abbreviation": "PUR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png"
+    },
+    {
+      "name": "Rutgers Scarlet Knights",
+      "abbreviation": "RUTG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/164.png"
+    },
+    {
+      "name": "SMU Mustangs",
+      "abbreviation": "SMU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2567.png"
+    },
+    {
+      "name": "South Carolina Gamecocks",
+      "abbreviation": "SC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2579.png"
+    },
+    {
+      "name": "Stanford Cardinal",
+      "abbreviation": "STAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/24.png"
+    },
+    {
+      "name": "Syracuse Orange",
+      "abbreviation": "SYR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/183.png"
+    },
+    {
+      "name": "TCU Horned Frogs",
+      "abbreviation": "TCU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2628.png"
+    },
+    {
+      "name": "Tennessee Volunteers",
+      "abbreviation": "TENN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2633.png"
+    },
+    {
+      "name": "Texas A&M Aggies",
+      "abbreviation": "TA&M",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/245.png"
+    },
+    {
+      "name": "Texas Longhorns",
+      "abbreviation": "TEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/251.png"
+    },
+    {
+      "name": "Texas Tech Red Raiders",
+      "abbreviation": "TTU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2641.png"
+    },
+    {
+      "name": "UCF Knights",
+      "abbreviation": "UCF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2116.png"
+    },
+    {
+      "name": "UCLA Bruins",
+      "abbreviation": "UCLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png"
+    },
+    {
+      "name": "USC Trojans",
+      "abbreviation": "USC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/30.png"
+    },
+    {
+      "name": "Utah Utes",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/254.png"
+    },
+    {
+      "name": "Vanderbilt Commodores",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/238.png"
+    },
+    {
+      "name": "Virginia Cavaliers",
+      "abbreviation": "UVA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/258.png"
+    },
+    {
+      "name": "Virginia Tech Hokies",
+      "abbreviation": "VT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/259.png"
+    },
+    {
+      "name": "Wake Forest Demon Deacons",
+      "abbreviation": "WAKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/154.png"
+    },
+    {
+      "name": "Washington Huskies",
+      "abbreviation": "WASH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/264.png"
+    },
+    {
+      "name": "West Virginia Mountaineers",
+      "abbreviation": "WVU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/277.png"
+    },
+    {
+      "name": "Wisconsin Badgers",
+      "abbreviation": "WIS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/275.png"
+    }
+  ],
+  "NBA": [
+    {
+      "name": "Atlanta Hawks",
+      "abbreviation": "ATL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/atl.png"
+    },
+    {
+      "name": "Boston Celtics",
+      "abbreviation": "BOS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png"
+    },
+    {
+      "name": "Brooklyn Nets",
+      "abbreviation": "BKN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png"
+    },
+    {
+      "name": "Charlotte Hornets",
+      "abbreviation": "CHA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/cha.png"
+    },
+    {
+      "name": "Chicago Bulls",
+      "abbreviation": "CHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/chi.png"
+    },
+    {
+      "name": "Cleveland Cavaliers",
+      "abbreviation": "CLE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png"
+    },
+    {
+      "name": "Dallas Mavericks",
+      "abbreviation": "DAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/dal.png"
+    },
+    {
+      "name": "Denver Nuggets",
+      "abbreviation": "DEN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/den.png"
+    },
+    {
+      "name": "Detroit Pistons",
+      "abbreviation": "DET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/det.png"
+    },
+    {
+      "name": "Golden State Warriors",
+      "abbreviation": "GS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png"
+    },
+    {
+      "name": "Houston Rockets",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png"
+    },
+    {
+      "name": "Indiana Pacers",
+      "abbreviation": "IND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/ind.png"
+    },
+    {
+      "name": "LA Clippers",
+      "abbreviation": "LAC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lac.png"
+    },
+    {
+      "name": "Los Angeles Lakers",
+      "abbreviation": "LAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png"
+    },
+    {
+      "name": "Memphis Grizzlies",
+      "abbreviation": "MEM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mem.png"
+    },
+    {
+      "name": "Miami Heat",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mia.png"
+    },
+    {
+      "name": "Milwaukee Bucks",
+      "abbreviation": "MIL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mil.png"
+    },
+    {
+      "name": "Minnesota Timberwolves",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/min.png"
+    },
+    {
+      "name": "New Orleans Pelicans",
+      "abbreviation": "NO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/no.png"
+    },
+    {
+      "name": "New York Knicks",
+      "abbreviation": "NY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png"
+    },
+    {
+      "name": "Oklahoma City Thunder",
+      "abbreviation": "OKC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/okc.png"
+    },
+    {
+      "name": "Orlando Magic",
+      "abbreviation": "ORL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/orl.png"
+    },
+    {
+      "name": "Philadelphia 76ers",
+      "abbreviation": "PHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/phi.png"
+    },
+    {
+      "name": "Phoenix Suns",
+      "abbreviation": "PHX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/phx.png"
+    },
+    {
+      "name": "Portland Trail Blazers",
+      "abbreviation": "POR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/por.png"
+    },
+    {
+      "name": "Sacramento Kings",
+      "abbreviation": "SAC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/sac.png"
+    },
+    {
+      "name": "San Antonio Spurs",
+      "abbreviation": "SA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/sa.png"
+    },
+    {
+      "name": "Toronto Raptors",
+      "abbreviation": "TOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/tor.png"
+    },
+    {
+      "name": "Utah Jazz",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/utah.png"
+    },
+    {
+      "name": "Washington Wizards",
+      "abbreviation": "WSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/wsh.png"
+    }
+  ],
+  "NCAA Men's Basketball": [
+    {
+      "name": "Alabama Crimson Tide",
+      "abbreviation": "ALA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png"
+    },
+    {
+      "name": "Arizona State Sun Devils",
+      "abbreviation": "ASU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/9.png"
+    },
+    {
+      "name": "Arizona Wildcats",
+      "abbreviation": "ARIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/12.png"
+    },
+    {
+      "name": "Arkansas Razorbacks",
+      "abbreviation": "ARK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/8.png"
+    },
+    {
+      "name": "Auburn Tigers",
+      "abbreviation": "AUB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2.png"
+    },
+    {
+      "name": "BYU Cougars",
+      "abbreviation": "BYU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/252.png"
+    },
+    {
+      "name": "Baylor Bears",
+      "abbreviation": "BAY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/239.png"
+    },
+    {
+      "name": "Boston College Eagles",
+      "abbreviation": "BC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/103.png"
+    },
+    {
+      "name": "California Golden Bears",
+      "abbreviation": "CAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/25.png"
+    },
+    {
+      "name": "Cincinnati Bearcats",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2132.png"
+    },
+    {
+      "name": "Clemson Tigers",
+      "abbreviation": "CLEM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/228.png"
+    },
+    {
+      "name": "Colorado Buffaloes",
+      "abbreviation": "COLO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/38.png"
+    },
+    {
+      "name": "Duke Blue Devils",
+      "abbreviation": "DUKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/150.png"
+    },
+    {
+      "name": "Florida Gators",
+      "abbreviation": "FLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/57.png"
+    },
+    {
+      "name": "Florida State Seminoles",
+      "abbreviation": "FSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/52.png"
+    },
+    {
+      "name": "Georgia Bulldogs",
+      "abbreviation": "UGA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png"
+    },
+    {
+      "name": "Georgia Tech Yellow Jackets",
+      "abbreviation": "GT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/59.png"
+    },
+    {
+      "name": "Houston Cougars",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/248.png"
+    },
+    {
+      "name": "Illinois Fighting Illini",
+      "abbreviation": "ILL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/356.png"
+    },
+    {
+      "name": "Indiana Hoosiers",
+      "abbreviation": "IU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/84.png"
+    },
+    {
+      "name": "Iowa Hawkeyes",
+      "abbreviation": "IOWA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png"
+    },
+    {
+      "name": "Iowa State Cyclones",
+      "abbreviation": "ISU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/66.png"
+    },
+    {
+      "name": "Kansas Jayhawks",
+      "abbreviation": "KU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png"
+    },
+    {
+      "name": "Kansas State Wildcats",
+      "abbreviation": "KSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2306.png"
+    },
+    {
+      "name": "Kentucky Wildcats",
+      "abbreviation": "UK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/96.png"
+    },
+    {
+      "name": "LSU Tigers",
+      "abbreviation": "LSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png"
+    },
+    {
+      "name": "Louisville Cardinals",
+      "abbreviation": "LOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/97.png"
+    },
+    {
+      "name": "Maryland Terrapins",
+      "abbreviation": "MD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/120.png"
+    },
+    {
+      "name": "Miami Hurricanes",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png"
+    },
+    {
+      "name": "Michigan State Spartans",
+      "abbreviation": "MSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/127.png"
+    },
+    {
+      "name": "Michigan Wolverines",
+      "abbreviation": "MICH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/130.png"
+    },
+    {
+      "name": "Minnesota Golden Gophers",
+      "abbreviation": "MINN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/135.png"
+    },
+    {
+      "name": "Mississippi State Bulldogs",
+      "abbreviation": "MSST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/344.png"
+    },
+    {
+      "name": "Missouri Tigers",
+      "abbreviation": "MIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/142.png"
+    },
+    {
+      "name": "NC State Wolfpack",
+      "abbreviation": "NCSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/152.png"
+    },
+    {
+      "name": "Nebraska Cornhuskers",
+      "abbreviation": "NEB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/158.png"
+    },
+    {
+      "name": "North Carolina Tar Heels",
+      "abbreviation": "UNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/153.png"
+    },
+    {
+      "name": "Northwestern Wildcats",
+      "abbreviation": "NU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/77.png"
+    },
+    {
+      "name": "Notre Dame Fighting Irish",
+      "abbreviation": "ND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/87.png"
+    },
+    {
+      "name": "Ohio State Buckeyes",
+      "abbreviation": "OSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/194.png"
+    },
+    {
+      "name": "Oklahoma Sooners",
+      "abbreviation": "OU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/201.png"
+    },
+    {
+      "name": "Oklahoma State Cowboys",
+      "abbreviation": "OKST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/197.png"
+    },
+    {
+      "name": "Ole Miss Rebels",
+      "abbreviation": "MISS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/145.png"
+    },
+    {
+      "name": "Oregon Ducks",
+      "abbreviation": "ORE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2483.png"
+    },
+    {
+      "name": "Penn State Nittany Lions",
+      "abbreviation": "PSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/213.png"
+    },
+    {
+      "name": "Pittsburgh Panthers",
+      "abbreviation": "PITT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/221.png"
+    },
+    {
+      "name": "Purdue Boilermakers",
+      "abbreviation": "PUR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png"
+    },
+    {
+      "name": "Rutgers Scarlet Knights",
+      "abbreviation": "RUTG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/164.png"
+    },
+    {
+      "name": "SMU Mustangs",
+      "abbreviation": "SMU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2567.png"
+    },
+    {
+      "name": "South Carolina Gamecocks",
+      "abbreviation": "SC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2579.png"
+    },
+    {
+      "name": "Stanford Cardinal",
+      "abbreviation": "STAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/24.png"
+    },
+    {
+      "name": "Syracuse Orange",
+      "abbreviation": "SYR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/183.png"
+    },
+    {
+      "name": "TCU Horned Frogs",
+      "abbreviation": "TCU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2628.png"
+    },
+    {
+      "name": "Tennessee Volunteers",
+      "abbreviation": "TENN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2633.png"
+    },
+    {
+      "name": "Texas A&M Aggies",
+      "abbreviation": "TA&M",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/245.png"
+    },
+    {
+      "name": "Texas Longhorns",
+      "abbreviation": "TEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/251.png"
+    },
+    {
+      "name": "Texas Tech Red Raiders",
+      "abbreviation": "TTU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2641.png"
+    },
+    {
+      "name": "UCF Knights",
+      "abbreviation": "UCF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2116.png"
+    },
+    {
+      "name": "UCLA Bruins",
+      "abbreviation": "UCLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png"
+    },
+    {
+      "name": "USC Trojans",
+      "abbreviation": "USC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/30.png"
+    },
+    {
+      "name": "Utah Utes",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/254.png"
+    },
+    {
+      "name": "Vanderbilt Commodores",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/238.png"
+    },
+    {
+      "name": "Virginia Cavaliers",
+      "abbreviation": "UVA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/258.png"
+    },
+    {
+      "name": "Virginia Tech Hokies",
+      "abbreviation": "VT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/259.png"
+    },
+    {
+      "name": "Wake Forest Demon Deacons",
+      "abbreviation": "WAKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/154.png"
+    },
+    {
+      "name": "Washington Huskies",
+      "abbreviation": "WASH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/264.png"
+    },
+    {
+      "name": "West Virginia Mountaineers",
+      "abbreviation": "WVU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/277.png"
+    },
+    {
+      "name": "Wisconsin Badgers",
+      "abbreviation": "WIS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/275.png"
+    }
+  ],
+  "WNBA": [
+    {
+      "name": "Atlanta Dream",
+      "abbreviation": "ATL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/atl.png"
+    },
+    {
+      "name": "Chicago Sky",
+      "abbreviation": "CHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/chi.png"
+    },
+    {
+      "name": "Connecticut Sun",
+      "abbreviation": "CON",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/con.png"
+    },
+    {
+      "name": "Dallas Wings",
+      "abbreviation": "DAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/dal.png"
+    },
+    {
+      "name": "Golden State Valkyries",
+      "abbreviation": "GS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/gs.png"
+    },
+    {
+      "name": "Indiana Fever",
+      "abbreviation": "IND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/ind.png"
+    },
+    {
+      "name": "Las Vegas Aces",
+      "abbreviation": "LV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/lv.png"
+    },
+    {
+      "name": "Los Angeles Sparks",
+      "abbreviation": "LA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/la.png"
+    },
+    {
+      "name": "Minnesota Lynx",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/min.png"
+    },
+    {
+      "name": "New York Liberty",
+      "abbreviation": "NY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/ny.png"
+    },
+    {
+      "name": "Phoenix Mercury",
+      "abbreviation": "PHX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/phx.png"
+    },
+    {
+      "name": "Portland Fire",
+      "abbreviation": "POR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/por.png"
+    },
+    {
+      "name": "Seattle Storm",
+      "abbreviation": "SEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/sea.png"
+    },
+    {
+      "name": "Toronto Tempo",
+      "abbreviation": "TOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/tor.png"
+    },
+    {
+      "name": "Washington Mystics",
+      "abbreviation": "WSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/wnba/500/wsh.png"
+    }
+  ],
+  "NCAA Women's Basketball": [
+    {
+      "name": "Alabama Crimson Tide",
+      "abbreviation": "ALA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png"
+    },
+    {
+      "name": "Arizona State Sun Devils",
+      "abbreviation": "ASU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/9.png"
+    },
+    {
+      "name": "Arizona Wildcats",
+      "abbreviation": "ARIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/12.png"
+    },
+    {
+      "name": "Arkansas Razorbacks",
+      "abbreviation": "ARK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/8.png"
+    },
+    {
+      "name": "Auburn Tigers",
+      "abbreviation": "AUB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2.png"
+    },
+    {
+      "name": "BYU Cougars",
+      "abbreviation": "BYU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/252.png"
+    },
+    {
+      "name": "Baylor Bears",
+      "abbreviation": "BAY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/239.png"
+    },
+    {
+      "name": "Boston College Eagles",
+      "abbreviation": "BC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/103.png"
+    },
+    {
+      "name": "California Golden Bears",
+      "abbreviation": "CAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/25.png"
+    },
+    {
+      "name": "Cincinnati Bearcats",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2132.png"
+    },
+    {
+      "name": "Clemson Tigers",
+      "abbreviation": "CLEM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/228.png"
+    },
+    {
+      "name": "Colorado Buffaloes",
+      "abbreviation": "COLO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/38.png"
+    },
+    {
+      "name": "Duke Blue Devils",
+      "abbreviation": "DUKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/150.png"
+    },
+    {
+      "name": "Florida Gators",
+      "abbreviation": "FLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/57.png"
+    },
+    {
+      "name": "Florida State Seminoles",
+      "abbreviation": "FSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/52.png"
+    },
+    {
+      "name": "Georgia Lady Bulldogs",
+      "abbreviation": "UGA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png"
+    },
+    {
+      "name": "Georgia Tech Yellow Jackets",
+      "abbreviation": "GT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/59.png"
+    },
+    {
+      "name": "Houston Cougars",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/248.png"
+    },
+    {
+      "name": "Illinois Fighting Illini",
+      "abbreviation": "ILL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/356.png"
+    },
+    {
+      "name": "Indiana Hoosiers",
+      "abbreviation": "IU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/84.png"
+    },
+    {
+      "name": "Iowa Hawkeyes",
+      "abbreviation": "IOWA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png"
+    },
+    {
+      "name": "Iowa State Cyclones",
+      "abbreviation": "ISU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/66.png"
+    },
+    {
+      "name": "Kansas Jayhawks",
+      "abbreviation": "KU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png"
+    },
+    {
+      "name": "Kansas State Wildcats",
+      "abbreviation": "KSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2306.png"
+    },
+    {
+      "name": "Kentucky Wildcats",
+      "abbreviation": "UK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/96.png"
+    },
+    {
+      "name": "LSU Tigers",
+      "abbreviation": "LSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png"
+    },
+    {
+      "name": "Louisville Cardinals",
+      "abbreviation": "LOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/97.png"
+    },
+    {
+      "name": "Maryland Terrapins",
+      "abbreviation": "MD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/120.png"
+    },
+    {
+      "name": "Miami Hurricanes",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png"
+    },
+    {
+      "name": "Michigan State Spartans",
+      "abbreviation": "MSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/127.png"
+    },
+    {
+      "name": "Michigan Wolverines",
+      "abbreviation": "MICH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/130.png"
+    },
+    {
+      "name": "Minnesota Golden Gophers",
+      "abbreviation": "MINN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/135.png"
+    },
+    {
+      "name": "Mississippi State Bulldogs",
+      "abbreviation": "MSST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/344.png"
+    },
+    {
+      "name": "Missouri Tigers",
+      "abbreviation": "MIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/142.png"
+    },
+    {
+      "name": "NC State Wolfpack",
+      "abbreviation": "NCSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/152.png"
+    },
+    {
+      "name": "Nebraska Cornhuskers",
+      "abbreviation": "NEB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/158.png"
+    },
+    {
+      "name": "North Carolina Tar Heels",
+      "abbreviation": "UNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/153.png"
+    },
+    {
+      "name": "Northwestern Wildcats",
+      "abbreviation": "NU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/77.png"
+    },
+    {
+      "name": "Notre Dame Fighting Irish",
+      "abbreviation": "ND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/87.png"
+    },
+    {
+      "name": "Ohio State Buckeyes",
+      "abbreviation": "OSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/194.png"
+    },
+    {
+      "name": "Oklahoma Sooners",
+      "abbreviation": "OU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/201.png"
+    },
+    {
+      "name": "Oklahoma State Cowgirls",
+      "abbreviation": "OKST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/197.png"
+    },
+    {
+      "name": "Ole Miss Rebels",
+      "abbreviation": "MISS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/145.png"
+    },
+    {
+      "name": "Oregon Ducks",
+      "abbreviation": "ORE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2483.png"
+    },
+    {
+      "name": "Penn State Lady Lions",
+      "abbreviation": "PSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/213.png"
+    },
+    {
+      "name": "Pittsburgh Panthers",
+      "abbreviation": "PITT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/221.png"
+    },
+    {
+      "name": "Purdue Boilermakers",
+      "abbreviation": "PUR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png"
+    },
+    {
+      "name": "Rutgers Scarlet Knights",
+      "abbreviation": "RUTG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/164.png"
+    },
+    {
+      "name": "SMU Mustangs",
+      "abbreviation": "SMU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2567.png"
+    },
+    {
+      "name": "South Carolina Gamecocks",
+      "abbreviation": "SC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2579.png"
+    },
+    {
+      "name": "Stanford Cardinal",
+      "abbreviation": "STAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/24.png"
+    },
+    {
+      "name": "Syracuse Orange",
+      "abbreviation": "SYR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/183.png"
+    },
+    {
+      "name": "TCU Horned Frogs",
+      "abbreviation": "TCU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2628.png"
+    },
+    {
+      "name": "Tennessee Lady Volunteers",
+      "abbreviation": "TENN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2633_ncw.png"
+    },
+    {
+      "name": "Texas A&M Aggies",
+      "abbreviation": "TA&M",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/245.png"
+    },
+    {
+      "name": "Texas Longhorns",
+      "abbreviation": "TEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/251.png"
+    },
+    {
+      "name": "Texas Tech Lady Raiders",
+      "abbreviation": "TTU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2641.png"
+    },
+    {
+      "name": "UCF Knights",
+      "abbreviation": "UCF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2116.png"
+    },
+    {
+      "name": "UCLA Bruins",
+      "abbreviation": "UCLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png"
+    },
+    {
+      "name": "USC Trojans",
+      "abbreviation": "USC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/30.png"
+    },
+    {
+      "name": "Utah Utes",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/254.png"
+    },
+    {
+      "name": "Vanderbilt Commodores",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/238.png"
+    },
+    {
+      "name": "Virginia Cavaliers",
+      "abbreviation": "UVA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/258.png"
+    },
+    {
+      "name": "Virginia Tech Hokies",
+      "abbreviation": "VT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/259.png"
+    },
+    {
+      "name": "Wake Forest Demon Deacons",
+      "abbreviation": "WAKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/154.png"
+    },
+    {
+      "name": "Washington Huskies",
+      "abbreviation": "WASH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/264.png"
+    },
+    {
+      "name": "West Virginia Mountaineers",
+      "abbreviation": "WVU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/277.png"
+    },
+    {
+      "name": "Wisconsin Badgers",
+      "abbreviation": "WIS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/275.png"
+    }
+  ],
+  "MLB": [
+    {
+      "name": "Arizona Diamondbacks",
+      "abbreviation": "ARI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/ari.png"
+    },
+    {
+      "name": "Athletics",
+      "abbreviation": "ATH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/ath.png"
+    },
+    {
+      "name": "Atlanta Braves",
+      "abbreviation": "ATL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/atl.png"
+    },
+    {
+      "name": "Baltimore Orioles",
+      "abbreviation": "BAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/bal.png"
+    },
+    {
+      "name": "Boston Red Sox",
+      "abbreviation": "BOS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png"
+    },
+    {
+      "name": "Chicago Cubs",
+      "abbreviation": "CHC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/chc.png"
+    },
+    {
+      "name": "Chicago White Sox",
+      "abbreviation": "CHW",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/chw.png"
+    },
+    {
+      "name": "Cincinnati Reds",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/cin.png"
+    },
+    {
+      "name": "Cleveland Guardians",
+      "abbreviation": "CLE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/cle.png"
+    },
+    {
+      "name": "Colorado Rockies",
+      "abbreviation": "COL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/col.png"
+    },
+    {
+      "name": "Detroit Tigers",
+      "abbreviation": "DET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/det.png"
+    },
+    {
+      "name": "Houston Astros",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/hou.png"
+    },
+    {
+      "name": "Kansas City Royals",
+      "abbreviation": "KC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/kc.png"
+    },
+    {
+      "name": "Los Angeles Angels",
+      "abbreviation": "LAA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/laa.png"
+    },
+    {
+      "name": "Los Angeles Dodgers",
+      "abbreviation": "LAD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png"
+    },
+    {
+      "name": "Miami Marlins",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/mia.png"
+    },
+    {
+      "name": "Milwaukee Brewers",
+      "abbreviation": "MIL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/mil.png"
+    },
+    {
+      "name": "Minnesota Twins",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/min.png"
+    },
+    {
+      "name": "New York Mets",
+      "abbreviation": "NYM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/nym.png"
+    },
+    {
+      "name": "New York Yankees",
+      "abbreviation": "NYY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png"
+    },
+    {
+      "name": "Philadelphia Phillies",
+      "abbreviation": "PHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/phi.png"
+    },
+    {
+      "name": "Pittsburgh Pirates",
+      "abbreviation": "PIT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/pit.png"
+    },
+    {
+      "name": "San Diego Padres",
+      "abbreviation": "SD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/sd.png"
+    },
+    {
+      "name": "San Francisco Giants",
+      "abbreviation": "SF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/sf.png"
+    },
+    {
+      "name": "Seattle Mariners",
+      "abbreviation": "SEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/sea.png"
+    },
+    {
+      "name": "St. Louis Cardinals",
+      "abbreviation": "STL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/stl.png"
+    },
+    {
+      "name": "Tampa Bay Rays",
+      "abbreviation": "TB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/tb.png"
+    },
+    {
+      "name": "Texas Rangers",
+      "abbreviation": "TEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/tex.png"
+    },
+    {
+      "name": "Toronto Blue Jays",
+      "abbreviation": "TOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/tor.png"
+    },
+    {
+      "name": "Washington Nationals",
+      "abbreviation": "WSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/wsh.png"
+    }
+  ],
+  "NCAA Baseball": [
+    {
+      "name": "Alabama Crimson Tide",
+      "abbreviation": "ALA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png"
+    },
+    {
+      "name": "Arizona State Sun Devils",
+      "abbreviation": "ASU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/9.png"
+    },
+    {
+      "name": "Arizona Wildcats",
+      "abbreviation": "ARIZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/12.png"
+    },
+    {
+      "name": "Arkansas Razorbacks",
+      "abbreviation": "ARK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/8.png"
+    },
+    {
+      "name": "Auburn Tigers",
+      "abbreviation": "AUB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2.png"
+    },
+    {
+      "name": "BYU Cougars",
+      "abbreviation": "BYU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/252.png"
+    },
+    {
+      "name": "Baylor Bears",
+      "abbreviation": "BAY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/239.png"
+    },
+    {
+      "name": "Boston College Eagles",
+      "abbreviation": "BC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/103.png"
+    },
+    {
+      "name": "California Golden Bears",
+      "abbreviation": "CAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/25.png"
+    },
+    {
+      "name": "Cincinnati Bearcats",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2132.png"
+    },
+    {
+      "name": "Clemson Tigers",
+      "abbreviation": "CLEM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/228.png"
+    },
+    {
+      "name": "Duke Blue Devils",
+      "abbreviation": "DUKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/150.png"
+    },
+    {
+      "name": "Florida Gators",
+      "abbreviation": "FLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/57.png"
+    },
+    {
+      "name": "Florida State Seminoles",
+      "abbreviation": "FSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/52.png"
+    },
+    {
+      "name": "Georgia Bulldogs",
+      "abbreviation": "UGA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png"
+    },
+    {
+      "name": "Georgia Tech Yellow Jackets",
+      "abbreviation": "GT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/59.png"
+    },
+    {
+      "name": "Houston Cougars",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/248.png"
+    },
+    {
+      "name": "Illinois Fighting Illini",
+      "abbreviation": "ILL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/356.png"
+    },
+    {
+      "name": "Indiana Hoosiers",
+      "abbreviation": "IU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/84.png"
+    },
+    {
+      "name": "Iowa Hawkeyes",
+      "abbreviation": "IOWA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2294.png"
+    },
+    {
+      "name": "Kansas Jayhawks",
+      "abbreviation": "KU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2305.png"
+    },
+    {
+      "name": "Kansas State Wildcats",
+      "abbreviation": "KSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2306.png"
+    },
+    {
+      "name": "Kentucky Wildcats",
+      "abbreviation": "UK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/96.png"
+    },
+    {
+      "name": "LSU Tigers",
+      "abbreviation": "LSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png"
+    },
+    {
+      "name": "Louisville Cardinals",
+      "abbreviation": "LOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/97.png"
+    },
+    {
+      "name": "Maryland Terrapins",
+      "abbreviation": "MD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/120.png"
+    },
+    {
+      "name": "Miami Hurricanes",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png"
+    },
+    {
+      "name": "Michigan State Spartans",
+      "abbreviation": "MSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/127.png"
+    },
+    {
+      "name": "Michigan Wolverines",
+      "abbreviation": "MICH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/130.png"
+    },
+    {
+      "name": "Minnesota Golden Gophers",
+      "abbreviation": "MINN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/135.png"
+    },
+    {
+      "name": "Mississippi State Bulldogs",
+      "abbreviation": "MSST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/344.png"
+    },
+    {
+      "name": "Missouri Tigers",
+      "abbreviation": "MIZZ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/142.png"
+    },
+    {
+      "name": "NC State Wolfpack",
+      "abbreviation": "NCST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/152.png"
+    },
+    {
+      "name": "Nebraska Cornhuskers",
+      "abbreviation": "NEB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/158.png"
+    },
+    {
+      "name": "North Carolina Tar Heels",
+      "abbreviation": "UNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/153.png"
+    },
+    {
+      "name": "Northwestern Wildcats",
+      "abbreviation": "NU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/77.png"
+    },
+    {
+      "name": "Notre Dame Fighting Irish",
+      "abbreviation": "ND",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/87.png"
+    },
+    {
+      "name": "Ohio State Buckeyes",
+      "abbreviation": "OSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/194.png"
+    },
+    {
+      "name": "Oklahoma Sooners",
+      "abbreviation": "OU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/201.png"
+    },
+    {
+      "name": "Oklahoma State Cowboys",
+      "abbreviation": "OKST",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/197.png"
+    },
+    {
+      "name": "Ole Miss Rebels",
+      "abbreviation": "MISS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/145.png"
+    },
+    {
+      "name": "Oregon Ducks",
+      "abbreviation": "ORE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2483.png"
+    },
+    {
+      "name": "Penn State Nittany Lions",
+      "abbreviation": "PSU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/213.png"
+    },
+    {
+      "name": "Pittsburgh Panthers",
+      "abbreviation": "PITT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/221.png"
+    },
+    {
+      "name": "Purdue Boilermakers",
+      "abbreviation": "PUR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2509.png"
+    },
+    {
+      "name": "Rutgers Scarlet Knights",
+      "abbreviation": "RUTG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/164.png"
+    },
+    {
+      "name": "South Carolina Gamecocks",
+      "abbreviation": "SC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2579.png"
+    },
+    {
+      "name": "Stanford Cardinal",
+      "abbreviation": "STAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/24.png"
+    },
+    {
+      "name": "TCU Horned Frogs",
+      "abbreviation": "TCU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2628.png"
+    },
+    {
+      "name": "Tennessee Volunteers",
+      "abbreviation": "TENN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2633.png"
+    },
+    {
+      "name": "Texas A&M Aggies",
+      "abbreviation": "TA&M",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/245.png"
+    },
+    {
+      "name": "Texas Longhorns",
+      "abbreviation": "TEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/251.png"
+    },
+    {
+      "name": "Texas Tech Red Raiders",
+      "abbreviation": "TTU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2641.png"
+    },
+    {
+      "name": "UCF Knights",
+      "abbreviation": "UCF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/2116.png"
+    },
+    {
+      "name": "UCLA Bruins",
+      "abbreviation": "UCLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png"
+    },
+    {
+      "name": "USC Trojans",
+      "abbreviation": "USC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/30.png"
+    },
+    {
+      "name": "Utah Utes",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/254.png"
+    },
+    {
+      "name": "Vanderbilt Commodores",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/238.png"
+    },
+    {
+      "name": "Virginia Cavaliers",
+      "abbreviation": "UVA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/258.png"
+    },
+    {
+      "name": "Virginia Tech Hokies",
+      "abbreviation": "VT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/259.png"
+    },
+    {
+      "name": "Wake Forest Demon Deacons",
+      "abbreviation": "WAKE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/154.png"
+    },
+    {
+      "name": "Washington Huskies",
+      "abbreviation": "WASH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/264.png"
+    },
+    {
+      "name": "West Virginia Mountaineers",
+      "abbreviation": "WVU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/277.png"
+    }
+  ],
+  "NHL": [
+    {
+      "name": "Anaheim Ducks",
+      "abbreviation": "ANA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/ana.png"
+    },
+    {
+      "name": "Boston Bruins",
+      "abbreviation": "BOS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/bos.png"
+    },
+    {
+      "name": "Buffalo Sabres",
+      "abbreviation": "BUF",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/buf.png"
+    },
+    {
+      "name": "Calgary Flames",
+      "abbreviation": "CGY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/cgy.png"
+    },
+    {
+      "name": "Carolina Hurricanes",
+      "abbreviation": "CAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/car.png"
+    },
+    {
+      "name": "Chicago Blackhawks",
+      "abbreviation": "CHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/chi.png"
+    },
+    {
+      "name": "Colorado Avalanche",
+      "abbreviation": "COL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/col.png"
+    },
+    {
+      "name": "Columbus Blue Jackets",
+      "abbreviation": "CBJ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/cbj.png"
+    },
+    {
+      "name": "Dallas Stars",
+      "abbreviation": "DAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/dal.png"
+    },
+    {
+      "name": "Detroit Red Wings",
+      "abbreviation": "DET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/det.png"
+    },
+    {
+      "name": "Edmonton Oilers",
+      "abbreviation": "EDM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/edm.png"
+    },
+    {
+      "name": "Florida Panthers",
+      "abbreviation": "FLA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/fla.png"
+    },
+    {
+      "name": "Los Angeles Kings",
+      "abbreviation": "LA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/la.png"
+    },
+    {
+      "name": "Minnesota Wild",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/min.png"
+    },
+    {
+      "name": "Montreal Canadiens",
+      "abbreviation": "MTL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/mtl.png"
+    },
+    {
+      "name": "Nashville Predators",
+      "abbreviation": "NSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nsh.png"
+    },
+    {
+      "name": "New Jersey Devils",
+      "abbreviation": "NJ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nj.png"
+    },
+    {
+      "name": "New York Islanders",
+      "abbreviation": "NYI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nyi.png"
+    },
+    {
+      "name": "New York Rangers",
+      "abbreviation": "NYR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nyr.png"
+    },
+    {
+      "name": "Ottawa Senators",
+      "abbreviation": "OTT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/ott.png"
+    },
+    {
+      "name": "Philadelphia Flyers",
+      "abbreviation": "PHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/phi.png"
+    },
+    {
+      "name": "Pittsburgh Penguins",
+      "abbreviation": "PIT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/pit.png"
+    },
+    {
+      "name": "San Jose Sharks",
+      "abbreviation": "SJ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/sj.png"
+    },
+    {
+      "name": "Seattle Kraken",
+      "abbreviation": "SEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/sea.png"
+    },
+    {
+      "name": "St. Louis Blues",
+      "abbreviation": "STL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/stl.png"
+    },
+    {
+      "name": "Tampa Bay Lightning",
+      "abbreviation": "TB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/tb.png"
+    },
+    {
+      "name": "Toronto Maple Leafs",
+      "abbreviation": "TOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/tor.png"
+    },
+    {
+      "name": "Utah Mammoth",
+      "abbreviation": "UTAH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/utah.png"
+    },
+    {
+      "name": "Vancouver Canucks",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/van.png"
+    },
+    {
+      "name": "Vegas Golden Knights",
+      "abbreviation": "VGK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/vgk.png"
+    },
+    {
+      "name": "Washington Capitals",
+      "abbreviation": "WSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/wsh.png"
+    },
+    {
+      "name": "Winnipeg Jets",
+      "abbreviation": "WPG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/wpg.png"
+    }
+  ],
+  "MLS": [
+    {
+      "name": "Atlanta United FC",
+      "abbreviation": "ATL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18418.png"
+    },
+    {
+      "name": "Austin FC",
+      "abbreviation": "ATX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/20906.png"
+    },
+    {
+      "name": "CF Montréal",
+      "abbreviation": "MTL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/9720.png"
+    },
+    {
+      "name": "Charlotte FC",
+      "abbreviation": "CLT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/21300.png"
+    },
+    {
+      "name": "Chicago Fire FC",
+      "abbreviation": "CHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/182.png"
+    },
+    {
+      "name": "Colorado Rapids",
+      "abbreviation": "COL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/184.png"
+    },
+    {
+      "name": "Columbus Crew",
+      "abbreviation": "CLB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/183.png"
+    },
+    {
+      "name": "D.C. United",
+      "abbreviation": "DC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/193.png"
+    },
+    {
+      "name": "FC Cincinnati",
+      "abbreviation": "CIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18267.png"
+    },
+    {
+      "name": "FC Dallas",
+      "abbreviation": "DAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/185.png"
+    },
+    {
+      "name": "Houston Dynamo FC",
+      "abbreviation": "HOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/6077.png"
+    },
+    {
+      "name": "Inter Miami CF",
+      "abbreviation": "MIA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/20232.png"
+    },
+    {
+      "name": "LA Galaxy",
+      "abbreviation": "LA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/187.png"
+    },
+    {
+      "name": "LAFC",
+      "abbreviation": "LAFC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18966.png"
+    },
+    {
+      "name": "Minnesota United FC",
+      "abbreviation": "MIN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/17362.png"
+    },
+    {
+      "name": "Nashville SC",
+      "abbreviation": "NSH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18986.png"
+    },
+    {
+      "name": "New England Revolution",
+      "abbreviation": "NE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/189.png"
+    },
+    {
+      "name": "New York City FC",
+      "abbreviation": "NYC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/17606.png"
+    },
+    {
+      "name": "Orlando City SC",
+      "abbreviation": "ORL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/12011.png"
+    },
+    {
+      "name": "Philadelphia Union",
+      "abbreviation": "PHI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/10739.png"
+    },
+    {
+      "name": "Portland Timbers",
+      "abbreviation": "POR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/9723.png"
+    },
+    {
+      "name": "Real Salt Lake",
+      "abbreviation": "RSL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/4771.png"
+    },
+    {
+      "name": "Red Bull New York",
+      "abbreviation": "RBNY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/190.png"
+    },
+    {
+      "name": "San Diego FC",
+      "abbreviation": "SD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/22529.png"
+    },
+    {
+      "name": "San Jose Earthquakes",
+      "abbreviation": "SJ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/191.png"
+    },
+    {
+      "name": "Seattle Sounders FC",
+      "abbreviation": "SEA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/9726.png"
+    },
+    {
+      "name": "Sporting Kansas City",
+      "abbreviation": "SKC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/186.png"
+    },
+    {
+      "name": "St. Louis CITY SC",
+      "abbreviation": "STL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/21812.png"
+    },
+    {
+      "name": "Toronto FC",
+      "abbreviation": "TOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7318.png"
+    },
+    {
+      "name": "Vancouver Whitecaps",
+      "abbreviation": "VAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/9727.png"
+    }
+  ],
+  "Premier League": [
+    {
+      "name": "AFC Bournemouth",
+      "abbreviation": "BOU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/349.png"
+    },
+    {
+      "name": "Arsenal",
+      "abbreviation": "ARS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+    },
+    {
+      "name": "Aston Villa",
+      "abbreviation": "AVL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/362.png"
+    },
+    {
+      "name": "Brentford",
+      "abbreviation": "BRE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/337.png"
+    },
+    {
+      "name": "Brighton & Hove Albion",
+      "abbreviation": "BHA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png"
+    },
+    {
+      "name": "Chelsea",
+      "abbreviation": "CHE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/363.png"
+    },
+    {
+      "name": "Coventry City",
+      "abbreviation": "COV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/388.png"
+    },
+    {
+      "name": "Crystal Palace",
+      "abbreviation": "CRY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/384.png"
+    },
+    {
+      "name": "Everton",
+      "abbreviation": "EVE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/368.png"
+    },
+    {
+      "name": "Fulham",
+      "abbreviation": "FUL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/370.png"
+    },
+    {
+      "name": "Hull City",
+      "abbreviation": "HUL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/306.png"
+    },
+    {
+      "name": "Ipswich Town",
+      "abbreviation": "IPS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png"
+    },
+    {
+      "name": "Leeds United",
+      "abbreviation": "LEE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/357.png"
+    },
+    {
+      "name": "Liverpool",
+      "abbreviation": "LIV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/364.png"
+    },
+    {
+      "name": "Manchester City",
+      "abbreviation": "MNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
+    },
+    {
+      "name": "Manchester United",
+      "abbreviation": "MAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/360.png"
+    },
+    {
+      "name": "Newcastle United",
+      "abbreviation": "NEW",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/361.png"
+    },
+    {
+      "name": "Nottingham Forest",
+      "abbreviation": "NFO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/393.png"
+    },
+    {
+      "name": "Sunderland",
+      "abbreviation": "SUN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/366.png"
+    },
+    {
+      "name": "Tottenham Hotspur",
+      "abbreviation": "TOT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/367.png"
+    }
+  ],
+  "Champions League": [
+    {
+      "name": "AEK Athens",
+      "abbreviation": "AEK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/887.png"
+    },
+    {
+      "name": "AS Roma",
+      "abbreviation": "ROMA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png"
+    },
+    {
+      "name": "Arsenal",
+      "abbreviation": "ARS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+    },
+    {
+      "name": "Aston Villa",
+      "abbreviation": "AVL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/362.png"
+    },
+    {
+      "name": "Atlético Madrid",
+      "abbreviation": "ATM",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png"
+    },
+    {
+      "name": "Barcelona",
+      "abbreviation": "BAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/83.png"
+    },
+    {
+      "name": "Bayern Munich",
+      "abbreviation": "MUN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/132.png"
+    },
+    {
+      "name": "Bodo/Glimt",
+      "abbreviation": "BODO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2980.png"
+    },
+    {
+      "name": "Borussia Dortmund",
+      "abbreviation": "DOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/124.png"
+    },
+    {
+      "name": "Club Brugge",
+      "abbreviation": "BRU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/570.png"
+    },
+    {
+      "name": "Como",
+      "abbreviation": "COMO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png"
+    },
+    {
+      "name": "FC Porto",
+      "abbreviation": "FCP",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/437.png"
+    },
+    {
+      "name": "Fenerbahce",
+      "abbreviation": "FEN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/436.png"
+    },
+    {
+      "name": "Feyenoord Rotterdam",
+      "abbreviation": "FEY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/142.png"
+    },
+    {
+      "name": "Galatasaray",
+      "abbreviation": "GAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/432.png"
+    },
+    {
+      "name": "Internazionale",
+      "abbreviation": "INT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png"
+    },
+    {
+      "name": "LASK Linz",
+      "abbreviation": "LAS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/4411.png"
+    },
+    {
+      "name": "Lens",
+      "abbreviation": "RCL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/175.png"
+    },
+    {
+      "name": "Lille",
+      "abbreviation": "LILL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/166.png"
+    },
+    {
+      "name": "Liverpool",
+      "abbreviation": "LIV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/364.png"
+    },
+    {
+      "name": "Manchester City",
+      "abbreviation": "MNC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
+    },
+    {
+      "name": "Manchester United",
+      "abbreviation": "MAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/360.png"
+    },
+    {
+      "name": "Napoli",
+      "abbreviation": "NAP",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png"
+    },
+    {
+      "name": "PSV Eindhoven",
+      "abbreviation": "PSV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/148.png"
+    },
+    {
+      "name": "Paris Saint-Germain",
+      "abbreviation": "PSG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/160.png"
+    },
+    {
+      "name": "RB Leipzig",
+      "abbreviation": "RBL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/11420.png"
+    },
+    {
+      "name": "Real Betis",
+      "abbreviation": "BET",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png"
+    },
+    {
+      "name": "Real Madrid",
+      "abbreviation": "RMA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/86.png"
+    },
+    {
+      "name": "Sabah FK",
+      "abbreviation": "SAB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/21922.png"
+    },
+    {
+      "name": "Shakhtar Donetsk",
+      "abbreviation": "SHK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/493.png"
+    },
+    {
+      "name": "Slavia Prague",
+      "abbreviation": "SLP",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/494.png"
+    },
+    {
+      "name": "Slovan Bratislava",
+      "abbreviation": "SLB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/521.png"
+    },
+    {
+      "name": "Sporting CP",
+      "abbreviation": "SCP",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2250.png"
+    },
+    {
+      "name": "VfB Stuttgart",
+      "abbreviation": "VFB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/134.png"
+    },
+    {
+      "name": "Viking FK",
+      "abbreviation": "VIK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/510.png"
+    },
+    {
+      "name": "Villarreal",
+      "abbreviation": "VIL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/102.png"
+    }
+  ],
+  "World Cup": [
+    {
+      "name": "Algeria",
+      "abbreviation": "ALG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/alg.png"
+    },
+    {
+      "name": "Argentina",
+      "abbreviation": "ARG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/arg.png"
+    },
+    {
+      "name": "Australia",
+      "abbreviation": "AUS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png"
+    },
+    {
+      "name": "Austria",
+      "abbreviation": "AUT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/aut.png"
+    },
+    {
+      "name": "Belgium",
+      "abbreviation": "BEL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/bel.png"
+    },
+    {
+      "name": "Bosnia-Herzegovina",
+      "abbreviation": "BIH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/bih.png"
+    },
+    {
+      "name": "Brazil",
+      "abbreviation": "BRA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png"
+    },
+    {
+      "name": "Canada",
+      "abbreviation": "CAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/can.png"
+    },
+    {
+      "name": "Cape Verde",
+      "abbreviation": "CPV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"
+    },
+    {
+      "name": "Colombia",
+      "abbreviation": "COL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/col.png"
+    },
+    {
+      "name": "Congo DR",
+      "abbreviation": "COD",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/rdc.png"
+    },
+    {
+      "name": "Croatia",
+      "abbreviation": "CRO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/cro.png"
+    },
+    {
+      "name": "Curaçao",
+      "abbreviation": "CUW",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/11678.png"
+    },
+    {
+      "name": "Czechia",
+      "abbreviation": "CZE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/cze.png"
+    },
+    {
+      "name": "Ecuador",
+      "abbreviation": "ECU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"
+    },
+    {
+      "name": "Egypt",
+      "abbreviation": "EGY",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/egy.png"
+    },
+    {
+      "name": "England",
+      "abbreviation": "ENG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png"
+    },
+    {
+      "name": "France",
+      "abbreviation": "FRA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/fra.png"
+    },
+    {
+      "name": "Germany",
+      "abbreviation": "GER",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ger.png"
+    },
+    {
+      "name": "Ghana",
+      "abbreviation": "GHA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/gha.png"
+    },
+    {
+      "name": "Haiti",
+      "abbreviation": "HAI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/hai.png"
+    },
+    {
+      "name": "Iran",
+      "abbreviation": "IRN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/irn.png"
+    },
+    {
+      "name": "Iraq",
+      "abbreviation": "IRQ",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/irq.png"
+    },
+    {
+      "name": "Ivory Coast",
+      "abbreviation": "CIV",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/civ.png"
+    },
+    {
+      "name": "Japan",
+      "abbreviation": "JPN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"
+    },
+    {
+      "name": "Jordan",
+      "abbreviation": "JOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/jor.png"
+    },
+    {
+      "name": "Mexico",
+      "abbreviation": "MEX",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/mex.png"
+    },
+    {
+      "name": "Morocco",
+      "abbreviation": "MAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/mar.png"
+    },
+    {
+      "name": "Netherlands",
+      "abbreviation": "NED",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ned.png"
+    },
+    {
+      "name": "New Zealand",
+      "abbreviation": "NZL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/nzl.png"
+    },
+    {
+      "name": "Norway",
+      "abbreviation": "NOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/nor.png"
+    },
+    {
+      "name": "Panama",
+      "abbreviation": "PAN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/pan.png"
+    },
+    {
+      "name": "Paraguay",
+      "abbreviation": "PAR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/par.png"
+    },
+    {
+      "name": "Portugal",
+      "abbreviation": "POR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/por.png"
+    },
+    {
+      "name": "Qatar",
+      "abbreviation": "QAT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/qat.png"
+    },
+    {
+      "name": "Saudi Arabia",
+      "abbreviation": "KSA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ksa.png"
+    },
+    {
+      "name": "Scotland",
+      "abbreviation": "SCO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/sco.png"
+    },
+    {
+      "name": "Senegal",
+      "abbreviation": "SEN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/sen.png"
+    },
+    {
+      "name": "South Africa",
+      "abbreviation": "RSA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/rsa.png"
+    },
+    {
+      "name": "South Korea",
+      "abbreviation": "KOR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/kors.png"
+    },
+    {
+      "name": "Spain",
+      "abbreviation": "ESP",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png"
+    },
+    {
+      "name": "Sweden",
+      "abbreviation": "SWE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png"
+    },
+    {
+      "name": "Switzerland",
+      "abbreviation": "SUI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/sui.png"
+    },
+    {
+      "name": "Tunisia",
+      "abbreviation": "TUN",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/tun.png"
+    },
+    {
+      "name": "Türkiye",
+      "abbreviation": "TUR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/tur.png"
+    },
+    {
+      "name": "United States",
+      "abbreviation": "USA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"
+    },
+    {
+      "name": "Uruguay",
+      "abbreviation": "URU",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/uru.png"
+    },
+    {
+      "name": "Uzbekistan",
+      "abbreviation": "UZB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/uzb.png"
+    }
+  ]
+}

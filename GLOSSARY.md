@@ -73,7 +73,7 @@ _Avoid_: Finished, completed, over, ended
 ### Local runs
 
 **Scenario**:
-A named set of made-up games at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally.
+A named set of made-up games between real teams of their league at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally.
 _Avoid_: Dummy data, fake data, demo, simulation
 
 **Scenario clock**:

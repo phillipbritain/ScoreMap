@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
@@ -138,7 +139,7 @@ public class ScenarioTests
     }
 
     [Fact]
-    public async Task A_browser_gets_every_filled_game_at_a_different_venue_in_the_group_with_its_home_team()
+    public async Task A_browser_gets_every_filled_game_at_a_different_venue_in_the_group_between_two_teams_of_its_league()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", """{ "fill": { "count": 10, "group": "london", "mix": { "live": 4, "upcoming": 2, "final": 2 } }, "play": true, "disrupted": 0.2 }""");
@@ -151,8 +152,11 @@ public class ScenarioTests
         Assert.Equal(10, snapshot.Select(g => g.Venue.Name).Distinct().Count());
         Assert.All(snapshot, game =>
         {
-            var venue = Assert.Single(london, v => v.Name == game.Venue.Name);
-            Assert.Equal(venue.HomeTeam.Name, game.Home.FullName);
+            Assert.Single(london, v => v.Name == game.Venue.Name);
+            var teams = ShippedTeams[game.League];
+            Assert.Contains(teams, team => team.Name == game.Home.FullName);
+            Assert.Contains(teams, team => team.Name == game.Away.FullName);
+            Assert.NotEqual(game.Home.FullName, game.Away.FullName);
         });
         Assert.Equal(
             [(GameStatus.Upcoming, 2), (GameStatus.Live, 4), (GameStatus.Final, 2), (GameStatus.Disrupted, 2)],
@@ -189,6 +193,12 @@ public class ScenarioTests
         var before = snapshot.Single(g => g.Id == change.Game.Id);
         Assert.True(change.Game.Home.Score + change.Game.Away.Score > before.Home.Score + before.Away.Score);
     }
+
+    // The shipped team list, by league name.
+    private static readonly Dictionary<string, List<ScenarioTeam>> ShippedTeams =
+        JsonSerializer.Deserialize<Dictionary<string, List<ScenarioTeam>>>(
+            File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-teams.json")),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
 
     private static IReadOnlyList<ScenarioVenue> ShippedVenues() =>
         ScenarioVenue.ReadList(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-venues.json"));

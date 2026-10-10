@@ -32,9 +32,10 @@ public static partial class ScenarioReader
     /// <summary>
     /// Reads scenario <paramref name="name"/> from <paramref name="folder"/>. Written-out games must be
     /// at venues in <paramref name="venues"/>, the venue list, unless marked <c>notInVenueList</c>, and
-    /// a <c>fill</c> takes its games from it.
+    /// a <c>fill</c> takes its venues from it and its teams from <paramref name="teams"/>, the team list.
     /// </summary>
-    public static Scenario Read(string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null)
+    public static Scenario Read(
+        string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null, ScenarioTeamList? teams = null)
     {
         var path = Path.GetFullPath(Path.Combine(folder, $"{name}.json"));
         if (!File.Exists(path))
@@ -72,7 +73,7 @@ public static partial class ScenarioReader
         var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
         if (file.Fill is not null)
         {
-            foreach (var game in ReadFill(file.Fill, disruptedShare, name, path, leagues, venues))
+            foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, leagues, venues, teams))
             {
                 if (!ids.Add(game.Id))
                     throw new ScenarioFileException(name, path,
@@ -81,7 +82,7 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
-        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, leagues, venues) : null;
+        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, leagues, venues, teams) : null;
         return new Scenario(name, games, timeline, play);
     }
 

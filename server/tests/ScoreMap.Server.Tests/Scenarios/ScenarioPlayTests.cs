@@ -28,9 +28,14 @@ public sealed class ScenarioPlayTests : IDisposable
 
     // 100 venues around the world, the first 10 of them also in "london".
     private static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 100)
-        .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere",
-            new ScenarioTeam($"Team {n}", $"T{n}", null), n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
+        .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
+
+    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 100 games at a time,
+    // so with 60 games showing, play has to steer clear of the teams already playing.
+    private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
+        l => l.Name,
+        l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, 20).Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", null)).ToList()));
 
     // The most a team plausibly scores in a whole game (as in ScenarioGameMakerTests).
     private static readonly Dictionary<Sport, int> MostPoints = new()
@@ -125,6 +130,19 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.Contains("london", Venues.Single(venue => venue.Name == newGame.Venue!.Name).Groups);
         Assert.All(feed, games => Assert.Equal(5, games.Count));
         Assert.All(feed, games => Assert.Equal(games.Count, games.Select(game => game.Venue!.Name).Distinct().Count()));
+    }
+
+    [Fact]
+    public void No_team_is_ever_in_two_games_showing_at_once()
+    {
+        var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(30));
+
+        Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 90, "new games came on");
+        Assert.All(feed, games =>
+        {
+            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+            Assert.Equal(teams.Count, teams.Distinct().Count());
+        });
     }
 
     [Fact]
@@ -417,6 +435,6 @@ public sealed class ScenarioPlayTests : IDisposable
     private Scenario Read(string json)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);
-        return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
+        return ScenarioReader.Read(_folder, "sample", Leagues, Venues, Teams);
     }
 }

@@ -11,9 +11,13 @@ Run these with the PowerShell tool, from the repo root:
 
 ```powershell
 ./scripts/dev.ps1 start    # builds, starts server (5147) and Vite (5173) in the background, waits until both answer
-./scripts/dev.ps1 status   # what's running, and whether each port answers
+./scripts/dev.ps1 status   # what's running, since when, from which commit (STALE if not the one checked out), and whether each port answers
 ./scripts/dev.ps1 stop     # stops both, however they were started
 ```
+
+The server runs from its own `bin\DevRun\` build, so `dotnet test` works while it's up.
+
+A run already up is often one left by another session, built from another commit. `start` refuses while it runs and prints its `status`: if it's STALE or not started by the script, `stop` and `start` again.
 
 Use the script, not `dotnet run` or `npm run dev` in a background task: stopping those stops only their wrapper, and the real server or Vite keeps running and holding its port.
 

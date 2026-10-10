@@ -4,8 +4,10 @@
     the browser app (Vite) on http://localhost:5173.
 
 .DESCRIPTION
-    start   Builds the server, then starts the server exe and Vite's own node process directly, in
-            the background, with their output in $env:TEMP\scoremap\. Launching them directly (not
+    start   Builds the server into its bin\DevRun\, then starts the server exe and Vite's own node
+            process directly, in the background, with their output in $env:TEMP\scoremap\. Its own
+            build folder keeps the running exe from locking the one `dotnet test` builds into.
+            Launching them directly (not
             through `dotnet run` or `npm run dev`) leaves no wrapper process behind whose stopping
             would orphan the real one. Refuses to start while anything from this repo is running.
             Runs the scenario set in appsettings.Development.json ("Scenario"), unless -Scenario
@@ -13,8 +15,10 @@
             there ("ScenarioSpeed"), unless -Speed sets another.
     stop    Stops every ScoreMap server and Vite process from this repo, including ones started some
             other way (`dotnet run`, `npm run dev`), then confirms nothing still answers.
-    status  Lists those processes and whether each port answers. The server is probed at
-            /api/leagues, since in development it answers / with 404 (Vite serves the browser app).
+    status  Lists those processes, when each started, and whether each port answers. For a run this
+            script started, it names the branch and commit it was built from, and flags it STALE when
+            another commit is checked out now. The server is probed at /api/leagues, since in
+            development it answers / with 404 (Vite serves the browser app).
 
 .PARAMETER Scenario
     With start: the scenario to run (a file name in server\src\ScoreMap.Server\Scenarios\Files,
@@ -44,9 +48,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $serverProject = Join-Path $repo 'server\src\ScoreMap.Server'
-$serverExe = Join-Path $serverProject 'bin\Debug\net10.0\ScoreMap.Server.exe'
+$serverOut = Join-Path $serverProject 'bin\DevRun'
+$serverExe = Join-Path $serverOut 'ScoreMap.Server.exe'
 $web = Join-Path $repo 'web'
 $logs = Join-Path $env:TEMP 'scoremap'
+# What start started, and from which commit, so status can tell how stale a run is.
+$runFile = Join-Path $logs 'run.json'
 $serverUrl = 'http://localhost:5147/api/leagues'
 $webUrl = 'http://localhost:5173/'
 
@@ -82,10 +89,28 @@ function Wait-Until-Answers([string] $url, [string] $what, [System.Diagnostics.P
     throw "$what failed to start"
 }
 
+function Get-Commit { git -C $repo rev-parse --short HEAD 2>$null }
+
 function Show-Status {
     $running = @(Get-ScoreMapProcesses)
     if ($running.Count -eq 0) { Write-Output 'processes: none' }
-    else { $running | ForEach-Object { Write-Output "process: $($_.ProcessId) $($_.Name) $($_.CommandLine)" } }
+    else {
+        foreach ($p in $running) {
+            $age = (Get-Date) - $p.CreationDate
+            Write-Output ("process: $($p.ProcessId) $($p.Name), started $($p.CreationDate.ToString('g')) " +
+                "($([int][math]::Floor($age.TotalHours))h $($age.Minutes)m ago): $($p.CommandLine)")
+        }
+        $run = if (Test-Path $runFile) { Get-Content $runFile -Raw | ConvertFrom-Json }
+        if ($run -and ($running.ProcessId -contains $run.serverPid)) {
+            Write-Output "run: started by dev.ps1 from $($run.branch) at $($run.commit)"
+            $now = Get-Commit
+            if ($run.commit -ne $now) {
+                Write-Output "STALE: built from $($run.commit), but $now is checked out now; stop and start again to run it"
+            }
+        } else {
+            Write-Output 'run: not started by dev.ps1, so what it was built from is unknown; stop and start again to be sure'
+        }
+    }
     Write-Output "server ($serverUrl): $(if (Test-Answers $serverUrl) { 'answering' } else { 'not answering' })"
     Write-Output "web ($webUrl): $(if (Test-Answers $webUrl) { 'answering' } else { 'not answering' })"
     Write-Output "logs: $logs"
@@ -99,6 +124,7 @@ switch ($Action) {
             Stop-Process -Id $p.ProcessId -Force -ErrorAction SilentlyContinue
             Write-Output "stopped $($p.ProcessId) $($p.Name)"
         }
+        Remove-Item $runFile -ErrorAction SilentlyContinue
         Start-Sleep -Milliseconds 500
         $left = @(Get-ScoreMapProcesses)
         if ($left.Count -gt 0 -or (Test-Answers $serverUrl) -or (Test-Answers $webUrl)) {
@@ -116,7 +142,7 @@ switch ($Action) {
         }
         New-Item -ItemType Directory -Force $logs | Out-Null
 
-        dotnet build $serverProject -v quiet -nologo
+        dotnet build $serverProject -v quiet -nologo -o $serverOut
         if ($LASTEXITCODE -ne 0) { throw 'Server build failed' }
 
         # The server's content root is its working directory, where it finds appsettings.json and data\.
@@ -138,6 +164,8 @@ switch ($Action) {
             -RedirectStandardOutput (Join-Path $logs 'web.log') -RedirectStandardError (Join-Path $logs 'web.err.log')
 
         Write-Output "started server (pid $($server.Id)) and Vite (pid $($vite.Id)); logs in $logs"
+        @{ serverPid = $server.Id; vitePid = $vite.Id; branch = (git -C $repo branch --show-current); commit = (Get-Commit) } |
+            ConvertTo-Json | Set-Content $runFile -Encoding utf8
         try {
             Wait-Until-Answers $serverUrl 'server' $server (Join-Path $logs 'server.log') 60
             Wait-Until-Answers $webUrl 'web' $vite (Join-Path $logs 'web.log') 30
@@ -146,6 +174,7 @@ switch ($Action) {
             foreach ($p in @($server, $vite)) {
                 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
             }
+            Remove-Item $runFile -ErrorAction SilentlyContinue
             Write-Output 'stopped what this start had started'
             throw
         }

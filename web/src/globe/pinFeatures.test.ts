@@ -5,7 +5,7 @@ import { pinFeatures } from './pinFeatures'
 const arrowhead: Game = {
   id: '401',
   league: 'NFL',
-  sport: 'American football',
+  sport: 'Football',
   startTime: '2026-10-04T17:00:00+00:00',
   status: 'Live',
   delayed: false,

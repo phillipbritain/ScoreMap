@@ -3,7 +3,7 @@ import type { GameStatus } from '../games/game'
 
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer, Final fades and
- * Disrupted is greyed out, alike on small pins, score cards and clusters of either. Map layers read
+ * Disrupted is greyed out, alike on small pins, score cards, pin clusters and card clusters. Map layers read
  * these through style expressions (see byStatus), and the page's CSS through custom properties (see
  * applyStatusLook).
  */
@@ -23,7 +23,7 @@ interface StatusLook {
   /** The glow's radius in pixels, out to where it has faded to nothing, and how opaque it is at its middle. */
   glowRadius: number
   glowOpacity: number
-  /** A cluster's opacity (of small pins or score cards), when it shows as this status. */
+  /** A cluster's opacity, pin or card, when it shows as this status. */
   groupOpacity: number
 }
 
@@ -76,7 +76,7 @@ export const statusLooks: Record<GameStatus, StatusLook> = {
 }
 
 /**
- * A cluster (of small pins or score cards) is a dark disc like a HUD score card, outlined and
+ * A cluster, pin or card, is a dark disc like a HUD score card, outlined and
  * lit in its status colour: this fill, an outline this wide, and a glow this much of its opacity.
  */
 export const groupFill = 'rgba(6, 12, 24, 0.88)'
@@ -86,7 +86,7 @@ export const groupGlowOpacity = 0.45
 /** The selected game's small pin ring and score card outline. */
 export const selectionColor = '#2f80ed'
 
-/** The selected game's score card draws above every other card, and clusters of cards above all, so a count is never hidden. */
+/** The selected game's score card draws above every other card, and card clusters above all, so a count is never hidden. */
 export const selectedStacking = Math.max(...Object.values(statusLooks).map((look) => look.stacking)) + 1
 export const cardClusterStacking = selectedStacking + 1
 
@@ -100,7 +100,7 @@ export const smallPinWidth = Math.round(2 * 0.6 * Math.max(...Object.values(stat
 export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
 
 /**
- * The status a group of games shows as (a cluster of small pins or score cards): the most prominent
+ * The status a group of games shows as (a pin cluster or a card cluster): the most prominent
  * among them, so Disrupted only when all its games are.
  */
 export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
@@ -110,34 +110,34 @@ export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
 const pinStatus: ExpressionSpecification = ['get', 'status']
 const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', pinStatus, s], 1, 0]]
 
-/** The counts of each status the pin source keeps for a cluster, which clusterStatus reads. */
-export const clusterStatusCounts = Object.fromEntries(
+/** The counts of each status the pin source keeps for a pin cluster, which pinClusterStatus reads. */
+export const pinClusterStatusCounts = Object.fromEntries(
   statusProminence.slice(0, -1).map((s) => [s.toLowerCase(), countOf(s)]),
 ) as Record<string, ExpressionSpecification>
 
-/** groupStatus as a style expression, for a cluster from its counts (see clusterStatusCounts). */
-export const clusterStatus: ExpressionSpecification = [
+/** groupStatus as a style expression, for a pin cluster from its counts (see pinClusterStatusCounts). */
+export const pinClusterStatus: ExpressionSpecification = [
   'case',
   ...statusProminence.slice(0, -1).flatMap((s) => [['>', ['get', s.toLowerCase()], 0], s]),
   'Disrupted',
 ] as ExpressionSpecification
 
-/** A style value from the look of the status a pin (pinStatus) or a cluster (clusterStatus) shows as. */
+/** A style value from the look of the status a pin (pinStatus) or a pin cluster (pinClusterStatus) shows as. */
 export function byStatus(
-  status: 'pin' | 'cluster',
+  status: 'pin' | 'pinCluster',
   value: (look: StatusLook) => number | string,
 ): ExpressionSpecification {
   // A match needs a fallback; every status has its own arm, so it's never used.
   return [
     'match',
-    status === 'pin' ? pinStatus : clusterStatus,
+    status === 'pin' ? pinStatus : pinClusterStatus,
     ...statusProminence.flatMap((s) => [s, value(statusLooks[s])]),
     value(statusLooks.Final),
   ] as ExpressionSpecification
 }
 
 /**
- * Writes the looks to CSS custom properties on the page's root, for score cards, their clusters and trails:
+ * Writes the looks to CSS custom properties on the page's root, for score cards, card clusters and trails:
  * --live-color and --live-group-opacity for Live, and so on, --group-fill and --group-outline, and
  * --selection-color.
  */

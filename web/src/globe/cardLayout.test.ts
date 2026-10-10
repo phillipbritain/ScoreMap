@@ -31,8 +31,8 @@ const lay = (cards: ScreenCard[], names: ScreenBox[] = []) => layOutCards(cards,
 /** How far each card that has room is moved from where it would sit. */
 function shiftsOf({ cards }: CardLayout): Map<string, ScreenOffset> {
   const shifts = new Map<string, ScreenOffset>()
-  for (const [gameId, { offset, clustered }] of cards) {
-    if (!clustered) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + pointer })
+  for (const [gameId, { offset, inCardCluster }] of cards) {
+    if (!inCardCluster) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + pointer })
   }
   return shifts
 }
@@ -68,7 +68,7 @@ function anyOverlap(cards: ScreenBox[]): boolean {
   return cards.some((a, i) => cards.slice(i + 1).some((b) => overlaps(a, b)))
 }
 
-const sitting = { offset: { dx: 0, dy: -pointer }, clustered: false, trail: null }
+const sitting = { offset: { dx: 0, dy: -pointer }, inCardCluster: false, trail: null }
 
 describe('layOutCards', () => {
   it('sits a card with room just above its venue, its pointer on the spot, with no trail', () => {
@@ -197,19 +197,19 @@ describe('layOutCards', () => {
   it('gives every card room while there is room within reach', () => {
     const layout = lay([card('a', 0, 0), card('b', 5, 2), card('c', 10, -3)])
     expect(shiftsOf(layout).size).toBe(3)
-    expect(layout.clusters).toEqual([])
+    expect(layout.cardClusters).toEqual([])
   })
 
   it("groups games with no room for a card into a count at the first one's venue, the rest nearby joining it", () => {
     // Twenty games at nearly one spot: far more cards than fit within reach.
     const many = games('g', 20, 0, 0, 'Live')
     const layout = lay(many)
-    const { clusters } = layout
-    expect(clusters).toHaveLength(1)
-    expect(shiftsOf(layout).size + clusters[0].gameIds.length).toBe(20)
-    for (const gameId of clusters[0].gameIds) expect(layout.cards.get(gameId)).toEqual({ ...sitting, clustered: true })
-    const first = many.find((c) => c.gameId === clusters[0].gameIds[0])!
-    expect([clusters[0].x, clusters[0].y]).toEqual([first.venueX, first.venueY])
+    const { cardClusters } = layout
+    expect(cardClusters).toHaveLength(1)
+    expect(shiftsOf(layout).size + cardClusters[0].gameIds.length).toBe(20)
+    for (const gameId of cardClusters[0].gameIds) expect(layout.cards.get(gameId)).toEqual({ ...sitting, inCardCluster: true })
+    const first = many.find((c) => c.gameId === cardClusters[0].gameIds[0])!
+    expect([cardClusters[0].x, cardClusters[0].y]).toEqual([first.venueX, first.venueY])
   })
 
   it('gives Live games room first, so the games most worth following keep their cards', () => {
@@ -217,11 +217,11 @@ describe('layOutCards', () => {
     expect(spreadCards([...games('g', 20, 0, 0, 'Final'), live]).get('z')).toEqual({ dx: 0, dy: 0 })
   })
 
-  it('shows a cluster as its most prominent game, Disrupted only when all its games are', () => {
+  it('shows a card cluster as its most prominent game, Disrupted only when all its games are', () => {
     const mixed = [...games('g', 20, 0, 0, 'Live'), card('f', 19, 0, 'Final')]
     const disrupted = games('d', 20, 500, 300, 'Disrupted')
-    const { clusters } = lay([...mixed, ...disrupted])
-    expect(clusters.map((c) => c.status).sort()).toEqual(['Disrupted', 'Live'])
+    const { cardClusters } = lay([...mixed, ...disrupted])
+    expect(cardClusters.map((c) => c.status).sort()).toEqual(['Disrupted', 'Live'])
   })
 
   describe('laid out again, as the globe turns', () => {
@@ -230,7 +230,7 @@ describe('layOutCards', () => {
     const below = { dx: 0, dy: 80 }
     const lastTime = (shifts: Record<string, ScreenOffset>) =>
       new Map(
-        Object.entries(shifts).map(([gameId, { dx, dy }]) => [gameId, { offset: { dx, dy: dy - pointer }, clustered: false, trail: null }]),
+        Object.entries(shifts).map(([gameId, { dx, dy }]) => [gameId, { offset: { dx, dy: dy - pointer }, inCardCluster: false, trail: null }]),
       )
 
     it('keeps a moved card where it was while that still has room, rather than jumping to a nearer spot', () => {
@@ -253,8 +253,8 @@ describe('layOutCards', () => {
   })
 
   it("leaves cards well off screen where they'd sit, however they overlap", () => {
-    const { cards, clusters } = lay([card('a', -500, 100), card('b', -500, 100), card('c', 400, 1200)])
+    const { cards, cardClusters } = lay([card('a', -500, 100), card('b', -500, 100), card('c', 400, 1200)])
     for (const placement of cards.values()) expect(placement).toEqual(sitting)
-    expect(clusters).toEqual([])
+    expect(cardClusters).toEqual([])
   })
 })

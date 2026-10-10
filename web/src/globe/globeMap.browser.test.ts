@@ -45,6 +45,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: away },
     clock,
     period: null,
+    clutchTime: false,
     venue: { name: null, city: null, country: null, latitude, longitude, timeZone: null, photo: null },
     broadcasters: [],
     streamLinks: [],

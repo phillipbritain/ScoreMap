@@ -40,6 +40,14 @@ _Avoid_: Cluster (zoomed-out pins only), stack, pile
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.
 _Avoid_: Popup, detail page, modal
 
+**Pulse**:
+The short animation a pin, score card, cluster or crowd plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time.
+_Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
+
+**Clutch time**:
+In basketball, the last 5 minutes of the last period of regulation, or any time in overtime, while the score is within 5 points. Borrowed from the NBA's clutch-time stat.
+_Avoid_: Crunch time, close game
+
 **Venue**:
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city

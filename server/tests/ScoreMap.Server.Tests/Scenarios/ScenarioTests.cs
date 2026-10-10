@@ -181,7 +181,7 @@ public class ScenarioTests
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
 
-        server.Clock.Advance(TimeSpan.FromSeconds(30));
+        server.Clock.Advance(TimeSpan.FromMinutes(5));
 
         GameChange change;
         do change = await client.NextChangeAsync();

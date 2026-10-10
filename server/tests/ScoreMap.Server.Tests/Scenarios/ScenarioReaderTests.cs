@@ -8,7 +8,7 @@ public sealed class ScenarioReaderTests : IDisposable
 {
     private static readonly League[] Leagues =
     [
-        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.AmericanFootball },
+        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.Football },
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer },
     ];
 

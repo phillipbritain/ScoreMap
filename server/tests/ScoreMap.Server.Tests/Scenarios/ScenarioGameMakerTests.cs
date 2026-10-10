@@ -10,9 +10,10 @@ public sealed class ScenarioGameMakerTests
 {
     private static readonly League[] Leagues =
     [
-        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.AmericanFootball, PlannedLength = TimeSpan.FromMinutes(195) },
+        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.Football, PlannedLength = TimeSpan.FromMinutes(195) },
         new() { Key = "basketball/nba", Name = "NBA", Sport = Sport.Basketball, PlannedLength = TimeSpan.FromMinutes(150) },
-        new() { Key = "basketball/ncaa", Name = "NCAA Men's Basketball", Sport = Sport.Basketball, RegulationPeriods = 2, PlannedLength = TimeSpan.FromHours(2) },
+        new() { Key = "basketball/ncaa", Name = "NCAA Men's Basketball", Sport = Sport.Basketball, RegulationPeriods = 2, PeriodMinutes = 20, PlannedLength = TimeSpan.FromHours(2) },
+        new() { Key = "basketball/wnba", Name = "WNBA", Sport = Sport.Basketball, PeriodMinutes = 10, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "baseball/mlb", Name = "MLB", Sport = Sport.Baseball, PlannedLength = TimeSpan.FromHours(3) },
         new() { Key = "hockey/nhl", Name = "NHL", Sport = Sport.Hockey, PlannedLength = TimeSpan.FromMinutes(150) },
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
@@ -24,7 +25,7 @@ public sealed class ScenarioGameMakerTests
     // The most each team plausibly scores in a whole game.
     private static readonly Dictionary<Sport, int> MostPoints = new()
     {
-        [Sport.AmericanFootball] = 50,
+        [Sport.Football] = 50,
         [Sport.Basketball] = 140,
         [Sport.Baseball] = 12,
         [Sport.Hockey] = 8,
@@ -88,7 +89,7 @@ public sealed class ScenarioGameMakerTests
             Assert.InRange(game.StartsIn, -(league.PlannedLength + GameBoard.FinalWindow) + TimeSpan.FromMinutes(30), -league.PlannedLength);
             Assert.InRange(game.Home.Score!.Value, 0, MostPoints[league.Sport]);
             Assert.InRange(game.Away.Score!.Value, 0, MostPoints[league.Sport]);
-            Assert.Equal(league.RegulationPeriods ?? Regulation(league.Sport), game.Period);
+            Assert.Equal(league.Regulation, game.Period);
         }
     }
 
@@ -148,8 +149,7 @@ public sealed class ScenarioGameMakerTests
 
     private static void AssertClockFits(ScenarioGame game, League league)
     {
-        var regulation = league.RegulationPeriods ?? Regulation(league.Sport);
-        Assert.InRange(game.Period!.Value, 1, regulation);
+        Assert.InRange(game.Period!.Value, 1, league.Regulation);
         switch (league.Sport)
         {
             case Sport.Baseball:
@@ -167,20 +167,13 @@ public sealed class ScenarioGameMakerTests
                 break;
             default:
                 Assert.Matches(@"^\d{1,2}:\d{2}$", game.Clock);
+                Assert.True(TimeSpan.Parse($"0:{game.Clock}") <= TimeSpan.FromMinutes(league.PeriodClockMinutes!.Value), $"clock {game.Clock}");
                 Assert.Contains(game.Phase, new[] { ProviderPeriodPhase.Playing, ProviderPeriodPhase.Break });
                 break;
         }
     }
 
     private static int Minute(ScenarioGame game) => int.Parse(Regex.Match(game.Clock!, @"^(\d+)'$").Groups[1].Value);
-
-    private static int Regulation(Sport sport) => sport switch
-    {
-        Sport.Baseball => 9,
-        Sport.Hockey => 3,
-        Sport.Soccer => 2,
-        _ => 4,
-    };
 
     /// <summary>Games made over many seeds, so the checks see the spread of what the maker picks.</summary>
     private static IEnumerable<(ScenarioGame Game, League League)> Make(string leagueKey, GameStatus status)

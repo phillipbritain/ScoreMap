@@ -9,8 +9,8 @@ import {
   withSport,
 } from './viewerSettings'
 
-const nfl = { name: 'NFL', sport: 'American football' }
-const ncaaf = { name: 'NCAA Football', sport: 'American football' }
+const nfl = { name: 'NFL', sport: 'Football' }
+const ncaaf = { name: 'NCAA Football', sport: 'Football' }
 const nba = { name: 'NBA', sport: 'Basketball' }
 const mls = { name: 'MLS', sport: 'Soccer' }
 const epl = { name: 'Premier League', sport: 'Soccer' }
@@ -18,7 +18,7 @@ const epl = { name: 'Premier League', sport: 'Soccer' }
 describe('leaguesBySport', () => {
   it('groups leagues under their sport, keeping the configured order', () => {
     expect(leaguesBySport([nfl, ncaaf, nba, mls, epl])).toEqual([
-      { sport: 'American football', leagues: [nfl, ncaaf] },
+      { sport: 'Football', leagues: [nfl, ncaaf] },
       { sport: 'Basketball', leagues: [nba] },
       { sport: 'Soccer', leagues: [mls, epl] },
     ])

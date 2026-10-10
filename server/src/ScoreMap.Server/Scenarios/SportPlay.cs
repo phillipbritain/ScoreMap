@@ -171,9 +171,8 @@ internal sealed class SportPlay
                     : 0;
             default:
                 // Time left in the period, counting down, such as 8:05.
-                var parts = (clock ?? "").Split(':');
-                return parts.Length == 2 && int.TryParse(parts[0], out var minutes) && int.TryParse(parts[1], out var seconds)
-                    ? Math.Clamp(1 - (minutes * 60 + seconds) / (PeriodMinutes * 60.0), 0, 1)
+                return PeriodClock.TimeLeft(clock) is { } left
+                    ? Math.Clamp(1 - left.TotalSeconds / (PeriodMinutes * 60.0), 0, 1)
                     : 0;
         }
     }

@@ -151,6 +151,7 @@ public sealed class GameBoard(
             ToTeam(game.Away),
             ClockLine.For(game, league),
             game.Period,
+            ClutchTime.For(game, league),
             ToVenue(game.Venue, location) with { Photo = photos.PhotoFor(league.Key, game.Venue) },
             game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList(),
             StreamLinks: []);

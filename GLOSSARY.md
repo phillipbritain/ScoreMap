@@ -80,6 +80,14 @@ _Avoid_: Dummy data, fake data, demo, simulation
 The time a scenario's games are on. It reads the real time when the scenario starts, then runs at the scenario's speed, so it moves ahead of the real time at any speed above 1×.
 _Avoid_: Game clock (the clock within a game, such as 67'), fake time, virtual time
 
+**Play**:
+A scenario's games playing like real games, at random: Live games score and finish, Upcoming games start, some games are disrupted, and new games take the place of old ones. A scenario has play or a timeline, not both; with neither, its games stand still.
+_Avoid_: Simulation, random play, live play
+
+**Timeline**:
+A scenario's written changes to its games at set times on the scenario clock, starting again from the beginning when it ends.
+_Avoid_: Schedule, events
+
 **Speed**:
 How fast the scenario clock runs, by name: Paused (it stands still), Normal (real time), Fast (2×) or Faster (8×). One speed applies to whichever scenario is running.
 _Avoid_: Pace, play speed, playback rate

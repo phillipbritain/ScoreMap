@@ -11,3 +11,7 @@ When a diff adds a call to an outside service, or a fake for one, check that its
 ## Names and comments use the glossary's terms
 
 Identifiers, comments, messages and UI text name domain concepts with the terms in `GLOSSARY.md`. Flag any term the glossary lists under _Avoid_ for the concept meant: "game clock" for the scenario clock, "pace" or "rate" for the speed. It's a judgement call, since many _Avoid_ words are everyday ones that are fine in other senses (a game's "location" in a geometry helper, an "event" in the DOM).
+
+## Seeded tests assert what every seed gives
+
+A test of something seeded (a scenario's fill, play) checks a property the code guarantees, such as a fill's Disrupted games going Postponed, Suspended and Canceled in turn, not one its seed happens to produce, such as which cities a fill picks. A seed-lucky test passes until an unrelated change draws one more random number, then fails far from the change that broke it, as "worldwide disrupted in every way" did when fill started drawing teams. Where a seed's particular outcome is the point, a comment beside the assertion says so.

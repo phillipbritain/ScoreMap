@@ -4,12 +4,25 @@ namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
 /// The share of filled games in each status (ADR-0009), as weights: <c>{ "live": 3, "final": 1 }</c>
-/// makes three Live games for each Final one. Statuses left out get none.
+/// makes three Live games for each Final one. Statuses left out get none. A scenario file's mix leaves
+/// out Disrupted, whose share comes from the scenario's <c>"disrupted"</c> (see <see cref="WithDisrupted"/>).
 /// </summary>
 public sealed record StatusMix(IReadOnlyDictionary<GameStatus, double> Shares)
 {
     /// <summary>Every filled game Live, when a fill gives no mix.</summary>
     public static readonly StatusMix AllLive = new(new Dictionary<GameStatus, double> { [GameStatus.Live] = 1 });
+
+    /// <summary>
+    /// The mix with <paramref name="share"/> of the games Disrupted (a scenario's <c>"disrupted"</c>), and
+    /// the rest shared out as this mix shares them.
+    /// </summary>
+    public StatusMix WithDisrupted(double share)
+    {
+        var total = Shares.Values.Sum();
+        var shares = Shares.ToDictionary(s => s.Key, s => s.Value / total * (1 - share));
+        shares[GameStatus.Disrupted] = share;
+        return new StatusMix(shares);
+    }
 
     /// <summary>
     /// The statuses of <paramref name="count"/> games, split by the shares and shuffled. Each status

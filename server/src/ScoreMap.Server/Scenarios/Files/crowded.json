@@ -1,10 +1,12 @@
 // crowded: about 40 games packed into London and nearby, to bring out Clusters zoomed out and
-// Crowds (score cards with no room) zoomed in. Live games play on but no game changes status.
+// Crowds (score cards with no room) zoomed in. The games play like real games, as in worldwide;
+// new ones come from around London too.
 {
   "fill": {
     "count": 40,
     "group": "london-and-nearby",
     "mix": { "live": 3, "upcoming": 1, "final": 1 }
   },
-  "play": "live"
+  "play": true,
+  "disrupted": 0.05
 }

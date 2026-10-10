@@ -7,7 +7,7 @@ namespace ScoreMap.Server.Scenarios;
 /// Makes up a game at a venue from the venue list, in a given status: the venue's home team against
 /// another venue's home team, in a random configured league (odd pairings included, ADR-0009). Its
 /// start, score and clock fit its status, as its sport plays out (see <see cref="SportPlay"/>), and its
-/// start keeps it inside its pin window when the scenario starts. Used by <c>fill</c>; random play uses
+/// start keeps it inside its pin window when the scenario starts. Used by <c>fill</c>; play uses
 /// it to bring on new games.
 /// </summary>
 public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue> venues)

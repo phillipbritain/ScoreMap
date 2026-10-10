@@ -16,11 +16,10 @@ public static class ClockLine
 
         return league.Sport switch
         {
-            Sport.AmericanFootball or Sport.Basketball => Timed(game, period, league.RegulationPeriods ?? 4,
-                league.RegulationPeriods == 2 ? "H" : "Q"),
-            Sport.Hockey => Timed(game, period, league.RegulationPeriods ?? 3, "P"),
-            Sport.Baseball => Innings(game, period, league.RegulationPeriods ?? 9),
-            Sport.Soccer => Halves(game, period, league.RegulationPeriods ?? 2),
+            Sport.Football or Sport.Basketball => Timed(game, period, league.Regulation, league.Regulation == 2 ? "H" : "Q"),
+            Sport.Hockey => Timed(game, period, league.Regulation, "P"),
+            Sport.Baseball => Innings(game, period, league.Regulation),
+            Sport.Soccer => Halves(game, period, league.Regulation),
             _ => throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport"),
         };
     }

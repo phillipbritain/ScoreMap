@@ -9,16 +9,28 @@ public sealed class League
     public required string Name { get; init; }
 
     /// <summary>
-    /// The league's sport, configured by its display name ("American football", "Basketball", "Baseball",
+    /// The league's sport, configured by its display name ("Football", "Basketball", "Baseball",
     /// "Hockey" or "Soccer"). The clock line is written in the sport's style.
     /// </summary>
     public required Sport Sport { get; init; }
 
     /// <summary>
     /// How many periods make up a game before overtime, when the league differs from its sport's usual
-    /// (e.g. 2 for college basketball's halves). Used only to write the clock line.
+    /// (e.g. 2 for men's college basketball's halves). Read <see cref="Regulation"/> instead.
     /// </summary>
     public int? RegulationPeriods { get; init; }
+
+    /// <summary>
+    /// How many minutes a period lasts on the game clock, when the league differs from its sport's usual
+    /// (e.g. 10 for women's basketball's quarters). Read <see cref="PeriodClockMinutes"/> instead.
+    /// </summary>
+    public int? PeriodMinutes { get; init; }
+
+    /// <summary>How many periods make up a game before overtime, in this league.</summary>
+    public int Regulation => RegulationPeriods ?? Sport.Usual().RegulationPeriods;
+
+    /// <summary>How many minutes a period lasts on the game clock, in this league; null in a sport without one.</summary>
+    public int? PeriodClockMinutes => PeriodMinutes ?? Sport.Usual().PeriodMinutes;
 
     /// <summary>
     /// How long the league's games are planned to last, start to finish (ADR-0005). A Disrupted game keeps

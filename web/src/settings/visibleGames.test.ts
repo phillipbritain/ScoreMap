@@ -23,7 +23,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
   }
 }
 
-const nfl = game('nfl', 'NFL', 'American football')
+const nfl = game('nfl', 'NFL', 'Football')
 const nba = game('nba', 'NBA', 'Basketball')
 const epl = game('epl', 'Premier League', 'Soccer')
 
@@ -39,22 +39,22 @@ describe('visibleGames', () => {
   })
 
   it('hides Upcoming and Final games when "Live only" is on', () => {
-    const upcoming = game('upcoming', 'NFL', 'American football', 'Upcoming')
-    const final = game('final', 'NFL', 'American football', 'Final')
+    const upcoming = game('upcoming', 'NFL', 'Football', 'Upcoming')
+    const final = game('final', 'NFL', 'Football', 'Final')
     const settings = { ...firstVisitSettings, liveOnly: true }
 
     expect(visibleGames([upcoming, nfl, final], settings)).toEqual([nfl])
   })
 
   it('shows Disrupted games on a first visit', () => {
-    const postponed = game('postponed', 'NFL', 'American football', 'Disrupted')
+    const postponed = game('postponed', 'NFL', 'Football', 'Disrupted')
 
     expect(visibleGames([nfl, postponed], firstVisitSettings)).toEqual([nfl, postponed])
   })
 
   it('hides Disrupted games when "Show Disrupted games" is off', () => {
-    const postponed = game('postponed', 'NFL', 'American football', 'Disrupted')
-    const upcoming = game('upcoming', 'NFL', 'American football', 'Upcoming')
+    const postponed = game('postponed', 'NFL', 'Football', 'Disrupted')
+    const upcoming = game('upcoming', 'NFL', 'Football', 'Upcoming')
     const settings = { ...firstVisitSettings, showDisrupted: false }
 
     expect(visibleGames([nfl, postponed, upcoming], settings)).toEqual([nfl, upcoming])
@@ -62,7 +62,7 @@ describe('visibleGames', () => {
 
   it('applies "Live only" and league switches together', () => {
     const liveNba = nba
-    const upcomingNfl = game('upcoming', 'NFL', 'American football', 'Upcoming')
+    const upcomingNfl = game('upcoming', 'NFL', 'Football', 'Upcoming')
     const settings = { ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true }
 
     expect(visibleGames([nfl, liveNba, upcomingNfl, epl], settings)).toEqual([nfl, epl])

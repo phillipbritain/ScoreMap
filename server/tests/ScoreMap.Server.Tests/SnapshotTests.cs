@@ -31,7 +31,7 @@ public class SnapshotTests
         var game = Assert.Single(snapshot);
         Assert.Equal("401", game.Id);
         Assert.Equal("NFL", game.League);
-        Assert.Equal("American football", game.Sport);
+        Assert.Equal("Football", game.Sport);
         Assert.Equal(kickoff, game.StartTime);
         Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", 21), game.Home);
         Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", 17), game.Away);

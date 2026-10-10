@@ -14,10 +14,10 @@ public sealed class RandomPlayTests : IDisposable
 {
     private static readonly League[] Leagues =
     [
-        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.AmericanFootball, PlannedLength = TimeSpan.FromMinutes(195) },
-        new() { Key = "football/college-football", Name = "NCAA Football", Sport = Sport.AmericanFootball, PlannedLength = TimeSpan.FromMinutes(210) },
+        new() { Key = "football/nfl", Name = "NFL", Sport = Sport.Football, PlannedLength = TimeSpan.FromMinutes(195) },
+        new() { Key = "football/college-football", Name = "NCAA Football", Sport = Sport.Football, PlannedLength = TimeSpan.FromMinutes(210) },
         new() { Key = "basketball/nba", Name = "NBA", Sport = Sport.Basketball, PlannedLength = TimeSpan.FromMinutes(150) },
-        new() { Key = "basketball/mens-college-basketball", Name = "NCAA Men's Basketball", Sport = Sport.Basketball, RegulationPeriods = 2, PlannedLength = TimeSpan.FromHours(2) },
+        new() { Key = "basketball/mens-college-basketball", Name = "NCAA Men's Basketball", Sport = Sport.Basketball, RegulationPeriods = 2, PeriodMinutes = 20, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "baseball/mlb", Name = "MLB", Sport = Sport.Baseball, PlannedLength = TimeSpan.FromHours(3) },
         new() { Key = "hockey/nhl", Name = "NHL", Sport = Sport.Hockey, PlannedLength = TimeSpan.FromMinutes(150) },
         new() { Key = "soccer/usa.1", Name = "MLS", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
@@ -35,7 +35,7 @@ public sealed class RandomPlayTests : IDisposable
     // The most a team plausibly scores in a whole game (as in ScenarioGameMakerTests).
     private static readonly Dictionary<Sport, int> MostPoints = new()
     {
-        [Sport.AmericanFootball] = 50,
+        [Sport.Football] = 50,
         [Sport.Basketball] = 140,
         [Sport.Baseball] = 12,
         [Sport.Hockey] = 8,

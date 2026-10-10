@@ -7,7 +7,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -18,7 +19,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -29,7 +31,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -40,7 +43,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -51,7 +55,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -62,7 +67,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -73,7 +79,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -84,7 +91,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -95,7 +103,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -106,7 +115,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -117,7 +127,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -128,7 +139,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -139,7 +151,8 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
     ]
   },
   {
@@ -150,7 +163,260 @@
     "groups": [
       "worldwide",
       "big-cities",
-      "london"
+      "london",
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Twickenham Stadium",
+    "city": "Twickenham",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Twickenham Stoop",
+    "city": "Twickenham",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "StoneX Stadium",
+    "city": "London",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Gander Green Lane",
+    "city": "Sutton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Silverlake Stadium",
+    "city": "Eastleigh",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Grosvenor Vale",
+    "city": "Ruislip",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Meadow Park",
+    "city": "Borehamwood",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Vicarage Road",
+    "city": "Watford",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kenilworth Road",
+    "city": "Luton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Select Car Leasing Stadium",
+    "city": "Reading",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Adams Park",
+    "city": "High Wycombe",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Stadium MK",
+    "city": "Milton Keynes",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kassam Stadium",
+    "city": "Oxford",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Lamex Stadium",
+    "city": "Stevenage",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Abbey Stadium",
+    "city": "Cambridge",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Roots Hall",
+    "city": "Southend-on-Sea",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Priestfield Stadium",
+    "city": "Gillingham",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Broadfield Stadium",
+    "city": "Crawley",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Recreation Ground",
+    "city": "Aldershot",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Kingfield Stadium",
+    "city": "Woking",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Colchester Community Stadium",
+    "city": "Colchester",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "American Express Stadium",
+    "city": "Brighton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Portman Road",
+    "city": "Ipswich",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Weston Homes Stadium",
+    "city": "Peterborough",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Sixfields Stadium",
+    "city": "Northampton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Franklin's Gardens",
+    "city": "Northampton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "St Mary's Stadium",
+    "city": "Southampton",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
+    ]
+  },
+  {
+    "name": "Fratton Park",
+    "city": "Portsmouth",
+    "region": null,
+    "country": "England",
+    "groups": [
+      "london-and-nearby"
     ]
   },
   {

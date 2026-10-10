@@ -189,7 +189,24 @@ public sealed class ScenarioFillTests : IDisposable
         // Six leagues of two teams: room for six games.
         var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
 
-        Assert.Contains("asks for 7 games, more than the team list has teams for", error.Message);
+        Assert.Contains("asks for 7 games, but the team list has free teams for only 6 of them", error.Message);
+    }
+
+    [Fact]
+    public void A_fill_short_of_teams_beside_games_written_out_says_how_many_are_written_out()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """
+            {
+              "games": [ { "league": "NBA", "home": { "name": "NBA team 1", "abbreviation": "T1" }, "away": { "name": "NBA team 2", "abbreviation": "T2" },
+                           "venue": { "name": "Madison Square Garden", "city": "New York" }, "startsIn": "1h", "status": "upcoming" } ],
+              "fill": { "count": 6, "group": "worldwide" }
+            }
+            """);
+
+        // Six leagues of two teams: room for six games, one of them written out.
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
+
+        Assert.Contains("asks for 6 games, but the team list has free teams for only 5 of them beside the 1 written out", error.Message);
     }
 
     [Fact]

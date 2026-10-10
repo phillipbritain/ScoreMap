@@ -41,9 +41,9 @@ public static partial class ScenarioReader
     /// Play leaves the games in <paramref name="writtenOut"/> undisrupted.
     /// </summary>
     private static PlaySettings ReadPlay(
-        ScenarioFile file, double disruptedShare, IReadOnlySet<string> writtenOut, string scenario, string path,
-        IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues, ScenarioTeamList? teams)
+        ScenarioFile file, double disruptedShare, IReadOnlySet<string> writtenOut, string scenario, string path, Lists lists)
     {
+        var (leagues, venues, teams) = lists;
         ScenarioFileException Problem(string problem) => new(scenario, path, $"play {problem}");
 
         if (file.Timeline is not null)

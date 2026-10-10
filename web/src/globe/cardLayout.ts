@@ -22,8 +22,6 @@ export interface CardScene {
   pointer: number
   /** Where the names of games' cities are written, which cards and trails keep clear of. */
   names?: readonly ScreenBox[]
-  /** The selected game, whose card gets room first. */
-  selectedGameId?: string | null
 }
 
 /** A distance on screen, in pixels. */
@@ -68,15 +66,15 @@ export interface CardLayout {
 /**
  * Lays out the score cards on screen. Each sits above its venue, its pointer's tip on the spot, unless
  * that overlaps another card, a venue or a city's name: then it's moved the least it can be, with a
- * trail back to its venue (see arrange). The selected game's card gets room first, then cards by
- * status, most prominent first; a card with no room within reach joins a crowd. Cards whose venues are
- * well off screen stay where they'd sit: nothing on screen can get in their way.
+ * trail back to its venue (see arrange). Cards get room by status, most prominent first, whichever is
+ * selected, so selecting a card never moves it; a card with no room within reach joins a crowd.
+ * Cards whose venues are well off screen stay where they'd sit: nothing on screen can get in their
+ * way.
  */
 export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): CardLayout {
   const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, crowded: false, trail: null }
   const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
-  const rank = ({ gameId, status }: ScreenCard) =>
-    gameId === scene.selectedGameId ? 0 : 1 + statusProminence.indexOf(status)
+  const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
   const boxes = cards
     .filter((card) => nearScreen(card.venueX, card.venueY, scene))
     .map(

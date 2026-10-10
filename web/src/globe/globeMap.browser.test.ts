@@ -5,6 +5,7 @@ import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
+import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { clusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
@@ -116,19 +117,37 @@ async function cameraSettles(
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** Where a game's venue is on the page. */
+function venueOnPage(map: MapLibreMap, { venue }: Game) {
+  const { x, y } = map.project([venue.longitude, venue.latitude])
+  const { left, top } = container.getBoundingClientRect()
+  return { x: left + x, y: top + y }
+}
+
+/** A game panel's box on the page, as the app's sits across the bottom of the globe. */
+function panelAcrossBottom() {
+  const { left, top, width, height } = container.getBoundingClientRect()
+  return { left: left + 100, top: top + height - 140, right: left + width - 100, bottom: top + height - 12 }
+}
+
+/** How many pixels apart two positions on screen are. */
+const offBy = (a: number, b: number) => Math.abs(a - b)
+
 describe('selection', () => {
-  it('rings the selected game’s small pin and turns the globe to it', async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+  it('rings the selected game’s small pin and leaves the globe where it is', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 20 })
     const b = game('B', { longitude: -20, latitude: 20 })
     globe.show([a, b])
     await pinsDrawn(map, smallPinLayer, a, b)
 
-    globe.select('A')
+    globe.select('A', panelAcrossBottom())
 
-    await cameraSettles(onCameraMove, (camera) => Math.abs(camera.longitude - 20) < 0.1)
     await vi.waitFor(() => expect(drawnAt(map, selectedPinLayer, a).map((f) => f.properties.gameId)).toEqual(['A']))
     expect(drawnAt(map, selectedPinLayer, b)).toEqual([])
+    await pause(500)
+    expect(map.getCenter().lng).toBeCloseTo(0)
+    expect(map.getCenter().lat).toBeCloseTo(0)
 
     globe.select(null)
     await vi.waitFor(() => expect(drawnAt(map, selectedPinLayer, a)).toEqual([]))
@@ -147,19 +166,68 @@ describe('selection', () => {
     expect(container.querySelector('.score-card--selected')).toBeNull()
   })
 
-  it('does not turn to the selected game again when it is selected again', async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    const a = game('A', { longitude: 20 })
-    globe.show([a])
-    await pinsDrawn(map, smallPinLayer, a)
-    globe.select('A')
-    await cameraSettles(onCameraMove, (camera) => Math.abs(camera.longitude - 20) < 0.1)
-    map.jumpTo({ center: [0, 0] })
+  it('leaves a score card moved aside for its neighbours where it is when it is selected', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Close enough that some cards are moved aside, not so close that any is crowded out.
+    globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
+    await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
+    const moved = container.querySelector<HTMLElement>('[data-moved] .score-card')!
+    const before = JSON.stringify(moved.getBoundingClientRect())
+    const placed = () => [...container.querySelectorAll('.score-card')].map((c) => JSON.stringify(c.getBoundingClientRect()))
+    const everyCard = placed()
 
-    globe.select('A')
+    globe.select(moved.dataset.gameId!)
     await pause(500)
 
-    expect(map.getCenter().lng).toBeCloseTo(0)
+    expect(JSON.stringify(moved.getBoundingClientRect())).toBe(before)
+    expect(placed()).toEqual(everyCard)
+  })
+
+  it('lifts a small pin the panel would cover just clear of it, without turning sideways', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { longitude: 5, latitude: -40 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    const panel = panelAcrossBottom()
+    const before = venueOnPage(map, a)
+    expect(before.y).toBeGreaterThan(panel.top)
+
+    globe.select('A', panel)
+
+    await vi.waitFor(() => expect(offBy(venueOnPage(map, a).y, panel.top - panelGap - smallPinReach)).toBeLessThan(2), {
+      timeout: 5_000,
+    })
+    expect(offBy(venueOnPage(map, a).x, before.x)).toBeLessThan(2)
+  })
+
+  it('lifts a score card’s venue the panel would cover until the card and venue are clear of it', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const a = game('A', { latitude: -8 })
+    globe.show([a])
+    await cardShown('A')
+    const panel = panelAcrossBottom()
+    expect(venueOnPage(map, a).y).toBeGreaterThan(panel.top)
+
+    globe.select('A', panel)
+
+    await vi.waitFor(() => expect(offBy(venueOnPage(map, a).y, panel.top - panelGap)).toBeLessThan(2), { timeout: 5_000 })
+    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top)
+  })
+
+  it('does not lift the selected game again when it is selected again', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { latitude: -40 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    globe.select('A', panelAcrossBottom())
+    await vi.waitFor(() => expect(map.getCenter().lat).toBeLessThan(-1), { timeout: 5_000 })
+    await new Promise((resolve) => map.once('moveend', resolve))
+    map.jumpTo({ center: [0, 0] })
+
+    globe.select('A', panelAcrossBottom())
+    await pause(500)
+
+    expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
   it('tells the app when the viewer selects a small pin', async () => {
@@ -175,6 +243,16 @@ describe('selection', () => {
 })
 
 describe('zooming in to clusters and crowds', () => {
+  it('does not zoom in when the viewer double-clicks the globe', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    await new Promise((resolve) => map.once('load', resolve))
+
+    await userEvent.dblClick(map.getCanvas(), { position: { x: 300, y: 200 } })
+    await pause(500)
+
+    expect(map.getZoom()).toBe(2)
+  })
+
   it('zooms in to a cluster the viewer selects, no further than score cards', async () => {
     const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     // At the same venue, so the cluster would only split at the cluster source's last zoom.

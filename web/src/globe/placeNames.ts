@@ -15,7 +15,7 @@ import { cardZoom } from './zoomLevels'
 
 /**
  * Free map fonts, Open Sans among them (ADR-0006); OpenFreeMap, the base style's own font source,
- * only has Noto Sans. Every text on the globe, cluster counts included, must use one of mapFonts,
+ * only has Noto Sans. Every text on the globe, pin cluster counts included, must use one of mapFonts,
  * which this source has: for a font it lacks, it answers with a web page rather than an error, and
  * the text falls back to a browser font.
  */

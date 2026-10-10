@@ -29,19 +29,23 @@ The look a viewer picks for every score card in the settings menu: HUD (the defa
 _Avoid_: Theme, skin, card look
 
 **Cluster**:
-While zoomed out, a group of pins close enough to overlap, shown as one marker with a count. It splits apart as you zoom in, or zooms in until it does when selected.
-_Avoid_: Bubble, group
+Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected.
+_Avoid_: Crowd, bubble, group, stack, pile
 
-**Crowd**:
-While zoomed in, the games whose score cards have no room on screen even after nearby cards are moved aside, shown as one count. Selecting it zooms in until it splits. Unlike a cluster, it depends on room for cards, not on how close the pins are.
-_Avoid_: Cluster (zoomed-out pins only), stack, pile
+**Pin cluster**:
+While zoomed out, a cluster of pins close enough to overlap.
+_Avoid_: Cluster (when it matters that it's pins)
+
+**Card cluster**:
+While zoomed in, a cluster of games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are.
+_Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Game panel**:
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.
 _Avoid_: Popup, detail page, modal
 
 **Pulse**:
-The short animation a pin, score card, cluster or crowd plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time.
+The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time.
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
 
 **Clutch time**:

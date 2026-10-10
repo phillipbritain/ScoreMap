@@ -5,8 +5,8 @@ export type PinSize = 'small' | 'card'
 
 export interface PinLayout {
   /**
-   * Small pins cluster; score cards don't, since cards find room among themselves and crowd
-   * together only when there is none (see cardLayout).
+   * Small pins form pin clusters; score cards don't, since cards find room among themselves and
+   * form card clusters only when there is none (see cardLayout).
    */
   size: PinSize
   /** The pin source's cluster radius while small pins show, in pixels at the whole zoom level below (see pinLayout). */
@@ -33,7 +33,7 @@ export const maxZoom = 13
 
 /**
  * Highest zoom at which the pin source clusters. Small pins stop showing well before it, at cardZoom,
- * and score cards aren't clustered, so this only needs to be past cardZoom.
+ * and score cards aren't in pin clusters, so this only needs to be past cardZoom.
  */
 export const clusterMaxZoom = maxZoom - 1
 

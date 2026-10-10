@@ -23,8 +23,8 @@ import {
   cardFootprintLayerSpec,
   pinFootprint,
   pinFootprintLayerSpec,
-  clusterLayer,
-  clusterLayers,
+  pinClusterLayer,
+  pinClusterLayers,
   pinSource,
   pinSourceSpec,
   smallPinLayer,
@@ -56,13 +56,13 @@ export interface GlobeMapOptions {
 }
 
 export const selectedPinLayer = 'pin-selected'
-/** Room left around a crowd's games when zooming in to them. */
-const crowdZoomPadding = 120
+/** Room left around a card cluster's games when zooming in to them. */
+const cardClusterZoomPadding = 120
 
 /**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
- * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster or a crowd
- * zooms in until it splits.
+ * pin clusters; zoomed in, each pin becomes a score card, and cards with no room form card
+ * clusters. Selecting any cluster zooms in until it splits.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
@@ -105,7 +105,7 @@ export class GlobeMap {
       map,
       this.names,
       (gameId) => this.onSelect(gameId),
-      (gameIds) => this.zoomToCrowd(gameIds),
+      (gameIds) => this.zoomToCardCluster(gameIds),
     )
     this.clustering = pinLayout(map.getZoom())
 
@@ -113,9 +113,9 @@ export class GlobeMap {
     map.on('zoom', this.recluster)
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
     map.on('render', this.syncCards)
-    map.on('click', clusterLayer, this.zoomToCluster)
+    map.on('click', pinClusterLayer, this.zoomToPinCluster)
     map.on('click', smallPinLayer, this.selectPin)
-    for (const layer of [clusterLayer, smallPinLayer]) {
+    for (const layer of [pinClusterLayer, smallPinLayer]) {
       map.on('mouseenter', layer, this.pointAt)
       map.on('mouseleave', layer, this.stopPointing)
     }
@@ -197,7 +197,7 @@ export class GlobeMap {
     map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), map.getZoom()))
     // Beneath the place names, so a pin never hides a city's name.
     const belowNames = firstPlaceNameLayer(map.getStyle())
-    for (const layer of clusterLayers) map.addLayer(layer, belowNames)
+    for (const layer of pinClusterLayers) map.addLayer(layer, belowNames)
     for (const layer of smallPinLayerSpecs) map.addLayer(layer, belowNames)
     // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
     map.addLayer(
@@ -223,8 +223,8 @@ export class GlobeMap {
     map.addLayer(pinFootprintLayerSpec)
   }
 
-  // Small pins cluster, with a radius that changes in steps between whole zoom levels; score
-  // cards don't cluster (see pinLayout).
+  // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score
+  // cards don't (see pinLayout).
   private readonly recluster = () => {
     const now = pinLayout(this.map.getZoom())
     const was = this.clustering
@@ -245,15 +245,15 @@ export class GlobeMap {
   private readonly pointAt = () => (this.map.getCanvas().style.cursor = 'pointer')
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
-  // Selecting a cluster of small pins, and selecting a crowd of score cards, both zoom in until
+  // Selecting a pin cluster, and selecting a card cluster, both zoom in until
   // their games split.
 
   /**
-   * Zooms in to where a cluster splits. Score cards aren't clustered, so a cluster splits by
+   * Zooms in to where a pin cluster splits. Score cards aren't in pin clusters, so one splits by
    * cardZoom at the latest, even one of games at the same venue (their cards are moved apart on
    * screen, see cardLayout).
    */
-  private readonly zoomToCluster = async (event: MapLayerMouseEvent) => {
+  private readonly zoomToPinCluster = async (event: MapLayerMouseEvent) => {
     const cluster = event.features?.[0]
     const source = this.map.getSource<GeoJSONSource>(pinSource)
     if (!cluster || !source) return
@@ -263,32 +263,32 @@ export class GlobeMap {
   }
 
   /**
-   * Zooms in until a crowd splits: to fit its games, at least a level in, and again from there while
-   * some of them are still crowded (until the globe can zoom no further in). A move by the viewer
-   * along the way stops it.
+   * Zooms in until a card cluster splits: to fit its games, at least a level in, and again
+   * from there while some of them are still in one (until the globe can zoom no further in). A move
+   * by the viewer along the way stops it.
    */
-  private zoomToCrowd(gameIds: readonly string[]): void {
+  private zoomToCardCluster(gameIds: readonly string[]): void {
     const bounds = new LngLatBounds()
     for (const gameId of gameIds) {
       const venue = this.shown.get(gameId)?.venue
       if (venue) bounds.extend([venue.longitude, venue.latitude])
     }
     if (bounds.isEmpty()) return
-    const fitted = this.map.cameraForBounds(bounds, { padding: crowdZoomPadding })?.zoom ?? 0
+    const fitted = this.map.cameraForBounds(bounds, { padding: cardClusterZoomPadding })?.zoom ?? 0
     const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
     const center = bounds.getCenter()
     this.map.easeTo({ center, zoom })
     this.map.once('idle', () => {
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
       if (!arrived || zoom >= maxZoom) return
-      const stillCrowded = this.cards.crowdedGames().find((crowd) => crowd.some((id) => gameIds.includes(id)))
-      if (stillCrowded) this.zoomToCrowd(stillCrowded)
+      const stillInCardCluster = this.cards.cardClusterGames().find((cluster) => cluster.some((id) => gameIds.includes(id)))
+      if (stillInCardCluster) this.zoomToCardCluster(stillInCardCluster)
     })
   }
 
   /**
    * Plays an animation where a game shows on the globe: its score card when zoomed in, its small pin
-   * when zoomed out, or the cluster it's in. Games not on the map (off screen) don't animate.
+   * when zoomed out, or the pin cluster it's in. Games not on the map (off screen) don't animate.
    */
   private async animate(game: Game, animation: PinAnimation): Promise<void> {
     const map = this.map
@@ -307,7 +307,7 @@ export class GlobeMap {
     }
 
     for (const { clusterId, lngLat } of target.candidates) {
-      // A cluster can be gone by the time it's asked (the data or zoom changed), so skip it.
+      // A pin cluster can be gone by the time it's asked (the data or zoom changed), so skip it.
       const leaves = await source.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])
       if (this.destroyed) return
       if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
@@ -347,7 +347,7 @@ export class GlobeMap {
   }
 }
 
-/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a cluster). */
+/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
 function selectedPin(gameId: string | null): ExpressionSpecification {
   return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
 }

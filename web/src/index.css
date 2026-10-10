@@ -301,31 +301,31 @@ body {
 }
 
 /* How each status looks comes from globe/statusLook.ts, which writes it to the page's root
-   (--live-color, --live-group-opacity and so on). Score cards, crowds and trails pick theirs by
+   (--live-color, --live-group-opacity and so on). Score cards, card clusters and trails pick theirs by
    their status class. Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out. */
 .score-card--live,
-.score-crowd--live,
+.card-cluster--live,
 .score-card-trail--live {
   --status-color: var(--live-color);
   --status-group-opacity: var(--live-group-opacity);
 }
 
 .score-card--upcoming,
-.score-crowd--upcoming,
+.card-cluster--upcoming,
 .score-card-trail--upcoming {
   --status-color: var(--upcoming-color);
   --status-group-opacity: var(--upcoming-group-opacity);
 }
 
 .score-card--final,
-.score-crowd--final,
+.card-cluster--final,
 .score-card-trail--final {
   --status-color: var(--final-color);
   --status-group-opacity: var(--final-group-opacity);
 }
 
 .score-card--disrupted,
-.score-crowd--disrupted,
+.card-cluster--disrupted,
 .score-card-trail--disrupted {
   --status-color: var(--disrupted-color);
   --status-group-opacity: var(--disrupted-group-opacity);
@@ -396,14 +396,14 @@ body {
   display: none;
 }
 
-/* No room for this card: its game is counted in a crowd instead. */
-[data-crowded] {
+/* No room for this card: its game is counted in a card cluster instead. */
+[data-in-card-cluster] {
   visibility: hidden;
 }
 
-/* Games with no room for a card, shown as a count that looks like a cluster: a dark disc outlined
+/* Games with no room for a card, shown as a card cluster: a dark disc outlined
    and lit in the colour of its most prominent game (see groupFill in globe/statusLook.ts). */
-.score-crowd {
+.card-cluster {
   display: grid;
   place-items: center;
   box-sizing: border-box;

@@ -7,7 +7,7 @@ import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
-import { clusterLayer, smallPinLayer } from './pinLayers'
+import { pinClusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
 import { cardZoom, maxZoom } from './zoomLevels'
 
@@ -15,7 +15,7 @@ applyStatusLook(document.documentElement)
 
 /**
  * A plain style with nothing to fetch: no tiles, no place names, and no glyphs, so cluster counts
- * aren't drawn (the tests look for the clusters themselves). The place-name test adds a stand-in.
+ * aren't drawn (the tests look for the pin clusters themselves). The place-name test adds a stand-in.
  */
 const plainStyle: StyleSpecification = {
   version: 8,
@@ -92,7 +92,7 @@ function drawnAt(map: MapLibreMap, layer: string, { venue }: Game) {
   )
 }
 
-/** Waits until the map has drawn these games' small pins, or the clusters they're in. */
+/** Waits until the map has drawn these games' small pins, or the pin clusters they're in. */
 async function pinsDrawn(map: MapLibreMap, layer: string, ...games: Game[]) {
   await vi.waitFor(() => expect(games.every((game) => drawnAt(map, layer, game).length > 0)).toBe(true), {
     timeout: 10_000,
@@ -168,7 +168,7 @@ describe('selection', () => {
 
   it('leaves a score card moved aside for its neighbours where it is when it is selected', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
-    // Close enough that some cards are moved aside, not so close that any is crowded out.
+    // Close enough that some cards are moved aside, not so close that any is in a card cluster.
     globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
     await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
     const moved = container.querySelector<HTMLElement>('[data-moved] .score-card')!
@@ -242,7 +242,7 @@ describe('selection', () => {
   })
 })
 
-describe('zooming in to clusters and crowds', () => {
+describe('zooming in to pin clusters and card clusters', () => {
   it('does not zoom in when the viewer double-clicks the globe', async () => {
     const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     await new Promise((resolve) => map.once('load', resolve))
@@ -253,11 +253,11 @@ describe('zooming in to clusters and crowds', () => {
     expect(map.getZoom()).toBe(2)
   })
 
-  it('zooms in to a cluster the viewer selects, no further than score cards', async () => {
+  it('zooms in to a pin cluster the viewer selects, no further than score cards', async () => {
     const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    // At the same venue, so the cluster would only split at the cluster source's last zoom.
+    // At the same venue, so the pin cluster would only split at the pin source's last zoom.
     globe.show([game('A'), game('B')])
-    await pinsDrawn(map, clusterLayer, game('A'))
+    await pinsDrawn(map, pinClusterLayer, game('A'))
 
     await userEvent.click(map.getCanvas(), { position: { x: 400, y: 300 } })
 
@@ -266,31 +266,31 @@ describe('zooming in to clusters and crowds', () => {
     await cardShown('B')
   })
 
-  it('zooms in to a crowd the viewer selects until its games all have cards', async () => {
+  it('zooms in to a card cluster the viewer selects until its games all have cards', async () => {
     const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at cardZoom.
     const games = Array.from({ length: 16 }, (_, i) =>
       game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
     )
     globe.show(games)
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).not.toBeNull(), { timeout: 10_000 })
 
-    await userEvent.click(container.querySelector('.score-crowd')!)
+    await userEvent.click(container.querySelector('.card-cluster')!)
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom > cardZoom + 1)
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).toBeNull(), { timeout: 20_000 })
+    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).toBeNull(), { timeout: 20_000 })
   })
 
   // Five or so zooms one after another: about 10 seconds in CI.
-  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', { timeout: 30_000 }, async () => {
+  it('zooms in again while some of a card cluster’s games are still in one, as far as the globe goes', { timeout: 30_000 }, async () => {
     const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     // Two games half a degree out set how far the first zoom goes; at the venue between them,
-    // more games than there's ever room for stay crowded after it.
+    // more games than there's ever room for stay in a card cluster after it.
     const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
     globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).not.toBeNull(), { timeout: 10_000 })
 
-    await userEvent.click(container.querySelector('.score-crowd')!)
+    await userEvent.click(container.querySelector('.card-cluster')!)
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
     const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
@@ -336,7 +336,7 @@ describe('score cards', () => {
     expect(Math.abs(a.x - b.x)).toBeLessThan(20)
 
     expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
-    expect(container.querySelector('.score-crowd')).toBeNull()
+    expect(container.querySelector('.card-cluster')).toBeNull()
     const trails = [...container.querySelectorAll<SVGGElement>('.score-card-trails g')]
     expect(trails.filter((trail) => trail.style.display !== 'none')).toEqual([])
   })
@@ -399,10 +399,10 @@ describe('animations', () => {
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--pin.pin-pulse--score')).not.toBeNull())
   })
 
-  it('plays over the cluster a game is in', async () => {
+  it('plays over the pin cluster a game is in', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     globe.show([game('A', { home: 0 }), game('B')])
-    await pinsDrawn(map, clusterLayer, game('A'))
+    await pinsDrawn(map, pinClusterLayer, game('A'))
 
     globe.show([game('A', { home: 7 }), game('B')])
 

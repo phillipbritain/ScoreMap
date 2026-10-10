@@ -13,21 +13,21 @@ public sealed class ScenarioGameFeedProvider : IGameFeedProvider
     private readonly Scenario _scenario;
     private readonly TimeProvider _clock;
     private readonly DateTimeOffset _startedAt;
-    private readonly RandomPlay? _randomPlay;
+    private readonly ScenarioPlay? _play;
 
     public ScenarioGameFeedProvider(Scenario scenario, TimeProvider clock)
     {
         _scenario = scenario;
         _clock = clock;
         _startedAt = clock.GetUtcNow();
-        if (scenario.RandomPlay is not null)
-            _randomPlay = new RandomPlay(scenario, _startedAt, new Random(Scenario.StableSeed(scenario.Name)));
+        if (scenario.Play is not null)
+            _play = new ScenarioPlay(scenario, _startedAt, new Random(Scenario.StableSeed(scenario.Name)));
     }
 
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
         var now = _clock.GetUtcNow();
-        var all = _randomPlay is not null ? _randomPlay.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
+        var all = _play is not null ? _play.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
         IReadOnlyList<ProviderGame> games = all.Where(game => game.LeagueKey == leagueKey).ToList();
         return Task.FromResult(games);
     }

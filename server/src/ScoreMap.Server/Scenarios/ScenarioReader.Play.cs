@@ -13,7 +13,7 @@ public static partial class ScenarioReader
     /// Disrupted (<c>"disrupted"</c>): <see cref="DefaultDisruptedShare"/> if left out, and none without
     /// play, which rejects the field since nothing would act on it.
     /// </summary>
-    private static (bool Plays, double DisruptedShare) ReadPlays(ScenarioFile file, string scenario, string path)
+    private static (bool Plays, double DisruptedShare) ReadPlayAndShare(ScenarioFile file, string scenario, string path)
     {
         var plays = file.Play?.ValueKind switch
         {
@@ -38,9 +38,10 @@ public static partial class ScenarioReader
     /// <summary>
     /// The settings for a scenario's play. New games come from the venues of the scenario's
     /// <c>fill</c> group, so play needs a fill; it replaces a timeline rather than adding to one.
+    /// Play leaves the games in <paramref name="writtenOut"/> undisrupted.
     /// </summary>
-    private static RandomPlaySettings ReadPlay(
-        ScenarioFile file, double disruptedShare, string scenario, string path, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
+    private static PlaySettings ReadPlay(
+        ScenarioFile file, double disruptedShare, IReadOnlySet<string> writtenOut, string scenario, string path, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
     {
         ScenarioFileException Problem(string problem) => new(scenario, path, $"play {problem}");
 
@@ -48,7 +49,7 @@ public static partial class ScenarioReader
             throw Problem("is on, so the scenario can't have a timeline as well; use one or the other");
         if (file.Fill?.Group is not { } group || venues is null)
             throw Problem("needs a fill: new games go to venues from the fill's group");
-        return new RandomPlaySettings(
-            leagues, venues.Where(venue => venue.Groups.Contains(group)).ToList(), new ScenarioGameMaker(leagues, venues), disruptedShare);
+        return new PlaySettings(
+            leagues, venues.Where(venue => venue.Groups.Contains(group)).ToList(), new ScenarioGameMaker(leagues, venues), disruptedShare, writtenOut);
     }
 }

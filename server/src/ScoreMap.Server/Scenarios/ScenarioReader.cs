@@ -68,7 +68,8 @@ public static partial class ScenarioReader
                 throw new ScenarioFileException(name, path, $"game {i + 1}{id} {e.Message}");
             }
         }).ToList();
-        var (plays, disruptedShare) = ReadPlays(file, name, path);
+        var writtenOut = ids.ToHashSet();
+        var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
         if (file.Fill is not null)
         {
             foreach (var game in ReadFill(file.Fill, disruptedShare, name, path, leagues, venues))
@@ -80,7 +81,7 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
-        var play = plays ? ReadPlay(file, disruptedShare, name, path, leagues, venues) : null;
+        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, leagues, venues) : null;
         return new Scenario(name, games, timeline, play);
     }
 

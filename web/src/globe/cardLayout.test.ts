@@ -224,6 +224,34 @@ describe('layOutCards', () => {
     expect(crowds.map((c) => c.status).sort()).toEqual(['Disrupted', 'Live'])
   })
 
+  describe('laid out again, as the globe turns', () => {
+    // Two games at one venue: b is moved aside. Below the venue is clear but not b's nearest spot.
+    const pair = [card('a', 0, 0), card('b', 0, 0)]
+    const below = { dx: 0, dy: 80 }
+    const lastTime = (shifts: Record<string, ScreenOffset>) =>
+      new Map(
+        Object.entries(shifts).map(([gameId, { dx, dy }]) => [gameId, { offset: { dx, dy: dy - pointer }, crowded: false, trail: null }]),
+      )
+
+    it('keeps a moved card where it was while that still has room, rather than jumping to a nearer spot', () => {
+      expect(spreadCards(pair).get('b')).not.toEqual(below)
+      const layout = layOutCards(pair, scene, lastTime({ a: { dx: 0, dy: 0 }, b: below }))
+      expect(shiftsOf(layout).get('b')).toEqual(below)
+    })
+
+    it('moves a card back over its venue once there is room there', () => {
+      const layout = layOutCards([card('b', 0, 0)], scene, lastTime({ b: below }))
+      expect(shiftsOf(layout).get('b')).toEqual({ dx: 0, dy: 0 })
+    })
+
+    it('moves a card from where it was once that has no room', () => {
+      const blocking = { x: 0, y: 80, width: 80, height: 24 }
+      const layout = layOutCards(pair, { ...scene, names: [blocking] }, lastTime({ a: { dx: 0, dy: 0 }, b: below }))
+      expect(shiftsOf(layout).get('b')).not.toEqual(below)
+      expect(anyOverlap(placed(pair, [blocking]))).toBe(false)
+    })
+  })
+
   it("leaves cards well off screen where they'd sit, however they overlap", () => {
     const { cards, crowds } = lay([card('a', -500, 100), card('b', -500, 100), card('c', 400, 1200)])
     for (const placement of cards.values()) expect(placement).toEqual(sitting)

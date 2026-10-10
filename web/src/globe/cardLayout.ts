@@ -69,9 +69,14 @@ export interface CardLayout {
  * trail back to its venue (see arrange). Cards get room by status, most prominent first, whichever is
  * selected, so selecting a card never moves it; a card with no room within reach joins a crowd.
  * Cards whose venues are well off screen stay where they'd sit: nothing on screen can get in their
- * way.
+ * way. Given where the cards were last time (`previous`), a moved card stays where it was while that
+ * still has room, so cards don't jump about as the globe turns.
  */
-export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): CardLayout {
+export function layOutCards(
+  cards: readonly ScreenCard[],
+  scene: CardScene,
+  previous: ReadonlyMap<string, CardPlacement> = new Map(),
+): CardLayout {
   const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, crowded: false, trail: null }
   const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
   const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
@@ -87,6 +92,7 @@ export function layOutCards(cards: readonly ScreenCard[], scene: CardScene): Car
         venueX: card.venueX,
         venueY: card.venueY,
         rank: rank(card),
+        previous: shiftOf(previous.get(card.gameId), scene.pointer),
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
@@ -120,6 +126,12 @@ function nearScreen(x: number, y: number, { width, height }: CardScene): boolean
   return x > -offScreenMargin && x < width + offScreenMargin && y > -offScreenMargin && y < height + offScreenMargin
 }
 
+/** How far a card was moved from where it would sit, if it had room. */
+function shiftOf(placement: CardPlacement | undefined, pointer: number): ScreenOffset | undefined {
+  if (!placement || placement.crowded) return undefined
+  return { dx: placement.offset.dx, dy: placement.offset.dy + pointer }
+}
+
 /** A moved card's trail: from where a line from the card's centre to its venue leaves the card. */
 function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
   const centreX = box.x + dx
@@ -143,6 +155,8 @@ interface CardBox {
   venueY: number
   /** Which cards get room first where there isn't room for all: lowest first, then in game order. */
   rank: number
+  /** How far the card was moved last time it was laid out, if it had room. */
+  previous?: ScreenOffset
 }
 
 interface Arrangement {
@@ -177,7 +191,9 @@ const crowdRadius = 40
  * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. No card
  * covers a name in `names`, and no trail crosses one unless it covers the trail's own venue. Of those
  * spots it takes the nearest whose trail crosses no card and that sits on no trail, where there is
- * one. A card with no spot within reach joins a crowd instead.
+ * one. A card with no spot within reach joins a crowd instead. A card that was moved last time tries
+ * where it was straight after where it would sit, and keeps it while it fits, so it moves only when
+ * that spot has no room.
  */
 function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrangement {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
@@ -233,11 +249,14 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrang
       return cardsNear.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     }
 
-    // The nearest spot clear of trails too, or failing that the nearest spot at all.
+    // The nearest spot clear of trails too, or failing that the nearest spot at all. Where the card was
+    // last time will do while it fits, trails or not, so a trail edging across a card doesn't send it
+    // elsewhere.
     let shift: ScreenOffset | undefined
-    for (const move of moves) {
+    const tries = card.previous ? [moves[0], card.previous, ...moves.slice(1)] : moves
+    for (const move of tries) {
       if (!fits(move)) continue
-      if (trailsClear(move)) {
+      if (move === card.previous || trailsClear(move)) {
         shift = move
         break
       }

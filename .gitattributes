@@ -1,2 +1,5 @@
 # Markdown is text whatever editor wrote it, with LF line endings everywhere.
 *.md text eol=lf
+# Code and data too, as the index already holds them, so git doesn't warn about converting them on every command.
+*.cs text eol=lf
+*.json text eol=lf

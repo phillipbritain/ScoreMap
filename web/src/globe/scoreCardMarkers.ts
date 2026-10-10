@@ -199,7 +199,6 @@ export class ScoreCardMarkers {
       height: canvas.clientHeight,
       pointer: this.pointer,
       names: this.placeNames.nameBoxes(),
-      selectedGameId: this.selectedGameId,
     })
 
     for (const [gameId, placed] of this.placed) {

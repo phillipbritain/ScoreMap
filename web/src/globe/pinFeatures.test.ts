@@ -15,6 +15,7 @@ const arrowhead: Game = {
   away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: 17 },
   clock: '4:12',
   period: 3,
+  clutchTime: false,
   venue: {
     name: 'GEHA Field at Arrowhead Stadium',
     city: 'Kansas City',

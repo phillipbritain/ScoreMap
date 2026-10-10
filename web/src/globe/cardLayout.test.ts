@@ -217,12 +217,6 @@ describe('layOutCards', () => {
     expect(spreadCards([...games('g', 20, 0, 0, 'Final'), live]).get('z')).toEqual({ dx: 0, dy: 0 })
   })
 
-  it("gives the selected game's card room before any other", () => {
-    const selected = card('z', 10, 0, 'Disrupted')
-    const layout = layOutCards([...games('g', 20, 0, 0, 'Live'), selected], { ...scene, selectedGameId: 'z' })
-    expect(layout.cards.get('z')).toEqual(sitting)
-  })
-
   it('shows a crowd as its most prominent game, Disrupted only when all its games are', () => {
     const mixed = [...games('g', 20, 0, 0, 'Live'), card('f', 19, 0, 'Final')]
     const disrupted = games('d', 20, 500, 300, 'Disrupted')

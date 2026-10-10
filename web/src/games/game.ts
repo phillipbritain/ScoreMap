@@ -75,6 +75,11 @@ export interface Game {
   away: GameTeam
   clock: string | null
   period: number | null
+  /**
+   * In basketball, whether the game is in clutch time (see GLOSSARY.md): the last 5 minutes of the
+   * last period of regulation, or any time in overtime, within 5 points. False in other sports.
+   */
+  clutchTime: boolean
   venue: GameVenue
   broadcasters: GameBroadcaster[]
   /** Unofficial stream links; empty when the stream finder found none or is switched off. */

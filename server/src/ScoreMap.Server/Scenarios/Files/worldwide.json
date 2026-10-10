@@ -1,7 +1,22 @@
 // worldwide (the default): about 150 games at venues on every continent, in a mix of Upcoming,
 // Live, Final and Disrupted. For the globe as a whole: pins everywhere, clusters, every status.
 // Live games play on (clocks run, teams score) but no game changes status, so the mix holds.
+// Raptors v Celtics is written out: a close NBA game late in the 4th quarter, coming into clutch time,
+// so its score pulses start once 5 minutes are left (if the score stays within 5 points).
 {
+  "games": [
+    {
+      "id": "worldwide-raptors-celtics",
+      "league": "NBA",
+      "home": { "name": "Toronto Raptors", "abbreviation": "TOR", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/tor.png", "score": 99 },
+      "away": { "name": "Boston Celtics", "abbreviation": "BOS", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png", "score": 97 },
+      "venue": { "name": "Scotiabank Arena", "city": "Toronto" },
+      "startsIn": "-2h20m",
+      "status": "live",
+      "clock": "6:30",
+      "period": 4
+    }
+  ],
   "fill": {
     "count": 150,
     "group": "worldwide",

@@ -35,7 +35,7 @@ Pick the scenario that brings out what you're checking, and you know what should
 
 | Scenario | What it shows | Use it for |
 | --- | --- | --- |
-| `worldwide` | ~150 games on every continent: Upcoming, Live, Final, Disrupted; Live games play on, but no game starts or finishes | the globe as a whole, clusters, every status |
+| `worldwide` | ~150 games on every continent: Upcoming, Live, Final, Disrupted; Live games play on, but no game starts or finishes; Raptors v Celtics (Toronto) is close late in the 4th, coming into clutch time | the globe as a whole, clusters, every status; basketball's score pulses in clutch time |
 | `crowded` | ~40 games in and around London; Live games play on, but no game starts or finishes | a Cluster zoomed out; score cards and a Crowd zoomed in over London |
 | `live-scoring` | 5 Live games (NFL, NBA, NHL, soccer, MLB, around New York and London); a score every ~3 s, the first at 3 s; soccer to HT at 30 s and back at 1m33s; MLB Final at 45 s; loops every 2 min | score cards and their animations |
 | `busy` | ~60 Live games on random play: scoring, breaks, finishes, new games arriving (at 1×, a score every ~15 s and a finish every few minutes; faster at higher speeds) | the app under steady change |

@@ -105,7 +105,8 @@ public sealed class ScenarioPlay
                     Play(played, at);
                     break;
                 case var status when (status == ProviderStatus.Final || IsDisrupted(status)) && at - played.StoppedAt >= DropsOutAfter:
-                    _games[i] = NewGame(at, replacing: played);
+                    // Without teams free for a new game, the old one stays until some are.
+                    _games[i] = NewGame(at, replacing: played) ?? played;
                     break;
             }
         }
@@ -185,23 +186,31 @@ public sealed class ScenarioPlay
     /// A new game at a venue no game is at (if there is one), between teams in no other game showing,
     /// Upcoming and starting soon, or straight into Live. The teams of the game it is
     /// <paramref name="replacing"/> are free again, so a scenario filled with as many games as its teams
-    /// have room for can still bring new ones on.
+    /// have room for can still bring new ones on. Null if no league has two teams free, which can happen
+    /// when the game replaced is between teams the team list doesn't have (one written out).
     /// </summary>
-    private PlayedGame NewGame(DateTimeOffset at, PlayedGame replacing)
+    private PlayedGame? NewGame(DateTimeOffset at, PlayedGame replacing)
     {
         var inUse = _games.Select(game => game.Game.Venue?.Name).ToHashSet();
         var free = _settings.Venues.Where(venue => !inUse.Contains(venue.Name)).ToList();
         var venues = free.Count > 0 ? free : _settings.Venues;
         var venue = venues[_random.Next(venues.Count)];
-        var id = $"{_scenario}-play-{++_newGames}";
-        var playing = ScenarioGameMaker.Playing(_games.Where(game => game != replacing).Select(game => game.Game)).ToList();
-        if (_random.NextDouble() < UpcomingShare)
+        var id = $"{_scenario}-play-{_newGames + 1}";
+        var playing = _games.Where(game => game != replacing)
+            .SelectMany(game => PlayingTeam.In(game.Game.LeagueKey, game.Game.Home, game.Game.Away)).ToList();
+        ScenarioGame made;
+        try
         {
-            var upcoming = _settings.Maker.Make(id, venue, GameStatus.Upcoming, playing, _random)
-                with { StartsIn = TimeSpan.FromSeconds(_random.Next(60, 181)) };
-            return Begin(upcoming, at);
+            made = _random.NextDouble() < UpcomingShare
+                ? _settings.Maker.Make(id, venue, GameStatus.Upcoming, playing, _random) with { StartsIn = TimeSpan.FromSeconds(_random.Next(60, 181)) }
+                : _settings.Maker.Make(id, venue, GameStatus.Live, playing, _random);
         }
-        return Begin(_settings.Maker.Make(id, venue, GameStatus.Live, playing, _random), at);
+        catch (NotEnoughTeamsException)
+        {
+            return null;
+        }
+        _newGames++;
+        return Begin(made, at);
     }
 
     /// <summary>

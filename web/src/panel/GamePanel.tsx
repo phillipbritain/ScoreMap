@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { progressLine } from '../games/progressLine'
@@ -8,6 +8,8 @@ import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 interface GamePanelProps {
   game: Game
   onClose: () => void
+  /** The panel's element, so the globe can keep the selected pin clear of it. */
+  ref?: Ref<HTMLElement>
 }
 
 /** A link in the panel's Watch column: an official channel or service, or an unofficial stream. */
@@ -23,7 +25,7 @@ interface PanelLink {
  * another doesn't make it jump: long text is clipped, with the full text on hover. Re-renders with
  * each new snapshot, so it stays current while open.
  */
-export function GamePanel({ game, onClose }: GamePanelProps) {
+export function GamePanel({ game, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = [venue.city, venue.country].filter(Boolean).join(', ')
   const venueName = venue.name ?? 'Unknown venue'
@@ -43,7 +45,7 @@ export function GamePanel({ game, onClose }: GamePanelProps) {
   const statusStyle = { '--status-color': `var(--${game.status.toLowerCase()}-color)` } as CSSProperties
 
   return (
-    <aside className="game-panel" style={statusStyle} aria-label="Game panel">
+    <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">
       <div className="game-panel__score">
         <div className="game-panel__league">{game.league}</div>
         <TeamRow team={game.away} />

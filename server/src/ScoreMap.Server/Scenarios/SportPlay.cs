@@ -31,28 +31,17 @@ internal sealed class SportPlay
     {
         _sport = league.Sport;
         _plannedMinutes = league.PlannedLength.TotalMinutes;
-        Regulation = league.RegulationPeriods ?? league.Sport switch
-        {
-            Sport.Baseball => 9,
-            Sport.Hockey => 3,
-            Sport.Soccer => 2,
-            _ => 4,
-        };
-        PeriodMinutes = league.Sport switch
-        {
-            Sport.AmericanFootball => 15,
-            Sport.Basketball => Regulation == 2 ? 20 : 12,
-            Sport.Soccer => 45,
-            _ => 20,
-        };
+        Regulation = league.Regulation;
+        PeriodMinutes = league.PeriodClockMinutes ?? 0;
         _segments = Segments(league.Sport, Regulation);
         _totalWeight = _segments.Sum(s => s.Weight);
         _playingShare = _segments.Where(s => s.Playing).Sum(s => s.Weight) / _totalWeight;
 
         _scoring = league.Sport switch
         {
-            Sport.AmericanFootball => new Scoring(3.5, [(7, 0.7), (3, 0.3)], 47, 3),
+            Sport.Football => new Scoring(3.5, [(7, 0.7), (3, 0.3)], 47, 3),
             Sport.Basketball when Regulation == 2 => new Scoring(34, BasketballPoints, 100, 2),
+            Sport.Basketball when PeriodMinutes == 10 => new Scoring(36, BasketballPoints, 115, 2),
             Sport.Basketball => new Scoring(52, BasketballPoints, 137, 2),
             Sport.Baseball => new Scoring(3, [(1, 0.65), (2, 0.25), (3, 0.08), (4, 0.02)], 11, 1),
             Sport.Hockey => new Scoring(3, [(1, 1.0)], 7, 1),

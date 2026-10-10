@@ -35,7 +35,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
   return {
     id,
     league: 'NFL',
-    sport: 'American football',
+    sport: 'Football',
     startTime: '2026-10-04T17:00:00+00:00',
     status,
     delayed: false,

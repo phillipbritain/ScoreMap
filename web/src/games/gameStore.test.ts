@@ -6,7 +6,7 @@ function game(id: string, homeScore: number | null = null): Game {
   return {
     id,
     league: 'NFL',
-    sport: 'American football',
+    sport: 'Football',
     startTime: '2026-10-04T17:00:00+00:00',
     status: 'Live',
     delayed: false,

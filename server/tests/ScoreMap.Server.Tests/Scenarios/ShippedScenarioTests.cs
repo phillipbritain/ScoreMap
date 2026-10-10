@@ -131,6 +131,7 @@ public class ShippedScenarioTests
         await using var client = await StartAsync(server, name);
         await client.NextSnapshotAsync();
 
+        // New Live games start up to 90% of the way through, so the first finish can take a while.
         var changes = new List<GameChange>();
         foreach (var wanted in new Func<GameChange, bool>[]
         {
@@ -142,7 +143,7 @@ public class ShippedScenarioTests
         })
         {
             if (!changes.Any(wanted))
-                changes.AddRange(await AdvanceUntilAsync(server, client, wanted, within: TimeSpan.FromMinutes(15)));
+                changes.AddRange(await AdvanceUntilAsync(server, client, wanted, within: TimeSpan.FromMinutes(30)));
         }
     }
 

@@ -12,31 +12,30 @@ namespace ScoreMap.Server.Scenarios;
 /// </summary>
 public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTeamList teams)
 {
-    /// <summary>The ways a game can be Disrupted, as the feed reports them.</summary>
-    public static readonly IReadOnlyList<ProviderStatus> Disruptions = [ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled];
+    private static readonly ProviderStatus[] Disruptions = [ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled];
 
     /// <summary>
     /// A game with id <paramref name="id"/> at <paramref name="venue"/> in <paramref name="status"/>,
     /// with its start relative to the scenario's (or loop's) start, between two teams of a league that
-    /// aren't among <paramref name="playing"/> (each team in a game showing, by league key and name).
-    /// A Disrupted game is <paramref name="disruption"/> (one of <see cref="Disruptions"/>), or one at
-    /// random if left out. Every choice comes from <paramref name="random"/>, so a seeded one makes the
+    /// aren't among <paramref name="playing"/> (each team in a game showing).
+    /// A Disrupted game is <paramref name="disruption"/> (Postponed, Suspended or Canceled; see
+    /// <see cref="DisruptionInTurn"/>), or one at random if left out. Every choice comes from <paramref name="random"/>, so a seeded one makes the
     /// same game each time.
     /// </summary>
     /// <exception cref="NotEnoughTeamsException">No league has two teams free to play.</exception>
     public ScenarioGame Make(
-        string id, ScenarioVenue venue, GameStatus status, IEnumerable<(string LeagueKey, string Team)> playing, Random random,
+        string id, ScenarioVenue venue, GameStatus status, IEnumerable<PlayingTeam> playing, Random random,
         ProviderStatus? disruption = null)
     {
-        var busy = playing.ToHashSet();
-        var open = leagues
-            .Select(league => (League: league, Free: teams.For(league).Where(team => !busy.Contains((league.Key, team.Name))).ToList()))
-            .Where(choice => choice.Free.Count >= 2)
+        var taken = playing.ToHashSet();
+        var leaguesWithAGameFree = leagues
+            .Select(league => (League: league, Free: teams.For(league).Where(team => !taken.Contains(new(league.Key, team.Name))).ToList()))
+            .Where(league => league.Free.Count >= 2)
             .ToList();
-        if (open.Count == 0)
+        if (leaguesWithAGameFree.Count == 0)
             throw new NotEnoughTeamsException(
                 $"Can't make game \"{id}\": no league has two teams free to play; add teams to the scenario team list or ask for fewer games");
-        var (league, free) = open[random.Next(open.Count)];
+        var (league, free) = leaguesWithAGameFree[random.Next(leaguesWithAGameFree.Count)];
         var home = free[random.Next(free.Count)];
         free.Remove(home);
         var away = free[random.Next(free.Count)];
@@ -58,7 +57,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
             GameStatus.Upcoming => game with { StartsIn = Minutes(random.Next(5, 171)) },
             GameStatus.Live => UnderWay(game, league, sport, random),
             GameStatus.Final => Finished(game, league, sport, random),
-            GameStatus.Disrupted => Disrupted(game, league, sport, disruption ?? Disruptions[random.Next(Disruptions.Count)], random),
+            GameStatus.Disrupted => Disrupted(game, league, sport, disruption ?? Disruptions[random.Next(Disruptions.Length)], random),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "No such status"),
         };
     }
@@ -114,17 +113,23 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
             : game with { StartsIn = Minutes(random.Next(-30, 121)), Status = status };
     }
 
-    /// <summary>Each team in <paramref name="games"/>, by league key and name, as <see cref="Make"/> takes the teams playing.</summary>
-    public static IEnumerable<(string LeagueKey, string Team)> Playing(IEnumerable<ScenarioGame> games) =>
-        games.SelectMany(game => new[] { (game.LeagueKey, game.Home.FullName), (game.LeagueKey, game.Away.FullName) });
-
-    /// <inheritdoc cref="Playing(IEnumerable{ScenarioGame})"/>
-    public static IEnumerable<(string LeagueKey, string Team)> Playing(IEnumerable<ProviderGame> games) =>
-        games.SelectMany(game => new[] { (game.LeagueKey, game.Home.FullName), (game.LeagueKey, game.Away.FullName) });
+    /// <summary>
+    /// The way the <paramref name="n"/>th (from 0) of a batch of Disrupted games is disrupted: Postponed,
+    /// Suspended and Canceled in turn, so a few Disrupted games show every kind.
+    /// </summary>
+    public static ProviderStatus DisruptionInTurn(int n) => Disruptions[n % Disruptions.Length];
 
     private static TimeSpan Minutes(int minutes) => TimeSpan.FromMinutes(minutes);
 
     private static ProviderTeam Team(ScenarioTeam team) => new(team.Abbreviation, team.Name, team.LogoUrl, null);
+}
+
+/// <summary>A team in a game showing, by its league's key and its name, which the game maker won't put in another game.</summary>
+public readonly record struct PlayingTeam(string LeagueKey, string Team)
+{
+    /// <summary>The two teams of a game in league <paramref name="leagueKey"/>.</summary>
+    public static IEnumerable<PlayingTeam> In(string leagueKey, ProviderTeam home, ProviderTeam away) =>
+        [new(leagueKey, home.FullName), new(leagueKey, away.FullName)];
 }
 
 /// <summary>Thrown when no league has two teams free to play, so the game maker can't make another game.</summary>

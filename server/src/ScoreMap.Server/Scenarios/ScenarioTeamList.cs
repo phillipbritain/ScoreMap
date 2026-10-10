@@ -12,9 +12,8 @@ public sealed class ScenarioTeamList(IReadOnlyDictionary<string, IReadOnlyList<S
     private readonly Dictionary<string, IReadOnlyList<ScenarioTeam>> _byLeague =
         new(byLeague, StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>The league's teams, listed under its name or key; none if the list doesn't have it.</summary>
-    public IReadOnlyList<ScenarioTeam> For(League league) =>
-        _byLeague.GetValueOrDefault(league.Name) ?? _byLeague.GetValueOrDefault(league.Key) ?? [];
+    /// <summary>The league's teams, listed under its name; none if the list doesn't have it.</summary>
+    public IReadOnlyList<ScenarioTeam> For(League league) => _byLeague.GetValueOrDefault(league.Name) ?? [];
 
     /// <summary>Reads the team list (a JSON object of league names, each with an array of teams) from a file.</summary>
     public static ScenarioTeamList Read(string path) =>

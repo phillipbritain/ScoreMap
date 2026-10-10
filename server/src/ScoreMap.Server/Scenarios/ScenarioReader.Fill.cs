@@ -10,17 +10,17 @@ public static partial class ScenarioReader
 
     /// <summary>
     /// Expands a <c>fill</c> (ADR-0009): <c>count</c> games, each at a different venue from the named
-    /// group of the venue list, between teams from the team list that no other game (filled or written
-    /// out in <paramref name="writtenOut"/>) has: <paramref name="disruptedShare"/> of them
+    /// group of the venue list, between teams from the team list that no other game (filled, or in
+    /// <paramref name="writtenOutGames"/>) has: <paramref name="disruptedShare"/> of them
     /// Disrupted (the scenario's <c>"disrupted"</c>), postponed, suspended and canceled in turn so a
     /// few of them show every kind, the rest in statuses shared out by the <c>mix</c>
     /// (all Live without one). The same scenario file gives the same games each time, since every
     /// choice is seeded by the scenario's name. Filled games are numbered <c>&lt;scenario&gt;-fill-&lt;n&gt;</c>.
     /// </summary>
     private static IReadOnlyList<ScenarioGame> ReadFill(
-        FillEntry entry, double disruptedShare, IReadOnlyList<ScenarioGame> writtenOut, string scenario, string path,
-        IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues, ScenarioTeamList? teams)
+        FillEntry entry, double disruptedShare, IReadOnlyList<ScenarioGame> writtenOutGames, string scenario, string path, Lists lists)
     {
+        var (leagues, venues, teams) = lists;
         ScenarioFileException Problem(string problem) => new(scenario, path, $"fill {problem}");
 
         if (venues is null)
@@ -58,16 +58,15 @@ public static partial class ScenarioReader
         {
             foreach (var (venue, i) in inGroup.Take(entry.Count).Select((venue, i) => (venue, i)))
             {
-                var disruption = statuses[i] == GameStatus.Disrupted
-                    ? ScenarioGameMaker.Disruptions[disrupted++ % ScenarioGameMaker.Disruptions.Count]
-                    : (ProviderStatus?)null;
-                var playing = ScenarioGameMaker.Playing(writtenOut.Concat(filled));
+                var disruption = statuses[i] == GameStatus.Disrupted ? ScenarioGameMaker.DisruptionInTurn(disrupted++) : (ProviderStatus?)null;
+                var playing = writtenOutGames.Concat(filled).SelectMany(game => PlayingTeam.In(game.LeagueKey, game.Home, game.Away));
                 filled.Add(maker.Make($"{scenario}-fill-{i + 1}", venue, statuses[i], playing, random, disruption));
             }
         }
         catch (NotEnoughTeamsException e)
         {
-            throw Problem($"asks for {entry.Count} games, more than the team list has teams for: {e.Message}");
+            var beside = writtenOutGames.Count > 0 ? $" beside the {writtenOutGames.Count} written out" : "";
+            throw Problem($"asks for {entry.Count} games, but the team list has free teams for only {filled.Count} of them{beside}: {e.Message}");
         }
         return filled;
     }

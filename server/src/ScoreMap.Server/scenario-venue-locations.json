@@ -11,6 +11,10 @@
     "latitude": 52.2120297,
     "longitude": 0.1541831
   },
+  "Accor Arena, Paris": {
+    "latitude": 48.8387085,
+    "longitude": 2.3787666
+  },
   "Adams Park, High Wycombe": {
     "latitude": 51.6304108,
     "longitude": -0.8002826
@@ -38,6 +42,10 @@
   "Allianz Stadium, Turin": {
     "latitude": 45.1095759,
     "longitude": 7.6421338
+  },
+  "Amerant Bank Arena, Sunrise": {
+    "latitude": 26.1583702,
+    "longitude": -80.3254289
   },
   "American Express Stadium, Brighton": {
     "latitude": 50.8615471,
@@ -223,6 +231,10 @@
     "latitude": -34.5452932,
     "longitude": -58.4497385
   },
+  "Estadio Olímpico Universitario, Mexico City": {
+    "latitude": 19.3316881,
+    "longitude": -99.1922864
+  },
   "Estadio Rodrigo Paz Delgado, Quito": {
     "latitude": -0.1077231,
     "longitude": -78.4890768
@@ -246,6 +258,10 @@
   "Estádio do Dragão, Porto": {
     "latitude": 41.1618235,
     "longitude": -8.5837492
+  },
+  "Estádio do Morumbi, São Paulo": {
+    "latitude": -23.6001016,
+    "longitude": -46.7201264
   },
   "Etihad Stadium, Manchester": {
     "latitude": 53.4831448,
@@ -271,9 +287,17 @@
     "latitude": 51.3641973,
     "longitude": -0.2062369
   },
+  "Gelora Bung Karno Stadium, Jakarta": {
+    "latitude": -6.2185958,
+    "longitude": 106.802607
+  },
   "Go Media Stadium, Auckland": {
     "latitude": -36.9178349,
     "longitude": 174.8122802
+  },
+  "Gocheok Sky Dome, Seoul": {
+    "latitude": 37.4981936,
+    "longitude": 126.8670731
   },
   "Grosvenor Vale, Ruislip": {
     "latitude": 51.5683609,
@@ -423,6 +447,10 @@
     "latitude": 35.677954,
     "longitude": 139.7147442
   },
+  "Neo Química Arena, São Paulo": {
+    "latitude": -23.5453071,
+    "longitude": -46.474338
+  },
   "Nissan Stadium, Yokohama": {
     "latitude": 35.5099882,
     "longitude": 139.6063825
@@ -559,6 +587,10 @@
     "latitude": 37.5683021,
     "longitude": 126.8972477
   },
+  "Shanghai Stadium, Shanghai": {
+    "latitude": 31.1833432,
+    "longitude": 121.4373709
+  },
   "Signal Iduna Park, Dortmund": {
     "latitude": 51.4924922,
     "longitude": 7.4518549
@@ -615,6 +647,10 @@
     "latitude": 36.7477717,
     "longitude": 10.27314
   },
+  "Stade de France, Saint-Denis": {
+    "latitude": 48.9244726,
+    "longitude": 2.3601325
+  },
   "Stade des Martyrs, Kinshasa": {
     "latitude": -4.3301897,
     "longitude": 15.3103635
@@ -663,6 +699,10 @@
     "latitude": 42.3662986,
     "longitude": -71.0621622
   },
+  "Teslim Balogun Stadium, Lagos": {
+    "latitude": 6.4997711,
+    "longitude": 3.3607844
+  },
   "The Den, London": {
     "latitude": 51.4859656,
     "longitude": -0.0509103
@@ -674,6 +714,10 @@
   "The Valley, London": {
     "latitude": 51.4863915,
     "longitude": 0.0361585
+  },
+  "Tokyo Dome, Tokyo": {
+    "latitude": 35.7055706,
+    "longitude": 139.7519705
   },
   "Tottenham Hotspur Stadium, London": {
     "latitude": 51.604157,
@@ -707,6 +751,10 @@
     "latitude": 52.5091264,
     "longitude": -1.8850354
   },
+  "Wankhede Stadium, Mumbai": {
+    "latitude": 18.9385497,
+    "longitude": 72.8257408
+  },
   "Wembley Stadium, London": {
     "latitude": 51.5560695,
     "longitude": -0.2796034
@@ -726,6 +774,10 @@
   "Yankee Stadium, Bronx": {
     "latitude": 40.8295828,
     "longitude": -73.9265212
+  },
+  "loanDepot park, Miami": {
+    "latitude": 25.7780733,
+    "longitude": -80.219554
   },
   "Şükrü Saracoğlu Stadium, Istanbul": {
     "latitude": 40.9875807,

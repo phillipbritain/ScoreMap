@@ -115,7 +115,7 @@ public class ShippedScenarioTests
     }
 
     [Fact]
-    public async Task Crowded_shows_about_40_games_in_and_around_london()
+    public async Task Crowded_shows_about_40_games_packed_into_big_cities_around_the_world()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
@@ -123,8 +123,10 @@ public class ShippedScenarioTests
         var snapshot = await client.NextSnapshotAsync();
 
         Assert.InRange(snapshot.Count, 35, 45);
-        Assert.All(snapshot, g => Assert.InRange(KmFromCentralLondon(g.Venue), 0, 130));
-        Assert.True(snapshot.Count(g => KmFromCentralLondon(g.Venue) < 15) >= 12, "at least 12 games inside London");
+        // Which cities a fill picks is up to its seed (the venue list's tests check the group spans them all).
+        var byCity = snapshot.GroupBy(g => Assert.Single(BigCities, city => KmFrom(city.At, g.Venue) < 60).Name).ToList();
+        Assert.True(byCity.Count >= 5, $"games in {byCity.Count} cities");
+        Assert.True(byCity.Any(city => city.Count() >= 8), "at least 8 games in one city");
     }
 
     [Fact]
@@ -221,9 +223,21 @@ public class ShippedScenarioTests
         return changes;
     }
 
-    private static double KmFromCentralLondon(GameVenue venue)
+    // The centres of the cities crowded packs its games into.
+    private static readonly (string Name, (double Lat, double Lon) At)[] BigCities =
+    [
+        ("New York", (40.7128, -74.0060)), ("Los Angeles", (34.0522, -118.2437)), ("Miami", (25.7617, -80.1918)),
+        ("London", (51.5072, -0.1276)), ("Paris", (48.8566, 2.3522)), ("Tokyo", (35.6762, 139.6503)),
+        ("Madrid", (40.4168, -3.7038)), ("Mexico City", (19.4326, -99.1332)), ("São Paulo", (-23.5505, -46.6333)),
+        ("Buenos Aires", (-34.6037, -58.3816)), ("Istanbul", (41.0082, 28.9784)), ("Cairo", (30.0444, 31.2357)),
+        ("Seoul", (37.5665, 126.9780)), ("Mumbai", (19.0760, 72.8777)), ("Shanghai", (31.2304, 121.4737)),
+        ("Lagos", (6.5244, 3.3792)), ("Jakarta", (-6.2088, 106.8456)),
+    ];
+
+    private static double KmFrom((double Lat, double Lon) centre, GameVenue venue)
     {
-        const double lat = 51.5072, lon = -0.1276, radiusKm = 6371;
+        var (lat, lon) = centre;
+        const double radiusKm = 6371;
         double Rad(double degrees) => degrees * Math.PI / 180;
         var dLat = Rad(venue.Latitude - lat);
         var dLon = Rad(venue.Longitude - lon);

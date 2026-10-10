@@ -32,9 +32,10 @@ public static partial class ScenarioReader
     /// <summary>
     /// Reads scenario <paramref name="name"/> from <paramref name="folder"/>. Written-out games must be
     /// at venues in <paramref name="venues"/>, the venue list, unless marked <c>notInVenueList</c>, and
-    /// a <c>fill</c> takes its games from it.
+    /// a <c>fill</c> takes its venues from it and its teams from <paramref name="teams"/>, the team list.
     /// </summary>
-    public static Scenario Read(string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null)
+    public static Scenario Read(
+        string folder, string name, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues = null, ScenarioTeamList? teams = null)
     {
         var path = Path.GetFullPath(Path.Combine(folder, $"{name}.json"));
         if (!File.Exists(path))
@@ -52,12 +53,13 @@ public static partial class ScenarioReader
         if (file is null)
             throw new ScenarioFileException(name, path, "it is empty");
 
+        var lists = new Lists(leagues, venues, teams);
         var ids = new HashSet<string>();
         var games = (file.Games ?? []).Select((entry, i) =>
         {
             try
             {
-                var game = ReadGame(entry, i, name, leagues, venues);
+                var game = ReadGame(entry, i, name, lists);
                 if (!ids.Add(game.Id))
                     throw new InvalidDataException("has the same id as an earlier game; each game needs its own");
                 return game;
@@ -72,7 +74,7 @@ public static partial class ScenarioReader
         var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
         if (file.Fill is not null)
         {
-            foreach (var game in ReadFill(file.Fill, disruptedShare, name, path, leagues, venues))
+            foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, lists))
             {
                 if (!ids.Add(game.Id))
                     throw new ScenarioFileException(name, path,
@@ -81,14 +83,15 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
-        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, leagues, venues) : null;
+        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, lists) : null;
         return new Scenario(name, games, timeline, play);
     }
 
     /// <summary>Reads one game written out in full; throws <see cref="InvalidDataException"/> saying what's wrong with it.</summary>
     private static ScenarioGame ReadGame(
-        GameEntry? entry, int index, string scenario, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
+        GameEntry? entry, int index, string scenario, Lists lists)
     {
+        var (leagues, venues, _) = lists;
         if (entry is null)
             throw new InvalidDataException("is empty");
         var league = leagues.FirstOrDefault(l =>
@@ -192,6 +195,9 @@ public static partial class ScenarioReader
     private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score);
 
     private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country, bool NotInVenueList = false);
+
+    /// <summary>What a scenario file is read against: the configured leagues, the venue list and the team list.</summary>
+    private sealed record Lists(IReadOnlyList<League> Leagues, IReadOnlyList<ScenarioVenue>? Venues, ScenarioTeamList? Teams);
 }
 
 /// <summary>A scenario file that can't be used, and why.</summary>

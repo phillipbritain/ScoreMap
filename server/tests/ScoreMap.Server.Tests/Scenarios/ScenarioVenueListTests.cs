@@ -33,9 +33,10 @@ public class ScenarioVenueListTests
     }
 
     [Fact]
-    public void Every_venue_is_worldwide_or_near_london_and_the_dense_areas_have_groups_of_their_own()
+    public void Every_venue_is_worldwide_in_a_big_city_or_near_london_and_the_dense_areas_have_groups_of_their_own()
     {
-        Assert.All(Venues, v => Assert.True(v.Groups.Contains("worldwide") || v.Groups.Contains("london-and-nearby"), v.Name));
+        Assert.All(Venues, v => Assert.True(
+            v.Groups.Contains("worldwide") || v.Groups.Contains("big-cities") || v.Groups.Contains("london-and-nearby"), v.Name));
         int InGroup(string group) => Venues.Count(v => v.Groups.Contains(group));
         Assert.InRange(InGroup("worldwide"), 150, 200);
         // Spread across the world: London's own venues are in, the many around it are not.
@@ -50,14 +51,16 @@ public class ScenarioVenueListTests
     }
 
     [Fact]
-    public void Every_venue_has_its_home_team()
+    public void The_big_cities_have_room_for_crowded_and_span_the_worlds_biggest_cities()
     {
-        Assert.All(Venues, v =>
-        {
-            Assert.False(string.IsNullOrWhiteSpace(v.HomeTeam.Name), v.Name);
-            Assert.False(string.IsNullOrWhiteSpace(v.HomeTeam.Abbreviation), v.Name);
-            Assert.StartsWith("https://a.espncdn.com/", v.HomeTeam.LogoUrl);
-        });
+        var bigCities = Venues.Where(v => v.Groups.Contains("big-cities")).ToList();
+
+        // Crowded fills 40, and play needs free venues to bring new games on at.
+        Assert.InRange(bigCities.Count, 50, 80);
+        Assert.Superset(new HashSet<string> { "New York", "Los Angeles", "Miami", "London", "Paris", "Tokyo" },
+            bigCities.Select(v => v.City).ToHashSet());
+        Assert.Superset(Venues.Where(v => v.Groups.Contains("london")).Select(v => v.Name).ToHashSet(),
+            bigCities.Select(v => v.Name).ToHashSet());
     }
 
     [Fact]

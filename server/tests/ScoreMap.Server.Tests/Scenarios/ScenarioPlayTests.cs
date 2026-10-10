@@ -28,9 +28,14 @@ public sealed class ScenarioPlayTests : IDisposable
 
     // 100 venues around the world, the first 10 of them also in "london".
     private static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 100)
-        .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere",
-            new ScenarioTeam($"Team {n}", $"T{n}", null), n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
+        .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
+
+    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 100 games at a time,
+    // so with 60 games showing, play has to steer clear of the teams already playing.
+    private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
+        l => l.Name,
+        l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, 20).Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", null)).ToList()));
 
     // The most a team plausibly scores in a whole game (as in ScenarioGameMakerTests).
     private static readonly Dictionary<Sport, int> MostPoints = new()
@@ -125,6 +130,75 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.Contains("london", Venues.Single(venue => venue.Name == newGame.Venue!.Name).Groups);
         Assert.All(feed, games => Assert.Equal(5, games.Count));
         Assert.All(feed, games => Assert.Equal(games.Count, games.Select(game => game.Venue!.Name).Distinct().Count()));
+    }
+
+    [Fact]
+    public void No_team_is_ever_in_two_games_showing_at_once()
+    {
+        var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(30));
+
+        Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 90, "new games came on");
+        Assert.All(feed, games =>
+        {
+            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+            Assert.Equal(teams.Count, teams.Distinct().Count());
+        });
+    }
+
+    [Fact]
+    public void Play_never_puts_a_written_out_games_teams_in_another_game()
+    {
+        // NBA team 1 and 2 are written out, and the fill takes all the room left, so play is always short of teams.
+        var feed = Watched(Read("""
+            {
+              "games": [ { "id": "written", "league": "NBA", "home": { "name": "NBA team 1", "abbreviation": "T1", "score": 50 },
+                           "away": { "name": "NBA team 2", "abbreviation": "T2", "score": 48 },
+                           "venue": { "name": "Stadium 100", "city": "City 100" }, "startsIn": "-1h", "status": "live", "clock": "6:00", "period": 3 } ],
+              "fill": { "count": 99, "group": "worldwide" },
+              "play": true
+            }
+            """), TimeSpan.FromMinutes(30));
+
+        // Until it finishes and drops out, which frees its teams.
+        var whileShowing = feed.TakeWhile(games => games.Any(game => game.Id == "written")).ToList();
+        Assert.True(whileShowing.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 110, "new games came on while it showed");
+        Assert.All(whileShowing.SelectMany(games => games).Where(game => game.Id != "written"), game =>
+            Assert.DoesNotContain(new[] { game.Home.FullName, game.Away.FullName }, team => team is "NBA team 1" or "NBA team 2"));
+    }
+
+    [Fact]
+    public void With_every_team_playing_a_finished_games_teams_are_free_for_the_game_that_replaces_it()
+    {
+        // 100 games, as many as the teams have room for, so each new game needs the teams of the one it replaces.
+        var feed = Watched(Read("""{ "fill": { "count": 100, "group": "worldwide" }, "play": true, "disrupted": 0 }"""), TimeSpan.FromMinutes(30));
+
+        Assert.All(feed, games => Assert.Equal(100, games.Count));
+        Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 130, "new games came on");
+        Assert.All(feed, games =>
+        {
+            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+            Assert.Equal(teams.Count, teams.Distinct().Count());
+        });
+    }
+
+    [Fact]
+    public void Play_keeps_a_game_on_when_no_teams_are_free_to_replace_it()
+    {
+        // The written-out game's teams aren't in the team list, so when it finishes, replacing it frees none,
+        // and the fill has taken every team.
+        var feed = Watched(Read("""
+            {
+              "games": [ { "id": "written", "league": "NBA", "home": { "name": "Made Up Home", "abbreviation": "MUH", "score": 99 },
+                           "away": { "name": "Made Up Away", "abbreviation": "MUA", "score": 97 },
+                           "venue": { "name": "Stadium 100", "city": "City 100" }, "startsIn": "-2h", "status": "final" } ],
+              "fill": { "count": 100, "group": "worldwide" },
+              "play": true,
+              "disrupted": 0
+            }
+            """), TimeSpan.FromMinutes(5), speed: 1);
+
+        Assert.All(feed, games => Assert.Equal(101, games.Count));
+        Assert.All(feed, games => Assert.Contains(games, game => game.Id == "written"));
     }
 
     [Fact]
@@ -417,6 +491,6 @@ public sealed class ScenarioPlayTests : IDisposable
     private Scenario Read(string json)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);
-        return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
+        return ScenarioReader.Read(_folder, "sample", Leagues, Venues, Teams);
     }
 }

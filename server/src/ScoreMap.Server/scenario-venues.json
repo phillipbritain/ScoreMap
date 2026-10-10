@@ -4,13 +4,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Arsenal",
-      "abbreviation": "ARS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -20,13 +16,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Chelsea",
-      "abbreviation": "CHE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/363.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -36,13 +28,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Tottenham Hotspur",
-      "abbreviation": "TOT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/367.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -52,13 +40,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "West Ham United",
-      "abbreviation": "WHU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/371.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -68,13 +52,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Fulham",
-      "abbreviation": "FUL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/370.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -84,13 +64,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Crystal Palace",
-      "abbreviation": "CRY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/384.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -100,13 +76,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Brentford",
-      "abbreviation": "BRE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/337.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -116,13 +88,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Queens Park Rangers",
-      "abbreviation": "QPR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/334.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -132,13 +100,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Millwall",
-      "abbreviation": "MIL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/391.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -148,13 +112,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Charlton Athletic",
-      "abbreviation": "CHA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/372.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -164,13 +124,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "AFC Wimbledon",
-      "abbreviation": "WIM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3802.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -180,13 +136,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Leyton Orient",
-      "abbreviation": "LEY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/309.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -196,13 +148,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "England",
-      "abbreviation": "ENG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -212,13 +160,9 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Barnet",
-      "abbreviation": "BAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/280.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "london",
       "london-and-nearby"
     ]
@@ -228,11 +172,6 @@
     "city": "Twickenham",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "England",
-      "abbreviation": "ENG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/1.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -242,11 +181,6 @@
     "city": "Twickenham",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Harlequins",
-      "abbreviation": "HAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25901.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -256,11 +190,6 @@
     "city": "London",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Saracens",
-      "abbreviation": "SAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25909.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -270,11 +199,6 @@
     "city": "Sutton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Sutton United",
-      "abbreviation": "SUT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3231.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -284,11 +208,6 @@
     "city": "Eastleigh",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Eastleigh",
-      "abbreviation": "ELH",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3897.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -298,11 +217,6 @@
     "city": "Ruislip",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Wealdstone",
-      "abbreviation": "WEA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3887.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -312,11 +226,6 @@
     "city": "Borehamwood",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Boreham Wood",
-      "abbreviation": "BOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2595.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -326,11 +235,6 @@
     "city": "Watford",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Watford",
-      "abbreviation": "WAT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/395.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -340,11 +244,6 @@
     "city": "Luton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Luton Town",
-      "abbreviation": "LTN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/301.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -354,11 +253,6 @@
     "city": "Reading",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Reading",
-      "abbreviation": "REA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/338.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -368,11 +262,6 @@
     "city": "High Wycombe",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Wycombe Wanderers",
-      "abbreviation": "WYC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/344.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -382,11 +271,6 @@
     "city": "Milton Keynes",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Milton Keynes Dons",
-      "abbreviation": "MKD",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/390.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -396,11 +280,6 @@
     "city": "Oxford",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Oxford United",
-      "abbreviation": "OXF",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/311.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -410,11 +289,6 @@
     "city": "Stevenage",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Stevenage",
-      "abbreviation": "STE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/285.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -424,11 +298,6 @@
     "city": "Cambridge",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Cambridge United",
-      "abbreviation": "CAM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/351.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -438,11 +307,6 @@
     "city": "Southend-on-Sea",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Southend United",
-      "abbreviation": "SOUT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/310.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -452,11 +316,6 @@
     "city": "Gillingham",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Gillingham",
-      "abbreviation": "GIL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/389.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -466,11 +325,6 @@
     "city": "Crawley",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Crawley Town",
-      "abbreviation": "CRA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2594.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -480,11 +334,6 @@
     "city": "Aldershot",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Aldershot Town",
-      "abbreviation": "ALD",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/632.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -494,11 +343,6 @@
     "city": "Woking",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Woking",
-      "abbreviation": "WOK",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/290.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -508,11 +352,6 @@
     "city": "Colchester",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Colchester United",
-      "abbreviation": "COL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/339.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -522,11 +361,6 @@
     "city": "Brighton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Brighton & Hove Albion",
-      "abbreviation": "BHA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -536,11 +370,6 @@
     "city": "Ipswich",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Ipswich Town",
-      "abbreviation": "IPS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -550,11 +379,6 @@
     "city": "Peterborough",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Peterborough United",
-      "abbreviation": "PET",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/342.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -564,11 +388,6 @@
     "city": "Northampton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Northampton Town",
-      "abbreviation": "NHT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/353.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -578,11 +397,6 @@
     "city": "Northampton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Northampton Saints",
-      "abbreviation": "NOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/25907.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -592,11 +406,6 @@
     "city": "Southampton",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Southampton",
-      "abbreviation": "SOU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/376.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -606,11 +415,6 @@
     "city": "Portsmouth",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Portsmouth",
-      "abbreviation": "POR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/385.png"
-    },
     "groups": [
       "london-and-nearby"
     ]
@@ -620,13 +424,9 @@
     "city": "East Rutherford",
     "region": "NJ",
     "country": "USA",
-    "homeTeam": {
-      "name": "New York Giants",
-      "abbreviation": "NYG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -635,13 +435,9 @@
     "city": "Bronx",
     "region": "NY",
     "country": "USA",
-    "homeTeam": {
-      "name": "New York Yankees",
-      "abbreviation": "NYY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/nyy.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -650,13 +446,9 @@
     "city": "Queens",
     "region": "NY",
     "country": "USA",
-    "homeTeam": {
-      "name": "New York Mets",
-      "abbreviation": "NYM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/nym.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -665,13 +457,9 @@
     "city": "New York",
     "region": "NY",
     "country": "USA",
-    "homeTeam": {
-      "name": "New York Knicks",
-      "abbreviation": "NY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/ny.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -680,13 +468,9 @@
     "city": "Brooklyn",
     "region": "NY",
     "country": "USA",
-    "homeTeam": {
-      "name": "Brooklyn Nets",
-      "abbreviation": "BKN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -695,13 +479,9 @@
     "city": "Elmont",
     "region": "NY",
     "country": "USA",
-    "homeTeam": {
-      "name": "New York Islanders",
-      "abbreviation": "NYI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nyi.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -710,13 +490,9 @@
     "city": "Newark",
     "region": "NJ",
     "country": "USA",
-    "homeTeam": {
-      "name": "New Jersey Devils",
-      "abbreviation": "NJ",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/nj.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -725,13 +501,9 @@
     "city": "Harrison",
     "region": "NJ",
     "country": "USA",
-    "homeTeam": {
-      "name": "Red Bull New York",
-      "abbreviation": "RBNY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/190.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "new-york"
     ]
   },
@@ -740,13 +512,9 @@
     "city": "Inglewood",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Los Angeles Rams",
-      "abbreviation": "LAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -755,13 +523,9 @@
     "city": "Los Angeles",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Los Angeles Dodgers",
-      "abbreviation": "LAD",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/lad.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -770,13 +534,9 @@
     "city": "Anaheim",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Los Angeles Angels",
-      "abbreviation": "LAA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/laa.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -785,13 +545,9 @@
     "city": "Los Angeles",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Los Angeles Lakers",
-      "abbreviation": "LAL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -800,13 +556,9 @@
     "city": "Inglewood",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "LA Clippers",
-      "abbreviation": "LAC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lac.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -815,13 +567,9 @@
     "city": "Anaheim",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Anaheim Ducks",
-      "abbreviation": "ANA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/ana.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -830,13 +578,9 @@
     "city": "Los Angeles",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "LAFC",
-      "abbreviation": "LAFC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18966.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -845,13 +589,9 @@
     "city": "Carson",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "LA Galaxy",
-      "abbreviation": "LA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/187.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -860,13 +600,9 @@
     "city": "Pasadena",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "UCLA Bruins",
-      "abbreviation": "UCLA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/26.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -875,13 +611,9 @@
     "city": "Los Angeles",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "USC Trojans",
-      "abbreviation": "USC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/30.png"
-    },
     "groups": [
       "worldwide",
+      "big-cities",
       "los-angeles"
     ]
   },
@@ -890,11 +622,6 @@
     "city": "Kansas City",
     "region": "MO",
     "country": "USA",
-    "homeTeam": {
-      "name": "Kansas City Chiefs",
-      "abbreviation": "KC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -904,11 +631,6 @@
     "city": "Green Bay",
     "region": "WI",
     "country": "USA",
-    "homeTeam": {
-      "name": "Green Bay Packers",
-      "abbreviation": "GB",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -918,11 +640,6 @@
     "city": "Chicago",
     "region": "IL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Chicago Bears",
-      "abbreviation": "CHI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -932,11 +649,6 @@
     "city": "Arlington",
     "region": "TX",
     "country": "USA",
-    "homeTeam": {
-      "name": "Dallas Cowboys",
-      "abbreviation": "DAL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -946,11 +658,6 @@
     "city": "Philadelphia",
     "region": "PA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Philadelphia Eagles",
-      "abbreviation": "PHI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -960,11 +667,6 @@
     "city": "Denver",
     "region": "CO",
     "country": "USA",
-    "homeTeam": {
-      "name": "Denver Broncos",
-      "abbreviation": "DEN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/den.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -974,11 +676,6 @@
     "city": "Seattle",
     "region": "WA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Seattle Seahawks",
-      "abbreviation": "SEA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -988,11 +685,6 @@
     "city": "Santa Clara",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "San Francisco 49ers",
-      "abbreviation": "SF",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1002,11 +694,6 @@
     "city": "New Orleans",
     "region": "LA",
     "country": "USA",
-    "homeTeam": {
-      "name": "New Orleans Saints",
-      "abbreviation": "NO",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/no.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1016,13 +703,9 @@
     "city": "Miami Gardens",
     "region": "FL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Miami Dolphins",
-      "abbreviation": "MIA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1030,11 +713,6 @@
     "city": "Atlanta",
     "region": "GA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Atlanta Falcons",
-      "abbreviation": "ATL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1044,11 +722,6 @@
     "city": "Glendale",
     "region": "AZ",
     "country": "USA",
-    "homeTeam": {
-      "name": "Arizona Cardinals",
-      "abbreviation": "ARI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1058,11 +731,6 @@
     "city": "Ann Arbor",
     "region": "MI",
     "country": "USA",
-    "homeTeam": {
-      "name": "Michigan Wolverines",
-      "abbreviation": "MICH",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/130.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1072,11 +740,6 @@
     "city": "Columbus",
     "region": "OH",
     "country": "USA",
-    "homeTeam": {
-      "name": "Ohio State Buckeyes",
-      "abbreviation": "OSU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/194.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1086,11 +749,6 @@
     "city": "Tuscaloosa",
     "region": "AL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Alabama Crimson Tide",
-      "abbreviation": "ALA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1100,11 +758,6 @@
     "city": "San Francisco",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Golden State Warriors",
-      "abbreviation": "GS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1114,11 +767,6 @@
     "city": "Boston",
     "region": "MA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Boston Celtics",
-      "abbreviation": "BOS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1128,11 +776,6 @@
     "city": "Chicago",
     "region": "IL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Chicago Bulls",
-      "abbreviation": "CHI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/chi.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1142,13 +785,9 @@
     "city": "Miami",
     "region": "FL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Miami Heat",
-      "abbreviation": "MIA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mia.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1156,11 +795,6 @@
     "city": "Toronto",
     "region": "ON",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Toronto Raptors",
-      "abbreviation": "TOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/tor.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1170,11 +804,6 @@
     "city": "Boston",
     "region": "MA",
     "country": "USA",
-    "homeTeam": {
-      "name": "Boston Red Sox",
-      "abbreviation": "BOS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/bos.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1184,11 +813,6 @@
     "city": "Chicago",
     "region": "IL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Chicago Cubs",
-      "abbreviation": "CHC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/chc.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1198,11 +822,6 @@
     "city": "San Francisco",
     "region": "CA",
     "country": "USA",
-    "homeTeam": {
-      "name": "San Francisco Giants",
-      "abbreviation": "SF",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/sf.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1212,11 +831,6 @@
     "city": "Toronto",
     "region": "ON",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Toronto Blue Jays",
-      "abbreviation": "TOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/mlb/500/tor.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1226,11 +840,6 @@
     "city": "Montreal",
     "region": "QC",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Montreal Canadiens",
-      "abbreviation": "MTL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/mtl.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1240,11 +849,6 @@
     "city": "Edmonton",
     "region": "AB",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Edmonton Oilers",
-      "abbreviation": "EDM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/edm.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1254,11 +858,6 @@
     "city": "Vancouver",
     "region": "BC",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Vancouver Canucks",
-      "abbreviation": "VAN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/nhl/500/van.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1268,11 +867,6 @@
     "city": "Portland",
     "region": "OR",
     "country": "USA",
-    "homeTeam": {
-      "name": "Portland Timbers",
-      "abbreviation": "POR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/9723.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1282,11 +876,6 @@
     "city": "Washington",
     "region": "DC",
     "country": "USA",
-    "homeTeam": {
-      "name": "D.C. United",
-      "abbreviation": "DC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/193.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1296,13 +885,9 @@
     "city": "Fort Lauderdale",
     "region": "FL",
     "country": "USA",
-    "homeTeam": {
-      "name": "Inter Miami CF",
-      "abbreviation": "MIA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/20232.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1310,11 +895,6 @@
     "city": "Toronto",
     "region": "ON",
     "country": "Canada",
-    "homeTeam": {
-      "name": "Toronto FC",
-      "abbreviation": "TOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7318.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1324,13 +904,9 @@
     "city": "Mexico City",
     "region": null,
     "country": "Mexico",
-    "homeTeam": {
-      "name": "América",
-      "abbreviation": "AME",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/227.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1338,11 +914,6 @@
     "city": "Zapopan",
     "region": null,
     "country": "Mexico",
-    "homeTeam": {
-      "name": "Guadalajara",
-      "abbreviation": "GDL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/219.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1352,11 +923,6 @@
     "city": "Guadalupe",
     "region": null,
     "country": "Mexico",
-    "homeTeam": {
-      "name": "Monterrey",
-      "abbreviation": "MTY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/220.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1366,11 +932,6 @@
     "city": "San Nicolás de los Garza",
     "region": null,
     "country": "Mexico",
-    "homeTeam": {
-      "name": "Tigres UANL",
-      "abbreviation": "UANL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/232.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1380,11 +941,6 @@
     "city": "Panamá",
     "region": null,
     "country": "Panama",
-    "homeTeam": {
-      "name": "Panama",
-      "abbreviation": "PAN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/pan.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1394,11 +950,6 @@
     "city": "Rio de Janeiro",
     "region": null,
     "country": "Brazil",
-    "homeTeam": {
-      "name": "Flamengo",
-      "abbreviation": "FLA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/819.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1408,13 +959,9 @@
     "city": "São Paulo",
     "region": null,
     "country": "Brazil",
-    "homeTeam": {
-      "name": "Palmeiras",
-      "abbreviation": "PAL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2029.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1422,11 +969,6 @@
     "city": "Belo Horizonte",
     "region": null,
     "country": "Brazil",
-    "homeTeam": {
-      "name": "Cruzeiro",
-      "abbreviation": "CRU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2022.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1436,11 +978,6 @@
     "city": "Porto Alegre",
     "region": null,
     "country": "Brazil",
-    "homeTeam": {
-      "name": "Grêmio",
-      "abbreviation": "GRE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/6273.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1450,13 +987,9 @@
     "city": "Buenos Aires",
     "region": null,
     "country": "Argentina",
-    "homeTeam": {
-      "name": "Boca Juniors",
-      "abbreviation": "CABJ",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1464,13 +997,9 @@
     "city": "Buenos Aires",
     "region": null,
     "country": "Argentina",
-    "homeTeam": {
-      "name": "River Plate",
-      "abbreviation": "RIV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/16.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1478,11 +1007,6 @@
     "city": "Córdoba",
     "region": null,
     "country": "Argentina",
-    "homeTeam": {
-      "name": "Talleres (Córdoba)",
-      "abbreviation": "TALL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/19.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1492,11 +1016,6 @@
     "city": "Montevideo",
     "region": null,
     "country": "Uruguay",
-    "homeTeam": {
-      "name": "Uruguay",
-      "abbreviation": "URU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/uru.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1506,11 +1025,6 @@
     "city": "Santiago",
     "region": null,
     "country": "Chile",
-    "homeTeam": {
-      "name": "Colo Colo",
-      "abbreviation": "COL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2688.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1520,11 +1034,6 @@
     "city": "Bogotá",
     "region": null,
     "country": "Colombia",
-    "homeTeam": {
-      "name": "Millonarios",
-      "abbreviation": "MIL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5484.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1534,11 +1043,6 @@
     "city": "Medellín",
     "region": null,
     "country": "Colombia",
-    "homeTeam": {
-      "name": "Atlético Nacional",
-      "abbreviation": "NAL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5264.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1548,11 +1052,6 @@
     "city": "Quito",
     "region": null,
     "country": "Ecuador",
-    "homeTeam": {
-      "name": "Ecuador",
-      "abbreviation": "ECU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ecu.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1562,11 +1061,6 @@
     "city": "Asunción",
     "region": null,
     "country": "Paraguay",
-    "homeTeam": {
-      "name": "Paraguay",
-      "abbreviation": "PAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/par.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1576,11 +1070,6 @@
     "city": "Manchester",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Manchester United",
-      "abbreviation": "MAN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/360.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1590,11 +1079,6 @@
     "city": "Manchester",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Manchester City",
-      "abbreviation": "MNC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1604,11 +1088,6 @@
     "city": "Liverpool",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Liverpool",
-      "abbreviation": "LIV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/364.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1618,11 +1097,6 @@
     "city": "Birmingham",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Aston Villa",
-      "abbreviation": "AVL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/362.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1632,11 +1106,6 @@
     "city": "Newcastle upon Tyne",
     "region": null,
     "country": "England",
-    "homeTeam": {
-      "name": "Newcastle United",
-      "abbreviation": "NEW",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/361.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1646,11 +1115,6 @@
     "city": "Glasgow",
     "region": null,
     "country": "Scotland",
-    "homeTeam": {
-      "name": "Celtic",
-      "abbreviation": "CEL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/256.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1660,11 +1124,6 @@
     "city": "Glasgow",
     "region": null,
     "country": "Scotland",
-    "homeTeam": {
-      "name": "Rangers",
-      "abbreviation": "RAN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/257.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1674,11 +1133,6 @@
     "city": "Cardiff",
     "region": null,
     "country": "Wales",
-    "homeTeam": {
-      "name": "Cardiff City",
-      "abbreviation": "CAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/347.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1688,13 +1142,9 @@
     "city": "Madrid",
     "region": null,
     "country": "Spain",
-    "homeTeam": {
-      "name": "Real Madrid",
-      "abbreviation": "RMA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/86.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1702,11 +1152,6 @@
     "city": "Barcelona",
     "region": null,
     "country": "Spain",
-    "homeTeam": {
-      "name": "Barcelona",
-      "abbreviation": "BAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/83.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1716,13 +1161,9 @@
     "city": "Madrid",
     "region": null,
     "country": "Spain",
-    "homeTeam": {
-      "name": "Atlético Madrid",
-      "abbreviation": "ATM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1730,11 +1171,6 @@
     "city": "Seville",
     "region": null,
     "country": "Spain",
-    "homeTeam": {
-      "name": "Sevilla",
-      "abbreviation": "SEV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1744,11 +1180,6 @@
     "city": "Bilbao",
     "region": null,
     "country": "Spain",
-    "homeTeam": {
-      "name": "Athletic Club",
-      "abbreviation": "ATH",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/93.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1758,11 +1189,6 @@
     "city": "Dortmund",
     "region": null,
     "country": "Germany",
-    "homeTeam": {
-      "name": "Borussia Dortmund",
-      "abbreviation": "DOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/124.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1772,11 +1198,6 @@
     "city": "Munich",
     "region": null,
     "country": "Germany",
-    "homeTeam": {
-      "name": "Bayern Munich",
-      "abbreviation": "MUN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/132.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1786,11 +1207,6 @@
     "city": "Berlin",
     "region": null,
     "country": "Germany",
-    "homeTeam": {
-      "name": "1. FC Union Berlin",
-      "abbreviation": "FCU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/598.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1800,11 +1216,6 @@
     "city": "Milan",
     "region": null,
     "country": "Italy",
-    "homeTeam": {
-      "name": "AC Milan",
-      "abbreviation": "MIL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1814,11 +1225,6 @@
     "city": "Rome",
     "region": null,
     "country": "Italy",
-    "homeTeam": {
-      "name": "AS Roma",
-      "abbreviation": "ROMA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1828,11 +1234,6 @@
     "city": "Turin",
     "region": null,
     "country": "Italy",
-    "homeTeam": {
-      "name": "Juventus",
-      "abbreviation": "JUV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1842,11 +1243,6 @@
     "city": "Naples",
     "region": null,
     "country": "Italy",
-    "homeTeam": {
-      "name": "Napoli",
-      "abbreviation": "NAP",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1856,13 +1252,9 @@
     "city": "Paris",
     "region": null,
     "country": "France",
-    "homeTeam": {
-      "name": "Paris Saint-Germain",
-      "abbreviation": "PSG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/160.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1870,11 +1262,6 @@
     "city": "Marseille",
     "region": null,
     "country": "France",
-    "homeTeam": {
-      "name": "Marseille",
-      "abbreviation": "OLM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/176.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1884,11 +1271,6 @@
     "city": "Décines-Charpieu",
     "region": null,
     "country": "France",
-    "homeTeam": {
-      "name": "Lyon",
-      "abbreviation": "LYON",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/167.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1898,11 +1280,6 @@
     "city": "Lisbon",
     "region": null,
     "country": "Portugal",
-    "homeTeam": {
-      "name": "Benfica",
-      "abbreviation": "SLB",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/1929.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1912,11 +1289,6 @@
     "city": "Porto",
     "region": null,
     "country": "Portugal",
-    "homeTeam": {
-      "name": "FC Porto",
-      "abbreviation": "FCP",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/437.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1926,11 +1298,6 @@
     "city": "Amsterdam",
     "region": null,
     "country": "Netherlands",
-    "homeTeam": {
-      "name": "Ajax Amsterdam",
-      "abbreviation": "AJA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/139.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1940,11 +1307,6 @@
     "city": "Eindhoven",
     "region": null,
     "country": "Netherlands",
-    "homeTeam": {
-      "name": "PSV Eindhoven",
-      "abbreviation": "PSV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/148.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1954,11 +1316,6 @@
     "city": "Bruges",
     "region": null,
     "country": "Belgium",
-    "homeTeam": {
-      "name": "Club Brugge",
-      "abbreviation": "BRU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/570.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -1968,13 +1325,9 @@
     "city": "Istanbul",
     "region": null,
     "country": "Turkey",
-    "homeTeam": {
-      "name": "Galatasaray",
-      "abbreviation": "GAL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/432.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1982,13 +1335,9 @@
     "city": "Istanbul",
     "region": null,
     "country": "Turkey",
-    "homeTeam": {
-      "name": "Fenerbahce",
-      "abbreviation": "FEN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/436.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -1996,11 +1345,6 @@
     "city": "Piraeus",
     "region": null,
     "country": "Greece",
-    "homeTeam": {
-      "name": "Olympiacos",
-      "abbreviation": "OLY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/435.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2010,11 +1354,6 @@
     "city": "Solna",
     "region": null,
     "country": "Sweden",
-    "homeTeam": {
-      "name": "Sweden",
-      "abbreviation": "SWE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2024,11 +1363,6 @@
     "city": "Oslo",
     "region": null,
     "country": "Norway",
-    "homeTeam": {
-      "name": "Norway",
-      "abbreviation": "NOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/nor.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2038,11 +1372,6 @@
     "city": "Vienna",
     "region": null,
     "country": "Austria",
-    "homeTeam": {
-      "name": "Austria",
-      "abbreviation": "AUT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/aut.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2052,11 +1381,6 @@
     "city": "Zagreb",
     "region": null,
     "country": "Croatia",
-    "homeTeam": {
-      "name": "Croatia",
-      "abbreviation": "CRO",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/cro.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2066,11 +1390,6 @@
     "city": "Johannesburg",
     "region": null,
     "country": "South Africa",
-    "homeTeam": {
-      "name": "Kaizer Chiefs",
-      "abbreviation": "KAI",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7081.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2080,11 +1399,6 @@
     "city": "Johannesburg",
     "region": null,
     "country": "South Africa",
-    "homeTeam": {
-      "name": "Orlando Pirates",
-      "abbreviation": "ORL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7085.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2094,11 +1408,6 @@
     "city": "Pretoria",
     "region": null,
     "country": "South Africa",
-    "homeTeam": {
-      "name": "Mamelodi Sundowns",
-      "abbreviation": "MSU",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7084.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2108,11 +1417,6 @@
     "city": "Durban",
     "region": null,
     "country": "South Africa",
-    "homeTeam": {
-      "name": "AmaZulu",
-      "abbreviation": "AMA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7079.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2122,13 +1426,9 @@
     "city": "Cairo",
     "region": null,
     "country": "Egypt",
-    "homeTeam": {
-      "name": "Egypt",
-      "abbreviation": "EGY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/egy.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -2136,11 +1436,6 @@
     "city": "Rabat",
     "region": null,
     "country": "Morocco",
-    "homeTeam": {
-      "name": "Morocco",
-      "abbreviation": "MAR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/mar.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2150,11 +1445,6 @@
     "city": "Abidjan",
     "region": null,
     "country": "Ivory Coast",
-    "homeTeam": {
-      "name": "Ivory Coast",
-      "abbreviation": "CIV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/civ.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2164,11 +1454,6 @@
     "city": "Diamniadio",
     "region": null,
     "country": "Senegal",
-    "homeTeam": {
-      "name": "Senegal",
-      "abbreviation": "SEN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/sen.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2178,11 +1463,6 @@
     "city": "Kumasi",
     "region": null,
     "country": "Ghana",
-    "homeTeam": {
-      "name": "Ghana",
-      "abbreviation": "GHA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/gha.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2192,11 +1472,6 @@
     "city": "Aba",
     "region": null,
     "country": "Nigeria",
-    "homeTeam": {
-      "name": "Enyimba",
-      "abbreviation": "ENY",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2227.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2206,11 +1481,6 @@
     "city": "Radès",
     "region": null,
     "country": "Tunisia",
-    "homeTeam": {
-      "name": "Tunisia",
-      "abbreviation": "TUN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/tun.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2220,11 +1490,6 @@
     "city": "Algiers",
     "region": null,
     "country": "Algeria",
-    "homeTeam": {
-      "name": "Algeria",
-      "abbreviation": "ALG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/alg.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2234,11 +1499,6 @@
     "city": "Kinshasa",
     "region": null,
     "country": "DR Congo",
-    "homeTeam": {
-      "name": "Congo DR",
-      "abbreviation": "COD",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/rdc.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2248,11 +1508,6 @@
     "city": "Praia",
     "region": null,
     "country": "Cape Verde",
-    "homeTeam": {
-      "name": "Cape Verde",
-      "abbreviation": "CPV",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/cpv.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2262,13 +1517,9 @@
     "city": "Tokyo",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "Japan",
-      "abbreviation": "JPN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -2276,13 +1527,9 @@
     "city": "Chōfu",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "FC Tokyo",
-      "abbreviation": "TOK",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3384.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -2290,11 +1537,6 @@
     "city": "Saitama",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "Urawa Red Diamonds",
-      "abbreviation": "URA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/3385.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2304,11 +1546,6 @@
     "city": "Suita",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "Gamba Osaka",
-      "abbreviation": "GAM",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7102.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2318,11 +1555,6 @@
     "city": "Kobe",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "Vissel Kobe",
-      "abbreviation": "VIS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7477.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2332,11 +1564,6 @@
     "city": "Yokohama",
     "region": null,
     "country": "Japan",
-    "homeTeam": {
-      "name": "Yokohama F. Marinos",
-      "abbreviation": "YOK",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/7116.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2346,13 +1573,9 @@
     "city": "Seoul",
     "region": null,
     "country": "South Korea",
-    "homeTeam": {
-      "name": "South Korea",
-      "abbreviation": "KOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/kors.png"
-    },
     "groups": [
-      "worldwide"
+      "worldwide",
+      "big-cities"
     ]
   },
   {
@@ -2360,11 +1583,6 @@
     "city": "Beijing",
     "region": null,
     "country": "China",
-    "homeTeam": {
-      "name": "Beijing Guoan",
-      "abbreviation": "BJG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/2052.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2374,11 +1592,6 @@
     "city": "Riyadh",
     "region": null,
     "country": "Saudi Arabia",
-    "homeTeam": {
-      "name": "Saudi Arabia",
-      "abbreviation": "KSA",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/ksa.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2388,11 +1601,6 @@
     "city": "Riyadh",
     "region": null,
     "country": "Saudi Arabia",
-    "homeTeam": {
-      "name": "Al Nassr",
-      "abbreviation": "NSR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/817.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2402,11 +1610,6 @@
     "city": "Lusail",
     "region": null,
     "country": "Qatar",
-    "homeTeam": {
-      "name": "Qatar",
-      "abbreviation": "QAT",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/qat.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2416,11 +1619,6 @@
     "city": "Tehran",
     "region": null,
     "country": "Iran",
-    "homeTeam": {
-      "name": "Iran",
-      "abbreviation": "IRN",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/irn.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2430,11 +1628,6 @@
     "city": "Amman",
     "region": null,
     "country": "Jordan",
-    "homeTeam": {
-      "name": "Jordan",
-      "abbreviation": "JOR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/jor.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2444,11 +1637,6 @@
     "city": "Tashkent",
     "region": null,
     "country": "Uzbekistan",
-    "homeTeam": {
-      "name": "Uzbekistan",
-      "abbreviation": "UZB",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/uzb.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2458,11 +1646,6 @@
     "city": "Kolkata",
     "region": null,
     "country": "India",
-    "homeTeam": {
-      "name": "Mohun Bagan Super Giant",
-      "abbreviation": "MBSG",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/20774.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2472,11 +1655,6 @@
     "city": "Bengaluru",
     "region": null,
     "country": "India",
-    "homeTeam": {
-      "name": "Bengaluru FC",
-      "abbreviation": "BFC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/18851.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2486,11 +1664,6 @@
     "city": "Ernakulam",
     "region": null,
     "country": "India",
-    "homeTeam": {
-      "name": "Kerala Blasters FC",
-      "abbreviation": "KER",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/17997.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2500,11 +1673,6 @@
     "city": "Sydney",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Sydney FC",
-      "abbreviation": "SYD",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5327.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2514,11 +1682,6 @@
     "city": "Parramatta",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Western Sydney Wanderers",
-      "abbreviation": "WSW",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/13696.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2528,11 +1691,6 @@
     "city": "Melbourne",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Melbourne Victory",
-      "abbreviation": "MVC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5328.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2542,11 +1700,6 @@
     "city": "Brisbane",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Brisbane Roar",
-      "abbreviation": "BRR",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5326.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2556,11 +1709,6 @@
     "city": "Adelaide",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Adelaide United",
-      "abbreviation": "ADE",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/5321.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2570,11 +1718,6 @@
     "city": "Melbourne",
     "region": null,
     "country": "Australia",
-    "homeTeam": {
-      "name": "Australia",
-      "abbreviation": "AUS",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2584,11 +1727,6 @@
     "city": "Auckland",
     "region": null,
     "country": "New Zealand",
-    "homeTeam": {
-      "name": "Auckland FC",
-      "abbreviation": "AFC",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/soccer/500/22344.png"
-    },
     "groups": [
       "worldwide"
     ]
@@ -2598,13 +1736,125 @@
     "city": "Auckland",
     "region": null,
     "country": "New Zealand",
-    "homeTeam": {
-      "name": "New Zealand",
-      "abbreviation": "NZL",
-      "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/nzl.png"
-    },
     "groups": [
       "worldwide"
+    ]
+  },
+  {
+    "name": "loanDepot park",
+    "city": "Miami",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Amerant Bank Arena",
+    "city": "Sunrise",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Stade de France",
+    "city": "Saint-Denis",
+    "region": null,
+    "country": "France",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Accor Arena",
+    "city": "Paris",
+    "region": null,
+    "country": "France",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Tokyo Dome",
+    "city": "Tokyo",
+    "region": null,
+    "country": "Japan",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Gocheok Sky Dome",
+    "city": "Seoul",
+    "region": null,
+    "country": "South Korea",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Estádio do Morumbi",
+    "city": "São Paulo",
+    "region": null,
+    "country": "Brazil",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Neo Química Arena",
+    "city": "São Paulo",
+    "region": null,
+    "country": "Brazil",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Estadio Olímpico Universitario",
+    "city": "Mexico City",
+    "region": null,
+    "country": "Mexico",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Wankhede Stadium",
+    "city": "Mumbai",
+    "region": null,
+    "country": "India",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Shanghai Stadium",
+    "city": "Shanghai",
+    "region": null,
+    "country": "China",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Teslim Balogun Stadium",
+    "city": "Lagos",
+    "region": null,
+    "country": "Nigeria",
+    "groups": [
+      "big-cities"
+    ]
+  },
+  {
+    "name": "Gelora Bung Karno Stadium",
+    "city": "Jakarta",
+    "region": null,
+    "country": "Indonesia",
+    "groups": [
+      "big-cities"
     ]
   }
 ]

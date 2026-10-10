@@ -92,6 +92,12 @@ export class ScoreCardMarkers {
     this.sync()
   }
 
+  /** Where a game's card is on the page, if it has one. */
+  cardOnPage(gameId: string): DOMRect | null {
+    const element = this.placed.get(gameId)?.marker.getElement().firstElementChild
+    return element ? element.getBoundingClientRect() : null
+  }
+
   setGames(games: readonly Game[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
     this.sync()

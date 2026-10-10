@@ -15,6 +15,7 @@ import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
+import { liftClearOf, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import {
@@ -55,6 +56,8 @@ export interface GlobeMapOptions {
 }
 
 export const selectedPinLayer = 'pin-selected'
+/** How far a small pin's selection ring reaches from its venue (its radius and stroke). */
+const smallPinReach = 16
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120
 
@@ -92,6 +95,8 @@ export class GlobeMap {
       // they turn with the globe, so names gone over the horizon were still written at its edge.
       // They pop in and out as score cards do.
       fadeDuration: 0,
+      // A double click while turning the globe is more often a slip than a wish to zoom in.
+      doubleClickZoom: false,
     })
     this.map = map
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })
@@ -151,17 +156,25 @@ export class GlobeMap {
   }
 
   /**
-   * Highlights the selected game's pin (a ring around its small pin, or its score card highlighted)
-   * and turns the globe to centre it. Selecting the game already selected does nothing, so later
-   * games arriving don't pull the camera back.
+   * Highlights the selected game's pin (a ring around its small pin, or its score card highlighted).
+   * The globe stays where it is, unless the game panel (its box on the page) would cover the pin:
+   * then it lifts just far enough to clear it (see liftClearOf). Selecting the game already
+   * selected does nothing, so later games arriving don't move the camera.
    */
-  select(gameId: string | null): void {
+  select(gameId: string | null, panel: ScreenBox | null = null): void {
     if (gameId === this.selectedGameId) return
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
     if (this.map.getLayer(selectedPinLayer)) this.map.setFilter(selectedPinLayer, selectedPin(gameId))
     const game = gameId === null ? undefined : this.shown.get(gameId)
-    if (game) this.map.easeTo({ center: [game.venue.longitude, game.venue.latitude], duration: 1200 })
+    if (!game) return
+    const lift = liftClearOf(this.pinOnPage(game), panel)
+    if (lift <= 0) return
+    // The venue straight up from where it is: panning by the lift would land short on the curved globe.
+    const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
+    const { x, y } = this.map.project(venue)
+    const { width, height } = this.map.getContainer().getBoundingClientRect()
+    this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
   }
 
   /** The "Card style" setting. */
@@ -197,7 +210,7 @@ export class GlobeMap {
         filter: selectedPin(this.selectedGameId),
         maxzoom: cardZoom,
         paint: {
-          'circle-radius': 13,
+          'circle-radius': smallPinReach - 3,
           'circle-color': 'rgba(0, 0, 0, 0)',
           'circle-stroke-width': 3,
           'circle-stroke-color': selectionColor,
@@ -303,6 +316,28 @@ export class GlobeMap {
         pulse(map, lngLat, animation, 'cluster')
         return
       }
+    }
+  }
+
+  /** The box a game's pin takes up on the page: its score card and venue, or its ringed small pin. */
+  private pinOnPage(game: Game): ScreenBox {
+    const container = this.map.getContainer().getBoundingClientRect()
+    const { x, y } = this.map.project([game.venue.longitude, game.venue.latitude])
+    const venue = { x: container.left + x, y: container.top + y }
+    const card = pinLayout(this.map.getZoom()).size === 'card' ? this.cards.cardOnPage(game.id) : null
+    if (!card) {
+      return {
+        left: venue.x - smallPinReach,
+        top: venue.y - smallPinReach,
+        right: venue.x + smallPinReach,
+        bottom: venue.y + smallPinReach,
+      }
+    }
+    return {
+      left: Math.min(card.left, venue.x),
+      top: Math.min(card.top, venue.y),
+      right: Math.max(card.right, venue.x),
+      bottom: Math.max(card.bottom, venue.y),
     }
   }
 

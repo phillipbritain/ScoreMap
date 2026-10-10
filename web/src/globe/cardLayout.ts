@@ -42,14 +42,14 @@ export interface Segment {
 export interface CardPlacement {
   /** Where the card's bottom centre sits, from its venue: just above it, or moved aside. */
   offset: ScreenOffset
-  /** True when there's no room for the card and its game is counted in a crowd instead. */
-  crowded: boolean
+  /** True when there's no room for the card and its game is counted in a cluster instead. */
+  clustered: boolean
   /** From the edge of a moved card to its venue; null for a card that isn't moved. */
   trail: Segment | null
 }
 
 /** Games with no room for a card, shown as one count at the first one's venue. */
-export interface CardCrowd {
+export interface CardCluster {
   gameIds: string[]
   /** The status the count shows as (see groupStatus). */
   status: GameStatus
@@ -60,14 +60,14 @@ export interface CardCrowd {
 export interface CardLayout {
   /** Where every card goes, by game. */
   cards: Map<string, CardPlacement>
-  crowds: CardCrowd[]
+  clusters: CardCluster[]
 }
 
 /**
  * Lays out the score cards on screen. Each sits above its venue, its pointer's tip on the spot, unless
  * that overlaps another card, a venue or a city's name: then it's moved the least it can be, with a
  * trail back to its venue (see arrange). Cards get room by status, most prominent first, whichever is
- * selected, so selecting a card never moves it; a card with no room within reach joins a crowd.
+ * selected, so selecting a card never moves it; a card with no room within reach joins a cluster.
  * Cards whose venues are well off screen stay where they'd sit: nothing on screen can get in their
  * way. Given where the cards were last time (`previous`), a moved card stays where it was while that
  * still has room, so cards don't jump about as the globe turns.
@@ -77,7 +77,7 @@ export function layOutCards(
   scene: CardScene,
   previous: ReadonlyMap<string, CardPlacement> = new Map(),
 ): CardLayout {
-  const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, crowded: false, trail: null }
+  const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, clustered: false, trail: null }
   const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
   const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
   const boxes = cards
@@ -96,25 +96,25 @@ export function layOutCards(
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
-  const { shifts, crowds } = arrange(boxes, names)
+  const { shifts, clusters } = arrange(boxes, names)
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
     const shift = shifts.get(box.gameId)
     if (!shift) {
-      placements.set(box.gameId, { ...unmoved, crowded: true })
+      placements.set(box.gameId, { ...unmoved, clustered: true })
       continue
     }
     const moved = shift.dx !== 0 || shift.dy !== 0
     placements.set(box.gameId, {
       offset: { dx: shift.dx, dy: shift.dy - scene.pointer },
-      crowded: false,
+      clustered: false,
       trail: moved ? trail(box, shift) : null,
     })
   }
   return {
     cards: placements,
-    crowds: crowds.map((crowd) => ({ ...crowd, status: groupStatus(crowd.gameIds.map((id) => statuses.get(id)!)) })),
+    clusters: clusters.map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
   }
 }
 
@@ -128,7 +128,7 @@ function nearScreen(x: number, y: number, { width, height }: CardScene): boolean
 
 /** How far a card was moved from where it would sit, if it had room. */
 function shiftOf(placement: CardPlacement | undefined, pointer: number): ScreenOffset | undefined {
-  if (!placement || placement.crowded) return undefined
+  if (!placement || placement.clustered) return undefined
   return { dx: placement.offset.dx, dy: placement.offset.dy + pointer }
 }
 
@@ -163,7 +163,7 @@ interface Arrangement {
   /** How far each card that has room is moved from where it would sit. */
   shifts: Map<string, ScreenOffset>
   /** The rest, grouped with others nearby. */
-  crowds: Omit<CardCrowd, 'status'>[]
+  clusters: Omit<CardCluster, 'status'>[]
 }
 
 // Space left between cards that had to be moved apart.
@@ -182,7 +182,7 @@ for (let dx = -furthest; dx <= furthest; dx += step) {
 }
 moves.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy) || a.dy - b.dy || a.dx - b.dx)
 // Games with no room join a count within this distance of their venue, rather than starting their own.
-const crowdRadius = 40
+const cardClusterRadius = 40
 
 /**
  * Finds room for score cards that would overlap, moving each as little as it can. Cards are placed
@@ -191,7 +191,7 @@ const crowdRadius = 40
  * placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. No card
  * covers a name in `names`, and no trail crosses one unless it covers the trail's own venue. Of those
  * spots it takes the nearest whose trail crosses no card and that sits on no trail, where there is
- * one. A card with no spot within reach joins a crowd instead. A card that was moved last time tries
+ * one. A card with no spot within reach joins a cluster instead. A card that was moved last time tries
  * where it was straight after where it would sit, and keeps it while it fits, so it moves only when
  * that spot has no room.
  */
@@ -201,7 +201,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrang
   // From each moved card's centre to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
   const shifts = new Map<string, ScreenOffset>()
-  const crowds: Omit<CardCrowd, 'status'>[] = []
+  const clusters: Omit<CardCluster, 'status'>[] = []
 
   for (const card of boxes) {
     // Only what's within reach of the card can get in its way.
@@ -270,11 +270,11 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrang
       if (shift.dx !== 0 || shift.dy !== 0) trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
       continue
     }
-    const crowd = crowds.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= crowdRadius)
-    if (crowd) crowd.gameIds.push(card.gameId)
-    else crowds.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
+    const cluster = clusters.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= cardClusterRadius)
+    if (cluster) cluster.gameIds.push(card.gameId)
+    else clusters.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
   }
-  return { shifts, crowds }
+  return { shifts, clusters }
 }
 
 /** Whether a line passes through a box, given by its centre and half its size. */

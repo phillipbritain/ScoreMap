@@ -56,12 +56,12 @@ export interface GlobeMapOptions {
 }
 
 export const selectedPinLayer = 'pin-selected'
-/** Room left around a crowd's games when zooming in to them. */
-const crowdZoomPadding = 120
+/** Room left around a card cluster's games when zooming in to them. */
+const cardClusterZoomPadding = 120
 
 /**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
- * clusters with counts; zoomed in, each pin becomes a score card. Selecting a cluster or a crowd
+ * clusters with counts; zoomed in, each pin becomes a score card. Selecting any cluster
  * zooms in until it splits.
  */
 export class GlobeMap {
@@ -105,7 +105,7 @@ export class GlobeMap {
       map,
       this.names,
       (gameId) => this.onSelect(gameId),
-      (gameIds) => this.zoomToCrowd(gameIds),
+      (gameIds) => this.zoomToCardCluster(gameIds),
     )
     this.clustering = pinLayout(map.getZoom())
 
@@ -245,7 +245,7 @@ export class GlobeMap {
   private readonly pointAt = () => (this.map.getCanvas().style.cursor = 'pointer')
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
-  // Selecting a cluster of small pins, and selecting a crowd of score cards, both zoom in until
+  // Selecting a cluster of small pins, and selecting a cluster of score cards, both zoom in until
   // their games split.
 
   /**
@@ -263,26 +263,26 @@ export class GlobeMap {
   }
 
   /**
-   * Zooms in until a crowd splits: to fit its games, at least a level in, and again from there while
-   * some of them are still crowded (until the globe can zoom no further in). A move by the viewer
-   * along the way stops it.
+   * Zooms in until a cluster of score cards splits: to fit its games, at least a level in, and again
+   * from there while some of them are still clustered (until the globe can zoom no further in). A move
+   * by the viewer along the way stops it.
    */
-  private zoomToCrowd(gameIds: readonly string[]): void {
+  private zoomToCardCluster(gameIds: readonly string[]): void {
     const bounds = new LngLatBounds()
     for (const gameId of gameIds) {
       const venue = this.shown.get(gameId)?.venue
       if (venue) bounds.extend([venue.longitude, venue.latitude])
     }
     if (bounds.isEmpty()) return
-    const fitted = this.map.cameraForBounds(bounds, { padding: crowdZoomPadding })?.zoom ?? 0
+    const fitted = this.map.cameraForBounds(bounds, { padding: cardClusterZoomPadding })?.zoom ?? 0
     const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
     const center = bounds.getCenter()
     this.map.easeTo({ center, zoom })
     this.map.once('idle', () => {
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
       if (!arrived || zoom >= maxZoom) return
-      const stillCrowded = this.cards.crowdedGames().find((crowd) => crowd.some((id) => gameIds.includes(id)))
-      if (stillCrowded) this.zoomToCrowd(stillCrowded)
+      const stillClustered = this.cards.clusteredGames().find((cluster) => cluster.some((id) => gameIds.includes(id)))
+      if (stillClustered) this.zoomToCardCluster(stillClustered)
     })
   }
 

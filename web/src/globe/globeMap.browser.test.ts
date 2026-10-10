@@ -168,7 +168,7 @@ describe('selection', () => {
 
   it('leaves a score card moved aside for its neighbours where it is when it is selected', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
-    // Close enough that some cards are moved aside, not so close that any is crowded out.
+    // Close enough that some cards are moved aside, not so close that any is clustered.
     globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
     await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
     const moved = container.querySelector<HTMLElement>('[data-moved] .score-card')!
@@ -242,7 +242,7 @@ describe('selection', () => {
   })
 })
 
-describe('zooming in to clusters and crowds', () => {
+describe('zooming in to clusters of small pins and of score cards', () => {
   it('does not zoom in when the viewer double-clicks the globe', async () => {
     const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     await new Promise((resolve) => map.once('load', resolve))
@@ -266,31 +266,31 @@ describe('zooming in to clusters and crowds', () => {
     await cardShown('B')
   })
 
-  it('zooms in to a crowd the viewer selects until its games all have cards', async () => {
+  it('zooms in to a cluster of score cards the viewer selects until its games all have cards', async () => {
     const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at cardZoom.
     const games = Array.from({ length: 16 }, (_, i) =>
       game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
     )
     globe.show(games)
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+    await vi.waitFor(() => expect(container.querySelector('.score-cluster')).not.toBeNull(), { timeout: 10_000 })
 
-    await userEvent.click(container.querySelector('.score-crowd')!)
+    await userEvent.click(container.querySelector('.score-cluster')!)
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom > cardZoom + 1)
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).toBeNull(), { timeout: 20_000 })
+    await vi.waitFor(() => expect(container.querySelector('.score-cluster')).toBeNull(), { timeout: 20_000 })
   })
 
   // Five or so zooms one after another: about 10 seconds in CI.
-  it('zooms in again while some of a crowd’s games are still crowded, as far as the globe goes', { timeout: 30_000 }, async () => {
+  it('zooms in again while some of a card cluster’s games are still clustered, as far as the globe goes', { timeout: 30_000 }, async () => {
     const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     // Two games half a degree out set how far the first zoom goes; at the venue between them,
-    // more games than there's ever room for stay crowded after it.
+    // more games than there's ever room for stay clustered after it.
     const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
     globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
-    await vi.waitFor(() => expect(container.querySelector('.score-crowd')).not.toBeNull(), { timeout: 10_000 })
+    await vi.waitFor(() => expect(container.querySelector('.score-cluster')).not.toBeNull(), { timeout: 10_000 })
 
-    await userEvent.click(container.querySelector('.score-crowd')!)
+    await userEvent.click(container.querySelector('.score-cluster')!)
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
     const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
@@ -336,7 +336,7 @@ describe('score cards', () => {
     expect(Math.abs(a.x - b.x)).toBeLessThan(20)
 
     expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
-    expect(container.querySelector('.score-crowd')).toBeNull()
+    expect(container.querySelector('.score-cluster')).toBeNull()
     const trails = [...container.querySelectorAll<SVGGElement>('.score-card-trails g')]
     expect(trails.filter((trail) => trail.style.display !== 'none')).toEqual([])
   })

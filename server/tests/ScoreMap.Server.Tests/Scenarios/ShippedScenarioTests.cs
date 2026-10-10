@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Tests.Support;
+using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
@@ -12,8 +13,6 @@ namespace ScoreMap.Server.Tests.Scenarios;
 public class ShippedScenarioTests
 {
     private static readonly string ShippedFolder = Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "Scenarios", "Files");
-
-    private sealed record ScenarioListing(string Running, string[] Scenarios, bool CanControlPlay);
 
     [Fact]
     public async Task Every_scenario_file_in_the_repo_loads_and_worldwide_is_the_default()

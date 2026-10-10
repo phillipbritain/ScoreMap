@@ -10,6 +10,9 @@ namespace ScoreMap.Server.Scenarios;
 /// </summary>
 public sealed record Scenario(string Name, IReadOnlyList<ScenarioGame> Games, ScenarioTimeline? Timeline = null, PlaySettings? Play = null)
 {
+    /// <summary>Whether its games change over time, with play or a timeline, rather than standing still.</summary>
+    public bool ChangesOverTime => Play is not null || Timeline is not null;
+
     /// <summary>
     /// The games as the feed reports them at <paramref name="now"/>, for a scenario that started at
     /// <paramref name="startedAt"/>. Each time the timeline ends the scenario starts again: its games

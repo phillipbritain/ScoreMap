@@ -141,7 +141,7 @@ public class ScenarioTests
     public async Task A_browser_gets_every_filled_game_at_a_different_venue_in_the_group_with_its_home_team()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
-        server.WriteScenario("test", """{ "fill": { "count": 10, "group": "london", "mix": { "live": 4, "upcoming": 2, "final": 2, "disrupted": 2 } } }""");
+        server.WriteScenario("test", """{ "fill": { "count": 10, "group": "london", "mix": { "live": 4, "upcoming": 2, "final": 2 } }, "play": true, "disrupted": 0.2 }""");
         var london = ShippedVenues().Where(v => v.Groups.Contains("london")).ToList();
 
         await using var client = await server.ConnectClientAsync();
@@ -164,7 +164,7 @@ public class ScenarioTests
     {
         var count = ShippedVenues().Count(v => v.Groups.Contains("worldwide"));
         await using var server = new ScoreMapServer { Scenario = "test" };
-        server.WriteScenario("test", $$"""{ "fill": { "count": {{count}}, "group": "worldwide", "mix": { "live": 1, "upcoming": 1, "final": 1, "disrupted": 1 } } }""");
+        server.WriteScenario("test", $$"""{ "fill": { "count": {{count}}, "group": "worldwide", "mix": { "live": 1, "upcoming": 1, "final": 1 } }, "play": true, "disrupted": 0.25 }""");
 
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
@@ -174,10 +174,10 @@ public class ScenarioTests
     }
 
     [Fact]
-    public async Task With_random_play_a_browser_sees_live_games_score_by_themselves()
+    public async Task With_play_a_browser_sees_live_games_score_by_themselves()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
-        server.WriteScenario("test", """{ "fill": { "count": 20, "group": "worldwide" }, "play": "random" }""");
+        server.WriteScenario("test", """{ "fill": { "count": 20, "group": "worldwide" }, "play": true }""");
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
 

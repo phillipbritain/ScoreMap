@@ -3,7 +3,7 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { cardPins, type CardPin } from './cardPins'
 import { defaultCardStyle, type CardStyle } from './cardStyle'
-import { layOutCards, type CardCrowd, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
+import { layOutCards, type CardCrowd, type CardPlacement, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
@@ -20,8 +20,11 @@ interface PlacedCard {
   /** The card's size on screen, measured when it's drawn. */
   width: number
   height: number
-  /** Where the card sits from its venue: just above it, or moved aside to make room for others (see cardLayout). */
-  offset: ScreenOffset
+  /**
+   * Where the card sits from its venue: just above it, or moved aside to make room for others (see
+   * cardLayout). Null until it's first laid out.
+   */
+  offset: ScreenOffset | null
   /** The line and venue point drawn while the card is moved (see drawTrail). */
   trail: SVGGElement
   /** True while there's no room for the card and its game is counted in a crowd instead. */
@@ -145,7 +148,7 @@ export class ScoreCardMarkers {
           drawn: '',
           width: 0,
           height: 0,
-          offset: { dx: 0, dy: 0 },
+          offset: null,
           trail: this.trails.appendChild(newTrail()),
           crowded: false,
         }
@@ -193,19 +196,24 @@ export class ScoreCardMarkers {
       const venue = this.map.project(marker.getLngLat())
       return { gameId, status: this.games.get(gameId)!.status, venueX: venue.x, venueY: venue.y, width, height }
     })
+    // Where the cards were last frame, so they stay put while they still have room.
+    const previous = new Map<string, CardPlacement>()
+    for (const gameId of gameIds) {
+      const { offset, crowded } = this.placed.get(gameId)!
+      if (offset) previous.set(gameId, { offset, crowded, trail: null })
+    }
     const canvas = this.map.getCanvas()
-    const layout = layOutCards(cards, {
-      width: canvas.clientWidth,
-      height: canvas.clientHeight,
-      pointer: this.pointer,
-      names: this.placeNames.nameBoxes(),
-    })
+    const layout = layOutCards(
+      cards,
+      { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() },
+      previous,
+    )
 
     for (const [gameId, placed] of this.placed) {
       const placement = layout.cards.get(gameId)
       if (!placement) continue
       const { offset, crowded, trail } = placement
-      if (offset.dx !== placed.offset.dx || offset.dy !== placed.offset.dy) {
+      if (offset.dx !== placed.offset?.dx || offset.dy !== placed.offset?.dy) {
         placed.offset = offset
         placed.marker.setOffset([offset.dx, offset.dy])
         placed.marker.getElement().toggleAttribute('data-moved', trail !== null)

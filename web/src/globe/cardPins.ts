@@ -7,7 +7,7 @@ export interface CardPin {
 }
 
 /**
- * Picks the individual pins (not clusters) out of features queried from the pin source,
+ * Picks the individual pins (not pin clusters) out of features queried from the pin source,
  * once per game: a source query returns a pin again for every map tile it falls in.
  */
 export function cardPins(features: readonly Feature<Point>[]): CardPin[] {

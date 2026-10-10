@@ -26,6 +26,10 @@ describe('liftClearOf', () => {
     expect(liftClearOf(pinAt(750, 500), panel)).toBe(0)
   })
 
+  it('leaves a pin below the panel where it is', () => {
+    expect(liftClearOf(pinAt(400, 620), panel)).toBe(0)
+  })
+
   it('lifts a pin that overlaps the panel’s side', () => {
     expect(liftClearOf(pinAt(95, 500), panel)).toBe(500 - 460 + panelGap)
   })

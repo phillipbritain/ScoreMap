@@ -15,7 +15,7 @@ import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
-import { liftClearOf, type ScreenBox } from './panelClearance'
+import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import {
@@ -56,8 +56,6 @@ export interface GlobeMapOptions {
 }
 
 export const selectedPinLayer = 'pin-selected'
-/** How far a small pin's selection ring reaches from its venue (its radius and stroke). */
-const smallPinReach = 16
 /** Room left around a crowd's games when zooming in to them. */
 const crowdZoomPadding = 120
 
@@ -168,11 +166,11 @@ export class GlobeMap {
     if (this.map.getLayer(selectedPinLayer)) this.map.setFilter(selectedPinLayer, selectedPin(gameId))
     const game = gameId === null ? undefined : this.shown.get(gameId)
     if (!game) return
-    const lift = liftClearOf(this.pinOnPage(game), panel)
-    if (lift <= 0) return
-    // The venue straight up from where it is: panning by the lift would land short on the curved globe.
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
     const { x, y } = this.map.project(venue)
+    const lift = liftClearOf(this.pinOnPage(game, { x, y }), panel)
+    if (lift <= 0) return
+    // The venue straight up from where it is: panning by the lift would land short on the curved globe.
     const { width, height } = this.map.getContainer().getBoundingClientRect()
     this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
   }
@@ -319,10 +317,12 @@ export class GlobeMap {
     }
   }
 
-  /** The box a game's pin takes up on the page: its score card and venue, or its ringed small pin. */
-  private pinOnPage(game: Game): ScreenBox {
+  /**
+   * The box a game's pin takes up on the page: its score card and venue, or its ringed small pin.
+   * Given where its venue is on the map.
+   */
+  private pinOnPage(game: Game, { x, y }: { x: number; y: number }): ScreenBox {
     const container = this.map.getContainer().getBoundingClientRect()
-    const { x, y } = this.map.project([game.venue.longitude, game.venue.latitude])
     const venue = { x: container.left + x, y: container.top + y }
     const card = pinLayout(this.map.getZoom()).size === 'card' ? this.cards.cardOnPage(game.id) : null
     if (!card) {

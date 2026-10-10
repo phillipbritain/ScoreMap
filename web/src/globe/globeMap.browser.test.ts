@@ -5,7 +5,7 @@ import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { Camera } from './camera'
 import { GlobeMap, selectedPinLayer } from './globeMap'
-import { panelGap } from './panelClearance'
+import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { clusterLayer, smallPinLayer } from './pinLayers'
 import { applyStatusLook } from './statusLook'
@@ -132,9 +132,6 @@ function panelAcrossBottom() {
 
 /** How many pixels apart two positions on screen are. */
 const offBy = (a: number, b: number) => Math.abs(a - b)
-
-/** How far below its venue a small pin's selection ring reaches. */
-const smallPinReach = 16
 
 describe('selection', () => {
   it('rings the selected game’s small pin and leaves the globe where it is', async () => {

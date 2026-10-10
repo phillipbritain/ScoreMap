@@ -45,6 +45,7 @@ public class LeagueTests
 
         var leagues = await http.GetFromJsonAsync<LeagueListing[]>("/api/leagues");
 
+        Assert.NotNull(leagues);
         Assert.Equal(
         [
             new LeagueListing("NFL", "Football"),

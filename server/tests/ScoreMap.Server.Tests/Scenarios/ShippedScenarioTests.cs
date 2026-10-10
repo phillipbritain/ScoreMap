@@ -82,7 +82,7 @@ public class ShippedScenarioTests
         await client.NextSnapshotAsync();
 
         // At 1×, worldwide scores every ~15 s or so (see the run-scoremap skill).
-        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
+        await AdvanceUntilAsync(server, client, "a score change", c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
     }
 
     [Fact]
@@ -96,7 +96,8 @@ public class ShippedScenarioTests
         Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
         Assert.InRange(Math.Abs((close.Home.Score - close.Away.Score) ?? 99), 0, 5);
 
-        await AdvanceUntilAsync(server, client, c => c.Game.Id == close.Id && c.Game.ClutchTime, within: TimeSpan.FromMinutes(10));
+        await AdvanceUntilAsync(server, client, $"{close.Id} in clutch time", c => c.Game.Id == close.Id && c.Game.ClutchTime,
+            within: TimeSpan.FromMinutes(10));
     }
 
     [Fact]
@@ -133,17 +134,17 @@ public class ShippedScenarioTests
 
         // New Live games start up to 90% of the way through, so the first finish can take a while.
         var changes = new List<GameChange>();
-        foreach (var wanted in new Func<GameChange, bool>[]
+        foreach (var (waitingFor, wanted) in new (string, Func<GameChange, bool>)[]
         {
-            c => c.Kind == GameChangeKind.Started,
-            c => c.Kind == GameChangeKind.Finished,
-            c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Disrupted,
-            c => c.Kind == GameChangeKind.Removed,
-            c => c.Kind == GameChangeKind.Added,
+            ("a game starting", c => c.Kind == GameChangeKind.Started),
+            ("a game finishing", c => c.Kind == GameChangeKind.Finished),
+            ("a game disrupted", c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Disrupted),
+            ("a game dropping out", c => c.Kind == GameChangeKind.Removed),
+            ("a new game", c => c.Kind == GameChangeKind.Added),
         })
         {
             if (!changes.Any(wanted))
-                changes.AddRange(await AdvanceUntilAsync(server, client, wanted, within: TimeSpan.FromMinutes(30)));
+                changes.AddRange(await AdvanceUntilAsync(server, client, waitingFor, wanted, within: TimeSpan.FromMinutes(30)));
         }
     }
 
@@ -176,10 +177,11 @@ public class ShippedScenarioTests
     /// <summary>
     /// Moves the clock on a second at a time, as the poller fetches every second, until the browser
     /// gets a change that is <paramref name="wanted"/>, and returns the changes it got until then.
-    /// Fails if there is none <paramref name="within"/> the given time.
+    /// Fails if there is none <paramref name="within"/> the given time, saying what it was waiting for
+    /// (<paramref name="waitingFor"/>, such as "a game finishing") and the kinds of change it saw instead.
     /// </summary>
     private static async Task<List<GameChange>> AdvanceUntilAsync(
-        ScoreMapServer server, TestClient client, Func<GameChange, bool> wanted, TimeSpan within)
+        ScoreMapServer server, TestClient client, string waitingFor, Func<GameChange, bool> wanted, TimeSpan within)
     {
         var changes = new List<GameChange>();
         for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += TimeSpan.FromSeconds(1))
@@ -191,8 +193,17 @@ public class ShippedScenarioTests
                 return changes;
         }
         // The poller can be behind the clock: give it real time to catch up with the last second.
-        while (!changes.Any(wanted))
-            changes.Add(await client.NextChangeAsync());
+        try
+        {
+            while (!changes.Any(wanted))
+                changes.Add(await client.NextChangeAsync());
+        }
+        catch (TimeoutException)
+        {
+            var seen = changes.Select(c => c.Kind).Distinct().Order().ToList();
+            Assert.Fail($"No change for {waitingFor} within {within} of scenario time; saw "
+                + (seen.Count > 0 ? string.Join(", ", seen) : "no changes at all"));
+        }
         return changes;
     }
 

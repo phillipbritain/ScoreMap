@@ -25,9 +25,7 @@ public class ShippedScenarioTests
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
-        Assert.Superset(
-            new HashSet<string> { "worldwide", "crowded", "live-scoring", "busy", "lifecycle", "disrupted", "empty", "edge-cases" },
-            listing.Scenarios.ToHashSet());
+        Assert.Equal(["crowded", "edge-cases", "empty", "worldwide"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
@@ -65,6 +63,29 @@ public class ShippedScenarioTests
     }
 
     [Fact]
+    public async Task Worldwide_starts_about_5_percent_of_its_games_disrupted_in_every_way()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        Assert.InRange(snapshot.Count(g => g.Status == GameStatus.Disrupted), 6, 10);
+        Assert.Equal(Enum.GetValues<Disruption>().ToHashSet(), snapshot.Select(g => g.Disruption).OfType<Disruption>().ToHashSet());
+    }
+
+    [Fact]
+    public async Task Worldwide_scores_by_itself()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        // At 1×, worldwide scores every ~15 s or so (see the run-scoremap skill).
+        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
+    }
+
+    [Fact]
     public async Task Worldwide_has_a_close_basketball_game_coming_into_clutch_time()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
@@ -92,54 +113,6 @@ public class ShippedScenarioTests
     }
 
     [Fact]
-    public async Task Live_scoring_changes_a_score_within_10_seconds_and_has_a_break_and_a_finish_in_each_loop()
-    {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
-        await using var client = await StartAsync(server, "live-scoring");
-        var snapshot = await client.NextSnapshotAsync();
-        Assert.True(snapshot.Where(g => g.Status == GameStatus.Live).Select(g => g.Sport).Distinct().Count() >= 3,
-            "live games in at least 3 sports");
-
-        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(10));
-
-        var loop = await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.Added, within: TimeSpan.FromMinutes(3));
-        Assert.Contains(loop, c => c.Kind == GameChangeKind.Finished);
-        Assert.Contains(loop, c => IsBreak(c.Game.Clock));
-    }
-
-    [Fact]
-    public async Task Lifecycle_takes_one_game_from_upcoming_to_live_to_a_break_and_back_to_final()
-    {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
-        await using var client = await StartAsync(server, "lifecycle");
-        var game = Assert.Single(await client.NextSnapshotAsync());
-        Assert.Equal(GameStatus.Upcoming, game.Status);
-
-        var changes = await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.Finished, within: TimeSpan.FromMinutes(3));
-
-        var states = changes.Select(c => (c.Game.Status, Break: IsBreak(c.Game.Clock)))
-            .Prepend((game.Status, Break: false))
-            .ToList();
-        var inTurn = states.Where((state, i) => i == 0 || state != states[i - 1]); // each state once, in the order seen
-        Assert.Equal(
-            [(GameStatus.Upcoming, false), (GameStatus.Live, false), (GameStatus.Live, true), (GameStatus.Live, false), (GameStatus.Final, false)],
-            inTurn);
-    }
-
-    [Fact]
-    public async Task Disrupted_shows_postponed_suspended_and_canceled_games_next_to_normal_ones()
-    {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
-
-        await using var client = await StartAsync(server, "disrupted");
-        var snapshot = await client.NextSnapshotAsync();
-
-        Assert.Equal(Enum.GetValues<Disruption>().ToHashSet(), snapshot.Select(g => g.Disruption).OfType<Disruption>().ToHashSet());
-        Assert.Contains(snapshot, g => g.Status == GameStatus.Live);
-        Assert.Contains(snapshot, g => g.Status == GameStatus.Upcoming);
-    }
-
-    [Fact]
     public async Task Empty_shows_no_games()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
@@ -149,33 +122,28 @@ public class ShippedScenarioTests
         Assert.Empty(await client.NextSnapshotAsync());
     }
 
-    [Fact]
-    public async Task Busy_shows_about_60_live_games_that_score_by_themselves()
-    {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
-        await using var client = await StartAsync(server, "busy");
-        var snapshot = await client.NextSnapshotAsync();
-
-        Assert.InRange(snapshot.Count, 55, 65);
-        Assert.All(snapshot, g => Assert.Equal(GameStatus.Live, g.Status));
-        // At 1×, busy scores every ~15 s or so (see the run-scoremap skill).
-        await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
-    }
-
     [Theory]
     [InlineData("worldwide")]
     [InlineData("crowded")]
-    [InlineData("disrupted")]
-    public async Task Live_games_move_on_by_themselves_and_no_game_starts_or_finishes(string name)
+    public async Task Games_start_finish_get_disrupted_and_drop_out_for_new_ones(string name)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
         await using var client = await StartAsync(server, name);
         await client.NextSnapshotAsync();
 
-        var changes = await AdvanceUntilAsync(server, client, c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Live,
-            within: TimeSpan.FromSeconds(10));
-
-        Assert.DoesNotContain(changes, c => c.Kind is GameChangeKind.Started or GameChangeKind.Finished);
+        var changes = new List<GameChange>();
+        foreach (var wanted in new Func<GameChange, bool>[]
+        {
+            c => c.Kind == GameChangeKind.Started,
+            c => c.Kind == GameChangeKind.Finished,
+            c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Disrupted,
+            c => c.Kind == GameChangeKind.Removed,
+            c => c.Kind == GameChangeKind.Added,
+        })
+        {
+            if (!changes.Any(wanted))
+                changes.AddRange(await AdvanceUntilAsync(server, client, wanted, within: TimeSpan.FromMinutes(15)));
+        }
     }
 
     [Fact]
@@ -226,8 +194,6 @@ public class ShippedScenarioTests
             changes.Add(await client.NextChangeAsync());
         return changes;
     }
-
-    private static bool IsBreak(string? clock) => clock is "HT" or "Halftime" || clock?.StartsWith("End ") == true;
 
     private static double KmFromCentralLondon(GameVenue venue)
     {

@@ -6,7 +6,7 @@ namespace ScoreMap.Server.Scenarios;
 /// The fake game feed provider (ADR-0009): stands in for ESPN's and answers from the running
 /// scenario, so everything after the feed is the real code. The scenario starts when the provider
 /// is made, and its timeline (if any) plays from then on the clock it is given, the scenario clock.
-/// With play (random or live), the games play out from then, seeded by the scenario's name.
+/// With play, the games play out from then, seeded by the scenario's name.
 /// </summary>
 public sealed class ScenarioGameFeedProvider : IGameFeedProvider
 {

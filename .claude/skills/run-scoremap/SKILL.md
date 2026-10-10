@@ -58,8 +58,9 @@ With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scor
    `open http://localhost:5173/favicon.svg`, `eval "localStorage.clear()"`, then `open http://localhost:5173`.
    A dark, empty globe is usually a saved camera zoomed in over ocean; reset.
 3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
-4. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
-5. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
+4. **Pick from the scenario pill by ref.** The globe's canvas covers the pill's list for clicks by text, so open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
+5. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
+6. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
 

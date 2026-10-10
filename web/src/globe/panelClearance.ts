@@ -6,6 +6,9 @@ export interface ScreenBox {
   bottom: number
 }
 
+/** How far a small pin's selection ring reaches from its venue (its radius and stroke). */
+export const smallPinReach = 16
+
 /** Room left between a selected pin and the game panel below it. */
 export const panelGap = 16
 
@@ -15,6 +18,6 @@ export const panelGap = 16
  * all when the panel doesn't cover it, so selecting a game leaves the globe still where it can.
  */
 export function liftClearOf(pin: ScreenBox, panel: ScreenBox | null): number {
-  if (!panel || pin.right < panel.left || pin.left > panel.right) return 0
+  if (!panel || pin.right < panel.left || pin.left > panel.right || pin.top >= panel.bottom) return 0
   return Math.max(0, pin.bottom + panelGap - panel.top)
 }

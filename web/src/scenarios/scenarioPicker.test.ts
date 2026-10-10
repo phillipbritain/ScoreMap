@@ -7,7 +7,6 @@ import {
   litKey,
   pressedSpeed,
   showsFasterIcon,
-  speedChangeable,
   togglesScenarioControls,
   type ScenarioListing,
 } from './scenarioPicker'
@@ -23,10 +22,11 @@ const local: ScenarioListing = {
     { name: 'Fast', times: 2 },
     { name: 'Faster', times: 8 },
   ],
+  canControlPlay: true,
   clock,
 }
 // What the deployed server says: no scenarios.
-const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 'Normal', speeds: [], clock }
+const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 'Normal', speeds: [], canControlPlay: false, clock }
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {
@@ -87,11 +87,6 @@ describe('the media keys', () => {
     expect(showsFasterIcon('Faster')).toBe(true)
     for (const speed of ['Paused', 'Normal', 'Fast'] as const) expect(showsFasterIcon(speed)).toBe(false)
   })
-
-  it('can change the speed while a scenario runs, but not while real games run', () => {
-    expect(speedChangeable(local)).toBe(true)
-    expect(speedChangeable({ ...local, running: 'real' })).toBe(false)
-  })
 })
 
 describe('the clock', () => {
@@ -107,12 +102,6 @@ describe('the clock', () => {
 
   it('stands still while paused', () => {
     expect(clockReading({ ...local, speed: 'Paused' }, at + 10_000)).toEqual(new Date(clock.reads))
-  })
-
-  it('runs at real time while real games run, whatever the speed', () => {
-    const real = { ...local, running: 'real', clock: { at: clock.at, reads: clock.at } }
-
-    expect(clockReading(real, at + 10_000)).toEqual(new Date('2026-10-04T18:00:10Z'))
   })
 })
 

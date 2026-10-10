@@ -166,6 +166,23 @@ describe('selection', () => {
     expect(container.querySelector('.score-card--selected')).toBeNull()
   })
 
+  it('leaves a score card moved aside for its neighbours where it is when it is selected', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Close enough that some cards are moved aside, not so close that any is crowded out.
+    globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
+    await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
+    const moved = container.querySelector<HTMLElement>('[data-moved] .score-card')!
+    const before = JSON.stringify(moved.getBoundingClientRect())
+    const placed = () => [...container.querySelectorAll('.score-card')].map((c) => JSON.stringify(c.getBoundingClientRect()))
+    const everyCard = placed()
+
+    globe.select(moved.dataset.gameId!)
+    await pause(500)
+
+    expect(JSON.stringify(moved.getBoundingClientRect())).toBe(before)
+    expect(placed()).toEqual(everyCard)
+  })
+
   it('lifts a small pin the panel would cover just clear of it, without turning sideways', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 5, latitude: -40 })

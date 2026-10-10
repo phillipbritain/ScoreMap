@@ -19,8 +19,13 @@ public sealed class ScenarioGameMakerTests
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
     ];
 
-    private static readonly ScenarioVenue Home = Venue("Emirates Stadium", "Arsenal", "ARS");
-    private static readonly ScenarioVenue[] Venues = [Home, Venue("Stamford Bridge", "Chelsea", "CHE"), Venue("Maracanã", "Flamengo", "FLA")];
+    private static readonly ScenarioVenue At = new("Emirates Stadium", "London", null, "England", ["worldwide"]);
+
+    // Six made-up teams in each league, named for it ("NFL team 1"), so a game's teams show where they came from.
+    private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
+        l => l.Name,
+        l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, 6)
+            .Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", $"https://example.com/{l.Key}/{n}.png")).ToList()));
 
     // The most each team plausibly scores in a whole game.
     private static readonly Dictionary<Sport, int> MostPoints = new()
@@ -133,18 +138,20 @@ public sealed class ScenarioGameMakerTests
         }
     }
 
-    [Fact]
-    public void A_game_is_the_venues_home_team_against_another_venues_home_team_in_any_league()
+    [Theory]
+    [MemberData(nameof(LeagueKeys))]
+    public void A_game_is_two_different_teams_from_its_leagues_team_list_at_the_venue_given(string leagueKey)
     {
-        var games = Leagues.SelectMany(l => Make(l.Key, GameStatus.Live)).Select(made => made.Game).ToList();
-
-        Assert.All(games, game =>
+        foreach (var (game, league) in Make(leagueKey, GameStatus.Live))
         {
-            Assert.Equal(("ARS", "Arsenal", "https://example.com/ARS.png"), (game.Home.Abbreviation, game.Home.FullName, game.Home.LogoUrl));
-            Assert.Equal(Home.ToProviderVenue(), game.Venue);
-            Assert.Contains(game.Away.Abbreviation, new[] { "CHE", "FLA" });
+            var teams = Teams.For(league);
+            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Home.Abbreviation, game.Home.FullName, game.Home.LogoUrl));
+            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Away.Abbreviation, game.Away.FullName, game.Away.LogoUrl));
+            Assert.NotEqual(game.Home.FullName, game.Away.FullName);
+            Assert.Equal(league.Key, game.LeagueKey);
+            Assert.Equal(At.ToProviderVenue(), game.Venue);
             Assert.Equal("made", game.Id);
-        });
+        }
     }
 
     private static void AssertClockFits(ScenarioGame game, League league)
@@ -179,10 +186,7 @@ public sealed class ScenarioGameMakerTests
     private static IEnumerable<(ScenarioGame Game, League League)> Make(string leagueKey, GameStatus status)
     {
         var league = Leagues.Single(l => l.Key == leagueKey);
-        var maker = new ScenarioGameMaker([league], Venues);
-        return Enumerable.Range(0, 200).Select(seed => (maker.Make("made", Home, status, new Random(seed)), league)).ToList();
+        var maker = new ScenarioGameMaker([league], Teams);
+        return Enumerable.Range(0, 200).Select(seed => (maker.Make("made", At, status, [], new Random(seed)), league)).ToList();
     }
-
-    private static ScenarioVenue Venue(string name, string team, string abbreviation) =>
-        new(name, "Somewhere", null, "Somewhere", new ScenarioTeam(team, abbreviation, $"https://example.com/{abbreviation}.png"), ["worldwide"]);
 }

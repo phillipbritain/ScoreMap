@@ -68,9 +68,10 @@ public static partial class ScenarioReader
                 throw new ScenarioFileException(name, path, $"game {i + 1}{id} {e.Message}");
             }
         }).ToList();
+        var (plays, disruptedShare) = ReadPlays(file, name, path);
         if (file.Fill is not null)
         {
-            foreach (var game in ReadFill(file.Fill, name, path, leagues, venues))
+            foreach (var game in ReadFill(file.Fill, disruptedShare, name, path, leagues, venues))
             {
                 if (!ids.Add(game.Id))
                     throw new ScenarioFileException(name, path,
@@ -79,7 +80,7 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
-        var play = file.Play is null ? null : ReadPlay(file, name, path, leagues, venues);
+        var play = plays ? ReadPlay(file, disruptedShare, name, path, leagues, venues) : null;
         return new Scenario(name, games, timeline, play);
     }
 
@@ -180,7 +181,8 @@ public static partial class ScenarioReader
     }
 
     // The file's own shape, kept apart from the model so the format can grow.
-    private sealed record ScenarioFile(List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, string? Play);
+    private sealed record ScenarioFile(
+        List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted);
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,

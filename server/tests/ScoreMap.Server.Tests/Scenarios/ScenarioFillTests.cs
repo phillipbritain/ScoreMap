@@ -57,15 +57,14 @@ public sealed class ScenarioFillTests : IDisposable
     [Fact]
     public void The_status_mix_gives_each_status_its_share_of_the_filled_games()
     {
-        var scenario = Read("""{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 50, "upcoming": 25, "final": 12.5, "disrupted": 12.5 } } }""");
+        var scenario = Read("""{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 50, "upcoming": 37.5, "final": 12.5 } } }""");
 
         var statuses = scenario.Games.GroupBy(g => Status(g.Status)).ToDictionary(g => g.Key, g => g.Count());
         Assert.Equal(new Dictionary<GameStatus, int>
         {
             [GameStatus.Live] = 4,
-            [GameStatus.Upcoming] = 2,
+            [GameStatus.Upcoming] = 3,
             [GameStatus.Final] = 1,
-            [GameStatus.Disrupted] = 1,
         }, statuses);
     }
 
@@ -91,7 +90,7 @@ public sealed class ScenarioFillTests : IDisposable
     [Fact]
     public void The_same_scenario_file_makes_the_same_games_each_time()
     {
-        const string json = """{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 2, "upcoming": 1, "final": 1, "disrupted": 1 } } }""";
+        const string json = """{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 2, "upcoming": 1, "final": 1 } }, "play": true, "disrupted": 0.25 }""";
 
         var first = Read(json);
         var second = Read(json);
@@ -130,7 +129,8 @@ public sealed class ScenarioFillTests : IDisposable
     [InlineData("""{ "fill": { "count": 2, "group": "paris" } }""", "unknown group \"paris\"", "worldwide, london")]
     [InlineData("""{ "fill": { "count": 2 } }""", "fill has no group")]
     [InlineData("""{ "fill": { "count": 0, "group": "london" } }""", "count 0")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "playing": 1 } } }""", "unknown status \"playing\"", "upcoming, live, final, disrupted")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "playing": 1 } } }""", "unknown status \"playing\"", "upcoming, live, final")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 1, "disrupted": 1 } } }""", "mix", "disrupted", "\"disrupted\" beside \"play\"")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": -1, "final": 2 } } }""", "share -1")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 0 } } }""", "no games to any status")]
     public void A_fill_that_cant_be_made_says_why(string json, params string[] messageParts)

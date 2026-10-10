@@ -34,7 +34,7 @@
     ./scripts/dev.ps1 start
 
 .EXAMPLE
-    ./scripts/dev.ps1 start -Scenario busy -Speed Faster
+    ./scripts/dev.ps1 start -Scenario crowded -Speed Faster
 
 .EXAMPLE
     ./scripts/dev.ps1 start -Scenario real

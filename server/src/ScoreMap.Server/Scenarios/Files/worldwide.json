@@ -1,6 +1,7 @@
 // worldwide (the default): about 150 games at venues on every continent, in a mix of Upcoming,
 // Live, Final and Disrupted. For the globe as a whole: pins everywhere, clusters, every status.
-// Live games play on (clocks run, teams score) but no game changes status, so the mix holds.
+// The games play like real games: they score, start and finish, about 5% of them are Disrupted at
+// any moment, and a finished or Disrupted game soon drops out and a new one takes its place.
 // Raptors v Celtics is written out: a close NBA game late in the 4th quarter, coming into clutch time,
 // so its score pulses start once 5 minutes are left (if the score stays within 5 points).
 {
@@ -20,7 +21,8 @@
   "fill": {
     "count": 150,
     "group": "worldwide",
-    "mix": { "live": 4, "upcoming": 3, "final": 2, "disrupted": 1 }
+    "mix": { "live": 4, "upcoming": 3, "final": 2 }
   },
-  "play": "live"
+  "play": true,
+  "disrupted": 0.05
 }

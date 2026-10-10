@@ -29,8 +29,16 @@ The look a viewer picks for every score card in the settings menu: HUD (the defa
 _Avoid_: Theme, skin, card look
 
 **Cluster**:
-Games shown as one marker with a count because there's no room to show them apart: while zoomed out, pins close enough to overlap; while zoomed in, games whose score cards have no room on screen even after nearby cards are moved aside. It splits apart as you zoom in, or zooms in until it does when selected.
+Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected.
 _Avoid_: Crowd, bubble, group, stack, pile
+
+**Pin cluster**:
+While zoomed out, a cluster of pins close enough to overlap.
+_Avoid_: Cluster (when it matters that it's pins)
+
+**Card cluster**:
+While zoomed in, a cluster of games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are.
+_Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Game panel**:
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.

@@ -4,8 +4,8 @@ import type { GameStatus } from '../games/game'
 import {
   applyStatusLook,
   byStatus,
-  clusterStatus,
-  clusterStatusCounts,
+  pinClusterStatus,
+  pinClusterStatusCounts,
   cardClusterStacking,
   groupFill,
   groupOutline,
@@ -24,10 +24,10 @@ function evaluate(expression: ExpressionSpecification, properties: Record<string
   return parsed.value.evaluate({ zoom: 0 }, { type: 'Point', properties } as never)
 }
 
-/** The properties the pin source gives a cluster of games with these statuses (see clusterStatusCounts). */
-function clusterOf(statuses: readonly GameStatus[]): Record<string, number> {
+/** The properties the pin source gives a pin cluster of games with these statuses (see pinClusterStatusCounts). */
+function pinClusterOf(statuses: readonly GameStatus[]): Record<string, number> {
   return Object.fromEntries(
-    Object.entries(clusterStatusCounts).map(([name, [, perPin]]) => [
+    Object.entries(pinClusterStatusCounts).map(([name, [, perPin]]) => [
       name,
       statuses.reduce((sum, status) => sum + (evaluate(perPin as ExpressionSpecification, { status }) as number), 0),
     ]),
@@ -49,10 +49,10 @@ describe('the status a group of games shows as', () => {
     expect(groupStatus(['Disrupted', 'Disrupted'])).toBe('Disrupted')
   })
 
-  it('is the same for a cluster of small pins as for one of score cards, whatever the mix', () => {
+  it('is the same for a pin cluster as for a card cluster, whatever the mix', () => {
     for (const mix of everyMix) {
       const games = [...mix, ...mix.slice(0, 1)]
-      expect(evaluate(clusterStatus, clusterOf(games)), mix.join(', ')).toBe(groupStatus(games))
+      expect(evaluate(pinClusterStatus, pinClusterOf(games)), mix.join(', ')).toBe(groupStatus(games))
     }
   })
 })
@@ -64,15 +64,15 @@ describe('byStatus', () => {
     }
   })
 
-  it("picks a cluster's value by the status it shows as", () => {
-    expect(evaluate(byStatus('cluster', (look) => look.color), clusterOf(['Final', 'Upcoming']))).toBe(
+  it("picks a pin cluster's value by the status it shows as", () => {
+    expect(evaluate(byStatus('pinCluster', (look) => look.color), pinClusterOf(['Final', 'Upcoming']))).toBe(
       statusLooks.Upcoming.color,
     )
   })
 })
 
 describe('the status look', () => {
-  it('draws the selected card above every other, and clusters of cards above all', () => {
+  it('draws the selected card above every other, and card clusters above all', () => {
     for (const look of Object.values(statusLooks)) expect(selectedStacking).toBeGreaterThan(look.stacking)
     expect(cardClusterStacking).toBeGreaterThan(selectedStacking)
   })

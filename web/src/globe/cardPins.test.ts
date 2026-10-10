@@ -22,7 +22,7 @@ describe('cardPins', () => {
     ])
   })
 
-  it('leaves clusters as clusters', () => {
+  it('leaves pin clusters out', () => {
     expect(cardPins([cluster, pin('401', [-94.48, 39.05])]).map((c) => c.gameId)).toEqual(['401'])
   })
 

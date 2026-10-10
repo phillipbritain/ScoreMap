@@ -6,8 +6,8 @@ import { clockReading, type ScenarioListing } from './scenarioPicker'
 const tickMs = 100
 
 /**
- * The clock games are on (ADR-0009): the scenario clock while a scenario runs, run forward in the
- * browser from where the server last said it was, or the real time while real games run.
+ * The scenario clock (ADR-0009), run forward in the browser from where the server last said it was.
+ * Shown only where play can be controlled.
  */
 export function ScenarioClock({ listing }: { listing: ScenarioListing }) {
   const [now, setNow] = useState(Date.now)

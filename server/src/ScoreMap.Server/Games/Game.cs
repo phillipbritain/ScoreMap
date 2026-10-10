@@ -2,7 +2,8 @@ namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// A game as ScoreMap sends it to browsers. Serialized camelCase over SignalR;
-/// mirrored by <c>web/src/games/game.ts</c>.
+/// mirrored by <c>web/src/games/game.ts</c>. <see cref="ClutchTime"/> says whether a basketball game is in
+/// clutch time (see <see cref="Games.ClutchTime"/>); it's false in every other sport.
 /// </summary>
 public sealed record Game(
     string Id,
@@ -17,6 +18,7 @@ public sealed record Game(
     GameTeam Away,
     string? Clock,
     int? Period,
+    bool ClutchTime,
     GameVenue Venue,
     IReadOnlyList<GameBroadcaster> Broadcasters,
     IReadOnlyList<StreamLink> StreamLinks);

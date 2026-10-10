@@ -16,6 +16,7 @@ function game(id: string, homeScore: number | null = null): Game {
     away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: homeScore },
     clock: null,
     period: null,
+    clutchTime: false,
     venue: {
       name: null,
       city: 'Kansas City',

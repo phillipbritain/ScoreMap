@@ -6,7 +6,7 @@ import {
   byStatus,
   clusterStatus,
   clusterStatusCounts,
-  crowdStacking,
+  cardClusterStacking,
   groupFill,
   groupOutline,
   groupStatus,
@@ -49,7 +49,7 @@ describe('the status a group of games shows as', () => {
     expect(groupStatus(['Disrupted', 'Disrupted'])).toBe('Disrupted')
   })
 
-  it('is the same for a cluster on the map as for a crowd of score cards, whatever the mix', () => {
+  it('is the same for a cluster of small pins as for one of score cards, whatever the mix', () => {
     for (const mix of everyMix) {
       const games = [...mix, ...mix.slice(0, 1)]
       expect(evaluate(clusterStatus, clusterOf(games)), mix.join(', ')).toBe(groupStatus(games))
@@ -72,9 +72,9 @@ describe('byStatus', () => {
 })
 
 describe('the status look', () => {
-  it('draws the selected card above every other, and crowds above all', () => {
+  it('draws the selected card above every other, and clusters of cards above all', () => {
     for (const look of Object.values(statusLooks)) expect(selectedStacking).toBeGreaterThan(look.stacking)
-    expect(crowdStacking).toBeGreaterThan(selectedStacking)
+    expect(cardClusterStacking).toBeGreaterThan(selectedStacking)
   })
 
   it("measures a small pin by a Live one's glow, the widest, of which the inner part shows", () => {

@@ -3,7 +3,7 @@ import type { GameStatus } from '../games/game'
 
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer, Final fades and
- * Disrupted is greyed out, alike on small pins, clusters, score cards and crowds. Map layers read
+ * Disrupted is greyed out, alike on small pins, score cards and clusters of either. Map layers read
  * these through style expressions (see byStatus), and the page's CSS through custom properties (see
  * applyStatusLook).
  */
@@ -23,7 +23,7 @@ interface StatusLook {
   /** The glow's radius in pixels, out to where it has faded to nothing, and how opaque it is at its middle. */
   glowRadius: number
   glowOpacity: number
-  /** A group's (a cluster's or a crowd's) opacity, when it shows as this status. */
+  /** A cluster's opacity (of small pins or score cards), when it shows as this status. */
   groupOpacity: number
 }
 
@@ -76,7 +76,7 @@ export const statusLooks: Record<GameStatus, StatusLook> = {
 }
 
 /**
- * A group (a cluster, or a crowd of score cards) is a dark disc like a HUD score card, outlined and
+ * A cluster (of small pins or score cards) is a dark disc like a HUD score card, outlined and
  * lit in its status colour: this fill, an outline this wide, and a glow this much of its opacity.
  */
 export const groupFill = 'rgba(6, 12, 24, 0.88)'
@@ -86,9 +86,9 @@ export const groupGlowOpacity = 0.45
 /** The selected game's small pin ring and score card outline. */
 export const selectionColor = '#2f80ed'
 
-/** The selected game's score card draws above every other card, and crowds above all, so a count is never hidden. */
+/** The selected game's score card draws above every other card, and clusters of cards above all, so a count is never hidden. */
 export const selectedStacking = Math.max(...Object.values(statusLooks).map((look) => look.stacking)) + 1
-export const crowdStacking = selectedStacking + 1
+export const cardClusterStacking = selectedStacking + 1
 
 /**
  * How far across the widest small pin (a Live one) shows. Its glow is blurred to nothing at its
@@ -100,7 +100,7 @@ export const smallPinWidth = Math.round(2 * 0.6 * Math.max(...Object.values(stat
 export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
 
 /**
- * The status a group of games shows as (a cluster, or a crowd of score cards): the most prominent
+ * The status a group of games shows as (a cluster of small pins or score cards): the most prominent
  * among them, so Disrupted only when all its games are.
  */
 export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
@@ -137,7 +137,7 @@ export function byStatus(
 }
 
 /**
- * Writes the looks to CSS custom properties on the page's root, for score cards, crowds and trails:
+ * Writes the looks to CSS custom properties on the page's root, for score cards, their clusters and trails:
  * --live-color and --live-group-opacity for Live, and so on, --group-fill and --group-outline, and
  * --selection-color.
  */

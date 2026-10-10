@@ -5,8 +5,8 @@ export type PinSize = 'small' | 'card'
 
 export interface PinLayout {
   /**
-   * Small pins cluster; score cards don't, since cards find room among themselves and crowd
-   * together only when there is none (see cardLayout).
+   * Small pins cluster by distance; score cards don't, since cards find room among themselves and
+   * cluster only when there is none (see cardLayout).
    */
   size: PinSize
   /** The pin source's cluster radius while small pins show, in pixels at the whole zoom level below (see pinLayout). */

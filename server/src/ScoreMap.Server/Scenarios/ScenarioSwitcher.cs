@@ -33,7 +33,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private readonly ScenarioClock _clock;
     private volatile Source _running;
 
-    private sealed record Source(string Name, IGameFeedProvider Feed);
+    private sealed record Source(string Name, IGameFeedProvider Feed, bool CanControlPlay);
 
     public ScenarioSwitcher(
         [FromKeyedServices(RealGamesKey)] IGameFeedProvider realGames,
@@ -80,7 +80,14 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         }
     }
 
-    /// <summary>How fast the scenario clock runs, kept while real games run.</summary>
+    /// <summary>
+    /// Whether the speed can be changed: while a scenario whose games change over time (with play or a
+    /// timeline) runs, not while one whose games stand still does, nor while real games, which play in
+    /// real time, do.
+    /// </summary>
+    public bool CanControlPlay => _running.CanControlPlay;
+
+    /// <summary>How fast the scenario clock runs, kept wherever play can't be controlled.</summary>
     public Speed Speed => _clock.Speed;
 
     /// <summary>The time games are on now: the scenario clock while a scenario runs, else the real time.</summary>
@@ -123,12 +130,15 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// <summary>
     /// Runs the scenario clock at <paramref name="speed"/> from its reading now, so the running scenario
     /// carries on from where it is, and returns the <see cref="Polling"/> for that speed. Throws an
-    /// <see cref="InvalidOperationException"/> while real games run, which play in real time.
+    /// <see cref="InvalidOperationException"/> where play can't be controlled (<see cref="CanControlPlay"/>).
     /// </summary>
     public PollingOptions ChangeSpeed(Speed speed)
     {
         if (IsRealGames(_running.Name))
             throw new InvalidOperationException("Real games play in real time, so their speed can't be changed");
+        if (!_running.CanControlPlay)
+            throw new InvalidOperationException(
+                $"The games in scenario \"{_running.Name}\" stand still, with no play or timeline, so its speed can't be changed");
         _clock.ChangeSpeed(speed);
         return Polling;
     }
@@ -139,10 +149,10 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private Source Start(string name)
     {
         if (IsRealGames(name))
-            return new Source(RealGames, _realGames);
+            return new Source(RealGames, _realGames, CanControlPlay: false);
         var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues);
         _clock.Restart();
-        return new Source(name, new ScenarioGameFeedProvider(scenario, _clock));
+        return new Source(name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime);
     }
 
     private static bool IsRealGames(string name) => name.Equals(RealGames, StringComparison.OrdinalIgnoreCase);

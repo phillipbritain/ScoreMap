@@ -8,11 +8,13 @@ public static class ScenarioEndpoints
 {
     /// <summary>
     /// What the browser's scenario pill, media keys and clock show: the running scenario (or "real") and
-    /// every scenario file, the speed (by name) and the speeds there are, and where the clock games are on
-    /// is (the scenario clock, or the real time while real games run), for the browser to run forward.
+    /// every scenario file, the speed (by name) and the speeds there are, whether play can be controlled
+    /// (the browser hides the media keys and clock where it can't), and where the clock games are on is
+    /// (the scenario clock, or the real time while real games run), for the browser to run forward.
     /// </summary>
     public sealed record ScenarioListing(
-        string Running, IReadOnlyList<string> Scenarios, string Speed, IReadOnlyList<Speed> Speeds, ClockAnchor Clock);
+        string Running, IReadOnlyList<string> Scenarios, string Speed, IReadOnlyList<Speed> Speeds, bool CanControlPlay,
+        ClockAnchor Clock);
 
     /// <summary>A switch: a scenario's name, or "real" for real games.</summary>
     public sealed record ScenarioSwitch(string? Name);
@@ -30,7 +32,7 @@ public static class ScenarioEndpoints
         app.MapGet("/api/scenarios", (IServiceProvider services) =>
             services.GetService<ScenarioSwitcher>() is { } switcher
                 ? Listing(switcher)
-                : new ScenarioListing(ScenarioSwitcher.RealGames, [], Speed.Normal.Name, [], ClockAnchor.RealTime(services.GetRequiredService<TimeProvider>())));
+                : new ScenarioListing(ScenarioSwitcher.RealGames, [], Speed.Normal.Name, [], CanControlPlay: false, ClockAnchor.RealTime(services.GetRequiredService<TimeProvider>())));
 
         // Switches every browser's games, in order:
         // 1. Under the poller's lock, between its fetches, the switcher starts the new source and hands
@@ -92,5 +94,5 @@ public static class ScenarioEndpoints
     }
 
     private static ScenarioListing Listing(ScenarioSwitcher switcher) =>
-        new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.Clock);
+        new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.CanControlPlay, switcher.Clock);
 }

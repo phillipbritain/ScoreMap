@@ -24,7 +24,7 @@ public class ScenarioSwitchingTests
         }
         """;
 
-    private sealed record ScenarioListing(string Running, string[] Scenarios);
+    private sealed record ScenarioListing(string Running, string[] Scenarios, bool CanControlPlay);
 
     [Fact]
     public async Task Run_locally_the_server_lists_every_scenario_file_and_the_running_one()
@@ -206,6 +206,7 @@ public class ScenarioSwitchingTests
 
         Assert.NotNull(listing);
         Assert.Empty(listing.Scenarios);
+        Assert.False(listing.CanControlPlay);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         await Task.Delay(100);
         Assert.Empty(client.PendingChanges());

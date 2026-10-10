@@ -1266,11 +1266,6 @@ body {
   width: 20px;
 }
 
-/* While real games run, the keys show but can't be pressed. */
-.speed-keys[aria-disabled='true'] {
-  opacity: 0.6;
-}
-
 .speed-keys button:disabled {
   cursor: not-allowed;
 }

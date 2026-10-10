@@ -41,15 +41,16 @@ public static partial class ScenarioReader
     /// Play leaves the games in <paramref name="writtenOut"/> undisrupted.
     /// </summary>
     private static PlaySettings ReadPlay(
-        ScenarioFile file, double disruptedShare, IReadOnlySet<string> writtenOut, string scenario, string path, IReadOnlyList<League> leagues, IReadOnlyList<ScenarioVenue>? venues)
+        ScenarioFile file, double disruptedShare, IReadOnlySet<string> writtenOut, string scenario, string path, Lists lists)
     {
+        var (leagues, venues, teams) = lists;
         ScenarioFileException Problem(string problem) => new(scenario, path, $"play {problem}");
 
         if (file.Timeline is not null)
             throw Problem("is on, so the scenario can't have a timeline as well; use one or the other");
-        if (file.Fill?.Group is not { } group || venues is null)
+        if (file.Fill?.Group is not { } group || venues is null || teams is null)
             throw Problem("needs a fill: new games go to venues from the fill's group");
         return new PlaySettings(
-            leagues, venues.Where(venue => venue.Groups.Contains(group)).ToList(), new ScenarioGameMaker(leagues, venues), disruptedShare, writtenOut);
+            leagues, venues.Where(venue => venue.Groups.Contains(group)).ToList(), new ScenarioGameMaker(leagues, teams), disruptedShare, writtenOut);
     }
 }

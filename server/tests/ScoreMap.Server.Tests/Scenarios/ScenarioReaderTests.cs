@@ -149,7 +149,7 @@ public sealed class ScenarioReaderTests : IDisposable
     }
 
     private static ScenarioVenue Venue(string name, string city, string? region, string country) =>
-        new(name, city, region, country, new ScenarioTeam("Home", "HOM", null), ["worldwide"]);
+        new(name, city, region, country, ["worldwide"]);
 
     private const string Arrowhead = """{ "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" }""";
 

@@ -19,15 +19,18 @@ public sealed class ScenarioFillTests : IDisposable
 
     private static readonly ScenarioVenue[] Venues =
     [
-        Venue("Emirates Stadium", "London", "Arsenal", "ARS", "worldwide", "london"),
-        Venue("Stamford Bridge", "London", "Chelsea", "CHE", "worldwide", "london"),
-        Venue("Craven Cottage", "London", "Fulham", "FUL", "worldwide", "london"),
-        Venue("Wembley Stadium", "London", "England", "ENG", "worldwide", "london"),
-        Venue("Madison Square Garden", "New York", "New York Knicks", "NY", "worldwide"),
-        Venue("Maracanã", "Rio de Janeiro", "Flamengo", "FLA", "worldwide"),
-        Venue("Scotiabank Arena", "Toronto", "Toronto Maple Leafs", "TOR", "worldwide"),
-        Venue("Melbourne Cricket Ground", "Melbourne", "Melbourne Demons", "MEL", "worldwide"),
+        Venue("Emirates Stadium", "London", "worldwide", "london"),
+        Venue("Stamford Bridge", "London", "worldwide", "london"),
+        Venue("Craven Cottage", "London", "worldwide", "london"),
+        Venue("Wembley Stadium", "London", "worldwide", "london"),
+        Venue("Madison Square Garden", "New York", "worldwide"),
+        Venue("Maracanã", "Rio de Janeiro", "worldwide"),
+        Venue("Scotiabank Arena", "Toronto", "worldwide"),
+        Venue("Melbourne Cricket Ground", "Melbourne", "worldwide"),
     ];
+
+    // Four made-up teams in each league, named for it ("NFL team 1"): room for two games per league at a time.
+    private static readonly ScenarioTeamList Teams = TeamsPerLeague(4);
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-scenario-fill-{Guid.NewGuid():N}");
 
@@ -36,7 +39,7 @@ public sealed class ScenarioFillTests : IDisposable
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 
     [Fact]
-    public void Fill_makes_n_games_at_different_venues_in_the_group_each_with_the_venues_home_team()
+    public void Fill_makes_n_games_at_different_venues_in_the_group_each_between_two_teams_of_its_league()
     {
         var scenario = Read("""{ "fill": { "count": 3, "group": "london" } }""");
 
@@ -47,10 +50,10 @@ public sealed class ScenarioFillTests : IDisposable
             var venue = Assert.Single(Venues, v => v.Name == game.Venue.Name);
             Assert.Contains("london", venue.Groups);
             Assert.Equal(venue.ToProviderVenue(), game.Venue);
-            Assert.Equal((venue.HomeTeam.Abbreviation, venue.HomeTeam.Name, venue.HomeTeam.LogoUrl),
-                (game.Home.Abbreviation, game.Home.FullName, game.Home.LogoUrl));
+            var league = Assert.Single(Leagues, l => l.Key == game.LeagueKey);
+            Assert.Contains(Teams.For(league), team => team.Name == game.Home.FullName);
+            Assert.Contains(Teams.For(league), team => team.Name == game.Away.FullName);
             Assert.NotEqual(game.Home.FullName, game.Away.FullName);
-            Assert.Contains(Leagues, l => l.Key == game.LeagueKey);
         }
     }
 
@@ -85,6 +88,15 @@ public sealed class ScenarioFillTests : IDisposable
         var scenario = Read("""{ "fill": { "count": 5, "group": "worldwide" } }""");
 
         Assert.All(scenario.Games, game => Assert.Equal(ProviderStatus.InProgress, game.Status));
+    }
+
+    [Fact]
+    public void A_fills_disrupted_games_are_postponed_suspended_and_canceled_in_turn()
+    {
+        var scenario = Read("""{ "fill": { "count": 8, "group": "worldwide" }, "play": true, "disrupted": 0.375 }""");
+
+        var disruptions = scenario.Games.Select(g => g.Status).Where(s => Status(s) == GameStatus.Disrupted).Order();
+        Assert.Equal([ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled], disruptions);
     }
 
     [Fact]
@@ -152,6 +164,61 @@ public sealed class ScenarioFillTests : IDisposable
         Assert.Contains("no venue list", error.Message);
     }
 
+    [Fact]
+    public void No_team_is_in_two_filled_games_nor_in_a_game_written_out()
+    {
+        // Six leagues of two teams: room for six games, one written out and five filled.
+        var scenario = Read(teams: TeamsPerLeague(2), json: """
+            {
+              "games": [ { "league": "NBA", "home": { "name": "NBA team 1", "abbreviation": "T1" }, "away": { "name": "NBA team 2", "abbreviation": "T2" },
+                           "venue": { "name": "Madison Square Garden", "city": "New York" }, "startsIn": "1h", "status": "upcoming" } ],
+              "fill": { "count": 5, "group": "worldwide" }
+            }
+            """);
+
+        var teams = scenario.Games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+        Assert.Equal(12, teams.Count);
+        Assert.Equal(teams.Count, teams.Distinct().Count());
+    }
+
+    [Fact]
+    public void A_fill_asking_for_more_games_than_the_team_list_has_free_teams_for_says_so()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """{ "fill": { "count": 7, "group": "worldwide" } }""");
+
+        // Six leagues of two teams: room for six games.
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
+
+        Assert.Contains("asks for 7 games, but the team list has free teams for only 6 of them", error.Message);
+    }
+
+    [Fact]
+    public void A_fill_short_of_teams_beside_games_written_out_says_how_many_are_written_out()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """
+            {
+              "games": [ { "league": "NBA", "home": { "name": "NBA team 1", "abbreviation": "T1" }, "away": { "name": "NBA team 2", "abbreviation": "T2" },
+                           "venue": { "name": "Madison Square Garden", "city": "New York" }, "startsIn": "1h", "status": "upcoming" } ],
+              "fill": { "count": 6, "group": "worldwide" }
+            }
+            """);
+
+        // Six leagues of two teams: room for six games, one of them written out.
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
+
+        Assert.Contains("asks for 6 games, but the team list has free teams for only 5 of them beside the 1 written out", error.Message);
+    }
+
+    [Fact]
+    public void A_fill_with_no_team_list_says_so()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """{ "fill": { "count": 2, "group": "london" } }""");
+
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues));
+
+        Assert.Contains("no team list", error.Message);
+    }
+
     // Records compare their lists by reference, so compare games by what they say.
     private static readonly IEqualityComparer<ScenarioGame> GameComparer = EqualityComparer<ScenarioGame>.Create(
         (a, b) => a!.ToProviderGame(DateTimeOffset.UnixEpoch).ToString() == b!.ToProviderGame(DateTimeOffset.UnixEpoch).ToString());
@@ -165,12 +232,16 @@ public sealed class ScenarioFillTests : IDisposable
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Filled games are never this"),
     };
 
-    private Scenario Read(string json)
+    private Scenario Read(string json, ScenarioTeamList? teams = null)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);
-        return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
+        return ScenarioReader.Read(_folder, "sample", Leagues, Venues, teams ?? Teams);
     }
 
-    private static ScenarioVenue Venue(string name, string city, string team, string abbreviation, params string[] groups) =>
-        new(name, city, null, "Somewhere", new ScenarioTeam(team, abbreviation, $"https://example.com/{abbreviation}.png"), groups);
+    private static ScenarioVenue Venue(string name, string city, params string[] groups) => new(name, city, null, "Somewhere", groups);
+
+    private static ScenarioTeamList TeamsPerLeague(int count) => new(Leagues.ToDictionary(
+        l => l.Name,
+        l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, count)
+            .Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", $"https://example.com/{l.Key}/{n}.png")).ToList()));
 }

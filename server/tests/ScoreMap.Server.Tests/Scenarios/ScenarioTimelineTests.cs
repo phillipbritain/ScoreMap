@@ -14,7 +14,7 @@ public sealed class ScenarioTimelineTests : IDisposable
     ];
 
     private static readonly ScenarioVenue[] Venues =
-        [new("Arrowhead Stadium", "Kansas City", "MO", "USA", new ScenarioTeam("Kansas City Chiefs", "KC", null), ["worldwide"])];
+        [new("Arrowhead Stadium", "Kansas City", "MO", "USA", ["worldwide"])];
 
     private static readonly DateTimeOffset StartedAt = new(2026, 10, 4, 18, 0, 0, TimeSpan.Zero);
 

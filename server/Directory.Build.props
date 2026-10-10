@@ -1,0 +1,6 @@
+<Project>
+  <!-- Every project in the solution: a warning fails the build, so new ones get fixed rather than pile up. -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Tests.Support;
+using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
 namespace ScoreMap.Server.Tests.Scenarios;
@@ -23,8 +24,6 @@ public class ScenarioSwitchingTests
           ]
         }
         """;
-
-    private sealed record ScenarioListing(string Running, string[] Scenarios, bool CanControlPlay);
 
     [Fact]
     public async Task Run_locally_the_server_lists_every_scenario_file_and_the_running_one()

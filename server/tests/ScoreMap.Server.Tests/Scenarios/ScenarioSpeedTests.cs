@@ -263,6 +263,62 @@ public class ScenarioSpeedTests
         Assert.Empty(client.PendingChanges());
     }
 
+    // The same game, standing still: no timeline and no play.
+    private const string StandsStill = """
+        {
+          "games": [
+            {
+              "id": "chiefs-bills",
+              "league": "NFL",
+              "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "score": 14 },
+              "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
+              "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+              "startsIn": "-40m",
+              "status": "live"
+            }
+          ]
+        }
+        """;
+
+    [Fact]
+    public async Task Play_can_be_controlled_in_a_scenario_whose_games_change_but_not_in_one_whose_games_stand_still_nor_with_real_games()
+    {
+        await using var server = new ScoreMapServer { Scenario = "test" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        server.WriteScenario("still", StandsStill);
+        using var http = server.CreateClient();
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+        Assert.True((await ListingAsync(http)).CanControlPlay);
+
+        foreach (var name in new[] { "still", "real" })
+        {
+            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+
+            var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+            Assert.False(listing?.CanControlPlay, name);
+            Assert.False((await client.NextScenarioChangeAsync()).CanControlPlay, name);
+            Assert.False((await ListingAsync(http)).CanControlPlay, name);
+        }
+    }
+
+    [Fact]
+    public async Task Where_play_cant_be_controlled_a_speed_change_is_refused_and_the_speed_carries_on_into_the_next_scenario()
+    {
+        await using var server = new ScoreMapServer { Scenario = "still", ScenarioSpeed = "Faster" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        server.WriteScenario("still", StandsStill);
+        using var http = server.CreateClient();
+
+        var refused = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
+
+        Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
+        Assert.Contains("still", await refused.Content.ReadAsStringAsync());
+        Assert.Equal("Faster", (await ListingAsync(http)).Speed);
+        var switched = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test" });
+        Assert.Equal("Faster", (await switched.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>())?.Speed);
+    }
+
     [Fact]
     public async Task A_speed_is_named_in_any_case()
     {
@@ -328,7 +384,7 @@ public class ScenarioSpeedTests
         public static readonly ListingComparer Instance = new();
 
         public bool Equals(ScenarioEndpoints.ScenarioListing? x, ScenarioEndpoints.ScenarioListing? y) =>
-            x is not null && y is not null && (x.Running, x.Speed, x.Clock) == (y.Running, y.Speed, y.Clock)
+            x is not null && y is not null && (x.Running, x.Speed, x.CanControlPlay, x.Clock) == (y.Running, y.Speed, y.CanControlPlay, y.Clock)
             && x.Scenarios.SequenceEqual(y.Scenarios) && x.Speeds.SequenceEqual(y.Speeds);
 
         public int GetHashCode(ScenarioEndpoints.ScenarioListing obj) => obj.Running.GetHashCode();

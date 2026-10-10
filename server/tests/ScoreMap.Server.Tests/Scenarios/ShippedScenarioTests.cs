@@ -65,6 +65,20 @@ public class ShippedScenarioTests
     }
 
     [Fact]
+    public async Task Worldwide_has_a_close_basketball_game_coming_into_clutch_time()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        var close = Assert.Single(snapshot, g => g.Id == "worldwide-raptors-celtics");
+        Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
+        Assert.InRange(Math.Abs((close.Home.Score - close.Away.Score) ?? 99), 0, 5);
+
+        await AdvanceUntilAsync(server, client, c => c.Game.Id == close.Id && c.Game.ClutchTime, within: TimeSpan.FromMinutes(10));
+    }
+
+    [Fact]
     public async Task Crowded_shows_about_40_games_in_and_around_london()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };

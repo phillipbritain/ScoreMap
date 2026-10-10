@@ -9,11 +9,13 @@ export type PinAnimation = 'score' | 'start' | 'finish'
 /**
  * Which animation a game plays, going from how the globe last showed it to how it is now; null for
  * changes that only redraw it (the clock, the period, a delay). A game that starts or finishes
- * plays that, even if its score changed in the same update.
+ * plays that, even if its score changed in the same update. Basketball scores so often that its
+ * score changes pulse only in clutch time, as the server judges it on the score after the basket.
  */
 export function pinAnimation(before: Game, after: Game): PinAnimation | null {
   if (before.status === 'Upcoming' && after.status === 'Live') return 'start'
   if (before.status === 'Live' && after.status === 'Final') return 'finish'
-  if (before.home.score !== after.home.score || before.away.score !== after.away.score) return 'score'
+  const scored = before.home.score !== after.home.score || before.away.score !== after.away.score
+  if (scored && (after.sport !== 'Basketball' || after.clutchTime)) return 'score'
   return null
 }

@@ -17,6 +17,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null },
     clock: null,
     period: null,
+    clutchTime: false,
     venue: { name: null, city: null, country: null, latitude: 0, longitude: 0, timeZone: null, photo: null },
     broadcasters: [],
     streamLinks: [],

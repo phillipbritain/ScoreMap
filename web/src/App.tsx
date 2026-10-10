@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { SettingsMenu } from './settings/SettingsMenu'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
@@ -28,6 +28,7 @@ export default function App() {
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const panel = useRef<HTMLElement>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
@@ -62,6 +63,7 @@ export default function App() {
         <Globe
           games={visible}
           selectedGameId={selectedGame?.id ?? null}
+          panel={panel}
           onSelectGame={setSelectedGameId}
           startCamera={camera}
           onCameraMove={store.saveCamera}
@@ -89,7 +91,7 @@ export default function App() {
         </div>
         {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
             settings menu, so an open settings menu lies over it on a phone. */}
-        {selectedGame && <GamePanel game={selectedGame} onClose={() => setSelectedGameId(null)} />}
+        {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
       </div>
     </div>

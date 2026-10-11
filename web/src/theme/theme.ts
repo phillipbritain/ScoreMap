@@ -254,9 +254,9 @@ const settings = {
   /**
    * Text on the game panel, the settings menu and the scenario controls: main text, secondary text
    * (the lines under a venue or time), the accent (the game panel's league and labels, the settings
-   * gear, league chips) and links.
+   * gear, league chips), links, and text written on a status's colour (the game panel's progress line).
    */
-  text: { main: color, secondary: color, accent: color, link: color },
+  text: { main: color, secondary: color, accent: color, link: color, onStatus: color },
   /** The lines between a menu's parts. */
   divider: color,
   /** Behind a control under the pointer. */
@@ -324,11 +324,11 @@ const settings = {
     clusterCount: { font: globeFont, size: textSize },
   },
   /**
-   * Corners, each a step of the radius scale: a score card's; a menu's (the settings menu, the list
-   * of scenarios); an item's in a menu; a message's (such as "No games right now."); and a control's
-   * (the scenario pill and clock, the speed keys, league chips).
+   * Corners, each a step of the radius scale: a score card's; the game panel's; a menu's (the settings
+   * menu, the list of scenarios); an item's in a menu; a message's (such as "No games right now.");
+   * and a control's (the scenario pill and clock, the speed keys, league chips).
    */
-  corners: { card: radius, menu: radius, menuItem: radius, message: radius, control: radius },
+  corners: { card: radius, panel: radius, menu: radius, menuItem: radius, message: radius, control: radius },
   /** The game panel's bottom left corner cut off, like a broadcast graphic, or not: this far along each side. */
   cutCorner: { on: onOff, size: spacing },
   /**

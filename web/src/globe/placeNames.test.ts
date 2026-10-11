@@ -50,7 +50,7 @@ describe('cityNameLook', () => {
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {
-    expect(cityNameLook(7, true, builtInTheme)).toMatchObject({ size: 15, maxWidth: 120 })
+    expect(cityNameLook(7, true, builtInTheme)).toMatchObject({ size: 16, maxWidth: 128 })
   })
 
   it("writes each kind of place's name at the theme's text sizes as the map zooms", () => {

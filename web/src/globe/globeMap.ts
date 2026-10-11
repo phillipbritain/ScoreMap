@@ -269,7 +269,7 @@ export class GlobeMap {
 
   private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
     const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
-    const gameIds = this.cards.cardClusterGames().find((cluster) => cluster[0] === firstGameId)
+    const gameIds = typeof firstGameId === 'string' ? this.cards.cardClusterOf(firstGameId) : undefined
     if (gameIds) this.zoomToCardCluster(gameIds)
   }
 

@@ -50,14 +50,14 @@ const theme: Theme = {
     coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
     countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
     stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
-    disputedBorders: { color: '#000005', width: { '0': 0.9 } },
+    disputedBorders: { color: '#000005', width: { '0': 0.9 }, dash: [3, 1] },
     halo: builtInTheme.globe.halo,
   },
   placeNames: {
-    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light') },
-    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold') },
-    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular') },
-    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold') },
+    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light'), letterSpacing: 0.03 },
+    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold'), letterSpacing: 0 },
+    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
+    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
   },
 }
 
@@ -240,15 +240,20 @@ describe('globeStyle', () => {
     }
   })
 
-  it('writes state and country names in spaced capitals, city names as they are', () => {
-    for (const id of ['label_state', 'label_country_1']) {
-      expect(layout(id)['text-transform'], id).toBe('uppercase')
-      expect(layout(id)['text-letter-spacing'], id).toBeGreaterThan(0)
-    }
-    for (const id of ['label_city', 'label_city_capital']) {
-      expect(layout(id)['text-transform'], id).toBe('none')
-      expect(layout(id)['text-letter-spacing'], id).toBe(0)
-    }
+  it('writes state and country names in capitals, city names as they are', () => {
+    for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
+    for (const id of ['label_city', 'label_city_capital']) expect(layout(id)['text-transform'], id).toBe('none')
+  })
+
+  it("spaces each kind of place's name out as far as the theme says", () => {
+    expect(layout('label_city')['text-letter-spacing']).toBe(0.03)
+    expect(layout('label_city_capital')['text-letter-spacing']).toBe(0)
+    expect(layout('label_state')['text-letter-spacing']).toBe(0.3)
+    expect(layout('label_country_1')['text-letter-spacing']).toBe(0.2)
+  })
+
+  it("dashes disputed borders in the theme's pattern", () => {
+    expect(paint('boundary_disputed')['line-dasharray']).toEqual([3, 1])
   })
 
   it("turns off MapLibre's one-sided atmosphere", () => {

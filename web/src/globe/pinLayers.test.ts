@@ -67,6 +67,27 @@ describe('clusters', () => {
     expect(evaluate(cardClusterGlow, { status: 'Final' })).toBe(0)
   })
 
+  it('fade as the status they show as says, disc, outline and count alike, on pin clusters and card clusters', () => {
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.settings.status.live.clusterOpacity = 1
+    json.settings.status.final.clusterOpacity = 0.4
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    /** How opaque a cluster's disc, outline and count are, for a cluster with these properties. */
+    const faded = (layers: readonly LayerSpecification[], [disc, count]: [string, string], properties: Record<string, unknown>) =>
+      [paintOf(layers, disc)['circle-opacity'], paintOf(layers, disc)['circle-stroke-opacity'], paintOf(layers, count)['text-opacity']].map(
+        (opacity) => evaluate(opacity, properties),
+      )
+    const pinClusters = pinClusterLayers(result.theme)
+    const pinCluster: [string, string] = ['pin-clusters', 'pin-cluster-counts']
+    expect(faded(pinClusters, pinCluster, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toEqual([1, 1, 1])
+    expect(faded(pinClusters, pinCluster, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toEqual([0.4, 0.4, 0.4])
+    const cardClusters = cardLayoutLayers(result.theme)
+    const cardCluster: [string, string] = ['card-clusters', 'card-cluster-counts']
+    expect(faded(cardClusters, cardCluster, { status: 'Live' })).toEqual([1, 1, 1])
+    expect(faded(cardClusters, cardCluster, { status: 'Final' })).toEqual([0.4, 0.4, 0.4])
+  })
+
   it("draw a card cluster as a pin cluster of some games, its outline inside its size", () => {
     const paint = (id: string) => paintOf(cardLayoutLayers(sizedTheme()), id)
     expect(paint('card-clusters')['circle-radius']).toBe(14 - 2)

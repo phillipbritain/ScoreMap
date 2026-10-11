@@ -92,16 +92,94 @@ describe('resolveTheme', () => {
     expect(resolved(json).panel.shadow.color).toBe('transparent')
   })
 
+  it('takes a colour given directly in any form both CSS and MapLibre read', () => {
+    const forms = ['#abc', '#abcd', '#a1b2c3', '#A1B2C3D4', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'rgb(10% 20% 30% / 50%)', 'hsl(210 40% 30%)', 'hsla(210deg, 40%, 30%, .5)']
+    for (const form of forms) {
+      const json = themeJson()
+      json.settings.globe.surface = form
+      expect(resolveTheme(json), form).toMatchObject({ ok: true, theme: { globe: { surface: form } } })
+    }
+  })
+
+  it('rejects a colour given directly that isn’t well formed', () => {
+    const json = themeJson()
+    json.settings.globe.surface = '#12'
+    json.settings.globe.halo.inner.color = 'foo('
+    json.settings.globe.halo.outer.color = 'rgb(1, 2)'
+    json.settings.card.fill = '#12345'
+    json.settings.card.text = 'rgb(1, 2%, 3)'
+    json.settings.divider = 7
+    const why = 'not a colour CSS and MapLibre both read (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent)'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        `settings.globe.surface is "#12", ${why}`,
+        `settings.globe.halo.inner.color is "foo(", ${why}`,
+        `settings.globe.halo.outer.color is "rgb(1, 2)", ${why}`,
+        'settings.divider is 7, not a colour job: a palette step such as "navy.700", or a colour',
+        `settings.card.fill is "#12345", ${why}`,
+        `settings.card.text is "rgb(1, 2%, 3)", ${why}`,
+      ],
+    })
+  })
+
+  it('rejects a theme that isn’t an object with a palette and settings, rather than failing', () => {
+    for (const json of [null, undefined, 'dark', 42, []]) {
+      expect(resolveTheme(json), JSON.stringify(json)).toEqual({
+        ok: false,
+        problems: [`a theme is ${JSON.stringify(json) ?? 'undefined'}, not an object with a palette and settings`],
+      })
+    }
+    expect(resolveTheme({ palette: null, settings: 'dark' })).toEqual({
+      ok: false,
+      problems: ['palette is null, not colours by name', 'settings is "dark", not a group of settings'],
+    })
+  })
+
+  it('rejects a palette colour or a group of settings that isn’t an object', () => {
+    const json = themeJson()
+    json.palette.teal = '#008080'
+    json.settings.globe.halo = '#ffffff'
+    json.settings.text = null
+    const result = resolveTheme(json)
+    expect(!result.ok && result.problems).toEqual([
+      'palette.teal is "#008080", not a colour with a base',
+      'settings.globe.halo is "#ffffff", not a group of settings',
+      'settings.text is null, not a group of settings',
+    ])
+  })
+
+  it('rejects settings the theme doesn’t know, alongside every other problem', () => {
+    const json = themeJson()
+    json.mode = 'dark'
+    json.palette.navy.shade = 'deep'
+    json.settings.globe.surfce = 'navy.500'
+    json.settings.textSizes.xxl = 24
+    json.settings.panel.shadow.spread = 4
+    json.settings.divider = 'navy.950'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'mode isn’t part of a theme: a theme has a palette and settings',
+        'palette.navy.shade isn’t part of a palette colour: it has a base and steps',
+        'settings.textSizes.xxl isn’t a setting a theme has',
+        'settings.globe.surfce isn’t a setting a theme has',
+        'settings.divider names "navy.950", a step the palette doesn’t have',
+        'settings.panel.shadow.spread isn’t a setting a theme has',
+      ],
+    })
+  })
+
   it('rejects a colour job naming a step the palette doesn’t have', () => {
     const json = themeJson()
     json.palette.navy = { base: '#2b4d7d' }
     json.settings.globe.surface = 'navy.950'
-    json.settings.globe.halo.inner = 'teal.500'
+    json.settings.globe.halo.inner.color = 'teal.500'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
         'settings.globe.surface names "navy.950", a step the palette doesn’t have',
-        'settings.globe.halo.inner names "teal.500", a step the palette doesn’t have',
+        'settings.globe.halo.inner.color names "teal.500", a step the palette doesn’t have',
       ],
     })
   })
@@ -234,6 +312,23 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('rejects a dash pattern, a size in ems or a halo’s share of the globe that isn’t one', () => {
+    const json = themeJson()
+    json.settings.globe.disputedBorders.dash = [2]
+    json.settings.globe.halo.inner.blur = { share: '12%', max: 60 }
+    json.settings.letterSpacing.label = '0.14em'
+    json.settings.sizes.panel.scoreWidth = -1
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'settings.letterSpacing.label is "0.14em", not a number of ems',
+        'settings.globe.disputedBorders.dash is [2], not a dash pattern: dash and gap lengths in line widths, such as [2, 2]',
+        'settings.globe.halo.inner.blur.share is "12%", not a share of the globe’s radius, such as 0.12',
+        'settings.sizes.panel.scoreWidth is -1, not a number of ems',
+      ],
+    })
+  })
+
   it('rejects a theme missing a setting', () => {
     const json = themeJson()
     delete json.settings.globe.coastlines
@@ -304,7 +399,7 @@ describe('the built-in theme', () => {
       expect(isStepOf('navy', '100', '300')(look.color), kind).toBe(true)
       expect(stepOf(look.outline.color), kind).toMatch(/^navy\./)
     }
-    expect(isStepOf('navy', '100', '400')(globe.halo.inner)).toBe(true)
+    expect(isStepOf('navy', '100', '400')(globe.halo.inner.color)).toBe(true)
   })
 
   it('puts score cards, the game panel, the settings menu, the scenario controls and clusters on solid darker navy', () => {
@@ -353,14 +448,16 @@ describe('the built-in theme', () => {
       expect(look.glow.opacity).toBe(0)
       expect(look.card.glow.opacity).toBe(0)
     }
-    expect(live.card.opacity).toBeGreaterThan(upcoming.card.opacity)
-    expect(upcoming.card.opacity).toBeGreaterThan(final.card.opacity)
+    expect(live.card.fade).toBe(0)
+    expect(upcoming.card.fade).toBeGreaterThan(live.card.fade)
+    expect(final.card.fade).toBeGreaterThan(upcoming.card.fade)
+    expect(disrupted.card.fade).toBeGreaterThan(0)
     expect(live.clusterOpacity).toBeGreaterThan(final.clusterOpacity)
   })
 
   it('gives panels and controls no glow or drop shadow', () => {
     const { panel, settingsMenu, controls } = theme
-    for (const shadow of [panel.shadow, settingsMenu.shadow, controls.shadow]) expect(shadow.color).toBe('transparent')
+    for (const shadow of [panel.shadow, settingsMenu.shadow, settingsMenu.gearOutline, controls.shadow]) expect(shadow.color).toBe('transparent')
     expect(panel.glow.opacity).toBe(0)
   })
 

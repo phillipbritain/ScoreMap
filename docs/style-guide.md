@@ -20,14 +20,15 @@ A theme has two layers:
 - The **palette** names a few base colours. Each is worked out into steps from light to dark (see [The palette](#the-palette)).
 - The **settings** use it: every colour job, font, scale, corner, size, glow and fade in the app. A colour job names a palette step, such as `navy.700`, so changing a base colour changes every job that uses it.
 
-Every setting is required: a theme without one is rejected (see [What checking rejects](#what-checking-rejects)).
+Every setting is required, and nothing else is allowed: a theme missing a setting, or with one it doesn't know, is rejected (see [What checking rejects](#what-checking-rejects)).
 
 ### Where the theme reaches
 
 The code reads only the resolved theme, never the JSON:
 
-- **The page** (the game panel, score cards, the settings menu, the scenario controls): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the settings in kebab case. `text.main` is `--text-main`, `status.live.color` is `--status-live-color`, `spacing.l` is `--spacing-l`, `panel.surface.top` is `--panel-surface-top`. Sizes are written in pixels (`12px`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) names no colour, font, text size, spacing, radius or pixel size of its own, and a test (`indexCss.test.ts`) fails if it does.
-- **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths that change with zoom are read only by the globe and aren't written to CSS.
+- **The page** (the game panel, score cards, the settings menu, the scenario controls): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the settings in kebab case. `text.main` is `--text-main`, `status.live.color` is `--status-live-color`, `spacing.l` is `--spacing-l`, `panel.surface.top` is `--panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) names no colour, font, text size, spacing, radius, size in pixels or ems, or opacity of its own, outside its animations (an opacity of 1 or 0 only shows or hides a thing), and a test (`indexCss.test.ts`) fails if it does.
+- **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
+- **The theme is chosen once**, in `web/src/main.tsx`: it's written to the page there and handed down through `App` and `Globe` to the globe.
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
@@ -70,9 +71,9 @@ Navy is the globe and every surface, off-white the text, the selection and what'
 A **colour job** is what a colour is for (the globe's surface, Live's colour, main text), not which colour it is. Each takes either:
 
 - a palette step by name: `"navy.700"`; or
-- a colour given directly: a CSS colour starting `#`, a colour function such as `rgb(…)`, or `transparent` (for a shadow or glow that isn't there). This is the escape hatch for a one-off the palette doesn't fit, at the cost of that colour no longer following the palette. It's passed on as written to both CSS and MapLibre, so it must be a colour both understand.
+- a colour given directly, in a form both CSS and MapLibre read, since it's passed on to both as written: a hex colour of 3, 4, 6 or 8 digits (`#abc`, `#abcd`, `#0b1526`, `#0b152680`); `rgb(…)` or `rgba(…)`, its three channels all numbers or all percentages; `hsl(…)` or `hsla(…)`, a hue (in degrees, `deg` optional) and two percentages; each function's arguments comma-separated with an optional fourth for alpha (`rgba(255, 255, 255, 0.7)`), or space-separated with an optional `/ alpha` (`rgb(10% 20% 30% / 50%)`); or `transparent` (for a shadow or glow that isn't there). Named colours such as `red` aren't taken: `red` would read as a step's name. This is the escape hatch for a one-off the palette doesn't fit, at the cost of that colour no longer following the palette.
 
-The dark theme gives every job a step but the three shadows, which are `transparent`. Every colour job, by where it shows:
+The dark theme gives every job a step but the four shadows, which are `transparent`. Every colour job, by where it shows:
 
 ### The globe
 
@@ -83,8 +84,8 @@ The dark theme gives every job a step but the three shadows, which are `transpar
 | `globe.countryBorders.color` | Country borders | `navy.300` |
 | `globe.stateLines.color` | State and province lines | `navy.400` |
 | `globe.disputedBorders.color` | Disputed borders, dashed | `navy.400` |
-| `globe.halo.inner` | The halo close around the globe's edge | `navy.400` |
-| `globe.halo.outer` | The halo's wider, fainter outer glow | `navy.700` |
+| `globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
+| `globe.halo.outer.color` | The halo's wider, fainter outer glow | `navy.700` |
 | `placeNames.<kind>.color` | A kind of place's name: `city`, `capital`, `state`, `country` | city `navy.200`, capital `navy.100`, state `navy.300`, country `navy.200` |
 | `placeNames.<kind>.outline.color` | The outline around its letters | `navy.600` for every kind |
 | `page.sky` | The sky around the globe | `navy.900` |
@@ -109,8 +110,7 @@ The dark theme gives every job a step but the three shadows, which are `transpar
 | --- | --- | --- |
 | `page.background` | The page behind everything | `navy.900` |
 | `text.main` | Main text on the game panel, the settings menu and the scenario controls | `offWhite.500` |
-| `text.secondary` | Secondary text: the lines under a venue or a time | `offWhite.600` |
-| `text.accent` | The game panel's league and labels, the settings gear, league chips and their badge's count. The name is from the look before the dark theme, when these were gold; in the dark theme they're secondary text, and the accent of the globe (gold) is the status colour | `offWhite.600` |
+| `text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; the settings gear; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
 | `text.link` | Links (the game panel's stream links) | `offWhite.500` |
 | `text.onStatus` | Text written on a status's colour: the game panel's progress line | `navy.800` |
 | `divider` | The lines between a menu's parts (under the settings tabs, under "All leagues") | `navy.600` |
@@ -128,7 +128,7 @@ The dark theme gives every job a step but the three shadows, which are `transpar
 | `panel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `settingsMenu.surface` | The settings menu | `navy.800` |
 | `settingsMenu.shadow.color` | Its drop shadow | `transparent` |
-| `settingsMenu.gearOutline.color` | The dark outline around the settings gear, so it reads over the globe | `navy.800` |
+| `settingsMenu.gearOutline.color` | An outline around the settings gear, cast as a shadow, for a theme whose gear needs one to read over the globe | `transparent` (none) |
 | `settingsMenu.tab` | A settings tab that's off | `offWhite.600` |
 | `settingsMenu.count` | The count of a sport's leagues that are on | `offWhite.600` |
 | `settingsMenu.hint` | The hint beside "All leagues" | `offWhite.600` |
@@ -147,6 +147,8 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.
 
+Score cards stay solid as they fade, so the map never shows through the scores: a card fades by colour, its status colour, text and logos mixed into its fill, not by being see-through.
+
 Each status still has its own colour job, though three point at the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new job.
 
 Each status's look, `status.<status>`:
@@ -157,25 +159,27 @@ Each status's look, `status.<status>`:
 | `core.color`, `core.radius`, `core.opacity` | A small pin's bright core: its colour, radius in pixels and opacity |
 | `core.ring` | The width of the ring of status colour around the core, in pixels (0 is no ring) |
 | `glow.radius`, `glow.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
-| `clusterOpacity` | How opaque a cluster showing as this status is: a card cluster's disc, outline and count, a pin cluster's outline |
-| `card.opacity` | How opaque its score cards are |
+| `clusterOpacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike |
+| `card.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its status colour (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill (a Disrupted game's fill for a Disrupted card). The selected game's card doesn't fade |
 | `card.glow.radius`, `card.glow.opacity` | How far and how strongly its score cards glow in its colour (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
 
 The dark theme's:
 
-| Status | Colour | Pin core | Pin glow | Cluster | Score card | Card glow |
+| Status | Colour | Pin core | Pin glow | Cluster | Card fade | Card glow |
 | --- | --- | --- | --- | --- | --- | --- |
-| Live | `gold.500` | `gold.100`, 3.5px, opacity 1, 1.5px ring | 15px at 0.8 | 1 | 1 | 12px at 0.8 |
-| Upcoming | `gold.500` | `gold.500`, 3px, 0.9, no ring | 9px at 0.4 | 0.9 | 0.85 | 4px at 0.3 |
-| Final | `gold.500` | `gold.500`, 2.5px, 0.5, no ring | none | 0.55 | 0.55 | none |
-| Disrupted | `offWhite.700` | `offWhite.700`, 2.5px, 0.7, no ring | none | 0.6 | 0.7 | none |
+| Live | `gold.500` | `gold.100`, 3.5px, opacity 1, 1.5px ring | 15px at 0.8 | 1 | 0 | 12px at 0.8 |
+| Upcoming | `gold.500` | `gold.500`, 3px, 0.9, no ring | 9px at 0.4 | 0.9 | 0.15 | 4px at 0.3 |
+| Final | `gold.500` | `gold.500`, 2.5px, 0.5, no ring | none | 0.55 | 0.45 | none |
+| Disrupted | `offWhite.700` | `offWhite.700`, 2.5px, 0.7, no ring | none | 0.6 | 0.3 | none |
+
+The card fades are what the cards' opacities were before cards were made solid (1 minus 1, 0.85, 0.55 and 0.7), so they look as close to that as a solid card can.
 
 How status reaches the rest of the globe:
 
 - **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48.
 - **Pulses** play in the colour of the pin's, score card's or cluster's status after the change. A score, a start and a finish are told apart by the pulse's shape, never its colour.
 - **The selected game** is outlined in `selection.color`, off-white, apart from the gold of every other game.
-- **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows are `transparent` and the game panel's glow has opacity 0.
+- **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows, the settings gear's outline among them, are `transparent` and the game panel's glow has opacity 0.
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
 ## Scales
@@ -211,13 +215,15 @@ The **cut corner** cuts off the game panel's bottom left corner, like a broadcas
 
 ## Other sizes
 
-Sizes that aren't on a scale are pixels, any number from 0 up (an offset may be negative). The dark theme keeps the look before it for all of these.
+Sizes that aren't on a scale are free values: pixels, any number from 0 up (an offset may be negative), or ems where a size goes with its text and should grow with it (letter spacing, which may be negative, and boxes sized to their characters). They're not forced onto the scales, which are for text sizes, spacing, corners and the page's line widths only. The dark theme keeps the look before it for all of these.
 
 ### On the globe
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
 | `globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.6, "8": 1.2 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.6 to 1.2 (zoom 2 to 8), country borders 0.6 to 1.4 (2 to 8), state lines 0.5 to 1 (3 to 8), disputed borders 0.8 |
+| `globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
+| `globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `placeNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.2 and 0 |
 | `cluster.radius.few`, `.some`, `.many` | A pin cluster's disc by how many games it holds: up to 4, up to 14, more. A card cluster is as wide as `some`, outline and all | 11, 13, 16 |
 | `cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
@@ -236,16 +242,24 @@ Sizes that aren't on a scale are pixels, any number from 0 up (an offset may be 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
 | `panel.shadow`, `settingsMenu.shadow`, `controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
-| `settingsMenu.gearOutline` | The outline around the settings gear, as a shadow | blur 2, `navy.800` |
+| `settingsMenu.gearOutline` | The outline around the settings gear, as a shadow | none (`transparent`, blur 0) |
 | `panel.glow.y`, `.blur`, `.opacity` | The glow in the game's status colour along the game panel's top | 0, 0, 0 (none) |
+| `card.headerTint` | How strongly a score card's header is tinted with its status colour, 0 to 1 | 0.28 |
+| `controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |
+| `letterSpacing.label` | How far apart the letters of the game panel's league and labels are spaced, in ems | 0.14 |
+| `letterSpacing.cardHeader` | Likewise for a score card's header line | 0.06 |
+| `page.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `sizes.panel.width` | The game panel's width at most | 940 |
 | `sizes.panel.height`, `.phoneHeight` | Its height, and its height on a phone, where the details go below the score block | 127, 236 |
 | `sizes.panel.scoreBlock`, `.slant` | The score block's width, and how far its right edge slants | 290, 16 |
 | `sizes.panel.photo`, `.logo`, `.close` | The venue photo's width, a team's logo, the close button | 180, 28, 24 |
+| `sizes.panel.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
 | `sizes.card.minWidth` | A score card's narrowest | 92 |
 | `sizes.card.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
 | `sizes.card.pointer` | How far a score card's pointer reaches below it to the venue (the globe reads this to place cards) | 6 |
+| `sizes.card.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `sizes.settingsMenu.width`, `.gear`, `.allLeagues` | The settings menu's width, the gear, the "All leagues" chip's height | 320, 28, 32 |
+| `sizes.settingsMenu.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `sizes.controls.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
 
 ## Fonts
@@ -286,26 +300,27 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 | --- | --- | --- |
 | `placeNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, capital `Open Sans Bold`, state `Open Sans Regular`, country `Open Sans Bold` |
 | `placeNames.<kind>.size` | Its size by zoom: a step of the text size scale at each of some zoom levels (`{ "4": "s", "11": "xl" }`), growing evenly between them | city `s` at zoom 4, `m` at 7, `xl` at 11; capital `m`, `l`, `xl` at 4, 7, 11; state `xs` at 3 to `m` at 8; country `xs` at 1 to `l` at 4 |
+| `placeNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city and capital 0, state 0.25, country 0.12 |
 | `fonts.clusterCount.font` | The count on a pin or card cluster | `Open Sans Bold` |
 | `fonts.clusterCount.size` | Its size, a step of the text size scale | `s` |
 
 ## What checking rejects
 
-A theme is checked when it's resolved, and every problem is listed, not just the first. Checking rejects:
+A theme is checked when it's resolved, and every problem is listed, not just the first; checking never throws, whatever it's given. Checking rejects:
 
-- a missing palette, or a missing setting anywhere in the settings;
+- a theme that isn't an object, or that has anything but a `palette` and `settings`;
+- a missing palette, or a palette, a palette colour or a group of settings that isn't an object;
+- a missing setting anywhere in the settings, and **a setting the theme doesn't know** (a misspelt one shows as itself, as well as the real one missing), or a part of a palette colour other than `base` and `steps`;
 - a palette colour whose base isn't a `#rrggbb` colour, or a hand-set step that isn't `100` to `900` or isn't a `#rrggbb` colour;
-- a colour job naming a step the palette doesn't have (an unknown colour or an unknown step), where it doesn't give a colour directly;
+- a colour job naming a step the palette doesn't have (an unknown colour or an unknown step), or giving a colour directly that isn't well formed (see [Colour jobs](#colour-jobs): `#12` or `rgb(1, 2)` is rejected), or that isn't a string;
 - a size, spacing or radius given as a name that isn't one of its scale's steps, and a scale step that isn't a number of pixels;
-- a size that isn't a number of pixels from 0 up, an offset that isn't a number, an opacity that isn't from 0 to 1, or a font weight that isn't from 1 to 1000;
+- a size that isn't a number of pixels (or ems) from 0 up, an offset or letter spacing that isn't a number, an opacity or fade that isn't from 0 to 1, or a font weight that isn't from 1 to 1000;
 - an on or off setting that isn't `true` or `false`, or a font family that's empty;
 - a size by zoom with no zoom levels, or with a zoom level that isn't a number;
+- a dash pattern that isn't two or more lengths from 0 up, or a halo size's share of the globe that isn't a number from 0 up;
 - a globe font fonts.openmaptiles.org doesn't have.
 
-It doesn't check:
-
-- **settings it doesn't know**, which are ignored, so a misspelt setting shows as the real one missing;
-- **a colour given directly**, beyond how it starts (`#`, a colour function, or `transparent`): it's passed on as written.
+It doesn't check how a theme looks: whether text reads against its surface, or whether the statuses can be told apart. That's for looking at it running (see [Making or changing a theme](#making-or-changing-a-theme)).
 
 The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme fails its tests rather than shipping.
 
@@ -321,14 +336,15 @@ ScoreMap has one theme, built in, so making a theme today means changing `web/sr
 
 ### Adding a setting
 
-A new setting goes in the settings in `web/src/theme/theme.ts` and in every theme's JSON, since a theme without it is rejected; its custom property then appears on the page by itself. The page's CSS reads it through that custom property.
+A new setting goes in the settings in `web/src/theme/theme.ts` and in every theme's JSON, since a theme without it is rejected; its custom property then appears on the page by itself. The page's CSS reads it through that custom property. Likewise a setting taken out must leave every theme's JSON, since a theme with a setting it doesn't know is rejected.
 
 ### What stays in code
 
-Some of the look is in code on purpose, as proportions or behaviour rather than a theme's choices:
+Some of the look is in code on purpose, as behaviour or layout rather than a theme's choices:
 
-- motion: durations, easings and the shapes of the animations, including the status light's pulse;
-- letter spacing (in ems), and the halo's proportions to the globe's size (`globeGlow.ts`);
-- the disputed borders' dash pattern, the starfield's pattern and skew angles;
-- score card and pin footprints, card layout distances (`cardLayout.ts`) and how far the selected pin's ring reaches;
+- motion: durations, easings and the shapes of the animations, including the status light's pulse and the sizes and opacities inside their keyframes;
+- the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
+- layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
+- score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot and where it wraps (as the base map style has them);
+- which kinds of place are named in capitals (states and countries);
 - which text size, spacing step and stroke each thing on the page uses (the CSS), and which status is most prominent and draws on top (the status look, `web/src/globe/statusLook.ts`).

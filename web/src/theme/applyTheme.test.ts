@@ -84,8 +84,9 @@ describe('applyTheme', () => {
       // Four kinds of place name, each with a colour, an outline (its colour, width and blur) and a
       // font (its name, family, weight and style).
       placeNames: 4 * 8,
-      // Four statuses, each with a colour, a core of four, a glow of two and a cluster opacity.
-      status: 4 * 8,
+      // Four statuses, each with a colour, a core of four, a glow of two, a cluster opacity and a score
+      // card's opacity and glow of two.
+      status: 4 * 11,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity.
       cluster: 9,
       // A trail's width and opacity, its glow's three and its venue's three.

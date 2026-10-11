@@ -315,23 +315,34 @@ body {
   }
 }
 
-/* How each status looks comes from the theme (--status-live-color and so on). Score cards pick
-   theirs by their status class. Live stands out most,
-   Upcoming is dimmer, Final fades, Disrupted is greyed out. */
+/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how
+   opaque its score cards are and how they glow. Score cards pick theirs by their status class. */
 .score-card--live {
   --status-color: var(--status-live-color);
+  --status-card-opacity: var(--status-live-card-opacity);
+  --status-card-glow-radius: var(--status-live-card-glow-radius);
+  --status-card-glow-opacity: var(--status-live-card-glow-opacity);
 }
 
 .score-card--upcoming {
   --status-color: var(--status-upcoming-color);
+  --status-card-opacity: var(--status-upcoming-card-opacity);
+  --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
+  --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
 }
 
 .score-card--final {
   --status-color: var(--status-final-color);
+  --status-card-opacity: var(--status-final-card-opacity);
+  --status-card-glow-radius: var(--status-final-card-glow-radius);
+  --status-card-glow-opacity: var(--status-final-card-glow-opacity);
 }
 
 .score-card--disrupted {
   --status-color: var(--status-disrupted-color);
+  --status-card-opacity: var(--status-disrupted-card-opacity);
+  --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
+  --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
 }
 
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
@@ -352,9 +363,12 @@ body {
   font-weight: var(--fonts-card-clock-weight);
   line-height: 1.2;
   text-transform: uppercase;
+  opacity: var(--status-card-opacity);
+  /* The status's glow around the card, and a fainter one inside it. */
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--status-color) 45%, transparent),
-    inset 0 0 10px color-mix(in srgb, var(--status-color) 15%, transparent);
+    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
+    inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
+      color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
   /* Animations grow the card from its pointer, which stays on the venue. */
@@ -386,19 +400,7 @@ body {
   visibility: hidden;
 }
 
-.score-card--upcoming {
-  opacity: 0.85;
-}
-
-.score-card--final {
-  opacity: 0.6;
-}
-
 /* Greyed out: the game isn't being played as scheduled. */
-.score-card--disrupted {
-  opacity: 0.7;
-}
-
 .score-card.score-card--disrupted {
   background: var(--card-disrupted-fill);
   color: var(--card-disrupted-text);
@@ -432,7 +434,8 @@ body {
   height: 6px;
   border-radius: 50%;
   background: var(--status-color);
-  box-shadow: 0 0 6px var(--status-color);
+  /* Lit as its card glows. */
+  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--status-color);
 }
 
 .score-card--live .score-card__light {

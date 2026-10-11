@@ -165,13 +165,15 @@ const placeName = {
  * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
  * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
  * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
- * opacity at the middle), and how opaque a cluster showing as this status is.
+ * opacity at the middle), how opaque a cluster showing as this status is, and its score cards: how
+ * opaque they are, and how far and how strongly they glow in its colour (a radius of 0 is no glow).
  */
 const statusLook = {
   color,
   core: { color, radius: pixels, opacity, ring: pixels },
   glow: { radius: pixels, opacity },
   clusterOpacity: opacity,
+  card: { opacity, glow: { radius: pixels, opacity } },
 }
 
 /** Every setting a theme has, by where it sits in the theme's settings. */

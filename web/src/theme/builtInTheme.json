@@ -50,25 +50,29 @@
         "color": "#e4572e",
         "core": { "color": "#ffd9c8", "radius": 3.5, "opacity": 1, "ring": 1.5 },
         "glow": { "radius": 15, "opacity": 0.7 },
-        "clusterOpacity": 1
+        "clusterOpacity": 1,
+        "card": { "opacity": 1, "glow": { "radius": 8, "opacity": 0.45 } }
       },
       "upcoming": {
         "color": "#f2a541",
         "core": { "color": "#f2a541", "radius": 3, "opacity": 0.8, "ring": 0 },
         "glow": { "radius": 10, "opacity": 0.45 },
-        "clusterOpacity": 0.85
+        "clusterOpacity": 0.85,
+        "card": { "opacity": 0.85, "glow": { "radius": 8, "opacity": 0.45 } }
       },
       "final": {
         "color": "#8a8f98",
         "core": { "color": "#8a8f98", "radius": 2.5, "opacity": 0.55, "ring": 0 },
         "glow": { "radius": 7, "opacity": 0.25 },
-        "clusterOpacity": 0.6
+        "clusterOpacity": 0.6,
+        "card": { "opacity": 0.6, "glow": { "radius": 8, "opacity": 0.45 } }
       },
       "disrupted": {
         "color": "#c3c6cc",
         "core": { "color": "#c3c6cc", "radius": 2.5, "opacity": 0.6, "ring": 0 },
         "glow": { "radius": 7, "opacity": 0.25 },
-        "clusterOpacity": 0.6
+        "clusterOpacity": 0.6,
+        "card": { "opacity": 0.7, "glow": { "radius": 8, "opacity": 0.45 } }
       }
     },
     "cluster": {

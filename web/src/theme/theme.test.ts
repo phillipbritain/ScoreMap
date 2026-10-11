@@ -259,7 +259,9 @@ describe('the built-in theme', () => {
 
   it('draws pins, clusters and the selection in today’s look and sizes', () => {
     const { status, cluster, selection } = resolved(builtIn)
-    expect(status).toEqual({
+    // Score cards' looks are in a test of their own.
+    const pins = Object.fromEntries(Object.entries(status).map(([name, { card: _card, ...look }]) => [name, look]))
+    expect(pins).toEqual({
       live: {
         color: '#e4572e',
         core: { color: '#ffd9c8', radius: 3.5, opacity: 1, ring: 1.5 },
@@ -293,6 +295,15 @@ describe('the built-in theme', () => {
       glowOpacity: 0.45,
     })
     expect(selection).toEqual({ color: '#2f80ed', width: 3 })
+  })
+
+  it('shows each status’s score cards at today’s opacity and glow', () => {
+    const { status } = resolved(builtIn)
+    const glow = { radius: 8, opacity: 0.45 }
+    expect(status.live.card).toEqual({ opacity: 1, glow })
+    expect(status.upcoming.card).toEqual({ opacity: 0.85, glow })
+    expect(status.final.card).toEqual({ opacity: 0.6, glow })
+    expect(status.disrupted.card).toEqual({ opacity: 0.7, glow })
   })
 
   it('draws trails and pulses at today’s sizes', () => {

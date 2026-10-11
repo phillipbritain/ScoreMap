@@ -340,11 +340,18 @@ export function addPlaceNames(map: MapLibreMap): PlaceNames {
     },
     nameBoxes() {
       const zoom = map.getZoom()
+      // PROTOTYPE: each name knows the games it names, the same way the cities were found.
+      const gameIdsOf = new Map<number, string[]>()
+      for (const game of games) {
+        const [city] = gameCities([game.venue], cities)
+        if (city) gameIdsOf.set(city.id, [...(gameIdsOf.get(city.id) ?? []), game.id])
+      }
       return cities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
-        .map((city) =>
-          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
-        )
+        .map((city) => ({
+          ...cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
+          gameIds: gameIdsOf.get(city.id) ?? [],
+        }))
     },
     remove() {
       map.off('sourcedata', onSourceData)

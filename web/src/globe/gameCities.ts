@@ -18,6 +18,8 @@ export interface ScreenBox {
   y: number
   width: number
   height: number
+  /** PROTOTYPE: for a city's name, the games whose venue it names. */
+  gameIds?: string[]
 }
 
 /**

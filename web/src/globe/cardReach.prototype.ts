@@ -8,13 +8,17 @@ export interface ReachVariant {
   reach: (width: number, height: number) => number
   /** Whether a moved card must stay wholly on screen. */
   onScreen: boolean
+  /** Which city names a trail may cross: none (unless the name covers its venue), its own city's, or any. */
+  trailsCross: 'none' | 'own' | 'any'
+  /** Whether trails are drawn beneath the map's names (a line layer) rather than over them (SVG). */
+  namesOverTrails: boolean
 }
 
 export const reachVariants: ReachVariant[] = [
-  { key: 'Now', name: 'Now: 160 px', reach: () => 160, onScreen: false },
-  { key: 'A', name: 'A: no limit', reach: (width, height) => Math.hypot(width, height), onScreen: true },
-  { key: 'B', name: 'B: 400 px', reach: () => 400, onScreen: true },
-  { key: 'C', name: 'C: half the map height', reach: (_, height) => height / 2, onScreen: true },
+  { key: 'Now', name: 'Now: 160 px, trails avoid names', reach: () => 160, onScreen: false, trailsCross: 'none', namesOverTrails: false },
+  { key: 'B', name: 'B: 400 px, trails avoid names', reach: () => 400, onScreen: true, trailsCross: 'none', namesOverTrails: true },
+  { key: 'Ba', name: 'B + (a): trails cross their own city name', reach: () => 400, onScreen: true, trailsCross: 'own', namesOverTrails: true },
+  { key: 'Bb', name: 'B + (b): trails cross any name', reach: () => 400, onScreen: true, trailsCross: 'any', namesOverTrails: true },
 ]
 
 export function currentReachVariant(): ReachVariant {

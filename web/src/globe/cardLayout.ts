@@ -98,10 +98,11 @@ export function layOutCards(
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
   // PROTOTYPE: the reach comes from the variant picked in the switcher.
+  if (typeof window !== 'undefined') Object.assign(window, { lastLayoutInput: { cards, scene, previous } })
   const variant = currentReachVariant()
   const reach = variant.reach(scene.width, scene.height)
   const screen = variant.onScreen ? { width: scene.width, height: scene.height } : undefined
-  const { shifts, cardClusters } = arrange(boxes, names, reach, screen)
+  const { shifts, cardClusters } = arrange(boxes, names, reach, screen, variant.trailsCross)
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
@@ -225,6 +226,7 @@ function arrange(
   names: readonly ScreenBox[],
   furthest: number,
   screen?: { width: number; height: number },
+  trailsCross: 'none' | 'own' | 'any' = 'none',
 ): Arrangement {
   const moves = movesWithin(furthest).filter((move) => Math.hypot(move.dx, move.dy) <= furthest)
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
@@ -243,8 +245,12 @@ function arrange(
     const venuesNear = boxes.filter((other) => near(other.venueX, other.venueY, venueRadius, venueRadius))
     const namesNear = names.filter((name) => near(name.x, name.y, name.width / 2, name.height / 2))
     // A name over the card's own venue can't be kept clear of its trail.
+    // PROTOTYPE: or, by variant, its own city's name, or any name.
     const namesAcrossTrail = namesNear.filter(
-      (name) => Math.abs(card.venueX - name.x) >= name.width / 2 || Math.abs(card.venueY - name.y) >= name.height / 2,
+      (name) =>
+        trailsCross !== 'any' &&
+        !(trailsCross === 'own' && name.gameIds?.includes(card.gameId)) &&
+        (Math.abs(card.venueX - name.x) >= name.width / 2 || Math.abs(card.venueY - name.y) >= name.height / 2),
     )
     const trailsNear = trails.filter(
       (trail) =>

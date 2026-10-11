@@ -3,6 +3,8 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { cardPins, type CardPin } from './cardPins'
 import { defaultCardStyle, type CardStyle } from './cardStyle'
+import { currentReachVariant } from './cardReach.prototype'
+import { drawTrailLayer } from './trailLayer.prototype'
 import { layOutCards, type CardCluster, type CardPlacement, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
@@ -225,6 +227,16 @@ export class ScoreCardMarkers {
       }
       // Redrawn every frame: the venue moves on screen as the globe turns.
       drawTrail(placed.trail, trail)
+    }
+    // PROTOTYPE: trails beneath the map's names, so a name always draws over a trail crossing it.
+    if (currentReachVariant().namesOverTrails) {
+      this.trails.classList.add('score-card-trails--names-over')
+      drawTrailLayer(
+        this.map,
+        [...layout.cards].flatMap(([gameId, { trail }]) =>
+          trail && !this.placed.get(gameId)!.inCardCluster ? [{ segment: trail, status: this.games.get(gameId)!.status }] : [],
+        ),
+      )
     }
     this.drawCardClusters(layout.cardClusters)
   }

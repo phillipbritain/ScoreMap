@@ -1339,3 +1339,8 @@ body {
   height: 28px;
   cursor: pointer;
 }
+
+/* PROTOTYPE: trails drawn in the map beneath its names (trailLayer.prototype); the SVG keeps only the venue's point and ring. */
+.score-card-trails--names-over line {
+  display: none;
+}

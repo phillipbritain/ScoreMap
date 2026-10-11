@@ -10,6 +10,7 @@ import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
+import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { selectedStacking, statusLooks } from './statusLook'
 import { pinLayout } from './zoomLevels'
@@ -192,11 +193,9 @@ export class ScoreCardMarkers {
       if (offset) previous.set(gameId, { offset, inCardCluster, trail: null })
     }
     const canvas = this.map.getCanvas()
-    const layout = layOutCards(
-      cards,
-      { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() },
-      previous,
-    )
+    const scene = { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() }
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
+    const layout = layOutCards(cards, scene, previous)
 
     for (const [gameId, placed] of this.placed) {
       const placement = layout.cards.get(gameId)

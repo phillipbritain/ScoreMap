@@ -20,6 +20,10 @@
     <Content Update="Scenarios\Files\**" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ScoreMap.ServiceDefaults\ScoreMap.ServiceDefaults.csproj" />
+  </ItemGroup>
+
   <!--
     `dotnet publish` builds the browser app with Vite and publishes it as wwwroot, so the
     publish folder is the whole deployable app. Pass -p:SkipBrowserApp=true to leave it out.

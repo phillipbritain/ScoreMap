@@ -164,6 +164,15 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('rejects a shadow without its colour or with an offset that isn’t a number', () => {
+    const json = themeJson()
+    json.settings.panel.shadow = { x: 0, y: '8px', blur: 30 }
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['settings.panel.shadow.y is "8px", not a number of pixels', 'settings.panel.shadow.color is missing'],
+    })
+  })
+
   it('rejects a text size, spacing or radius that isn’t one of its scale’s steps', () => {
     const json = themeJson()
     json.settings.fonts.clusterCount.size = 'xxl'
@@ -306,6 +315,22 @@ describe('the built-in theme', () => {
     expect(status.disrupted.card).toEqual({ opacity: 0.7, glow })
   })
 
+  it('holds today’s line widths, shadows and sizes of things on the page', () => {
+    const { strokes, panel, settingsMenu, controls, sizes } = resolved(builtIn)
+    expect(strokes).toEqual({ thin: 1, medium: 2, thick: 3 })
+    expect(panel.shadow).toEqual({ x: 0, y: 8, blur: 30, color: 'rgb(0 0 0 / 0.6)' })
+    expect(panel.glow).toEqual({ y: -2, blur: 14, opacity: 0.35 })
+    expect(settingsMenu.shadow).toEqual({ x: 0, y: 4, blur: 16, color: 'rgba(0, 0, 0, 0.4)' })
+    expect(settingsMenu.gearOutline).toEqual({ x: 0, y: 0, blur: 2, color: '#050b16' })
+    expect(controls.shadow).toEqual({ x: 0, y: 2, blur: 8, color: 'rgba(0, 0, 0, 0.3)' })
+    expect(sizes).toEqual({
+      panel: { width: 940, height: 127, phoneHeight: 236, scoreBlock: 290, slant: 16, photo: 180, logo: 28, close: 24 },
+      card: { minWidth: 92, logo: 16, pointer: 6, light: 6 },
+      settingsMenu: { width: 320, gear: 28, allLeagues: 32 },
+      controls: { key: 34, icon: 14 },
+    })
+  })
+
   it('draws trails and pulses at today’s sizes', () => {
     const { trail, pulse } = resolved(builtIn)
     expect(trail).toEqual({
@@ -329,7 +354,7 @@ describe('the built-in theme', () => {
     expect(hover).toBe('rgba(255, 255, 255, 0.12)')
     expect(controls).toEqual({
       surface: 'rgba(11, 16, 32, 0.85)',
-      shadow: 'rgba(0, 0, 0, 0.3)',
+      shadow: { x: 0, y: 2, blur: 8, color: 'rgba(0, 0, 0, 0.3)' },
       on: { fill: '#ffffff', text: '#0b1020' },
     })
     expect(card).toEqual({
@@ -346,12 +371,13 @@ describe('the built-in theme', () => {
       photo: 'rgb(42 62 112 / 0.5)',
       credit: { fill: 'rgb(0 0 0 / 0.6)', text: 'rgb(255 255 255 / 0.75)' },
       close: 'rgb(0 0 0 / 0.55)',
-      shadow: 'rgb(0 0 0 / 0.6)',
+      shadow: { x: 0, y: 8, blur: 30, color: 'rgb(0 0 0 / 0.6)' },
+      glow: { y: -2, blur: 14, opacity: 0.35 },
     })
     expect(settingsMenu).toEqual({
       surface: '#0b1020',
-      shadow: 'rgba(0, 0, 0, 0.4)',
-      gearOutline: '#050b16',
+      shadow: { x: 0, y: 4, blur: 16, color: 'rgba(0, 0, 0, 0.4)' },
+      gearOutline: { x: 0, y: 0, blur: 2, color: '#050b16' },
       tab: 'rgba(255, 255, 255, 0.6)',
       count: 'rgba(255, 255, 255, 0.5)',
       hint: 'rgba(255, 255, 255, 0.4)',

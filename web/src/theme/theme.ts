@@ -57,6 +57,28 @@ function numberFrom(min: number, max: number, what: string): Setting<number> {
 /** A size in pixels, written to CSS as one. */
 const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: (value) => `${value}px` }
 const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
+/** How far something is moved, in pixels, either way; written to CSS in pixels. */
+const offset: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of pixels'), css: (value) => `${value}px` }
+
+interface Shadow {
+  x: number
+  y: number
+  blur: number
+  color: string
+}
+
+/**
+ * A shadow, or a glow, cast by a panel or control: how far it falls across and down, how far it
+ * blurs, and its colour. Written to CSS as one shadow ("0px 8px 30px #000000"), for a box-shadow or a
+ * drop-shadow.
+ */
+const shadow: Setting<Shadow> = {
+  resolve(value, path, resolving) {
+    const parts = { x: offset, y: offset, blur: pixels, color }
+    return resolveAll(parts, value, path, resolving) as Shadow
+  },
+  css: ({ x, y, blur, color }) => `${x}px ${y}px ${blur}px ${color}`,
+}
 
 /** On or off; written to CSS as 1 or 0, to multiply by. */
 const onOff: Setting<boolean> = {
@@ -81,14 +103,15 @@ const fontFamily: Setting<string> = {
 const pageFont = { family: fontFamily, weight: numberFrom(1, 1000, 'a font weight from 1 to 1000') }
 
 /**
- * The scales every text size, spacing and corner radius is a step of, and their steps' names. The
- * page's CSS uses only these steps (as --text-sizes-m, --spacing-l, --corners-card and so on), and a
- * size elsewhere in a theme names one.
+ * The scales every text size, spacing, corner radius and the page's line widths (borders, dividers) are
+ * a step of, and their steps' names. The page's CSS uses only these steps (as --text-sizes-m, --spacing-l,
+ * --corners-card, --strokes-thin and so on), and a size elsewhere in a theme names one.
  */
 const scales = {
   textSizes: { what: 'text size', steps: ['xs', 's', 'm', 'l', 'xl'] },
   spacing: { what: 'spacing', steps: ['2xs', 'xs', 's', 'm', 'l', 'xl', '2xl', '3xl'] },
   radii: { what: 'radius', steps: ['xs', 's', 'm', 'l', 'pill'] },
+  strokes: { what: 'stroke', steps: ['thin', 'medium', 'thick'] },
 } as const
 
 type ScaleName = keyof typeof scales
@@ -181,6 +204,7 @@ const settings = {
   textSizes: scale(scales.textSizes.steps),
   spacing: scale(scales.spacing.steps),
   radii: scale(scales.radii.steps),
+  strokes: scale(scales.strokes.steps),
   globe: {
     surface: color,
     coastlines: globeLine,
@@ -237,7 +261,7 @@ const settings = {
    * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
    * surface and drop shadow, and a speed key that's on.
    */
-  controls: { surface: color, shadow: color, on: { fill: color, text: color } },
+  controls: { surface: color, shadow, on: { fill: color, text: color } },
   /**
    * A score card: its fill and text, a Disrupted game's, and the drop shadow a starting game's card
    * settles with. Its outline, header, light and glow are its status's colour.
@@ -246,7 +270,8 @@ const settings = {
   /**
    * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
    * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-   * button and the panel's drop shadow. Its top edge is the game's status colour.
+   * button and the panel's drop shadow. Its top edge is the game's status colour, and it glows in that
+   * colour, this far up, this blurred and this strongly.
    */
   panel: {
     surface: { top: color, bottom: color },
@@ -256,7 +281,8 @@ const settings = {
     photo: color,
     credit: { fill: color, text: color },
     close: color,
-    shadow: color,
+    shadow,
+    glow: { y: offset, blur: pixels, opacity },
   },
   /**
    * The settings menu: its surface and drop shadow, the dark outline around the gear, a tab that's off,
@@ -265,8 +291,8 @@ const settings = {
    */
   settingsMenu: {
     surface: color,
-    shadow: color,
-    gearOutline: color,
+    shadow,
+    gearOutline: shadow,
     tab: color,
     count: color,
     hint: color,
@@ -301,6 +327,30 @@ const settings = {
   corners: { card: radius, menu: radius, menuItem: radius, message: radius, control: radius },
   /** The game panel's bottom left corner cut off, like a broadcast graphic, or not: this far along each side. */
   cutCorner: { on: onOff, size: spacing },
+  /**
+   * How big things on the page are, in pixels. The game panel: its width at most, its height, and its
+   * height on a phone, where the details go below the score block; the score block's width and how
+   * far its right edge slants; the venue photo's width; a team's logo; and the close button. A score
+   * card: its narrowest, a team's logo, how far its pointer reaches below it to the venue (the globe
+   * reads this to place cards) and its status light. The settings menu: its width, the gear, and the
+   * "All leagues" chip's height. The scenario controls: a speed key and its icon. The game panel sits
+   * clear of the scenario controls by their keys' size.
+   */
+  sizes: {
+    panel: {
+      width: pixels,
+      height: pixels,
+      phoneHeight: pixels,
+      scoreBlock: pixels,
+      slant: pixels,
+      photo: pixels,
+      logo: pixels,
+      close: pixels,
+    },
+    card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels },
+    settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels },
+    controls: { key: pixels, icon: pixels },
+  },
 }
 
 type Resolved<S> = S extends Setting<infer T> ? T : { readonly [K in keyof S]: Resolved<S[K]> }

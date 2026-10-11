@@ -51,8 +51,11 @@ export function cardLayoutFeatures(
         feature({ kind: 'venue', status }, { type: 'Point', coordinates: lngLat }),
       )
     }
-    // A card sitting above its venue points down to it; a moved card has no pointer.
-    const foot = trail ? unproject(card.venueX + offset.dx, card.venueY + offset.dy) : lngLat
+    // A card sitting above its venue points down to it, so its footprint (pointer and all) stands on
+    // the venue; a moved card has no pointer, so its footprint is centred on the card.
+    const foot = trail
+      ? unproject(card.venueX + offset.dx, card.venueY + offset.dy - card.height / 2 + cardFootprint.height / 2)
+      : lngLat
     features.push(feature({ kind: 'footprint' }, { type: 'Point', coordinates: foot }))
   }
   for (const { gameIds, status } of layout.cardClusters) {
@@ -73,6 +76,8 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
 }
 
 const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
+// Each trail, venue and card cluster in its game's status colour (a card cluster's, see groupStatus).
+const statusColor = byStatus('own', (look) => look.color)
 
 /**
  * Moved cards' trails, the venues they end at, and card clusters, from the bottom up. Added beneath
@@ -96,14 +101,14 @@ export const cardLayoutLayerSpecs: [
     type: 'line',
     source: cardLayoutSource,
     filter: kindIs('trail'),
-    paint: { 'line-color': byStatus('own', (look) => look.color), 'line-width': 4, 'line-blur': 3, 'line-opacity': 0.35 },
+    paint: { 'line-color': statusColor, 'line-width': 4, 'line-blur': 3, 'line-opacity': 0.35 },
   },
   {
     id: 'trails',
     type: 'line',
     source: cardLayoutSource,
     filter: kindIs('trail'),
-    paint: { 'line-color': byStatus('own', (look) => look.color), 'line-width': 1.25, 'line-opacity': 0.9 },
+    paint: { 'line-color': statusColor, 'line-width': 1.25, 'line-opacity': 0.9 },
   },
   {
     id: 'trail-venue-rings',
@@ -114,7 +119,7 @@ export const cardLayoutLayerSpecs: [
       'circle-radius': 5,
       'circle-color': 'rgba(0, 0, 0, 0)',
       'circle-stroke-width': 1,
-      'circle-stroke-color': byStatus('own', (look) => look.color),
+      'circle-stroke-color': statusColor,
     },
   },
   {
@@ -122,7 +127,7 @@ export const cardLayoutLayerSpecs: [
     type: 'circle',
     source: cardLayoutSource,
     filter: kindIs('venue'),
-    paint: { 'circle-radius': 2, 'circle-color': byStatus('own', (look) => look.color) },
+    paint: { 'circle-radius': 2, 'circle-color': statusColor },
   },
   {
     id: 'card-cluster-glows',
@@ -131,7 +136,7 @@ export const cardLayoutLayerSpecs: [
     filter: kindIs('cardCluster'),
     paint: {
       'circle-radius': 26,
-      'circle-color': byStatus('own', (look) => look.color),
+      'circle-color': statusColor,
       'circle-blur': 1,
       'circle-opacity': byStatus('own', (look) => look.groupOpacity * groupGlowOpacity),
     },
@@ -147,7 +152,7 @@ export const cardLayoutLayerSpecs: [
       'circle-color': groupFill,
       'circle-opacity': byStatus('own', (look) => look.groupOpacity),
       'circle-stroke-width': groupOutline,
-      'circle-stroke-color': byStatus('own', (look) => look.color),
+      'circle-stroke-color': statusColor,
       'circle-stroke-opacity': byStatus('own', (look) => look.groupOpacity),
     },
   },
@@ -162,7 +167,7 @@ export const cardLayoutLayerSpecs: [
       'text-size': 11,
       'text-allow-overlap': true,
     },
-    paint: { 'text-color': byStatus('own', (look) => look.color), 'text-opacity': byStatus('own', (look) => look.groupOpacity) },
+    paint: { 'text-color': statusColor, 'text-opacity': byStatus('own', (look) => look.groupOpacity) },
   },
 ]
 

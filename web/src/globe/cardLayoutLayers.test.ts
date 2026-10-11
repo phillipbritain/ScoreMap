@@ -71,12 +71,13 @@ describe('cardLayoutFeatures', () => {
     ])
   })
 
-  it('gives every card with room a footprint where it is, moved or not, by the foot of the card', () => {
+  it('gives every card with room a footprint where it is, moved or not', () => {
     expect(features('footprint').map((feature) => (feature.geometry as Point).coordinates)).toEqual([
-      // Sitting above its venue: the tip of its pointer, on the venue.
+      // Sitting above its venue: from the tip of its pointer, on the venue.
       [10, -20.5],
-      // Moved, with no pointer: the middle of its bottom edge.
-      [22, -19.4],
+      // Moved, with no pointer: centred on the card, its centre at (220, 164), so its foot is half a
+      // footprint (68) below that.
+      [22, -19.8],
     ])
   })
 })

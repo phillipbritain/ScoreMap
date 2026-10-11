@@ -15,12 +15,6 @@ import { degreesApart } from './geo'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
 
-/**
- * The font pin cluster and card cluster counts are written in. Like every text on the globe, it must
- * be one the map's font server has (see globeFonts, ADR-0006).
- */
-export const clusterCountFont = 'Open Sans Bold'
-
 // Name layers of the base style.
 const stateNames = 'label_state'
 // City names, national capitals included; only major cities are named (see majorCity), and other
@@ -75,23 +69,28 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 /** The kinds of place the globe names, each with its own look in the theme. */
 type PlaceKind = keyof Theme['placeNames']
 
-/** How a kind of place's name is written, beyond its colours and font (which come from the theme). */
+/** How a kind of place's name is written, beyond its colours, font and size (which come from the theme). */
 interface NameShape {
-  /** Text size in pixels, as zoom, size stops (see zoomed). */
-  sizes: readonly number[]
   /** Spaced capitals, with this much tracking in ems. */
   capitals?: number
   /** The outline around its letters: how wide, and how blurred, in pixels. */
   outline: { width: number; blur: number }
 }
 
-/** Capitals a touch larger than other cities; states and countries in spaced capitals. */
+/** States and countries in spaced capitals. */
 const nameShapes: Record<PlaceKind, NameShape> = {
-  city: { sizes: [4, 12, 7, 14, 11, 18], outline: { width: 2, blur: 0.5 } },
-  capital: { sizes: [4, 12.5, 7, 15, 11, 19], outline: { width: 2, blur: 0.5 } },
-  state: { sizes: [3, 9, 8, 13], capitals: 0.25, outline: { width: 1.2, blur: 0 } },
-  country: { sizes: [1, 9, 4, 16], capitals: 0.12, outline: { width: 2, blur: 0.5 } },
+  city: { outline: { width: 2, blur: 0.5 } },
+  capital: { outline: { width: 2, blur: 0.5 } },
+  state: { capitals: 0.25, outline: { width: 1.2, blur: 0 } },
+  country: { capitals: 0.12, outline: { width: 2, blur: 0.5 } },
 }
+
+/** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
+const sizeStops = (kind: PlaceKind, theme: Theme): number[] =>
+  Object.entries(theme.placeNames[kind].size)
+    .map(([zoom, size]) => [Number(zoom), size])
+    .sort(([a], [b]) => a - b)
+    .flat()
 
 function placeKind(layerId: string): PlaceKind {
   if (layerId === 'label_city_capital') return 'capital'
@@ -110,7 +109,7 @@ function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification 
     layout: {
       ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [look.font.name],
-      'text-size': zoomed(...shape.sizes),
+      'text-size': zoomed(...sizeStops(kind, theme)),
       'text-transform': shape.capitals === undefined ? 'none' : 'uppercase',
       'text-letter-spacing': shape.capitals ?? 0,
     },
@@ -222,11 +221,11 @@ export interface CityNameLook {
 
 /**
  * How a city's name looks at a zoom level: a capital's or another city's, worked out from the same
- * shapes and theme the map draws it with (see nameShapes).
+ * theme the map draws it with.
  */
 export function cityNameLook(zoom: number, capital: boolean, theme: Theme): CityNameLook {
   const kind = capital ? 'capital' : 'city'
-  const size = atZoom(nameShapes[kind].sizes, zoom)
+  const size = atZoom(sizeStops(kind, theme), zoom)
   return {
     font: cssFont(theme.placeNames[kind].font, size),
     size,

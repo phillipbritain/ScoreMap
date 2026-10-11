@@ -5,6 +5,9 @@
     "night": { "base": "#0b1020" }
   },
   "settings": {
+    "textSizes": { "xs": 10, "s": 11, "m": 13, "l": 15, "xl": 18 },
+    "spacing": { "2xs": 2, "xs": 4, "s": 6, "m": 8, "l": 12, "xl": 16, "2xl": 24, "3xl": 32 },
+    "radii": { "xs": 3, "s": 6, "m": 8, "l": 12, "pill": 999 },
     "globe": {
       "surface": "navy.500",
       "coastlines": "rgba(255, 255, 255, 0.7)",
@@ -17,10 +20,30 @@
       }
     },
     "placeNames": {
-      "city": { "color": "cream.500", "outline": "navy.900", "font": "Open Sans Semibold" },
-      "capital": { "color": "cream.400", "outline": "navy.900", "font": "Open Sans Bold" },
-      "state": { "color": "#9a8a62", "outline": "navy.900", "font": "Open Sans Regular" },
-      "country": { "color": "cream.600", "outline": "navy.900", "font": "Open Sans Bold" }
+      "city": {
+        "color": "cream.500",
+        "outline": "navy.900",
+        "font": "Open Sans Semibold",
+        "size": { "4": "s", "7": "m", "11": "xl" }
+      },
+      "capital": {
+        "color": "cream.400",
+        "outline": "navy.900",
+        "font": "Open Sans Bold",
+        "size": { "4": "m", "7": "l", "11": "xl" }
+      },
+      "state": {
+        "color": "#9a8a62",
+        "outline": "navy.900",
+        "font": "Open Sans Regular",
+        "size": { "3": "xs", "8": "m" }
+      },
+      "country": {
+        "color": "cream.600",
+        "outline": "navy.900",
+        "font": "Open Sans Bold",
+        "size": { "1": "xs", "4": "l" }
+      }
     },
     "status": {
       "live": {
@@ -93,6 +116,22 @@
       "hint": "rgba(255, 255, 255, 0.4)",
       "chip": { "outline": "rgba(216, 201, 164, 0.45)", "badge": "rgba(216, 201, 164, 0.15)" },
       "on": { "fill": "cream.600", "text": "night.500" }
-    }
+    },
+    "fonts": {
+      "body": { "family": "system-ui, sans-serif", "weight": 400 },
+      "heading": { "family": "system-ui, sans-serif", "weight": 800 },
+      "team": { "family": "system-ui, sans-serif", "weight": 700 },
+      "score": { "family": "system-ui, sans-serif", "weight": 800 },
+      "control": { "family": "system-ui, sans-serif", "weight": 600 },
+      "scenarioClock": { "family": "system-ui, sans-serif", "weight": 400 },
+      "card": {
+        "clock": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 400 },
+        "team": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 600 },
+        "score": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 700 }
+      },
+      "clusterCount": { "font": "Open Sans Bold", "size": "s" }
+    },
+    "corners": { "card": "xs", "menu": "l", "menuItem": "s", "message": "m", "control": "pill" },
+    "cutCorner": { "on": true, "size": "xl" }
   }
 }

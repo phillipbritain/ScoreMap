@@ -81,10 +81,10 @@ export const smallPinLayerSpecs: [CircleLayerSpecification, CircleLayerSpecifica
     filter: ['!', ['has', 'point_count']],
     maxzoom: cardZoom,
     paint: {
-      'circle-radius': byStatus('pin', (look) => look.glowRadius),
-      'circle-color': byStatus('pin', (look) => look.color),
+      'circle-radius': byStatus('own', (look) => look.glowRadius),
+      'circle-color': byStatus('own', (look) => look.color),
       'circle-blur': 1,
-      'circle-opacity': byStatus('pin', (look) => look.glowOpacity),
+      'circle-opacity': byStatus('own', (look) => look.glowOpacity),
     },
   },
   {
@@ -93,13 +93,13 @@ export const smallPinLayerSpecs: [CircleLayerSpecification, CircleLayerSpecifica
     source: pinSource,
     filter: ['!', ['has', 'point_count']],
     maxzoom: cardZoom,
-    layout: { 'circle-sort-key': byStatus('pin', (look) => look.stacking) },
+    layout: { 'circle-sort-key': byStatus('own', (look) => look.stacking) },
     paint: {
-      'circle-radius': byStatus('pin', (look) => look.coreRadius),
-      'circle-color': byStatus('pin', (look) => look.coreColor),
-      'circle-opacity': byStatus('pin', (look) => look.coreOpacity),
-      'circle-stroke-width': byStatus('pin', (look) => look.coreRing),
-      'circle-stroke-color': byStatus('pin', (look) => look.color),
+      'circle-radius': byStatus('own', (look) => look.coreRadius),
+      'circle-color': byStatus('own', (look) => look.coreColor),
+      'circle-opacity': byStatus('own', (look) => look.coreOpacity),
+      'circle-stroke-width': byStatus('own', (look) => look.coreRing),
+      'circle-stroke-color': byStatus('own', (look) => look.color),
     },
   },
 ]
@@ -110,37 +110,15 @@ function byCount(small: number, medium: number, large: number): ExpressionSpecif
 }
 
 /**
- * Invisible stand-ins for the pins, the size of what each shows: a score card zoomed in, a small pin
- * zoomed out. Score cards are page elements MapLibre can't see, and circle layers take no part in
- * label placement, so these give place names something to avoid: a name that would fall under a pin
- * moves to another side of its dot (see placeNames' city names), or is left out if no side is free.
- * Pin clusters have none: a name too close to fit beside one would be lost, so it's written across the
- * pin cluster instead (place names draw above the pins). Both draw nothing.
- *
- * A card's footprint is a typical score card with its pointer and a small margin: cards vary with
- * their teams' names and clock line, and a footprint image has one size, so it's an approximation.
- * A small pin's is as far across as the widest small pin shows (see smallPinWidth), with a pixel's
- * margin each side.
+ * Invisible stand-ins for the small pins, as far across as the widest small pin shows (see
+ * smallPinWidth), with a pixel's margin each side. Circle layers take no part in label placement, so
+ * these give place names something to avoid: a name that would fall under a pin moves to another side
+ * of its dot (see placeNames' city names), or is left out if no side is free. Score cards have theirs
+ * too (see cardLayoutLayers' cardFootprint). Pin clusters have none: a name too close to fit beside
+ * one would be lost, so it's written across the pin cluster instead (place names draw above the
+ * pins). Footprints draw nothing.
  */
-export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
 export const pinFootprint = { image: 'pin-footprint', size: smallPinWidth + 2 }
-
-/** Where each score card sits: above its venue, the card's size with its pointer and a small margin. */
-export const cardFootprintLayerSpec: SymbolLayerSpecification = {
-  id: 'card-footprints',
-  type: 'symbol',
-  source: pinSource,
-  // Where score cards show: single pins, zoomed in.
-  filter: ['!', ['has', 'point_count']],
-  minzoom: cardZoom,
-  layout: {
-    'icon-image': cardFootprint.image,
-    'icon-anchor': 'bottom',
-    // Always placed, whatever else is there, and still keeps names out.
-    'icon-allow-overlap': true,
-  },
-  paint: { 'icon-opacity': 0 },
-}
 
 /** Each small pin, while zoomed out. */
 export const pinFootprintLayerSpec: SymbolLayerSpecification = {

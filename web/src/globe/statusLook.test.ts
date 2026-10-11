@@ -6,9 +6,6 @@ import {
   byStatus,
   pinClusterStatus,
   pinClusterStatusCounts,
-  cardClusterStacking,
-  groupFill,
-  groupOutline,
   groupStatus,
   selectedStacking,
   selectionColor,
@@ -58,9 +55,9 @@ describe('the status a group of games shows as', () => {
 })
 
 describe('byStatus', () => {
-  it("picks a pin's value by its own status", () => {
+  it("picks a pin's, a trail's or a card cluster's value by its own status", () => {
     for (const status of statusProminence) {
-      expect(evaluate(byStatus('pin', (look) => look.coreRadius), { status })).toBe(statusLooks[status].coreRadius)
+      expect(evaluate(byStatus('own', (look) => look.coreRadius), { status })).toBe(statusLooks[status].coreRadius)
     }
   })
 
@@ -72,9 +69,8 @@ describe('byStatus', () => {
 })
 
 describe('the status look', () => {
-  it('draws the selected card above every other, and card clusters above all', () => {
+  it('draws the selected card above every other', () => {
     for (const look of Object.values(statusLooks)) expect(selectedStacking).toBeGreaterThan(look.stacking)
-    expect(cardClusterStacking).toBeGreaterThan(selectedStacking)
   })
 
   it("measures a small pin by a Live one's glow, the widest, of which the inner part shows", () => {
@@ -85,15 +81,13 @@ describe('the status look', () => {
     }
   })
 
-  it("writes each status's look, the groups' fill and outline, and the selection colour, for the page's CSS", () => {
+  it("writes each status's colour and the selection colour, for the page's CSS", () => {
     const properties = new Map<string, string>()
     applyStatusLook({ style: { setProperty: (name: string, value: string | null) => properties.set(name, value!) } })
 
     expect(properties.get('--live-color')).toBe(statusLooks.Live.color)
-    expect(properties.get('--disrupted-group-opacity')).toBe(String(statusLooks.Disrupted.groupOpacity))
-    expect(properties.get('--group-fill')).toBe(groupFill)
-    expect(properties.get('--group-outline')).toBe(`${groupOutline}px`)
+    expect(properties.get('--disrupted-color')).toBe(statusLooks.Disrupted.color)
     expect(properties.get('--selection-color')).toBe(selectionColor)
-    expect(properties.size).toBe(2 * statusProminence.length + 3)
+    expect(properties.size).toBe(statusProminence.length + 1)
   })
 })

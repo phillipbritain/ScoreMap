@@ -11,6 +11,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import { addGlobeGlow } from './globeGlow'
@@ -53,6 +54,8 @@ export type GlobeMapStyle = StyleSpecification | { url: string; transform: (base
 
 export interface GlobeMapOptions {
   style: GlobeMapStyle
+  /** The look of what the globe draws beyond its map style: the halo and place names. */
+  theme: Theme
   /** Where the globe opens. */
   startCamera: Camera
   /** Called with a game's id when the viewer selects its pin or score card. */
@@ -85,7 +88,7 @@ export class GlobeMap {
   private clustering: PinLayout
   private destroyed = false
 
-  constructor(container: HTMLElement, { style, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
+  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     const map = new MapLibreMap({
@@ -106,8 +109,8 @@ export class GlobeMap {
     traceLayouts(map)
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })
     else map.setStyle(style)
-    this.removeGlow = addGlobeGlow(map)
-    this.names = addPlaceNames(map)
+    this.removeGlow = addGlobeGlow(map, theme)
+    this.names = addPlaceNames(map, theme)
     this.cards = new ScoreCardMarkers(map, this.names, (gameId) => this.onSelect(gameId))
     this.clustering = pinLayout(map.getZoom())
 

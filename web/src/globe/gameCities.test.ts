@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cityNameBox, cityOfPlace, gameCities, type City } from './gameCities'
 import { cityNameLook } from './placeNames'
+import { builtInTheme } from '../theme/builtInTheme'
 
 const tampa: City = { id: 1, name: 'Tampa', capital: false, longitude: -82.4584, latitude: 27.9478 }
 const miami: City = { id: 2, name: 'Miami', capital: false, longitude: -80.1937, latitude: 25.7743 }
@@ -56,7 +57,7 @@ describe('cityOfPlace', () => {
 describe('cityNameBox', () => {
   // Every letter 10 px wide.
   const measure = (text: string) => text.length * 10
-  const look = cityNameLook(4, false)
+  const look = cityNameLook(4, false, builtInTheme)
 
   it('sits centred below the dot, past the offset, with room for the outline', () => {
     const box = cityNameBox(tampa, { x: 100, y: 200 }, look, measure)

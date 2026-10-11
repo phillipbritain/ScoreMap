@@ -322,55 +322,62 @@ body {
   }
 }
 
-/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how
-   opaque its score cards are and how they glow. Score cards pick theirs by their status class. */
+/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how far
+   its score cards fade and how they glow. Score cards pick theirs by their status class. */
 .score-card--live {
-  --status-color: var(--status-live-color);
-  --status-card-opacity: var(--status-live-card-opacity);
+  --status-card-color: var(--status-live-color);
+  --status-card-fade: var(--status-live-card-fade);
   --status-card-glow-radius: var(--status-live-card-glow-radius);
   --status-card-glow-opacity: var(--status-live-card-glow-opacity);
 }
 
 .score-card--upcoming {
-  --status-color: var(--status-upcoming-color);
-  --status-card-opacity: var(--status-upcoming-card-opacity);
+  --status-card-color: var(--status-upcoming-color);
+  --status-card-fade: var(--status-upcoming-card-fade);
   --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
   --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
 }
 
 .score-card--final {
-  --status-color: var(--status-final-color);
-  --status-card-opacity: var(--status-final-card-opacity);
+  --status-card-color: var(--status-final-color);
+  --status-card-fade: var(--status-final-card-fade);
   --status-card-glow-radius: var(--status-final-card-glow-radius);
   --status-card-glow-opacity: var(--status-final-card-glow-opacity);
 }
 
 .score-card--disrupted {
-  --status-color: var(--status-disrupted-color);
-  --status-card-opacity: var(--status-disrupted-card-opacity);
+  --status-card-color: var(--status-disrupted-color);
+  --status-card-fade: var(--status-disrupted-card-fade);
   --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
   --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
 }
 
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
-   light and the clock line (or the status), then both teams' logos, abbreviations and scores. */
+   light and the clock line (or the status), then both teams' logos, abbreviations and scores.
+
+   Solid, so the map never shows through the scores. A card fades (Final, say) by colour instead:
+   its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
+   are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
 .score-card {
   /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
   --score-card-pointer: var(--sizes-card-pointer);
+  --card-surface: var(--card-fill);
+  --card-ink: var(--card-text);
+  --fade: calc(var(--status-card-fade) * 100%);
+  --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
   display: grid;
   gap: var(--spacing-2xs);
   min-width: var(--sizes-card-min-width);
   padding: 0 0 var(--spacing-xs);
   border: var(--strokes-thin) solid var(--status-color);
   border-radius: var(--corners-card);
-  background: var(--card-fill);
-  color: var(--card-text);
+  background: var(--card-surface);
+  color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
   font-family: var(--fonts-card-clock-family);
   font-size: var(--text-sizes-s);
   font-weight: var(--fonts-card-clock-weight);
   line-height: 1.2;
   text-transform: uppercase;
-  opacity: var(--status-card-opacity);
   /* The status's glow around the card, and a fainter one inside it. */
   box-shadow:
     0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
@@ -383,13 +390,13 @@ body {
 }
 
 /* A small pointer down to the venue; the card sits above it. A square turned on its corner, sized
-   and placed so its tip is --score-card-pointer below the card. */
+   and placed so its tip is the theme's card pointer below the card (the globe places cards by it). */
 .score-card::after {
-  --side: calc(var(--score-card-pointer) * 1.5);
+  --side: calc(var(--sizes-card-pointer) * 1.5);
   content: '';
   position: absolute;
   left: 50%;
-  bottom: calc(var(--side) * 0.7071 - var(--score-card-pointer) - var(--side) / 2);
+  bottom: calc(var(--side) * 0.7071 - var(--sizes-card-pointer) - var(--side) / 2);
   width: var(--side);
   height: var(--side);
   background: var(--status-color);
@@ -409,19 +416,19 @@ body {
 
 /* Greyed out: the game isn't being played as scheduled. */
 .score-card.score-card--disrupted {
-  background: var(--card-disrupted-fill);
-  color: var(--card-disrupted-text);
+  --card-surface: var(--card-disrupted-fill);
+  --card-ink: var(--card-disrupted-text);
 }
 
 .score-card--disrupted .score-card__logo {
   filter: grayscale(1);
 }
 
-/* The game whose panel is open, matching the selected small pin's ring. */
+/* The game whose panel is open, matching the selected small pin's ring, and not faded. */
 .score-card--selected {
+  --status-card-fade: 0;
   outline: var(--selection-width) solid var(--selection-color);
   outline-offset: var(--spacing-2xs);
-  opacity: 1;
 }
 
 .score-card__header {
@@ -463,10 +470,12 @@ body {
   padding: 0 var(--spacing-s);
 }
 
+/* Faded into the card's fill with the rest of the card: the card behind it is solid. */
 .score-card__logo {
   width: var(--sizes-card-logo);
   height: var(--sizes-card-logo);
   object-fit: contain;
+  opacity: calc(1 - var(--status-card-fade));
 }
 
 .score-card__abbreviation {

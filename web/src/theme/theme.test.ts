@@ -331,7 +331,7 @@ describe('the built-in theme', () => {
     })
   })
 
-  it('writes text in today’s fonts: the system font on the page, monospace on score cards, Open Sans on the globe', () => {
+  it('writes text in today’s fonts: the system font on the page (but the browser’s Arial on its buttons), monospace on score cards, Open Sans on the globe', () => {
     const { fonts, placeNames } = resolved(builtIn)
     const system = 'system-ui, sans-serif'
     const mono = "ui-monospace, 'Cascadia Mono', Consolas, monospace"
@@ -340,7 +340,9 @@ describe('the built-in theme', () => {
       heading: { family: system, weight: 800 },
       team: { family: system, weight: 700 },
       score: { family: system, weight: 800 },
-      control: { family: system, weight: 600 },
+      tab: { family: 'Arial', weight: 600 },
+      button: { family: 'Arial', weight: 400 },
+      scenarioPill: { family: system, weight: 600 },
       scenarioClock: { family: system, weight: 400 },
       card: { clock: { family: mono, weight: 400 }, team: { family: mono, weight: 600 }, score: { family: mono, weight: 700 } },
       clusterCount: { font: globeFonts.get('Open Sans Bold'), size: 11 },

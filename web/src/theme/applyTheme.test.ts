@@ -82,10 +82,10 @@ describe('applyTheme', () => {
     // The page's background, sky and three stars; four kinds of text, a divider and hover; the
     // controls' surface, shadow and on (fill and text). A score card's five, the game panel's eleven
     // and the settings menu's eleven colours. Five text sizes, eight spacing steps and five radii;
-    // nine page fonts (a family and a weight each) and the cluster count's (a font of four and a
+    // eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a
     // size); five corners and the cut corner's two. Place names' sizes are for the globe, not the page.
     expect(properties.size).toBe(
-      7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11 + (5 + 8 + 5) + (9 * 2 + 5) + (5 + 2),
+      7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11 + (5 + 8 + 5) + (11 * 2 + 5) + (5 + 2),
     )
   })
 })

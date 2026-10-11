@@ -5,6 +5,7 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
+import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
@@ -35,7 +36,7 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       source: pinSource,
       filter: ['has', 'point_count'],
       paint: {
-        'circle-radius': byCount(22, 26, 32),
+        'circle-radius': byCount(cluster.glowRadius),
         'circle-color': byStatus(theme, 'pinCluster', (look) => look.color),
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.clusterOpacity * cluster.glowOpacity),
@@ -48,7 +49,7 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       filter: ['has', 'point_count'],
       layout: { 'circle-sort-key': byStatus(theme, 'pinCluster', (look) => look.stacking) },
       paint: {
-        'circle-radius': byCount(11, 13, 16),
+        'circle-radius': byCount(cluster.radius),
         'circle-color': cluster.fill,
         'circle-stroke-width': cluster.outlineWidth,
         'circle-stroke-color': byStatus(theme, 'pinCluster', (look) => look.color),
@@ -109,9 +110,36 @@ export function smallPinLayers(theme: Theme): [CircleLayerSpecification, CircleL
   ]
 }
 
-/** A pin cluster's size by how many games are in it: up to 4, up to 14, and more. */
-function byCount(small: number, medium: number, large: number): ExpressionSpecification {
-  return ['step', ['get', 'point_count'], small, 5, medium, 15, large]
+export const selectedPinLayer = 'pin-selected'
+
+/**
+ * A ring around the selected game's small pin, in the theme's selection colour and width, reaching as
+ * far as a small pin does (see panelClearance); zoomed in, its score card is outlined instead.
+ */
+export function selectedPinLayerSpec(theme: Theme, gameId: string | null): CircleLayerSpecification {
+  return {
+    id: selectedPinLayer,
+    type: 'circle',
+    source: pinSource,
+    filter: selectedPin(gameId),
+    maxzoom: cardZoom,
+    paint: {
+      'circle-radius': smallPinReach - theme.selection.width,
+      'circle-color': 'transparent',
+      'circle-stroke-width': theme.selection.width,
+      'circle-stroke-color': theme.selection.color,
+    },
+  }
+}
+
+/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
+export function selectedPin(gameId: string | null): ExpressionSpecification {
+  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
+}
+
+/** A pin cluster's size by how many games are in it: a few (up to 4), some (up to 14), or many. */
+function byCount({ few, some, many }: Theme['cluster']['radius']): ExpressionSpecification {
+  return ['step', ['get', 'point_count'], few, 5, some, 15, many]
 }
 
 /**

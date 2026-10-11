@@ -2,7 +2,6 @@ import {
   LngLatBounds,
   Map as MapLibreMap,
   setWorkerUrl,
-  type ExpressionSpecification,
   type GeoJSONSource,
   type MapLayerMouseEvent,
   type StyleSpecification,
@@ -34,6 +33,9 @@ import {
   pinClusterLayers,
   pinSource,
   pinSourceSpec,
+  selectedPin,
+  selectedPinLayer,
+  selectedPinLayerSpec,
   smallPinLayer,
   smallPinLayers,
 } from './pinLayers'
@@ -64,7 +66,7 @@ export interface GlobeMapOptions {
   onCameraMove: (camera: Camera) => void
 }
 
-export const selectedPinLayer = 'pin-selected'
+export { selectedPinLayer } from './pinLayers'
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
 
@@ -202,23 +204,7 @@ export class GlobeMap {
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of pinClusterLayers(this.theme)) map.addLayer(layer, belowNames)
     for (const layer of smallPinLayers(this.theme)) map.addLayer(layer, belowNames)
-    // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
-    map.addLayer(
-      {
-        id: selectedPinLayer,
-        type: 'circle',
-        source: pinSource,
-        filter: selectedPin(this.selectedGameId),
-        maxzoom: cardZoom,
-        paint: {
-          'circle-radius': smallPinReach - 3,
-          'circle-color': 'transparent',
-          'circle-stroke-width': 3,
-          'circle-stroke-color': this.theme.selection,
-        },
-      },
-      belowNames,
-    )
+    map.addLayer(selectedPinLayerSpec(this.theme, this.selectedGameId), belowNames)
     // Trails and card clusters too, so names draw over them (ADR-0010).
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
     for (const layer of cardLayoutLayers(this.theme)) map.addLayer(layer, belowNames)
@@ -358,11 +344,6 @@ export class GlobeMap {
     const { lng, lat } = this.map.getCenter().wrap()
     this.onCameraMove({ longitude: lng, latitude: lat, zoom: this.map.getZoom() })
   }
-}
-
-/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
-function selectedPin(gameId: string | null): ExpressionSpecification {
-  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
 }
 
 /** A fully transparent image, for the pins' invisible footprints. */

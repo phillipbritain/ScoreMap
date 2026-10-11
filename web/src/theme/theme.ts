@@ -120,36 +120,46 @@ const spacing = stepOf('spacing')
 const radius = stepOf('radii')
 
 /**
- * The size of text on the globe as the map zooms: a text size at each of some zoom levels, by zoom
- * ({ "4": "s", "11": "xl" }), growing smoothly from one to the next. Read by the globe, not the
- * page's CSS, so not written to it.
+ * A size on the globe as the map zooms: a size at each of some zoom levels, by zoom ({ "4": "s",
+ * "11": "xl" } for text, { "2": 0.6, "8": 1.2 } for a line), changing smoothly from one to the next.
+ * Read by the globe, not the page's CSS, so not written to it.
  */
-const zoomedTextSize: Setting<Readonly<Record<string, number>>> = {
-  resolve(value, path, resolving) {
-    const stops = typeof value === 'object' && value !== null ? Object.entries(value) : []
-    if (stops.length === 0) {
-      resolving.problems.push(`${path} gives no zoom levels: it needs a text size at one zoom level at least`)
-      return undefined
-    }
-    const sizes: Record<string, number> = {}
-    for (const [zoom, step] of stops) {
-      if (!/^\d+(\.\d+)?$/.test(zoom)) {
-        resolving.problems.push(`${path}.${zoom} isn’t a zoom level`)
-        continue
+function byZoom(size: Setting<number>, what: string): Setting<Readonly<Record<string, number>>> {
+  return {
+    resolve(value, path, resolving) {
+      const stops = typeof value === 'object' && value !== null ? Object.entries(value) : []
+      if (stops.length === 0) {
+        resolving.problems.push(`${path} gives no zoom levels: it needs ${what} at one zoom level at least`)
+        return undefined
       }
-      const size = textSize.resolve(step, `${path}.${zoom}`, resolving)
-      if (size !== undefined) sizes[zoom] = size
-    }
-    return sizes
-  },
-  css: () => ({}),
+      const sizes: Record<string, number> = {}
+      for (const [zoom, stop] of stops) {
+        if (!/^\d+(\.\d+)?$/.test(zoom)) {
+          resolving.problems.push(`${path}.${zoom} isn’t a zoom level`)
+          continue
+        }
+        const resolved = size.resolve(stop, `${path}.${zoom}`, resolving)
+        if (resolved !== undefined) sizes[zoom] = resolved
+      }
+      return sizes
+    },
+    css: () => ({}),
+  }
 }
 
+/** A line on the globe: its colour, and its width in pixels as the map zooms. */
+const globeLine = { color, width: byZoom(pixels, 'a width') }
+
 /**
- * A kind of place's name on the globe: its colour, the outline around its letters, its font, and its
- * size as the map zooms.
+ * A kind of place's name on the globe: its colour, the outline around its letters (its colour, and
+ * how wide and blurred it is), its font, and its size as the map zooms.
  */
-const placeName = { color, outline: color, font: globeFont, size: zoomedTextSize }
+const placeName = {
+  color,
+  outline: { color, width: pixels, blur: pixels },
+  font: globeFont,
+  size: byZoom(textSize, 'a text size'),
+}
 
 /**
  * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
@@ -171,21 +181,44 @@ const settings = {
   radii: scale(scales.radii.steps),
   globe: {
     surface: color,
-    coastlines: color,
-    countryBorders: color,
-    stateLines: color,
-    disputedBorders: color,
+    coastlines: globeLine,
+    countryBorders: globeLine,
+    stateLines: globeLine,
+    disputedBorders: globeLine,
     halo: { inner: color, outer: color },
   },
   placeNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
   status: { live: statusLook, upcoming: statusLook, final: statusLook, disrupted: statusLook },
   /**
    * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
-   * colour, with a glow this much of its opacity.
+   * colour, with a glow this much of its opacity. A pin cluster's disc and glow are as wide as these
+   * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
+   * wide as a pin cluster of some games.
    */
-  cluster: { fill: color, outlineWidth: pixels, glowOpacity: opacity },
-  /** The selected game's small pin ring and score card outline. */
-  selection: color,
+  cluster: {
+    fill: color,
+    radius: { few: pixels, some: pixels, many: pixels },
+    glowRadius: { few: pixels, some: pixels, many: pixels },
+    outlineWidth: pixels,
+    glowOpacity: opacity,
+  },
+  /**
+   * A moved score card's trail back to its venue: a line this wide and opaque in its game's status
+   * colour, in a soft glow, to a dot ringed in that colour.
+   */
+  trail: {
+    width: pixels,
+    opacity,
+    glow: { width: pixels, blur: pixels, opacity },
+    venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
+  },
+  /** The selected game's small pin ring and score card outline: their colour and width. */
+  selection: { color, width: pixels },
+  /**
+   * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
+   * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
+   */
+  pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
   /** Behind the globe: the page itself, and the sky around the globe with its scattering of stars, white, cool and warm. */
   page: { background: color, sky: color, stars: { white: color, cool: color, warm: color } },
   /**

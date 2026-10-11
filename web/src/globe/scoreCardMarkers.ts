@@ -12,7 +12,7 @@ import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { selectedStacking, stacking } from './statusLook'
+import { selectedStacking, stacking, statusKey } from './statusLook'
 import { pinSize } from './zoomLevels'
 
 interface PlacedCard {
@@ -279,7 +279,7 @@ export class ScoreCardMarkers {
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
 function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean, animation?: PinAnimation): void {
-  element.className = `score-card score-card--${card.status.toLowerCase()}`
+  element.className = `score-card score-card--${statusKey(card.status)}`
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId

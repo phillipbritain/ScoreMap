@@ -13,7 +13,6 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
-import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
 import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
@@ -177,11 +176,6 @@ export class GlobeMap {
     // The venue straight up from where it is: panning by the lift would land short on the curved globe.
     const { width, height } = this.map.getContainer().getBoundingClientRect()
     this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
-  }
-
-  /** The "Card style" setting. */
-  setCardStyle(style: CardStyle): void {
-    this.cards.setStyle(style)
   }
 
   /** Removes the globe from the page, with everything it listens to. */

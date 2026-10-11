@@ -227,4 +227,47 @@ describe('the built-in theme', () => {
     expect(cluster).toEqual({ fill: 'rgba(6, 12, 24, 0.88)', outlineWidth: 1.5, glowOpacity: 0.45 })
     expect(selection).toBe('#2f80ed')
   })
+
+  it('colours the page, its score cards, panels, menus and controls in today’s colours', () => {
+    const { page, text, divider, hover, controls, card, panel, settingsMenu } = resolved(builtIn)
+    expect(page).toEqual({
+      background: '#0b1020',
+      sky: '#03050c',
+      stars: { white: '#ffffff', cool: 'rgb(200 220 255)', warm: 'rgb(255 240 220)' },
+    })
+    expect(text).toEqual({ main: '#ffffff', secondary: 'rgb(255 255 255 / 0.55)', accent: '#d8c9a4', link: '#8fc1ff' })
+    expect(divider).toBe('rgba(255, 255, 255, 0.1)')
+    expect(hover).toBe('rgba(255, 255, 255, 0.12)')
+    expect(controls).toEqual({
+      surface: 'rgba(11, 16, 32, 0.85)',
+      shadow: 'rgba(0, 0, 0, 0.3)',
+      on: { fill: '#ffffff', text: '#0b1020' },
+    })
+    expect(card).toEqual({
+      fill: 'rgb(6 12 24 / 0.85)',
+      text: '#d9f0ff',
+      disrupted: { fill: 'rgb(12 14 20 / 0.85)', text: '#8b93a3' },
+      shadow: 'rgb(0 0 0 / 0.45)',
+    })
+    expect(panel).toEqual({
+      surface: { top: 'rgb(18 28 56 / 0.98)', bottom: 'rgb(8 12 26 / 0.98)' },
+      scoreBlock: { top: '#1d2d55', bottom: '#121c38' },
+      score: { fill: '#ffffff', text: '#0b1020' },
+      unofficial: 'rgb(255 255 255 / 0.45)',
+      photo: 'rgb(42 62 112 / 0.5)',
+      credit: { fill: 'rgb(0 0 0 / 0.6)', text: 'rgb(255 255 255 / 0.75)' },
+      close: 'rgb(0 0 0 / 0.55)',
+      shadow: 'rgb(0 0 0 / 0.6)',
+    })
+    expect(settingsMenu).toEqual({
+      surface: '#0b1020',
+      shadow: 'rgba(0, 0, 0, 0.4)',
+      gearOutline: '#050b16',
+      tab: 'rgba(255, 255, 255, 0.6)',
+      count: 'rgba(255, 255, 255, 0.5)',
+      hint: 'rgba(255, 255, 255, 0.4)',
+      chip: { outline: 'rgba(216, 201, 164, 0.45)', badge: 'rgba(216, 201, 164, 0.15)' },
+      on: { fill: '#d8c9a4', text: '#0b1020' },
+    })
+  })
 })

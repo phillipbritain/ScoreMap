@@ -6,6 +6,7 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
 import { Globe } from './globe/Globe'
+import { CardReachSwitcher } from './globe/CardReachSwitcher.prototype'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
@@ -92,6 +93,7 @@ export default function App() {
         {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
             settings menu, so an open settings menu lies over it on a phone. */}
         {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
+        <CardReachSwitcher />
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
       </div>
     </div>

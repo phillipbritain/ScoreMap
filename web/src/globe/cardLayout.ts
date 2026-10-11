@@ -1,6 +1,7 @@
 import type { GameStatus } from '../games/game'
 import type { ScreenBox } from './gameCities'
 import { groupStatus, statusProminence } from './statusLook'
+import { currentReachVariant, reachStats } from './cardReach.prototype'
 
 /** One game's score card, as the map shows it: its venue on screen and the card's measured size. */
 export interface ScreenCard {
@@ -96,7 +97,11 @@ export function layOutCards(
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
-  const { shifts, cardClusters } = arrange(boxes, names)
+  // PROTOTYPE: the reach comes from the variant picked in the switcher.
+  const variant = currentReachVariant()
+  const reach = variant.reach(scene.width, scene.height)
+  const screen = variant.onScreen ? { width: scene.width, height: scene.height } : undefined
+  const { shifts, cardClusters } = arrange(boxes, names, reach, screen)
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
@@ -112,6 +117,13 @@ export function layOutCards(
       trail: moved ? trail(box, shift) : null,
     })
   }
+  reachStats.reach = Math.round(reach)
+  reachStats.cards = boxes.length
+  reachStats.clustered = cardClusters.reduce((sum, cluster) => sum + cluster.gameIds.length, 0)
+  reachStats.clusters = cardClusters.length
+  reachStats.longestTrail = Math.round(
+    Math.max(0, ...[...placements.values()].map(({ trail }) => (trail ? Math.hypot(trail.x2 - trail.x1, trail.y2 - trail.y1) : 0))),
+  )
   return {
     cards: placements,
     cardClusters: cardClusters.map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
@@ -170,17 +182,30 @@ interface Arrangement {
 const gap = 4
 // Half the size of the spot around each venue that cards keep clear of: its trail's dot and a margin.
 const venueRadius = 6
-// Moves tried for a card that doesn't fit where it would sit: every step of this many pixels up to
-// the furthest a card is moved, nearest first.
-const step = 4
-const furthest = 160
-const moves: ScreenOffset[] = []
-for (let dx = -furthest; dx <= furthest; dx += step) {
-  for (let dy = -furthest; dy <= furthest; dy += step) {
-    if (Math.hypot(dx, dy) <= furthest) moves.push({ dx, dy })
+// Moves tried for a card that doesn't fit where it would sit, nearest first: every 4 pixels out to
+// 160, then coarser further out so a long reach stays quick (PROTOTYPE).
+const movesByReach = new Map<number, ScreenOffset[]>()
+function movesWithin(reach: number): ScreenOffset[] {
+  const key = Math.ceil(reach / 50) * 50
+  let moves = movesByReach.get(key)
+  if (moves) return moves
+  moves = []
+  for (const [step, from, to] of [
+    [4, 0, 160],
+    [8, 160, 400],
+    [16, 400, key],
+  ]) {
+    for (let dx = -to; dx <= to; dx += step) {
+      for (let dy = -to; dy <= to; dy += step) {
+        const distance = Math.hypot(dx, dy)
+        if ((distance > from || from === 0) && distance <= Math.min(to, key)) moves.push({ dx, dy })
+      }
+    }
   }
+  moves.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy) || a.dy - b.dy || a.dx - b.dx)
+  movesByReach.set(key, moves)
+  return moves
 }
-moves.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy) || a.dy - b.dy || a.dx - b.dx)
 // Games with no room join a count within this distance of their venue, rather than starting their own.
 const cardClusterRadius = 40
 
@@ -195,7 +220,13 @@ const cardClusterRadius = 40
  * where it was straight after where it would sit, and keeps it while it fits, so it moves only when
  * that spot has no room.
  */
-function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrangement {
+function arrange(
+  cards: readonly CardBox[],
+  names: readonly ScreenBox[],
+  furthest: number,
+  screen?: { width: number; height: number },
+): Arrangement {
+  const moves = movesWithin(furthest).filter((move) => Math.hypot(move.dx, move.dy) <= furthest)
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
   // From each moved card's centre to its venue: the part outside the card is its trail.
@@ -223,6 +254,12 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[]): Arrang
     const fits = ({ dx, dy }: ScreenOffset) => {
       const x = card.x + dx
       const y = card.y + dy
+      if (
+        screen &&
+        (dx !== 0 || dy !== 0) &&
+        (x - card.width / 2 < 0 || x + card.width / 2 > screen.width || y - card.height / 2 < 0 || y + card.height / 2 > screen.height)
+      )
+        return false
       const clearOf = (otherX: number, otherY: number, halfWidth: number, halfHeight: number) =>
         Math.abs(x - otherX) >= card.width / 2 + halfWidth || Math.abs(y - otherY) >= card.height / 2 + halfHeight
       return (

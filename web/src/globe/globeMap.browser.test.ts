@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
+import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
@@ -11,10 +12,9 @@ import { GlobeMap, selectedPinLayer } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { pinClusterLayer, smallPinLayer } from './pinLayers'
-import { applyStatusLook } from './statusLook'
 import { cardZoom, maxZoom } from './zoomLevels'
 
-applyStatusLook(document.documentElement)
+applyTheme(document.documentElement, builtInTheme)
 
 /**
  * A plain style with nothing to fetch: no tiles, no place names, and no glyphs, so the counts of pin

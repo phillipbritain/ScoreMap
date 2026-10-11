@@ -2,9 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { applyStatusLook } from './globe/statusLook'
+import { applyTheme } from './theme/applyTheme'
+import { builtInTheme } from './theme/builtInTheme'
 
-applyStatusLook(document.documentElement)
+applyTheme(document.documentElement, builtInTheme)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

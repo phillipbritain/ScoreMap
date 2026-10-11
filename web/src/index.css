@@ -18,11 +18,6 @@ body {
   font-size: var(--text-sizes-l);
 }
 
-/* Buttons write in the page's font, not the browser's own. */
-button {
-  font-family: inherit;
-}
-
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
 .app {
   display: flex;
@@ -285,7 +280,9 @@ button {
   border-radius: 50%;
   background: var(--panel-close);
   color: var(--text-main);
+  font-family: var(--fonts-button-family);
   font-size: var(--text-sizes-l);
+  font-weight: var(--fonts-button-weight);
   line-height: 1;
   cursor: pointer;
 }
@@ -681,9 +678,9 @@ button {
   border-bottom: 2px solid transparent;
   background: none;
   color: var(--settings-menu-tab);
-  font-family: var(--fonts-control-family);
+  font-family: var(--fonts-tab-family);
   font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-control-weight);
+  font-weight: var(--fonts-tab-weight);
   cursor: pointer;
 }
 
@@ -708,7 +705,9 @@ button {
   border-radius: var(--corners-control);
   background: transparent;
   color: var(--text-accent);
+  font-family: var(--fonts-button-family);
   font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-button-weight);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -787,17 +786,17 @@ button {
   border: none;
   background: none;
   color: var(--text-main);
-  font-family: var(--fonts-control-family);
+  font-family: var(--fonts-tab-family);
   font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-control-weight);
+  font-weight: var(--fonts-tab-weight);
   cursor: pointer;
 }
 
 /* How many of the sport's leagues are on, such as 2/2. */
 .settings-sport__count {
   color: var(--settings-menu-count);
-  font-family: var(--fonts-body-family);
-  font-weight: var(--fonts-body-weight);
+  font-family: var(--fonts-button-family);
+  font-weight: var(--fonts-button-weight);
 }
 
 /* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
@@ -826,8 +825,8 @@ button {
 .scenario-pill summary {
   padding: var(--spacing-m) var(--spacing-l);
   cursor: pointer;
-  font-family: var(--fonts-control-family);
-  font-weight: var(--fonts-control-weight);
+  font-family: var(--fonts-scenario-pill-family);
+  font-weight: var(--fonts-scenario-pill-weight);
   list-style: none;
   white-space: nowrap;
   overflow: hidden;
@@ -873,8 +872,8 @@ button {
 }
 
 .scenario-pill button[aria-current='true'] {
-  font-family: var(--fonts-control-family);
-  font-weight: var(--fonts-control-weight);
+  font-family: var(--fonts-scenario-pill-family);
+  font-weight: var(--fonts-scenario-pill-weight);
 }
 
 .scenario-pill button[aria-current='true']::before {

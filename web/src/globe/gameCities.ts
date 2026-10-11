@@ -63,19 +63,17 @@ export function gameCities(venues: readonly GlobePoint[], cities: readonly City[
   return [...found.values()]
 }
 
+/** A line's width in pixels, written in a CSS font (see CityNameLook) whose size is `size` pixels. */
+export type MeasureText = (text: string, font: string, size: number) => number
+
 /**
  * Where a game city's name is written: centred below its dot at `dot` (see placeNames' game city
- * names), wrapped as the map wraps it. `measure` gives a line's width in pixels in the name's font.
+ * names), wrapped as the map wraps it. `measure` gives a line's width in the name's font.
  * Its outline and a margin are included, since the box is for keeping cards clear of the name.
  */
-export function cityNameBox(
-  city: City,
-  dot: { x: number; y: number },
-  look: CityNameLook,
-  measure: (text: string, font: string) => number,
-): ScreenBox {
+export function cityNameBox(city: City, dot: { x: number; y: number }, look: CityNameLook, measure: MeasureText): ScreenBox {
   const lines = city.name.split('\n').flatMap((line) => wrap(line, look, measure))
-  const width = Math.max(...lines.map((line) => measure(line, look.font))) + 2 * nameMargin
+  const width = Math.max(...lines.map((line) => measure(line, look.font, look.size))) + 2 * nameMargin
   const height = lines.length * lineHeight * look.size + 2 * nameMargin
   return { x: dot.x, y: dot.y + look.offset - nameMargin + height / 2, width, height }
 }
@@ -86,12 +84,12 @@ const lineHeight = 1.2
 const nameMargin = 4
 
 /** Splits a line at spaces where it's wider than the map lets a name run (an approximation of MapLibre's wrapping). */
-function wrap(line: string, look: CityNameLook, measure: (text: string, font: string) => number): string[] {
+function wrap(line: string, look: CityNameLook, measure: MeasureText): string[] {
   const lines: string[] = []
   let current = ''
   for (const word of line.split(' ')) {
     const longer = current ? `${current} ${word}` : word
-    if (current && measure(longer, look.font) > look.maxWidth) {
+    if (current && measure(longer, look.font, look.size) > look.maxWidth) {
       lines.push(current)
       current = word
     } else {

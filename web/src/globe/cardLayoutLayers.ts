@@ -121,7 +121,7 @@ export function cardLayoutLayers(
       filter: kindIs('venue'),
       paint: {
         'circle-radius': 5,
-        'circle-color': 'rgba(0, 0, 0, 0)',
+        'circle-color': 'transparent',
         'circle-stroke-width': 1,
         'circle-stroke-color': statusColor,
       },

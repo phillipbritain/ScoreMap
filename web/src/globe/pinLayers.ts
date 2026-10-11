@@ -7,14 +7,14 @@ import type {
 import type { Theme } from '../theme/theme'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
-import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
+import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
 
 export const pinSource = 'pins'
 export const pinClusterLayer = 'pin-clusters'
 export const smallPinLayer = 'pins'
 
-export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number, theme: Theme): GeoJSONSourceSpecification {
-  const { size, clusterRadius } = pinLayout(zoom, smallPinWidth(theme))
+/** The pins' source, clustering small pins as the pin layout at the zoom it's added at says. */
+export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, clusterRadius }: PinLayout): GeoJSONSourceSpecification {
   return {
     type: 'geojson',
     data,

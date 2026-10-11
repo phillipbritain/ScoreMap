@@ -88,11 +88,14 @@ function numberFrom(min: number, max: number, what: string): Setting<number> {
   }
 }
 
+/** A number of pixels as CSS writes it ("12px"). */
+const inPixels = (value: number) => `${value}px`
+
 /** A size in pixels, written to CSS as one. */
-const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: (value) => `${value}px` }
+const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: inPixels }
 const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
 /** How far something is moved, in pixels, either way; written to CSS in pixels. */
-const offset: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of pixels'), css: (value) => `${value}px` }
+const offset: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of pixels'), css: inPixels }
 
 interface Shadow {
   x: number
@@ -111,7 +114,7 @@ const shadow: Setting<Shadow> = {
     const parts = { x: offset, y: offset, blur: pixels, color }
     return resolveAll(parts, value, path, resolving) as Shadow
   },
-  css: ({ x, y, blur, color }) => `${x}px ${y}px ${blur}px ${color}`,
+  css: ({ x, y, blur, color }) => `${inPixels(x)} ${inPixels(y)} ${inPixels(blur)} ${color}`,
 }
 
 /** On or off; written to CSS as 1 or 0, to multiply by. */
@@ -168,7 +171,7 @@ function stepOf(name: ScaleName): Setting<number> {
       problems.push(`${path} is ${JSON.stringify(value)}, not a step of the ${what} scale (${steps.join(', ')})`)
       return undefined
     },
-    css: (value) => `${value}px`,
+    css: inPixels,
   }
 }
 

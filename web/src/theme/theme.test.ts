@@ -146,6 +146,23 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('rejects a size that isn’t a number of pixels, or an opacity that isn’t from 0 to 1', () => {
+    const json = themeJson()
+    json.settings.status.live.glow.radius = '15px'
+    json.settings.status.final.core.ring = -1
+    json.settings.status.upcoming.glow.opacity = 1.5
+    json.settings.cluster.glowOpacity = 'half'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'settings.status.live.glow.radius is "15px", not a number of pixels',
+        'settings.status.upcoming.glow.opacity is 1.5, not an opacity from 0 to 1',
+        'settings.status.final.core.ring is -1, not a number of pixels',
+        'settings.cluster.glowOpacity is "half", not an opacity from 0 to 1',
+      ],
+    })
+  })
+
   it('rejects a theme missing a setting', () => {
     const json = themeJson()
     delete json.settings.globe.coastlines
@@ -177,5 +194,37 @@ describe('the built-in theme', () => {
     expect(look('capital')).toEqual({ color: '#fff4dc', outline: '#050b16', font: 'Open Sans Bold' })
     expect(look('state')).toEqual({ color: '#9a8a62', outline: '#050b16', font: 'Open Sans Regular' })
     expect(look('country')).toEqual({ color: '#d8c9a4', outline: '#050b16', font: 'Open Sans Bold' })
+  })
+
+  it('draws pins, clusters and the selection in today’s look', () => {
+    const { status, cluster, selection } = resolved(builtIn)
+    expect(status).toEqual({
+      live: {
+        color: '#e4572e',
+        core: { color: '#ffd9c8', radius: 3.5, opacity: 1, ring: 1.5 },
+        glow: { radius: 15, opacity: 0.7 },
+        clusterOpacity: 1,
+      },
+      upcoming: {
+        color: '#f2a541',
+        core: { color: '#f2a541', radius: 3, opacity: 0.8, ring: 0 },
+        glow: { radius: 10, opacity: 0.45 },
+        clusterOpacity: 0.85,
+      },
+      final: {
+        color: '#8a8f98',
+        core: { color: '#8a8f98', radius: 2.5, opacity: 0.55, ring: 0 },
+        glow: { radius: 7, opacity: 0.25 },
+        clusterOpacity: 0.6,
+      },
+      disrupted: {
+        color: '#c3c6cc',
+        core: { color: '#c3c6cc', radius: 2.5, opacity: 0.6, ring: 0 },
+        glow: { radius: 7, opacity: 0.25 },
+        clusterOpacity: 0.6,
+      },
+    })
+    expect(cluster).toEqual({ fill: 'rgba(6, 12, 24, 0.88)', outlineWidth: 1.5, glowOpacity: 0.45 })
+    expect(selection).toBe('#2f80ed')
   })
 })

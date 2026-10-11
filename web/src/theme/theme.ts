@@ -36,8 +36,36 @@ const globeFont: Setting<GlobeFont> = {
   },
 }
 
+/** A number in a range, or a problem naming what it should be. */
+function numberFrom(min: number, max: number, what: string): Setting<number> {
+  return {
+    resolve(value, path, { problems }) {
+      if (typeof value === 'number' && value >= min && value <= max) return value
+      problems.push(`${path} is ${JSON.stringify(value)}, not ${what}`)
+      return undefined
+    },
+  }
+}
+
+/** A size in pixels. */
+const pixels = numberFrom(0, Infinity, 'a number of pixels')
+const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
+
 /** A kind of place's name on the globe: its colour, the outline around its letters, and its font. */
 const placeName = { color, outline: color, font: globeFont }
+
+/**
+ * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
+ * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
+ * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
+ * opacity at the middle), and how opaque a cluster showing as this status is.
+ */
+const statusLook = {
+  color,
+  core: { color, radius: pixels, opacity, ring: pixels },
+  glow: { radius: pixels, opacity },
+  clusterOpacity: opacity,
+}
 
 /** Every setting a theme has, by where it sits in the theme's settings. */
 const settings = {
@@ -50,6 +78,14 @@ const settings = {
     halo: { inner: color, outer: color },
   },
   placeNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
+  status: { live: statusLook, upcoming: statusLook, final: statusLook, disrupted: statusLook },
+  /**
+   * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
+   * colour, with a glow this much of its opacity.
+   */
+  cluster: { fill: color, outlineWidth: pixels, glowOpacity: opacity },
+  /** The selected game's small pin ring and score card outline. */
+  selection: color,
 }
 
 type Resolved<S> = S extends Setting<infer T> ? T : { readonly [K in keyof S]: Resolved<S[K]> }

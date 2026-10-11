@@ -113,7 +113,8 @@
       "fill": "navy.700",
       "text": "offWhite.500",
       "disrupted": { "fill": "navy.700", "text": "offWhite.700" },
-      "shadow": "navy.900"
+      "shadow": "navy.900",
+      "headerTint": 0.28
     },
     "panel": {
       "surface": { "top": "navy.800", "bottom": "navy.800" },

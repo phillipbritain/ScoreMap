@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react'
-import { cardStyles } from '../globe/cardStyle'
 import {
   isLeagueOn,
   leaguesBySport,
@@ -32,8 +31,7 @@ const displaySwitches = [
 /**
  * The settings menu, opened from a gear icon, in two tabs. Leagues, first as the most used: an "All
  * leagues" chip to switch every league at once, then leagues grouped under their sport, each a chip
- * to switch on or off. Display: "Live only" and "Show Disrupted games" as chips, then a chip for each
- * card style.
+ * to switch on or off. Display: "Live only" and "Show Disrupted games" as chips.
  */
 export function SettingsMenu({ leagues, settings, onChange }: SettingsMenuProps) {
   const [tab, setTab] = useState<Tab>('leagues')
@@ -117,27 +115,13 @@ export function SettingsMenu({ leagues, settings, onChange }: SettingsMenuProps)
               })}
             </>
           ) : (
-            <>
-              <div className="settings-chips">
-                {displaySwitches.map(({ key, name }) => (
-                  <Chip key={key} on={settings[key]} onClick={() => onChange({ ...settings, [key]: !settings[key] })}>
-                    {name}
-                  </Chip>
-                ))}
-              </div>
-              <h3 className="settings-heading">Card style</h3>
-              <div className="settings-chips">
-                {cardStyles.map((style) => (
-                  <Chip
-                    key={style.key}
-                    on={settings.cardStyle === style.key}
-                    onClick={() => onChange({ ...settings, cardStyle: style.key })}
-                  >
-                    {style.name}
-                  </Chip>
-                ))}
-              </div>
-            </>
+            <div className="settings-chips">
+              {displaySwitches.map(({ key, name }) => (
+                <Chip key={key} on={settings[key]} onClick={() => onChange({ ...settings, [key]: !settings[key] })}>
+                  {name}
+                </Chip>
+              ))}
+            </div>
           )}
         </div>
       </div>

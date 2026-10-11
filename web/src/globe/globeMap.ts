@@ -19,8 +19,14 @@ import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
 import {
+  cardClusterLayer,
   cardFootprint,
   cardFootprintLayerSpec,
+  cardLayoutLayerSpecs,
+  cardLayoutSource,
+  cardLayoutSourceSpec,
+} from './cardLayoutLayers'
+import {
   pinFootprint,
   pinFootprintLayerSpec,
   pinClusterLayer,
@@ -101,12 +107,7 @@ export class GlobeMap {
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map)
     this.names = addPlaceNames(map)
-    this.cards = new ScoreCardMarkers(
-      map,
-      this.names,
-      (gameId) => this.onSelect(gameId),
-      (gameIds) => this.zoomToCardCluster(gameIds),
-    )
+    this.cards = new ScoreCardMarkers(map, this.names, (gameId) => this.onSelect(gameId))
     this.clustering = pinLayout(map.getZoom())
 
     map.on('style.load', this.addPins)
@@ -115,7 +116,8 @@ export class GlobeMap {
     map.on('render', this.syncCards)
     map.on('click', pinClusterLayer, this.zoomToPinCluster)
     map.on('click', smallPinLayer, this.selectPin)
-    for (const layer of [pinClusterLayer, smallPinLayer]) {
+    map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
+    for (const layer of [pinClusterLayer, smallPinLayer, cardClusterLayer]) {
       map.on('mouseenter', layer, this.pointAt)
       map.on('mouseleave', layer, this.stopPointing)
     }
@@ -216,6 +218,9 @@ export class GlobeMap {
       },
       belowNames,
     )
+    // Trails and card clusters too, so names draw over them (ADR-0010).
+    map.addSource(cardLayoutSource, cardLayoutSourceSpec)
+    for (const layer of cardLayoutLayerSpecs) map.addLayer(layer, belowNames)
     // On top, so names are placed around the pins' footprints rather than under the pins.
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
     addBlankImage(map, pinFootprint.image, pinFootprint.size, pinFootprint.size)
@@ -260,6 +265,12 @@ export class GlobeMap {
     const zoom = Math.min(await source.getClusterExpansionZoom(cluster.properties.cluster_id), cardZoom)
     if (this.destroyed) return
     this.map.easeTo({ center: (cluster.geometry as Point).coordinates as [number, number], zoom })
+  }
+
+  private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
+    const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
+    const gameIds = this.cards.cardClusterGames().find((cluster) => cluster[0] === firstGameId)
+    if (gameIds) this.zoomToCardCluster(gameIds)
   }
 
   /**

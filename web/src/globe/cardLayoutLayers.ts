@@ -7,7 +7,6 @@ import type {
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
-import { clusterCountFont } from './placeNames'
 import { byStatus } from './statusLook'
 
 /**
@@ -122,7 +121,7 @@ export function cardLayoutLayers(
       filter: kindIs('venue'),
       paint: {
         'circle-radius': 5,
-        'circle-color': 'rgba(0, 0, 0, 0)',
+        'circle-color': 'transparent',
         'circle-stroke-width': 1,
         'circle-stroke-color': statusColor,
       },
@@ -168,8 +167,8 @@ export function cardLayoutLayers(
       filter: kindIs('cardCluster'),
       layout: {
         'text-field': ['to-string', ['get', 'count']],
-        'text-font': [clusterCountFont],
-        'text-size': 11,
+        'text-font': [theme.fonts.clusterCount.font.name],
+        'text-size': theme.fonts.clusterCount.size,
         'text-allow-overlap': true,
       },
       paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },

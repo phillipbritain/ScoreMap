@@ -32,7 +32,7 @@ describe('applyTheme', () => {
     )
     expect(properties.get('--globe-surface')).toBe('#123456')
     expect(properties.get('--status-live-color')).toBe('#ff0000')
-    expect(properties.get('--status-upcoming-core-radius')).toBe('4.5')
+    expect(properties.get('--status-upcoming-core-radius')).toBe('4.5px')
     expect(properties.get('--cluster-glow-opacity')).toBe('0.3')
     expect(properties.get('--selection')).toBe('#00ff00')
   })
@@ -49,6 +49,31 @@ describe('applyTheme', () => {
     expect(properties.get('--place-names-state-font-style')).toBe('italic')
   })
 
+  it('writes the scales’ steps, and the sizes, corners and cut corner that name them, in pixels', () => {
+    const properties = propertiesOf(
+      themeWith((settings) => {
+        settings.textSizes.m = 14
+        settings.spacing.l = 10
+        settings.radii.s = 5
+        settings.corners.menuItem = 's'
+        settings.cutCorner = { on: false, size: 'l' }
+      }),
+    )
+    expect(properties.get('--text-sizes-m')).toBe('14px')
+    expect(properties.get('--spacing-l')).toBe('10px')
+    expect(properties.get('--spacing-2xs')).toBe('2px')
+    expect(properties.get('--radii-s')).toBe('5px')
+    expect(properties.get('--corners-menu-item')).toBe('5px')
+    expect(properties.get('--cut-corner-size')).toBe('10px')
+    expect(properties.get('--cut-corner-on')).toBe('0')
+  })
+
+  it('writes a page font as its CSS family and weight', () => {
+    const properties = propertiesOf(themeWith((settings) => (settings.fonts.card.score = { family: 'Georgia, serif', weight: 500 })))
+    expect(properties.get('--fonts-card-score-family')).toBe('Georgia, serif')
+    expect(properties.get('--fonts-card-score-weight')).toBe('500')
+  })
+
   it('writes every setting', () => {
     const properties = propertiesOf(themeWith(() => {}))
     // The globe: a surface, four kinds of line and two halo colours. Four kinds of place name, each
@@ -56,7 +81,11 @@ describe('applyTheme', () => {
     // a colour, a core of four, a glow of two and a cluster opacity. A cluster's three, and the selection.
     // The page's background, sky and three stars; four kinds of text, a divider and hover; the
     // controls' surface, shadow and on (fill and text). A score card's five, the game panel's eleven
-    // and the settings menu's eleven colours.
-    expect(properties.size).toBe(7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11)
+    // and the settings menu's eleven colours. Five text sizes, eight spacing steps and five radii;
+    // eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a
+    // size); five corners and the cut corner's two. Place names' sizes are for the globe, not the page.
+    expect(properties.size).toBe(
+      7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11 + (5 + 8 + 5) + (11 * 2 + 5) + (5 + 2),
+    )
   })
 })

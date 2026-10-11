@@ -6,6 +6,7 @@ A globe showing live sports games as pins at their venues, with scores that upda
 
 - `server/` — C# ASP.NET Core server (`ScoreMap.slnx`)
   - `src/ScoreMap.Server/` — the server: game feed provider (`GameFeed/`), game board (`Games/`), poller (`Live/`), SignalR hub (`Hubs/`), venue locator and photos (`Venues/`), watch and stream links (`WatchLinks/`), scenarios for local runs (`Scenarios/`)
+  - `src/ScoreMap.AppHost/` and `src/ScoreMap.ServiceDefaults/` — Aspire, for running locally (ADR-0013)
   - `tests/ScoreMap.Server.Tests/` — server seam tests: the real server with fake provider and clock
 - `web/` — React + TypeScript browser app built with Vite, MapLibre globe, Vitest unit tests
 
@@ -13,25 +14,33 @@ A globe showing live sports games as pins at their venues, with scores that upda
 
 - .NET SDK 10
 - Node.js 24
+- The Aspire CLI, to run locally
 
 ## Run locally
 
-In two terminals, from the repo root:
+ScoreMap runs locally through .NET Aspire (ADR-0013). Once per machine, install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) with its install script, then (in a new terminal, for the PATH) trust the development certificate:
 
-```sh
-dotnet run --project server/src/ScoreMap.Server --launch-profile http   # server on http://localhost:5147
+```powershell
+irm https://aspire.dev/install.ps1 | iex   # Windows PowerShell; elsewhere: curl -sSL https://aspire.dev/install.sh | bash
+aspire certs trust
 ```
 
+The install script puts `aspire.exe` on the PATH, which every shell finds. `dotnet tool install -g Aspire.Cli` works too, but installs it as `aspire.cmd`, which Git Bash can't run as `aspire`.
+
+Then, from the repo root:
+
 ```sh
-npm --prefix web install   # first time only
-npm --prefix web run dev   # browser app on http://localhost:5173
+aspire start      # the server and the browser app (Vite), in the background
+aspire wait web   # until the browser app answers
+aspire describe   # the URLs of each; open the web one
+aspire stop       # when you're done
 ```
 
-Open http://localhost:5173. The Vite dev server proxies `/hubs` (SignalR) and `/api` to the server.
+`aspire start` also prints the Aspire dashboard's URL, which shows both with their logs. The Vite dev server proxies `/hubs` (SignalR) and `/api` to the server, at the URL Aspire passes it.
 
-Or, on Windows, run both in the background with `./scripts/dev.ps1 start`, and `./scripts/dev.ps1 stop` when you're done (`status` says what's running). Logs go to `%TEMP%\scoremap\`.
+Each clone or git worktree runs once, and several can run side by side: start the first with `aspire start` and any other with `aspire start --isolated`, which gives it random ports. `aspire ps` lists every run on the machine and `aspire stop --all` stops them all. Starting a clone again stops its run first.
 
-Run locally, the app shows a **scenario** (made-up games at real venues, ADR-0009) rather than real games: `worldwide` by default, set by `Scenario` in `appsettings.Development.json` or `./scripts/dev.ps1 start -Scenario <name>` (`real` for real ESPN games). A scenario's games run on a scenario clock at a speed: Paused, Normal (real time), Fast (2×) or Faster (8×), set by `ScenarioSpeed` or `-Speed <name>`. At the bottom left of the globe, a pill switches the scenario and media keys (Pause, Play, Fast-forward) set the speed while it runs, for every open tab, with the scenario clock beside them (both hidden where the speed changes nothing: real games, and scenarios whose games stand still); Shift+S hides them. Scenario files are in `server/src/ScoreMap.Server/Scenarios/Files/`.
+Run locally, the app shows a **scenario** (made-up games at real venues, ADR-0009) rather than real games: `worldwide` at the start, set by `Scenario` in `appsettings.Development.json`. A scenario's games run on a scenario clock at a speed: Paused, Normal (real time), Fast (2×) or Faster (8×), starting at `ScenarioSpeed`. At the bottom left of the globe, a pill switches the scenario (or to real ESPN games) and media keys (Pause, Play, Fast-forward) set the speed while it runs, for every open tab, with the scenario clock beside them (both hidden where the speed changes nothing: real games, and scenarios whose games stand still); Shift+S hides them. `PUT /api/scenarios/running` (`{"name": "crowded"}`) and `PUT /api/scenarios/speed` (`{"speed": "Faster"}`) do the same from a script. Scenario files are in `server/src/ScoreMap.Server/Scenarios/Files/`.
 
 The server reads each league's games from ESPN's scoreboards for yesterday and today (and, within 3 hours of midnight, tomorrow), in US Eastern days as ESPN keeps them, and looks each venue up once through OpenStreetMap Nominatim, saving the results to `server/src/ScoreMap.Server/data/venue-locations.json` (git-ignored; delete it to look venues up again). It also finds each venue's photo once, for the game panel: ESPN's own, or else the venue's Wikidata image from Wikimedia Commons with its author and licence. These are saved to `server/src/ScoreMap.Server/data/venue-photos.json` (also git-ignored; delete it to search again).
 

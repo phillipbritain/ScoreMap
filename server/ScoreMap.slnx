@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/ScoreMap.AppHost/ScoreMap.AppHost.csproj" />
     <Project Path="src/ScoreMap.Server/ScoreMap.Server.csproj" />
+    <Project Path="src/ScoreMap.ServiceDefaults/ScoreMap.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ScoreMap.Server.Tests/ScoreMap.Server.Tests.csproj" />

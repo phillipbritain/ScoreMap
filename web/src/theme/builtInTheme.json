@@ -20,6 +20,34 @@
       "capital": { "color": "cream.400", "outline": "navy.900", "font": "Open Sans Bold" },
       "state": { "color": "#9a8a62", "outline": "navy.900", "font": "Open Sans Regular" },
       "country": { "color": "cream.600", "outline": "navy.900", "font": "Open Sans Bold" }
-    }
+    },
+    "status": {
+      "live": {
+        "color": "#e4572e",
+        "core": { "color": "#ffd9c8", "radius": 3.5, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 15, "opacity": 0.7 },
+        "clusterOpacity": 1
+      },
+      "upcoming": {
+        "color": "#f2a541",
+        "core": { "color": "#f2a541", "radius": 3, "opacity": 0.8, "ring": 0 },
+        "glow": { "radius": 10, "opacity": 0.45 },
+        "clusterOpacity": 0.85
+      },
+      "final": {
+        "color": "#8a8f98",
+        "core": { "color": "#8a8f98", "radius": 2.5, "opacity": 0.55, "ring": 0 },
+        "glow": { "radius": 7, "opacity": 0.25 },
+        "clusterOpacity": 0.6
+      },
+      "disrupted": {
+        "color": "#c3c6cc",
+        "core": { "color": "#c3c6cc", "radius": 2.5, "opacity": 0.6, "ring": 0 },
+        "glow": { "radius": 7, "opacity": 0.25 },
+        "clusterOpacity": 0.6
+      }
+    },
+    "cluster": { "fill": "rgba(6, 12, 24, 0.88)", "outlineWidth": 1.5, "glowOpacity": 0.45 },
+    "selection": "#2f80ed"
   }
 }

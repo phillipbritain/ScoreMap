@@ -4,4 +4,4 @@ The globe's place names are written in Open Sans, so its fonts come from the fre
 
 ## Themes
 
-Place names' colours, outlines and fonts now come from the theme (ADR-0011), per kind of place; the built-in theme keeps warm night's. A theme's globe text must use one of fonts.openmaptiles.org's fonts, listed in `globeFonts`: for a font it lacks, the server answers with a web page rather than an error, and the text falls back to a browser font, so checking a theme rejects any other font for text on the globe.
+Place names' colours, outlines and fonts now come from the theme (ADR-0011), per kind of place. The built-in dark theme's are no longer warm night's cream and gold but pale navy steps on a darker navy outline, so they sit quietly on its navy globe; they're still in Open Sans. A theme's globe text must use one of fonts.openmaptiles.org's fonts, listed in `globeFonts`: for a font it lacks, the server answers with a web page rather than an error, and the text falls back to a browser font, so checking a theme rejects any other font for text on the globe.

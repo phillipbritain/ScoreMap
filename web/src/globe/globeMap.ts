@@ -14,6 +14,7 @@ import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import { addGlobeGlow } from './globeGlow'
+import { globeStyle } from './globeStyle'
 import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
@@ -49,14 +50,17 @@ import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout, pinSize, type Pi
 setWorkerUrl(workerUrl)
 
 /**
- * The map style the globe draws its pins over: a style to load from a URL and make over as it
- * loads (the app's, see globeStyle), or a finished style (the tests' plain one).
+ * The map style the globe draws its pins over: a base style to load from a URL and make over in the
+ * globe's theme as it loads (the app's, see globeStyle), or a finished style (the tests' plain one).
  */
-export type GlobeMapStyle = StyleSpecification | { url: string; transform: (base: StyleSpecification) => StyleSpecification }
+export type GlobeMapStyle = StyleSpecification | { url: string }
 
 export interface GlobeMapOptions {
   style: GlobeMapStyle
-  /** The look of what the globe draws beyond its map style: the halo, place names, pins and score cards. */
+  /**
+   * The look of the globe: its map style (when made over from a base style), the halo, place
+   * names, pins and score cards.
+   */
   theme: Theme
   /** Where the globe opens. */
   startCamera: Camera
@@ -110,7 +114,7 @@ export class GlobeMap {
     this.map = map
     this.theme = theme
     traceLayouts(map)
-    if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })
+    if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map, theme)
     this.names = addPlaceNames(map, theme)

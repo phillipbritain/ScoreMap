@@ -8,10 +8,12 @@ import App from './App.tsx'
 import { applyTheme } from './theme/applyTheme'
 import { builtInTheme } from './theme/builtInTheme'
 
-applyTheme(document.documentElement, builtInTheme)
+// The one place the theme is chosen: written to the page for its CSS, and handed to the globe.
+const theme = builtInTheme
+applyTheme(document.documentElement, theme)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <App theme={theme} />
   </StrictMode>,
 )

@@ -436,7 +436,7 @@ body {
   margin-bottom: var(--spacing-2xs);
   padding: var(--spacing-2xs) var(--spacing-s);
   border-bottom: var(--strokes-thin) solid var(--status-color);
-  background: color-mix(in srgb, var(--status-color) 28%, transparent);
+  background: color-mix(in srgb, var(--status-color) calc(var(--card-header-tint) * 100%), transparent);
   font-size: var(--text-sizes-xs);
   letter-spacing: 0.06em;
 }

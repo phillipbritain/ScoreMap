@@ -300,10 +300,11 @@ const settings = {
    */
   controls: { surface: color, shadow, on: { fill: color, text: color } },
   /**
-   * A score card: its fill and text, a Disrupted game's, and the drop shadow a starting game's card
-   * settles with. Its outline, header, light and glow are its status's colour.
+   * A score card: its fill and text, a Disrupted game's, the drop shadow a starting game's card
+   * settles with, and how strongly its header is tinted with its status's colour (0 is not at all, 1
+   * is the colour itself). Its outline, header line, light and glow are its status's colour.
    */
-  card: { fill: color, text: color, disrupted: { fill: color, text: color }, shadow: color },
+  card: { fill: color, text: color, disrupted: { fill: color, text: color }, shadow: color, headerTint: opacity },
   /**
    * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
    * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close

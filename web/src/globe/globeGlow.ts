@@ -12,7 +12,7 @@ export function addGlobeGlow(map: MapLibreMap, { globe }: Theme): () => void {
   const container = map.getContainer()
   const glow = document.createElement('div')
   glow.className = 'globe-glow'
-  glow.style.background = globe.surface
+  glow.style.backgroundColor = globe.surface
   // Before the canvas, so the globe draws over it and only the halo shows.
   container.insertBefore(glow, container.firstChild)
 

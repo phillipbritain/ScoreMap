@@ -1,9 +1,11 @@
-import type { Map as MapLibreMap, StyleSpecification } from 'maplibre-gl'
+import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl'
+import type { Feature, FeatureCollection, LineString, Point } from 'geojson'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { Camera } from './camera'
+import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap, selectedPinLayer } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
@@ -14,8 +16,9 @@ import { cardZoom, maxZoom } from './zoomLevels'
 applyStatusLook(document.documentElement)
 
 /**
- * A plain style with nothing to fetch: no tiles, no place names, and no glyphs, so cluster counts
- * aren't drawn (the tests look for the pin clusters themselves). The place-name test adds a stand-in.
+ * A plain style with nothing to fetch: no tiles, no place names, and no glyphs, so the counts of pin
+ * clusters and card clusters aren't drawn (the tests look for the clusters themselves). The
+ * place-name test adds a stand-in.
  */
 const plainStyle: StyleSpecification = {
   version: 8,
@@ -61,10 +64,10 @@ afterEach(() => {
   container?.remove()
 })
 
-/** Opens a globe on the page, 800 × 600, looking at the given place. */
-function openGlobe(startCamera: Camera) {
+/** Opens a globe on the page, 800 × 600 unless given a size, looking at the given place. */
+function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   container = document.createElement('div')
-  container.style.cssText = 'position: relative; width: 800px; height: 600px'
+  container.style.cssText = `position: relative; width: ${width}px; height: ${height}px`
   document.body.append(container)
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
@@ -116,6 +119,43 @@ async function cameraSettles(
 }
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * What the map has been given to draw of the score cards' layout (see cardLayoutLayers): its trails,
+ * their venues, card clusters or footprints.
+ */
+async function laidOut(map: MapLibreMap, kind: 'trail' | 'venue' | 'cardCluster' | 'footprint') {
+  const source = map.getSource<GeoJSONSource>(cardLayoutSource)
+  if (!source) return []
+  const { features } = (await source.getData()) as FeatureCollection
+  return features.filter((feature) => feature.properties?.kind === kind)
+}
+
+/** Where on the map a card cluster is drawn, once there is one. */
+async function cardClusterDrawn(map: MapLibreMap) {
+  let at = { x: 0, y: 0 }
+  await vi.waitFor(
+    async () => {
+      const [cardCluster] = (await laidOut(map, 'cardCluster')) as Feature<Point>[]
+      expect(cardCluster).toBeDefined()
+      const { x, y } = map.project(cardCluster.geometry.coordinates as [number, number])
+      const drawn = map.queryRenderedFeatures(
+        [
+          [x - 10, y - 10],
+          [x + 10, y + 10],
+        ],
+        { layers: [cardClusterLayer] },
+      )
+      expect(drawn).not.toEqual([])
+      at = { x, y }
+    },
+    { timeout: 10_000 },
+  )
+  return at
+}
+
+// Small enough that a few dozen games' cards can't all find room.
+const smallGlobe = { width: 400, height: 300 }
 
 /** Where a game's venue is on the page. */
 function venueOnPage(map: MapLibreMap, { venue }: Game) {
@@ -267,30 +307,30 @@ describe('zooming in to pin clusters and card clusters', () => {
   })
 
   it('zooms in to a card cluster the viewer selects until its games all have cards', async () => {
-    const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, smallGlobe)
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at cardZoom.
     const games = Array.from({ length: 16 }, (_, i) =>
       game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
     )
     globe.show(games)
-    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).not.toBeNull(), { timeout: 10_000 })
+    const cardCluster = await cardClusterDrawn(map)
 
-    await userEvent.click(container.querySelector('.card-cluster')!)
+    await userEvent.click(map.getCanvas(), { position: cardCluster })
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom > cardZoom + 1)
-    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).toBeNull(), { timeout: 20_000 })
+    await vi.waitFor(async () => expect(await laidOut(map, 'cardCluster')).toEqual([]), { timeout: 20_000 })
   })
 
   // Five or so zooms one after another: about 10 seconds in CI.
   it('zooms in again while some of a card cluster’s games are still in one, as far as the globe goes', { timeout: 30_000 }, async () => {
-    const { globe, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, smallGlobe)
     // Two games half a degree out set how far the first zoom goes; at the venue between them,
     // more games than there's ever room for stay in a card cluster after it.
     const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
     globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
-    await vi.waitFor(() => expect(container.querySelector('.card-cluster')).not.toBeNull(), { timeout: 10_000 })
+    const cardCluster = await cardClusterDrawn(map)
 
-    await userEvent.click(container.querySelector('.card-cluster')!)
+    await userEvent.click(map.getCanvas(), { position: cardCluster })
 
     await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
     const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
@@ -336,9 +376,20 @@ describe('score cards', () => {
     expect(Math.abs(a.x - b.x)).toBeLessThan(20)
 
     expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
-    expect(container.querySelector('.card-cluster')).toBeNull()
-    const trails = [...container.querySelectorAll<SVGGElement>('.score-card-trails g')]
-    expect(trails.filter((trail) => trail.style.display !== 'none')).toEqual([])
+    expect(await laidOut(map, 'cardCluster')).toEqual([])
+    expect(await laidOut(map, 'trail')).toEqual([])
+  })
+
+  it('has the map draw a trail from a moved card to its venue, and a ringed point on the venue', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const [a, b] = [game('A'), game('B')]
+    globe.show([a, b])
+    await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
+
+    await vi.waitFor(() => expect(drawnAt(map, 'trail-venues', a)).not.toEqual([]), { timeout: 10_000 })
+    const [trail] = (await laidOut(map, 'trail')) as Feature<LineString>[]
+    const [, venue] = trail.geometry.coordinates
+    expect(venue).toEqual([0, 0])
   })
 })
 
@@ -488,7 +539,7 @@ describe('destroy', () => {
     const listeners = (spy: typeof added) => spy.mock.calls.map(([type, listener]) => ({ type, listener }))
     expect(listeners(added).length).toBeGreaterThan(0)
     expect(listeners(removed)).toEqual(expect.arrayContaining(listeners(added)))
-    expect(container.querySelector('canvas, .globe-glow, .score-card, .score-card-trails')).toBeNull()
+    expect(container.querySelector('canvas, .globe-glow, .score-card')).toBeNull()
     added.mockRestore()
     removed.mockRestore()
   })

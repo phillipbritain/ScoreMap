@@ -7,14 +7,14 @@ import type {
 import type { Theme } from '../theme/theme'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
-import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
+import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
 
 export const pinSource = 'pins'
 export const pinClusterLayer = 'pin-clusters'
 export const smallPinLayer = 'pins'
 
-export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number, theme: Theme): GeoJSONSourceSpecification {
-  const { size, clusterRadius } = pinLayout(zoom, smallPinWidth(theme))
+/** The pins' source, clustering small pins as the pin layout at the zoom it's added at says. */
+export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, clusterRadius }: PinLayout): GeoJSONSourceSpecification {
   return {
     type: 'geojson',
     data,
@@ -26,9 +26,14 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: nu
   }
 }
 
-/** Pin clusters: discs outlined and lit in their status colour, with the count in it too (see the theme's cluster). */
+/**
+ * Pin clusters: discs outlined and lit in their status colour, with the count in it too (see the
+ * theme's cluster), the disc, outline and count faded as their status's clusters are, as card
+ * clusters are (see cardLayoutLayers).
+ */
 export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
   const { cluster } = theme
+  const clusterOpacity = byStatus(theme, 'pinCluster', (look) => look.clusterOpacity)
   return [
     {
       id: 'pin-cluster-glows',
@@ -51,9 +56,10 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       paint: {
         'circle-radius': byCount(cluster.radius),
         'circle-color': cluster.fill,
+        'circle-opacity': clusterOpacity,
         'circle-stroke-width': cluster.outlineWidth,
         'circle-stroke-color': byStatus(theme, 'pinCluster', (look) => look.color),
-        'circle-stroke-opacity': byStatus(theme, 'pinCluster', (look) => look.clusterOpacity),
+        'circle-stroke-opacity': clusterOpacity,
       },
     },
     {
@@ -67,7 +73,7 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
         'text-size': theme.fonts.clusterCount.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color) },
+      paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color), 'text-opacity': clusterOpacity },
     },
   ]
 }

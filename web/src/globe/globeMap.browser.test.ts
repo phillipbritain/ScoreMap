@@ -8,10 +8,10 @@ import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
-import { GlobeMap, selectedPinLayer } from './globeMap'
+import { GlobeMap } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
-import { pinClusterLayer, smallPinLayer } from './pinLayers'
+import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
 applyTheme(document.documentElement, builtInTheme)
@@ -173,6 +173,45 @@ function panelAcrossBottom() {
 
 /** How many pixels apart two positions on screen are. */
 const offBy = (a: number, b: number) => Math.abs(a - b)
+
+/** A computed CSS colour's red, green, blue (0 to 255) and alpha (0 to 1), as rgb(…) or color(srgb …). */
+function channels(colour: string): [number, number, number, number] {
+  const srgb = /^color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)$/.exec(colour)
+  if (srgb) return [Number(srgb[1]) * 255, Number(srgb[2]) * 255, Number(srgb[3]) * 255, Number(srgb[4] ?? 1)]
+  const rgb = /^rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)$/.exec(colour)
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), Number(rgb[4] ?? 1)]
+  throw new Error(`Not a computed colour: ${colour}`)
+}
+
+const hexChannels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+
+/** Whether a colour lies between two others, strictly, in each channel that differs (to within rounding). */
+function between(colour: string, from: string, to: string): boolean {
+  const [a, b, c] = [channels(colour), hexChannels(from), hexChannels(to)]
+  const channelsBetween = [0, 1, 2].every((i) =>
+    b[i] === c[i] ? Math.abs(a[i] - b[i]) < 1 : a[i] > Math.min(b[i], c[i]) + 0.5 && a[i] < Math.max(b[i], c[i]) - 0.5,
+  )
+  return channelsBetween && [0, 1, 2].some((i) => b[i] !== c[i])
+}
+
+describe('score cards', () => {
+  it('keeps every card solid, fading a Final or Disrupted game’s by colour into its fill', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Far enough apart that none is moved aside.
+    globe.show([game('L'), game('F', { longitude: 6, status: 'Final' }), game('D', { longitude: -6, status: 'Disrupted' })])
+    const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
+    const { card: look, status } = builtInTheme
+
+    for (const shown of [live, final, disrupted]) {
+      expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
+      expect(channels(getComputedStyle(shown).backgroundColor)[3], shown.dataset.gameId).toBe(1)
+    }
+    expect(channels(getComputedStyle(live).color).slice(0, 3).map(Math.round)).toEqual(hexChannels(look.text))
+    expect(between(getComputedStyle(final).color, look.text, look.fill)).toBe(true)
+    expect(between(getComputedStyle(final).borderTopColor, status.final.color, look.fill)).toBe(true)
+    expect(between(getComputedStyle(disrupted).color, look.disrupted.text, look.disrupted.fill)).toBe(true)
+  })
+})
 
 describe('selection', () => {
   it('rings the selected game’s small pin and leaves the globe where it is', async () => {

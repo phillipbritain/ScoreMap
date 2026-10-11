@@ -10,7 +10,7 @@ import type { Theme } from '../theme/theme'
  * cluster picks its status. Map layers read the look through style expressions (see byStatus), and the
  * page's CSS through the theme's custom properties (see applyTheme).
  */
-export type StatusLook = Theme['status'][Lowercase<GameStatus>] & {
+export type StatusLook = Theme['status'][keyof Theme['status']] & {
   /** Which draws on top where pins or score cards overlap: highest first. */
   stacking: number
 }
@@ -18,9 +18,16 @@ export type StatusLook = Theme['status'][Lowercase<GameStatus>] & {
 /** Which status draws on top where pins or score cards overlap: highest first. */
 export const stacking: Readonly<Record<GameStatus, number>> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
+/**
+ * A status's name in the theme: its key among the theme's status looks, and so in the custom
+ * properties the page's CSS reads (--status-live-color) and the score cards' status classes
+ * (score-card--live). "live" for Live.
+ */
+export const statusKey = (status: GameStatus): keyof Theme['status'] => status.toLowerCase() as Lowercase<GameStatus>
+
 /** A status's look, from the theme. */
 export function statusLook(theme: Theme, status: GameStatus): StatusLook {
-  return { ...theme.status[status.toLowerCase() as Lowercase<GameStatus>], stacking: stacking[status] }
+  return { ...theme.status[statusKey(status)], stacking: stacking[status] }
 }
 
 /** The selected game's score card draws above every other card. */

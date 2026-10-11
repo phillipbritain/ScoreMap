@@ -12,7 +12,7 @@ import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { selectedStacking, stacking } from './statusLook'
+import { selectedStacking, stacking, statusKey } from './statusLook'
 import { pinSize } from './zoomLevels'
 
 interface PlacedCard {
@@ -58,12 +58,11 @@ export class ScoreCardMarkers {
   private cardClusters: PlacedCardCluster[] = []
   /** The layout last given to the map (see drawLayout), so it's given again only when it changes. */
   private layoutDrawn = ''
-  /** How far a card's pointer reaches below it, read from the first card drawn (see cardPointer). */
-  private pointer = 0
 
   /**
-   * `theme` gives the colour of pulses over card clusters; `placeNames` gives the names cards keep
-   * clear of; `onSelect` is called with a game's id when its card is selected.
+   * `theme` gives how far a card's pointer reaches below it to its venue and the colour of pulses
+   * over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
+   * a game's id when its card is selected.
    */
   constructor(map: MapLibreMap, theme: Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
     this.map = map
@@ -144,7 +143,6 @@ export class ScoreCardMarkers {
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
         drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
-        this.pointer ||= cardPointer(cardElement)
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -185,7 +183,12 @@ export class ScoreCardMarkers {
       if (offset) previous.set(gameId, { offset, inCardCluster, trail: null })
     }
     const canvas = this.map.getCanvas()
-    const scene = { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() }
+    const scene = {
+      width: canvas.clientWidth,
+      height: canvas.clientHeight,
+      pointer: this.theme.sizes.card.pointer,
+      names: this.placeNames.nameBoxes(),
+    }
     traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
@@ -273,15 +276,10 @@ export class ScoreCardMarkers {
   }
 }
 
-/** How far a card's pointer reaches below the card, as its CSS draws it (see .score-card). */
-function cardPointer(card: HTMLElement): number {
-  return parseFloat(getComputedStyle(card).getPropertyValue('--score-card-pointer')) || 0
-}
-
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
 function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean, animation?: PinAnimation): void {
-  element.className = `score-card score-card--${card.status.toLowerCase()}`
+  element.className = `score-card score-card--${statusKey(card.status)}`
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId

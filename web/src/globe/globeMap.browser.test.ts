@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
+import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap, selectedPinLayer } from './globeMap'
@@ -71,7 +72,7 @@ function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   document.body.append(container)
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
-  const globe = new GlobeMap(container, { style: plainStyle, startCamera, onSelect, onCameraMove })
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove })
   opened.push(globe)
   // MapLibre's own map, to see what it draws; the tests drive the globe only through GlobeMap.
   const map = (globe as unknown as { map: MapLibreMap }).map

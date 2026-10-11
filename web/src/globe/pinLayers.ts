@@ -4,16 +4,17 @@ import type {
   GeoJSONSourceSpecification,
   SymbolLayerSpecification,
 } from 'maplibre-gl'
-import { mapFonts } from './placeNames'
-import { byStatus, pinClusterStatusCounts, groupFill, groupGlowOpacity, groupOutline, smallPinWidth } from './statusLook'
-import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
+import type { Theme } from '../theme/theme'
+import { smallPinReach } from './panelClearance'
+import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
+import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
 
 export const pinSource = 'pins'
 export const pinClusterLayer = 'pin-clusters'
 export const smallPinLayer = 'pins'
 
-export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: number): GeoJSONSourceSpecification {
-  const { size, clusterRadius } = pinLayout(zoom)
+/** The pins' source, clustering small pins as the pin layout at the zoom it's added at says. */
+export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, clusterRadius }: PinLayout): GeoJSONSourceSpecification {
   return {
     type: 'geojson',
     data,
@@ -25,88 +26,126 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], zoom: nu
   }
 }
 
-/** Pin clusters: dark discs outlined and lit in their status colour, with the count in it too (see groupFill). */
-export const pinClusterLayers: [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] = [
-  {
-    id: 'pin-cluster-glows',
-    type: 'circle',
-    source: pinSource,
-    filter: ['has', 'point_count'],
-    paint: {
-      'circle-radius': byCount(22, 26, 32),
-      'circle-color': byStatus('pinCluster', (look) => look.color),
-      'circle-blur': 1,
-      'circle-opacity': byStatus('pinCluster', (look) => look.groupOpacity * groupGlowOpacity),
+/**
+ * Pin clusters: discs outlined and lit in their status colour, with the count in it too (see the
+ * theme's cluster), the disc, outline and count faded as their status's clusters are, as card
+ * clusters are (see cardLayoutLayers).
+ */
+export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
+  const { cluster } = theme
+  const clusterOpacity = byStatus(theme, 'pinCluster', (look) => look.clusterOpacity)
+  return [
+    {
+      id: 'pin-cluster-glows',
+      type: 'circle',
+      source: pinSource,
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-radius': byCount(cluster.glowRadius),
+        'circle-color': byStatus(theme, 'pinCluster', (look) => look.color),
+        'circle-blur': 1,
+        'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity),
+      },
     },
-  },
-  {
-    id: pinClusterLayer,
-    type: 'circle',
-    source: pinSource,
-    filter: ['has', 'point_count'],
-    layout: { 'circle-sort-key': byStatus('pinCluster', (look) => look.stacking) },
-    paint: {
-      'circle-radius': byCount(11, 13, 16),
-      'circle-color': groupFill,
-      'circle-stroke-width': groupOutline,
-      'circle-stroke-color': byStatus('pinCluster', (look) => look.color),
-      'circle-stroke-opacity': byStatus('pinCluster', (look) => look.groupOpacity),
+    {
+      id: pinClusterLayer,
+      type: 'circle',
+      source: pinSource,
+      filter: ['has', 'point_count'],
+      layout: { 'circle-sort-key': byStatus(theme, 'pinCluster', (look) => look.stacking) },
+      paint: {
+        'circle-radius': byCount(cluster.radius),
+        'circle-color': cluster.fill,
+        'circle-opacity': clusterOpacity,
+        'circle-stroke-width': cluster.outlineWidth,
+        'circle-stroke-color': byStatus(theme, 'pinCluster', (look) => look.color),
+        'circle-stroke-opacity': clusterOpacity,
+      },
     },
-  },
-  {
-    id: 'pin-cluster-counts',
-    type: 'symbol',
-    source: pinSource,
-    filter: ['has', 'point_count'],
-    layout: {
-      'text-field': ['get', 'point_count_abbreviated'],
-      'text-font': [mapFonts.bold.name],
-      'text-size': 11,
-      'text-allow-overlap': true,
+    {
+      id: 'pin-cluster-counts',
+      type: 'symbol',
+      source: pinSource,
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': [theme.fonts.clusterCount.font.name],
+        'text-size': theme.fonts.clusterCount.size,
+        'text-allow-overlap': true,
+      },
+      paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color), 'text-opacity': clusterOpacity },
     },
-    paint: { 'text-color': byStatus('pinCluster', (look) => look.color) },
-  },
-]
+  ]
+}
 
 /**
  * Small pins for single games while zoomed out, each a bright core in a soft glow (see StatusLook);
  * zoomed in, score cards take over (see scoreCardMarkers). The glows are a layer beneath the cores,
  * so a core is never dimmed by a neighbour's glow.
  */
-export const smallPinLayerSpecs: [CircleLayerSpecification, CircleLayerSpecification] = [
-  {
-    id: 'pin-glows',
-    type: 'circle',
-    source: pinSource,
-    filter: ['!', ['has', 'point_count']],
-    maxzoom: cardZoom,
-    paint: {
-      'circle-radius': byStatus('own', (look) => look.glowRadius),
-      'circle-color': byStatus('own', (look) => look.color),
-      'circle-blur': 1,
-      'circle-opacity': byStatus('own', (look) => look.glowOpacity),
+export function smallPinLayers(theme: Theme): [CircleLayerSpecification, CircleLayerSpecification] {
+  return [
+    {
+      id: 'pin-glows',
+      type: 'circle',
+      source: pinSource,
+      filter: ['!', ['has', 'point_count']],
+      maxzoom: cardZoom,
+      paint: {
+        'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
+        'circle-color': byStatus(theme, 'own', (look) => look.color),
+        'circle-blur': 1,
+        'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity),
+      },
     },
-  },
-  {
-    id: smallPinLayer,
-    type: 'circle',
-    source: pinSource,
-    filter: ['!', ['has', 'point_count']],
-    maxzoom: cardZoom,
-    layout: { 'circle-sort-key': byStatus('own', (look) => look.stacking) },
-    paint: {
-      'circle-radius': byStatus('own', (look) => look.coreRadius),
-      'circle-color': byStatus('own', (look) => look.coreColor),
-      'circle-opacity': byStatus('own', (look) => look.coreOpacity),
-      'circle-stroke-width': byStatus('own', (look) => look.coreRing),
-      'circle-stroke-color': byStatus('own', (look) => look.color),
+    {
+      id: smallPinLayer,
+      type: 'circle',
+      source: pinSource,
+      filter: ['!', ['has', 'point_count']],
+      maxzoom: cardZoom,
+      layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
+      paint: {
+        'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
+        'circle-color': byStatus(theme, 'own', (look) => look.core.color),
+        'circle-opacity': byStatus(theme, 'own', (look) => look.core.opacity),
+        'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
+        'circle-stroke-color': byStatus(theme, 'own', (look) => look.color),
+      },
     },
-  },
-]
+  ]
+}
 
-/** A pin cluster's size by how many games are in it: up to 4, up to 14, and more. */
-function byCount(small: number, medium: number, large: number): ExpressionSpecification {
-  return ['step', ['get', 'point_count'], small, 5, medium, 15, large]
+export const selectedPinLayer = 'pin-selected'
+
+/**
+ * A ring around the selected game's small pin, in the theme's selection colour and width, reaching as
+ * far as a small pin does (see panelClearance); zoomed in, its score card is outlined instead.
+ */
+export function selectedPinLayerSpec(theme: Theme, gameId: string | null): CircleLayerSpecification {
+  return {
+    id: selectedPinLayer,
+    type: 'circle',
+    source: pinSource,
+    filter: selectedPin(gameId),
+    maxzoom: cardZoom,
+    paint: {
+      'circle-radius': smallPinReach - theme.selection.width,
+      'circle-color': 'transparent',
+      'circle-stroke-width': theme.selection.width,
+      'circle-stroke-color': theme.selection.color,
+    },
+  }
+}
+
+/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
+export function selectedPin(gameId: string | null): ExpressionSpecification {
+  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
+}
+
+/** A pin cluster's size by how many games are in it: a few (up to 4), some (up to 14), or many. */
+function byCount({ few, some, many }: Theme['cluster']['radius']): ExpressionSpecification {
+  return ['step', ['get', 'point_count'], few, 5, some, 15, many]
 }
 
 /**
@@ -118,7 +157,11 @@ function byCount(small: number, medium: number, large: number): ExpressionSpecif
  * one would be lost, so it's written across the pin cluster instead (place names draw above the
  * pins). Footprints draw nothing.
  */
-export const pinFootprint = { image: 'pin-footprint', size: smallPinWidth + 2 }
+export function pinFootprint(theme: Theme): { image: string; size: number } {
+  return { image: pinFootprintImage, size: smallPinWidth(theme) + 2 }
+}
+
+const pinFootprintImage = 'pin-footprint'
 
 /** Each small pin, while zoomed out. */
 export const pinFootprintLayerSpec: SymbolLayerSpecification = {
@@ -127,6 +170,6 @@ export const pinFootprintLayerSpec: SymbolLayerSpecification = {
   source: pinSource,
   filter: ['!', ['has', 'point_count']],
   maxzoom: cardZoom,
-  layout: { 'icon-image': pinFootprint.image, 'icon-allow-overlap': true },
+  layout: { 'icon-image': pinFootprintImage, 'icon-allow-overlap': true },
   paint: { 'icon-opacity': 0 },
 }

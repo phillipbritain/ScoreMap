@@ -1,8 +1,16 @@
-import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
+import {
+  createExpression,
+  featureFilter,
+  type ExpressionSpecification,
+  type FilterSpecification,
+} from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
+import { builtInTheme } from '../theme/builtInTheme'
+import { globeFonts, glyphsUrl } from '../theme/globeFonts'
+import type { Theme } from '../theme/theme'
 import { globeStyle } from './globeStyle'
-import { firstPlaceNameLayer, gameCitiesState, gameCityPlaces, glyphsUrl } from './placeNames'
+import { firstPlaceNameLayer, gameCitiesState, gameCityPlaces } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -32,11 +40,46 @@ const liberty = base([
   { id: 'label_country_1', type: 'symbol', ...tiles, 'source-layer': 'place' },
 ])
 
-const layer = (id: string) => globeStyle(liberty).layers.find((l) => l.id === id)
+const font = (name: string) => globeFonts.get(name)!
+
+/** A theme with a colour and font of its own for everything the globe draws, to tell them apart. */
+const theme: Theme = {
+  ...builtInTheme,
+  globe: {
+    surface: '#000001',
+    coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
+    countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
+    stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
+    disputedBorders: { color: '#000005', width: { '0': 0.9 }, dash: [3, 1] },
+    halo: builtInTheme.globe.halo,
+  },
+  placeNames: {
+    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light'), letterSpacing: 0.03 },
+    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold'), letterSpacing: 0 },
+    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
+    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
+  },
+}
+
+function outline(color: string, width: number, blur: number) {
+  return { color, width, blur }
+}
+
+const style = (base: StyleSpecification = liberty) => globeStyle(base, theme)
+const layer = (id: string) => style().layers.find((l) => l.id === id)
+const paint = (id: string) => layer(id)?.paint as Record<string, unknown>
+const layout = (id: string) => layer(id)?.layout as Record<string, unknown>
+
+/** What a zoom-dependent paint value is at a zoom level, as MapLibre works it out. */
+function atZoom(value: unknown, zoom: number): number {
+  const parsed = createExpression(value as ExpressionSpecification, 'test')
+  if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
+  return parsed.value.evaluate({ zoom }) as number
+}
 
 describe('globeStyle', () => {
   it("keeps only the lines and place names, dropping roads, land cover, points of interest, and towns and villages but for games'", () => {
-    expect(globeStyle(liberty).layers.map((l) => l.id)).toEqual([
+    expect(style().layers.map((l) => l.id)).toEqual([
       'background',
       'coastline',
       'boundary_3',
@@ -53,9 +96,28 @@ describe('globeStyle', () => {
     ])
   })
 
-  it('draws land and sea the same colour, with coastlines from the water edges', () => {
-    expect(layer('background')).toMatchObject({ paint: { 'background-color': '#0b1526' } })
+  it("draws land and sea alike in the theme's globe surface, with coastlines from the water edges", () => {
+    expect(paint('background')['background-color']).toBe('#000001')
     expect(layer('coastline')).toMatchObject({ type: 'line', 'source-layer': 'water' })
+  })
+
+  it("draws coastlines, country borders, state lines and disputed borders in the theme's colours", () => {
+    expect(paint('coastline')['line-color']).toBe('#000002')
+    expect(paint('boundary_2')['line-color']).toBe('#000003')
+    expect(paint('boundary_3')['line-color']).toBe('#000004')
+    expect(paint('boundary_disputed')['line-color']).toBe('#000005')
+  })
+
+  it("draws each kind of line at the theme's widths as the map zooms", () => {
+    const width = (id: string, zoom: number) => atZoom(paint(id)['line-width'], zoom)
+    expect(width('coastline', 0)).toBeCloseTo(0.5, 6)
+    expect(width('coastline', 5)).toBeCloseTo(1.25, 6)
+    expect(width('coastline', 12)).toBeCloseTo(2, 6)
+    expect(width('boundary_2', 2)).toBeCloseTo(0.7, 6)
+    expect(width('boundary_2', 6)).toBeCloseTo(1.5, 6)
+    expect(width('boundary_3', 5.5)).toBeCloseTo(0.75, 6)
+    expect(width('boundary_disputed', 3)).toBeCloseTo(0.9, 6)
+    expect(width('boundary_disputed', 10)).toBeCloseTo(0.9, 6)
   })
 
   it('outlines only the sea, not lakes or rivers', () => {
@@ -125,7 +187,7 @@ describe('globeStyle', () => {
     const layout = layer('label_city_game')?.layout as Record<string, unknown>
     expect(layout['text-variable-anchor']).toEqual(['top'])
     expect(layout['text-allow-overlap']).toBe(true)
-    expect(globeStyle(liberty).state).toEqual({ [gameCitiesState]: { default: [] } })
+    expect(style().state).toEqual({ [gameCitiesState]: { default: [] } })
   })
 
   it("names a game's place however small: a minor city or a town", () => {
@@ -149,52 +211,57 @@ describe('globeStyle', () => {
   })
 
   it('finds the first place-name layer, for pins to go beneath', () => {
-    const style = globeStyle(liberty)
-    const first = firstPlaceNameLayer(style)
+    const globe = style()
+    const first = firstPlaceNameLayer(globe)
     expect(first).toBe('label_city')
-    const lines = style.layers.slice(0, style.layers.findIndex((l) => l.id === first))
+    const lines = globe.layers.slice(0, globe.layers.findIndex((l) => l.id === first))
     expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
 
-  it('writes every place name in Open Sans, from a font source that has it', () => {
-    const style = globeStyle(liberty)
-    expect(style.glyphs).toBe(glyphsUrl)
-    for (const l of style.layers.filter((l) => l.type === 'symbol')) {
-      expect((l.layout as Record<string, unknown>)['text-font'], l.id).toEqual([expect.stringMatching(/^Open Sans /)])
+  it("writes each kind of place name in the theme's colour, outline (its colour, width and blur) and font, from the map's font server", () => {
+    expect(style().glyphs).toBe(glyphsUrl)
+    const kinds = {
+      label_city: 'city',
+      label_city_game: 'city',
+      label_town_game: 'city',
+      label_village_game: 'city',
+      label_city_capital: 'capital',
+      label_city_capital_game: 'capital',
+      label_state: 'state',
+      label_country_1: 'country',
+    } as const
+    for (const [id, kind] of Object.entries(kinds)) {
+      const look = theme.placeNames[kind]
+      expect(paint(id)['text-color'], id).toBe(look.color)
+      expect(paint(id)['text-halo-color'], id).toBe(look.outline.color)
+      expect(paint(id)['text-halo-width'], id).toBe(look.outline.width)
+      expect(paint(id)['text-halo-blur'], id).toBe(look.outline.blur)
+      expect(layout(id)['text-font'], id).toEqual([look.font.name])
     }
   })
 
-  it('makes city names the brightest place names, with state names muted behind them', () => {
-    const colour = (id: string) => (layer(id)?.paint as Record<string, unknown> | undefined)?.['text-color']
-    expect(colour('label_city')).toBe('#f1e6cc')
-    expect(colour('label_state')).toBe('#9a8a62')
-    expect(colour('label_country_1')).not.toBe(colour('label_city'))
+  it('writes state and country names in capitals, city names as they are', () => {
+    for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
+    for (const id of ['label_city', 'label_city_capital']) expect(layout(id)['text-transform'], id).toBe('none')
   })
 
-  it('writes state and country names in spaced capitals, city names as they are', () => {
-    const layout = (id: string) => layer(id)?.layout as Record<string, unknown>
-    for (const id of ['label_state', 'label_country_1']) {
-      expect(layout(id)['text-transform'], id).toBe('uppercase')
-      expect(layout(id)['text-letter-spacing'], id).toBeGreaterThan(0)
-    }
-    for (const id of ['label_city', 'label_city_capital']) {
-      expect(layout(id)['text-transform'], id).toBe('none')
-      expect(layout(id)['text-letter-spacing'], id).toBe(0)
-    }
+  it("spaces each kind of place's name out as far as the theme says", () => {
+    expect(layout('label_city')['text-letter-spacing']).toBe(0.03)
+    expect(layout('label_city_capital')['text-letter-spacing']).toBe(0)
+    expect(layout('label_state')['text-letter-spacing']).toBe(0.3)
+    expect(layout('label_country_1')['text-letter-spacing']).toBe(0.2)
   })
 
-  it('outlines every place name in dark navy, so it reads over coastlines and borders', () => {
-    for (const l of globeStyle(liberty).layers.filter((l) => l.type === 'symbol')) {
-      expect((l.paint as Record<string, unknown>)['text-halo-color'], l.id).toBe('#050b16')
-    }
+  it("dashes disputed borders in the theme's pattern", () => {
+    expect(paint('boundary_disputed')['line-dasharray']).toEqual([3, 1])
   })
 
   it("turns off MapLibre's one-sided atmosphere", () => {
-    expect(globeStyle(liberty).sky).toEqual({ 'atmosphere-blend': 0 })
+    expect(style().sky).toEqual({ 'atmosphere-blend': 0 })
   })
 
   it('fails loudly when the base style lacks a layer the globe needs', () => {
     const noStates = base(liberty.layers.filter((l) => l.id !== 'boundary_3'))
-    expect(() => globeStyle(noStates)).toThrow(/boundary_3/)
+    expect(() => style(noStates)).toThrow(/boundary_3/)
   })
 })

@@ -1,11 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import type { Game } from '../games/game'
+import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
-import type { CardStyle } from './cardStyle'
 import { GlobeMap } from './globeMap'
-import { baseStyleUrl, globeStyle } from './globeStyle'
+import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
+  /** The look of the globe and everything on it. Only read when the globe is created. */
+  theme: Theme
   games: readonly Game[]
   /**
    * The game whose panel is open: its pin is highlighted, and the globe lifts it clear of the panel
@@ -19,32 +21,23 @@ interface GlobeProps {
   startCamera: Camera
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
-  /** The "Card style" setting. */
-  cardStyle: CardStyle
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({
-  games,
-  selectedGameId,
-  panel,
-  onSelectGame,
-  startCamera,
-  onCameraMove,
-  cardStyle,
-}: GlobeProps) {
+export function Globe({ theme, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, startCamera })
+  const latest = useRef({ onSelectGame, onCameraMove, startCamera, theme })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, startCamera }
-  }, [onSelectGame, onCameraMove, startCamera])
+    latest.current = { onSelectGame, onCameraMove, startCamera, theme }
+  }, [onSelectGame, onCameraMove, startCamera, theme])
 
   useEffect(() => {
     if (!container.current) return
     const instance = new GlobeMap(container.current, {
-      style: { url: baseStyleUrl, transform: globeStyle },
+      style: { url: baseStyleUrl },
+      theme: latest.current.theme,
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
       onCameraMove: (camera) => latest.current.onCameraMove(camera),
@@ -63,7 +56,6 @@ export function Globe({
     () => globe.current?.select(selectedGameId, panel.current?.getBoundingClientRect() ?? null),
     [selectedGameId, panel],
   )
-  useEffect(() => globe.current?.setCardStyle(cardStyle), [cardStyle])
 
   return <div ref={container} className="globe" />
 }

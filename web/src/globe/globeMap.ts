@@ -2,7 +2,6 @@ import {
   LngLatBounds,
   Map as MapLibreMap,
   setWorkerUrl,
-  type ExpressionSpecification,
   type GeoJSONSource,
   type MapLayerMouseEvent,
   type StyleSpecification,
@@ -11,10 +10,11 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
-import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
+import { globeStyle } from './globeStyle'
 import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
@@ -23,7 +23,7 @@ import {
   cardClusterLayer,
   cardFootprint,
   cardFootprintLayerSpec,
-  cardLayoutLayerSpecs,
+  cardLayoutLayers,
   cardLayoutSource,
   cardLayoutSourceSpec,
 } from './cardLayoutLayers'
@@ -34,26 +34,34 @@ import {
   pinClusterLayers,
   pinSource,
   pinSourceSpec,
+  selectedPin,
+  selectedPinLayer,
+  selectedPinLayerSpec,
   smallPinLayer,
-  smallPinLayerSpecs,
+  smallPinLayers,
 } from './pinLayers'
 import { pulse } from './pinPulse'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
-import { selectionColor } from './statusLook'
-import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout, type PinLayout } from './zoomLevels'
+import { smallPinWidth } from './statusLook'
+import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout, pinSize, type PinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
 
 /**
- * The map style the globe draws its pins over: a style to load from a URL and make over as it
- * loads (the app's, see globeStyle), or a finished style (the tests' plain one).
+ * The map style the globe draws its pins over: a base style to load from a URL and make over in the
+ * globe's theme as it loads (the app's, see globeStyle), or a finished style (the tests' plain one).
  */
-export type GlobeMapStyle = StyleSpecification | { url: string; transform: (base: StyleSpecification) => StyleSpecification }
+export type GlobeMapStyle = StyleSpecification | { url: string }
 
 export interface GlobeMapOptions {
   style: GlobeMapStyle
+  /**
+   * The look of the globe: its map style (when made over from a base style), the halo, place
+   * names, pins and score cards.
+   */
+  theme: Theme
   /** Where the globe opens. */
   startCamera: Camera
   /** Called with a game's id when the viewer selects its pin or score card. */
@@ -62,7 +70,6 @@ export interface GlobeMapOptions {
   onCameraMove: (camera: Camera) => void
 }
 
-export const selectedPinLayer = 'pin-selected'
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
 
@@ -73,6 +80,7 @@ const cardClusterZoomPadding = 120
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
+  private readonly theme: Theme
   private readonly cards: ScoreCardMarkers
   private readonly names: PlaceNames
   private readonly removeGlow: () => void
@@ -86,7 +94,7 @@ export class GlobeMap {
   private clustering: PinLayout
   private destroyed = false
 
-  constructor(container: HTMLElement, { style, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
+  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     const map = new MapLibreMap({
@@ -104,13 +112,14 @@ export class GlobeMap {
       doubleClickZoom: false,
     })
     this.map = map
+    this.theme = theme
     traceLayouts(map)
-    if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })
+    if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
     else map.setStyle(style)
-    this.removeGlow = addGlobeGlow(map)
-    this.names = addPlaceNames(map)
-    this.cards = new ScoreCardMarkers(map, this.names, (gameId) => this.onSelect(gameId))
-    this.clustering = pinLayout(map.getZoom())
+    this.removeGlow = addGlobeGlow(map, theme)
+    this.names = addPlaceNames(map, theme)
+    this.cards = new ScoreCardMarkers(map, theme, this.names, (gameId) => this.onSelect(gameId))
+    this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
     map.on('zoom', this.recluster)
@@ -179,11 +188,6 @@ export class GlobeMap {
     this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
   }
 
-  /** The "Card style" setting. */
-  setCardStyle(style: CardStyle): void {
-    this.cards.setStyle(style)
-  }
-
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     this.destroyed = true
@@ -197,35 +201,20 @@ export class GlobeMap {
   private readonly addPins = () => {
     const map = this.map
     map.setProjection({ type: 'globe' })
-    this.clustering = pinLayout(map.getZoom())
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), map.getZoom()))
+    this.clustering = this.pinLayoutNow()
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), this.clustering))
     // Beneath the place names, so a pin never hides a city's name.
     const belowNames = firstPlaceNameLayer(map.getStyle())
-    for (const layer of pinClusterLayers) map.addLayer(layer, belowNames)
-    for (const layer of smallPinLayerSpecs) map.addLayer(layer, belowNames)
-    // A ring around the selected game's small pin; zoomed in, its score card is highlighted instead.
-    map.addLayer(
-      {
-        id: selectedPinLayer,
-        type: 'circle',
-        source: pinSource,
-        filter: selectedPin(this.selectedGameId),
-        maxzoom: cardZoom,
-        paint: {
-          'circle-radius': smallPinReach - 3,
-          'circle-color': 'rgba(0, 0, 0, 0)',
-          'circle-stroke-width': 3,
-          'circle-stroke-color': selectionColor,
-        },
-      },
-      belowNames,
-    )
+    for (const layer of pinClusterLayers(this.theme)) map.addLayer(layer, belowNames)
+    for (const layer of smallPinLayers(this.theme)) map.addLayer(layer, belowNames)
+    map.addLayer(selectedPinLayerSpec(this.theme, this.selectedGameId), belowNames)
     // Trails and card clusters too, so names draw over them (ADR-0010).
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
-    for (const layer of cardLayoutLayerSpecs) map.addLayer(layer, belowNames)
+    for (const layer of cardLayoutLayers(this.theme)) map.addLayer(layer, belowNames)
     // On top, so names are placed around the pins' footprints rather than under the pins.
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
-    addBlankImage(map, pinFootprint.image, pinFootprint.size, pinFootprint.size)
+    const { image, size } = pinFootprint(this.theme)
+    addBlankImage(map, image, size, size)
     map.addLayer(cardFootprintLayerSpec)
     map.addLayer(pinFootprintLayerSpec)
   }
@@ -233,13 +222,18 @@ export class GlobeMap {
   // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score
   // cards don't (see pinLayout).
   private readonly recluster = () => {
-    const now = pinLayout(this.map.getZoom())
+    const now = this.pinLayoutNow()
     const was = this.clustering
     if (now.size === was.size && (now.size === 'card' || now.clusterRadius === was.clusterRadius)) return
     this.clustering = now
     void this.map
       .getSource<GeoJSONSource>(pinSource)
       ?.setClusterOptions({ cluster: now.size === 'small', clusterRadius: now.clusterRadius, clusterMaxZoom })
+  }
+
+  /** The pin layout at the map's zoom now, for small pins as wide as the theme's (see pinLayout). */
+  private pinLayoutNow(): PinLayout {
+    return pinLayout(this.map.getZoom(), smallPinWidth(this.theme))
   }
 
   private readonly syncCards = () => this.cards.sync()
@@ -314,8 +308,8 @@ export class GlobeMap {
     if (!target) return
 
     if (target.kind === 'pin') {
-      if (pinLayout(map.getZoom()).size === 'card') this.cards.animate(game.id, animation)
-      else pulse(map, target.lngLat, animation, 'pin')
+      if (pinSize(map.getZoom()) === 'card') this.cards.animate(game.id, animation)
+      else pulse(map, this.theme, target.lngLat, animation, 'pin')
       return
     }
 
@@ -324,7 +318,7 @@ export class GlobeMap {
       const leaves = await source.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])
       if (this.destroyed) return
       if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
-        pulse(map, lngLat, animation, 'cluster')
+        pulse(map, this.theme, lngLat, animation, 'cluster')
         return
       }
     }
@@ -337,7 +331,7 @@ export class GlobeMap {
   private pinOnPage(game: Game, { x, y }: { x: number; y: number }): ScreenBox {
     const container = this.map.getContainer().getBoundingClientRect()
     const venue = { x: container.left + x, y: container.top + y }
-    const card = pinLayout(this.map.getZoom()).size === 'card' ? this.cards.cardOnPage(game.id) : null
+    const card = pinSize(this.map.getZoom()) === 'card' ? this.cards.cardOnPage(game.id) : null
     if (!card) {
       return {
         left: venue.x - smallPinReach,
@@ -358,11 +352,6 @@ export class GlobeMap {
     const { lng, lat } = this.map.getCenter().wrap()
     this.onCameraMove({ longitude: lng, latitude: lat, zoom: this.map.getZoom() })
   }
-}
-
-/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
-function selectedPin(gameId: string | null): ExpressionSpecification {
-  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
 }
 
 /** A fully transparent image, for the pins' invisible footprints. */

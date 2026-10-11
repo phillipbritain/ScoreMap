@@ -24,10 +24,6 @@ _Avoid_: Marker, dot, icon
 While zoomed in, the panel a pin shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
-**Card style**:
-The look a viewer picks for every score card in the settings menu: HUD (the default), LED scoreboard, Broadcast bug, Tactical or Neon sign. It changes only how cards look, not what they show or where they go.
-_Avoid_: Theme, skin, card look
-
 **Cluster**:
 Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected.
 _Avoid_: Crowd, bubble, group, stack, pile
@@ -55,6 +51,24 @@ _Avoid_: Crunch time, close game
 **Venue**:
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city
+
+### Look
+
+**Theme**:
+The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded: a palette and the settings that use it. ScoreMap has one, built in.
+_Avoid_: Skin, style (the globe's map style is MapLibre's), card style
+
+**Palette**:
+A theme's named base colours, each worked out into steps from light (100) to dark (900), its base colour at 500. A theme's colour jobs, such as the globe's surface or a city's name, each name a step, such as `navy.700`, or give a colour directly.
+_Avoid_: Colour scheme, swatches, tokens
+
+**Colour job**:
+What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
+_Avoid_: Token, role, semantic colour
+
+**Scale**:
+A theme's few named sizes, from small to large, that every size of one kind is a step of: text sizes, spacing, corner radii and line widths each have one. A theme sets how big each step is.
+_Avoid_: Token, ramp, size table
 
 ### Game status
 

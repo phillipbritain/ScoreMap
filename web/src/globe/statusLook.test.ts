@@ -1,18 +1,45 @@
 import { createExpression, type ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec'
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
+import builtIn from '../theme/builtInTheme.json'
+import { resolveTheme, type Theme } from '../theme/theme'
 import {
-  applyStatusLook,
   byStatus,
   pinClusterStatus,
   pinClusterStatusCounts,
   groupStatus,
   selectedStacking,
-  selectionColor,
   smallPinWidth,
-  statusLooks,
+  stacking,
+  statusLook,
   statusProminence,
 } from './statusLook'
+
+/** A theme whose status looks are each unlike the built-in theme's, and unlike each other's. */
+function testTheme(): Theme {
+  const json = structuredClone(builtIn) as Record<string, any>
+  json.settings.status = {
+    live: look('#ff0000', 4, 20),
+    upcoming: look('#00ff00', 3, 12),
+    final: look('#0000ff', 2, 6),
+    disrupted: look('#808080', 1, 5),
+  }
+  const result = resolveTheme(json)
+  if (!result.ok) throw new Error(result.problems.join('\n'))
+  return result.theme
+}
+
+function look(color: string, coreRadius: number, glowRadius: number) {
+  return {
+    color,
+    core: { color: '#ffffff', radius: coreRadius, opacity: 0.9, ring: 1 },
+    glow: { radius: glowRadius, opacity: 0.5 },
+    clusterOpacity: coreRadius / 4,
+    card: { fade: 0, glow: { radius: glowRadius / 2, opacity: 0.5 } },
+  }
+}
+
+const theme = testTheme()
 
 /** What a style expression gives for a feature with these properties, as MapLibre works it out. */
 function evaluate(expression: ExpressionSpecification, properties: Record<string, unknown>): unknown {
@@ -55,39 +82,47 @@ describe('the status a group of games shows as', () => {
 })
 
 describe('byStatus', () => {
-  it("picks a pin's, a trail's or a card cluster's value by its own status", () => {
+  it("picks a pin's, a trail's or a card cluster's value by its own status, from the theme", () => {
+    const radii = { Live: 4, Upcoming: 3, Final: 2, Disrupted: 1 }
     for (const status of statusProminence) {
-      expect(evaluate(byStatus('own', (look) => look.coreRadius), { status })).toBe(statusLooks[status].coreRadius)
+      expect(evaluate(byStatus(theme, 'own', (look) => look.core.radius), { status })).toBe(radii[status])
     }
   })
 
-  it("picks a pin cluster's value by the status it shows as", () => {
-    expect(evaluate(byStatus('pinCluster', (look) => look.color), pinClusterOf(['Final', 'Upcoming']))).toBe(
-      statusLooks.Upcoming.color,
-    )
+  it("picks a pin cluster's value by the status it shows as, from the theme", () => {
+    expect(evaluate(byStatus(theme, 'pinCluster', (look) => look.color), pinClusterOf(['Final', 'Upcoming']))).toBe('#00ff00')
+  })
+
+  it('picks which status draws on top, which isn’t part of the theme', () => {
+    for (const status of statusProminence) {
+      expect(evaluate(byStatus(theme, 'own', (look) => look.stacking), { status })).toBe(stacking[status])
+    }
   })
 })
 
 describe('the status look', () => {
+  it("is each status's look from the theme", () => {
+    expect(statusLook(theme, 'Live')).toMatchObject({ color: '#ff0000', glow: { radius: 20 }, clusterOpacity: 1 })
+    expect(statusLook(theme, 'Upcoming')).toMatchObject({ color: '#00ff00', core: { radius: 3 } })
+    expect(statusLook(theme, 'Final')).toMatchObject({ color: '#0000ff', clusterOpacity: 0.5 })
+    expect(statusLook(theme, 'Disrupted')).toMatchObject({ color: '#808080', glow: { radius: 5 } })
+  })
+
+  it('draws Live on top, then Upcoming, then Final and Disrupted alike', () => {
+    expect(stacking.Live).toBeGreaterThan(stacking.Upcoming)
+    expect(stacking.Upcoming).toBeGreaterThan(stacking.Final)
+    expect(stacking.Final).toBe(stacking.Disrupted)
+  })
+
   it('draws the selected card above every other', () => {
-    for (const look of Object.values(statusLooks)) expect(selectedStacking).toBeGreaterThan(look.stacking)
+    for (const status of statusProminence) expect(selectedStacking).toBeGreaterThan(stacking[status])
   })
 
-  it("measures a small pin by a Live one's glow, the widest, of which the inner part shows", () => {
-    expect(smallPinWidth).toBe(Math.round(2 * 0.6 * statusLooks.Live.glowRadius))
-    for (const look of Object.values(statusLooks)) {
-      expect(look.glowRadius).toBeLessThanOrEqual(statusLooks.Live.glowRadius)
-      expect(smallPinWidth).toBeGreaterThan(2 * (look.coreRadius + look.coreRing))
-    }
-  })
-
-  it("writes each status's colour and the selection colour, for the page's CSS", () => {
-    const properties = new Map<string, string>()
-    applyStatusLook({ style: { setProperty: (name: string, value: string | null) => properties.set(name, value!) } })
-
-    expect(properties.get('--live-color')).toBe(statusLooks.Live.color)
-    expect(properties.get('--disrupted-color')).toBe(statusLooks.Disrupted.color)
-    expect(properties.get('--selection-color')).toBe(selectionColor)
-    expect(properties.size).toBe(statusProminence.length + 1)
+  it("measures a small pin by the widest glow in the theme, of which the inner part shows", () => {
+    expect(smallPinWidth(theme)).toBe(Math.round(2 * 0.6 * 20))
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.settings.status.final.glow.radius = 30
+    const wideFinal = resolveTheme(json)
+    expect(wideFinal.ok && smallPinWidth(wideFinal.theme)).toBe(36)
   })
 })

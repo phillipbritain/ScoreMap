@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
+import { statusKey } from '../globe/statusLook'
 import { dualTime } from './dualTime'
 import { progressLine } from '../games/progressLine'
 import { streamLinks } from './streamLinks'
@@ -42,7 +43,7 @@ export function GamePanel({ game, onClose, ref }: GamePanelProps) {
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's status colour, as its score card is.
-  const statusStyle = { '--status-color': `var(--${game.status.toLowerCase()}-color)` } as CSSProperties
+  const statusStyle = { '--status-color': `var(--status-${statusKey(game.status)}-color)` } as CSSProperties
 
   return (
     <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">

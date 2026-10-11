@@ -6,7 +6,7 @@ import type {
 } from 'maplibre-gl'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { CardLayout, ScreenCard } from './cardLayout'
-import { mapFonts } from './placeNames'
+import { clusterCountFont } from './placeNames'
 import { byStatus, groupFill, groupGlowOpacity, groupOutline } from './statusLook'
 
 /**
@@ -163,7 +163,7 @@ export const cardLayoutLayerSpecs: [
     filter: kindIs('cardCluster'),
     layout: {
       'text-field': ['to-string', ['get', 'count']],
-      'text-font': [mapFonts.bold.name],
+      'text-font': [clusterCountFont],
       'text-size': 11,
       'text-allow-overlap': true,
     },

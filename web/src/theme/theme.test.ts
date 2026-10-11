@@ -440,7 +440,7 @@ describe('the built-in theme', () => {
 
   it('gives panels and controls no glow or drop shadow', () => {
     const { panel, settingsMenu, controls } = theme
-    for (const shadow of [panel.shadow, settingsMenu.shadow, controls.shadow]) expect(shadow.color).toBe('transparent')
+    for (const shadow of [panel.shadow, settingsMenu.shadow, settingsMenu.gearOutline, controls.shadow]) expect(shadow.color).toBe('transparent')
     expect(panel.glow.opacity).toBe(0)
   })
 

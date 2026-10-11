@@ -8,6 +8,7 @@
     "textSizes": { "xs": 10, "s": 11, "m": 13, "l": 15, "xl": 18 },
     "spacing": { "2xs": 2, "xs": 4, "s": 6, "m": 8, "l": 12, "xl": 16, "2xl": 24, "3xl": 32 },
     "radii": { "xs": 3, "s": 6, "m": 8, "l": 12, "pill": 999 },
+    "strokes": { "thin": 1, "medium": 2, "thick": 3 },
     "globe": {
       "surface": "navy.500",
       "coastlines": { "color": "rgba(255, 255, 255, 0.7)", "width": { "2": 0.6, "8": 1.2 } },
@@ -105,7 +106,7 @@
     "hover": "rgba(255, 255, 255, 0.12)",
     "controls": {
       "surface": "rgba(11, 16, 32, 0.85)",
-      "shadow": "rgba(0, 0, 0, 0.3)",
+      "shadow": { "x": 0, "y": 2, "blur": 8, "color": "rgba(0, 0, 0, 0.3)" },
       "on": { "fill": "#ffffff", "text": "night.500" }
     },
     "card": {
@@ -122,12 +123,13 @@
       "photo": "rgb(42 62 112 / 0.5)",
       "credit": { "fill": "rgb(0 0 0 / 0.6)", "text": "rgb(255 255 255 / 0.75)" },
       "close": "rgb(0 0 0 / 0.55)",
-      "shadow": "rgb(0 0 0 / 0.6)"
+      "shadow": { "x": 0, "y": 8, "blur": 30, "color": "rgb(0 0 0 / 0.6)" },
+      "glow": { "y": -2, "blur": 14, "opacity": 0.35 }
     },
     "settingsMenu": {
       "surface": "night.500",
-      "shadow": "rgba(0, 0, 0, 0.4)",
-      "gearOutline": "navy.900",
+      "shadow": { "x": 0, "y": 4, "blur": 16, "color": "rgba(0, 0, 0, 0.4)" },
+      "gearOutline": { "x": 0, "y": 0, "blur": 2, "color": "navy.900" },
       "tab": "rgba(255, 255, 255, 0.6)",
       "count": "rgba(255, 255, 255, 0.5)",
       "hint": "rgba(255, 255, 255, 0.4)",
@@ -151,6 +153,12 @@
       "clusterCount": { "font": "Open Sans Bold", "size": "s" }
     },
     "corners": { "card": "xs", "menu": "l", "menuItem": "s", "message": "m", "control": "pill" },
-    "cutCorner": { "on": true, "size": "xl" }
+    "cutCorner": { "on": true, "size": "xl" },
+    "sizes": {
+      "panel": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24 },
+      "card": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6 },
+      "settingsMenu": { "width": 320, "gear": 28, "allLeagues": 32 },
+      "controls": { "key": 34, "icon": 14 }
+    }
   }
 }

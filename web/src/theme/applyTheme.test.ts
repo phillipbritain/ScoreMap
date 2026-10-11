@@ -75,6 +75,13 @@ describe('applyTheme', () => {
     expect(properties.get('--fonts-card-score-weight')).toBe('500')
   })
 
+  it('writes a shadow as a CSS shadow, its colour resolved', () => {
+    const properties = propertiesOf(
+      themeWith((settings) => (settings.panel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
+    )
+    expect(properties.get('--panel-shadow')).toBe('1px -2px 12px #050b16')
+  })
+
   it('writes every setting', () => {
     const properties = propertiesOf(themeWith(() => {}))
     // Widths by zoom (lines' and place names' sizes) are for the globe, not the page, so aren't written.
@@ -96,10 +103,12 @@ describe('applyTheme', () => {
       pulse: 4,
       // The page's background, sky and three stars; four kinds of text, a divider and hover; the
       // controls' surface, shadow and on (fill and text); a score card's five, the game panel's eleven
-      // and the settings menu's eleven colours.
-      colours: 5 + 4 + 2 + 4 + 5 + 11 + 11,
-      // Five text sizes, eight spacing steps and five radii.
-      scales: 5 + 8 + 5,
+      // and the settings menu's eleven colours and shadows. The game panel's glow of three.
+      colours: 5 + 4 + 2 + 4 + 5 + 11 + 11 + 3,
+      // Five text sizes, eight spacing steps, five radii and three strokes.
+      scales: 5 + 8 + 5 + 3,
+      // The game panel's eight, a score card's four, the settings menu's three and the controls' two.
+      sizes: 8 + 4 + 3 + 2,
       // Eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a size).
       fonts: 11 * 2 + 5,
       // Five corners and the cut corner's two.

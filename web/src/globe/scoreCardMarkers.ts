@@ -1,6 +1,7 @@
 import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import type { Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
 import { cardLayoutFeatures, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
@@ -11,8 +12,8 @@ import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { selectedStacking, statusLooks } from './statusLook'
-import { pinLayout } from './zoomLevels'
+import { selectedStacking, stacking } from './statusLook'
+import { pinSize } from './zoomLevels'
 
 interface PlacedCard {
   marker: Marker
@@ -50,6 +51,7 @@ export class ScoreCardMarkers {
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
+  private readonly theme: Theme
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
   /** Games with no room for a card, as last laid out. */
@@ -60,11 +62,12 @@ export class ScoreCardMarkers {
   private pointer = 0
 
   /**
-   * `placeNames` gives the names cards keep clear of; `onSelect` is called with a game's id when its
-   * card is selected.
+   * `theme` gives the colour of pulses over card clusters; `placeNames` gives the names cards keep
+   * clear of; `onSelect` is called with a game's id when its card is selected.
    */
-  constructor(map: MapLibreMap, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
+  constructor(map: MapLibreMap, theme: Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
     this.map = map
+    this.theme = theme
     this.placeNames = placeNames
     this.onSelect = onSelect
   }
@@ -93,7 +96,7 @@ export class ScoreCardMarkers {
   sync(): void {
     if (!this.map.getSource(pinSource)) return
     const pins = this.map.isSourceLoaded(pinSource)
-      ? pinLayout(this.map.getZoom()).size === 'card'
+      ? pinSize(this.map.getZoom()) === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
       : // The source reloads after every change of games, and can't be read until it has. Live games
@@ -138,7 +141,7 @@ export class ScoreCardMarkers {
       if (placed.drawn !== drawn) {
         const element = placed.marker.getElement()
         // Live cards draw on top, as Live small pins do; the selected card above all.
-        element.style.zIndex = String(selected ? selectedStacking : statusLooks[card.status].stacking)
+        element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
         drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
         this.pointer ||= cardPointer(cardElement)
@@ -239,7 +242,7 @@ export class ScoreCardMarkers {
   animate(gameId: string, animation: PinAnimation): boolean {
     const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
     if (cardCluster) {
-      pulse(this.map, cardCluster.lngLat, animation, 'cluster')
+      pulse(this.map, this.theme, cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined

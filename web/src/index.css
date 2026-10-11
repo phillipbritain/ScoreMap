@@ -1,3 +1,14 @@
+/* The theme is written to the page's root as custom properties, one per setting (see
+   theme/applyTheme.ts): --status-live-color, --selection and so on. These are the names the score
+   cards and the game panel read each status's colour and the selection colour by. */
+:root {
+  --live-color: var(--status-live-color);
+  --upcoming-color: var(--status-upcoming-color);
+  --final-color: var(--status-final-color);
+  --disrupted-color: var(--status-disrupted-color);
+  --selection-color: var(--selection);
+}
+
 html,
 body,
 #root {
@@ -299,8 +310,8 @@ body {
   }
 }
 
-/* How each status looks comes from globe/statusLook.ts, which writes its colour to the page's root
-   (--live-color and so on). Score cards pick theirs by their status class. Live stands out most,
+/* How each status looks comes from the theme, which is written to the page's root (--live-color and
+   so on, see :root). Score cards pick theirs by their status class. Live stands out most,
    Upcoming is dimmer, Final fades, Disrupted is greyed out. */
 .score-card--live {
   --status-color: var(--live-color);

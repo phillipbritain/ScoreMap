@@ -5,9 +5,10 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Feature, FeatureCollection } from 'geojson'
+import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterCountFont } from './placeNames'
-import { byStatus, groupFill, groupGlowOpacity, groupOutline } from './statusLook'
+import { byStatus } from './statusLook'
 
 /**
  * What the score cards' layout adds to the map (see cardLayout): moved cards' trails and the venues
@@ -76,18 +77,18 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
 }
 
 const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
-// Each trail, venue and card cluster in its game's status colour (a card cluster's, see groupStatus).
-const statusColor = byStatus('own', (look) => look.color)
 
 /**
  * Moved cards' trails, the venues they end at, and card clusters, from the bottom up. Added beneath
  * the place names, so every name draws over them.
  *
  * A trail is a thin line lit in its game's status colour, like a score card's outline, in a soft glow,
- * to a point ringed in it. A card cluster is a dark disc outlined and lit in the colour of its most
- * prominent game, with the count in it, as a pin cluster is (see groupFill).
+ * to a point ringed in it. A card cluster is a disc outlined and lit in the colour of its most
+ * prominent game, with the count in it, as a pin cluster is (see the theme's cluster).
  */
-export const cardLayoutLayerSpecs: [
+export function cardLayoutLayers(
+  theme: Theme,
+): [
   LineLayerSpecification,
   LineLayerSpecification,
   CircleLayerSpecification,
@@ -95,81 +96,86 @@ export const cardLayoutLayerSpecs: [
   CircleLayerSpecification,
   CircleLayerSpecification,
   SymbolLayerSpecification,
-] = [
-  {
-    id: 'trail-glows',
-    type: 'line',
-    source: cardLayoutSource,
-    filter: kindIs('trail'),
-    paint: { 'line-color': statusColor, 'line-width': 4, 'line-blur': 3, 'line-opacity': 0.35 },
-  },
-  {
-    id: 'trails',
-    type: 'line',
-    source: cardLayoutSource,
-    filter: kindIs('trail'),
-    paint: { 'line-color': statusColor, 'line-width': 1.25, 'line-opacity': 0.9 },
-  },
-  {
-    id: 'trail-venue-rings',
-    type: 'circle',
-    source: cardLayoutSource,
-    filter: kindIs('venue'),
-    paint: {
-      'circle-radius': 5,
-      'circle-color': 'rgba(0, 0, 0, 0)',
-      'circle-stroke-width': 1,
-      'circle-stroke-color': statusColor,
+] {
+  const { cluster } = theme
+  // Each trail, venue and card cluster in its game's status colour (a card cluster's, see groupStatus).
+  const statusColor = byStatus(theme, 'own', (look) => look.color)
+  return [
+    {
+      id: 'trail-glows',
+      type: 'line',
+      source: cardLayoutSource,
+      filter: kindIs('trail'),
+      paint: { 'line-color': statusColor, 'line-width': 4, 'line-blur': 3, 'line-opacity': 0.35 },
     },
-  },
-  {
-    id: 'trail-venues',
-    type: 'circle',
-    source: cardLayoutSource,
-    filter: kindIs('venue'),
-    paint: { 'circle-radius': 2, 'circle-color': statusColor },
-  },
-  {
-    id: 'card-cluster-glows',
-    type: 'circle',
-    source: cardLayoutSource,
-    filter: kindIs('cardCluster'),
-    paint: {
-      'circle-radius': 26,
-      'circle-color': statusColor,
-      'circle-blur': 1,
-      'circle-opacity': byStatus('own', (look) => look.groupOpacity * groupGlowOpacity),
+    {
+      id: 'trails',
+      type: 'line',
+      source: cardLayoutSource,
+      filter: kindIs('trail'),
+      paint: { 'line-color': statusColor, 'line-width': 1.25, 'line-opacity': 0.9 },
     },
-  },
-  {
-    id: cardClusterLayer,
-    type: 'circle',
-    source: cardLayoutSource,
-    filter: kindIs('cardCluster'),
-    paint: {
-      // 26 pixels across, outline and all: the stroke is drawn outside the radius.
-      'circle-radius': 13 - groupOutline,
-      'circle-color': groupFill,
-      'circle-opacity': byStatus('own', (look) => look.groupOpacity),
-      'circle-stroke-width': groupOutline,
-      'circle-stroke-color': statusColor,
-      'circle-stroke-opacity': byStatus('own', (look) => look.groupOpacity),
+    {
+      id: 'trail-venue-rings',
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('venue'),
+      paint: {
+        'circle-radius': 5,
+        'circle-color': 'rgba(0, 0, 0, 0)',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': statusColor,
+      },
     },
-  },
-  {
-    id: 'card-cluster-counts',
-    type: 'symbol',
-    source: cardLayoutSource,
-    filter: kindIs('cardCluster'),
-    layout: {
-      'text-field': ['to-string', ['get', 'count']],
-      'text-font': [clusterCountFont],
-      'text-size': 11,
-      'text-allow-overlap': true,
+    {
+      id: 'trail-venues',
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('venue'),
+      paint: { 'circle-radius': 2, 'circle-color': statusColor },
     },
-    paint: { 'text-color': statusColor, 'text-opacity': byStatus('own', (look) => look.groupOpacity) },
-  },
-]
+    {
+      id: 'card-cluster-glows',
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('cardCluster'),
+      paint: {
+        'circle-radius': 26,
+        'circle-color': statusColor,
+        'circle-blur': 1,
+        'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity * cluster.glowOpacity),
+      },
+    },
+    {
+      id: cardClusterLayer,
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('cardCluster'),
+      paint: {
+        // 26 pixels across, outline and all: the stroke is drawn outside the radius.
+        'circle-radius': 13 - cluster.outlineWidth,
+        'circle-color': cluster.fill,
+        'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
+        'circle-stroke-width': cluster.outlineWidth,
+        'circle-stroke-color': statusColor,
+        'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
+      },
+    },
+    {
+      id: 'card-cluster-counts',
+      type: 'symbol',
+      source: cardLayoutSource,
+      filter: kindIs('cardCluster'),
+      layout: {
+        'text-field': ['to-string', ['get', 'count']],
+        'text-font': [clusterCountFont],
+        'text-size': 11,
+        'text-allow-overlap': true,
+      },
+      paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+    },
+  ]
+}
 
 /**
  * An invisible stand-in for each score card with room, where it is, moved or not: score cards are

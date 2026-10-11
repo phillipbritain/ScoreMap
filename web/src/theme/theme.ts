@@ -204,6 +204,13 @@ function byZoom(size: Setting<number>, what: string): Setting<Readonly<Record<st
   }
 }
 
+/** A size by zoom (see byZoom) as [zoom, size] stops, furthest out first, as a map style takes them. */
+export function zoomStops(sizes: Readonly<Record<string, number>>): [number, number][] {
+  return Object.entries(sizes)
+    .map(([zoom, size]): [number, number] => [Number(zoom), size])
+    .sort(([a], [b]) => a - b)
+}
+
 /** A line on the globe: its colour, and its width in pixels as the map zooms. */
 const globeLine = { color, width: byZoom(pixels, 'a width') }
 

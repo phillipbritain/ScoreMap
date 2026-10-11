@@ -653,8 +653,8 @@ body {
   max-height: calc(100% - 2 * var(--spacing-l));
 }
 
-/* Just the gear, standing on the globe without a panel: in the accent, like the country names, on a
-   dark outline like theirs, and without the disclosure triangle. */
+/* Just the gear, standing on the globe without a panel: in the accent, with the theme's outline
+   around it (the dark theme has none: controls cast no shadow), and without the disclosure triangle. */
 .settings-menu summary {
   display: flex;
   color: var(--text-accent);

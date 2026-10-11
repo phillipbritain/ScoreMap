@@ -322,9 +322,9 @@ const settings = {
     glow: { y: offset, blur: pixels, opacity },
   },
   /**
-   * The settings menu: its surface and drop shadow, the dark outline around the gear, a tab that's off,
-   * the count of a sport's leagues that are on, the hint beside "All leagues", a league chip's outline
-   * and the badge counting leagues, and a tab or chip that's on.
+   * The settings menu: its surface and drop shadow, an outline around the gear (a shadow), a tab
+   * that's off, the count of a sport's leagues that are on, the hint beside "All leagues", a league
+   * chip's outline and the badge counting leagues, and a tab or chip that's on.
    */
   settingsMenu: {
     surface: color,

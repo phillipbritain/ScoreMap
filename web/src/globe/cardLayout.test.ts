@@ -349,6 +349,42 @@ describe('layOutCards', () => {
       expect(shiftsOf(layout).get('b')).not.toEqual(below)
       expect(anyOverlap(placed(pair, [blocking]))).toBe(false)
     })
+
+    it('keeps cards anchored as the globe pans across a crowd of venues', () => {
+      // Forty venues packed in a spiral, panned across the screen 4 px a frame and spreading a little
+      // as they go, as a globe's venues shift against each other while it turns.
+      const statuses: GameStatus[] = ['Live', 'Upcoming', 'Final']
+      const crowd = (frame: number): ScreenCard[] =>
+        Array.from({ length: 40 }, (_, i) => {
+          const r = 14 * Math.sqrt(i) * (1 + frame / 1000)
+          const angle = i * 2.39996
+          return {
+            gameId: `g${String(i).padStart(2, '0')}`,
+            status: statuses[i % 3],
+            venueX: 900 - 4 * frame + r * Math.cos(angle),
+            venueY: my + r * Math.sin(angle),
+            width: 106,
+            height: 60,
+          }
+        })
+      // How often a card with its venue on screen leaps more than 24 px from where it was.
+      let jumps = 0
+      let previous: CardLayout['cards'] = new Map()
+      for (let frame = 0; frame < 100; frame++) {
+        const cards = crowd(frame)
+        const layout = layOutCards(cards, scene, previous)
+        for (const { gameId, venueX, venueY } of cards) {
+          const was = previous.get(gameId)
+          const now = layout.cards.get(gameId)!
+          if (!was || was.inCardCluster || now.inCardCluster) continue
+          const onScreen = venueX >= 0 && venueX <= scene.width && venueY >= 0 && venueY <= scene.height
+          if (onScreen && Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > 24) jumps++
+        }
+        previous = layout.cards
+      }
+      // No jumpier than before #88 (21), which made 130 here; the layout now makes 5.
+      expect(jumps).toBeLessThanOrEqual(20)
+    })
   })
 
   it("leaves cards well off screen where they'd sit, however they overlap", () => {

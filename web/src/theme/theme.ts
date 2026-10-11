@@ -223,14 +223,16 @@ const placeName = {
  * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
  * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
  * opacity at the middle), how opaque a cluster showing as this status is, and its score cards: how
- * opaque they are, and how far and how strongly they glow in its colour (a radius of 0 is no glow).
+ * far they fade, and how far and how strongly they glow in its colour (a radius of 0 is no glow). A
+ * card stays solid as it fades: its status colour, text and logos are mixed this far into its fill
+ * (0 is not at all, 1 is all the way, leaving a blank card).
  */
 const statusLook = {
   color,
   core: { color, radius: pixels, opacity, ring: pixels },
   glow: { radius: pixels, opacity },
   clusterOpacity: opacity,
-  card: { opacity, glow: { radius: pixels, opacity } },
+  card: { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radius: pixels, opacity } },
 }
 
 /** Every setting a theme has, by where it sits in the theme's settings. */

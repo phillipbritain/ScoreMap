@@ -35,7 +35,7 @@ function look(color: string, coreRadius: number, glowRadius: number) {
     core: { color: '#ffffff', radius: coreRadius, opacity: 0.9, ring: 1 },
     glow: { radius: glowRadius, opacity: 0.5 },
     clusterOpacity: coreRadius / 4,
-    card: { opacity: 1, glow: { radius: glowRadius / 2, opacity: 0.5 } },
+    card: { fade: 0, glow: { radius: glowRadius / 2, opacity: 0.5 } },
   }
 }
 

@@ -431,8 +431,10 @@ describe('the built-in theme', () => {
       expect(look.glow.opacity).toBe(0)
       expect(look.card.glow.opacity).toBe(0)
     }
-    expect(live.card.opacity).toBeGreaterThan(upcoming.card.opacity)
-    expect(upcoming.card.opacity).toBeGreaterThan(final.card.opacity)
+    expect(live.card.fade).toBe(0)
+    expect(upcoming.card.fade).toBeGreaterThan(live.card.fade)
+    expect(final.card.fade).toBeGreaterThan(upcoming.card.fade)
+    expect(disrupted.card.fade).toBeGreaterThan(0)
     expect(live.clusterOpacity).toBeGreaterThan(final.clusterOpacity)
   })
 

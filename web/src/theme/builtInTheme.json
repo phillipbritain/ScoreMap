@@ -1,0 +1,25 @@
+{
+  "palette": {
+    "navy": { "base": "#0b1526", "steps": { "900": "#050b16" } },
+    "cream": { "base": "#f1e6cc", "steps": { "400": "#fff4dc", "600": "#d8c9a4" } }
+  },
+  "settings": {
+    "globe": {
+      "surface": "navy.500",
+      "coastlines": "rgba(255, 255, 255, 0.7)",
+      "countryBorders": "rgba(255, 255, 255, 0.7)",
+      "stateLines": "rgba(255, 255, 255, 0.3)",
+      "disputedBorders": "rgba(255, 255, 255, 0.5)",
+      "halo": {
+        "inner": "rgb(110 168 255 / 0.55)",
+        "outer": "rgb(60 120 255 / 0.25)"
+      }
+    },
+    "placeNames": {
+      "city": { "color": "cream.500", "outline": "navy.900", "font": "Open Sans Semibold" },
+      "capital": { "color": "cream.400", "outline": "navy.900", "font": "Open Sans Bold" },
+      "state": { "color": "#9a8a62", "outline": "navy.900", "font": "Open Sans Regular" },
+      "country": { "color": "cream.600", "outline": "navy.900", "font": "Open Sans Bold" }
+    }
+  }
+}

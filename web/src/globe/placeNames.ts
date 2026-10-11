@@ -70,10 +70,10 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 type PlaceKind = keyof Theme['placeNames']
 
 /**
- * States and countries in spaced capitals, with this much tracking in ems; city names as they are.
- * Their colours, outlines, fonts and sizes come from the theme.
+ * States and countries in capitals; city names as they are. Their colours, outlines, fonts, sizes and
+ * letter spacing come from the theme.
  */
-const capitals: Partial<Record<PlaceKind, number>> = { state: 0.25, country: 0.12 }
+const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
 
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
 const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.placeNames[kind].size).flat()
@@ -85,10 +85,9 @@ function placeKind(layerId: string): PlaceKind {
   return 'city'
 }
 
-/** A place name in the theme's look for its kind of place, in spaced capitals or not (see capitals). */
+/** A place name in the theme's look for its kind of place, in capitals or not (see capitals). */
 function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
   const kind = placeKind(layer.id)
-  const tracking = capitals[kind]
   const look = theme.placeNames[kind]
   const named = {
     ...layer,
@@ -96,8 +95,8 @@ function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification 
       ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [look.font.name],
       'text-size': zoomed(...sizeStops(kind, theme)),
-      'text-transform': tracking === undefined ? 'none' : 'uppercase',
-      'text-letter-spacing': tracking ?? 0,
+      'text-transform': capitals.has(kind) ? 'uppercase' : 'none',
+      'text-letter-spacing': look.letterSpacing,
     },
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
@@ -203,6 +202,10 @@ export interface CityNameLook {
   offset: number
   /** The widest a line gets before the name wraps, in pixels. */
   maxWidth: number
+  /** How far apart its letters are spaced, in ems. */
+  letterSpacing: number
+  /** How far score cards keep clear of its letters, in pixels. */
+  clearance: number
 }
 
 /**
@@ -217,6 +220,8 @@ export function cityNameLook(zoom: number, capital: boolean, theme: Theme): City
     size,
     offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
     maxWidth: cityNameMaxWidth * size,
+    letterSpacing: theme.placeNames[kind].letterSpacing,
+    clearance: theme.sizes.card.nameClearance,
   }
 }
 /** A globe font as a CSS font at this size, for measuring text in it on the page. */

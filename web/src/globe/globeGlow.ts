@@ -19,16 +19,15 @@ export function addGlobeGlow(map: MapLibreMap, { globe }: Theme): () => void {
   const place = () => {
     const radius = onScreenRadius(map)
     const centre = map.project(map.getCenter())
-    const blur = Math.min(radius * 0.12, 60)
-    const spread = Math.min(radius * 0.04, 20)
-    const outerBlur = Math.min(radius * 0.35, 160)
-    const outerSpread = Math.min(radius * 0.08, 40)
+    // Each glow grows with the globe on screen, up to the theme's most.
+    const size = ({ share, max }: { share: number; max: number }) => Math.min(radius * share, max)
+    const shadow = ({ color, blur, spread }: Theme['globe']['halo']['inner']) => `0 0 ${size(blur)}px ${size(spread)}px ${color}`
     Object.assign(glow.style, {
       width: `${2 * radius}px`,
       height: `${2 * radius}px`,
       left: `${centre.x - radius}px`,
       top: `${centre.y - radius}px`,
-      boxShadow: `0 0 ${blur}px ${spread}px ${globe.halo.inner}, 0 0 ${outerBlur}px ${outerSpread}px ${globe.halo.outer}`,
+      boxShadow: `${shadow(globe.halo.inner)}, ${shadow(globe.halo.outer)}`,
     })
   }
   map.on('move', place)

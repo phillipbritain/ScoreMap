@@ -69,6 +69,14 @@ describe('cityNameBox', () => {
     expect(box.y + box.height / 2).toBeGreaterThanOrEqual(200 + look.offset + look.size)
   })
 
+  it("keeps the theme's clearance for score cards around the name's letters", () => {
+    const theme = { ...builtInTheme, sizes: { ...builtInTheme.sizes, card: { ...builtInTheme.sizes.card, nameClearance: 7 } } }
+    const clear = { ...cityNameLook(4, false, theme), maxWidth: 100 }
+    const box = cityNameBox(tampa, { x: 100, y: 200 }, clear, measure)
+    expect(box.width).toBe(measure(tampa.name) + 2 * 7)
+    expect(box.y - box.height / 2).toBe(200 + clear.offset - 7)
+  })
+
   it('wraps a long name onto more lines, as the map does', () => {
     const long = { ...tampa, name: 'Ciudad de la Santísima Trinidad' }
     const box = cityNameBox(long, { x: 0, y: 0 }, look, measure)

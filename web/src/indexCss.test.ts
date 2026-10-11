@@ -14,6 +14,23 @@ function declarations(source: string): string[] {
     .filter((part) => /^[-a-z]+ ?:/.test(part))
 }
 
+/** The CSS without its @keyframes: motion isn't part of the theme. */
+function withoutKeyframes(source: string): string {
+  let kept = ''
+  let at = 0
+  for (let start = source.indexOf('@keyframes'); start !== -1; start = source.indexOf('@keyframes', at)) {
+    kept += source.slice(at, start)
+    let depth = 0
+    let i = source.indexOf('{', start)
+    for (; i < source.length; i++) {
+      if (source[i] === '{') depth++
+      else if (source[i] === '}' && --depth === 0) break
+    }
+    at = i + 1
+  }
+  return kept + source.slice(at)
+}
+
 const valueOf = (declaration: string) => declaration.slice(declaration.indexOf(':') + 1)
 
 /** A colour written out: #rgb or #rrggbb, a colour function such as rgb(…), or a common colour keyword. */
@@ -40,6 +57,14 @@ describe('the page’s CSS', () => {
       // Circles stay circles.
       .filter((declaration) => !(propertyOf(declaration) === 'border-radius' && withoutThemeValues(declaration) === '50%'))
       .filter((declaration) => length.test(withoutThemeValues(declaration)))
+    expect(own).toEqual([])
+  })
+
+  it('sizes nothing in pixels of its own, but in animations and the starfield’s pattern', () => {
+    const own = declarations(withoutKeyframes(css))
+      // The stars behind the globe are a pattern, drawn to its own sizes.
+      .filter((declaration) => !/^background-(image|size)$/.test(propertyOf(declaration)))
+      .filter((declaration) => /\d*\.?\d+px/.test(withoutThemeValues(declaration)))
     expect(own).toEqual([])
   })
 

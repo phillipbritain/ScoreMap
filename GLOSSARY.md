@@ -62,6 +62,10 @@ _Avoid_: Skin, style (the globe's map style is MapLibre's), card style
 A theme's named base colours, each worked out into steps from light (100) to dark (900), its base colour at 500. A theme's colour jobs, such as the globe's surface or a city's name, each name a step, such as `navy.700`, or give a colour directly.
 _Avoid_: Colour scheme, swatches, tokens
 
+**Colour job**:
+What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
+_Avoid_: Token, role, semantic colour
+
 ### Game status
 
 **Upcoming**:

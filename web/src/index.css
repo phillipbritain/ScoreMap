@@ -1,8 +1,9 @@
-/* Every colour, font, text size, spacing and corner here comes from the theme, which is written to
-   the page's root as custom properties, one per setting (see theme/theme.ts' customProperties):
-   --text-main, --status-live-color, --fonts-body-family, --text-sizes-m, --spacing-l, --corners-card
-   and so on. Text sizes and spacing are steps of the theme's scales; corners are its radii, each for
-   a kind of corner. */
+/* Every colour, font, size, spacing, corner, line width and shadow here comes from the theme, which
+   is written to the page's root as custom properties, one per setting (see theme/theme.ts'
+   customProperties): --text-main, --status-live-color, --fonts-body-family, --text-sizes-m,
+   --spacing-l, --corners-card, --strokes-thin, --panel-shadow, --sizes-card-pointer and so on. Text
+   sizes, spacing and line widths are steps of the theme's scales; corners are its radii, each for a
+   kind of corner. Motion (durations, easings and the animations' own shapes) stays here. */
 
 html,
 body,
@@ -63,24 +64,29 @@ body {
   z-index: 1;
   display: flex;
   box-sizing: border-box;
-  width: min(940px, calc(100% - 2 * var(--spacing-l)));
-  height: 127px;
-  border-top: 3px solid var(--status-color);
+  width: min(var(--sizes-panel-width), calc(100% - 2 * var(--spacing-l)));
+  height: var(--sizes-panel-height);
+  /* The score block and photo are clipped to the panel's corners. */
+  overflow: hidden;
+  border-top: var(--strokes-thick) solid var(--status-color);
+  border-radius: var(--corners-panel);
   background: linear-gradient(180deg, var(--panel-surface-top), var(--panel-surface-bottom));
   color: var(--text-main);
   font-size: var(--text-sizes-m);
   transform: translateX(-50%);
   box-shadow:
-    0 8px 30px var(--panel-shadow),
-    0 -2px 14px color-mix(in srgb, var(--status-color) 35%, transparent);
+    var(--panel-shadow),
+    0 var(--panel-glow-y) var(--panel-glow-blur) color-mix(in srgb, var(--status-color) calc(var(--panel-glow-opacity) * 100%), transparent);
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
   --cut-corner: calc(var(--cut-corner-on) * var(--cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
-/* Clear of the scenario pills and clock (local runs only). */
+/* Clear of the scenario pills and clock (local runs only): above their row, as tall as a speed key
+   in the keys' padding, by the gap the bottom stack leaves between its rows. */
 .bottom-stack--scenario ~ .game-panel {
-  bottom: 60px;
+  --controls-row: calc(var(--sizes-controls-key) + 2 * var(--spacing-2xs));
+  bottom: calc(var(--spacing-l) + var(--controls-row) + var(--spacing-m));
 }
 
 /* The score block at the left, slanted on its right edge. One column that can't grow past the
@@ -91,11 +97,11 @@ body {
   align-content: center;
   gap: var(--spacing-2xs);
   box-sizing: border-box;
-  width: 290px;
+  width: var(--sizes-panel-score-block);
   flex-shrink: 0;
   padding: var(--spacing-m) var(--spacing-2xl) var(--spacing-m) var(--spacing-xl);
   background: linear-gradient(180deg, var(--panel-score-block-top), var(--panel-score-block-bottom));
-  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--sizes-panel-slant)) 100%, 0 100%);
 }
 
 /* In the accent and tracked out, like the country names on the globe. */
@@ -125,8 +131,8 @@ body {
 
 .game-panel__team img,
 .game-panel__logo {
-  width: 28px;
-  height: 28px;
+  width: var(--sizes-panel-logo);
+  height: var(--sizes-panel-logo);
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -156,11 +162,12 @@ body {
 
 .game-panel__progress {
   justify-self: start;
-  max-width: calc(100% - 8px);
+  max-width: calc(100% - var(--spacing-m));
   margin-top: var(--spacing-xs);
   padding: var(--spacing-2xs) var(--spacing-m);
   overflow: hidden;
   background: var(--status-color);
+  color: var(--text-on-status);
   font-family: var(--fonts-heading-family);
   font-size: var(--text-sizes-s);
   font-weight: var(--fonts-heading-weight);
@@ -231,7 +238,7 @@ body {
    there's no photo. */
 .game-panel__photo {
   position: relative;
-  width: 180px;
+  width: var(--sizes-panel-photo);
   margin: 0;
   flex-shrink: 0;
   background: radial-gradient(ellipse at 70% 50%, var(--panel-photo), transparent 70%);
@@ -274,8 +281,8 @@ body {
   position: absolute;
   top: var(--spacing-xs);
   right: var(--spacing-xs);
-  width: 24px;
-  height: 24px;
+  width: var(--sizes-panel-close);
+  height: var(--sizes-panel-close);
   border: none;
   border-radius: 50%;
   background: var(--panel-close);
@@ -291,13 +298,13 @@ body {
 @media (max-width: 640px) {
   .game-panel {
     flex-direction: column;
-    height: 236px;
+    height: var(--sizes-panel-phone-height);
     clip-path: none;
   }
 
   /* The pills and the clock wrap to two rows on a phone. */
   .bottom-stack--scenario ~ .game-panel {
-    bottom: 104px;
+    bottom: calc(var(--spacing-l) + 2 * (var(--controls-row) + var(--spacing-m)));
   }
 
   .game-panel__score {
@@ -315,35 +322,46 @@ body {
   }
 }
 
-/* How each status looks comes from the theme (--status-live-color and so on). Score cards pick
-   theirs by their status class. Live stands out most,
-   Upcoming is dimmer, Final fades, Disrupted is greyed out. */
+/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how
+   opaque its score cards are and how they glow. Score cards pick theirs by their status class. */
 .score-card--live {
   --status-color: var(--status-live-color);
+  --status-card-opacity: var(--status-live-card-opacity);
+  --status-card-glow-radius: var(--status-live-card-glow-radius);
+  --status-card-glow-opacity: var(--status-live-card-glow-opacity);
 }
 
 .score-card--upcoming {
   --status-color: var(--status-upcoming-color);
+  --status-card-opacity: var(--status-upcoming-card-opacity);
+  --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
+  --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
 }
 
 .score-card--final {
   --status-color: var(--status-final-color);
+  --status-card-opacity: var(--status-final-card-opacity);
+  --status-card-glow-radius: var(--status-final-card-glow-radius);
+  --status-card-glow-opacity: var(--status-final-card-glow-opacity);
 }
 
 .score-card--disrupted {
   --status-color: var(--status-disrupted-color);
+  --status-card-opacity: var(--status-disrupted-card-opacity);
+  --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
+  --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
 }
 
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores. */
 .score-card {
   /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
-  --score-card-pointer: 6px;
+  --score-card-pointer: var(--sizes-card-pointer);
   display: grid;
   gap: var(--spacing-2xs);
-  min-width: 92px;
+  min-width: var(--sizes-card-min-width);
   padding: 0 0 var(--spacing-xs);
-  border: 1px solid var(--status-color);
+  border: var(--strokes-thin) solid var(--status-color);
   border-radius: var(--corners-card);
   background: var(--card-fill);
   color: var(--card-text);
@@ -352,9 +370,12 @@ body {
   font-weight: var(--fonts-card-clock-weight);
   line-height: 1.2;
   text-transform: uppercase;
+  opacity: var(--status-card-opacity);
+  /* The status's glow around the card, and a fainter one inside it. */
   box-shadow:
-    0 0 8px color-mix(in srgb, var(--status-color) 45%, transparent),
-    inset 0 0 10px color-mix(in srgb, var(--status-color) 15%, transparent);
+    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
+    inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
+      color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
   /* Animations grow the card from its pointer, which stays on the venue. */
@@ -386,19 +407,7 @@ body {
   visibility: hidden;
 }
 
-.score-card--upcoming {
-  opacity: 0.85;
-}
-
-.score-card--final {
-  opacity: 0.6;
-}
-
 /* Greyed out: the game isn't being played as scheduled. */
-.score-card--disrupted {
-  opacity: 0.7;
-}
-
 .score-card.score-card--disrupted {
   background: var(--card-disrupted-fill);
   color: var(--card-disrupted-text);
@@ -410,8 +419,8 @@ body {
 
 /* The game whose panel is open, matching the selected small pin's ring. */
 .score-card--selected {
-  outline: 3px solid var(--selection);
-  outline-offset: 2px;
+  outline: var(--selection-width) solid var(--selection-color);
+  outline-offset: var(--spacing-2xs);
   opacity: 1;
 }
 
@@ -421,18 +430,19 @@ body {
   gap: var(--spacing-xs);
   margin-bottom: var(--spacing-2xs);
   padding: var(--spacing-2xs) var(--spacing-s);
-  border-bottom: 1px solid var(--status-color);
+  border-bottom: var(--strokes-thin) solid var(--status-color);
   background: color-mix(in srgb, var(--status-color) 28%, transparent);
   font-size: var(--text-sizes-xs);
   letter-spacing: 0.06em;
 }
 
 .score-card__light {
-  width: 6px;
-  height: 6px;
+  width: var(--sizes-card-light);
+  height: var(--sizes-card-light);
   border-radius: 50%;
   background: var(--status-color);
-  box-shadow: 0 0 6px var(--status-color);
+  /* Lit as its card glows. */
+  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--status-color);
 }
 
 .score-card--live .score-card__light {
@@ -447,15 +457,15 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: 18px 1fr auto;
+  grid-template-columns: calc(var(--sizes-card-logo) + var(--spacing-2xs)) 1fr auto;
   align-items: center;
   gap: var(--spacing-xs);
   padding: 0 var(--spacing-s);
 }
 
 .score-card__logo {
-  width: 16px;
-  height: 16px;
+  width: var(--sizes-card-logo);
+  height: var(--sizes-card-logo);
   object-fit: contain;
 }
 
@@ -548,16 +558,16 @@ body {
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--pulse-color);
+  width: var(--pulse-size-pin);
+  height: var(--pulse-size-pin);
+  border: var(--pulse-ring-lively) solid var(--pulse-color);
   border-radius: 50%;
   opacity: 0;
 }
 
 .pin-pulse--cluster {
-  width: 36px;
-  height: 36px;
+  width: var(--pulse-size-cluster);
+  height: var(--pulse-size-cluster);
 }
 
 .pin-pulse--score {
@@ -569,7 +579,7 @@ body {
 }
 
 .pin-pulse--finish {
-  border-width: 2px;
+  border-width: var(--pulse-ring-calm);
   animation: pin-pulse-calm 2.6s ease-in-out;
 }
 
@@ -641,7 +651,7 @@ body {
   color: var(--text-accent);
   cursor: pointer;
   list-style: none;
-  filter: drop-shadow(0 0 2px var(--settings-menu-gear-outline));
+  filter: drop-shadow(var(--settings-menu-gear-outline));
 }
 
 .settings-menu summary::-webkit-details-marker {
@@ -649,33 +659,33 @@ body {
 }
 
 .settings-menu__icon {
-  width: 28px;
-  height: 28px;
+  width: var(--sizes-settings-menu-gear);
+  height: var(--sizes-settings-menu-gear);
 }
 
 /* The panel below the gear, on the settings menu's surface: the built-in theme's is the scenario
    pills' colour but solid, so score cards behind it don't show through. */
 .settings-menu__panel {
-  width: 320px;
+  width: var(--sizes-settings-menu-width);
   max-width: calc(100vw - 2 * var(--spacing-l));
   overflow-y: auto;
   border-radius: var(--corners-menu);
   background: var(--settings-menu-surface);
   color: var(--text-main);
   font-size: var(--text-sizes-m);
-  box-shadow: 0 4px 16px var(--settings-menu-shadow);
+  box-shadow: var(--settings-menu-shadow);
 }
 
 .settings-tabs {
   display: flex;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: var(--strokes-thin) solid var(--divider);
 }
 
 .settings-tab {
   flex: 1;
   padding: var(--spacing-m);
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--strokes-medium) solid transparent;
   background: none;
   color: var(--settings-menu-tab);
   font-family: var(--fonts-tab-family);
@@ -701,7 +711,7 @@ body {
 
 .settings-chip {
   padding: var(--spacing-xs) var(--spacing-l);
-  border: 1px solid var(--settings-menu-chip-outline);
+  border: var(--strokes-thin) solid var(--settings-menu-chip-outline);
   border-radius: var(--corners-control);
   background: transparent;
   color: var(--text-accent);
@@ -726,14 +736,14 @@ body {
   gap: var(--spacing-m);
   margin-bottom: var(--spacing-l);
   padding-bottom: var(--spacing-m);
-  border-bottom: 1px solid var(--divider);
+  border-bottom: var(--strokes-thin) solid var(--divider);
 }
 
 .settings-master__chip {
   display: flex;
   align-items: center;
   gap: var(--spacing-m);
-  height: 32px;
+  height: var(--sizes-settings-menu-all-leagues);
   padding: 0 var(--spacing-m);
   font-size: var(--text-sizes-m);
 }
@@ -819,7 +829,7 @@ body {
   background: var(--controls-surface);
   color: var(--text-main);
   font-size: var(--text-sizes-m);
-  box-shadow: 0 2px 8px var(--controls-shadow);
+  box-shadow: var(--controls-shadow);
 }
 
 .scenario-pill summary {
@@ -842,14 +852,18 @@ body {
   left: 0;
   bottom: calc(100% + var(--spacing-s));
   min-width: 100%;
-  max-height: calc(100vh - 120px);
+  /* Clear of the settings gear above, by a wide gap, and of the pills below. */
+  max-height: calc(
+    100vh - (var(--spacing-l) + var(--sizes-settings-menu-gear) + var(--spacing-2xl)) -
+      (var(--spacing-l) + var(--sizes-controls-key) + 2 * var(--spacing-2xs) + var(--spacing-s))
+  );
   overflow-y: auto;
   box-sizing: border-box;
   margin: 0;
   padding: var(--spacing-s);
   border-radius: var(--corners-menu);
   background: var(--controls-surface);
-  box-shadow: 0 2px 8px var(--controls-shadow);
+  box-shadow: var(--controls-shadow);
   list-style: none;
   white-space: nowrap;
 }
@@ -888,15 +902,15 @@ body {
   border-radius: var(--corners-control);
   background: var(--controls-surface);
   color: var(--text-main);
-  box-shadow: 0 2px 8px var(--controls-shadow);
+  box-shadow: var(--controls-shadow);
 }
 
 .speed-keys button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: var(--sizes-controls-key);
+  height: var(--sizes-controls-key);
   padding: 0;
   border: none;
   border-radius: var(--corners-control);
@@ -920,18 +934,18 @@ body {
 }
 
 .speed-keys svg {
-  width: 14px;
-  height: 14px;
+  width: var(--sizes-controls-icon);
+  height: var(--sizes-controls-icon);
   fill: currentColor;
 }
 
 /* At Faster, Fast-forward widens for its third triangle. */
 .speed-keys .speed-keys__fast-forward--faster {
-  width: 42px;
+  width: calc(var(--sizes-controls-key) + var(--spacing-m));
 }
 
 .speed-keys .speed-keys__wide-icon {
-  width: 20px;
+  width: calc(var(--sizes-controls-icon) + var(--spacing-s));
 }
 
 .speed-keys button:disabled {
@@ -975,5 +989,5 @@ body {
   font-weight: var(--fonts-scenario-clock-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  box-shadow: 0 2px 8px var(--controls-shadow);
+  box-shadow: var(--controls-shadow);
 }

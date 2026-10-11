@@ -11,6 +11,9 @@ using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Aspire's service defaults: telemetry for its dashboard, health checks, service discovery (ADR-0013).
+builder.AddServiceDefaults();
+
 // Bound league by league at startup, so a misconfigured league (e.g. an unknown sport) stops the
 // server straight away; binding the whole list at once would quietly skip it.
 builder.Services.AddOptions<List<League>>()
@@ -98,6 +101,8 @@ builder.Services.AddSignalR();
 builder.AddScenarios();
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 // The built browser app (wwwroot, filled by `dotnet publish`; in development Vite serves it
 // instead). Any page address that isn't a file or the hub gets index.html.

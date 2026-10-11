@@ -81,10 +81,10 @@ describe('resolveTheme', () => {
   it('resolves a colour job from a colour given directly', () => {
     const json = themeJson()
     json.settings.globe.surface = '#123456'
-    json.settings.globe.coastlines = 'rgba(255, 255, 255, 0.7)'
+    json.settings.globe.coastlines.color = 'rgba(255, 255, 255, 0.7)'
     const theme = resolved(json)
     expect(theme.globe.surface).toBe('#123456')
-    expect(theme.globe.coastlines).toBe('rgba(255, 255, 255, 0.7)')
+    expect(theme.globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
   })
 
   it('rejects a colour job naming a step the palette doesn’t have', () => {
@@ -236,27 +236,28 @@ describe('the built-in theme', () => {
     expect(resolveTheme(builtIn)).toMatchObject({ ok: true })
   })
 
-  it('draws the globe and its place names in today’s colours', () => {
+  it('draws the globe and its place names in today’s colours, line widths and outlines', () => {
     const { globe, placeNames } = resolved(builtIn)
     expect(globe).toEqual({
       surface: '#0b1526',
-      coastlines: 'rgba(255, 255, 255, 0.7)',
-      countryBorders: 'rgba(255, 255, 255, 0.7)',
-      stateLines: 'rgba(255, 255, 255, 0.3)',
-      disputedBorders: 'rgba(255, 255, 255, 0.5)',
+      coastlines: { color: 'rgba(255, 255, 255, 0.7)', width: { '2': 0.6, '8': 1.2 } },
+      countryBorders: { color: 'rgba(255, 255, 255, 0.7)', width: { '2': 0.6, '8': 1.4 } },
+      stateLines: { color: 'rgba(255, 255, 255, 0.3)', width: { '3': 0.5, '8': 1 } },
+      disputedBorders: { color: 'rgba(255, 255, 255, 0.5)', width: { '0': 0.8 } },
       halo: { inner: 'rgb(110 168 255 / 0.55)', outer: 'rgb(60 120 255 / 0.25)' },
     })
     const look = (kind: keyof typeof placeNames) => {
       const { size: _size, ...colours } = placeNames[kind]
       return { ...colours, font: placeNames[kind].font.name }
     }
-    expect(look('city')).toEqual({ color: '#f1e6cc', outline: '#050b16', font: 'Open Sans Semibold' })
-    expect(look('capital')).toEqual({ color: '#fff4dc', outline: '#050b16', font: 'Open Sans Bold' })
-    expect(look('state')).toEqual({ color: '#9a8a62', outline: '#050b16', font: 'Open Sans Regular' })
-    expect(look('country')).toEqual({ color: '#d8c9a4', outline: '#050b16', font: 'Open Sans Bold' })
+    const outline = { color: '#050b16', width: 2, blur: 0.5 }
+    expect(look('city')).toEqual({ color: '#f1e6cc', outline, font: 'Open Sans Semibold' })
+    expect(look('capital')).toEqual({ color: '#fff4dc', outline, font: 'Open Sans Bold' })
+    expect(look('state')).toEqual({ color: '#9a8a62', outline: { ...outline, width: 1.2, blur: 0 }, font: 'Open Sans Regular' })
+    expect(look('country')).toEqual({ color: '#d8c9a4', outline, font: 'Open Sans Bold' })
   })
 
-  it('draws pins, clusters and the selection in today’s look', () => {
+  it('draws pins, clusters and the selection in today’s look and sizes', () => {
     const { status, cluster, selection } = resolved(builtIn)
     expect(status).toEqual({
       live: {
@@ -284,8 +285,25 @@ describe('the built-in theme', () => {
         clusterOpacity: 0.6,
       },
     })
-    expect(cluster).toEqual({ fill: 'rgba(6, 12, 24, 0.88)', outlineWidth: 1.5, glowOpacity: 0.45 })
-    expect(selection).toBe('#2f80ed')
+    expect(cluster).toEqual({
+      fill: 'rgba(6, 12, 24, 0.88)',
+      radius: { few: 11, some: 13, many: 16 },
+      glowRadius: { few: 22, some: 26, many: 32 },
+      outlineWidth: 1.5,
+      glowOpacity: 0.45,
+    })
+    expect(selection).toEqual({ color: '#2f80ed', width: 3 })
+  })
+
+  it('draws trails and pulses at today’s sizes', () => {
+    const { trail, pulse } = resolved(builtIn)
+    expect(trail).toEqual({
+      width: 1.25,
+      opacity: 0.9,
+      glow: { width: 4, blur: 3, opacity: 0.35 },
+      venue: { radius: 2, ring: { radius: 5, width: 1 } },
+    })
+    expect(pulse).toEqual({ size: { pin: 16, cluster: 36 }, ring: { lively: 3, calm: 2 } })
   })
 
   it('colours the page, its score cards, panels, menus and controls in today’s colours', () => {

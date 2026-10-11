@@ -13,6 +13,7 @@ import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
+import { gameLayers } from './gameLayers'
 import { addGlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
 import { traceLayouts } from './layoutTrace'
@@ -22,23 +23,17 @@ import { pinFeatures } from './pinFeatures'
 import {
   cardClusterLayer,
   cardFootprint,
-  cardFootprintLayerSpec,
-  cardLayoutLayers,
   cardLayoutSource,
   cardLayoutSourceSpec,
 } from './cardLayoutLayers'
 import {
   pinFootprint,
-  pinFootprintLayerSpec,
   pinClusterLayer,
-  pinClusterLayers,
   pinSource,
   pinSourceSpec,
   selectedPin,
   selectedPinLayer,
-  selectedPinLayerSpec,
   smallPinLayer,
-  smallPinLayers,
 } from './pinLayers'
 import { pulse } from './pinPulse'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
@@ -203,20 +198,14 @@ export class GlobeMap {
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
     map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), this.clustering))
-    // Beneath the place names, so a pin never hides a city's name.
-    const belowNames = firstPlaceNameLayer(map.getStyle())
-    for (const layer of pinClusterLayers(this.theme)) map.addLayer(layer, belowNames)
-    for (const layer of smallPinLayers(this.theme)) map.addLayer(layer, belowNames)
-    map.addLayer(selectedPinLayerSpec(this.theme, this.selectedGameId), belowNames)
-    // Trails and card clusters too, so names draw over them (ADR-0010).
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
-    for (const layer of cardLayoutLayers(this.theme)) map.addLayer(layer, belowNames)
-    // On top, so names are placed around the pins' footprints rather than under the pins.
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
     const { image, size } = pinFootprint(this.theme)
     addBlankImage(map, image, size, size)
-    map.addLayer(cardFootprintLayerSpec)
-    map.addLayer(pinFootprintLayerSpec)
+    const layers = gameLayers(this.theme, this.selectedGameId)
+    const belowNames = firstPlaceNameLayer(map.getStyle())
+    for (const layer of layers.belowNames) map.addLayer(layer, belowNames)
+    for (const layer of layers.onTop) map.addLayer(layer)
   }
 
   // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score

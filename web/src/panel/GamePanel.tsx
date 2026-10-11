@@ -153,7 +153,7 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
 function TeamRow({ team }: { team: GameTeam }) {
   return (
     <div className="game-panel__team">
-      {team.logoUrl ? <img src={team.logoUrl} alt="" width={28} height={28} /> : <span className="game-panel__logo" />}
+      {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
       <span className="game-panel__team-name" title={team.fullName}>
         {team.fullName}
       </span>

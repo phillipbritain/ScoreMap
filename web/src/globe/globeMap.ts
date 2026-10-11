@@ -116,7 +116,7 @@ export class GlobeMap {
     this.removeGlow = addGlobeGlow(map, theme)
     this.names = addPlaceNames(map, theme)
     this.cards = new ScoreCardMarkers(map, theme, this.names, (gameId) => this.onSelect(gameId))
-    this.clustering = pinLayout(map.getZoom(), smallPinWidth(theme))
+    this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
     map.on('zoom', this.recluster)
@@ -198,8 +198,8 @@ export class GlobeMap {
   private readonly addPins = () => {
     const map = this.map
     map.setProjection({ type: 'globe' })
-    this.clustering = pinLayout(map.getZoom(), smallPinWidth(this.theme))
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), map.getZoom(), this.theme))
+    this.clustering = this.pinLayoutNow()
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), this.clustering))
     // Beneath the place names, so a pin never hides a city's name.
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of pinClusterLayers(this.theme)) map.addLayer(layer, belowNames)
@@ -219,13 +219,18 @@ export class GlobeMap {
   // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score
   // cards don't (see pinLayout).
   private readonly recluster = () => {
-    const now = pinLayout(this.map.getZoom(), smallPinWidth(this.theme))
+    const now = this.pinLayoutNow()
     const was = this.clustering
     if (now.size === was.size && (now.size === 'card' || now.clusterRadius === was.clusterRadius)) return
     this.clustering = now
     void this.map
       .getSource<GeoJSONSource>(pinSource)
       ?.setClusterOptions({ cluster: now.size === 'small', clusterRadius: now.clusterRadius, clusterMaxZoom })
+  }
+
+  /** The pin layout at the map's zoom now, for small pins as wide as the theme's (see pinLayout). */
+  private pinLayoutNow(): PinLayout {
+    return pinLayout(this.map.getZoom(), smallPinWidth(this.theme))
   }
 
   private readonly syncCards = () => this.cards.sync()

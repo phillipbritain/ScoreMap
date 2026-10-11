@@ -1,4 +1,4 @@
-import type { LayerSpecification, StyleSpecification } from 'maplibre-gl'
+import type { LayerSpecification, LineLayerSpecification, StyleSpecification } from 'maplibre-gl'
 import { glyphsUrl } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { placeNameLayers, placeNameState } from './placeNames'
@@ -44,29 +44,26 @@ export function globeStyle(base: StyleSpecification, theme: Theme): StyleSpecifi
         source: 'openmaptiles',
         'source-layer': 'water',
         filter: ['==', ['get', 'class'], 'ocean'],
-        paint: {
-          'line-color': globe.coastlines,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 8, 1.2],
-        },
+        paint: linePaint(globe.coastlines),
       },
       // The base style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
-      restyled(stateLines, {
-        minzoom: 0,
-        paint: {
-          'line-color': globe.stateLines,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.5, 8, 1],
-        },
-      }),
-      restyled(countryLines, {
-        paint: {
-          'line-color': globe.countryBorders,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 2, 0.6, 8, 1.4],
-        },
-      }),
-      restyled(disputedLines, {
-        paint: { 'line-color': globe.disputedBorders, 'line-dasharray': [2, 2], 'line-width': 0.8 },
-      }),
+      restyled(stateLines, { minzoom: 0, paint: linePaint(globe.stateLines) }),
+      restyled(countryLines, { paint: linePaint(globe.countryBorders) }),
+      restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [2, 2] } }),
       ...placeNameLayers(base, theme),
     ],
+  }
+}
+
+type GlobeLine = Theme['globe']['coastlines']
+
+/** A line in the theme's colour, at its widths as the map zooms, growing evenly from one to the next. */
+function linePaint({ color, width }: GlobeLine): LineLayerSpecification['paint'] {
+  const stops = Object.entries(width)
+    .map(([zoom, pixels]) => [Number(zoom), pixels])
+    .sort(([a], [b]) => a - b)
+  return {
+    'line-color': color,
+    'line-width': stops.length === 1 ? stops[0][1] : ['interpolate', ['linear'], ['zoom'], ...stops.flat()],
   }
 }

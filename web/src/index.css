@@ -410,8 +410,8 @@ body {
 
 /* The game whose panel is open, matching the selected small pin's ring. */
 .score-card--selected {
-  outline: 3px solid var(--selection);
-  outline-offset: 2px;
+  outline: var(--selection-width) solid var(--selection-color);
+  outline-offset: var(--spacing-2xs);
   opacity: 1;
 }
 
@@ -548,16 +548,16 @@ body {
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--pulse-color);
+  width: var(--pulse-size-pin);
+  height: var(--pulse-size-pin);
+  border: var(--pulse-ring-lively) solid var(--pulse-color);
   border-radius: 50%;
   opacity: 0;
 }
 
 .pin-pulse--cluster {
-  width: 36px;
-  height: 36px;
+  width: var(--pulse-size-cluster);
+  height: var(--pulse-size-cluster);
 }
 
 .pin-pulse--score {
@@ -569,7 +569,7 @@ body {
 }
 
 .pin-pulse--finish {
-  border-width: 2px;
+  border-width: var(--pulse-ring-calm);
   animation: pin-pulse-calm 2.6s ease-in-out;
 }
 

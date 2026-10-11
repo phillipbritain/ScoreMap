@@ -10,10 +10,10 @@
     "radii": { "xs": 3, "s": 6, "m": 8, "l": 12, "pill": 999 },
     "globe": {
       "surface": "navy.500",
-      "coastlines": "rgba(255, 255, 255, 0.7)",
-      "countryBorders": "rgba(255, 255, 255, 0.7)",
-      "stateLines": "rgba(255, 255, 255, 0.3)",
-      "disputedBorders": "rgba(255, 255, 255, 0.5)",
+      "coastlines": { "color": "rgba(255, 255, 255, 0.7)", "width": { "2": 0.6, "8": 1.2 } },
+      "countryBorders": { "color": "rgba(255, 255, 255, 0.7)", "width": { "2": 0.6, "8": 1.4 } },
+      "stateLines": { "color": "rgba(255, 255, 255, 0.3)", "width": { "3": 0.5, "8": 1 } },
+      "disputedBorders": { "color": "rgba(255, 255, 255, 0.5)", "width": { "0": 0.8 } },
       "halo": {
         "inner": "rgb(110 168 255 / 0.55)",
         "outer": "rgb(60 120 255 / 0.25)"
@@ -22,25 +22,25 @@
     "placeNames": {
       "city": {
         "color": "cream.500",
-        "outline": "navy.900",
+        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
         "size": { "4": "s", "7": "m", "11": "xl" }
       },
       "capital": {
         "color": "cream.400",
-        "outline": "navy.900",
+        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
         "size": { "4": "m", "7": "l", "11": "xl" }
       },
       "state": {
         "color": "#9a8a62",
-        "outline": "navy.900",
+        "outline": { "color": "navy.900", "width": 1.2, "blur": 0 },
         "font": "Open Sans Regular",
         "size": { "3": "xs", "8": "m" }
       },
       "country": {
         "color": "cream.600",
-        "outline": "navy.900",
+        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
         "size": { "1": "xs", "4": "l" }
       }
@@ -71,8 +71,21 @@
         "clusterOpacity": 0.6
       }
     },
-    "cluster": { "fill": "rgba(6, 12, 24, 0.88)", "outlineWidth": 1.5, "glowOpacity": 0.45 },
-    "selection": "#2f80ed",
+    "cluster": {
+      "fill": "rgba(6, 12, 24, 0.88)",
+      "radius": { "few": 11, "some": 13, "many": 16 },
+      "glowRadius": { "few": 22, "some": 26, "many": 32 },
+      "outlineWidth": 1.5,
+      "glowOpacity": 0.45
+    },
+    "trail": {
+      "width": 1.25,
+      "opacity": 0.9,
+      "glow": { "width": 4, "blur": 3, "opacity": 0.35 },
+      "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
+    },
+    "selection": { "color": "#2f80ed", "width": 3 },
+    "pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
     "page": {
       "background": "night.500",
       "sky": "#03050c",

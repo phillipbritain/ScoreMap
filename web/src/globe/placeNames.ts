@@ -9,7 +9,7 @@ import type {
 } from 'maplibre-gl'
 import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
-import type { Theme } from '../theme/theme'
+import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { degreesApart } from './geo'
 import { isBehindGlobe } from './horizon'
@@ -70,17 +70,13 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 type PlaceKind = keyof Theme['placeNames']
 
 /**
- * States and countries in spaced capitals, with this much tracking in ems; city names as they are.
- * Their colours, outlines, fonts and sizes come from the theme.
+ * States and countries in capitals; city names as they are. Their colours, outlines, fonts, sizes and
+ * letter spacing come from the theme.
  */
-const capitals: Partial<Record<PlaceKind, number>> = { state: 0.25, country: 0.12 }
+const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
 
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
-const sizeStops = (kind: PlaceKind, theme: Theme): number[] =>
-  Object.entries(theme.placeNames[kind].size)
-    .map(([zoom, size]) => [Number(zoom), size])
-    .sort(([a], [b]) => a - b)
-    .flat()
+const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.placeNames[kind].size).flat()
 
 function placeKind(layerId: string): PlaceKind {
   if (layerId === 'label_city_capital') return 'capital'
@@ -89,10 +85,9 @@ function placeKind(layerId: string): PlaceKind {
   return 'city'
 }
 
-/** A place name in the theme's look for its kind of place, in spaced capitals or not (see capitals). */
+/** A place name in the theme's look for its kind of place, in capitals or not (see capitals). */
 function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
   const kind = placeKind(layer.id)
-  const tracking = capitals[kind]
   const look = theme.placeNames[kind]
   const named = {
     ...layer,
@@ -100,8 +95,8 @@ function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification 
       ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [look.font.name],
       'text-size': zoomed(...sizeStops(kind, theme)),
-      'text-transform': tracking === undefined ? 'none' : 'uppercase',
-      'text-letter-spacing': tracking ?? 0,
+      'text-transform': capitals.has(kind) ? 'uppercase' : 'none',
+      'text-letter-spacing': look.letterSpacing,
     },
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
@@ -207,6 +202,10 @@ export interface CityNameLook {
   offset: number
   /** The widest a line gets before the name wraps, in pixels. */
   maxWidth: number
+  /** How far apart its letters are spaced, in ems. */
+  letterSpacing: number
+  /** How far score cards keep clear of its letters, in pixels. */
+  clearance: number
 }
 
 /**
@@ -221,6 +220,8 @@ export function cityNameLook(zoom: number, capital: boolean, theme: Theme): City
     size,
     offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
     maxWidth: cityNameMaxWidth * size,
+    letterSpacing: theme.placeNames[kind].letterSpacing,
+    clearance: theme.sizes.card.nameClearance,
   }
 }
 /** A globe font as a CSS font at this size, for measuring text in it on the page. */
@@ -322,13 +323,13 @@ export function addPlaceNames(map: MapLibreMap, theme: Theme): PlaceNames {
 let measuring: CanvasRenderingContext2D | null | undefined
 
 /**
- * A line's width in a font, in pixels. The map writes its fonts from its own glyphs, which the page
- * doesn't have; the browser's fallback sans-serif measures a little wider than Open Sans, which errs
- * on the side of room.
+ * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
+ * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
+ * wider than Open Sans, which errs on the side of room.
  */
-function measureText(text: string, font: string): number {
+function measureText(text: string, font: string, size: number): number {
   measuring ??= document.createElement('canvas').getContext('2d')
-  if (!measuring) return text.length * fallbackLetterWidth * parseFloat(font.split(' ')[2])
+  if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = font
   return measuring.measureText(text).width
 }

@@ -66,6 +66,10 @@ _Avoid_: Colour scheme, swatches, tokens
 What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
 _Avoid_: Token, role, semantic colour
 
+**Scale**:
+A theme's few named sizes, from small to large, that every size of one kind is a step of: text sizes, spacing, corner radii and line widths each have one. A theme sets how big each step is.
+_Avoid_: Token, ramp, size table
+
 ### Game status
 
 **Upcoming**:

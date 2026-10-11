@@ -19,7 +19,7 @@ body {
   height: 100%;
 }
 
-/* Space behind the globe: a near-black sky with a scattering of faint stars, repeated in tiles. Each
+/* Space behind the globe: the theme's sky with a scattering of faint stars, repeated in tiles. Each
    star's brightness is mixed into the theme's white, cool or warm star. */
 .globe {
   position: relative;
@@ -638,8 +638,8 @@ body {
   height: 28px;
 }
 
-/* The panel below the gear, the dark navy of the scenario pills but solid, so score cards
-   behind it don't show through. */
+/* The panel below the gear, on the settings menu's surface: the built-in theme's is the scenario
+   pills' colour but solid, so score cards behind it don't show through. */
 .settings-menu__panel {
   width: 320px;
   max-width: calc(100vw - 24px);

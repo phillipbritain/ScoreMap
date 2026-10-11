@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { commands } from 'vitest/browser'
 import './index.css'
 import { applyTheme } from './theme/applyTheme'
@@ -53,16 +53,18 @@ describe('with reduce motion off', () => {
 })
 
 describe('with reduce motion on', () => {
-  it('keeps a Live score card’s status light fully lit, without blinking', async () => {
+  beforeEach(async () => {
     await commands.reduceMotion(true)
+  })
+
+  it('keeps a Live score card’s status light fully lit, without blinking', () => {
     const light = liveLight()
 
     expect(light.getAnimations()).toEqual([])
     expect(getComputedStyle(light).opacity).toBe('1')
   })
 
-  it.each(pinAnimations)('fades a pin’s %s ring in and out in place, without changing its size', async (animation) => {
-    await commands.reduceMotion(true)
+  it.each(pinAnimations)('fades a pin’s %s ring in and out in place, without changing its size', (animation) => {
     const keyframes = keyframesOf(pinRing(animation))
 
     expect(keyframes.filter((keyframe) => 'transform' in keyframe)).toEqual([])

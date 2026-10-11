@@ -1,99 +1,38 @@
 import type { ExpressionSpecification } from 'maplibre-gl'
 import type { GameStatus } from '../games/game'
+import type { Theme } from '../theme/theme'
 
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer, Final fades and
- * Disrupted is greyed out, alike on small pins, score cards, pin clusters and card clusters. Map layers read
- * these through style expressions (see byStatus), and the page's CSS through custom properties (see
- * applyStatusLook).
+ * Disrupted is greyed out, alike on small pins, score cards, pin clusters and card clusters. Each
+ * status's look (its colour, the small pin's core and glow, and a cluster's opacity) comes from the
+ * theme; what isn't look stays here: which status draws on top, the order of prominence, and how a
+ * cluster picks its status. Map layers read the look through style expressions (see byStatus), and the
+ * page's CSS through the theme's custom properties (see applyTheme).
  */
-interface StatusLook {
-  color: string
+export type StatusLook = Theme['status'][Lowercase<GameStatus>] & {
   /** Which draws on top where pins or score cards overlap: highest first. */
   stacking: number
-  /**
-   * A small pin is a bright core in a soft glow of the status colour, like a city's lights seen
-   * from orbit. The core's radius, colour and opacity, and the width of the ring of status colour
-   * around it, in pixels.
-   */
-  coreRadius: number
-  coreColor: string
-  coreOpacity: number
-  coreRing: number
-  /** The glow's radius in pixels, out to where it has faded to nothing, and how opaque it is at its middle. */
-  glowRadius: number
-  glowOpacity: number
-  /** A cluster's opacity, pin or card, when it shows as this status. */
-  groupOpacity: number
 }
 
-export const statusLooks: Record<GameStatus, StatusLook> = {
-  Live: {
-    color: '#e4572e',
-    stacking: 2,
-    // Hottest at the middle.
-    coreRadius: 3.5,
-    coreColor: '#ffd9c8',
-    coreOpacity: 1,
-    coreRing: 1.5,
-    glowRadius: 15,
-    glowOpacity: 0.7,
-    groupOpacity: 1,
-  },
-  Upcoming: {
-    color: '#f2a541',
-    stacking: 1,
-    coreRadius: 3,
-    coreColor: '#f2a541',
-    coreOpacity: 0.8,
-    coreRing: 0,
-    glowRadius: 10,
-    glowOpacity: 0.45,
-    groupOpacity: 0.85,
-  },
-  Final: {
-    color: '#8a8f98',
-    stacking: 0,
-    coreRadius: 2.5,
-    coreColor: '#8a8f98',
-    coreOpacity: 0.55,
-    coreRing: 0,
-    glowRadius: 7,
-    glowOpacity: 0.25,
-    groupOpacity: 0.6,
-  },
-  Disrupted: {
-    color: '#c3c6cc',
-    stacking: 0,
-    coreRadius: 2.5,
-    coreColor: '#c3c6cc',
-    coreOpacity: 0.6,
-    coreRing: 0,
-    glowRadius: 7,
-    glowOpacity: 0.25,
-    groupOpacity: 0.6,
-  },
+/** Which status draws on top where pins or score cards overlap: highest first. */
+export const stacking: Readonly<Record<GameStatus, number>> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
+
+/** A status's look, from the theme. */
+export function statusLook(theme: Theme, status: GameStatus): StatusLook {
+  return { ...theme.status[status.toLowerCase() as Lowercase<GameStatus>], stacking: stacking[status] }
 }
-
-/**
- * A cluster, pin or card, is a dark disc like a score card, outlined and
- * lit in its status colour: this fill, an outline this wide, and a glow this much of its opacity.
- */
-export const groupFill = 'rgba(6, 12, 24, 0.88)'
-export const groupOutline = 1.5
-export const groupGlowOpacity = 0.45
-
-/** The selected game's small pin ring and score card outline. */
-export const selectionColor = '#2f80ed'
 
 /** The selected game's score card draws above every other card. */
-export const selectedStacking = Math.max(...Object.values(statusLooks).map((look) => look.stacking)) + 1
+export const selectedStacking = Math.max(...Object.values(stacking)) + 1
 
 /**
- * How far across the widest small pin (a Live one) shows. Its glow is blurred to nothing at its
- * edge, so only about the inner 60% of it shows.
+ * How far across the widest small pin shows, by the widest glow in the theme. Its glow is blurred to
+ * nothing at its edge, so only about the inner 60% of it shows.
  */
-export const smallPinWidth = Math.round(2 * 0.6 * Math.max(...Object.values(statusLooks).map((look) => look.glowRadius)))
+export function smallPinWidth(theme: Theme): number {
+  return Math.round(2 * 0.6 * Math.max(...Object.values(theme.status).map((look) => look.glow.radius)))
+}
 
 /** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */
 export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final', 'Disrupted']
@@ -123,10 +62,11 @@ export const pinClusterStatus: ExpressionSpecification = [
 ] as ExpressionSpecification
 
 /**
- * A style value from the look of the status a feature shows as: its own (ownStatus), or a pin
- * cluster's from its counts (pinClusterStatus).
+ * A style value from the look, in this theme, of the status a feature shows as: its own (ownStatus),
+ * or a pin cluster's from its counts (pinClusterStatus).
  */
 export function byStatus(
+  theme: Theme,
   status: 'own' | 'pinCluster',
   value: (look: StatusLook) => number | string,
 ): ExpressionSpecification {
@@ -134,16 +74,7 @@ export function byStatus(
   return [
     'match',
     status === 'own' ? ownStatus : pinClusterStatus,
-    ...statusProminence.flatMap((s) => [s, value(statusLooks[s])]),
-    value(statusLooks.Final),
+    ...statusProminence.flatMap((s) => [s, value(statusLook(theme, s))]),
+    value(statusLook(theme, 'Final')),
   ] as ExpressionSpecification
-}
-
-/**
- * Writes the looks to CSS custom properties on the page's root, for score cards: --live-color for
- * Live, and so on, and --selection-color.
- */
-export function applyStatusLook(root: { style: Pick<CSSStyleDeclaration, 'setProperty'> }): void {
-  for (const [status, look] of Object.entries(statusLooks)) root.style.setProperty(`--${status.toLowerCase()}-color`, look.color)
-  root.style.setProperty('--selection-color', selectionColor)
 }

@@ -341,7 +341,10 @@ export function customProperties(theme: Theme): Map<string, string> {
   }
   const walk = (schema: object, value: unknown, name: string) => {
     if (isSetting(schema)) write(schema.css ? schema.css(value) : value, name)
-    else for (const [key, inner] of Object.entries(schema)) walk(inner, (value as Record<string, unknown>)[key], `${name}-${kebabCase(key)}`)
+    else {
+      const values = value as Record<string, unknown>
+      for (const [key, inner] of Object.entries(schema)) walk(inner, values[key], `${name}-${kebabCase(key)}`)
+    }
   }
   walk(settings, theme, '-')
   return properties

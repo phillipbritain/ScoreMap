@@ -620,8 +620,15 @@ body {
   }
 }
 
-/* Changes still show, without the bouncing, and nothing moves or blinks: a Live light stays lit (Live
-   is told by its glow and brightness alone) and every pin's ring fades in place without growing. */
+/* The calm ring without the growing: it fades in and out in place, for reduce motion. */
+@keyframes pin-pulse-still {
+  40% {
+    opacity: 0.6;
+  }
+}
+
+/* Changes still show, without the bouncing, and nothing moves or blinks: a Live score card's status
+   light stays lit (Live is told by its glow and brightness alone) and every pin's ring fades in place. */
 @media (prefers-reduced-motion: reduce) {
   .score-card--animate-score,
   .score-card--animate-start {
@@ -636,12 +643,6 @@ body {
   .pin-pulse--start,
   .pin-pulse--finish {
     animation: pin-pulse-still 2.6s ease-in-out;
-  }
-
-  @keyframes pin-pulse-still {
-    40% {
-      opacity: 0.6;
-    }
   }
 }
 

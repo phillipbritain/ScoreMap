@@ -1,7 +1,10 @@
 import { createExpression, type ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import { cityNameLook, mapFonts, placeNameLayers } from './placeNames'
+import { builtInTheme } from '../theme/builtInTheme'
+import { globeFonts } from '../theme/globeFonts'
+import type { Theme } from '../theme/theme'
+import { cityNameLook, placeNameLayers } from './placeNames'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -14,8 +17,8 @@ const base: StyleSpecification = {
   ],
 }
 
-const layout = (id: string) =>
-  (placeNameLayers(base).find((l) => l.id === id) as SymbolLayerSpecification).layout as Record<string, unknown>
+const layout = (id: string, theme: Theme = builtInTheme) =>
+  (placeNameLayers(base, theme).find((l) => l.id === id) as SymbolLayerSpecification).layout as Record<string, unknown>
 
 /** What a layer's zoom-dependent layout value is at a zoom level, as MapLibre works it out. */
 function atZoom(value: unknown, zoom: number): number {
@@ -33,31 +36,57 @@ describe('cityNameLook', () => {
       ['label_city_capital', true],
     ] as const) {
       for (const zoom of zooms) {
-        expect(cityNameLook(zoom, capital).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
+        expect(cityNameLook(zoom, capital, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
       }
     }
   })
 
   it("predicts how far below its dot the map writes a city's name, at every zoom", () => {
     for (const zoom of zooms) {
-      const look = cityNameLook(zoom, false)
+      const look = cityNameLook(zoom, false, builtInTheme)
       const ems = atZoom(layout('label_city')['text-radial-offset'], zoom)
       expect(look.offset, `at ${zoom}`).toBeCloseTo(ems * look.size, 6)
     }
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {
-    expect(cityNameLook(7, true)).toMatchObject({ size: 15, maxWidth: 120 })
+    expect(cityNameLook(7, true, builtInTheme)).toMatchObject({ size: 16, maxWidth: 128 })
   })
 
-  it('measures a name in the weight of the font the map writes it in', () => {
-    const fonts = Object.values(mapFonts)
-    for (const [id, capital] of [
-      ['label_city', false],
-      ['label_city_capital', true],
-    ] as const) {
-      const font = fonts.find((f) => f.name === (layout(id)['text-font'] as string[])[0])!
-      expect(cityNameLook(5, capital).font, id).toMatch(new RegExp(`^${font.weight} `))
+  it("writes each kind of place's name at the theme's text sizes as the map zooms", () => {
+    const theme: Theme = {
+      ...builtInTheme,
+      placeNames: {
+        ...builtInTheme.placeNames,
+        city: { ...builtInTheme.placeNames.city, size: { '2': 10, '6': 20 } },
+        state: { ...builtInTheme.placeNames.state, size: { '5': 14 } },
+      },
     }
+    const size = (id: string, zoom: number) => atZoom(layout(id, theme)['text-size'], zoom)
+    expect(size('label_city', 1)).toBeCloseTo(10, 6)
+    expect(size('label_city', 2)).toBeCloseTo(10, 6)
+    expect(size('label_city', 4)).toBeGreaterThan(10)
+    expect(size('label_city', 4)).toBeLessThan(20)
+    expect(size('label_city', 6)).toBeCloseTo(20, 6)
+    expect(size('label_city', 9)).toBeCloseTo(20, 6)
+    expect(cityNameLook(9, false, theme).size).toBeCloseTo(20, 6)
+    expect(size('label_state', 3)).toBe(14)
+    expect(size('label_state', 7)).toBe(14)
+  })
+
+  it("measures a name in the family, weight and style of the theme's font the map writes it in", () => {
+    const font = (name: string) => globeFonts.get(name)!
+    const theme: Theme = {
+      ...builtInTheme,
+      placeNames: {
+        ...builtInTheme.placeNames,
+        city: { ...builtInTheme.placeNames.city, font: font('Metropolis Light') },
+        capital: { ...builtInTheme.placeNames.capital, font: font('Open Sans Bold Italic') },
+      },
+    }
+    expect(layout('label_city', theme)['text-font']).toEqual(['Metropolis Light'])
+    expect(cityNameLook(5, false, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
+    expect(layout('label_city_capital', theme)['text-font']).toEqual(['Open Sans Bold Italic'])
+    expect(cityNameLook(5, true, theme).font).toMatch(/^italic 700 [\d.]+px "Open Sans", sans-serif$/)
   })
 })

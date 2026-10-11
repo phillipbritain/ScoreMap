@@ -13,6 +13,7 @@ import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
+import type { Theme } from './theme/theme'
 
 const store = settingsStore(() => window.localStorage)
 
@@ -24,7 +25,8 @@ function openingCamera() {
   })
 }
 
-export default function App() {
+/** The app, in a theme: the page's CSS reads it from the page's root (see applyTheme), the globe from here. */
+export default function App({ theme }: { theme: Theme }) {
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
@@ -61,13 +63,13 @@ export default function App() {
     <div className="app">
       <div className="globe-area">
         <Globe
+          theme={theme}
           games={visible}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
           onSelectGame={setSelectedGameId}
           startCamera={camera}
           onCameraMove={store.saveCamera}
-          cardStyle={viewerSettings.cardStyle}
         />
         {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
             settings menu, so an open settings menu lies over them on a phone. */}

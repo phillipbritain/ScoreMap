@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { cityNameBox, cityOfPlace, gameCities, type City } from './gameCities'
 import { cityNameLook } from './placeNames'
+import { builtInTheme } from '../theme/builtInTheme'
 
 const tampa: City = { id: 1, name: 'Tampa', capital: false, longitude: -82.4584, latitude: 27.9478 }
 const miami: City = { id: 2, name: 'Miami', capital: false, longitude: -80.1937, latitude: 25.7743 }
@@ -56,7 +57,8 @@ describe('cityOfPlace', () => {
 describe('cityNameBox', () => {
   // Every letter 10 px wide.
   const measure = (text: string) => text.length * 10
-  const look = cityNameLook(4, false)
+  // Wide enough for the longest word below, "Santísima", to fit on a line.
+  const look = { ...cityNameLook(4, false, builtInTheme), maxWidth: 100 }
 
   it('sits centred below the dot, past the offset, with room for the outline', () => {
     const box = cityNameBox(tampa, { x: 100, y: 200 }, look, measure)
@@ -65,6 +67,14 @@ describe('cityNameBox', () => {
     expect(box.y - box.height / 2).toBeLessThanOrEqual(200 + look.offset)
     expect(box.y - box.height / 2).toBeGreaterThan(200)
     expect(box.y + box.height / 2).toBeGreaterThanOrEqual(200 + look.offset + look.size)
+  })
+
+  it("keeps the theme's clearance for score cards around the name's letters", () => {
+    const theme = { ...builtInTheme, sizes: { ...builtInTheme.sizes, card: { ...builtInTheme.sizes.card, nameClearance: 7 } } }
+    const clear = { ...cityNameLook(4, false, theme), maxWidth: 100 }
+    const box = cityNameBox(tampa, { x: 100, y: 200 }, clear, measure)
+    expect(box.width).toBe(measure(tampa.name) + 2 * 7)
+    expect(box.y - box.height / 2).toBe(200 + clear.offset - 7)
   })
 
   it('wraps a long name onto more lines, as the map does', () => {

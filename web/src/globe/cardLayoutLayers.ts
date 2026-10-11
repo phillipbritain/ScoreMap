@@ -147,7 +147,7 @@ export function cardLayoutLayers(
         'circle-radius': cluster.glowRadius.some,
         'circle-color': statusColor,
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity * cluster.glowOpacity),
+        'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
     },
     {

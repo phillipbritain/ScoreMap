@@ -66,7 +66,6 @@ export interface GlobeMapOptions {
   onCameraMove: (camera: Camera) => void
 }
 
-export { selectedPinLayer } from './pinLayers'
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
 

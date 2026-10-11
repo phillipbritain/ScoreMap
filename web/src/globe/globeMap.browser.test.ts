@@ -8,10 +8,10 @@ import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
-import { GlobeMap, selectedPinLayer } from './globeMap'
+import { GlobeMap } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
-import { pinClusterLayer, smallPinLayer } from './pinLayers'
+import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
 applyTheme(document.documentElement, builtInTheme)

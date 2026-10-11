@@ -24,10 +24,6 @@ _Avoid_: Marker, dot, icon
 While zoomed in, the panel a pin shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
-**Card style**:
-The look a viewer picks for every score card in the settings menu: HUD (the default), LED scoreboard, Broadcast bug, Tactical or Neon sign. It changes only how cards look, not what they show or where they go.
-_Avoid_: Theme, skin, card look
-
 **Cluster**:
 Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected.
 _Avoid_: Crowd, bubble, group, stack, pile

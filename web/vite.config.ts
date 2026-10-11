@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 import { playwright } from '@vitest/browser-playwright'
+import type { BrowserCommand } from 'vitest/node'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
@@ -9,6 +10,11 @@ const server = process.env.SERVER_HTTPS || process.env.SERVER_HTTP
 
 // Tests that need a real browser, with WebGL for MapLibre (ADR-0008).
 const browserTests = 'src/**/*.browser.test.ts'
+
+/** Turns the device's reduce motion setting on or off for the test page (see motion.browser.test.ts). */
+const reduceMotion: BrowserCommand<[reduce: boolean]> = async ({ page }, reduce) => {
+  await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' })
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,6 +45,7 @@ export default defineConfig({
             // Room for the tests' 800 × 600 globe.
             viewport: { width: 1024, height: 768 },
             instances: [{ browser: 'chromium' }],
+            commands: { reduceMotion },
           },
         },
       },

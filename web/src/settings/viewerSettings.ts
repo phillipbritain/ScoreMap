@@ -1,5 +1,3 @@
-import { defaultCardStyle, type CardStyle } from '../globe/cardStyle'
-
 /** What a viewer has chosen to see. Saved in the browser by the settings store. */
 export interface ViewerSettings {
   /**
@@ -11,16 +9,13 @@ export interface ViewerSettings {
   liveOnly: boolean
   /** "Show Disrupted games": shows postponed, suspended and canceled games. */
   showDisrupted: boolean
-  /** "Card style": how score cards look. */
-  cardStyle: CardStyle
 }
 
-/** Every league on, "Live only" off, Disrupted games shown and HUD score cards. */
+/** Every league on, "Live only" off and Disrupted games shown. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   liveOnly: false,
   showDisrupted: true,
-  cardStyle: defaultCardStyle,
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {

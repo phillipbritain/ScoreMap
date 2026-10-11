@@ -212,7 +212,7 @@ export class GlobeMap {
         maxzoom: cardZoom,
         paint: {
           'circle-radius': smallPinReach - 3,
-          'circle-color': 'rgba(0, 0, 0, 0)',
+          'circle-color': 'transparent',
           'circle-stroke-width': 3,
           'circle-stroke-color': this.theme.selection,
         },

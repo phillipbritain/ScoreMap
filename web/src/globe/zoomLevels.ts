@@ -1,5 +1,3 @@
-import { smallPinWidth } from './statusLook'
-
 /** Small pins when zoomed out; score cards once a country fills the screen. */
 export type PinSize = 'small' | 'card'
 
@@ -37,6 +35,11 @@ export const maxZoom = 13
  */
 export const clusterMaxZoom = maxZoom - 1
 
+/** Small pins or score cards, by the zoom. */
+export function pinSize(zoom: number): PinSize {
+  return zoom >= cardZoom ? 'card' : 'small'
+}
+
 // The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
 // times per zoom level rather than on every frame of a zoom.
 const zoomStep = 0.25
@@ -49,8 +52,8 @@ const zoomStep = 0.25
  * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins
  * clustering only as close as they'd be on screen now.
  */
-export function pinLayout(zoom: number): PinLayout {
-  const size: PinSize = zoom >= cardZoom ? 'card' : 'small'
+export function pinLayout(zoom: number, smallPinWidth: number): PinLayout {
+  const size = pinSize(zoom)
   const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
   return { size, clusterRadius: Math.round(smallPinWidth / 2 ** pastWholeLevel) }
 }

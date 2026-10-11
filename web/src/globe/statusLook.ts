@@ -86,9 +86,8 @@ export const groupGlowOpacity = 0.45
 /** The selected game's small pin ring and score card outline. */
 export const selectionColor = '#2f80ed'
 
-/** The selected game's score card draws above every other card, and card clusters above all, so a count is never hidden. */
+/** The selected game's score card draws above every other card. */
 export const selectedStacking = Math.max(...Object.values(statusLooks).map((look) => look.stacking)) + 1
-export const cardClusterStacking = selectedStacking + 1
 
 /**
  * How far across the widest small pin (a Live one) shows. Its glow is blurred to nothing at its
@@ -107,8 +106,9 @@ export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
   return statusProminence.find((s) => statuses.includes(s)) ?? 'Disrupted'
 }
 
-const pinStatus: ExpressionSpecification = ['get', 'status']
-const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', pinStatus, s], 1, 0]]
+/** The status a feature has of its own: a pin's game's, a trail's game's, or a card cluster's (see groupStatus). */
+const ownStatus: ExpressionSpecification = ['get', 'status']
+const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', ownStatus, s], 1, 0]]
 
 /** The counts of each status the pin source keeps for a pin cluster, which pinClusterStatus reads. */
 export const pinClusterStatusCounts = Object.fromEntries(
@@ -122,32 +122,28 @@ export const pinClusterStatus: ExpressionSpecification = [
   'Disrupted',
 ] as ExpressionSpecification
 
-/** A style value from the look of the status a pin (pinStatus) or a pin cluster (pinClusterStatus) shows as. */
+/**
+ * A style value from the look of the status a feature shows as: its own (ownStatus), or a pin
+ * cluster's from its counts (pinClusterStatus).
+ */
 export function byStatus(
-  status: 'pin' | 'pinCluster',
+  status: 'own' | 'pinCluster',
   value: (look: StatusLook) => number | string,
 ): ExpressionSpecification {
   // A match needs a fallback; every status has its own arm, so it's never used.
   return [
     'match',
-    status === 'pin' ? pinStatus : pinClusterStatus,
+    status === 'own' ? ownStatus : pinClusterStatus,
     ...statusProminence.flatMap((s) => [s, value(statusLooks[s])]),
     value(statusLooks.Final),
   ] as ExpressionSpecification
 }
 
 /**
- * Writes the looks to CSS custom properties on the page's root, for score cards, card clusters and trails:
- * --live-color and --live-group-opacity for Live, and so on, --group-fill and --group-outline, and
- * --selection-color.
+ * Writes the looks to CSS custom properties on the page's root, for score cards: --live-color for
+ * Live, and so on, and --selection-color.
  */
 export function applyStatusLook(root: { style: Pick<CSSStyleDeclaration, 'setProperty'> }): void {
-  for (const [status, look] of Object.entries(statusLooks)) {
-    const name = status.toLowerCase()
-    root.style.setProperty(`--${name}-color`, look.color)
-    root.style.setProperty(`--${name}-group-opacity`, String(look.groupOpacity))
-  }
-  root.style.setProperty('--group-fill', groupFill)
-  root.style.setProperty('--group-outline', `${groupOutline}px`)
+  for (const [status, look] of Object.entries(statusLooks)) root.style.setProperty(`--${status.toLowerCase()}-color`, look.color)
   root.style.setProperty('--selection-color', selectionColor)
 }

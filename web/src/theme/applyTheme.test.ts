@@ -27,19 +27,20 @@ describe('applyTheme', () => {
         settings.status.live.color = '#ff0000'
         settings.status.upcoming.core.radius = 4.5
         settings.cluster.glowOpacity = 0.3
-        settings.selection = '#00ff00'
+        settings.selection = { color: '#00ff00', width: 3 }
       }),
     )
     expect(properties.get('--globe-surface')).toBe('#123456')
     expect(properties.get('--status-live-color')).toBe('#ff0000')
     expect(properties.get('--status-upcoming-core-radius')).toBe('4.5px')
     expect(properties.get('--cluster-glow-opacity')).toBe('0.3')
-    expect(properties.get('--selection')).toBe('#00ff00')
+    expect(properties.get('--selection-color')).toBe('#00ff00')
+    expect(properties.get('--selection-width')).toBe('3px')
   })
 
   it('writes colour jobs as the colours they resolve to', () => {
     const properties = propertiesOf(themeWith((settings) => (settings.placeNames.city.color = 'navy.900')))
-    expect(properties.get('--place-names-city-color')).toBe('#050b16')
+    expect(properties.get('--place-names-city-color')).toBe('#000209')
   })
 
   it('writes a globe font as its CSS family, weight and style', () => {
@@ -74,18 +75,45 @@ describe('applyTheme', () => {
     expect(properties.get('--fonts-card-score-weight')).toBe('500')
   })
 
+  it('writes a shadow as a CSS shadow, its colour resolved', () => {
+    const properties = propertiesOf(
+      themeWith((settings) => (settings.panel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
+    )
+    expect(properties.get('--panel-shadow')).toBe('1px -2px 12px #000209')
+  })
+
   it('writes every setting', () => {
     const properties = propertiesOf(themeWith(() => {}))
-    // The globe: a surface, four kinds of line and two halo colours. Four kinds of place name, each
-    // with a colour, an outline and a font (its name, family, weight and style). Four statuses, each with
-    // a colour, a core of four, a glow of two and a cluster opacity. A cluster's three, and the selection.
-    // The page's background, sky and three stars; four kinds of text, a divider and hover; the
-    // controls' surface, shadow and on (fill and text). A score card's five, the game panel's eleven
-    // and the settings menu's eleven colours. Five text sizes, eight spacing steps and five radii;
-    // eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a
-    // size); five corners and the cut corner's two. Place names' sizes are for the globe, not the page.
-    expect(properties.size).toBe(
-      7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11 + (5 + 8 + 5) + (11 * 2 + 5) + (5 + 2),
-    )
+    // Widths by zoom (lines' and place names' sizes) are for the globe, not the page, so aren't written.
+    const written = {
+      // A surface, four kinds of line (their colours) and two halo colours.
+      globe: 7,
+      // Four kinds of place name, each with a colour, an outline (its colour, width and blur) and a
+      // font (its name, family, weight and style).
+      placeNames: 4 * 8,
+      // Four statuses, each with a colour, a core of four, a glow of two, a cluster opacity and a score
+      // card's opacity and glow of two.
+      status: 4 * 11,
+      // A cluster's fill, three radii, three glow radii, outline width and glow opacity.
+      cluster: 9,
+      // A trail's width and opacity, its glow's three and its venue's three.
+      trail: 8,
+      selection: 2,
+      // Two sizes and two ring widths.
+      pulse: 4,
+      // The page's background, sky and three stars; five kinds of text, a divider and hover; the
+      // controls' surface, shadow and on (fill and text); a score card's five, the game panel's eleven
+      // and the settings menu's eleven colours and shadows. The game panel's glow of three.
+      colours: 5 + 5 + 2 + 4 + 5 + 11 + 11 + 3,
+      // Five text sizes, eight spacing steps, five radii and three strokes.
+      scales: 5 + 8 + 5 + 3,
+      // The game panel's eight, a score card's four, the settings menu's three and the controls' two.
+      sizes: 8 + 4 + 3 + 2,
+      // Eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a size).
+      fonts: 11 * 2 + 5,
+      // Six corners and the cut corner's two.
+      corners: 6 + 2,
+    }
+    expect(properties.size).toBe(Object.values(written).reduce((sum, n) => sum + n))
   })
 })

@@ -1,4 +1,9 @@
-import { featureFilter, type FilterSpecification } from '@maplibre/maplibre-gl-style-spec'
+import {
+  createExpression,
+  featureFilter,
+  type ExpressionSpecification,
+  type FilterSpecification,
+} from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
 import { builtInTheme } from '../theme/builtInTheme'
@@ -42,24 +47,35 @@ const theme: Theme = {
   ...builtInTheme,
   globe: {
     surface: '#000001',
-    coastlines: '#000002',
-    countryBorders: '#000003',
-    stateLines: '#000004',
-    disputedBorders: '#000005',
+    coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
+    countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
+    stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
+    disputedBorders: { color: '#000005', width: { '0': 0.9 } },
     halo: builtInTheme.globe.halo,
   },
   placeNames: {
-    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: '#200001', font: font('Open Sans Light') },
-    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: '#200002', font: font('Open Sans Extra Bold') },
-    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: '#200003', font: font('Metropolis Regular') },
-    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: '#200004', font: font('Klokantech Noto Sans Bold') },
+    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light') },
+    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold') },
+    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular') },
+    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold') },
   },
+}
+
+function outline(color: string, width: number, blur: number) {
+  return { color, width, blur }
 }
 
 const style = (base: StyleSpecification = liberty) => globeStyle(base, theme)
 const layer = (id: string) => style().layers.find((l) => l.id === id)
 const paint = (id: string) => layer(id)?.paint as Record<string, unknown>
 const layout = (id: string) => layer(id)?.layout as Record<string, unknown>
+
+/** What a zoom-dependent paint value is at a zoom level, as MapLibre works it out. */
+function atZoom(value: unknown, zoom: number): number {
+  const parsed = createExpression(value as ExpressionSpecification, 'test')
+  if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
+  return parsed.value.evaluate({ zoom }) as number
+}
 
 describe('globeStyle', () => {
   it("keeps only the lines and place names, dropping roads, land cover, points of interest, and towns and villages but for games'", () => {
@@ -90,6 +106,18 @@ describe('globeStyle', () => {
     expect(paint('boundary_2')['line-color']).toBe('#000003')
     expect(paint('boundary_3')['line-color']).toBe('#000004')
     expect(paint('boundary_disputed')['line-color']).toBe('#000005')
+  })
+
+  it("draws each kind of line at the theme's widths as the map zooms", () => {
+    const width = (id: string, zoom: number) => atZoom(paint(id)['line-width'], zoom)
+    expect(width('coastline', 0)).toBeCloseTo(0.5, 6)
+    expect(width('coastline', 5)).toBeCloseTo(1.25, 6)
+    expect(width('coastline', 12)).toBeCloseTo(2, 6)
+    expect(width('boundary_2', 2)).toBeCloseTo(0.7, 6)
+    expect(width('boundary_2', 6)).toBeCloseTo(1.5, 6)
+    expect(width('boundary_3', 5.5)).toBeCloseTo(0.75, 6)
+    expect(width('boundary_disputed', 3)).toBeCloseTo(0.9, 6)
+    expect(width('boundary_disputed', 10)).toBeCloseTo(0.9, 6)
   })
 
   it('outlines only the sea, not lakes or rivers', () => {
@@ -190,7 +218,7 @@ describe('globeStyle', () => {
     expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
 
-  it("writes each kind of place name in the theme's colour, outline and font, from the map's font server", () => {
+  it("writes each kind of place name in the theme's colour, outline (its colour, width and blur) and font, from the map's font server", () => {
     expect(style().glyphs).toBe(glyphsUrl)
     const kinds = {
       label_city: 'city',
@@ -205,7 +233,9 @@ describe('globeStyle', () => {
     for (const [id, kind] of Object.entries(kinds)) {
       const look = theme.placeNames[kind]
       expect(paint(id)['text-color'], id).toBe(look.color)
-      expect(paint(id)['text-halo-color'], id).toBe(look.outline)
+      expect(paint(id)['text-halo-color'], id).toBe(look.outline.color)
+      expect(paint(id)['text-halo-width'], id).toBe(look.outline.width)
+      expect(paint(id)['text-halo-blur'], id).toBe(look.outline.blur)
       expect(layout(id)['text-font'], id).toEqual([look.font.name])
     }
   })

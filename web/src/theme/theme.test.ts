@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import builtIn from './builtInTheme.json'
-import { globeFonts } from './globeFonts'
 import { resolveTheme, type Theme } from './theme'
 
 /** A theme's JSON to change in a test: the built-in theme's, so it has every setting. */
@@ -81,10 +80,16 @@ describe('resolveTheme', () => {
   it('resolves a colour job from a colour given directly', () => {
     const json = themeJson()
     json.settings.globe.surface = '#123456'
-    json.settings.globe.coastlines = 'rgba(255, 255, 255, 0.7)'
+    json.settings.globe.coastlines.color = 'rgba(255, 255, 255, 0.7)'
     const theme = resolved(json)
     expect(theme.globe.surface).toBe('#123456')
-    expect(theme.globe.coastlines).toBe('rgba(255, 255, 255, 0.7)')
+    expect(theme.globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
+  })
+
+  it('takes transparent as a colour given directly, for a shadow or glow that isn’t there', () => {
+    const json = themeJson()
+    json.settings.panel.shadow.color = 'transparent'
+    expect(resolved(json).panel.shadow.color).toBe('transparent')
   })
 
   it('rejects a colour job naming a step the palette doesn’t have', () => {
@@ -136,13 +141,13 @@ describe('resolveTheme', () => {
   it('rejects a palette colour that isn’t a #rrggbb colour, or a hand-set step the palette doesn’t have', () => {
     const json = themeJson()
     json.palette.teal = { base: 'teal' }
-    json.palette.gold = { base: '#d4ac63', steps: { '950': '#000000', '800': 'dark' } }
+    json.palette.sand = { base: '#d4ac63', steps: { '950': '#000000', '800': 'dark' } }
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
         'palette.teal.base is "teal", not a #rrggbb colour',
-        'palette.gold.steps.800 is "dark", not a #rrggbb colour',
-        'palette.gold.steps.950 isn’t a step: steps are 100 to 900',
+        'palette.sand.steps.800 is "dark", not a #rrggbb colour',
+        'palette.sand.steps.950 isn’t a step: steps are 100 to 900',
       ],
     })
   })
@@ -161,6 +166,15 @@ describe('resolveTheme', () => {
         'settings.status.final.core.ring is -1, not a number of pixels',
         'settings.cluster.glowOpacity is "half", not an opacity from 0 to 1',
       ],
+    })
+  })
+
+  it('rejects a shadow without its colour or with an offset that isn’t a number', () => {
+    const json = themeJson()
+    json.settings.panel.shadow = { x: 0, y: '8px', blur: 30 }
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['settings.panel.shadow.y is "8px", not a number of pixels', 'settings.panel.shadow.color is missing'],
     })
   })
 
@@ -231,137 +245,143 @@ describe('resolveTheme', () => {
   })
 })
 
+/** Every step of the built-in palette, by its colour. */
+const builtInSteps = new Map(
+  Object.keys(builtIn.palette).flatMap((name) => steps.map((s) => [step({}, `${name}.${s}`), `${name}.${s}`] as const)),
+)
+
+/** The step of the built-in palette a colour is, such as "navy.300", or the colour itself if it's none. */
+const stepOf = (colour: string): string => builtInSteps.get(colour) ?? colour
+
+/** Every colour a resolved theme gives, by where it sits in the settings. */
+function coloursOf(value: unknown, path = 'settings'): [string, string][] {
+  if (typeof value === 'string') return /^#|^transparent$/.test(value) ? [[path, value]] : []
+  if (typeof value !== 'object' || value === null) return []
+  return Object.entries(value).flatMap(([key, inner]) => coloursOf(inner, `${path}.${key}`))
+}
+
+const lightness = (colour: string) => oklch(colour).l
+
+/** Whether a colour is one of a palette colour's steps, from one step to another (lightest first). */
+const isStepOf = (name: string, from: string, to: string) => (colour: string) => {
+  const [palette, at] = stepOf(colour).split('.')
+  return palette === name && at >= from && at <= to
+}
+
 describe('the built-in theme', () => {
+  const theme = resolved(builtIn)
+
   it('resolves without problems', () => {
     expect(resolveTheme(builtIn)).toMatchObject({ ok: true })
   })
 
-  it('draws the globe and its place names in today’s colours', () => {
-    const { globe, placeNames } = resolved(builtIn)
-    expect(globe).toEqual({
-      surface: '#0b1526',
-      coastlines: 'rgba(255, 255, 255, 0.7)',
-      countryBorders: 'rgba(255, 255, 255, 0.7)',
-      stateLines: 'rgba(255, 255, 255, 0.3)',
-      disputedBorders: 'rgba(255, 255, 255, 0.5)',
-      halo: { inner: 'rgb(110 168 255 / 0.55)', outer: 'rgb(60 120 255 / 0.25)' },
+  it('is built from the five base colours, and gives every colour from them', () => {
+    expect(Object.fromEntries(Object.entries(builtIn.palette).map(([name, { base }]) => [name, base]))).toEqual({
+      gold: '#d4ac63',
+      red: '#cd2435',
+      orange: '#e56335',
+      navy: '#2b4d7d',
+      offWhite: '#f4f5f7',
     })
-    const look = (kind: keyof typeof placeNames) => {
-      const { size: _size, ...colours } = placeNames[kind]
-      return { ...colours, font: placeNames[kind].font.name }
+    const notFromPalette = coloursOf(theme).filter(([, colour]) => colour !== 'transparent' && stepOf(colour) === colour)
+    expect(notFromPalette).toEqual([])
+  })
+
+  it('keeps red and orange in the palette with no job yet', () => {
+    const used = coloursOf(theme).map(([path, colour]) => `${path}: ${stepOf(colour)}`)
+    expect(used.filter((job) => /: (red|orange)\./.test(job))).toEqual([])
+  })
+
+  it('draws the globe in navy, with lighter navy lines, pale navy place names and a light navy halo', () => {
+    const { globe, placeNames } = theme
+    expect(globe.surface).toBe('#2b4d7d')
+    const surface = lightness(globe.surface)
+    for (const line of [globe.coastlines, globe.countryBorders, globe.stateLines, globe.disputedBorders]) {
+      expect(isStepOf('navy', '100', '400')(line.color), stepOf(line.color)).toBe(true)
+      expect(lightness(line.color)).toBeGreaterThan(surface)
     }
-    expect(look('city')).toEqual({ color: '#f1e6cc', outline: '#050b16', font: 'Open Sans Semibold' })
-    expect(look('capital')).toEqual({ color: '#fff4dc', outline: '#050b16', font: 'Open Sans Bold' })
-    expect(look('state')).toEqual({ color: '#9a8a62', outline: '#050b16', font: 'Open Sans Regular' })
-    expect(look('country')).toEqual({ color: '#d8c9a4', outline: '#050b16', font: 'Open Sans Bold' })
+    for (const [kind, look] of Object.entries(placeNames)) {
+      expect(isStepOf('navy', '100', '300')(look.color), kind).toBe(true)
+      expect(stepOf(look.outline.color), kind).toMatch(/^navy\./)
+    }
+    expect(isStepOf('navy', '100', '400')(globe.halo.inner)).toBe(true)
   })
 
-  it('draws pins, clusters and the selection in today’s look', () => {
-    const { status, cluster, selection } = resolved(builtIn)
-    expect(status).toEqual({
-      live: {
-        color: '#e4572e',
-        core: { color: '#ffd9c8', radius: 3.5, opacity: 1, ring: 1.5 },
-        glow: { radius: 15, opacity: 0.7 },
-        clusterOpacity: 1,
-      },
-      upcoming: {
-        color: '#f2a541',
-        core: { color: '#f2a541', radius: 3, opacity: 0.8, ring: 0 },
-        glow: { radius: 10, opacity: 0.45 },
-        clusterOpacity: 0.85,
-      },
-      final: {
-        color: '#8a8f98',
-        core: { color: '#8a8f98', radius: 2.5, opacity: 0.55, ring: 0 },
-        glow: { radius: 7, opacity: 0.25 },
-        clusterOpacity: 0.6,
-      },
-      disrupted: {
-        color: '#c3c6cc',
-        core: { color: '#c3c6cc', radius: 2.5, opacity: 0.6, ring: 0 },
-        glow: { radius: 7, opacity: 0.25 },
-        clusterOpacity: 0.6,
-      },
-    })
-    expect(cluster).toEqual({ fill: 'rgba(6, 12, 24, 0.88)', outlineWidth: 1.5, glowOpacity: 0.45 })
-    expect(selection).toBe('#2f80ed')
+  it('puts score cards, the game panel, the settings menu, the scenario controls and clusters on solid darker navy', () => {
+    const { card, panel, settingsMenu, controls, cluster } = theme
+    const surfaces = {
+      card: card.fill,
+      panelTop: panel.surface.top,
+      panelBottom: panel.surface.bottom,
+      scoreBlock: panel.scoreBlock.top,
+      settingsMenu: settingsMenu.surface,
+      controls: controls.surface,
+      cluster: cluster.fill,
+    }
+    for (const [job, colour] of Object.entries(surfaces)) {
+      expect(isStepOf('navy', '600', '900')(colour), `${job}: ${stepOf(colour)}`).toBe(true)
+    }
   })
 
-  it('colours the page, its score cards, panels, menus and controls in today’s colours', () => {
-    const { page, text, divider, hover, controls, card, panel, settingsMenu } = resolved(builtIn)
-    expect(page).toEqual({
-      background: '#0b1020',
-      sky: '#03050c',
-      stars: { white: '#ffffff', cool: 'rgb(200 220 255)', warm: 'rgb(255 240 220)' },
-    })
-    expect(text).toEqual({ main: '#ffffff', secondary: 'rgb(255 255 255 / 0.55)', accent: '#d8c9a4', link: '#8fc1ff' })
-    expect(divider).toBe('rgba(255, 255, 255, 0.1)')
-    expect(hover).toBe('rgba(255, 255, 255, 0.12)')
-    expect(controls).toEqual({
-      surface: 'rgba(11, 16, 32, 0.85)',
-      shadow: 'rgba(0, 0, 0, 0.3)',
-      on: { fill: '#ffffff', text: '#0b1020' },
-    })
-    expect(card).toEqual({
-      fill: 'rgb(6 12 24 / 0.85)',
-      text: '#d9f0ff',
-      disrupted: { fill: 'rgb(12 14 20 / 0.85)', text: '#8b93a3' },
-      shadow: 'rgb(0 0 0 / 0.45)',
-    })
-    expect(panel).toEqual({
-      surface: { top: 'rgb(18 28 56 / 0.98)', bottom: 'rgb(8 12 26 / 0.98)' },
-      scoreBlock: { top: '#1d2d55', bottom: '#121c38' },
-      score: { fill: '#ffffff', text: '#0b1020' },
-      unofficial: 'rgb(255 255 255 / 0.45)',
-      photo: 'rgb(42 62 112 / 0.5)',
-      credit: { fill: 'rgb(0 0 0 / 0.6)', text: 'rgb(255 255 255 / 0.75)' },
-      close: 'rgb(0 0 0 / 0.55)',
-      shadow: 'rgb(0 0 0 / 0.6)',
-    })
-    expect(settingsMenu).toEqual({
-      surface: '#0b1020',
-      shadow: 'rgba(0, 0, 0, 0.4)',
-      gearOutline: '#050b16',
-      tab: 'rgba(255, 255, 255, 0.6)',
-      count: 'rgba(255, 255, 255, 0.5)',
-      hint: 'rgba(255, 255, 255, 0.4)',
-      chip: { outline: 'rgba(216, 201, 164, 0.45)', badge: 'rgba(216, 201, 164, 0.15)' },
-      on: { fill: '#d8c9a4', text: '#0b1020' },
-    })
+  it('writes main text in off-white and secondary text in a dimmer off-white', () => {
+    const { text, settingsMenu, panel } = theme
+    expect(text.main).toBe('#f4f5f7')
+    for (const colour of [text.secondary, settingsMenu.tab, settingsMenu.count, settingsMenu.hint, panel.unofficial]) {
+      expect(isStepOf('offWhite', '600', '700')(colour), stepOf(colour)).toBe(true)
+    }
   })
 
-  it('writes text in today’s fonts: the system font on the page (but the browser’s Arial on its buttons), monospace on score cards, Open Sans on the globe', () => {
-    const { fonts, placeNames } = resolved(builtIn)
-    const system = 'system-ui, sans-serif'
-    const mono = "ui-monospace, 'Cascadia Mono', Consolas, monospace"
-    expect(fonts).toEqual({
-      body: { family: system, weight: 400 },
-      heading: { family: system, weight: 800 },
-      team: { family: system, weight: 700 },
-      score: { family: system, weight: 800 },
-      tab: { family: 'Arial', weight: 600 },
-      button: { family: 'Arial', weight: 400 },
-      scenarioPill: { family: system, weight: 600 },
-      scenarioClock: { family: system, weight: 400 },
-      card: { clock: { family: mono, weight: 400 }, team: { family: mono, weight: 600 }, score: { family: mono, weight: 700 } },
-      clusterCount: { font: globeFonts.get('Open Sans Bold'), size: 11 },
-    })
-    expect(placeNames.city.font.family).toBe('Open Sans')
+  it('shows every game in gold but Disrupted ones, which are grey', () => {
+    const { status } = theme
+    expect([status.live.color, status.upcoming.color, status.final.color]).toEqual(['#d4ac63', '#d4ac63', '#d4ac63'])
+    expect(isStepOf('offWhite', '600', '800')(status.disrupted.color)).toBe(true)
+    expect(oklch(status.disrupted.color).c).toBeLessThan(0.01)
   })
 
-  it('holds scales close to today’s sizes, spacing and corners, with the game panel’s corner cut', () => {
-    const { textSizes, spacing, radii, corners, cutCorner, placeNames } = resolved(builtIn)
-    expect(textSizes).toEqual({ xs: 10, s: 11, m: 13, l: 15, xl: 18 })
-    expect(spacing).toEqual({ '2xs': 2, xs: 4, s: 6, m: 8, l: 12, xl: 16, '2xl': 24, '3xl': 32 })
-    expect(radii).toEqual({ xs: 3, s: 6, m: 8, l: 12, pill: 999 })
-    expect(corners).toEqual({ card: 3, menu: 12, menuItem: 6, message: 8, control: 999 })
-    expect(cutCorner).toEqual({ on: true, size: 16 })
-    // Today's sizes were 12, 14 and 18 for cities, 12.5, 15 and 19 for capitals, 9 and 13 for states
-    // and 9 and 16 for countries.
-    expect(placeNames.city.size).toEqual({ '4': 11, '7': 13, '11': 18 })
-    expect(placeNames.capital.size).toEqual({ '4': 13, '7': 15, '11': 18 })
-    expect(placeNames.state.size).toEqual({ '3': 10, '8': 13 })
-    expect(placeNames.country.size).toEqual({ '1': 10, '4': 15 })
+  it('shows the selection and a control that’s on in off-white', () => {
+    const { selection, controls, settingsMenu } = theme
+    expect([selection.color, controls.on.fill, settingsMenu.on.fill]).toEqual(['#f4f5f7', '#f4f5f7', '#f4f5f7'])
+  })
+
+  it('tells Live, Upcoming and Final apart by glow and brightness: Live glows most, Final fades without a glow', () => {
+    const { live, upcoming, final, disrupted } = theme.status
+    expect(live.glow.radius).toBeGreaterThan(upcoming.glow.radius)
+    expect(live.card.glow.radius).toBeGreaterThan(upcoming.card.glow.radius)
+    expect(upcoming.glow.radius).toBeGreaterThan(0)
+    expect(upcoming.card.glow.radius).toBeGreaterThan(0)
+    for (const look of [final, disrupted]) {
+      expect(look.glow.opacity).toBe(0)
+      expect(look.card.glow.opacity).toBe(0)
+    }
+    expect(live.card.opacity).toBeGreaterThan(upcoming.card.opacity)
+    expect(upcoming.card.opacity).toBeGreaterThan(final.card.opacity)
+    expect(live.clusterOpacity).toBeGreaterThan(final.clusterOpacity)
+  })
+
+  it('gives panels and controls no glow or drop shadow', () => {
+    const { panel, settingsMenu, controls } = theme
+    for (const shadow of [panel.shadow, settingsMenu.shadow, controls.shadow]) expect(shadow.color).toBe('transparent')
+    expect(panel.glow.opacity).toBe(0)
+  })
+
+  it('writes every text in Open Sans, at about 11, 12, 14, 16 and 20 pixels', () => {
+    const { fonts, placeNames, textSizes } = theme
+    const { clusterCount, card, ...page } = fonts
+    for (const [job, font] of Object.entries({ ...page, ...card })) expect(font.family, job).toMatch(/^'Open Sans/)
+    for (const font of [clusterCount.font, ...Object.values(placeNames).map((look) => look.font)]) {
+      expect(font.family).toBe('Open Sans')
+    }
+    expect(textSizes).toEqual({ xs: 11, s: 12, m: 14, l: 16, xl: 20 })
+  })
+
+  it('rounds cards and panels softly and controls into pills, with no corner cut', () => {
+    const { corners, cutCorner } = theme
+    for (const corner of [corners.card, corners.panel, corners.menu]) {
+      expect(corner).toBeGreaterThanOrEqual(6)
+      expect(corner).toBeLessThanOrEqual(8)
+    }
+    expect(corners.control).toBe(999)
+    expect(cutCorner.on).toBe(false)
   })
 })
+

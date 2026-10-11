@@ -96,7 +96,7 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
-  const { cluster } = theme
+  const { cluster, trail } = theme
   // Each trail, venue and card cluster in its game's status colour (a card cluster's, see groupStatus).
   const statusColor = byStatus(theme, 'own', (look) => look.color)
   return [
@@ -105,14 +105,19 @@ export function cardLayoutLayers(
       type: 'line',
       source: cardLayoutSource,
       filter: kindIs('trail'),
-      paint: { 'line-color': statusColor, 'line-width': 4, 'line-blur': 3, 'line-opacity': 0.35 },
+      paint: {
+        'line-color': statusColor,
+        'line-width': trail.glow.width,
+        'line-blur': trail.glow.blur,
+        'line-opacity': trail.glow.opacity,
+      },
     },
     {
       id: 'trails',
       type: 'line',
       source: cardLayoutSource,
       filter: kindIs('trail'),
-      paint: { 'line-color': statusColor, 'line-width': 1.25, 'line-opacity': 0.9 },
+      paint: { 'line-color': statusColor, 'line-width': trail.width, 'line-opacity': trail.opacity },
     },
     {
       id: 'trail-venue-rings',
@@ -120,9 +125,9 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('venue'),
       paint: {
-        'circle-radius': 5,
+        'circle-radius': trail.venue.ring.radius,
         'circle-color': 'transparent',
-        'circle-stroke-width': 1,
+        'circle-stroke-width': trail.venue.ring.width,
         'circle-stroke-color': statusColor,
       },
     },
@@ -131,7 +136,7 @@ export function cardLayoutLayers(
       type: 'circle',
       source: cardLayoutSource,
       filter: kindIs('venue'),
-      paint: { 'circle-radius': 2, 'circle-color': statusColor },
+      paint: { 'circle-radius': trail.venue.radius, 'circle-color': statusColor },
     },
     {
       id: 'card-cluster-glows',
@@ -139,10 +144,10 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('cardCluster'),
       paint: {
-        'circle-radius': 26,
+        'circle-radius': cluster.glowRadius.some,
         'circle-color': statusColor,
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity * cluster.glowOpacity),
+        'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
     },
     {
@@ -151,8 +156,8 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('cardCluster'),
       paint: {
-        // 26 pixels across, outline and all: the stroke is drawn outside the radius.
-        'circle-radius': 13 - cluster.outlineWidth,
+        // As wide as a pin cluster of some games, outline and all: the stroke is drawn outside the radius.
+        'circle-radius': cluster.radius.some - cluster.outlineWidth,
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,

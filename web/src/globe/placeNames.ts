@@ -69,21 +69,11 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 /** The kinds of place the globe names, each with its own look in the theme. */
 type PlaceKind = keyof Theme['placeNames']
 
-/** How a kind of place's name is written, beyond its colours, font and size (which come from the theme). */
-interface NameShape {
-  /** Spaced capitals, with this much tracking in ems. */
-  capitals?: number
-  /** The outline around its letters: how wide, and how blurred, in pixels. */
-  outline: { width: number; blur: number }
-}
-
-/** States and countries in spaced capitals. */
-const nameShapes: Record<PlaceKind, NameShape> = {
-  city: { outline: { width: 2, blur: 0.5 } },
-  capital: { outline: { width: 2, blur: 0.5 } },
-  state: { capitals: 0.25, outline: { width: 1.2, blur: 0 } },
-  country: { capitals: 0.12, outline: { width: 2, blur: 0.5 } },
-}
+/**
+ * States and countries in spaced capitals, with this much tracking in ems; city names as they are.
+ * Their colours, outlines, fonts and sizes come from the theme.
+ */
+const capitals: Partial<Record<PlaceKind, number>> = { state: 0.25, country: 0.12 }
 
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
 const sizeStops = (kind: PlaceKind, theme: Theme): number[] =>
@@ -99,10 +89,10 @@ function placeKind(layerId: string): PlaceKind {
   return 'city'
 }
 
-/** A place name in the theme's look for its kind of place (see nameShapes). */
+/** A place name in the theme's look for its kind of place, in spaced capitals or not (see capitals). */
 function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
   const kind = placeKind(layer.id)
-  const shape = nameShapes[kind]
+  const tracking = capitals[kind]
   const look = theme.placeNames[kind]
   const named = {
     ...layer,
@@ -110,15 +100,15 @@ function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification 
       ...(layer.type === 'symbol' ? layer.layout : {}),
       'text-font': [look.font.name],
       'text-size': zoomed(...sizeStops(kind, theme)),
-      'text-transform': shape.capitals === undefined ? 'none' : 'uppercase',
-      'text-letter-spacing': shape.capitals ?? 0,
+      'text-transform': tracking === undefined ? 'none' : 'uppercase',
+      'text-letter-spacing': tracking ?? 0,
     },
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
       'text-color': look.color,
-      'text-halo-color': look.outline,
-      'text-halo-width': shape.outline.width,
-      'text-halo-blur': shape.outline.blur,
+      'text-halo-color': look.outline.color,
+      'text-halo-width': look.outline.width,
+      'text-halo-blur': look.outline.blur,
     },
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;

@@ -5,12 +5,19 @@ import { isHexColor, paletteSteps, stepNames, type StepName } from './palette'
 interface Resolving {
   /** Every palette step, by its name in a colour job, such as "navy.700". */
   steps: ReadonlyMap<string, string>
+  /** The theme's settings as its JSON gives them, where a size reads its scale's steps. */
+  settings: Readonly<Record<string, unknown>>
   problems: string[]
 }
 
 /** One setting of a theme: how to read its value from the theme's JSON. */
 interface Setting<T> {
   resolve(value: unknown, path: string, resolving: Resolving): T | undefined
+  /**
+   * How the setting is written as a CSS custom property (see customProperties), if not as it
+   * resolves: a value, or values by the end of their names.
+   */
+  css?(value: T): string | Readonly<Record<string, string>>
 }
 
 /** A colour job: a palette step by name ("navy.700"), or a colour given directly ("#0b1526"). */
@@ -47,12 +54,102 @@ function numberFrom(min: number, max: number, what: string): Setting<number> {
   }
 }
 
-/** A size in pixels. */
-const pixels = numberFrom(0, Infinity, 'a number of pixels')
+/** A size in pixels, written to CSS as one. */
+const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: (value) => `${value}px` }
 const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
 
-/** A kind of place's name on the globe: its colour, the outline around its letters, and its font. */
-const placeName = { color, outline: color, font: globeFont }
+/** On or off; written to CSS as 1 or 0, to multiply by. */
+const onOff: Setting<boolean> = {
+  resolve(value, path, { problems }) {
+    if (typeof value === 'boolean') return value
+    problems.push(`${path} is ${JSON.stringify(value)}, not true or false`)
+    return undefined
+  },
+  css: (on) => (on ? '1' : '0'),
+}
+
+/** A CSS font family, such as "system-ui, sans-serif". */
+const fontFamily: Setting<string> = {
+  resolve(value, path, { problems }) {
+    if (typeof value === 'string' && value.trim() !== '') return value
+    problems.push(`${path} is ${JSON.stringify(value)}, not a CSS font family`)
+    return undefined
+  },
+}
+
+/** A font for text on the page: its CSS font family and its weight. */
+const pageFont = { family: fontFamily, weight: numberFrom(1, 1000, 'a font weight from 1 to 1000') }
+
+/**
+ * The scales every text size, spacing and corner radius is a step of, and their steps' names. The
+ * page's CSS uses only these steps (as --text-sizes-m, --spacing-l, --corners-card and so on), and a
+ * size elsewhere in a theme names one.
+ */
+const scales = {
+  textSizes: { what: 'text size', steps: ['xs', 's', 'm', 'l', 'xl'] },
+  spacing: { what: 'spacing', steps: ['2xs', 'xs', 's', 'm', 'l', 'xl', '2xl', '3xl'] },
+  radii: { what: 'radius', steps: ['xs', 's', 'm', 'l', 'pill'] },
+} as const
+
+type ScaleName = keyof typeof scales
+
+/** A scale's steps, each a number of pixels. */
+function scale<const Steps extends readonly string[]>(steps: Steps): Record<Steps[number], Setting<number>> {
+  return Object.fromEntries(steps.map((step) => [step, pixels])) as Record<Steps[number], Setting<number>>
+}
+
+/** A size given as a step of its scale, by name ("m"), resolving to the pixels that step holds. */
+function stepOf(name: ScaleName): Setting<number> {
+  const { what, steps } = scales[name]
+  return {
+    resolve(value, path, { settings, problems }) {
+      if (typeof value === 'string' && (steps as readonly string[]).includes(value)) {
+        const size = (settings[name] as Record<string, unknown> | undefined)?.[value]
+        // A step that isn't a number of pixels is the scale's own problem, reported there.
+        return typeof size === 'number' && size >= 0 ? size : undefined
+      }
+      problems.push(`${path} is ${JSON.stringify(value)}, not a step of the ${what} scale (${steps.join(', ')})`)
+      return undefined
+    },
+    css: (value) => `${value}px`,
+  }
+}
+
+const textSize = stepOf('textSizes')
+const spacing = stepOf('spacing')
+const radius = stepOf('radii')
+
+/**
+ * The size of text on the globe as the map zooms: a text size at each of some zoom levels, by zoom
+ * ({ "4": "s", "11": "xl" }), growing smoothly from one to the next. Read by the globe, not the
+ * page's CSS, so not written to it.
+ */
+const zoomedTextSize: Setting<Readonly<Record<string, number>>> = {
+  resolve(value, path, resolving) {
+    const stops = typeof value === 'object' && value !== null ? Object.entries(value) : []
+    if (stops.length === 0) {
+      resolving.problems.push(`${path} gives no zoom levels: it needs a text size at one zoom level at least`)
+      return undefined
+    }
+    const sizes: Record<string, number> = {}
+    for (const [zoom, step] of stops) {
+      if (!/^\d+(\.\d+)?$/.test(zoom)) {
+        resolving.problems.push(`${path}.${zoom} isn’t a zoom level`)
+        continue
+      }
+      const size = textSize.resolve(step, `${path}.${zoom}`, resolving)
+      if (size !== undefined) sizes[zoom] = size
+    }
+    return sizes
+  },
+  css: () => ({}),
+}
+
+/**
+ * A kind of place's name on the globe: its colour, the outline around its letters, its font, and its
+ * size as the map zooms.
+ */
+const placeName = { color, outline: color, font: globeFont, size: zoomedTextSize }
 
 /**
  * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
@@ -69,6 +166,9 @@ const statusLook = {
 
 /** Every setting a theme has, by where it sits in the theme's settings. */
 const settings = {
+  textSizes: scale(scales.textSizes.steps),
+  spacing: scale(scales.spacing.steps),
+  radii: scale(scales.radii.steps),
   globe: {
     surface: color,
     coastlines: color,
@@ -138,6 +238,31 @@ const settings = {
     chip: { outline: color, badge: color },
     on: { fill: color, text: color },
   },
+  /**
+   * A font for each kind of text. On the page: body text; the game panel's headings (its league,
+   * labels and progress line), team names and scores; the controls that stand out (settings tabs,
+   * sport names, the scenario pill); the scenario clock; and a score card's clock line, team
+   * abbreviations and scores. On the globe, the count on a pin or card cluster, in a font the map's
+   * font server has (ADR-0006), and its size. Place names have theirs by kind of place.
+   */
+  fonts: {
+    body: pageFont,
+    heading: pageFont,
+    team: pageFont,
+    score: pageFont,
+    control: pageFont,
+    scenarioClock: pageFont,
+    card: { clock: pageFont, team: pageFont, score: pageFont },
+    clusterCount: { font: globeFont, size: textSize },
+  },
+  /**
+   * Corners, each a step of the radius scale: a score card's; a menu's (the settings menu, the list
+   * of scenarios); an item's in a menu; a message's (such as "No games right now."); and a control's
+   * (the scenario pill and clock, the speed keys, league chips).
+   */
+  corners: { card: radius, menu: radius, menuItem: radius, message: radius, control: radius },
+  /** The game panel's bottom left corner cut off, like a broadcast graphic, or not: this far along each side. */
+  cutCorner: { on: onOff, size: spacing },
 }
 
 type Resolved<S> = S extends Setting<infer T> ? T : { readonly [K in keyof S]: Resolved<S[K]> }
@@ -156,7 +281,11 @@ interface ThemeJson {
 export function resolveTheme(json: unknown): ThemeResult {
   const { palette, settings: values } = json as ThemeJson
   const problems: string[] = []
-  const resolving: Resolving = { steps: paletteByStep(palette, problems), problems }
+  const resolving: Resolving = {
+    steps: paletteByStep(palette, problems),
+    settings: typeof values === 'object' && values !== null ? (values as Record<string, unknown>) : {},
+    problems,
+  }
   const theme = resolveAll(settings, values, 'settings', resolving) as Theme
   return problems.length ? { ok: false, problems } : { ok: true, theme }
 }
@@ -194,3 +323,25 @@ function resolveAll(schema: object, value: unknown, path: string, resolving: Res
     Object.entries(schema).map(([key, inner]) => [key, resolveAll(inner, values[key], `${path}.${key}`, resolving)]),
   )
 }
+
+/**
+ * The resolved theme as CSS custom properties, one for each setting, named by where it sits in the
+ * theme's settings, in kebab case: `status.live.color` is --status-live-color, `spacing.l` is
+ * --spacing-l and `placeNames.city.font` gives --place-names-city-font-family, -weight and -style.
+ * Sizes are written in pixels ("12px"), and on or off as 1 or 0.
+ */
+export function customProperties(theme: Theme): Map<string, string> {
+  const properties = new Map<string, string>()
+  const write = (value: unknown, name: string) => {
+    if (typeof value !== 'object' || value === null) properties.set(name, String(value))
+    else for (const [key, inner] of Object.entries(value)) write(inner, `${name}-${kebabCase(key)}`)
+  }
+  const walk = (schema: object, value: unknown, name: string) => {
+    if (isSetting(schema)) write(schema.css ? schema.css(value) : value, name)
+    else for (const [key, inner] of Object.entries(schema)) walk(inner, (value as Record<string, unknown>)[key], `${name}-${kebabCase(key)}`)
+  }
+  walk(settings, theme, '-')
+  return properties
+}
+
+const kebabCase = (key: string) => key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)

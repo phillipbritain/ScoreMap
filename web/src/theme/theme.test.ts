@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import builtIn from './builtInTheme.json'
+import { globeFonts } from './globeFonts'
 import { resolveTheme, type Theme } from './theme'
 
 /** A theme's JSON to change in a test: the built-in theme's, so it has every setting. */
@@ -163,6 +164,62 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('rejects a text size, spacing or radius that isn’t one of its scale’s steps', () => {
+    const json = themeJson()
+    json.settings.fonts.clusterCount.size = 'xxl'
+    json.settings.placeNames.city.size = { '4': 's', '11': 12 }
+    json.settings.cutCorner.size = '5xl'
+    json.settings.corners.card = 'huge'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'settings.placeNames.city.size.11 is 12, not a step of the text size scale (xs, s, m, l, xl)',
+        'settings.fonts.clusterCount.size is "xxl", not a step of the text size scale (xs, s, m, l, xl)',
+        'settings.corners.card is "huge", not a step of the radius scale (xs, s, m, l, pill)',
+        'settings.cutCorner.size is "5xl", not a step of the spacing scale (2xs, xs, s, m, l, xl, 2xl, 3xl)',
+      ],
+    })
+  })
+
+  it('rejects a scale whose step isn’t a number of pixels', () => {
+    const json = themeJson()
+    json.settings.textSizes.m = '13px'
+    delete json.settings.spacing['2xl']
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['settings.textSizes.m is "13px", not a number of pixels', 'settings.spacing.2xl is missing'],
+    })
+  })
+
+  it('gives a size, spacing or radius the pixels its scale step holds', () => {
+    const json = themeJson()
+    json.settings.textSizes.xl = 20
+    json.settings.spacing.xl = 18
+    json.settings.radii.l = 10
+    json.settings.fonts.clusterCount.size = 'xl'
+    json.settings.placeNames.country.size = { '1': 'xl', '4.5': 'xl' }
+    json.settings.cutCorner.size = 'xl'
+    json.settings.corners.menu = 'l'
+    const theme = resolved(json)
+    expect(theme.fonts.clusterCount.size).toBe(20)
+    expect(theme.placeNames.country.size).toEqual({ '1': 20, '4.5': 20 })
+    expect(theme.cutCorner.size).toBe(18)
+    expect(theme.corners.menu).toBe(10)
+  })
+
+  it('rejects text on the globe sized at no zoom level, or at one that isn’t a number', () => {
+    const json = themeJson()
+    json.settings.placeNames.city.size = {}
+    json.settings.placeNames.state.size = { far: 'xs' }
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'settings.placeNames.city.size gives no zoom levels: it needs a text size at one zoom level at least',
+        'settings.placeNames.state.size.far isn’t a zoom level',
+      ],
+    })
+  })
+
   it('rejects a theme missing a setting', () => {
     const json = themeJson()
     delete json.settings.globe.coastlines
@@ -189,7 +246,10 @@ describe('the built-in theme', () => {
       disputedBorders: 'rgba(255, 255, 255, 0.5)',
       halo: { inner: 'rgb(110 168 255 / 0.55)', outer: 'rgb(60 120 255 / 0.25)' },
     })
-    const look = (kind: keyof typeof placeNames) => ({ ...placeNames[kind], font: placeNames[kind].font.name })
+    const look = (kind: keyof typeof placeNames) => {
+      const { size: _size, ...colours } = placeNames[kind]
+      return { ...colours, font: placeNames[kind].font.name }
+    }
     expect(look('city')).toEqual({ color: '#f1e6cc', outline: '#050b16', font: 'Open Sans Semibold' })
     expect(look('capital')).toEqual({ color: '#fff4dc', outline: '#050b16', font: 'Open Sans Bold' })
     expect(look('state')).toEqual({ color: '#9a8a62', outline: '#050b16', font: 'Open Sans Regular' })
@@ -269,5 +329,37 @@ describe('the built-in theme', () => {
       chip: { outline: 'rgba(216, 201, 164, 0.45)', badge: 'rgba(216, 201, 164, 0.15)' },
       on: { fill: '#d8c9a4', text: '#0b1020' },
     })
+  })
+
+  it('writes text in today’s fonts: the system font on the page, monospace on score cards, Open Sans on the globe', () => {
+    const { fonts, placeNames } = resolved(builtIn)
+    const system = 'system-ui, sans-serif'
+    const mono = "ui-monospace, 'Cascadia Mono', Consolas, monospace"
+    expect(fonts).toEqual({
+      body: { family: system, weight: 400 },
+      heading: { family: system, weight: 800 },
+      team: { family: system, weight: 700 },
+      score: { family: system, weight: 800 },
+      control: { family: system, weight: 600 },
+      scenarioClock: { family: system, weight: 400 },
+      card: { clock: { family: mono, weight: 400 }, team: { family: mono, weight: 600 }, score: { family: mono, weight: 700 } },
+      clusterCount: { font: globeFonts.get('Open Sans Bold'), size: 11 },
+    })
+    expect(placeNames.city.font.family).toBe('Open Sans')
+  })
+
+  it('holds scales close to today’s sizes, spacing and corners, with the game panel’s corner cut', () => {
+    const { textSizes, spacing, radii, corners, cutCorner, placeNames } = resolved(builtIn)
+    expect(textSizes).toEqual({ xs: 10, s: 11, m: 13, l: 15, xl: 18 })
+    expect(spacing).toEqual({ '2xs': 2, xs: 4, s: 6, m: 8, l: 12, xl: 16, '2xl': 24, '3xl': 32 })
+    expect(radii).toEqual({ xs: 3, s: 6, m: 8, l: 12, pill: 999 })
+    expect(corners).toEqual({ card: 3, menu: 12, menuItem: 6, message: 8, control: 999 })
+    expect(cutCorner).toEqual({ on: true, size: 16 })
+    // Today's sizes were 12, 14 and 18 for cities, 12.5, 15 and 19 for capitals, 9 and 13 for states
+    // and 9 and 16 for countries.
+    expect(placeNames.city.size).toEqual({ '4': 11, '7': 13, '11': 18 })
+    expect(placeNames.capital.size).toEqual({ '4': 13, '7': 15, '11': 18 })
+    expect(placeNames.state.size).toEqual({ '3': 10, '8': 13 })
+    expect(placeNames.country.size).toEqual({ '1': 10, '4': 15 })
   })
 })

@@ -53,6 +53,27 @@ describe('cityNameLook', () => {
     expect(cityNameLook(7, true, builtInTheme)).toMatchObject({ size: 15, maxWidth: 120 })
   })
 
+  it("writes each kind of place's name at the theme's text sizes as the map zooms", () => {
+    const theme: Theme = {
+      ...builtInTheme,
+      placeNames: {
+        ...builtInTheme.placeNames,
+        city: { ...builtInTheme.placeNames.city, size: { '2': 10, '6': 20 } },
+        state: { ...builtInTheme.placeNames.state, size: { '5': 14 } },
+      },
+    }
+    const size = (id: string, zoom: number) => atZoom(layout(id, theme)['text-size'], zoom)
+    expect(size('label_city', 1)).toBeCloseTo(10, 6)
+    expect(size('label_city', 2)).toBeCloseTo(10, 6)
+    expect(size('label_city', 4)).toBeGreaterThan(10)
+    expect(size('label_city', 4)).toBeLessThan(20)
+    expect(size('label_city', 6)).toBeCloseTo(20, 6)
+    expect(size('label_city', 9)).toBeCloseTo(20, 6)
+    expect(cityNameLook(9, false, theme).size).toBeCloseTo(20, 6)
+    expect(size('label_state', 3)).toBe(14)
+    expect(size('label_state', 7)).toBe(14)
+  })
+
   it("measures a name in the family, weight and style of the theme's font the map writes it in", () => {
     const font = (name: string) => globeFonts.get(name)!
     const theme: Theme = {

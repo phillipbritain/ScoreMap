@@ -57,7 +57,8 @@ describe('cityOfPlace', () => {
 describe('cityNameBox', () => {
   // Every letter 10 px wide.
   const measure = (text: string) => text.length * 10
-  const look = cityNameLook(4, false, builtInTheme)
+  // Wide enough for the longest word below, "Santísima", to fit on a line.
+  const look = { ...cityNameLook(4, false, builtInTheme), maxWidth: 100 }
 
   it('sits centred below the dot, past the offset, with room for the outline', () => {
     const box = cityNameBox(tampa, { x: 100, y: 200 }, look, measure)

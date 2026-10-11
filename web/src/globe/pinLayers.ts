@@ -5,7 +5,6 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
-import { clusterCountFont } from './placeNames'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
@@ -63,8 +62,8 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       filter: ['has', 'point_count'],
       layout: {
         'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': [clusterCountFont],
-        'text-size': 11,
+        'text-font': [theme.fonts.clusterCount.font.name],
+        'text-size': theme.fonts.clusterCount.size,
         'text-allow-overlap': true,
       },
       paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color) },

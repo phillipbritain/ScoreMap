@@ -49,10 +49,10 @@ const theme: Theme = {
     halo: builtInTheme.globe.halo,
   },
   placeNames: {
-    city: { color: '#100001', outline: '#200001', font: font('Open Sans Light') },
-    capital: { color: '#100002', outline: '#200002', font: font('Open Sans Extra Bold') },
-    state: { color: '#100003', outline: '#200003', font: font('Metropolis Regular') },
-    country: { color: '#100004', outline: '#200004', font: font('Klokantech Noto Sans Bold') },
+    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: '#200001', font: font('Open Sans Light') },
+    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: '#200002', font: font('Open Sans Extra Bold') },
+    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: '#200003', font: font('Metropolis Regular') },
+    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: '#200004', font: font('Klokantech Noto Sans Bold') },
   },
 }
 

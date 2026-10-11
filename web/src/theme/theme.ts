@@ -23,19 +23,50 @@ interface Setting<T> {
 /** A colour job: a palette step by name ("navy.700"), or a colour given directly ("#0b1526"). */
 const color: Setting<string> = {
   resolve(value, path, { steps, problems }) {
-    const job = String(value)
-    if (isColor(job)) return job
-    const step = steps.get(job)
-    if (step === undefined) problems.push(`${path} names "${job}", a step the palette doesn’t have`)
+    if (typeof value !== 'string') {
+      problems.push(`${path} is ${shown(value)}, not a colour job: a palette step such as "navy.700", or a colour`)
+      return undefined
+    }
+    if (directColor.test(value)) return value
+    if (looksDirect(value)) {
+      problems.push(`${path} is "${value}", not a colour CSS and MapLibre both read (${directColorForms})`)
+      return undefined
+    }
+    const step = steps.get(value)
+    if (step === undefined) problems.push(`${path} names "${value}", a step the palette doesn’t have`)
     return step
   },
 }
 
+const number = String.raw`\d*\.?\d+`
+const percent = `${number}%`
+/** A colour function's three arguments and optional alpha, comma-separated or space-separated with "/ alpha". */
+const colorArguments = (a: string, b: string, c: string) =>
+  String.raw`\(\s*(?:${a}\s*,\s*${b}\s*,\s*${c}(?:\s*,\s*${number}%?)?|${a}\s+${b}\s+${c}(?:\s*\/\s*${number}%?)?)\s*\)`
+
 /**
- * Whether a colour job gives a colour directly, as a CSS colour such as "#0b1526", "rgb(…)" or
- * "transparent", rather than naming a step.
+ * A colour given directly, in a form both CSS and MapLibre read: #rgb, #rgba, #rrggbb or #rrggbbaa;
+ * rgb(…) or rgba(…), its channels all numbers or all percentages; hsl(…) or hsla(…); or transparent.
  */
-const isColor = (job: string) => /^(#|[a-z]+\(|transparent$)/i.test(job)
+const directColor = new RegExp(
+  [
+    '#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})',
+    'transparent',
+    `rgba?${colorArguments(number, number, number)}`,
+    `rgba?${colorArguments(percent, percent, percent)}`,
+    `hsla?${colorArguments(`${number}(?:deg)?`, percent, percent)}`,
+  ]
+    .map((form) => `^${form}$`)
+    .join('|'),
+  'i',
+)
+const directColorForms = '#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent'
+
+/** Whether a colour job means to give a colour directly, rather than name a step: a step has neither "#" nor "(". */
+const looksDirect = (job: string) => /^#|\(/.test(job)
+
+/** A value as a problem quotes it. */
+const shown = (value: unknown) => JSON.stringify(value) ?? String(value)
 
 /** A font for text on the globe: one the map's font server has, by name (ADR-0006). */
 const globeFont: Setting<GlobeFont> = {
@@ -364,38 +395,53 @@ export type Theme = Resolved<typeof settings>
 
 export type ThemeResult = { ok: true; theme: Theme } | { ok: false; problems: string[] }
 
-interface ThemeJson {
-  palette: Record<string, { base: string; steps?: Partial<Record<StepName, string>> }>
-  settings: unknown
-}
-
 /** Reads a theme from its parsed JSON. */
 export function resolveTheme(json: unknown): ThemeResult {
-  const { palette, settings: values } = json as ThemeJson
+  if (!isObject(json)) return { ok: false, problems: [`a theme is ${shown(json)}, not an object with a palette and settings`] }
   const problems: string[] = []
+  for (const key of Object.keys(json)) {
+    if (key !== 'palette' && key !== 'settings') problems.push(`${key} isn’t part of a theme: a theme has a palette and settings`)
+  }
+  const { palette, settings: values } = json
   const resolving: Resolving = {
     steps: paletteByStep(palette, problems),
-    settings: typeof values === 'object' && values !== null ? (values as Record<string, unknown>) : {},
+    settings: isObject(values) ? values : {},
     problems,
   }
   const theme = resolveAll(settings, values, 'settings', resolving) as Theme
   return problems.length ? { ok: false, problems } : { ok: true, theme }
 }
 
+/** Whether a value from a theme's JSON is an object of named values (not an array or null). */
+const isObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
 /** Every step of the palette's colours, by its name in a colour job; a colour with problems has none. */
-function paletteByStep(palette: ThemeJson['palette'] | undefined, problems: string[]): Map<string, string> {
+function paletteByStep(palette: unknown, problems: string[]): Map<string, string> {
   const byStep = new Map<string, string>()
   if (palette === undefined) problems.push('palette is missing')
-  for (const [name, { base, steps = {} }] of Object.entries(palette ?? {})) {
+  else if (!isObject(palette)) problems.push(`palette is ${shown(palette)}, not colours by name`)
+  for (const [name, colour] of Object.entries(isObject(palette) ? palette : {})) {
+    const path = `palette.${name}`
+    if (!isObject(colour)) {
+      problems.push(`${path} is ${shown(colour)}, not a colour with a base`)
+      continue
+    }
+    const { base, steps = {}, ...unknown } = colour
+    for (const key of Object.keys(unknown)) problems.push(`${path}.${key} isn’t part of a palette colour: it has a base and steps`)
+    // A colour that can't be worked out has no steps; one with only an unknown part still does.
     const before = problems.length
-    if (!isHexColor(base)) problems.push(`palette.${name}.base is "${base}", not a #rrggbb colour`)
-    for (const [step, value] of Object.entries(steps)) {
+    if (!isHexColor(base)) problems.push(`${path}.base is ${shown(base)}, not a #rrggbb colour`)
+    if (!isObject(steps)) problems.push(`${path}.steps is ${shown(steps)}, not steps by name`)
+    const handSet = isObject(steps) ? steps : {}
+    for (const [step, value] of Object.entries(handSet)) {
       if (!(stepNames as readonly string[]).includes(step)) {
-        problems.push(`palette.${name}.steps.${step} isn’t a step: steps are ${stepNames[0]} to ${stepNames.at(-1)}`)
-      } else if (!isHexColor(value)) problems.push(`palette.${name}.steps.${step} is "${value}", not a #rrggbb colour`)
+        problems.push(`${path}.steps.${step} isn’t a step: steps are ${stepNames[0]} to ${stepNames.at(-1)}`)
+      } else if (!isHexColor(value)) problems.push(`${path}.steps.${step} is ${shown(value)}, not a #rrggbb colour`)
     }
     if (problems.length > before) continue
-    for (const [step, value] of Object.entries(paletteSteps(base, steps))) byStep.set(`${name}.${step}`, value)
+    const worked = paletteSteps(base as string, handSet as Partial<Record<StepName, string>>)
+    for (const [step, value] of Object.entries(worked)) byStep.set(`${name}.${step}`, value)
   }
   return byStep
 }
@@ -404,15 +450,25 @@ function isSetting(schema: unknown): schema is Setting<unknown> {
   return typeof (schema as Setting<unknown>).resolve === 'function'
 }
 
+/**
+ * Resolves a setting, or a group of them: each setting the group has, and a problem for each it
+ * doesn't, so a misspelt setting shows as itself rather than as the real one missing.
+ */
 function resolveAll(schema: object, value: unknown, path: string, resolving: Resolving): unknown {
   if (value === undefined) {
     resolving.problems.push(`${path} is missing`)
     return undefined
   }
   if (isSetting(schema)) return schema.resolve(value, path, resolving)
-  const values = value as Record<string, unknown>
+  if (!isObject(value)) {
+    resolving.problems.push(`${path} is ${shown(value)}, not a group of settings`)
+    return undefined
+  }
+  for (const key of Object.keys(value)) {
+    if (!Object.hasOwn(schema, key)) resolving.problems.push(`${path}.${key} isn’t a setting a theme has`)
+  }
   return Object.fromEntries(
-    Object.entries(schema).map(([key, inner]) => [key, resolveAll(inner, values[key], `${path}.${key}`, resolving)]),
+    Object.entries(schema).map(([key, inner]) => [key, resolveAll(inner, value[key], `${path}.${key}`, resolving)]),
   )
 }
 

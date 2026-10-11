@@ -52,6 +52,16 @@ _Avoid_: Crunch time, close game
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city
 
+### Look
+
+**Theme**:
+The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded: a palette and the settings that use it. ScoreMap has one, built in.
+_Avoid_: Skin, style (the globe's map style is MapLibre's), card style
+
+**Palette**:
+A theme's named base colours, each worked out into steps from light (100) to dark (900), its base colour at 500. A theme's colour jobs, such as the globe's surface or a city's name, each name a step, such as `navy.700`, or give a colour directly.
+_Avoid_: Colour scheme, swatches, tokens
+
 ### Game status
 
 **Upcoming**:

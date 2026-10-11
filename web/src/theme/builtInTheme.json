@@ -98,7 +98,6 @@
     "text": {
       "main": "offWhite.500",
       "secondary": "offWhite.600",
-      "accent": "offWhite.600",
       "link": "offWhite.500",
       "onStatus": "navy.800"
     },

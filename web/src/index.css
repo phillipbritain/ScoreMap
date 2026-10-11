@@ -104,10 +104,10 @@ body {
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--sizes-panel-slant)) 100%, 0 100%);
 }
 
-/* In the accent and tracked out, like the country names on the globe. */
+/* Secondary text, tracked out like the country names on the globe. */
 .game-panel__league,
 .game-panel__label {
-  color: var(--text-accent);
+  color: var(--text-secondary);
   font-family: var(--fonts-heading-family);
   font-size: var(--text-sizes-s);
   font-weight: var(--fonts-heading-weight);
@@ -651,11 +651,11 @@ body {
   max-height: calc(100% - 2 * var(--spacing-l));
 }
 
-/* Just the gear, standing on the globe without a panel: in the accent, with the theme's outline
+/* Just the gear, standing on the globe without a panel: in secondary text, with the theme's outline
    around it (the dark theme has none: controls cast no shadow), and without the disclosure triangle. */
 .settings-menu summary {
   display: flex;
-  color: var(--text-accent);
+  color: var(--text-secondary);
   cursor: pointer;
   list-style: none;
   filter: drop-shadow(var(--settings-menu-gear-outline));
@@ -721,7 +721,7 @@ body {
   border: var(--strokes-thin) solid var(--settings-menu-chip-outline);
   border-radius: var(--corners-control);
   background: transparent;
-  color: var(--text-accent);
+  color: var(--text-secondary);
   font-family: var(--fonts-button-family);
   font-size: var(--text-sizes-m);
   font-weight: var(--fonts-button-weight);
@@ -777,7 +777,7 @@ body {
   border-radius: var(--corners-control);
   background: var(--settings-menu-chip-badge);
   text-align: center;
-  color: var(--text-accent);
+  color: var(--text-secondary);
   font-size: var(--text-sizes-s);
 }
 

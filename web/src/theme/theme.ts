@@ -86,6 +86,58 @@ const settings = {
   cluster: { fill: color, outlineWidth: pixels, glowOpacity: opacity },
   /** The selected game's small pin ring and score card outline. */
   selection: color,
+  /** Behind the globe: the page itself, and the sky around the globe with its scattering of stars, white, cool and warm. */
+  page: { background: color, sky: color, stars: { white: color, cool: color, warm: color } },
+  /**
+   * Text on the game panel, the settings menu and the scenario controls: main text, secondary text
+   * (the lines under a venue or time), the accent (the game panel's league and labels, the settings
+   * gear, league chips) and links.
+   */
+  text: { main: color, secondary: color, accent: color, link: color },
+  /** The lines between a menu's parts. */
+  divider: color,
+  /** Behind a control under the pointer. */
+  hover: color,
+  /**
+   * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
+   * surface and drop shadow, and a speed key that's on.
+   */
+  controls: { surface: color, shadow: color, on: { fill: color, text: color } },
+  /**
+   * A score card: its fill and text, a Disrupted game's, and the drop shadow a starting game's card
+   * settles with. Its outline, header, light and glow are its status's colour.
+   */
+  card: { fill: color, text: color, disrupted: { fill: color, text: color }, shadow: color },
+  /**
+   * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
+   * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
+   * button and the panel's drop shadow. Its top edge is the game's status colour.
+   */
+  panel: {
+    surface: { top: color, bottom: color },
+    scoreBlock: { top: color, bottom: color },
+    score: { fill: color, text: color },
+    unofficial: color,
+    photo: color,
+    credit: { fill: color, text: color },
+    close: color,
+    shadow: color,
+  },
+  /**
+   * The settings menu: its surface and drop shadow, the dark outline around the gear, a tab that's off,
+   * the count of a sport's leagues that are on, the hint beside "All leagues", a league chip's outline
+   * and the badge counting leagues, and a tab or chip that's on.
+   */
+  settingsMenu: {
+    surface: color,
+    shadow: color,
+    gearOutline: color,
+    tab: color,
+    count: color,
+    hint: color,
+    chip: { outline: color, badge: color },
+    on: { fill: color, text: color },
+  },
 }
 
 type Resolved<S> = S extends Setting<infer T> ? T : { readonly [K in keyof S]: Resolved<S[K]> }

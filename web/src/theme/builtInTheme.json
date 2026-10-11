@@ -1,7 +1,8 @@
 {
   "palette": {
     "navy": { "base": "#0b1526", "steps": { "900": "#050b16" } },
-    "cream": { "base": "#f1e6cc", "steps": { "400": "#fff4dc", "600": "#d8c9a4" } }
+    "cream": { "base": "#f1e6cc", "steps": { "400": "#fff4dc", "600": "#d8c9a4" } },
+    "night": { "base": "#0b1020" }
   },
   "settings": {
     "globe": {
@@ -48,6 +49,50 @@
       }
     },
     "cluster": { "fill": "rgba(6, 12, 24, 0.88)", "outlineWidth": 1.5, "glowOpacity": 0.45 },
-    "selection": "#2f80ed"
+    "selection": "#2f80ed",
+    "page": {
+      "background": "night.500",
+      "sky": "#03050c",
+      "stars": { "white": "#ffffff", "cool": "rgb(200 220 255)", "warm": "rgb(255 240 220)" }
+    },
+    "text": {
+      "main": "#ffffff",
+      "secondary": "rgb(255 255 255 / 0.55)",
+      "accent": "cream.600",
+      "link": "#8fc1ff"
+    },
+    "divider": "rgba(255, 255, 255, 0.1)",
+    "hover": "rgba(255, 255, 255, 0.12)",
+    "controls": {
+      "surface": "rgba(11, 16, 32, 0.85)",
+      "shadow": "rgba(0, 0, 0, 0.3)",
+      "on": { "fill": "#ffffff", "text": "night.500" }
+    },
+    "card": {
+      "fill": "rgb(6 12 24 / 0.85)",
+      "text": "#d9f0ff",
+      "disrupted": { "fill": "rgb(12 14 20 / 0.85)", "text": "#8b93a3" },
+      "shadow": "rgb(0 0 0 / 0.45)"
+    },
+    "panel": {
+      "surface": { "top": "rgb(18 28 56 / 0.98)", "bottom": "rgb(8 12 26 / 0.98)" },
+      "scoreBlock": { "top": "#1d2d55", "bottom": "#121c38" },
+      "score": { "fill": "#ffffff", "text": "night.500" },
+      "unofficial": "rgb(255 255 255 / 0.45)",
+      "photo": "rgb(42 62 112 / 0.5)",
+      "credit": { "fill": "rgb(0 0 0 / 0.6)", "text": "rgb(255 255 255 / 0.75)" },
+      "close": "rgb(0 0 0 / 0.55)",
+      "shadow": "rgb(0 0 0 / 0.6)"
+    },
+    "settingsMenu": {
+      "surface": "night.500",
+      "shadow": "rgba(0, 0, 0, 0.4)",
+      "gearOutline": "navy.900",
+      "tab": "rgba(255, 255, 255, 0.6)",
+      "count": "rgba(255, 255, 255, 0.5)",
+      "hint": "rgba(255, 255, 255, 0.4)",
+      "chip": { "outline": "rgba(216, 201, 164, 0.45)", "badge": "rgba(216, 201, 164, 0.15)" },
+      "on": { "fill": "cream.600", "text": "night.500" }
+    }
   }
 }

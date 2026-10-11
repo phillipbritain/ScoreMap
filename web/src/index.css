@@ -300,35 +300,23 @@ body {
   }
 }
 
-/* How each status looks comes from globe/statusLook.ts, which writes it to the page's root
-   (--live-color, --live-group-opacity and so on). Score cards, card clusters and trails pick theirs by
-   their status class. Live stands out most, Upcoming is dimmer, Final fades, Disrupted is greyed out. */
-.score-card--live,
-.card-cluster--live,
-.score-card-trail--live {
+/* How each status looks comes from globe/statusLook.ts, which writes its colour to the page's root
+   (--live-color and so on). Score cards pick theirs by their status class. Live stands out most,
+   Upcoming is dimmer, Final fades, Disrupted is greyed out. */
+.score-card--live {
   --status-color: var(--live-color);
-  --status-group-opacity: var(--live-group-opacity);
 }
 
-.score-card--upcoming,
-.card-cluster--upcoming,
-.score-card-trail--upcoming {
+.score-card--upcoming {
   --status-color: var(--upcoming-color);
-  --status-group-opacity: var(--upcoming-group-opacity);
 }
 
-.score-card--final,
-.card-cluster--final,
-.score-card-trail--final {
+.score-card--final {
   --status-color: var(--final-color);
-  --status-group-opacity: var(--final-group-opacity);
 }
 
-.score-card--disrupted,
-.card-cluster--disrupted,
-.score-card-trail--disrupted {
+.score-card--disrupted {
   --status-color: var(--disrupted-color);
-  --status-group-opacity: var(--disrupted-group-opacity);
 }
 
 /* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line. How it looks
@@ -362,62 +350,14 @@ body {
 }
 
 /* Cards moved aside to make room for another (see globe/cardLayout.ts) trail back to their venues
-   instead of pointing down. All trails share one layer above the map and beneath every card. */
-.score-card-trails {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* A thin line lit in the game's status colour, like the HUD card's outline, to a point ringed in it. */
-.score-card-trails line {
-  stroke: var(--status-color);
-  stroke-opacity: 0.9;
-  stroke-width: 1.25;
-  filter: drop-shadow(0 0 2px var(--status-color));
-}
-
-.score-card-trails .score-card-trail__point {
-  r: 2px;
-  fill: var(--status-color);
-}
-
-.score-card-trails .score-card-trail__ring {
-  r: 5.5px;
-  fill: none;
-  stroke: var(--status-color);
-  stroke-width: 1;
-}
-
+   instead of pointing down; the map draws the trails (see globe/cardLayoutLayers.ts). */
 [data-moved] > .score-card::after {
   display: none;
 }
 
-/* No room for this card: its game is counted in a card cluster instead. */
+/* No room for this card: its game is counted in a card cluster instead, which the map draws. */
 [data-in-card-cluster] {
   visibility: hidden;
-}
-
-/* Games with no room for a card, shown as a card cluster: a dark disc outlined
-   and lit in the colour of its most prominent game (see groupFill in globe/statusLook.ts). */
-.card-cluster {
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  width: 26px;
-  height: 26px;
-  border: var(--group-outline) solid var(--status-color);
-  border-radius: 50%;
-  background: var(--group-fill);
-  opacity: var(--status-group-opacity);
-  color: var(--status-color);
-  font-size: 11px;
-  font-weight: 700;
-  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--status-color) 45%, transparent);
-  cursor: pointer;
 }
 
 .score-card--upcoming {

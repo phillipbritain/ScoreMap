@@ -620,16 +620,28 @@ body {
   }
 }
 
-/* Changes still show, without the bouncing. */
+/* Changes still show, without the bouncing, and nothing moves or blinks: a Live light stays lit (Live
+   is told by its glow and brightness alone) and every pin's ring fades in place without growing. */
 @media (prefers-reduced-motion: reduce) {
   .score-card--animate-score,
   .score-card--animate-start {
     animation: score-card-finish 2.4s ease-in-out;
   }
 
+  .score-card--live .score-card__light {
+    animation: none;
+  }
+
   .pin-pulse--score,
-  .pin-pulse--start {
-    animation: pin-pulse-calm 2.6s ease-in-out;
+  .pin-pulse--start,
+  .pin-pulse--finish {
+    animation: pin-pulse-still 2.6s ease-in-out;
+  }
+
+  @keyframes pin-pulse-still {
+    40% {
+      opacity: 0.6;
+    }
   }
 }
 

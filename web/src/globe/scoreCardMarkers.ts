@@ -1,16 +1,18 @@
-import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
+import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { cardPins, type CardPin } from './cardPins'
 import { defaultCardStyle, type CardStyle } from './cardStyle'
-import { layOutCards, type CardCluster, type CardPlacement, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
+import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
+import { cardLayoutFeatures, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
+import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { cardClusterStacking, selectedStacking, statusLooks } from './statusLook'
+import { selectedStacking, statusLooks } from './statusLook'
 import { pinLayout } from './zoomLevels'
 
 interface PlacedCard {
@@ -25,24 +27,22 @@ interface PlacedCard {
    * cardLayout). Null until it's first laid out.
    */
   offset: ScreenOffset | null
-  /** The line and venue point drawn while the card is moved (see drawTrail). */
-  trail: SVGGElement
   /** True while there's no room for the card and its game is counted in a card cluster instead. */
   inCardCluster: boolean
 }
 
 interface PlacedCardCluster {
-  marker: Marker
   gameIds: string[]
-  /** The count last drawn, so unchanged card clusters aren't redrawn every frame. */
-  drawn: string
+  /** The first game's venue, where the card cluster is drawn. */
+  lngLat: [number, number]
 }
 
 /**
  * Zoomed in, shows each pin as an HTML score card (logos, abbreviations, score, clock line). Cards
  * that would overlap are moved apart with a trail back to their venue; where there's no room for
- * them all, the rest are shown as a card cluster. Zoomed out, the small-pin and pin cluster
- * layers show instead and no cards are placed.
+ * them all, the rest are shown as a card cluster. The trails and card clusters are drawn by the map,
+ * beneath the place names (see cardLayoutLayers). Zoomed out, the small-pin and pin cluster layers
+ * show instead and no cards are placed.
  */
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
@@ -53,31 +53,22 @@ export class ScoreCardMarkers {
   private readonly map: MapLibreMap
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
-  private readonly onSelectCardCluster: (gameIds: readonly string[]) => void
-  /** Trails from moved cards to their venues, in one layer just above the map so no trail crosses over a card. */
-  private readonly trails = document.createElementNS(svgNamespace, 'svg')
-  /** Counts of games with no room for a card, by the first game in each. */
-  private readonly cardClusters = new Map<string, PlacedCardCluster>()
+  /** Games with no room for a card, as last laid out. */
+  private cardClusters: PlacedCardCluster[] = []
+  /** The layout last given to the map (see drawLayout), so it's given again only when it changes. */
+  private layoutDrawn = ''
   /** How far a card's pointer reaches below it, read from the first card drawn (see cardPointer). */
   private pointer = 0
   private style: CardStyle = defaultCardStyle
 
   /**
-   * `placeNames` gives the names cards and trails keep clear of; `onSelect` is called with a game's
-   * id when its card is selected, and `onSelectCardCluster` with a card cluster's games when it is.
+   * `placeNames` gives the names cards keep clear of; `onSelect` is called with a game's id when its
+   * card is selected.
    */
-  constructor(
-    map: MapLibreMap,
-    placeNames: PlaceNames,
-    onSelect: (gameId: string) => void,
-    onSelectCardCluster: (gameIds: readonly string[]) => void,
-  ) {
+  constructor(map: MapLibreMap, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
     this.map = map
     this.placeNames = placeNames
     this.onSelect = onSelect
-    this.onSelectCardCluster = onSelectCardCluster
-    this.trails.classList.add('score-card-trails')
-    map.getCanvas().after(this.trails)
   }
 
   /** The "Card style" setting: redraws every card in the style picked. */
@@ -149,7 +140,6 @@ export class ScoreCardMarkers {
           width: 0,
           height: 0,
           offset: null,
-          trail: this.trails.appendChild(newTrail()),
           inCardCluster: false,
         }
         this.placed.set(gameId, placed)
@@ -163,7 +153,6 @@ export class ScoreCardMarkers {
         const cardElement = element.firstElementChild as HTMLElement
         drawScoreCard(cardElement, card, selected, this.style, this.animating.get(gameId))
         this.pointer ||= cardPointer(cardElement)
-        placed.trail.setAttribute('class', `score-card-trail--${card.status.toLowerCase()}`)
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -172,10 +161,9 @@ export class ScoreCardMarkers {
 
     this.layOut(keep)
 
-    for (const [gameId, { marker, trail }] of this.placed) {
+    for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
       marker.remove()
-      trail.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
     }
@@ -191,10 +179,12 @@ export class ScoreCardMarkers {
    * there's no room for (see cardLayout).
    */
   private layOut(gameIds: ReadonlySet<string>): void {
-    const cards = [...gameIds].map((gameId): ScreenCard => {
+    const cards = [...gameIds].map((gameId): CardOnGlobe => {
       const { marker, width, height } = this.placed.get(gameId)!
-      const venue = this.map.project(marker.getLngLat())
-      return { gameId, status: this.games.get(gameId)!.status, venueX: venue.x, venueY: venue.y, width, height }
+      const lngLat = marker.getLngLat()
+      const venue = this.map.project(lngLat)
+      const { status } = this.games.get(gameId)!
+      return { gameId, status, venueX: venue.x, venueY: venue.y, width, height, lngLat: lngLat.toArray() }
     })
     // Where the cards were last frame, so they stay put while they still have room.
     const previous = new Map<string, CardPlacement>()
@@ -203,11 +193,9 @@ export class ScoreCardMarkers {
       if (offset) previous.set(gameId, { offset, inCardCluster, trail: null })
     }
     const canvas = this.map.getCanvas()
-    const layout = layOutCards(
-      cards,
-      { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() },
-      previous,
-    )
+    const scene = { width: canvas.clientWidth, height: canvas.clientHeight, pointer: this.pointer, names: this.placeNames.nameBoxes() }
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
+    const layout = layOutCards(cards, scene, previous)
 
     for (const [gameId, placed] of this.placed) {
       const placement = layout.cards.get(gameId)
@@ -223,52 +211,36 @@ export class ScoreCardMarkers {
         // Hidden rather than removed, so the card keeps its size for laying out the next frame.
         placed.marker.getElement().toggleAttribute('data-in-card-cluster', inCardCluster)
       }
-      // Redrawn every frame: the venue moves on screen as the globe turns.
-      drawTrail(placed.trail, trail)
     }
-    this.drawCardClusters(layout.cardClusters)
+    const lngLats = new Map(cards.map((card) => [card.gameId, card.lngLat]))
+    this.cardClusters = layout.cardClusters.map(({ gameIds }) => ({ gameIds, lngLat: lngLats.get(gameIds[0])! }))
+    this.drawLayout(cards, layout)
   }
 
-  private drawCardClusters(cardClusters: readonly CardCluster[]): void {
-    const keep = new Set<string>()
-    for (const { gameIds, status } of cardClusters) {
-      const key = gameIds[0]
-      keep.add(key)
-      const at = this.placed.get(key)!.marker.getLngLat()
-      let cardCluster = this.cardClusters.get(key)
-      if (!cardCluster) {
-        const element = document.createElement('div')
-        element.append(document.createElement('div'))
-        element.addEventListener('click', (event) => {
-          event.stopPropagation()
-          const selected = this.cardClusters.get(key)
-          if (selected) this.onSelectCardCluster(selected.gameIds)
-        })
-        element.style.zIndex = String(cardClusterStacking)
-        cardCluster = { marker: new Marker({ element }).setLngLat(at).addTo(this.map), gameIds, drawn: '' }
-        this.cardClusters.set(key, cardCluster)
-      } else {
-        cardCluster.marker.setLngLat(at)
-        cardCluster.gameIds = gameIds
-      }
-      const drawn = `${status} ${gameIds.length}`
-      if (cardCluster.drawn !== drawn) {
-        const count = cardCluster.marker.getElement().firstElementChild as HTMLElement
-        count.className = `card-cluster card-cluster--${status.toLowerCase()}`
-        count.textContent = String(gameIds.length)
-        cardCluster.drawn = drawn
-      }
-    }
-    for (const [key, { marker }] of this.cardClusters) {
-      if (keep.has(key)) continue
-      marker.remove()
-      this.cardClusters.delete(key)
-    }
+  /**
+   * Gives the map the trails, card clusters and footprints of a layout (see cardLayoutLayers), when
+   * they've changed: as the globe turns, they move on screen with it.
+   */
+  private drawLayout(cards: readonly CardOnGlobe[], layout: CardLayout): void {
+    const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
+    if (!source) return
+    // To the pixel: finer changes don't show.
+    const drawn = JSON.stringify([cards, [...layout.cards], layout.cardClusters], (_key, value: unknown) =>
+      typeof value === 'number' ? Math.round(value) : value,
+    )
+    if (drawn === this.layoutDrawn) return
+    this.layoutDrawn = drawn
+    void source.setData(cardLayoutFeatures(cards, layout, (x, y) => this.map.unproject([x, y]).toArray()))
   }
 
   /** The games in each card cluster on screen now. */
   cardClusterGames(): string[][] {
-    return [...this.cardClusters.values()].map((cardCluster) => cardCluster.gameIds)
+    return this.cardClusters.map((cardCluster) => cardCluster.gameIds)
+  }
+
+  /** The games in the card cluster on screen now that's drawn at this game's venue, the first in it. */
+  cardClusterOf(firstGameId: string): string[] | undefined {
+    return this.cardClusters.find(({ gameIds }) => gameIds[0] === firstGameId)?.gameIds
   }
 
   /**
@@ -276,10 +248,9 @@ export class ScoreCardMarkers {
    * card. False when the game has neither on screen.
    */
   animate(gameId: string, animation: PinAnimation): boolean {
-    for (const { marker, gameIds } of this.cardClusters.values()) {
-      if (!gameIds.includes(gameId)) continue
-      const { lng, lat } = marker.getLngLat()
-      pulse(this.map, [lng, lat], animation, 'cluster')
+    const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
+    if (cardCluster) {
+      pulse(this.map, cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
@@ -304,9 +275,7 @@ export class ScoreCardMarkers {
 
   clear(): void {
     for (const { marker } of this.placed.values()) marker.remove()
-    for (const { marker } of this.cardClusters.values()) marker.remove()
-    this.cardClusters.clear()
-    this.trails.remove()
+    this.cardClusters = []
     this.placed.clear()
     this.animating.clear()
   }
@@ -315,33 +284,6 @@ export class ScoreCardMarkers {
 /** How far a card's pointer reaches below the card, as its CSS draws it (see .score-card). */
 function cardPointer(card: HTMLElement): number {
   return parseFloat(getComputedStyle(card).getPropertyValue('--score-card-pointer')) || 0
-}
-
-const svgNamespace = 'http://www.w3.org/2000/svg'
-
-function newTrail(): SVGGElement {
-  const trail = document.createElementNS(svgNamespace, 'g')
-  const point = document.createElementNS(svgNamespace, 'circle')
-  point.classList.add('score-card-trail__point')
-  const ring = document.createElementNS(svgNamespace, 'circle')
-  ring.classList.add('score-card-trail__ring')
-  trail.append(document.createElementNS(svgNamespace, 'line'), point, ring)
-  return trail
-}
-
-/** Points a moved card back at its venue: a line from the card's edge to a ringed point on the venue. */
-function drawTrail(element: SVGGElement, trail: Segment | null): void {
-  element.style.display = trail ? '' : 'none'
-  if (!trail) return
-  const [line, point, ring] = element.children
-  line.setAttribute('x1', String(trail.x1))
-  line.setAttribute('y1', String(trail.y1))
-  line.setAttribute('x2', String(trail.x2))
-  line.setAttribute('y2', String(trail.y2))
-  for (const circle of [point, ring]) {
-    circle.setAttribute('cx', String(trail.x2))
-    circle.setAttribute('cy', String(trail.y2))
-  }
 }
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`

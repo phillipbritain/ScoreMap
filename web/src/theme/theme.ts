@@ -222,8 +222,8 @@ const placeName = {
  * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
  * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
  * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
- * opacity at the middle), how opaque a cluster showing as this status is, and its score cards: how
- * far they fade, and how far and how strongly they glow in its colour (a radius of 0 is no glow). A
+ * opacity at the middle), how opaque a pin cluster or card cluster showing as this status is (its
+ * disc, outline and count alike), and its score cards: how far they fade, and how far and how strongly they glow in its colour (a radius of 0 is no glow). A
  * card stays solid as it fades: its status colour, text and logos are mixed this far into its fill
  * (0 is not at all, 1 is all the way, leaving a blank card).
  */

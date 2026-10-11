@@ -52,6 +52,21 @@ describe('clusters', () => {
     expect(paintOf(layers, 'pin-clusters')['circle-stroke-width']).toBe(2)
   })
 
+  it('glow as small pins of the status they show as do, as strongly as the theme says, or not at all', () => {
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.settings.status.live.glow.opacity = 0.8
+    json.settings.status.final.glow.opacity = 0
+    json.settings.cluster.glowOpacity = 0.5
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    const pinClusterGlow = paintOf(pinClusterLayers(result.theme), 'pin-cluster-glows')['circle-opacity']
+    expect(evaluate(pinClusterGlow, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toBeCloseTo(0.4, 6)
+    expect(evaluate(pinClusterGlow, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toBe(0)
+    const cardClusterGlow = paintOf(cardLayoutLayers(result.theme), 'card-cluster-glows')['circle-opacity']
+    expect(evaluate(cardClusterGlow, { status: 'Live' })).toBeCloseTo(0.4, 6)
+    expect(evaluate(cardClusterGlow, { status: 'Final' })).toBe(0)
+  })
+
   it("draw a card cluster as a pin cluster of some games, its outline inside its size", () => {
     const paint = (id: string) => paintOf(cardLayoutLayers(sizedTheme()), id)
     expect(paint('card-clusters')['circle-radius']).toBe(14 - 2)

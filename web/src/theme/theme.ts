@@ -220,7 +220,8 @@ const settings = {
   status: { live: statusLook, upcoming: statusLook, final: statusLook, disrupted: statusLook },
   /**
    * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
-   * colour, with a glow this much of its opacity. A pin cluster's disc and glow are as wide as these
+   * colour, in a glow as strong as this much of its status's small pins' glow, so a cluster of a
+   * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
    * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
    * wide as a pin cluster of some games.
    */

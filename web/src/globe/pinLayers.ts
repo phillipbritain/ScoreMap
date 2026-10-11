@@ -39,7 +39,7 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
         'circle-radius': byCount(cluster.glowRadius),
         'circle-color': byStatus(theme, 'pinCluster', (look) => look.color),
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.clusterOpacity * cluster.glowOpacity),
+        'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity),
       },
     },
     {

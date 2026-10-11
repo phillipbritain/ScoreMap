@@ -7,29 +7,41 @@ description: Start, stop and drive ScoreMap locally (server, browser app, a brow
 
 ## Start and stop
 
-Run these with the PowerShell tool, from the repo root:
+ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite together, from one clone or git worktree. Runs from different clones and worktrees go side by side, each with its own server, so its own scenario and speed. Run these with the PowerShell tool, from the repo root (or the worktree's root):
 
 ```powershell
-./scripts/dev.ps1 start    # builds, starts server (5147) and Vite (5173) in the background, waits until both answer
-./scripts/dev.ps1 status   # what's running, since when, from which commit (STALE if not the one checked out), and whether each port answers
-./scripts/dev.ps1 stop     # stops both, however they were started
+aspire start              # the first run on the machine: in the background, returns once Aspire is up
+aspire start --isolated   # any further run, from another worktree: random ports
+aspire wait web           # waits until the browser app answers; do this before using it
+aspire describe           # this clone's run: each resource's state, health and URLs
+aspire ps                 # every run on the machine: its AppHost path (so its clone), PIDs, dashboard URL
+aspire stop               # stops this clone's run
+aspire stop --all         # stops every run on the machine
 ```
 
-The server runs from its own `bin\DevRun\` build, so `dotnet test` works while it's up.
+`start` is plain when `aspire ps` lists no run, and `--isolated` when it lists any, since a plain run wants fixed ports another may hold. One clone or worktree has one run: starting it again (even `--isolated`) stops the one going and starts afresh, which is also how to pick up a changed server. For a second run of your own, make a git worktree and start it there.
 
-A run already up is often one left by another session, built from another commit. `start` refuses while it runs and prints its `status`: if it's STALE or not started by the script, `stop` and `start` again.
+**Its URLs.** The browser app is the `web` resource's URL and the server the `server`'s; in an isolated run both are random. Read them from `aspire describe --format json` (`.resources[]`, by `displayName`, `.urls[].url`):
 
-Use the script, not `dotnet run` or `npm run dev` in a background task: stopping those stops only their wrapper, and the real server or Vite keeps running and holding its port.
+```powershell
+$run = (aspire describe --format json | ConvertFrom-Json).resources
+$web = ($run | ? displayName -eq web).urls[0].url
+$server = ($run | ? displayName -eq server).urls | ? name -eq http | % url
+```
 
-Logs are in `%TEMP%\scoremap\` (`/tmp/scoremap/` from Git Bash): `server.log` for the server, including errors from the hub and the poller, and `web.log` for Vite.
+**Logs** are in the run's dashboard (`aspire ps` gives its URL, with its login token), or `aspire logs server` and `aspire logs web` (`-f` to follow).
 
-Finish every run with `stop`. Done means it printed `stopped: no ScoreMap processes left, and neither port answers`.
+**First time on a machine:** install the Aspire CLI (`irm https://aspire.dev/install.ps1 | iex` in PowerShell, or `dotnet tool install -g Aspire.Cli`) and trust the development certificate once with `aspire certs trust` (a Windows prompt the user must accept: ask them to run `! aspire certs trust`). Untrusted, the server shows Unhealthy and `web` waits for it forever.
+
+**Stop the run before `dotnet test` or `dotnet build`** in the same clone once you've changed the server: the run holds `ScoreMap.Server.exe` in the clone's `bin\Debug`, so the build fails with MSB3027 ("The file is locked by: ScoreMap.Server"). Unchanged, it builds and tests fine alongside. `aspire start` afterwards picks up the change.
+
+Finish every run with `aspire stop`. Done means `aspire ps` no longer lists this clone.
 
 ## Scenarios
 
-Run locally, the app shows a **scenario** (made-up games at real venues, see `GLOSSARY.md` and ADR-0009) in place of real games, so checking a change never waits for real games to be on. It starts on `worldwide`; `./scripts/dev.ps1 start -Scenario <name>` starts on another, and `-Scenario real` on real ESPN games.
+Run locally, the app shows a **scenario** (made-up games at real venues, see `GLOSSARY.md` and ADR-0009) in place of real games, so checking a change never waits for real games to be on. Every run starts on `worldwide` (`Scenario` in `appsettings.Development.json`); switch to another, or to real ESPN games, once it's up (below).
 
-A scenario's games run on the **scenario clock**, at a **speed**: Paused (the clock stands still), Normal (real time), Fast (2×) or Faster (8×). It starts at Normal; `./scripts/dev.ps1 start -Speed <name>` starts at another (any case, e.g. `-Speed Faster`).
+A scenario's games run on the **scenario clock**, at a **speed**: Paused (the clock stands still), Normal (real time), Fast (2×) or Faster (8×). It starts at Normal (`ScenarioSpeed`); change it once the run is up (below).
 
 Pick the scenario that brings out what you're checking, and you know what should be on screen:
 
@@ -42,10 +54,10 @@ Pick the scenario that brings out what you're checking, and you know what should
 
 Everything happens on the scenario clock, from when the scenario starts or is switched to, so at Faster (8×) a Final or Disrupted game drops out 7.5 s after it finishes or is disrupted. Switching to the running scenario starts it afresh; switching keeps the speed.
 
-To switch while running:
+To switch while running (each run's scenario and speed are its own):
 
 - **The controls** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the **media keys** set the speed: Play is Normal, Pause pauses, and Fast-forward goes to Fast and, pressed again, flips between Fast and Faster. The lit key is the speed (Fast-forward grows a third triangle at Faster), and there's no label. Picking a scenario or pressing a key changes every open tab. A speed change carries on from where the scenario is. The scenario clock shows beside them, or above them where the row is too narrow. Where the speed can't be controlled (real games, and scenarios whose games stand still: `edge-cases` and `empty`), the keys and the clock are hidden, leaving just the pill. `Shift+S` hides and shows the pill, the keys and the clock, for clean screenshots.
-- **From a script**: `Invoke-RestMethod -Method Put -Uri http://localhost:5147/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'`, or `.../api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
+- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
@@ -53,9 +65,9 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 
 With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`):
 
-1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file: `agent-browser open http://localhost:5173 > /tmp/ab.txt 2>&1`. Later commands can be piped.
+1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file: `agent-browser open $web > /tmp/ab.txt 2>&1`, where `$web` is the run's web URL. Later commands can be piped.
 2. **Reset to the start view.** The app saves the camera and settings to localStorage, including on `pagehide`, so clearing storage and then reloading the app writes them straight back. Clear it from a page that doesn't run the app:
-   `open http://localhost:5173/favicon.svg`, `eval "localStorage.clear()"`, then `open http://localhost:5173`.
+   `open $web/favicon.svg`, `eval "localStorage.clear()"`, then `open $web`. localStorage is kept per URL, so a run on a new port starts without a saved camera.
    A dark, empty globe is usually a saved camera zoomed in over ocean; reset.
 3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
 4. **Pick from the scenario pill by ref.** The globe's canvas covers the pill's list for clicks by text, so open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
@@ -66,4 +78,4 @@ On real games, few or no pins usually means few games right now: pins show from 
 
 ## Saved data
 
-The server saves its lookups in `server/src/ScoreMap.Server/data/` (git-ignored): `venue-locations.json` and `venue-photos.json`. To look venues up afresh, `stop`, delete the file, and `start` again.
+The server saves its lookups in `server/src/ScoreMap.Server/data/` (git-ignored): `venue-locations.json` and `venue-photos.json`. Each clone or worktree has its own. To look venues up afresh, `aspire stop`, delete the file, and `aspire start` again.

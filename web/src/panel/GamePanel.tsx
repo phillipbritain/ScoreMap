@@ -42,7 +42,7 @@ export function GamePanel({ game, onClose, ref }: GamePanelProps) {
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's status colour, as its score card is.
-  const statusStyle = { '--status-color': `var(--${game.status.toLowerCase()}-color)` } as CSSProperties
+  const statusStyle = { '--status-color': `var(--status-${game.status.toLowerCase()}-color)` } as CSSProperties
 
   return (
     <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">

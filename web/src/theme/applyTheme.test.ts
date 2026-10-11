@@ -54,6 +54,9 @@ describe('applyTheme', () => {
     // The globe: a surface, four kinds of line and two halo colours. Four kinds of place name, each
     // with a colour, an outline and a font (its name, family, weight and style). Four statuses, each with
     // a colour, a core of four, a glow of two and a cluster opacity. A cluster's three, and the selection.
-    expect(properties.size).toBe(7 + 4 * 6 + 4 * 8 + 3 + 1)
+    // The page's background, sky and three stars; four kinds of text, a divider and hover; the
+    // controls' surface, shadow and on (fill and text). A score card's five, the game panel's eleven
+    // and the settings menu's eleven colours.
+    expect(properties.size).toBe(7 + 4 * 6 + 4 * 8 + 3 + 1 + (5 + 4 + 2 + 4) + 5 + 11 + 11)
   })
 })

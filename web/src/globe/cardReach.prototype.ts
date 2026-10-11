@@ -1,5 +1,7 @@
+import type { PinsAndNames } from './pinsAndNames.prototype'
+
 // PROTOTYPE, throw away: how far a score card may travel from its venue before joining a card cluster.
-// Four variants on the real map, switchable via `?variant=` and the floating bar (CardReachSwitcher).
+// Variants on the real map, switchable via `?variant=` and the floating bar (CardReachSwitcher).
 
 export interface ReachVariant {
   key: string
@@ -12,13 +14,17 @@ export interface ReachVariant {
   trailsCross: 'none' | 'own' | 'any'
   /** Whether trails are drawn beneath the map's names (a line layer) rather than over them (SVG). */
   namesOverTrails: boolean
+  /** What gives way where a pin overlaps a name (see pinsAndNames.prototype). */
+  pinsAndNames: PinsAndNames
 }
 
+const bb = { reach: () => 400, onScreen: true, trailsCross: 'any', namesOverTrails: true } as const
 export const reachVariants: ReachVariant[] = [
-  { key: 'Now', name: 'Now: 160 px, trails avoid names', reach: () => 160, onScreen: false, trailsCross: 'none', namesOverTrails: false },
-  { key: 'B', name: 'B: 400 px, trails avoid names', reach: () => 400, onScreen: true, trailsCross: 'none', namesOverTrails: true },
-  { key: 'Ba', name: 'B + (a): trails cross their own city name', reach: () => 400, onScreen: true, trailsCross: 'own', namesOverTrails: true },
-  { key: 'Bb', name: 'B + (b): trails cross any name', reach: () => 400, onScreen: true, trailsCross: 'any', namesOverTrails: true },
+  { key: 'Now', name: 'Now: as on main', reach: () => 160, onScreen: false, trailsCross: 'none', namesOverTrails: false, pinsAndNames: 'today' },
+  { key: 'Bb', name: 'Bb: pins over names, as today', ...bb, pinsAndNames: 'today' },
+  { key: 'Bb-a', name: 'Bb + (a): names draw over pins', ...bb, pinsAndNames: 'a' },
+  { key: 'Bb-b', name: 'Bb + (b): names move aside, or hide', ...bb, pinsAndNames: 'b' },
+  { key: 'Bb-c', name: 'Bb + (c): names move aside, else draw over', ...bb, pinsAndNames: 'c' },
 ]
 
 export function currentReachVariant(): ReachVariant {

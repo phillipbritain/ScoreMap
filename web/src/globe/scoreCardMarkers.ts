@@ -5,6 +5,7 @@ import { cardPins, type CardPin } from './cardPins'
 import { defaultCardStyle, type CardStyle } from './cardStyle'
 import { currentReachVariant } from './cardReach.prototype'
 import { drawTrailLayer } from './trailLayer.prototype'
+import { drawPinsAndNames } from './pinsAndNames.prototype'
 import { layOutCards, type CardCluster, type CardPlacement, type ScreenCard, type ScreenOffset, type Segment } from './cardLayout'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
@@ -239,6 +240,21 @@ export class ScoreCardMarkers {
       )
     }
     this.drawCardClusters(layout.cardClusters)
+    // PROTOTYPE: what gives way where a pin overlaps a name.
+    const { pinsAndNames } = currentReachVariant()
+    document.documentElement.toggleAttribute('data-pins-in-map', pinsAndNames === 'a' || pinsAndNames === 'c')
+    const moved = cards.flatMap((card) => {
+      const placement = layout.cards.get(card.gameId)
+      return placement?.trail && !placement.inCardCluster ? [{ card, placement, trail: placement.trail }] : []
+    })
+    drawPinsAndNames(this.map, pinsAndNames, {
+      rings: moved.map(({ card, trail }) => ({ x: trail.x2, y: trail.y2, status: card.status })),
+      clusters: layout.cardClusters.map(({ x, y, gameIds, status }) => ({ x, y, count: gameIds.length, status })),
+      cards: moved.map(({ card, placement }) => ({
+        x: card.venueX + placement.offset.dx,
+        y: card.venueY + placement.offset.dy - card.height / 2,
+      })),
+    })
   }
 
   private drawCardClusters(cardClusters: readonly CardCluster[]): void {

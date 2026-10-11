@@ -102,7 +102,7 @@ export function layOutCards(
   const variant = currentReachVariant()
   const reach = variant.reach(scene.width, scene.height)
   const screen = variant.onScreen ? { width: scene.width, height: scene.height } : undefined
-  const { shifts, cardClusters } = arrange(boxes, names, reach, screen, variant.trailsCross)
+  const { shifts, cardClusters } = arrange(boxes, names, reach, screen, variant.trailsCross, variant.pinsAndNames !== 'today')
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
@@ -227,6 +227,7 @@ function arrange(
   furthest: number,
   screen?: { width: number; height: number },
   trailsCross: 'none' | 'own' | 'any' = 'none',
+  pointerClearOfNames = false,
 ): Arrangement {
   const moves = movesWithin(furthest).filter((move) => Math.hypot(move.dx, move.dy) <= furthest)
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
@@ -272,6 +273,17 @@ function arrange(
         cardsNear.every((other) => clearOf(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)) &&
         venuesNear.every((other) => clearOf(other.venueX, other.venueY, venueRadius, venueRadius)) &&
         namesNear.every((name) => clearOf(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)) &&
+        // PROTOTYPE: a card that isn't moved keeps its pointer, down to its venue, clear of names too.
+        (!pointerClearOfNames ||
+          dx !== 0 ||
+          dy !== 0 ||
+          namesNear.every((name) => {
+            const pointer = card.venueY - (card.y + card.height / 2)
+            return (
+              Math.abs(card.venueX - name.x) >= pointer + name.width / 2 ||
+              Math.abs(card.venueY - pointer / 2 - name.y) >= pointer / 2 + name.height / 2
+            )
+          })) &&
         ((dx === 0 && dy === 0) ||
           namesAcrossTrail.every(
             (name) => !crosses({ x1: x, y1: y, x2: card.venueX, y2: card.venueY }, name.x, name.y, name.width / 2, name.height / 2),

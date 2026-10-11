@@ -31,8 +31,11 @@ const color: Setting<string> = {
   },
 }
 
-/** Whether a colour job gives a colour directly, as a CSS colour such as "#0b1526" or "rgb(…)", rather than naming a step. */
-const isColor = (job: string) => /^(#|[a-z]+\()/i.test(job)
+/**
+ * Whether a colour job gives a colour directly, as a CSS colour such as "#0b1526", "rgb(…)" or
+ * "transparent", rather than naming a step.
+ */
+const isColor = (job: string) => /^(#|[a-z]+\(|transparent$)/i.test(job)
 
 /** A font for text on the globe: one the map's font server has, by name (ADR-0006). */
 const globeFont: Setting<GlobeFont> = {

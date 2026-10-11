@@ -87,6 +87,12 @@ describe('resolveTheme', () => {
     expect(theme.globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
   })
 
+  it('takes transparent as a colour given directly, for a shadow or glow that isn’t there', () => {
+    const json = themeJson()
+    json.settings.panel.shadow.color = 'transparent'
+    expect(resolved(json).panel.shadow.color).toBe('transparent')
+  })
+
   it('rejects a colour job naming a step the palette doesn’t have', () => {
     const json = themeJson()
     json.palette.navy = { base: '#2b4d7d' }

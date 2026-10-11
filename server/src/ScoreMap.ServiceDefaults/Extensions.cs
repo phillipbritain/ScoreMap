@@ -28,8 +28,9 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
-            http.AddStandardResilienceHandler();
+            // No standard resilience handler (ADR-0013): each ScoreMap client sets its own timeout and the
+            // poller retries on its next poll, its retries would get round the Nominatim rate limit, and
+            // its timeouts run on the app's TimeProvider, which the tests replace with a hand-moved clock.
 
             // Turn on service discovery by default
             http.AddServiceDiscovery();

@@ -22,7 +22,6 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA', 'MLS'],
       liveOnly: true,
       showDisrupted: false,
-      cardStyle: 'neon' as const,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -77,30 +76,25 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA'],
       liveOnly: false,
       showDisrupted: true,
-      cardStyle: 'hud',
     })
   })
 
-  it('gives score cards the HUD style when settings were saved before the style could be picked', () => {
-    const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+  it.each(['hud', 'led', 'broadcast', 'tactical', 'neon', 'white'])(
+    'keeps every other setting when the saved settings still carry a card style ("%s")',
+    (cardStyle) => {
+      const storage = memoryStorage()
+      storage.setItem(
+        'scoremap.settings',
+        JSON.stringify({ hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, showDisrupted: false, cardStyle }),
+      )
 
-    expect(settingsStore(() => storage).load().cardStyle).toBe('hud')
-  })
-
-  it('remembers the picked card style', () => {
-    const storage = memoryStorage()
-    settingsStore(() => storage).save({ ...firstVisitSettings, cardStyle: 'led' })
-
-    expect(settingsStore(() => storage).load().cardStyle).toBe('led')
-  })
-
-  it('falls back to the HUD style when the saved style is one the app no longer has', () => {
-    const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ cardStyle: 'white' }))
-
-    expect(settingsStore(() => storage).load().cardStyle).toBe('hud')
-  })
+      expect(settingsStore(() => storage).load()).toEqual({
+        hiddenLeagues: ['NBA', 'MLS'],
+        liveOnly: true,
+        showDisrupted: false,
+      })
+    },
+  )
 })
 
 describe('settingsStore camera', () => {

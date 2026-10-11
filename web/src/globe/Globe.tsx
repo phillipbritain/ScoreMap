@@ -1,7 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import type { Game } from '../games/game'
 import type { Camera } from './camera'
-import type { CardStyle } from './cardStyle'
 import { GlobeMap } from './globeMap'
 import { baseStyleUrl, globeStyle } from './globeStyle'
 import { builtInTheme } from '../theme/builtInTheme'
@@ -20,20 +19,10 @@ interface GlobeProps {
   startCamera: Camera
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
-  /** The "Card style" setting. */
-  cardStyle: CardStyle
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({
-  games,
-  selectedGameId,
-  panel,
-  onSelectGame,
-  startCamera,
-  onCameraMove,
-  cardStyle,
-}: GlobeProps) {
+export function Globe({ games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, startCamera })
@@ -65,7 +54,6 @@ export function Globe({
     () => globe.current?.select(selectedGameId, panel.current?.getBoundingClientRect() ?? null),
     [selectedGameId, panel],
   )
-  useEffect(() => globe.current?.setCardStyle(cardStyle), [cardStyle])
 
   return <div ref={container} className="globe" />
 }

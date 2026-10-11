@@ -285,11 +285,12 @@ const settings = {
   /** Behind the globe: the page itself, and the sky around the globe with its scattering of stars, white, cool and warm. */
   page: { background: color, sky: color, stars: { white: color, cool: color, warm: color } },
   /**
-   * Text on the game panel, the settings menu and the scenario controls: main text, secondary text
-   * (the lines under a venue or time), the accent (the game panel's league and labels, the settings
-   * gear, league chips), links, and text written on a status's colour (the game panel's progress line).
+   * Text on the game panel, the settings menu and the scenario controls: main text; secondary text
+   * (the game panel's league and labels and the lines under a venue or time, the settings gear,
+   * league chips that are off and the count on the "All leagues" chip); links; and text written on a
+   * status's colour (the game panel's progress line).
    */
-  text: { main: color, secondary: color, accent: color, link: color, onStatus: color },
+  text: { main: color, secondary: color, link: color, onStatus: color },
   /** The lines between a menu's parts. */
   divider: color,
   /** Behind a control under the pointer. */

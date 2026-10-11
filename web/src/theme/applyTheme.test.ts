@@ -103,11 +103,11 @@ describe('applyTheme', () => {
       selection: 2,
       // Two sizes and two ring widths.
       pulse: 4,
-      // The page's background, sky and three stars; five kinds of text, a divider and hover; the
+      // The page's background, sky and three stars; four kinds of text, a divider and hover; the
       // controls' surface, shadow and on (fill and text); a score card's five, the game panel's eleven
       // and the settings menu's eleven colours and shadows. A score card's header tint, and the game
       // panel's glow of three.
-      colours: 5 + 5 + 2 + 4 + 5 + 11 + 11 + 1 + 3,
+      colours: 5 + 4 + 2 + 4 + 5 + 11 + 11 + 1 + 3,
       // Five text sizes, eight spacing steps, five radii and three strokes.
       scales: 5 + 8 + 5 + 3,
       // The game panel's eight, a score card's four, the settings menu's three and the controls' two.

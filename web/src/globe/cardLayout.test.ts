@@ -300,12 +300,41 @@ describe('layOutCards', () => {
       expect(shiftsOf(layout).get('b')).toEqual(lower)
     })
 
-    it('moves a card to a spot whose trail is at least 40 px shorter once one opens up', () => {
+    it('keeps a moved card where it was while that still has room, however much nearer a spot opens up', () => {
       const nearest = spreadCards(pair).get('b')!
-      const far = { dx: 0, dy: nearest.dy + 60 }
-      expect(trailOf(far) - trailOf(nearest)).toBeGreaterThanOrEqual(40)
+      const far = { dx: 0, dy: nearest.dy + 160 }
+      expect(trailOf(far) - trailOf(nearest)).toBeGreaterThanOrEqual(160)
       const layout = layOutCards(pair, scene, lastTime({ a: { dx: 0, dy: 0 }, b: far }))
-      expect(shiftsOf(layout).get('b')).toEqual(nearest)
+      expect(shiftsOf(layout).get('b')).toEqual(far)
+    })
+
+    it('keeps a card where it was rather than let a more prominent card looking for room take its spot', () => {
+      // Two games at one venue; a city's name turns up over it, so the Live card there has to move.
+      const live = card('live', mx, my)
+      const upcoming = card('upcoming', mx, my, 'Upcoming')
+      const over = [{ x: mx, y: my, width: 80, height: 20 }]
+      // Where the Live card would go, had it the venue to itself, is where the Upcoming card was.
+      const taken = shiftsOf(lay([live], over)).get('live')!
+      const layout = layOutCards([live, upcoming], { ...scene, names: over }, lastTime({ live: { dx: 0, dy: 0 }, upcoming: taken }))
+      expect(shiftsOf(layout).get('upcoming')).toEqual(taken)
+      expect(shiftsOf(layout).get('live')).not.toEqual(taken)
+      expect(anyOverlap(boxesOf([live, upcoming], layout))).toBe(false)
+    })
+
+    it('keeps a moved card where it was as the globe turns its neighbour a pixel closer', () => {
+      // b moved down just clear of a's venue; as the globe turns, b's venue edges a pixel higher than a's.
+      const b = { dx: 0, dy: 72 }
+      expect(shiftsOf(lay([card('a', mx, my), card('b', mx + 1, my)])).get('b')).toEqual(b)
+      const layout = layOutCards([card('a', mx, my), card('b', mx + 1, my - 1)], scene, lastTime({ a: { dx: 0, dy: 0 }, b }))
+      expect(shiftsOf(layout).get('b')).toEqual(b)
+    })
+
+    it('keeps a card above its venue, whatever fraction of a pixel its venue is at', () => {
+      // Venues as the globe had them, just off the top of the screen, which once put the card's own
+      // venue a rounding error inside the card above it.
+      const at = (venueX: number, venueY: number): ScreenCard => ({ gameId: 'a', status: 'Live', venueX, venueY, width: 94, height: 61 })
+      const frames = [at(526.7053513415644, -53.395523840588766), at(523.7689444446646, -53.4684770992202)]
+      for (const frame of frames) expect(lay([frame]).cards.get('a')).toEqual(sitting)
     })
 
     it('moves a card back over its venue once there is room there', () => {

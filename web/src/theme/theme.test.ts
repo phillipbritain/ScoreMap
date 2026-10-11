@@ -92,6 +92,84 @@ describe('resolveTheme', () => {
     expect(resolved(json).panel.shadow.color).toBe('transparent')
   })
 
+  it('takes a colour given directly in any form both CSS and MapLibre read', () => {
+    const forms = ['#abc', '#abcd', '#a1b2c3', '#A1B2C3D4', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'rgb(10% 20% 30% / 50%)', 'hsl(210 40% 30%)', 'hsla(210deg, 40%, 30%, .5)']
+    for (const form of forms) {
+      const json = themeJson()
+      json.settings.globe.surface = form
+      expect(resolveTheme(json), form).toMatchObject({ ok: true, theme: { globe: { surface: form } } })
+    }
+  })
+
+  it('rejects a colour given directly that isn’t well formed', () => {
+    const json = themeJson()
+    json.settings.globe.surface = '#12'
+    json.settings.globe.halo.inner = 'foo('
+    json.settings.globe.halo.outer = 'rgb(1, 2)'
+    json.settings.card.fill = '#12345'
+    json.settings.card.text = 'rgb(1, 2%, 3)'
+    json.settings.divider = 7
+    const why = 'not a colour CSS and MapLibre both read (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent)'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        `settings.globe.surface is "#12", ${why}`,
+        `settings.globe.halo.inner is "foo(", ${why}`,
+        `settings.globe.halo.outer is "rgb(1, 2)", ${why}`,
+        'settings.divider is 7, not a colour job: a palette step such as "navy.700", or a colour',
+        `settings.card.fill is "#12345", ${why}`,
+        `settings.card.text is "rgb(1, 2%, 3)", ${why}`,
+      ],
+    })
+  })
+
+  it('rejects a theme that isn’t an object with a palette and settings, rather than failing', () => {
+    for (const json of [null, undefined, 'dark', 42, []]) {
+      expect(resolveTheme(json), JSON.stringify(json)).toEqual({
+        ok: false,
+        problems: [`a theme is ${JSON.stringify(json) ?? 'undefined'}, not an object with a palette and settings`],
+      })
+    }
+    expect(resolveTheme({ palette: null, settings: 'dark' })).toEqual({
+      ok: false,
+      problems: ['palette is null, not colours by name', 'settings is "dark", not a group of settings'],
+    })
+  })
+
+  it('rejects a palette colour or a group of settings that isn’t an object', () => {
+    const json = themeJson()
+    json.palette.teal = '#008080'
+    json.settings.globe.halo = '#ffffff'
+    json.settings.text = null
+    const result = resolveTheme(json)
+    expect(!result.ok && result.problems).toEqual([
+      'palette.teal is "#008080", not a colour with a base',
+      'settings.globe.halo is "#ffffff", not a group of settings',
+      'settings.text is null, not a group of settings',
+    ])
+  })
+
+  it('rejects settings the theme doesn’t know, alongside every other problem', () => {
+    const json = themeJson()
+    json.mode = 'dark'
+    json.palette.navy.shade = 'deep'
+    json.settings.globe.surfce = 'navy.500'
+    json.settings.textSizes.xxl = 24
+    json.settings.panel.shadow.spread = 4
+    json.settings.divider = 'navy.950'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'mode isn’t part of a theme: a theme has a palette and settings',
+        'palette.navy.shade isn’t part of a palette colour: it has a base and steps',
+        'settings.textSizes.xxl isn’t a setting a theme has',
+        'settings.globe.surfce isn’t a setting a theme has',
+        'settings.divider names "navy.950", a step the palette doesn’t have',
+        'settings.panel.shadow.spread isn’t a setting a theme has',
+      ],
+    })
+  })
+
   it('rejects a colour job naming a step the palette doesn’t have', () => {
     const json = themeJson()
     json.palette.navy = { base: '#2b4d7d' }

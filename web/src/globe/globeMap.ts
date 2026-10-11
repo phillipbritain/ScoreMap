@@ -15,6 +15,7 @@ import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import type { CardStyle } from './cardStyle'
 import { addGlobeGlow } from './globeGlow'
+import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { pinFeatures } from './pinFeatures'
@@ -103,6 +104,7 @@ export class GlobeMap {
       doubleClickZoom: false,
     })
     this.map = map
+    traceLayouts(map)
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => style.transform(base) })
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map)

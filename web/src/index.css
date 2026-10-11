@@ -359,8 +359,6 @@ body {
    its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
    are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
 .score-card {
-  /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
-  --score-card-pointer: var(--sizes-card-pointer);
   --card-surface: var(--card-fill);
   --card-ink: var(--card-text);
   --fade: calc(var(--status-card-fade) * 100%);

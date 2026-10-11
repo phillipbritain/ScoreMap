@@ -318,13 +318,13 @@ export function addPlaceNames(map: MapLibreMap, theme: Theme): PlaceNames {
 let measuring: CanvasRenderingContext2D | null | undefined
 
 /**
- * A line's width in a font, in pixels. The map writes its fonts from its own glyphs, which the page
- * doesn't have; the browser's fallback sans-serif measures a little wider than Open Sans, which errs
- * on the side of room.
+ * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
+ * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
+ * wider than Open Sans, which errs on the side of room.
  */
-function measureText(text: string, font: string): number {
+function measureText(text: string, font: string, size: number): number {
   measuring ??= document.createElement('canvas').getContext('2d')
-  if (!measuring) return text.length * fallbackLetterWidth * parseFloat(font.split(' ')[2])
+  if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = font
   return measuring.measureText(text).width
 }

@@ -83,7 +83,7 @@ const statusColor = byStatus('own', (look) => look.color)
  * Moved cards' trails, the venues they end at, and card clusters, from the bottom up. Added beneath
  * the place names, so every name draws over them.
  *
- * A trail is a thin line lit in its game's status colour, like the HUD card's outline, in a soft glow,
+ * A trail is a thin line lit in its game's status colour, like a score card's outline, in a soft glow,
  * to a point ringed in it. A card cluster is a dark disc outlined and lit in the colour of its most
  * prominent game, with the count in it, as a pin cluster is (see groupFill).
  */

@@ -1,5 +1,4 @@
 import type { Camera } from '../globe/camera'
-import { isCardStyle } from '../globe/cardStyle'
 import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -68,17 +67,17 @@ function cameraFromSaved(saved: unknown): Camera | null {
 
 /**
  * Reads saved settings field by field, so settings saved by an older version of the app (or
- * damaged ones) keep what is still valid and take first-visit defaults for the rest.
+ * damaged ones) keep what is still valid and take first-visit defaults for the rest. Settings the
+ * app no longer has, such as the old "Card style", are ignored.
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, liveOnly, showDisrupted, cardStyle } = fields
+  const { hiddenLeagues, liveOnly, showDisrupted } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     liveOnly: typeof liveOnly === 'boolean' ? liveOnly : firstVisitSettings.liveOnly,
     showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
-    cardStyle: isCardStyle(cardStyle) ? cardStyle : firstVisitSettings.cardStyle,
   }
 }

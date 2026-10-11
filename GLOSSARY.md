@@ -41,7 +41,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Pulse**:
-The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time.
+The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
 
 **Clutch time**:

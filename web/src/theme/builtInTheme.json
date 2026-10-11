@@ -122,7 +122,9 @@
       "heading": { "family": "system-ui, sans-serif", "weight": 800 },
       "team": { "family": "system-ui, sans-serif", "weight": 700 },
       "score": { "family": "system-ui, sans-serif", "weight": 800 },
-      "control": { "family": "system-ui, sans-serif", "weight": 600 },
+      "tab": { "family": "Arial", "weight": 600 },
+      "button": { "family": "Arial", "weight": 400 },
+      "scenarioPill": { "family": "system-ui, sans-serif", "weight": 600 },
       "scenarioClock": { "family": "system-ui, sans-serif", "weight": 400 },
       "card": {
         "clock": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 400 },

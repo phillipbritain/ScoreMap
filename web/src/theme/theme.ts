@@ -240,17 +240,20 @@ const settings = {
   },
   /**
    * A font for each kind of text. On the page: body text; the game panel's headings (its league,
-   * labels and progress line), team names and scores; the controls that stand out (settings tabs,
-   * sport names, the scenario pill); the scenario clock; and a score card's clock line, team
-   * abbreviations and scores. On the globe, the count on a pin or card cluster, in a font the map's
-   * font server has (ADR-0006), and its size. Place names have theirs by kind of place.
+   * labels and progress line), team names and scores; the settings menu's tabs and sport names;
+   * buttons (league chips, the game panel's close button); the scenario pill and the scenario it
+   * has on; the scenario clock; and a score card's clock line, team abbreviations and scores. On the
+   * globe, the count on a pin or card cluster, in a font the map's font server has (ADR-0006), and
+   * its size. Place names have theirs by kind of place.
    */
   fonts: {
     body: pageFont,
     heading: pageFont,
     team: pageFont,
     score: pageFont,
-    control: pageFont,
+    tab: pageFont,
+    button: pageFont,
+    scenarioPill: pageFont,
     scenarioClock: pageFont,
     card: { clock: pageFont, team: pageFont, score: pageFont },
     clusterCount: { font: globeFont, size: textSize },

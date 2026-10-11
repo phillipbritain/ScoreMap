@@ -1,5 +1,8 @@
-/* Every colour here comes from the theme, which is written to the page's root as custom properties,
-   one per setting (see theme/applyTheme.ts): --text-main, --status-live-color, --selection and so on. */
+/* Every colour, font, text size, spacing and corner here comes from the theme, which is written to
+   the page's root as custom properties, one per setting (see theme/theme.ts' customProperties):
+   --text-main, --status-live-color, --fonts-body-family, --text-sizes-m, --spacing-l, --corners-card
+   and so on. Text sizes and spacing are steps of the theme's scales; corners are its radii, each for
+   a kind of corner. */
 
 html,
 body,
@@ -10,7 +13,14 @@ body,
 
 body {
   background: var(--page-background);
-  font-family: system-ui, sans-serif;
+  font-family: var(--fonts-body-family);
+  font-weight: var(--fonts-body-weight);
+  font-size: var(--text-sizes-l);
+}
+
+/* Buttons write in the page's font, not the browser's own. */
+button {
+  font-family: inherit;
 }
 
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
@@ -54,22 +64,23 @@ body {
 .game-panel {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: var(--spacing-l);
   z-index: 1;
   display: flex;
   box-sizing: border-box;
-  width: min(940px, calc(100% - 24px));
+  width: min(940px, calc(100% - 2 * var(--spacing-l)));
   height: 127px;
   border-top: 3px solid var(--status-color);
   background: linear-gradient(180deg, var(--panel-surface-top), var(--panel-surface-bottom));
   color: var(--text-main);
-  font-size: 13px;
+  font-size: var(--text-sizes-m);
   transform: translateX(-50%);
   box-shadow:
     0 8px 30px var(--panel-shadow),
     0 -2px 14px color-mix(in srgb, var(--status-color) 35%, transparent);
-  /* The bottom left corner cut off, like a broadcast graphic. */
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+  /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
+  --cut-corner: calc(var(--cut-corner-on) * var(--cut-corner-size));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
 /* Clear of the scenario pills and clock (local runs only). */
@@ -83,11 +94,11 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   box-sizing: border-box;
   width: 290px;
   flex-shrink: 0;
-  padding: 10px 26px 10px 16px;
+  padding: var(--spacing-m) var(--spacing-2xl) var(--spacing-m) var(--spacing-xl);
   background: linear-gradient(180deg, var(--panel-score-block-top), var(--panel-score-block-bottom));
   clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
 }
@@ -96,23 +107,25 @@ body {
 .game-panel__league,
 .game-panel__label {
   color: var(--text-accent);
-  font-size: 11px;
-  font-weight: 800;
+  font-family: var(--fonts-heading-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-heading-weight);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .game-panel__label {
-  margin-bottom: 3px;
-  font-size: 10px;
+  margin-bottom: var(--spacing-2xs);
+  font-size: var(--text-sizes-xs);
 }
 
 .game-panel__team {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 700;
+  gap: var(--spacing-m);
+  font-family: var(--fonts-team-family);
+  font-size: var(--text-sizes-l);
+  font-weight: var(--fonts-team-weight);
 }
 
 .game-panel__team img,
@@ -138,8 +151,9 @@ body {
   flex-shrink: 0;
   background: var(--panel-score-fill);
   color: var(--panel-score-text);
-  font-size: 18px;
-  font-weight: 800;
+  font-family: var(--fonts-score-family);
+  font-size: var(--text-sizes-xl);
+  font-weight: var(--fonts-score-weight);
   font-variant-numeric: tabular-nums;
   text-align: center;
   transform: skewX(-10deg);
@@ -148,12 +162,13 @@ body {
 .game-panel__progress {
   justify-self: start;
   max-width: calc(100% - 8px);
-  margin-top: 4px;
-  padding: 1px 10px;
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-2xs) var(--spacing-m);
   overflow: hidden;
   background: var(--status-color);
-  font-size: 11px;
-  font-weight: 800;
+  font-family: var(--fonts-heading-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-heading-weight);
   text-transform: uppercase;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -165,9 +180,9 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--spacing-xl);
   min-width: 0;
-  padding: 12px 16px;
+  padding: var(--spacing-l) var(--spacing-xl);
   overflow: hidden;
 }
 
@@ -183,7 +198,7 @@ body {
 
 .game-panel__muted {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-sizes-s);
 }
 
 /* One line under a venue or time, kept even when empty. */
@@ -196,7 +211,7 @@ body {
 
 .game-panel__watch {
   display: grid;
-  gap: 1px;
+  gap: var(--spacing-2xs);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -214,7 +229,7 @@ body {
 
 .game-panel__unofficial {
   color: var(--panel-unofficial);
-  font-size: 11px;
+  font-size: var(--text-sizes-s);
 }
 
 /* The venue photo at the right, fading in from the details. A faint glow holds its place when
@@ -241,11 +256,11 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 2px 6px;
+  padding: var(--spacing-2xs) var(--spacing-s);
   overflow: hidden;
   background: var(--panel-credit-fill);
   color: var(--panel-credit-text);
-  font-size: 10px;
+  font-size: var(--text-sizes-xs);
   white-space: nowrap;
   text-overflow: ellipsis;
   opacity: 0;
@@ -262,15 +277,15 @@ body {
 
 .game-panel__close {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
   width: 24px;
   height: 24px;
   border: none;
   border-radius: 50%;
   background: var(--panel-close);
   color: var(--text-main);
-  font-size: 16px;
+  font-size: var(--text-sizes-l);
   line-height: 1;
   cursor: pointer;
 }
@@ -294,8 +309,8 @@ body {
   }
 
   .game-panel__details {
-    gap: 10px;
-    padding: 10px 12px;
+    gap: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
   }
 
   .game-panel__photo {
@@ -328,15 +343,16 @@ body {
   /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
   --score-card-pointer: 6px;
   display: grid;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   min-width: 92px;
-  padding: 0 0 4px;
+  padding: 0 0 var(--spacing-xs);
   border: 1px solid var(--status-color);
-  border-radius: 3px;
+  border-radius: var(--corners-card);
   background: var(--card-fill);
   color: var(--card-text);
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: 11px;
+  font-family: var(--fonts-card-clock-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-card-clock-weight);
   line-height: 1.2;
   text-transform: uppercase;
   box-shadow:
@@ -405,12 +421,12 @@ body {
 .score-card__header {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 2px;
-  padding: 2px 6px;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-2xs);
+  padding: var(--spacing-2xs) var(--spacing-s);
   border-bottom: 1px solid var(--status-color);
   background: color-mix(in srgb, var(--status-color) 28%, transparent);
-  font-size: 10px;
+  font-size: var(--text-sizes-xs);
   letter-spacing: 0.06em;
 }
 
@@ -436,8 +452,8 @@ body {
   display: grid;
   grid-template-columns: 18px 1fr auto;
   align-items: center;
-  gap: 5px;
-  padding: 0 6px;
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-s);
 }
 
 .score-card__logo {
@@ -447,11 +463,13 @@ body {
 }
 
 .score-card__abbreviation {
-  font-weight: 600;
+  font-family: var(--fonts-card-team-family);
+  font-weight: var(--fonts-card-team-weight);
 }
 
 .score-card__score {
-  font-weight: 700;
+  font-family: var(--fonts-card-score-family);
+  font-weight: var(--fonts-card-score-weight);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -609,14 +627,14 @@ body {
    down to. */
 .settings-menu {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: var(--spacing-l);
+  left: var(--spacing-l);
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  max-height: calc(100% - 24px);
+  gap: var(--spacing-m);
+  max-height: calc(100% - 2 * var(--spacing-l));
 }
 
 /* Just the gear, standing on the globe without a panel: in the accent, like the country names, on a
@@ -642,12 +660,12 @@ body {
    pills' colour but solid, so score cards behind it don't show through. */
 .settings-menu__panel {
   width: 320px;
-  max-width: calc(100vw - 24px);
+  max-width: calc(100vw - 2 * var(--spacing-l));
   overflow-y: auto;
-  border-radius: 12px;
+  border-radius: var(--corners-menu);
   background: var(--settings-menu-surface);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: var(--text-sizes-m);
   box-shadow: 0 4px 16px var(--settings-menu-shadow);
 }
 
@@ -658,12 +676,14 @@ body {
 
 .settings-tab {
   flex: 1;
-  padding: 10px;
+  padding: var(--spacing-m);
   border: none;
   border-bottom: 2px solid transparent;
   background: none;
   color: var(--settings-menu-tab);
-  font-weight: 600;
+  font-family: var(--fonts-control-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-control-weight);
   cursor: pointer;
 }
 
@@ -673,22 +693,22 @@ body {
 }
 
 .settings-tab-body {
-  padding: 12px;
+  padding: var(--spacing-l);
 }
 
 .settings-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-s);
 }
 
 .settings-chip {
-  padding: 5px 11px;
+  padding: var(--spacing-xs) var(--spacing-l);
   border: 1px solid var(--settings-menu-chip-outline);
-  border-radius: 999px;
+  border-radius: var(--corners-control);
   background: transparent;
   color: var(--text-accent);
-  font-size: 13px;
+  font-size: var(--text-sizes-m);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -704,19 +724,19 @@ body {
 .settings-master {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  gap: var(--spacing-m);
+  margin-bottom: var(--spacing-l);
+  padding-bottom: var(--spacing-m);
   border-bottom: 1px solid var(--divider);
 }
 
 .settings-master__chip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-m);
   height: 32px;
-  padding: 0 8px 0 10px;
-  font-size: 14px;
+  padding: 0 var(--spacing-m);
+  font-size: var(--text-sizes-m);
 }
 
 /* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
@@ -725,7 +745,7 @@ body {
   width: 1em;
   height: 1em;
   line-height: 1;
-  margin-right: -4px;
+  margin-right: calc(-1 * var(--spacing-xs));
   text-align: center;
 }
 
@@ -737,12 +757,12 @@ body {
 /* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
 .settings-master__count {
   min-width: 3.2em;
-  padding: 1px 7px;
-  border-radius: 999px;
+  padding: var(--spacing-2xs) var(--spacing-s);
+  border-radius: var(--corners-control);
   background: var(--settings-menu-chip-badge);
   text-align: center;
   color: var(--text-accent);
-  font-size: 12px;
+  font-size: var(--text-sizes-s);
 }
 
 .settings-master__chip--on .settings-master__count {
@@ -752,29 +772,32 @@ body {
 .settings-master__hint {
   flex: 1;
   color: var(--settings-menu-hint);
-  font-size: 11px;
+  font-size: var(--text-sizes-s);
 }
 
 .settings-sport + .settings-sport {
-  margin-top: 12px;
+  margin-top: var(--spacing-l);
 }
 
 .settings-sport__name {
   display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: var(--spacing-s);
+  margin-bottom: var(--spacing-s);
   padding: 0;
   border: none;
   background: none;
   color: var(--text-main);
-  font-weight: 600;
+  font-family: var(--fonts-control-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-control-weight);
   cursor: pointer;
 }
 
 /* How many of the sport's leagues are on, such as 2/2. */
 .settings-sport__count {
   color: var(--settings-menu-count);
-  font-weight: 400;
+  font-family: var(--fonts-body-family);
+  font-weight: var(--fonts-body-weight);
 }
 
 /* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
@@ -785,7 +808,7 @@ body {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--spacing-m);
   max-width: 100%;
   pointer-events: auto;
 }
@@ -793,17 +816,18 @@ body {
 .scenario-pill {
   position: relative;
   min-width: 0;
-  border-radius: 18px;
+  border-radius: var(--corners-control);
   background: var(--controls-surface);
   color: var(--text-main);
-  font-size: 14px;
+  font-size: var(--text-sizes-m);
   box-shadow: 0 2px 8px var(--controls-shadow);
 }
 
 .scenario-pill summary {
-  padding: 8px 14px;
+  padding: var(--spacing-m) var(--spacing-l);
   cursor: pointer;
-  font-weight: 600;
+  font-family: var(--fonts-control-family);
+  font-weight: var(--fonts-control-weight);
   list-style: none;
   white-space: nowrap;
   overflow: hidden;
@@ -817,14 +841,14 @@ body {
 .scenario-pill ul {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + var(--spacing-s));
   min-width: 100%;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   box-sizing: border-box;
   margin: 0;
-  padding: 6px;
-  border-radius: 12px;
+  padding: var(--spacing-s);
+  border-radius: var(--corners-menu);
   background: var(--controls-surface);
   box-shadow: 0 2px 8px var(--controls-shadow);
   list-style: none;
@@ -834,9 +858,9 @@ body {
 .scenario-pill button {
   display: block;
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--spacing-s) var(--spacing-m);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--corners-menu-item);
   background: none;
   color: inherit;
   font: inherit;
@@ -849,7 +873,8 @@ body {
 }
 
 .scenario-pill button[aria-current='true'] {
-  font-weight: 600;
+  font-family: var(--fonts-control-family);
+  font-weight: var(--fonts-control-weight);
 }
 
 .scenario-pill button[aria-current='true']::before {
@@ -859,9 +884,9 @@ body {
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 21px;
+  gap: var(--spacing-2xs);
+  padding: var(--spacing-2xs);
+  border-radius: var(--corners-control);
   background: var(--controls-surface);
   color: var(--text-main);
   box-shadow: 0 2px 8px var(--controls-shadow);
@@ -875,7 +900,7 @@ body {
   height: 34px;
   padding: 0;
   border: none;
-  border-radius: 17px;
+  border-radius: var(--corners-control);
   background: none;
   color: inherit;
   opacity: 0.6;
@@ -918,35 +943,37 @@ body {
    clock at the left (local runs only). */
 .bottom-stack {
   position: absolute;
-  right: 12px;
-  bottom: 32px;
-  left: 12px;
+  right: var(--spacing-l);
+  bottom: var(--spacing-3xl);
+  left: var(--spacing-l);
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-m);
   pointer-events: none;
 }
 
 .bottom-stack--scenario {
-  bottom: 12px;
+  bottom: var(--spacing-l);
 }
 
 .no-pins {
   margin: 0;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: var(--spacing-m) var(--spacing-xl);
+  border-radius: var(--corners-message);
   background: var(--controls-surface);
   color: var(--text-main);
 }
 
 .scenario-clock {
-  padding: 8px 14px;
-  border-radius: 18px;
+  padding: var(--spacing-m) var(--spacing-l);
+  border-radius: var(--corners-control);
   background: var(--controls-surface);
   color: var(--text-main);
-  font-size: 14px;
+  font-family: var(--fonts-scenario-clock-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-scenario-clock-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--controls-shadow);

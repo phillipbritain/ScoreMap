@@ -20,7 +20,29 @@ const valueOf = (declaration: string) => declaration.slice(declaration.indexOf('
 const colour =
   /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(|\b(white|black|gr[ae]y|silver|red|orange|yellow|gold|green|blue|navy|purple|pink)\b/i
 
+const propertyOf = (declaration: string) => declaration.slice(0, declaration.indexOf(':')).trim()
+const withoutThemeValues = (declaration: string) => valueOf(declaration).replace(/var\(--[-a-z0-9]+\)/g, '').trim()
+
+/** A length written out, such as 12px or 1.5em, or a percentage. */
+const length = /\d*\.?\d+(px|em|rem|ex|ch|pt|vh|vw|vmin|vmax|%)/
+
 describe('the page’s CSS', () => {
+  it('writes text only in the theme’s fonts and text sizes', () => {
+    const own = declarations(css)
+      .filter((declaration) => /^font(-family|-weight|-size)?$/.test(propertyOf(declaration)))
+      .filter((declaration) => !['', 'inherit'].includes(withoutThemeValues(declaration)))
+    expect(own).toEqual([])
+  })
+
+  it('spaces everything with the spacing scale’s steps, and rounds corners only with the theme’s radii', () => {
+    const own = declarations(css)
+      .filter((declaration) => /^(padding|margin|gap|row-gap|column-gap|border(-[a-z]+)*-radius)/.test(propertyOf(declaration)))
+      // Circles stay circles.
+      .filter((declaration) => !(propertyOf(declaration) === 'border-radius' && withoutThemeValues(declaration) === '50%'))
+      .filter((declaration) => length.test(withoutThemeValues(declaration)))
+    expect(own).toEqual([])
+  })
+
   it('names no colour of its own, reading every colour from the theme’s custom properties', () => {
     const own = declarations(css)
       // A mask uses only how opaque its colours are, never what colour they are.

@@ -9,7 +9,7 @@ import type {
 } from 'maplibre-gl'
 import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
-import type { Theme } from '../theme/theme'
+import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { degreesApart } from './geo'
 import { isBehindGlobe } from './horizon'
@@ -76,11 +76,7 @@ type PlaceKind = keyof Theme['placeNames']
 const capitals: Partial<Record<PlaceKind, number>> = { state: 0.25, country: 0.12 }
 
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
-const sizeStops = (kind: PlaceKind, theme: Theme): number[] =>
-  Object.entries(theme.placeNames[kind].size)
-    .map(([zoom, size]) => [Number(zoom), size])
-    .sort(([a], [b]) => a - b)
-    .flat()
+const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.placeNames[kind].size).flat()
 
 function placeKind(layerId: string): PlaceKind {
   if (layerId === 'label_city_capital') return 'capital'

@@ -1,6 +1,6 @@
 import type { LayerSpecification, LineLayerSpecification, StyleSpecification } from 'maplibre-gl'
 import { glyphsUrl } from '../theme/globeFonts'
-import type { Theme } from '../theme/theme'
+import { zoomStops, type Theme } from '../theme/theme'
 import { placeNameLayers, placeNameState } from './placeNames'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
@@ -59,9 +59,7 @@ type GlobeLine = Theme['globe']['coastlines']
 
 /** A line in the theme's colour, at its widths as the map zooms, growing evenly from one to the next. */
 function linePaint({ color, width }: GlobeLine): LineLayerSpecification['paint'] {
-  const stops = Object.entries(width)
-    .map(([zoom, pixels]) => [Number(zoom), pixels])
-    .sort(([a], [b]) => a - b)
+  const stops = zoomStops(width)
   return {
     'line-color': color,
     'line-width': stops.length === 1 ? stops[0][1] : ['interpolate', ['linear'], ['zoom'], ...stops.flat()],

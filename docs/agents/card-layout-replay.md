@@ -2,12 +2,12 @@
 
 For score cards that jump about, or land in the wrong place, on a running globe. The layout (`web/src/globe/cardLayout.ts`) is a pure function of each frame's cards, scene and the frame before, so a pan captured from a dev run replays the same way every time, in seconds: a **tight** loop to measure a fix against, rather than eyeballing the globe.
 
-1. **Start a dev run** (`./scripts/dev.ps1 start`, from PowerShell). In dev runs only, `window.scoremap` holds the map and the last 300 frames the cards were laid out from (`web/src/globe/layoutTrace.ts`).
+1. **Start a dev run** (`aspire start`, see the run-scoremap skill), and take its web URL from `aspire describe`. In dev runs only, `window.scoremap` holds the map and the last 300 frames the cards were laid out from (`web/src/globe/layoutTrace.ts`).
 2. **Capture a pan.** Set the camera and pan at the top of `web/scripts/panGlobe.js` to the place showing the problem, then run it in the page:
 
    ```sh
    agent-browser set viewport 1280 800
-   agent-browser open http://localhost:5173/
+   agent-browser open "$web"   # the run's web URL
    agent-browser eval "$(cat web/scripts/panGlobe.js)" > "$CLAUDE_JOB_DIR/tmp/trace.json"
    ```
 

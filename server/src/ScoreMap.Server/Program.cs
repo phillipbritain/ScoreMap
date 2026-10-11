@@ -11,7 +11,7 @@ using ScoreMap.Server.WatchLinks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Aspire's service defaults: telemetry for its dashboard, health checks, resilient HTTP clients (ADR-0013).
+// Aspire's service defaults: telemetry for its dashboard, health checks, service discovery (ADR-0013).
 builder.AddServiceDefaults();
 
 // Bound league by league at startup, so a misconfigured league (e.g. an unknown sport) stops the

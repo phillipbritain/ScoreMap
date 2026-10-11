@@ -20,6 +20,10 @@ Uses the default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 Single-context: one root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain.md`.
 
+### Style guide
+
+Making or changing the theme, or any colour, font, size or status look: see `docs/style-guide.md`.
+
 ### Card layout
 
 Score cards jumping about or landing in the wrong place on a running globe: capture and replay the layout, see `docs/agents/card-layout-replay.md`.

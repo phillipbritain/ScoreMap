@@ -239,6 +239,11 @@ export class ScoreCardMarkers {
     return this.cardClusters.map((cardCluster) => cardCluster.gameIds)
   }
 
+  /** The games in the card cluster on screen now that's drawn at this game's venue, the first in it. */
+  cardClusterOf(firstGameId: string): string[] | undefined {
+    return this.cardClusters.find(({ gameIds }) => gameIds[0] === firstGameId)?.gameIds
+  }
+
   /**
    * Plays an animation on a game's card, or over the count it's in when there's no room for its
    * card. False when the game has neither on screen.

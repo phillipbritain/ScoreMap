@@ -238,7 +238,7 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * over its venue or a spot whose trail is shorterTrailToMove shorter, so cards don't jump about as
  * the globe turns.
  */
-function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: { width: number; height: number }): Arrangement {
+function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: CardScene): Arrangement {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
   // From each moved card's centre to its venue: the part outside the card is its trail.
@@ -261,20 +261,20 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     const halfPointer = (card.venueY - card.y - card.height / 2) / 2
 
     // What the card keeps clear of (cards, venues and names), each as the box its centre stays out of.
-    const keepOut = (x: number, y: number, halfWidth: number, halfHeight: number): ScreenBox => ({
+    const keepOutBox = (x: number, y: number, halfWidth: number, halfHeight: number): ScreenBox => ({
       x,
       y,
       width: card.width + 2 * halfWidth,
       height: card.height + 2 * halfHeight,
     })
     const keepOuts = [
-      ...cardsNear.map((other) => keepOut(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)),
-      ...venuesNear.map((other) => keepOut(other.venueX, other.venueY, venueRadius, venueRadius)),
-      ...namesNear.map((name) => keepOut(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)),
+      ...cardsNear.map((other) => keepOutBox(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)),
+      ...venuesNear.map((other) => keepOutBox(other.venueX, other.venueY, venueRadius, venueRadius)),
+      ...namesNear.map((name) => keepOutBox(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)),
     ]
     // Spots near each other are mostly kept out by the same thing, so what kept out the last is tried first.
     let lastKeptOut: ScreenBox | undefined
-    const keptOut = (x: number, y: number) => {
+    const isKeptOut = (x: number, y: number) => {
       const inside = (box: ScreenBox) => Math.abs(x - box.x) < box.width / 2 && Math.abs(y - box.y) < box.height / 2
       if (lastKeptOut && inside(lastKeptOut)) return true
       const found = keepOuts.find(inside)
@@ -290,7 +290,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
         x - card.width / 2 >= 0 && x + card.width / 2 <= screen.width && y - card.height / 2 >= 0 && y + card.height / 2 <= screen.height
       // A card that isn't moved sits where it would whatever the screen's edges, as its venue may be off it.
       if (moved && !onScreen) return false
-      if (keptOut(x, y)) return false
+      if (isKeptOut(x, y)) return false
       return (
         moved ||
         namesNear.every(
@@ -315,9 +315,9 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     }
 
     // Where the card was last time will do while it fits, trails or not, so a trail edging across a
-    // card doesn't send it elsewhere; only a spot with a much shorter trail does.
+    // card doesn't send it elsewhere; only a spot whose trail is no longer than trailToBeatPrevious does.
     const previous = card.previous && (card.previous.dx !== 0 || card.previous.dy !== 0) && fits(card.previous) ? card.previous : undefined
-    const nearerThanPrevious = previous && trailLength({ ...card, x: card.x + previous.dx, y: card.y + previous.dy }) - shorterTrailToMove
+    const trailToBeatPrevious = previous && trailLength({ ...card, x: card.x + previous.dx, y: card.y + previous.dy }) - shorterTrailToMove
 
     // Where it would sit, if that's clear; or else the nearest spot clear of trails, while it's little
     // further than the nearest spot at all.
@@ -326,7 +326,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     if (!clear) {
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break
-        if (!nearest && nearerThanPrevious !== undefined && spot.trail > nearerThanPrevious) break
+        if (!nearest && trailToBeatPrevious !== undefined && spot.trail > trailToBeatPrevious) break
         if (!fits(spot)) continue
         nearest ??= spot
         if (trailsClear(spot)) {
@@ -336,9 +336,9 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       }
     }
     const best = clear ?? nearest
-    const stays =
-      previous !== undefined && clear !== unmovedSpot && !(best && nearerThanPrevious !== undefined && best.trail <= nearerThanPrevious)
-    const shift = stays ? previous : best && { dx: best.dx, dy: best.dy }
+    const keepsPrevious =
+      previous !== undefined && clear !== unmovedSpot && !(best && trailToBeatPrevious !== undefined && best.trail <= trailToBeatPrevious)
+    const shift = keepsPrevious ? previous : best && { dx: best.dx, dy: best.dy }
     if (shift) {
       shifts.set(card.gameId, shift)
       const x = card.x + shift.dx

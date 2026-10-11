@@ -76,7 +76,7 @@ export const statusLooks: Record<GameStatus, StatusLook> = {
 }
 
 /**
- * A cluster, pin or card, is a dark disc like a HUD score card, outlined and
+ * A cluster, pin or card, is a dark disc like a score card, outlined and
  * lit in its status colour: this fill, an outline this wide, and a glow this much of its opacity.
  */
 export const groupFill = 'rgba(6, 12, 24, 0.88)'

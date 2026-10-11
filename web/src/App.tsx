@@ -67,7 +67,6 @@ export default function App() {
           onSelectGame={setSelectedGameId}
           startCamera={camera}
           onCameraMove={store.saveCamera}
-          cardStyle={viewerSettings.cardStyle}
         />
         {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
             settings menu, so an open settings menu lies over them on a phone. */}

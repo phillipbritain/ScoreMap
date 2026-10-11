@@ -49,7 +49,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme): StyleSpecifi
       // The base style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
       restyled(stateLines, { minzoom: 0, paint: linePaint(globe.stateLines) }),
       restyled(countryLines, { paint: linePaint(globe.countryBorders) }),
-      restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [2, 2] } }),
+      restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [...globe.disputedBorders.dash] } }),
       ...placeNameLayers(base, theme),
     ],
   }

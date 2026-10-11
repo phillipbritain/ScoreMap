@@ -18,12 +18,14 @@ A globe showing live sports games as pins at their venues, with scores that upda
 
 ## Run locally
 
-ScoreMap runs locally through .NET Aspire (ADR-0013). Once per machine, install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) and trust the development certificate:
+ScoreMap runs locally through .NET Aspire (ADR-0013). Once per machine, install the [Aspire CLI](https://aspire.dev/get-started/install-cli/) with its install script, then (in a new terminal, for the PATH) trust the development certificate:
 
-```sh
-dotnet tool install -g Aspire.Cli
+```powershell
+irm https://aspire.dev/install.ps1 | iex   # Windows PowerShell; elsewhere: curl -sSL https://aspire.dev/install.sh | bash
 aspire certs trust
 ```
+
+The install script puts `aspire.exe` on the PATH, which every shell finds. `dotnet tool install -g Aspire.Cli` works too, but installs it as `aspire.cmd`, which Git Bash can't run as `aspire`.
 
 Then, from the repo root:
 

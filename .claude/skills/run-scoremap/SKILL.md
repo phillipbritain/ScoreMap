@@ -31,7 +31,7 @@ $server = ($run | ? displayName -eq server).urls | ? name -eq http | % url
 
 **Logs** are in the run's dashboard (`aspire ps` gives its URL, with its login token), or `aspire logs server` and `aspire logs web` (`-f` to follow).
 
-**First time on a machine:** install the Aspire CLI (`irm https://aspire.dev/install.ps1 | iex` in PowerShell, or `dotnet tool install -g Aspire.Cli`) and trust the development certificate once with `aspire certs trust` (a Windows prompt the user must accept: ask them to run `! aspire certs trust`). Untrusted, the server shows Unhealthy and `web` waits for it forever.
+**First time on a machine:** install the Aspire CLI with its install script (`irm https://aspire.dev/install.ps1 | iex` in PowerShell; a new shell then finds `aspire`). If `aspire` isn't found in Git Bash but `aspire.cmd` is, it was installed as a dotnet tool: use `aspire.cmd` there, or the PowerShell tool and trust the development certificate once with `aspire certs trust` (a Windows prompt the user must accept: ask them to run `! aspire certs trust`). Untrusted, the server shows Unhealthy and `web` waits for it forever.
 
 **Stop the run before `dotnet test` or `dotnet build`** in the same clone once you've changed the server: the run holds `ScoreMap.Server.exe` in the clone's `bin\Debug`, so the build fails with MSB3027 ("The file is locked by: ScoreMap.Server"). Unchanged, it builds and tests fine alongside. `aspire start` afterwards picks up the change.
 

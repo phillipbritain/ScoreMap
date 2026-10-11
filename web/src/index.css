@@ -66,7 +66,10 @@ body {
   box-sizing: border-box;
   width: min(var(--sizes-panel-width), calc(100% - 2 * var(--spacing-l)));
   height: var(--sizes-panel-height);
+  /* The score block and photo are clipped to the panel's corners. */
+  overflow: hidden;
   border-top: var(--strokes-thick) solid var(--status-color);
+  border-radius: var(--corners-panel);
   background: linear-gradient(180deg, var(--panel-surface-top), var(--panel-surface-bottom));
   color: var(--text-main);
   font-size: var(--text-sizes-m);
@@ -164,6 +167,7 @@ body {
   padding: var(--spacing-2xs) var(--spacing-m);
   overflow: hidden;
   background: var(--status-color);
+  color: var(--text-on-status);
   font-family: var(--fonts-heading-family);
   font-size: var(--text-sizes-s);
   font-weight: var(--fonts-heading-weight);

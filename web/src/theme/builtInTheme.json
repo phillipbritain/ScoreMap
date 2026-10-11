@@ -1,87 +1,86 @@
 {
   "palette": {
-    "navy": { "base": "#0b1526", "steps": { "900": "#050b16" } },
-    "cream": { "base": "#f1e6cc", "steps": { "400": "#fff4dc", "600": "#d8c9a4" } },
-    "night": { "base": "#0b1020" }
+    "gold": { "base": "#d4ac63" },
+    "red": { "base": "#cd2435" },
+    "orange": { "base": "#e56335" },
+    "navy": { "base": "#2b4d7d" },
+    "offWhite": { "base": "#f4f5f7" }
   },
   "settings": {
-    "textSizes": { "xs": 10, "s": 11, "m": 13, "l": 15, "xl": 18 },
+    "textSizes": { "xs": 11, "s": 12, "m": 14, "l": 16, "xl": 20 },
     "spacing": { "2xs": 2, "xs": 4, "s": 6, "m": 8, "l": 12, "xl": 16, "2xl": 24, "3xl": 32 },
-    "radii": { "xs": 3, "s": 6, "m": 8, "l": 12, "pill": 999 },
+    "radii": { "xs": 4, "s": 6, "m": 8, "l": 12, "pill": 999 },
     "strokes": { "thin": 1, "medium": 2, "thick": 3 },
     "globe": {
       "surface": "navy.500",
-      "coastlines": { "color": "rgba(255, 255, 255, 0.7)", "width": { "2": 0.6, "8": 1.2 } },
-      "countryBorders": { "color": "rgba(255, 255, 255, 0.7)", "width": { "2": 0.6, "8": 1.4 } },
-      "stateLines": { "color": "rgba(255, 255, 255, 0.3)", "width": { "3": 0.5, "8": 1 } },
-      "disputedBorders": { "color": "rgba(255, 255, 255, 0.5)", "width": { "0": 0.8 } },
-      "halo": {
-        "inner": "rgb(110 168 255 / 0.55)",
-        "outer": "rgb(60 120 255 / 0.25)"
-      }
+      "coastlines": { "color": "navy.300", "width": { "2": 0.6, "8": 1.2 } },
+      "countryBorders": { "color": "navy.300", "width": { "2": 0.6, "8": 1.4 } },
+      "stateLines": { "color": "navy.400", "width": { "3": 0.5, "8": 1 } },
+      "disputedBorders": { "color": "navy.400", "width": { "0": 0.8 } },
+      "halo": { "inner": "navy.400", "outer": "navy.700" }
     },
     "placeNames": {
       "city": {
-        "color": "cream.500",
-        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
+        "color": "navy.200",
+        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
         "size": { "4": "s", "7": "m", "11": "xl" }
       },
       "capital": {
-        "color": "cream.400",
-        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
+        "color": "navy.100",
+        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
         "size": { "4": "m", "7": "l", "11": "xl" }
       },
       "state": {
-        "color": "#9a8a62",
-        "outline": { "color": "navy.900", "width": 1.2, "blur": 0 },
+        "color": "navy.300",
+        "outline": { "color": "navy.600", "width": 1.2, "blur": 0 },
         "font": "Open Sans Regular",
         "size": { "3": "xs", "8": "m" }
       },
       "country": {
-        "color": "cream.600",
-        "outline": { "color": "navy.900", "width": 2, "blur": 0.5 },
+        "color": "navy.200",
+        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
         "size": { "1": "xs", "4": "l" }
       }
     },
     "status": {
       "live": {
-        "color": "#e4572e",
-        "core": { "color": "#ffd9c8", "radius": 3.5, "opacity": 1, "ring": 1.5 },
-        "glow": { "radius": 15, "opacity": 0.7 },
+        "color": "gold.500",
+        "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 15, "opacity": 0.8 },
         "clusterOpacity": 1,
-        "card": { "opacity": 1, "glow": { "radius": 8, "opacity": 0.45 } }
+        "card": { "opacity": 1, "glow": { "radius": 12, "opacity": 0.8 } }
       },
       "upcoming": {
-        "color": "#f2a541",
-        "core": { "color": "#f2a541", "radius": 3, "opacity": 0.8, "ring": 0 },
-        "glow": { "radius": 10, "opacity": 0.45 },
-        "clusterOpacity": 0.85,
-        "card": { "opacity": 0.85, "glow": { "radius": 8, "opacity": 0.45 } }
+        "color": "gold.500",
+        "core": { "color": "gold.500", "radius": 3, "opacity": 0.9, "ring": 0 },
+        "glow": { "radius": 9, "opacity": 0.4 },
+        "clusterOpacity": 0.9,
+        "card": { "opacity": 0.85, "glow": { "radius": 4, "opacity": 0.3 } }
       },
       "final": {
-        "color": "#8a8f98",
-        "core": { "color": "#8a8f98", "radius": 2.5, "opacity": 0.55, "ring": 0 },
-        "glow": { "radius": 7, "opacity": 0.25 },
-        "clusterOpacity": 0.6,
-        "card": { "opacity": 0.6, "glow": { "radius": 8, "opacity": 0.45 } }
+        "color": "gold.500",
+        "core": { "color": "gold.500", "radius": 2.5, "opacity": 0.5, "ring": 0 },
+        "glow": { "radius": 0, "opacity": 0 },
+        "clusterOpacity": 0.55,
+        "card": { "opacity": 0.55, "glow": { "radius": 0, "opacity": 0 } }
       },
       "disrupted": {
-        "color": "#c3c6cc",
-        "core": { "color": "#c3c6cc", "radius": 2.5, "opacity": 0.6, "ring": 0 },
-        "glow": { "radius": 7, "opacity": 0.25 },
+        "color": "offWhite.700",
+        "core": { "color": "offWhite.700", "radius": 2.5, "opacity": 0.7, "ring": 0 },
+        "glow": { "radius": 0, "opacity": 0 },
         "clusterOpacity": 0.6,
-        "card": { "opacity": 0.7, "glow": { "radius": 8, "opacity": 0.45 } }
+        "card": { "opacity": 0.7, "glow": { "radius": 0, "opacity": 0 } }
       }
     },
     "cluster": {
-      "fill": "rgba(6, 12, 24, 0.88)",
+      "fill": "navy.700",
       "radius": { "few": 11, "some": 13, "many": 16 },
       "glowRadius": { "few": 22, "some": 26, "many": 32 },
       "outlineWidth": 1.5,
-      "glowOpacity": 0.45
+      "glowOpacity": 0.6
     },
     "trail": {
       "width": 1.25,
@@ -89,71 +88,72 @@
       "glow": { "width": 4, "blur": 3, "opacity": 0.35 },
       "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
     },
-    "selection": { "color": "#2f80ed", "width": 3 },
+    "selection": { "color": "offWhite.500", "width": 2 },
     "pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
     "page": {
-      "background": "night.500",
-      "sky": "#03050c",
-      "stars": { "white": "#ffffff", "cool": "rgb(200 220 255)", "warm": "rgb(255 240 220)" }
+      "background": "navy.900",
+      "sky": "navy.900",
+      "stars": { "white": "offWhite.500", "cool": "navy.100", "warm": "gold.100" }
     },
     "text": {
-      "main": "#ffffff",
-      "secondary": "rgb(255 255 255 / 0.55)",
-      "accent": "cream.600",
-      "link": "#8fc1ff"
+      "main": "offWhite.500",
+      "secondary": "offWhite.600",
+      "accent": "offWhite.600",
+      "link": "offWhite.500",
+      "onStatus": "navy.800"
     },
-    "divider": "rgba(255, 255, 255, 0.1)",
-    "hover": "rgba(255, 255, 255, 0.12)",
+    "divider": "navy.600",
+    "hover": "navy.600",
     "controls": {
-      "surface": "rgba(11, 16, 32, 0.85)",
-      "shadow": { "x": 0, "y": 2, "blur": 8, "color": "rgba(0, 0, 0, 0.3)" },
-      "on": { "fill": "#ffffff", "text": "night.500" }
+      "surface": "navy.800",
+      "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
+      "on": { "fill": "offWhite.500", "text": "navy.800" }
     },
     "card": {
-      "fill": "rgb(6 12 24 / 0.85)",
-      "text": "#d9f0ff",
-      "disrupted": { "fill": "rgb(12 14 20 / 0.85)", "text": "#8b93a3" },
-      "shadow": "rgb(0 0 0 / 0.45)"
+      "fill": "navy.700",
+      "text": "offWhite.500",
+      "disrupted": { "fill": "navy.700", "text": "offWhite.700" },
+      "shadow": "navy.900"
     },
     "panel": {
-      "surface": { "top": "rgb(18 28 56 / 0.98)", "bottom": "rgb(8 12 26 / 0.98)" },
-      "scoreBlock": { "top": "#1d2d55", "bottom": "#121c38" },
-      "score": { "fill": "#ffffff", "text": "night.500" },
-      "unofficial": "rgb(255 255 255 / 0.45)",
-      "photo": "rgb(42 62 112 / 0.5)",
-      "credit": { "fill": "rgb(0 0 0 / 0.6)", "text": "rgb(255 255 255 / 0.75)" },
-      "close": "rgb(0 0 0 / 0.55)",
-      "shadow": { "x": 0, "y": 8, "blur": 30, "color": "rgb(0 0 0 / 0.6)" },
-      "glow": { "y": -2, "blur": 14, "opacity": 0.35 }
+      "surface": { "top": "navy.800", "bottom": "navy.800" },
+      "scoreBlock": { "top": "navy.700", "bottom": "navy.700" },
+      "score": { "fill": "navy.600", "text": "offWhite.500" },
+      "unofficial": "offWhite.600",
+      "photo": "navy.600",
+      "credit": { "fill": "navy.900", "text": "offWhite.600" },
+      "close": "navy.700",
+      "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
+      "glow": { "y": 0, "blur": 0, "opacity": 0 }
     },
     "settingsMenu": {
-      "surface": "night.500",
-      "shadow": { "x": 0, "y": 4, "blur": 16, "color": "rgba(0, 0, 0, 0.4)" },
-      "gearOutline": { "x": 0, "y": 0, "blur": 2, "color": "navy.900" },
-      "tab": "rgba(255, 255, 255, 0.6)",
-      "count": "rgba(255, 255, 255, 0.5)",
-      "hint": "rgba(255, 255, 255, 0.4)",
-      "chip": { "outline": "rgba(216, 201, 164, 0.45)", "badge": "rgba(216, 201, 164, 0.15)" },
-      "on": { "fill": "cream.600", "text": "night.500" }
+      "surface": "navy.800",
+      "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
+      "gearOutline": { "x": 0, "y": 0, "blur": 2, "color": "navy.800" },
+      "tab": "offWhite.600",
+      "count": "offWhite.600",
+      "hint": "offWhite.600",
+      "chip": { "outline": "navy.500", "badge": "navy.700" },
+      "on": { "fill": "offWhite.500", "text": "navy.800" }
     },
     "fonts": {
-      "body": { "family": "system-ui, sans-serif", "weight": 400 },
-      "heading": { "family": "system-ui, sans-serif", "weight": 800 },
-      "team": { "family": "system-ui, sans-serif", "weight": 700 },
-      "score": { "family": "system-ui, sans-serif", "weight": 800 },
-      "tab": { "family": "Arial", "weight": 600 },
-      "button": { "family": "Arial", "weight": 400 },
-      "scenarioPill": { "family": "system-ui, sans-serif", "weight": 600 },
-      "scenarioClock": { "family": "system-ui, sans-serif", "weight": 400 },
+      "body": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 400 },
+      "heading": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
+      "team": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
+      "score": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
+      "tab": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
+      "button": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
+      "scenarioPill": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
+      "scenarioClock": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 400 },
       "card": {
-        "clock": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 400 },
-        "team": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 600 },
-        "score": { "family": "ui-monospace, 'Cascadia Mono', Consolas, monospace", "weight": 700 }
+        "clock": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
+        "team": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
+        "score": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 }
       },
       "clusterCount": { "font": "Open Sans Bold", "size": "s" }
     },
-    "corners": { "card": "xs", "menu": "l", "menuItem": "s", "message": "m", "control": "pill" },
-    "cutCorner": { "on": true, "size": "xl" },
+    "corners": { "card": "s", "panel": "m", "menu": "m", "menuItem": "s", "message": "m", "control": "pill" },
+    "cutCorner": { "on": false, "size": "xl" },
     "sizes": {
       "panel": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24 },
       "card": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6 },

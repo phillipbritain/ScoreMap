@@ -27,7 +27,7 @@ describe('applyTheme', () => {
         settings.status.live.color = '#ff0000'
         settings.status.upcoming.core.radius = 4.5
         settings.cluster.glowOpacity = 0.3
-        settings.selection.color = '#00ff00'
+        settings.selection = { color: '#00ff00', width: 3 }
       }),
     )
     expect(properties.get('--globe-surface')).toBe('#123456')
@@ -40,7 +40,7 @@ describe('applyTheme', () => {
 
   it('writes colour jobs as the colours they resolve to', () => {
     const properties = propertiesOf(themeWith((settings) => (settings.placeNames.city.color = 'navy.900')))
-    expect(properties.get('--place-names-city-color')).toBe('#050b16')
+    expect(properties.get('--place-names-city-color')).toBe('#000209')
   })
 
   it('writes a globe font as its CSS family, weight and style', () => {
@@ -79,7 +79,7 @@ describe('applyTheme', () => {
     const properties = propertiesOf(
       themeWith((settings) => (settings.panel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
     )
-    expect(properties.get('--panel-shadow')).toBe('1px -2px 12px #050b16')
+    expect(properties.get('--panel-shadow')).toBe('1px -2px 12px #000209')
   })
 
   it('writes every setting', () => {
@@ -101,18 +101,18 @@ describe('applyTheme', () => {
       selection: 2,
       // Two sizes and two ring widths.
       pulse: 4,
-      // The page's background, sky and three stars; four kinds of text, a divider and hover; the
+      // The page's background, sky and three stars; five kinds of text, a divider and hover; the
       // controls' surface, shadow and on (fill and text); a score card's five, the game panel's eleven
       // and the settings menu's eleven colours and shadows. The game panel's glow of three.
-      colours: 5 + 4 + 2 + 4 + 5 + 11 + 11 + 3,
+      colours: 5 + 5 + 2 + 4 + 5 + 11 + 11 + 3,
       // Five text sizes, eight spacing steps, five radii and three strokes.
       scales: 5 + 8 + 5 + 3,
       // The game panel's eight, a score card's four, the settings menu's three and the controls' two.
       sizes: 8 + 4 + 3 + 2,
       // Eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a size).
       fonts: 11 * 2 + 5,
-      // Five corners and the cut corner's two.
-      corners: 5 + 2,
+      // Six corners and the cut corner's two.
+      corners: 6 + 2,
     }
     expect(properties.size).toBe(Object.values(written).reduce((sum, n) => sum + n))
   })

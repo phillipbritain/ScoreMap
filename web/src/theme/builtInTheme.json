@@ -129,7 +129,7 @@
     "settingsMenu": {
       "surface": "navy.800",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "gearOutline": { "x": 0, "y": 0, "blur": 2, "color": "navy.800" },
+      "gearOutline": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "tab": "offWhite.600",
       "count": "offWhite.600",
       "hint": "offWhite.600",

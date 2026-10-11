@@ -68,20 +68,24 @@ export type MeasureText = (text: string, font: string, size: number) => number
 
 /**
  * Where a game city's name is written: centred below its dot at `dot` (see placeNames' game city
- * names), wrapped as the map wraps it. `measure` gives a line's width in the name's font.
- * Its outline and a margin are included, since the box is for keeping cards clear of the name.
+ * names), wrapped as the map wraps it. `measure` gives a line's width in the name's font. The look's
+ * clearance (the name's outline and a little more) is included, since the box is for keeping cards
+ * clear of the name.
  */
 export function cityNameBox(city: City, dot: { x: number; y: number }, look: CityNameLook, measure: MeasureText): ScreenBox {
+  const { clearance } = look
   const lines = city.name.split('\n').flatMap((line) => wrap(line, look, measure))
-  const width = Math.max(...lines.map((line) => measure(line, look.font, look.size))) + 2 * nameMargin
-  const height = lines.length * lineHeight * look.size + 2 * nameMargin
-  return { x: dot.x, y: dot.y + look.offset - nameMargin + height / 2, width, height }
+  const width = Math.max(...lines.map((line) => lineWidth(line, look, measure))) + 2 * clearance
+  const height = lines.length * lineHeight * look.size + 2 * clearance
+  return { x: dot.x, y: dot.y + look.offset - clearance + height / 2, width, height }
 }
 
 // The map's line height for names, in ems.
 const lineHeight = 1.2
-// Room around a name's letters: its 2 px outline and a little more.
-const nameMargin = 4
+
+/** A line of a name's width in pixels, its letters spaced as the look says. */
+const lineWidth = (line: string, look: CityNameLook, measure: MeasureText) =>
+  measure(line, look.font, look.size) + line.length * look.letterSpacing * look.size
 
 /** Splits a line at spaces where it's wider than the map lets a name run (an approximation of MapLibre's wrapping). */
 function wrap(line: string, look: CityNameLook, measure: MeasureText): string[] {
@@ -89,7 +93,7 @@ function wrap(line: string, look: CityNameLook, measure: MeasureText): string[] 
   let current = ''
   for (const word of line.split(' ')) {
     const longer = current ? `${current} ${word}` : word
-    if (current && measure(longer, look.font, look.size) > look.maxWidth) {
+    if (current && lineWidth(longer, look, measure) > look.maxWidth) {
       lines.push(current)
       current = word
     } else {

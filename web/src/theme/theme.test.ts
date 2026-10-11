@@ -104,8 +104,8 @@ describe('resolveTheme', () => {
   it('rejects a colour given directly that isn’t well formed', () => {
     const json = themeJson()
     json.settings.globe.surface = '#12'
-    json.settings.globe.halo.inner = 'foo('
-    json.settings.globe.halo.outer = 'rgb(1, 2)'
+    json.settings.globe.halo.inner.color = 'foo('
+    json.settings.globe.halo.outer.color = 'rgb(1, 2)'
     json.settings.card.fill = '#12345'
     json.settings.card.text = 'rgb(1, 2%, 3)'
     json.settings.divider = 7
@@ -114,8 +114,8 @@ describe('resolveTheme', () => {
       ok: false,
       problems: [
         `settings.globe.surface is "#12", ${why}`,
-        `settings.globe.halo.inner is "foo(", ${why}`,
-        `settings.globe.halo.outer is "rgb(1, 2)", ${why}`,
+        `settings.globe.halo.inner.color is "foo(", ${why}`,
+        `settings.globe.halo.outer.color is "rgb(1, 2)", ${why}`,
         'settings.divider is 7, not a colour job: a palette step such as "navy.700", or a colour',
         `settings.card.fill is "#12345", ${why}`,
         `settings.card.text is "rgb(1, 2%, 3)", ${why}`,
@@ -174,12 +174,12 @@ describe('resolveTheme', () => {
     const json = themeJson()
     json.palette.navy = { base: '#2b4d7d' }
     json.settings.globe.surface = 'navy.950'
-    json.settings.globe.halo.inner = 'teal.500'
+    json.settings.globe.halo.inner.color = 'teal.500'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
         'settings.globe.surface names "navy.950", a step the palette doesn’t have',
-        'settings.globe.halo.inner names "teal.500", a step the palette doesn’t have',
+        'settings.globe.halo.inner.color names "teal.500", a step the palette doesn’t have',
       ],
     })
   })
@@ -312,6 +312,23 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('rejects a dash pattern, a size in ems or a halo’s share of the globe that isn’t one', () => {
+    const json = themeJson()
+    json.settings.globe.disputedBorders.dash = [2]
+    json.settings.globe.halo.inner.blur = { share: '12%', max: 60 }
+    json.settings.letterSpacing.label = '0.14em'
+    json.settings.sizes.panel.scoreWidth = -1
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'settings.letterSpacing.label is "0.14em", not a number of ems',
+        'settings.globe.disputedBorders.dash is [2], not a dash pattern: dash and gap lengths in line widths, such as [2, 2]',
+        'settings.globe.halo.inner.blur.share is "12%", not a share of the globe’s radius, such as 0.12',
+        'settings.sizes.panel.scoreWidth is -1, not a number of ems',
+      ],
+    })
+  })
+
   it('rejects a theme missing a setting', () => {
     const json = themeJson()
     delete json.settings.globe.coastlines
@@ -382,7 +399,7 @@ describe('the built-in theme', () => {
       expect(isStepOf('navy', '100', '300')(look.color), kind).toBe(true)
       expect(stepOf(look.outline.color), kind).toMatch(/^navy\./)
     }
-    expect(isStepOf('navy', '100', '400')(globe.halo.inner)).toBe(true)
+    expect(isStepOf('navy', '100', '400')(globe.halo.inner.color)).toBe(true)
   })
 
   it('puts score cards, the game panel, the settings menu, the scenario controls and clusters on solid darker navy', () => {

@@ -97,6 +97,44 @@ const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
 /** How far something is moved, in pixels, either way; written to CSS in pixels. */
 const offset: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of pixels'), css: inPixels }
 
+/** A number of ems as CSS writes it ("0.14em"). */
+const inEms = (value: number) => `${value}em`
+
+/** A size in ems of the text it goes with, so it grows with the text; written to CSS in ems. */
+const ems: Setting<number> = { ...numberFrom(0, Infinity, 'a number of ems'), css: inEms }
+/** How far apart letters are spaced, in ems, either way (less than 0 draws them closer); written to CSS in ems. */
+const tracking: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of ems'), css: inEms }
+
+/** A setting read by the globe, not the page's CSS, so not written to it. */
+const forGlobe = <T>(setting: Setting<T>): Setting<T> => ({ ...setting, css: () => ({}) })
+
+/** A line's dash pattern: the lengths of its dashes and of the gaps between them, in line widths ([2, 2]). */
+const dashes: Setting<readonly number[]> = forGlobe({
+  resolve(value, path, { problems }) {
+    if (Array.isArray(value) && value.length >= 2 && value.every((length) => typeof length === 'number' && length >= 0)) {
+      return value as number[]
+    }
+    problems.push(`${path} is ${shown(value)}, not a dash pattern: dash and gap lengths in line widths, such as [2, 2]`)
+    return undefined
+  },
+})
+
+interface GlobeShare {
+  share: number
+  max: number
+}
+
+/**
+ * A size that grows with the globe on screen: this share of the globe's radius there, but never more
+ * than `max` pixels.
+ */
+const withGlobe: Setting<GlobeShare> = forGlobe({
+  resolve(value, path, resolving) {
+    const parts = { share: numberFrom(0, Infinity, 'a share of the globe’s radius, such as 0.12'), max: pixels }
+    return resolveAll(parts, value, path, resolving) as GlobeShare
+  },
+})
+
 interface Shadow {
   x: number
   y: number
@@ -218,14 +256,22 @@ export function zoomStops(sizes: Readonly<Record<string, number>>): [number, num
 const globeLine = { color, width: byZoom(pixels, 'a width') }
 
 /**
+ * One of the halo's glows around the globe: its colour, and how far it blurs and spreads, each
+ * growing with the globe on screen up to a most.
+ */
+const haloGlow = { color, blur: withGlobe, spread: withGlobe }
+
+/**
  * A kind of place's name on the globe: its colour, the outline around its letters (its colour, and
- * how wide and blurred it is), its font, and its size as the map zooms.
+ * how wide and blurred it is), its font, its size as the map zooms, and how far apart its letters are
+ * spaced, in ems (state and country names are in capitals, which want more).
  */
 const placeName = {
   color,
   outline: { color, width: pixels, blur: pixels },
   font: globeFont,
   size: byZoom(textSize, 'a text size'),
+  letterSpacing: tracking,
 }
 
 /**
@@ -233,9 +279,10 @@ const placeName = {
  * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
  * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
  * opacity at the middle), how opaque a pin cluster or card cluster showing as this status is (its
- * disc, outline and count alike), and its score cards: how far they fade, and how far and how strongly they glow in its colour (a radius of 0 is no glow). A
- * card stays solid as it fades: its status colour, text and logos are mixed this far into its fill
- * (0 is not at all, 1 is all the way, leaving a blank card).
+ * disc, outline and count alike), and its score cards: how far they fade, and how far and how
+ * strongly they glow in its colour (a radius of 0 is no glow). A card stays solid as it fades: its
+ * status colour, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way,
+ * leaving a blank card).
  */
 const statusLook = {
   color,
@@ -251,13 +298,23 @@ const settings = {
   spacing: scale(scales.spacing.steps),
   radii: scale(scales.radii.steps),
   strokes: scale(scales.strokes.steps),
+  /**
+   * How far apart letters are spaced on the page, in ems: the game panel's league and labels, tracked
+   * out like the country names on the globe, and a score card's header line.
+   */
+  letterSpacing: { label: tracking, cardHeader: tracking },
+  /**
+   * The globe: its surface (land and sea alike); its coastlines, country borders, state lines and
+   * disputed borders, the disputed ones dashed in this pattern; and the halo around its edge, a glow
+   * close to the edge and a wider, fainter one outside it.
+   */
   globe: {
     surface: color,
     coastlines: globeLine,
     countryBorders: globeLine,
     stateLines: globeLine,
-    disputedBorders: globeLine,
-    halo: { inner: color, outer: color },
+    disputedBorders: { ...globeLine, dash: dashes },
+    halo: { inner: haloGlow, outer: haloGlow },
   },
   placeNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
   status: { live: statusLook, upcoming: statusLook, final: statusLook, disrupted: statusLook },
@@ -292,8 +349,15 @@ const settings = {
    * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
    */
   pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
-  /** Behind the globe: the page itself, and the sky around the globe with its scattering of stars, white, cool and warm. */
-  page: { background: color, sky: color, stars: { white: color, cool: color, warm: color } },
+  /**
+   * Behind the globe: the page itself, and the sky around the globe with its scattering of stars,
+   * white, cool and warm, small and large.
+   */
+  page: {
+    background: color,
+    sky: color,
+    stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } },
+  },
   /**
    * Text on the game panel, the settings menu and the scenario controls: main text; secondary text
    * (the game panel's league and labels and the lines under a venue or time, the settings gear,
@@ -307,9 +371,9 @@ const settings = {
   hover: color,
   /**
    * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
-   * surface and drop shadow, and a speed key that's on.
+   * surface and drop shadow, a speed key that's on, and how opaque one that's off is.
    */
-  controls: { surface: color, shadow, on: { fill: color, text: color } },
+  controls: { surface: color, shadow, on: { fill: color, text: color }, off: { opacity } },
   /**
    * A score card: its fill and text, a Disrupted game's, the drop shadow a starting game's card
    * settles with, and how strongly its header is tinted with its status's colour (0 is not at all, 1
@@ -377,13 +441,16 @@ const settings = {
   /** The game panel's bottom left corner cut off, like a broadcast graphic, or not: this far along each side. */
   cutCorner: { on: onOff, size: spacing },
   /**
-   * How big things on the page are, in pixels. The game panel: its width at most, its height, and its
-   * height on a phone, where the details go below the score block; the score block's width and how
-   * far its right edge slants; the venue photo's width; a team's logo; and the close button. A score
-   * card: its narrowest, a team's logo, how far its pointer reaches below it to the venue (the globe
-   * reads this to place cards) and its status light. The settings menu: its width, the gear, and the
-   * "All leagues" chip's height. The scenario controls: a speed key and its icon. The game panel sits
-   * clear of the scenario controls by their keys' size.
+   * How big things are, in pixels, or in ems where they go with their text. The game panel: its width
+   * at most, its height, and its height on a phone, where the details go below the score block; the
+   * score block's width and how far its right edge slants; the venue photo's width; a team's logo; the
+   * close button; and a team's score box, in ems of its digits. A score card: its narrowest, a team's
+   * logo, how far its pointer reaches below it to the venue (the globe reads this to place cards), its
+   * status light, and how far it keeps clear of the letters of a city named for its game (the globe
+   * lays cards out by this). The settings menu: its width, the gear, the "All leagues" chip's height,
+   * and on that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The
+   * scenario controls: a speed key and its icon. The game panel sits clear of the scenario controls by
+   * their keys' size.
    */
   sizes: {
     panel: {
@@ -395,9 +462,10 @@ const settings = {
       photo: pixels,
       logo: pixels,
       close: pixels,
+      scoreWidth: ems,
     },
-    card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels },
-    settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels },
+    card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
+    settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
     controls: { key: pixels, icon: pixels },
   },
 }
@@ -490,7 +558,9 @@ function resolveAll(schema: object, value: unknown, path: string, resolving: Res
  * The resolved theme as CSS custom properties, one for each setting, named by where it sits in the
  * theme's settings, in kebab case: `status.live.color` is --status-live-color, `spacing.l` is
  * --spacing-l and `placeNames.city.font` gives --place-names-city-font-family, -weight and -style.
- * Sizes are written in pixels ("12px"), and on or off as 1 or 0.
+ * Sizes are written in pixels ("12px"), or in ems where they go with their text ("0.14em"), and on
+ * or off as 1 or 0. What only the globe reads (sizes by zoom, a dash pattern, the halo's sizes)
+ * isn't written.
  */
 export function customProperties(theme: Theme): Map<string, string> {
   const properties = new Map<string, string>()

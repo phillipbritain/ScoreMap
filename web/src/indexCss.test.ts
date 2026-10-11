@@ -68,6 +68,21 @@ describe('the page’s CSS', () => {
     expect(own).toEqual([])
   })
 
+  it('sizes nothing in ems of its own, letter spacing included, but in animations', () => {
+    const own = declarations(withoutKeyframes(css)).filter((declaration) =>
+      /\d*\.?\d+(em|rem|ex|ch)\b/.test(withoutThemeValues(declaration)),
+    )
+    expect(own).toEqual([])
+  })
+
+  it('fades nothing by an opacity of its own but in animations: only shows (1) or hides (0) a thing', () => {
+    const own = declarations(withoutKeyframes(css))
+      .filter((declaration) => propertyOf(declaration) === 'opacity')
+      .filter((declaration) => /^\d*\.?\d+$/.test(valueOf(declaration).trim()))
+      .filter((declaration) => !['0', '1'].includes(valueOf(declaration).trim()))
+    expect(own).toEqual([])
+  })
+
   it('names no colour of its own, reading every colour from the theme’s custom properties', () => {
     const own = declarations(css)
       // A mask uses only how opaque its colours are, never what colour they are.

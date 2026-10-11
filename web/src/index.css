@@ -1,3 +1,12 @@
+/* Every colour, font, size, spacing, corner, line width, letter spacing, fade and shadow here comes
+   from the theme, which is written to the page's root as custom properties, one per setting (see
+   theme/theme.ts' customProperties): --text-main, --status-live-color, --fonts-body-family,
+   --text-sizes-m, --spacing-l, --corners-card, --strokes-thin, --panel-shadow, --sizes-card-pointer,
+   --letter-spacing-label and so on. Text sizes, spacing and line widths are steps of the theme's
+   scales; corners are its radii, each for a kind of corner. Motion (durations, easings and the
+   animations' own shapes), the starfield's pattern, and layout (percentages, line counts in lh, a
+   line height) stay here. */
+
 html,
 body,
 #root {
@@ -6,8 +15,10 @@ body,
 }
 
 body {
-  background: #0b1020;
-  font-family: system-ui, sans-serif;
+  background: var(--page-background);
+  font-family: var(--fonts-body-family);
+  font-weight: var(--fonts-body-weight);
+  font-size: var(--text-sizes-l);
 }
 
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
@@ -16,8 +27,12 @@ body {
   height: 100%;
 }
 
-/* Space behind the globe: a near-black sky with a scattering of faint stars, repeated in tiles. */
+/* Space behind the globe: the theme's sky with a scattering of faint stars, repeated in tiles. Each
+   star is the theme's small or large star, its brightness mixed into the theme's white, cool or warm
+   star; where they are in the tile is the pattern's own. */
 .globe {
+  --star: var(--page-stars-size-small);
+  --big-star: var(--page-stars-size-large);
   position: relative;
   /* Keeps the score cards' stacking among themselves, so the menus and messages laid over the
      globe stay above every card. */
@@ -25,22 +40,21 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background-color: #03050c;
+  background-color: var(--page-sky);
   background-image:
-    radial-gradient(1px 1px at 23px 41px, rgb(255 255 255 / 0.8), transparent),
-    radial-gradient(1px 1px at 97px 130px, rgb(255 255 255 / 0.6), transparent),
-    radial-gradient(1.5px 1.5px at 160px 72px, rgb(255 255 255 / 0.9), transparent),
-    radial-gradient(1px 1px at 211px 188px, rgb(200 220 255 / 0.7), transparent),
-    radial-gradient(1px 1px at 61px 219px, rgb(255 255 255 / 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 132px 11px, rgb(255 240 220 / 0.7), transparent);
+    radial-gradient(var(--star) var(--star) at 23px 41px, color-mix(in srgb, var(--page-stars-white) 80%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 97px 130px, color-mix(in srgb, var(--page-stars-white) 60%, transparent), transparent),
+    radial-gradient(var(--big-star) var(--big-star) at 160px 72px, color-mix(in srgb, var(--page-stars-white) 90%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 211px 188px, color-mix(in srgb, var(--page-stars-cool) 70%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 61px 219px, color-mix(in srgb, var(--page-stars-white) 50%, transparent), transparent),
+    radial-gradient(var(--big-star) var(--big-star) at 132px 11px, color-mix(in srgb, var(--page-stars-warm) 70%, transparent), transparent);
   background-size: 240px 240px;
 }
 
-/* The globe-sized circle behind the map that carries the atmosphere's halo (see globe/globeGlow.ts). */
+/* The globe-sized circle behind the map that carries the halo, coloured from the theme (see globe/globeGlow.ts). */
 .globe-glow {
   position: absolute;
   border-radius: 50%;
-  background: #0b1526;
   pointer-events: none;
 }
 
@@ -51,27 +65,33 @@ body {
 .game-panel {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: var(--spacing-l);
   z-index: 1;
   display: flex;
   box-sizing: border-box;
-  width: min(940px, calc(100% - 24px));
-  height: 127px;
-  border-top: 3px solid var(--status-color);
-  background: linear-gradient(180deg, rgb(18 28 56 / 0.98), rgb(8 12 26 / 0.98));
-  color: #ffffff;
-  font-size: 13px;
+  width: min(var(--sizes-panel-width), calc(100% - 2 * var(--spacing-l)));
+  height: var(--sizes-panel-height);
+  /* The score block and photo are clipped to the panel's corners. */
+  overflow: hidden;
+  border-top: var(--strokes-thick) solid var(--status-color);
+  border-radius: var(--corners-panel);
+  background: linear-gradient(180deg, var(--panel-surface-top), var(--panel-surface-bottom));
+  color: var(--text-main);
+  font-size: var(--text-sizes-m);
   transform: translateX(-50%);
   box-shadow:
-    0 8px 30px rgb(0 0 0 / 0.6),
-    0 -2px 14px color-mix(in srgb, var(--status-color) 35%, transparent);
-  /* The bottom left corner cut off, like a broadcast graphic. */
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+    var(--panel-shadow),
+    0 var(--panel-glow-y) var(--panel-glow-blur) color-mix(in srgb, var(--status-color) calc(var(--panel-glow-opacity) * 100%), transparent);
+  /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
+  --cut-corner: calc(var(--cut-corner-on) * var(--cut-corner-size));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
-/* Clear of the scenario pills and clock (local runs only). */
+/* Clear of the scenario pills and clock (local runs only): above their row, as tall as a speed key
+   in the keys' padding, by the gap the bottom stack leaves between its rows. */
 .bottom-stack--scenario ~ .game-panel {
-  bottom: 60px;
+  --controls-row: calc(var(--sizes-controls-key) + 2 * var(--spacing-2xs));
+  bottom: calc(var(--spacing-l) + var(--controls-row) + var(--spacing-m));
 }
 
 /* The score block at the left, slanted on its right edge. One column that can't grow past the
@@ -80,42 +100,44 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: 2px;
+  gap: var(--spacing-2xs);
   box-sizing: border-box;
-  width: 290px;
+  width: var(--sizes-panel-score-block);
   flex-shrink: 0;
-  padding: 10px 26px 10px 16px;
-  background: linear-gradient(180deg, #1d2d55, #121c38);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+  padding: var(--spacing-m) var(--spacing-2xl) var(--spacing-m) var(--spacing-xl);
+  background: linear-gradient(180deg, var(--panel-score-block-top), var(--panel-score-block-bottom));
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--sizes-panel-slant)) 100%, 0 100%);
 }
 
-/* Gold and tracked out, like the country names on the globe. */
+/* Secondary text, tracked out like the country names on the globe. */
 .game-panel__league,
 .game-panel__label {
-  color: #d8c9a4;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  font-family: var(--fonts-heading-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-heading-weight);
+  letter-spacing: var(--letter-spacing-label);
   text-transform: uppercase;
 }
 
 .game-panel__label {
-  margin-bottom: 3px;
-  font-size: 10px;
+  margin-bottom: var(--spacing-2xs);
+  font-size: var(--text-sizes-xs);
 }
 
 .game-panel__team {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 700;
+  gap: var(--spacing-m);
+  font-family: var(--fonts-team-family);
+  font-size: var(--text-sizes-l);
+  font-weight: var(--fonts-team-weight);
 }
 
 .game-panel__team img,
 .game-panel__logo {
-  width: 28px;
-  height: 28px;
+  width: var(--sizes-panel-logo);
+  height: var(--sizes-panel-logo);
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -131,12 +153,13 @@ body {
 /* Wide enough for three digits, so a score of 100 doesn't move anything. */
 .game-panel__team-score {
   box-sizing: border-box;
-  width: 2.6em;
+  width: var(--sizes-panel-score-width);
   flex-shrink: 0;
-  background: #ffffff;
-  color: #0b1020;
-  font-size: 18px;
-  font-weight: 800;
+  background: var(--panel-score-fill);
+  color: var(--panel-score-text);
+  font-family: var(--fonts-score-family);
+  font-size: var(--text-sizes-xl);
+  font-weight: var(--fonts-score-weight);
   font-variant-numeric: tabular-nums;
   text-align: center;
   transform: skewX(-10deg);
@@ -144,13 +167,15 @@ body {
 
 .game-panel__progress {
   justify-self: start;
-  max-width: calc(100% - 8px);
-  margin-top: 4px;
-  padding: 1px 10px;
+  max-width: calc(100% - var(--spacing-m));
+  margin-top: var(--spacing-xs);
+  padding: var(--spacing-2xs) var(--spacing-m);
   overflow: hidden;
   background: var(--status-color);
-  font-size: 11px;
-  font-weight: 800;
+  color: var(--text-on-status);
+  font-family: var(--fonts-heading-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-heading-weight);
   text-transform: uppercase;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -162,9 +187,9 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--spacing-xl);
   min-width: 0;
-  padding: 12px 16px;
+  padding: var(--spacing-l) var(--spacing-xl);
   overflow: hidden;
 }
 
@@ -173,19 +198,19 @@ body {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  min-height: 2.6em;
+  min-height: 2lh;
   overflow: hidden;
   line-height: 1.3;
 }
 
 .game-panel__muted {
-  color: rgb(255 255 255 / 0.55);
-  font-size: 12px;
+  color: var(--text-secondary);
+  font-size: var(--text-sizes-s);
 }
 
 /* One line under a venue or time, kept even when empty. */
 .game-panel__details > div > .game-panel__muted {
-  min-height: 1.3em;
+  min-height: 1lh;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -193,7 +218,7 @@ body {
 
 .game-panel__watch {
   display: grid;
-  gap: 1px;
+  gap: var(--spacing-2xs);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -206,22 +231,22 @@ body {
 }
 
 .game-panel__watch a {
-  color: #8fc1ff;
+  color: var(--text-link);
 }
 
 .game-panel__unofficial {
-  color: rgb(255 255 255 / 0.45);
-  font-size: 11px;
+  color: var(--panel-unofficial);
+  font-size: var(--text-sizes-s);
 }
 
 /* The venue photo at the right, fading in from the details. A faint glow holds its place when
    there's no photo. */
 .game-panel__photo {
   position: relative;
-  width: 180px;
+  width: var(--sizes-panel-photo);
   margin: 0;
   flex-shrink: 0;
-  background: radial-gradient(ellipse at 70% 50%, rgb(42 62 112 / 0.5), transparent 70%);
+  background: radial-gradient(ellipse at 70% 50%, var(--panel-photo), transparent 70%);
 }
 
 .game-panel__photo img {
@@ -238,11 +263,11 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: 2px 6px;
+  padding: var(--spacing-2xs) var(--spacing-s);
   overflow: hidden;
-  background: rgb(0 0 0 / 0.6);
-  color: rgb(255 255 255 / 0.75);
-  font-size: 10px;
+  background: var(--panel-credit-fill);
+  color: var(--panel-credit-text);
+  font-size: var(--text-sizes-xs);
   white-space: nowrap;
   text-overflow: ellipsis;
   opacity: 0;
@@ -259,15 +284,17 @@ body {
 
 .game-panel__close {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 24px;
-  height: 24px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  width: var(--sizes-panel-close);
+  height: var(--sizes-panel-close);
   border: none;
   border-radius: 50%;
-  background: rgb(0 0 0 / 0.55);
-  color: #ffffff;
-  font-size: 16px;
+  background: var(--panel-close);
+  color: var(--text-main);
+  font-family: var(--fonts-button-family);
+  font-size: var(--text-sizes-l);
+  font-weight: var(--fonts-button-weight);
   line-height: 1;
   cursor: pointer;
 }
@@ -276,13 +303,13 @@ body {
 @media (max-width: 640px) {
   .game-panel {
     flex-direction: column;
-    height: 236px;
+    height: var(--sizes-panel-phone-height);
     clip-path: none;
   }
 
   /* The pills and the clock wrap to two rows on a phone. */
   .bottom-stack--scenario ~ .game-panel {
-    bottom: 104px;
+    bottom: calc(var(--spacing-l) + 2 * (var(--controls-row) + var(--spacing-m)));
   }
 
   .game-panel__score {
@@ -291,8 +318,8 @@ body {
   }
 
   .game-panel__details {
-    gap: 10px;
-    padding: 10px 12px;
+    gap: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
   }
 
   .game-panel__photo {
@@ -300,34 +327,65 @@ body {
   }
 }
 
-/* How each status looks comes from globe/statusLook.ts, which writes its colour to the page's root
-   (--live-color and so on). Score cards pick theirs by their status class. Live stands out most,
-   Upcoming is dimmer, Final fades, Disrupted is greyed out. */
+/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how far
+   its score cards fade and how they glow. Score cards pick theirs by their status class. */
 .score-card--live {
-  --status-color: var(--live-color);
+  --status-card-color: var(--status-live-color);
+  --status-card-fade: var(--status-live-card-fade);
+  --status-card-glow-radius: var(--status-live-card-glow-radius);
+  --status-card-glow-opacity: var(--status-live-card-glow-opacity);
 }
 
 .score-card--upcoming {
-  --status-color: var(--upcoming-color);
+  --status-card-color: var(--status-upcoming-color);
+  --status-card-fade: var(--status-upcoming-card-fade);
+  --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
+  --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
 }
 
 .score-card--final {
-  --status-color: var(--final-color);
+  --status-card-color: var(--status-final-color);
+  --status-card-fade: var(--status-final-card-fade);
+  --status-card-glow-radius: var(--status-final-card-glow-radius);
+  --status-card-glow-opacity: var(--status-final-card-glow-opacity);
 }
 
 .score-card--disrupted {
-  --status-color: var(--disrupted-color);
+  --status-card-color: var(--status-disrupted-color);
+  --status-card-fade: var(--status-disrupted-card-fade);
+  --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
+  --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
 }
 
-/* Zoomed-in pin: both teams' logos, abbreviations and scores, and a short clock line. How it looks
-   is the viewer's "Card style" (see globe/cardStyle.ts); each style's rules are further down. */
+/* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
+   light and the clock line (or the status), then both teams' logos, abbreviations and scores.
+
+   Solid, so the map never shows through the scores. A card fades (Final, say) by colour instead:
+   its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
+   are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
 .score-card {
-  /* How far the pointer reaches below the card, to its venue. The globe reads this to place cards. */
-  --score-card-pointer: 6px;
+  --card-surface: var(--card-fill);
+  --card-ink: var(--card-text);
+  --fade: calc(var(--status-card-fade) * 100%);
+  --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
   display: grid;
-  gap: 2px;
-  font-size: 12px;
+  gap: var(--spacing-2xs);
+  min-width: var(--sizes-card-min-width);
+  padding: 0 0 var(--spacing-xs);
+  border: var(--strokes-thin) solid var(--status-color);
+  border-radius: var(--corners-card);
+  background: var(--card-surface);
+  color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
+  font-family: var(--fonts-card-clock-family);
+  font-size: var(--text-sizes-s);
+  font-weight: var(--fonts-card-clock-weight);
   line-height: 1.2;
+  text-transform: uppercase;
+  /* The status's glow around the card, and a fainter one inside it. */
+  box-shadow:
+    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
+    inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
+      color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
   /* Animations grow the card from its pointer, which stays on the venue. */
@@ -335,18 +393,17 @@ body {
 }
 
 /* A small pointer down to the venue; the card sits above it. A square turned on its corner, sized
-   and placed so its tip is --score-card-pointer below the card. */
+   and placed so its tip is the theme's card pointer below the card (the globe places cards by it). */
 .score-card::after {
-  --side: calc(var(--score-card-pointer) * 1.5);
+  --side: calc(var(--sizes-card-pointer) * 1.5);
   content: '';
   position: absolute;
   left: 50%;
-  bottom: calc(var(--side) * 0.7071 - var(--score-card-pointer) - var(--side) / 2);
+  bottom: calc(var(--side) * 0.7071 - var(--sizes-card-pointer) - var(--side) / 2);
   width: var(--side);
   height: var(--side);
-  background: inherit;
+  background: var(--status-color);
   transform: translateX(-50%) rotate(45deg);
-  box-shadow: 2px 2px 3px rgb(0 0 0 / 0.2);
 }
 
 /* Cards moved aside to make room for another (see globe/cardLayout.ts) trail back to their venues
@@ -360,389 +417,80 @@ body {
   visibility: hidden;
 }
 
-.score-card--upcoming {
-  opacity: 0.85;
-}
-
-.score-card--final {
-  opacity: 0.6;
-}
-
 /* Greyed out: the game isn't being played as scheduled. */
-.score-card--disrupted {
-  opacity: 0.7;
+.score-card.score-card--disrupted {
+  --card-surface: var(--card-disrupted-fill);
+  --card-ink: var(--card-disrupted-text);
 }
 
 .score-card--disrupted .score-card__logo {
   filter: grayscale(1);
 }
 
-.score-card--disrupted .score-card__clock {
-  font-style: italic;
-}
-
-/* The game whose panel is open, matching the selected small pin's ring. */
+/* The game whose panel is open, matching the selected small pin's ring, and not faded. */
 .score-card--selected {
-  outline: 3px solid var(--selection-color);
-  outline-offset: 2px;
-  opacity: 1;
+  --status-card-fade: 0;
+  outline: var(--selection-width) solid var(--selection-color);
+  outline-offset: var(--spacing-2xs);
 }
 
-.score-card__team {
-  display: grid;
-  grid-template-columns: 18px 1fr auto;
-  align-items: center;
-  gap: 5px;
-}
-
-.score-card__logo {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-}
-
-.score-card__abbreviation {
-  font-weight: 600;
-}
-
-.score-card__score {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.score-card__clock {
-  font-size: 11px;
-}
-
-.score-card__clock:empty {
-  display: none;
-}
-
-/* HUD: an instrument readout; a glowing status outline, a header strip with a status light. */
-
-.score-card.score-card--style-hud {
-  gap: 2px;
-  min-width: 92px;
-  padding: 0 0 4px;
-  border: 1px solid var(--status-color);
-  border-radius: 3px;
-  background: rgb(6 12 24 / 0.85);
-  color: #d9f0ff;
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  box-shadow:
-    0 0 8px color-mix(in srgb, var(--status-color) 45%, transparent),
-    inset 0 0 10px color-mix(in srgb, var(--status-color) 15%, transparent);
-}
-
-.score-card.score-card--style-hud::after {
-  background: var(--status-color);
-  box-shadow: none;
-}
-
-.score-card__hud-header {
+.score-card__header {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 2px;
-  padding: 2px 6px;
-  border-bottom: 1px solid var(--status-color);
-  background: color-mix(in srgb, var(--status-color) 28%, transparent);
-  font-size: 10px;
-  letter-spacing: 0.06em;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-2xs);
+  padding: var(--spacing-2xs) var(--spacing-s);
+  border-bottom: var(--strokes-thin) solid var(--status-color);
+  background: color-mix(in srgb, var(--status-color) calc(var(--card-header-tint) * 100%), transparent);
+  font-size: var(--text-sizes-xs);
+  letter-spacing: var(--letter-spacing-card-header);
 }
 
-.score-card__hud-light {
-  width: 6px;
-  height: 6px;
+.score-card__light {
+  width: var(--sizes-card-light);
+  height: var(--sizes-card-light);
   border-radius: 50%;
   background: var(--status-color);
-  box-shadow: 0 0 6px var(--status-color);
+  /* Lit as its card glows. */
+  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--status-color);
 }
 
-.score-card--live .score-card__hud-light {
-  animation: score-card-hud-light 1.6s ease-in-out infinite;
+.score-card--live .score-card__light {
+  animation: score-card-light 1.6s ease-in-out infinite;
 }
 
-@keyframes score-card-hud-light {
+@keyframes score-card-light {
   50% {
     opacity: 0.3;
   }
 }
 
-.score-card.score-card--style-hud .score-card__team {
-  padding: 0 6px;
-}
-
-.score-card.score-card--style-hud .score-card__logo {
-  width: 16px;
-  height: 16px;
-}
-
-.score-card.score-card--disrupted.score-card--style-hud {
-  background: rgb(12 14 20 / 0.85);
-  color: #8b93a3;
-}
-
-/* LED scoreboard: a stadium board; amber dot-matrix digits in dark cells, the clock lit above. */
-
-.score-card.score-card--style-led {
-  gap: 3px;
-  min-width: 86px;
-  padding: 4px 6px 5px;
-  border: 2px solid #2a2a2a;
-  border-top: 3px solid var(--status-color);
-  border-radius: 2px;
-  background:
-    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 1.2px) 0 0 / 3px 3px,
-    #0a0a0a;
-  color: #ffb000;
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  text-shadow: 0 0 4px rgb(255 176 0 / 0.7);
-  box-shadow: 0 3px 10px rgb(0 0 0 / 0.7);
-}
-
-.score-card.score-card--style-led::after {
-  background: #2a2a2a;
-  box-shadow: none;
-}
-
-.score-card.score-card--style-led .score-card__clock {
-  justify-self: center;
-  padding: 0 6px;
-  background: #000000;
-  color: var(--status-color);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-shadow: 0 0 5px var(--status-color);
-}
-
-.score-card.score-card--style-led .score-card__team {
-  grid-template-columns: 14px 1fr auto;
-}
-
-.score-card.score-card--style-led .score-card__logo {
-  width: 14px;
-  height: 14px;
-}
-
-.score-card.score-card--style-led .score-card__score {
-  min-width: 2.2ch;
-  padding: 0 3px;
-  border: 1px solid #262626;
-  background: #000000;
-  color: #ff3b1f;
-  font-size: 13px;
-  text-align: center;
-  text-shadow: 0 0 6px rgb(255 59 31 / 0.9);
-}
-
-.score-card.score-card--disrupted.score-card--style-led {
-  background: #0a0a0a;
-  color: #6b6b6b;
-  text-shadow: none;
-}
-
-/* Broadcast bug: a TV score strip; slanted blocks for each team and the clock. */
-
-.score-card.score-card--style-broadcast {
-  display: flex;
-  min-width: 0;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.7));
-}
-
-.score-card.score-card--style-broadcast::after {
-  background: #ffffff;
-  box-shadow: none;
-}
-
-.score-card__broadcast-team,
-.score-card.score-card--style-broadcast .score-card__clock {
-  display: flex;
+.score-card__team {
+  display: grid;
+  grid-template-columns: calc(var(--sizes-card-logo) + var(--spacing-2xs)) 1fr auto;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  transform: skewX(-14deg);
+  gap: var(--spacing-xs);
+  padding: 0 var(--spacing-s);
 }
 
-.score-card__broadcast-team > *,
-.score-card.score-card--style-broadcast .score-card__clock > * {
-  transform: skewX(14deg);
+/* Faded into the card's fill with the rest of the card: the card behind it is solid. */
+.score-card__logo {
+  width: var(--sizes-card-logo);
+  height: var(--sizes-card-logo);
+  object-fit: contain;
+  opacity: calc(1 - var(--status-card-fade));
 }
 
-.score-card__broadcast-team--away {
-  background: linear-gradient(180deg, #1d2d55, #121c38);
+.score-card__abbreviation {
+  font-family: var(--fonts-card-team-family);
+  font-weight: var(--fonts-card-team-weight);
 }
 
-.score-card__broadcast-team--home {
-  background: linear-gradient(180deg, #2a3e70, #1a2850);
-}
-
-.score-card__broadcast-team .score-card__score {
-  min-width: 1.4ch;
-  padding: 0 4px;
-  background: #ffffff;
-  color: #0b1020;
-}
-
-.score-card.score-card--style-broadcast .score-card__logo {
-  width: 16px;
-  height: 16px;
-}
-
-.score-card.score-card--style-broadcast .score-card__clock {
-  background: var(--status-color);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.score-card.score-card--disrupted.score-card--style-broadcast {
-  background: transparent;
-  color: #a0a6b2;
-}
-
-.score-card.score-card--disrupted.score-card--style-broadcast .score-card__broadcast-team {
-  background: #2a2e38;
-}
-
-/* Tactical: corner brackets in the status colour, no box, dotted leaders to each score. */
-
-.score-card.score-card--style-tactical {
-  --corner: 7px;
-  gap: 1px;
-  min-width: 96px;
-  padding: 5px 8px;
-  border-radius: 0;
-  background:
-    linear-gradient(var(--status-color), var(--status-color)) top left / var(--corner) 1.5px,
-    linear-gradient(var(--status-color), var(--status-color)) top left / 1.5px var(--corner),
-    linear-gradient(var(--status-color), var(--status-color)) top right / var(--corner) 1.5px,
-    linear-gradient(var(--status-color), var(--status-color)) top right / 1.5px var(--corner),
-    linear-gradient(var(--status-color), var(--status-color)) bottom left / var(--corner) 1.5px,
-    linear-gradient(var(--status-color), var(--status-color)) bottom left / 1.5px var(--corner),
-    linear-gradient(var(--status-color), var(--status-color)) bottom right / var(--corner) 1.5px,
-    linear-gradient(var(--status-color), var(--status-color)) bottom right / 1.5px var(--corner),
-    repeating-linear-gradient(0deg, rgb(255 255 255 / 0.03) 0 1px, transparent 1px 3px),
-    rgb(4 10 20 / 0.72);
-  background-repeat: no-repeat;
-  color: #cfe3ff;
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
-  font-size: 11px;
-  box-shadow: none;
-}
-
-.score-card.score-card--style-tactical::after {
-  --side: 6px;
-  background: var(--status-color);
-  box-shadow: none;
-}
-
-.score-card.score-card--style-tactical .score-card__team {
-  grid-template-columns: 14px auto 1fr auto;
-}
-
-.score-card__leader {
-  align-self: end;
-  margin-bottom: 4px;
-  border-bottom: 1px dotted rgb(207 227 255 / 0.35);
-}
-
-.score-card.score-card--style-tactical .score-card__logo {
-  width: 14px;
-  height: 14px;
-}
-
-.score-card.score-card--style-tactical .score-card__clock {
-  margin-top: 2px;
-  color: var(--status-color);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.score-card.score-card--style-tactical .score-card__clock::before {
-  content: '> ';
-}
-
-.score-card.score-card--disrupted.score-card--style-tactical {
-  color: #7d8594;
-}
-
-/* Neon sign: a glowing tube outline, the score lit large in the middle, names beneath. */
-
-.score-card.score-card--style-neon {
-  justify-items: center;
-  gap: 0;
-  min-width: 90px;
-  padding: 4px 10px 5px;
-  border: 1.5px solid var(--status-color);
-  border-radius: 14px;
-  background: rgb(10 6 24 / 0.82);
-  color: #ffffff;
-  box-shadow:
-    0 0 6px var(--status-color),
-    0 0 16px color-mix(in srgb, var(--status-color) 50%, transparent),
-    inset 0 0 8px color-mix(in srgb, var(--status-color) 40%, transparent);
-}
-
-.score-card.score-card--style-neon::after {
-  background: var(--status-color);
-  box-shadow: 0 0 6px var(--status-color);
-}
-
-.score-card__neon-score {
-  font-size: 18px;
-  font-weight: 800;
-  font-style: italic;
+.score-card__score {
+  font-family: var(--fonts-card-score-family);
+  font-weight: var(--fonts-card-score-weight);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  text-shadow:
-    0 0 4px #ffffff,
-    0 0 10px var(--status-color),
-    0 0 18px var(--status-color);
-}
-
-.score-card__neon-teams {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #6ee7ff;
-  text-shadow: 0 0 6px #22d3ee;
-}
-
-.score-card.score-card--style-neon .score-card__logo {
-  width: 14px;
-  height: 14px;
-}
-
-.score-card.score-card--style-neon .score-card__clock {
-  color: #ff7ce5;
-  font-size: 10px;
-  font-weight: 700;
-  text-shadow: 0 0 6px #ff2fd1;
-}
-
-.score-card.score-card--disrupted.score-card--style-neon {
-  background: rgb(14 14 20 / 0.85);
-  color: #8b93a3;
-  box-shadow: none;
+  text-align: right;
 }
 
 /* Animations for changes worth noticing (see globe/pinAnimation.ts): a lively bounce and flash when
@@ -804,7 +552,7 @@ body {
     transform: scale(1);
     box-shadow:
       0 0 0 14px transparent,
-      0 1px 6px rgb(0 0 0 / 0.45);
+      0 1px 6px var(--card-shadow);
   }
 }
 
@@ -815,23 +563,23 @@ body {
   }
   40% {
     filter: brightness(0.85) saturate(0.5);
-    box-shadow: 0 0 12px 3px rgb(138 143 152 / 0.6);
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--status-final-color) 60%, transparent);
   }
 }
 
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
-  width: 16px;
-  height: 16px;
-  border: 3px solid var(--pulse-color);
+  width: var(--pulse-size-pin);
+  height: var(--pulse-size-pin);
+  border: var(--pulse-ring-lively) solid var(--pulse-color);
   border-radius: 50%;
   opacity: 0;
 }
 
 .pin-pulse--cluster {
-  width: 36px;
-  height: 36px;
+  width: var(--pulse-size-cluster);
+  height: var(--pulse-size-cluster);
 }
 
 .pin-pulse--score {
@@ -843,7 +591,7 @@ body {
 }
 
 .pin-pulse--finish {
-  border-width: 2px;
+  border-width: var(--pulse-ring-calm);
   animation: pin-pulse-calm 2.6s ease-in-out;
 }
 
@@ -898,24 +646,24 @@ body {
    down to. */
 .settings-menu {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: var(--spacing-l);
+  left: var(--spacing-l);
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  max-height: calc(100% - 24px);
+  gap: var(--spacing-m);
+  max-height: calc(100% - 2 * var(--spacing-l));
 }
 
-/* Just the gear, standing on the globe without a panel: gold like the country names, on a dark
-   outline like theirs, and without the disclosure triangle. */
+/* Just the gear, standing on the globe without a panel: in secondary text, with the theme's outline
+   around it (the dark theme has none: controls cast no shadow), and without the disclosure triangle. */
 .settings-menu summary {
   display: flex;
-  color: #d8c9a4;
+  color: var(--text-secondary);
   cursor: pointer;
   list-style: none;
-  filter: drop-shadow(0 0 2px #050b16);
+  filter: drop-shadow(var(--settings-menu-gear-outline));
 }
 
 .settings-menu summary::-webkit-details-marker {
@@ -923,154 +671,154 @@ body {
 }
 
 .settings-menu__icon {
-  width: 28px;
-  height: 28px;
+  width: var(--sizes-settings-menu-gear);
+  height: var(--sizes-settings-menu-gear);
 }
 
-/* The panel below the gear, the dark navy of the scenario pills but solid, so score cards
-   behind it don't show through. */
+/* The panel below the gear, on the settings menu's surface: the built-in theme's is the scenario
+   pills' colour but solid, so score cards behind it don't show through. */
 .settings-menu__panel {
-  width: 320px;
-  max-width: calc(100vw - 24px);
+  width: var(--sizes-settings-menu-width);
+  max-width: calc(100vw - 2 * var(--spacing-l));
   overflow-y: auto;
-  border-radius: 12px;
-  background: rgb(11, 16, 32);
-  color: #ffffff;
-  font-size: 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border-radius: var(--corners-menu);
+  background: var(--settings-menu-surface);
+  color: var(--text-main);
+  font-size: var(--text-sizes-m);
+  box-shadow: var(--settings-menu-shadow);
 }
 
 .settings-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--strokes-thin) solid var(--divider);
 }
 
 .settings-tab {
   flex: 1;
-  padding: 10px;
+  padding: var(--spacing-m);
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--strokes-medium) solid transparent;
   background: none;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 600;
+  color: var(--settings-menu-tab);
+  font-family: var(--fonts-tab-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-tab-weight);
   cursor: pointer;
 }
 
 .settings-tab[aria-selected='true'] {
-  border-bottom-color: #d8c9a4;
-  color: #d8c9a4;
+  border-bottom-color: var(--settings-menu-on-fill);
+  color: var(--settings-menu-on-fill);
 }
 
 .settings-tab-body {
-  padding: 12px;
-}
-
-.settings-heading {
-  margin: 14px 0 8px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
-  font-weight: 600;
+  padding: var(--spacing-l);
 }
 
 .settings-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--spacing-s);
 }
 
 .settings-chip {
-  padding: 5px 11px;
-  border: 1px solid rgba(216, 201, 164, 0.45);
-  border-radius: 999px;
+  padding: var(--spacing-xs) var(--spacing-l);
+  border: var(--strokes-thin) solid var(--settings-menu-chip-outline);
+  border-radius: var(--corners-control);
   background: transparent;
-  color: #d8c9a4;
-  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--fonts-button-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-button-weight);
   white-space: nowrap;
   cursor: pointer;
 }
 
 /* Filled in, not bolder: bold text would widen the chip and shift the chips after it. */
 .settings-chip[aria-pressed='true'] {
-  border-color: #d8c9a4;
-  background: #d8c9a4;
-  color: #0b1020;
+  border-color: var(--settings-menu-on-fill);
+  background: var(--settings-menu-on-fill);
+  color: var(--settings-menu-on-text);
 }
 
 /* "All leagues", above the sports: a bigger chip, dashed while only some leagues are on. */
 .settings-master {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: var(--spacing-m);
+  margin-bottom: var(--spacing-l);
+  padding-bottom: var(--spacing-m);
+  border-bottom: var(--strokes-thin) solid var(--divider);
 }
 
 .settings-master__chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 8px 0 10px;
-  font-size: 14px;
+  gap: var(--spacing-m);
+  height: var(--sizes-settings-menu-all-leagues);
+  padding: 0 var(--spacing-m);
+  font-size: var(--text-sizes-m);
 }
 
 /* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
    keeps its size whatever the state: the ✓ comes from a taller fallback font. */
 .settings-master__mark {
-  width: 1em;
-  height: 1em;
+  width: var(--sizes-settings-menu-mark);
+  height: var(--sizes-settings-menu-mark);
   line-height: 1;
-  margin-right: -4px;
+  margin-right: calc(-1 * var(--spacing-xs));
   text-align: center;
 }
 
 .settings-master__chip--mixed {
   border-style: dashed;
-  border-color: #d8c9a4;
+  border-color: var(--settings-menu-on-fill);
 }
 
-/* How many leagues are on, as a badge that reads on the gold chip and on the dark one alike. */
+/* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
 .settings-master__count {
-  min-width: 3.2em;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: rgba(216, 201, 164, 0.15);
+  min-width: var(--sizes-settings-menu-count-width);
+  padding: var(--spacing-2xs) var(--spacing-s);
+  border-radius: var(--corners-control);
+  background: var(--settings-menu-chip-badge);
   text-align: center;
-  color: #d8c9a4;
-  font-size: 12px;
+  color: var(--text-secondary);
+  font-size: var(--text-sizes-s);
 }
 
 .settings-master__chip--on .settings-master__count {
-  background: #0b1020;
+  background: var(--settings-menu-on-text);
 }
 
 .settings-master__hint {
   flex: 1;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 11px;
+  color: var(--settings-menu-hint);
+  font-size: var(--text-sizes-s);
 }
 
 .settings-sport + .settings-sport {
-  margin-top: 12px;
+  margin-top: var(--spacing-l);
 }
 
 .settings-sport__name {
   display: flex;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: var(--spacing-s);
+  margin-bottom: var(--spacing-s);
   padding: 0;
   border: none;
   background: none;
-  color: #ffffff;
-  font-weight: 600;
+  color: var(--text-main);
+  font-family: var(--fonts-tab-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-tab-weight);
   cursor: pointer;
 }
 
 /* How many of the sport's leagues are on, such as 2/2. */
 .settings-sport__count {
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 400;
+  color: var(--settings-menu-count);
+  font-family: var(--fonts-button-family);
+  font-weight: var(--fonts-button-weight);
 }
 
 /* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
@@ -1081,7 +829,7 @@ body {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--spacing-m);
   max-width: 100%;
   pointer-events: auto;
 }
@@ -1089,17 +837,18 @@ body {
 .scenario-pill {
   position: relative;
   min-width: 0;
-  border-radius: 18px;
-  background: rgba(11, 16, 32, 0.85);
-  color: #ffffff;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-radius: var(--corners-control);
+  background: var(--controls-surface);
+  color: var(--text-main);
+  font-size: var(--text-sizes-m);
+  box-shadow: var(--controls-shadow);
 }
 
 .scenario-pill summary {
-  padding: 8px 14px;
+  padding: var(--spacing-m) var(--spacing-l);
   cursor: pointer;
-  font-weight: 600;
+  font-family: var(--fonts-scenario-pill-family);
+  font-weight: var(--fonts-scenario-pill-weight);
   list-style: none;
   white-space: nowrap;
   overflow: hidden;
@@ -1113,16 +862,20 @@ body {
 .scenario-pill ul {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + var(--spacing-s));
   min-width: 100%;
-  max-height: calc(100vh - 120px);
+  /* Clear of the settings gear above, by a wide gap, and of the pills below. */
+  max-height: calc(
+    100vh - (var(--spacing-l) + var(--sizes-settings-menu-gear) + var(--spacing-2xl)) -
+      (var(--spacing-l) + var(--sizes-controls-key) + 2 * var(--spacing-2xs) + var(--spacing-s))
+  );
   overflow-y: auto;
   box-sizing: border-box;
   margin: 0;
-  padding: 6px;
-  border-radius: 12px;
-  background: rgba(11, 16, 32, 0.85);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: var(--spacing-s);
+  border-radius: var(--corners-menu);
+  background: var(--controls-surface);
+  box-shadow: var(--controls-shadow);
   list-style: none;
   white-space: nowrap;
 }
@@ -1130,9 +883,9 @@ body {
 .scenario-pill button {
   display: block;
   width: 100%;
-  padding: 6px 10px;
+  padding: var(--spacing-s) var(--spacing-m);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--corners-menu-item);
   background: none;
   color: inherit;
   font: inherit;
@@ -1141,69 +894,70 @@ body {
 }
 
 .scenario-pill button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--hover);
 }
 
 .scenario-pill button[aria-current='true'] {
-  font-weight: 600;
+  font-family: var(--fonts-scenario-pill-family);
+  font-weight: var(--fonts-scenario-pill-weight);
 }
 
 .scenario-pill button[aria-current='true']::before {
   content: '✓ ';
 }
 
-/* The media keys: Pause, Play and Fast-forward in the scenario pill's navy. The lit key, white, is the speed. */
+/* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 21px;
-  background: rgba(11, 16, 32, 0.85);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  gap: var(--spacing-2xs);
+  padding: var(--spacing-2xs);
+  border-radius: var(--corners-control);
+  background: var(--controls-surface);
+  color: var(--text-main);
+  box-shadow: var(--controls-shadow);
 }
 
 .speed-keys button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: var(--sizes-controls-key);
+  height: var(--sizes-controls-key);
   padding: 0;
   border: none;
-  border-radius: 17px;
+  border-radius: var(--corners-control);
   background: none;
   color: inherit;
-  opacity: 0.6;
+  opacity: var(--controls-off-opacity);
   cursor: pointer;
   transition: width 0.15s ease;
 }
 
 .speed-keys button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--hover);
   opacity: 1;
 }
 
 .speed-keys button[aria-pressed='true'],
 .speed-keys button[aria-pressed='true']:hover {
-  background: #ffffff;
-  color: #0b1020;
+  background: var(--controls-on-fill);
+  color: var(--controls-on-text);
   opacity: 1;
 }
 
 .speed-keys svg {
-  width: 14px;
-  height: 14px;
+  width: var(--sizes-controls-icon);
+  height: var(--sizes-controls-icon);
   fill: currentColor;
 }
 
 /* At Faster, Fast-forward widens for its third triangle. */
 .speed-keys .speed-keys__fast-forward--faster {
-  width: 42px;
+  width: calc(var(--sizes-controls-key) + var(--spacing-m));
 }
 
 .speed-keys .speed-keys__wide-icon {
-  width: 20px;
+  width: calc(var(--sizes-controls-icon) + var(--spacing-s));
 }
 
 .speed-keys button:disabled {
@@ -1214,36 +968,38 @@ body {
    clock at the left (local runs only). */
 .bottom-stack {
   position: absolute;
-  right: 12px;
-  bottom: 32px;
-  left: 12px;
+  right: var(--spacing-l);
+  bottom: var(--spacing-3xl);
+  left: var(--spacing-l);
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-m);
   pointer-events: none;
 }
 
 .bottom-stack--scenario {
-  bottom: 12px;
+  bottom: var(--spacing-l);
 }
 
 .no-pins {
   margin: 0;
-  padding: 10px 16px;
-  border-radius: 8px;
-  background: rgba(11, 16, 32, 0.85);
-  color: #ffffff;
+  padding: var(--spacing-m) var(--spacing-xl);
+  border-radius: var(--corners-message);
+  background: var(--controls-surface);
+  color: var(--text-main);
 }
 
 .scenario-clock {
-  padding: 8px 14px;
-  border-radius: 18px;
-  background: rgba(11, 16, 32, 0.85);
-  color: #ffffff;
-  font-size: 14px;
+  padding: var(--spacing-m) var(--spacing-l);
+  border-radius: var(--corners-control);
+  background: var(--controls-surface);
+  color: var(--text-main);
+  font-family: var(--fonts-scenario-clock-family);
+  font-size: var(--text-sizes-m);
+  font-weight: var(--fonts-scenario-clock-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--controls-shadow);
 }

@@ -8,27 +8,12 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl'
 import type { Game } from '../games/game'
+import type { GlobeFont } from '../theme/globeFonts'
+import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
 import { degreesApart } from './geo'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
-
-/**
- * Free map fonts, Open Sans among them (ADR-0006); OpenFreeMap, the base style's own font source,
- * only has Noto Sans. Every text on the globe, pin cluster counts included, must use one of mapFonts,
- * which this source has: for a font it lacks, it answers with a web page rather than an error, and
- * the text falls back to a browser font.
- */
-export const glyphsUrl = 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf'
-
-/** The map's fonts, by the name the font source knows each by, and its CSS weight for measuring text the same. */
-export const mapFonts = {
-  regular: { name: 'Open Sans Regular', weight: 400 },
-  semibold: { name: 'Open Sans Semibold', weight: 600 },
-  bold: { name: 'Open Sans Bold', weight: 700 },
-}
-type MapFont = (typeof mapFonts)[keyof typeof mapFonts]
-const cssFamily = '"Open Sans", sans-serif'
 
 // Name layers of the base style.
 const stateNames = 'label_state'
@@ -44,23 +29,23 @@ const droppedNames = new Set([...townNames, 'label_other'])
 const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
 
 /**
- * The base style's place names in the globe's look: warm cream names on a dark outline. Major cities
+ * The base style's place names in the theme's colours, outlines and fonts, by kind of place. Major cities
  * are named, and also the place where each game is, however small, in layers of their own that are
  * placed before every other name. Goes after the globe's lines, the game cities' names last.
  */
-export function placeNameLayers(base: StyleSpecification): LayerSpecification[] {
+export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSpecification[] {
   if (!base.layers.some((l) => l.id === stateNames)) {
     // Fails loudly if the base style renames it, rather than silently losing state names.
     throw new Error(`The base map style has no layer "${stateNames}"`)
   }
   const names = base.layers
     .filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles.sourceLayer && !droppedNames.has(l.id))
-    .map((l) => placeName(l))
+    .map((l) => placeName(l, theme))
     .map((l) => (cityNames.has(l.id) ? exceptGameCities(majorCitiesOnly(cityNamePlacement(l))) : l))
   // Last, so they're placed first: every other name gives way to them.
   const gameCityNames = base.layers
     .filter((l) => cityNames.has(l.id) || townNames.has(l.id))
-    .map((l) => gameCityName(cityNamePlacement(placeName(l))))
+    .map((l) => gameCityName(cityNamePlacement(placeName(l, theme))))
   return [...names, ...gameCityNames]
 }
 
@@ -72,8 +57,6 @@ export function firstPlaceNameLayer(style: StyleSpecification): string | undefin
   return style.layers.find((l) => l.type === 'symbol' && l['source-layer'] === placeTiles.sourceLayer)?.id
 }
 
-// Place names, "warm night": cream on a dark outline, in Open Sans.
-const darkOutline = '#050b16'
 const zoomBase = 1.2
 
 const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number> => [
@@ -83,71 +66,44 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
   ...stops,
 ]
 
-interface NameStyle {
-  font: MapFont
-  /** Text size in pixels, as zoom, size stops (see zoomed). */
-  sizes: readonly number[]
-  color: string
-  /** Spaced capitals, with this much tracking in ems. */
-  capitals?: number
-  outline: { width: number; blur: number }
+/** The kinds of place the globe names, each with its own look in the theme. */
+type PlaceKind = keyof Theme['placeNames']
+
+/**
+ * States and countries in capitals; city names as they are. Their colours, outlines, fonts, sizes and
+ * letter spacing come from the theme.
+ */
+const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
+
+/** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
+const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.placeNames[kind].size).flat()
+
+function placeKind(layerId: string): PlaceKind {
+  if (layerId === 'label_city_capital') return 'capital'
+  if (layerId === stateNames) return 'state'
+  if (layerId.startsWith('label_country')) return 'country'
+  return 'city'
 }
 
-/** Cities brightest; capitals a touch bolder; states muted gold capitals that sit back; countries spaced capitals. */
-const nameStyles = {
-  city: {
-    font: mapFonts.semibold,
-    sizes: [4, 12, 7, 14, 11, 18],
-    color: '#f1e6cc',
-    outline: { width: 2, blur: 0.5 },
-  },
-  capital: {
-    font: mapFonts.bold,
-    sizes: [4, 12.5, 7, 15, 11, 19],
-    color: '#fff4dc',
-    outline: { width: 2, blur: 0.5 },
-  },
-  state: {
-    font: mapFonts.regular,
-    sizes: [3, 9, 8, 13],
-    color: '#9a8a62',
-    capitals: 0.25,
-    outline: { width: 1.2, blur: 0 },
-  },
-  country: {
-    font: mapFonts.bold,
-    sizes: [1, 9, 4, 16],
-    color: '#d8c9a4',
-    capitals: 0.12,
-    outline: { width: 2, blur: 0.5 },
-  },
-} satisfies Record<string, NameStyle>
-
-function nameStyle(layerId: string): NameStyle {
-  if (layerId === 'label_city_capital') return nameStyles.capital
-  if (layerId === stateNames) return nameStyles.state
-  if (layerId.startsWith('label_country')) return nameStyles.country
-  return nameStyles.city
-}
-
-/** A place name in the globe's look (see nameStyles). */
-function placeName(layer: LayerSpecification): LayerSpecification {
-  const style = nameStyle(layer.id)
+/** A place name in the theme's look for its kind of place, in capitals or not (see capitals). */
+function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
+  const kind = placeKind(layer.id)
+  const look = theme.placeNames[kind]
   const named = {
     ...layer,
     layout: {
       ...(layer.type === 'symbol' ? layer.layout : {}),
-      'text-font': [style.font.name],
-      'text-size': zoomed(...style.sizes),
-      'text-transform': style.capitals === undefined ? 'none' : 'uppercase',
-      'text-letter-spacing': style.capitals ?? 0,
+      'text-font': [look.font.name],
+      'text-size': zoomed(...sizeStops(kind, theme)),
+      'text-transform': capitals.has(kind) ? 'uppercase' : 'none',
+      'text-letter-spacing': look.letterSpacing,
     },
     paint: {
       ...(layer.type === 'symbol' ? layer.paint : {}),
-      'text-color': style.color,
-      'text-halo-color': darkOutline,
-      'text-halo-width': style.outline.width,
-      'text-halo-blur': style.outline.blur,
+      'text-color': look.color,
+      'text-halo-color': look.outline.color,
+      'text-halo-width': look.outline.width,
+      'text-halo-blur': look.outline.blur,
     },
   } as LayerSpecification
   // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;
@@ -246,22 +202,31 @@ export interface CityNameLook {
   offset: number
   /** The widest a line gets before the name wraps, in pixels. */
   maxWidth: number
+  /** How far apart its letters are spaced, in ems. */
+  letterSpacing: number
+  /** How far score cards keep clear of its letters, in pixels. */
+  clearance: number
 }
 
 /**
  * How a city's name looks at a zoom level: a capital's or another city's, worked out from the same
- * styles the map draws it with (see nameStyles).
+ * theme the map draws it with.
  */
-export function cityNameLook(zoom: number, capital: boolean): CityNameLook {
-  const style = capital ? nameStyles.capital : nameStyles.city
-  const size = atZoom(style.sizes, zoom)
+export function cityNameLook(zoom: number, capital: boolean, theme: Theme): CityNameLook {
+  const kind = capital ? 'capital' : 'city'
+  const size = atZoom(sizeStops(kind, theme), zoom)
   return {
-    font: `${style.font.weight} ${size}px ${cssFamily}`,
+    font: cssFont(theme.placeNames[kind].font, size),
     size,
     offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
     maxWidth: cityNameMaxWidth * size,
+    letterSpacing: theme.placeNames[kind].letterSpacing,
+    clearance: theme.sizes.card.nameClearance,
   }
 }
+/** A globe font as a CSS font at this size, for measuring text in it on the page. */
+const cssFont = ({ family, weight, style }: GlobeFont, size: number) => `${style} ${weight} ${size}px "${family}", sans-serif`
+
 // The base style wraps city names wider than this many ems.
 const cityNameMaxWidth = 8
 
@@ -293,7 +258,7 @@ export interface PlaceNames {
  * Keeps the place names on a map up to date: names the games' places as their tiles load, and shows
  * state names only while all of them fit (see showStateNamesWhenAllFit).
  */
-export function addPlaceNames(map: MapLibreMap): PlaceNames {
+export function addPlaceNames(map: MapLibreMap, theme: Theme): PlaceNames {
   let games: readonly Game[] = []
   let cities: City[] = []
   // True when the games or the map's loaded places have changed since the cities were found.
@@ -343,7 +308,7 @@ export function addPlaceNames(map: MapLibreMap): PlaceNames {
       return cities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
         .map((city) =>
-          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital), measureText),
+          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme), measureText),
         )
     },
     remove() {
@@ -358,12 +323,13 @@ export function addPlaceNames(map: MapLibreMap): PlaceNames {
 let measuring: CanvasRenderingContext2D | null | undefined
 
 /**
- * A line's width in a font, in pixels. The map writes Open Sans from its own glyphs, which the page
- * doesn't have; the browser's fallback sans-serif measures a little wider, which errs on the side of room.
+ * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
+ * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
+ * wider than Open Sans, which errs on the side of room.
  */
-function measureText(text: string, font: string): number {
+function measureText(text: string, font: string, size: number): number {
   measuring ??= document.createElement('canvas').getContext('2d')
-  if (!measuring) return text.length * fallbackLetterWidth * parseFloat(font.split(' ')[1])
+  if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = font
   return measuring.measureText(text).width
 }

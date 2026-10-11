@@ -4,7 +4,7 @@ import type {
   GeoJSONSourceSpecification,
   SymbolLayerSpecification,
 } from 'maplibre-gl'
-import { mapFonts } from './placeNames'
+import { clusterCountFont } from './placeNames'
 import { byStatus, pinClusterStatusCounts, groupFill, groupGlowOpacity, groupOutline, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, pinLayout } from './zoomLevels'
 
@@ -60,7 +60,7 @@ export const pinClusterLayers: [CircleLayerSpecification, CircleLayerSpecificati
     filter: ['has', 'point_count'],
     layout: {
       'text-field': ['get', 'point_count_abbreviated'],
-      'text-font': [mapFonts.bold.name],
+      'text-font': [clusterCountFont],
       'text-size': 11,
       'text-allow-overlap': true,
     },

@@ -1,15 +1,18 @@
 import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { Theme } from '../theme/theme'
 import { radians } from './geo'
 
 /**
- * A soft, even blue halo around the globe. MapLibre's own atmosphere is lit from one side and its
- * colour can't be set, so this draws a circle the size of the globe behind the map canvas and gives
- * it a blue glow. Returns a function that removes it.
+ * A soft, even halo around the globe in the theme's colours: an inner glow close to its edge and a
+ * wider, fainter outer one. MapLibre's own atmosphere is lit from one side and its colour can't be
+ * set, so this draws a circle the size of the globe, in the globe's surface colour, behind the map
+ * canvas and gives it the glow. Returns a function that removes it.
  */
-export function addGlobeGlow(map: MapLibreMap): () => void {
+export function addGlobeGlow(map: MapLibreMap, { globe }: Theme): () => void {
   const container = map.getContainer()
   const glow = document.createElement('div')
   glow.className = 'globe-glow'
+  glow.style.background = globe.surface
   // Before the canvas, so the globe draws over it and only the halo shows.
   container.insertBefore(glow, container.firstChild)
 
@@ -25,7 +28,7 @@ export function addGlobeGlow(map: MapLibreMap): () => void {
       height: `${2 * radius}px`,
       left: `${centre.x - radius}px`,
       top: `${centre.y - radius}px`,
-      boxShadow: `0 0 ${blur}px ${spread}px rgb(110 168 255 / 0.55), 0 0 ${outerBlur}px ${outerSpread}px rgb(60 120 255 / 0.25)`,
+      boxShadow: `0 0 ${blur}px ${spread}px ${globe.halo.inner}, 0 0 ${outerBlur}px ${outerSpread}px ${globe.halo.outer}`,
     })
   }
   map.on('move', place)

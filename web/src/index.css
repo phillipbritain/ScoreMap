@@ -36,11 +36,10 @@ body {
   background-size: 240px 240px;
 }
 
-/* The globe-sized circle behind the map that carries the atmosphere's halo (see globe/globeGlow.ts). */
+/* The globe-sized circle behind the map that carries the halo, coloured from the theme (see globe/globeGlow.ts). */
 .globe-glow {
   position: absolute;
   border-radius: 50%;
-  background: #0b1526;
   pointer-events: none;
 }
 

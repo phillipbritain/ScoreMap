@@ -4,6 +4,7 @@ import type { Camera } from './camera'
 import type { CardStyle } from './cardStyle'
 import { GlobeMap } from './globeMap'
 import { baseStyleUrl, globeStyle } from './globeStyle'
+import { builtInTheme } from '../theme/builtInTheme'
 
 interface GlobeProps {
   games: readonly Game[]
@@ -44,7 +45,8 @@ export function Globe({
   useEffect(() => {
     if (!container.current) return
     const instance = new GlobeMap(container.current, {
-      style: { url: baseStyleUrl, transform: globeStyle },
+      style: { url: baseStyleUrl, transform: (base) => globeStyle(base, builtInTheme) },
+      theme: builtInTheme,
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
       onCameraMove: (camera) => latest.current.onCameraMove(camera),

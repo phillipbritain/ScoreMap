@@ -32,6 +32,8 @@ The code reads only the resolved theme, never the JSON:
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+
 ## The palette
 
 Each palette colour has a `base`, a `#rrggbb` colour, and optional hand-set `steps`:
@@ -142,7 +144,7 @@ The dark theme gives every job a step but the four shadows, which are `transpare
 
 A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map and only six to eight colours can be told apart on one, so it's kept to stand for a game's league later, when several leagues are shown at once. Until then the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled.
 
-- **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS).
+- **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.

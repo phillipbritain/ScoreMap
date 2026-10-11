@@ -191,7 +191,7 @@ function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
     layout: {
       ...layout,
       // Below the city's dot by preference, clear of its own game's score card above the venue; if
-      // another card covers that spot, the name moves to another side (see pinLayers' cardFootprint).
+      // another card covers that spot, the name moves to another side (see cardLayoutLayers' cardFootprint).
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
       // Far enough from the dot (in ems) to clear a game's pin on it: a round small pin zoomed out,
       // a score card's pointer zoomed in.
@@ -207,7 +207,7 @@ const cityNameOffset = { small: 1.2, card: 1 }
 /**
  * The global state listing the places named for their games (see gameCities), by their features'
  * ids: cities, towns or villages. Their names always show, below their dots, and nothing else is
- * written over them; score cards and trails are laid out around them.
+ * written over them: score cards are laid out around them, and trails pass beneath them.
  */
 export const gameCitiesState = 'gameCities'
 const isGameCity: ExpressionSpecification = ['in', ['id'], ['global-state', gameCitiesState]]

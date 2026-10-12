@@ -1,11 +1,11 @@
 import type { FeatureCollection } from 'geojson'
-import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
 
 declare global {
   interface Window {
     /**
      * In dev runs, the globe's map and whether every game is on screen and still (see
-     * src/globe/layoutTrace.ts); a base from before the second has only the map.
+     * src/globe/layoutTrace.ts); a base from before #112 has only the map.
      */
     scoremap?: { map: MapLibreMap; ready?: () => boolean }
   }
@@ -19,13 +19,10 @@ export interface Camera {
 
 /** What the looks-same check asks of the page, one step at a time. */
 export type PageStep =
-  /** Waits for the games to arrive and the map to settle, then gives how many games there are. */
+  /** Waits for the page to say it's ready, then gives how many games there are. */
   | { step: 'games' }
-  /**
-   * Waits for the globe and its `games`, hides what can't be repeated, turns the camera to the view
-   * and waits for it to settle.
-   */
-  | { step: 'show'; games: number; camera: Camera }
+  /** Hides what can't be repeated, turns the camera to the view and waits for the page to say it's ready. */
+  | { step: 'show'; camera: Camera }
   /** Stops every animation, and keeps them stopped. */
   | { step: 'freeze' }
 
@@ -35,6 +32,8 @@ export type PageAnswer =
   | { frozen: true }
   /** Still waiting, for what's named, after as long as one step may take: run the step again. */
   | { waiting: string }
+  /** The page can't say when it's ready (`window.scoremap.ready()`): it's from before #112. */
+  | { tooOld: true }
 
 /**
  * Runs a step in a dev run's page (sent there as its source text, so it's self-contained), through
@@ -47,61 +46,36 @@ export type PageAnswer =
 export async function pageStep(step: PageStep): Promise<PageAnswer> {
   const end = Date.now() + 20_000
   class Waiting extends Error {}
-  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
   const frames = async (count: number) => {
     for (let i = 0; i < count; i++) await new Promise((resolve) => requestAnimationFrame(resolve))
   }
   const until = async (ready: () => boolean | Promise<boolean>, what: string) => {
     while (!(await ready())) {
       if (Date.now() > end) throw new Waiting(what)
-      await sleep(100)
+      await new Promise<void>((resolve) => setTimeout(resolve, 100))
     }
   }
 
   try {
     await until(() => !!window.scoremap?.map, 'the globe (window.scoremap): is this a dev run?')
-    const map = window.scoremap!.map
-    const pinCount = async () => {
-      const source = map.getSource('pins') as { getData?: () => Promise<FeatureCollection> } | undefined
-      return (await source?.getData?.())?.features.length ?? 0
-    }
-    const ready = window.scoremap!.ready
+    const { map, ready } = window.scoremap!
+    if (!ready) return { tooOld: true }
     const settle = async () => {
       await document.fonts.ready
-      if (ready) {
-        // Once the map has drawn the frame the last change asked for, the page says when every game
-        // is on screen and still (see GlobeMap.settled).
-        await frames(2)
-        await until(ready, 'the globe to settle (window.scoremap.ready())')
-        return
-      }
-      // A base from before the page could say: wait for the map, and long enough for the score
-      // cards to settle (they're laid out each frame).
-      await until(() => map.loaded() && map.areTilesLoaded() && !map.isMoving(), 'the map to load')
-      await frames(60)
-      let idle = false
-      map.once('idle', () => (idle = true))
-      map.triggerRepaint()
-      await until(() => idle, 'the map to settle')
-      await frames(2)
+      await until(ready, 'the globe to settle (window.scoremap.ready())')
+    }
+    /** Turns the camera, and waits for the map to draw the turn (until then the page still says it's ready) and settle. */
+    const turn = async (camera: Camera) => {
+      const drawn = new Promise((resolve) => map.once('render', resolve))
+      map.jumpTo(camera)
+      await drawn
+      await settle()
     }
 
     if (step.step === 'games') {
-      if (ready) {
-        await settle()
-        return { games: await pinCount() }
-      }
-      // Without the page to say, the games have all come once their count holds for a while (they
-      // come a league at a time). None at all has to hold longer, since the first take a moment.
-      let count = -1
-      let heldSince = Date.now()
-      await until(async () => {
-        const now = await pinCount()
-        if (now !== count) [count, heldSince] = [now, Date.now()]
-        return Date.now() - heldSince > (count ? 3000 : 15_000)
-      }, 'the games')
       await settle()
-      return { games: count }
+      const pins = (await map.getSource<GeoJSONSource>('pins')!.getData()) as FeatureCollection
+      return { games: pins.features.length }
     }
 
     if (step.step === 'show') {
@@ -111,17 +85,12 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
         style.textContent = 'img { visibility: hidden !important; }'
         document.head.append(style)
       }
-      if (ready) await settle()
-      // A base from before the pins source was named so can't be counted; give it time instead.
-      if (map.getSource('pins')) await until(async () => (await pinCount()) === step.games, `${step.games} games`)
-      else await sleep(5000)
+      await settle()
       // Score cards are laid out from where they were the frame before, and the games may have come
       // in any order. Zoomed out to small pins, no cards show, so back at the view they're laid out
       // afresh, all at once.
-      map.jumpTo({ center: step.camera.center, zoom: 2 })
-      await settle()
-      map.jumpTo(step.camera)
-      await settle()
+      await turn({ center: step.camera.center, zoom: 2 })
+      await turn(step.camera)
       return { shown: true }
     }
 

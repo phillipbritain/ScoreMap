@@ -63,8 +63,11 @@ export interface GlobeMapOptions {
   onSelect: (gameId: string) => void
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
-  /** Called each time the stage moves on (see stage): to drawing, then to ready, once each. */
-  onStage?: (stage: LoadingStage) => void
+  /**
+   * Called each time the stage moves on (see stage): to drawing, then to ready, once each. Until
+   * ready, the globe takes no keyboard input (the loading screen's dim takes the pointer's and touch).
+   */
+  onStage: (stage: LoadingStage) => void
 }
 
 /**
@@ -109,7 +112,7 @@ export class GlobeMap {
   constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
-    this.onStage = onStage ?? (() => {})
+    this.onStage = onStage
     const map = new MapLibreMap({
       container,
       center: [startCamera.longitude, startCamera.latitude],
@@ -124,6 +127,8 @@ export class GlobeMap {
       // A double click while turning the globe is more often a slip than a wish to zoom in.
       doubleClickZoom: false,
     })
+    // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
+    map.keyboard.disable()
     this.map = map
     this.theme = theme
     traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
@@ -233,8 +238,8 @@ export class GlobeMap {
    * says whether it's still right now.
    */
   stage(): LoadingStage {
-    this.noteReady()
-    return this.stageNow()
+    if (this.wasReady) return 'ready'
+    return this.hasGames ? 'drawing' : 'waitingForGames'
   }
 
   /**
@@ -296,21 +301,21 @@ export class GlobeMap {
     this.noteReady()
   }
 
-  private stageNow(): LoadingStage {
-    if (this.wasReady) return 'ready'
-    return this.hasGames ? 'drawing' : 'waitingForGames'
-  }
-
-  /** Becomes ready the first time it has settled with games: checked as the map goes idle, and when asked. */
+  /**
+   * Becomes ready the first time it has settled with games: checked as the map goes idle, after the
+   * score cards' sync on it. Only then can it become settled: every other change to the cards comes
+   * with a frame drawn or the globe unsettled.
+   */
   private noteReady(): void {
     if (this.wasReady || !this.hasGames || !this.settled()) return
     this.wasReady = true
+    this.map.keyboard.enable()
     this.tellStage()
   }
 
   /** Tells onStage the stage, if it has moved on since it was last told. */
   private tellStage(): void {
-    const stage = this.stageNow()
+    const stage = this.stage()
     if (stage === this.toldStage) return
     this.toldStage = stage
     this.onStage(stage)

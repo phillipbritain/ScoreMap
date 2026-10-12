@@ -433,6 +433,45 @@ describe('score cards', () => {
   })
 })
 
+describe('settling', () => {
+  /** Each score card on the page, by game, and where it is. */
+  const cardsOnPage = () =>
+    [...container.querySelectorAll<HTMLElement>('.score-card')]
+      .map((element) => {
+        const { x, y } = element.getBoundingClientRect()
+        return `${element.dataset.gameId} at ${Math.round(x)}, ${Math.round(y)}`
+      })
+      .sort()
+
+  // Close enough together that their cards have to move aside for each other, which takes frames.
+  const crowd = ['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 }))
+
+  it('settles once the games it was shown have their score cards, each where it stays', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show(crowd)
+    expect(globe.settled()).toBe(false)
+
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    const settled = cardsOnPage()
+    expect(settled).toHaveLength(crowd.length)
+    await pause(500)
+    expect(cardsOnPage()).toEqual(settled)
+    expect(globe.settled()).toBe(true)
+  })
+
+  it('is unsettled by a change of games until the change has been shown and has settled', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show(crowd.slice(0, 2))
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    globe.show(crowd)
+    expect(globe.settled()).toBe(false)
+
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(cardsOnPage()).toHaveLength(crowd.length)
+  })
+})
+
 describe('place names', () => {
   // The test style has no glyphs, so a layer of plain squares stands in for the place names: MapLibre
   // places both the same way. Unlike the other tests, this one adds to the map itself, as GlobeMap

@@ -9,7 +9,7 @@ import { defineConfig } from 'vite'
 const server = process.env.SERVER_HTTPS || process.env.SERVER_HTTP
 
 // Tests that need a real browser, with WebGL for MapLibre (ADR-0008).
-const browserTests = 'src/**/*.browser.test.ts'
+const browserTests = '{src,scripts}/**/*.browser.test.ts'
 
 /** Turns the device's reduce motion setting on or off for the test page (see motion.browser.test.ts). */
 const reduceMotion: BrowserCommand<[reduce: boolean]> = async ({ page }, reduce) => {

@@ -6,6 +6,7 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
 import { Globe } from './globe/Globe'
+import { traceSnapshotShown } from './globe/layoutTrace'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { GamePanel } from './panel/GamePanel'
@@ -51,6 +52,10 @@ export default function App({ theme }: { theme: Theme }) {
     [setScenarioListing],
   )
   useEffect(() => store.save(viewerSettings), [viewerSettings])
+  // After the Globe's own effect has handed it the games: a child's effects run before its parent's.
+  useEffect(() => {
+    if (games) traceSnapshotShown()
+  }, [games])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   const message = noPinsMessage(games, visible)

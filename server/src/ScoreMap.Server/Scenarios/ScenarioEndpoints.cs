@@ -16,8 +16,11 @@ public static class ScenarioEndpoints
         string Running, IReadOnlyList<string> Scenarios, string Speed, IReadOnlyList<Speed> Speeds, bool CanControlPlay,
         ClockAnchor Clock);
 
-    /// <summary>A switch: a scenario's name, or "real" for real games.</summary>
-    public sealed record ScenarioSwitch(string? Name);
+    /// <summary>
+    /// A switch: a scenario's name, or "real" for real games, and the speed to start it at (the speed it
+    /// has, if left out): "Paused" starts it standing still at its start.
+    /// </summary>
+    public sealed record ScenarioSwitch(string? Name, string? Speed = null);
 
     /// <summary>A change of speed: the new speed's name.</summary>
     public sealed record SpeedChange(string? Speed);
@@ -50,9 +53,12 @@ public static class ScenarioEndpoints
                 return Results.NotFound("Scenarios are only available when ScoreMap runs locally");
             if (request.Name is not { } name || !switcher.Has(name))
                 return Results.NotFound($"There is no scenario \"{request.Name}\"");
+            var speed = request.Speed is null ? null : Speed.Named(request.Speed);
+            if (request.Speed is not null && speed is null)
+                return Results.BadRequest($"There is no speed \"{request.Speed}\"; it must be one of {Speed.List}");
             try
             {
-                await poller.StartAfreshAsync(() => switcher.SwitchTo(name), cancellationToken);
+                await poller.StartAfreshAsync(() => switcher.SwitchTo(name, speed), cancellationToken);
             }
             catch (ScenarioFileException e)
             {

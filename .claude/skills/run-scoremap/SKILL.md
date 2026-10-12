@@ -1,6 +1,6 @@
 ---
 name: run-scoremap
-description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, picking a scenario, or taking screenshots of it.
+description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, checking a change looks the same, picking a scenario, or taking screenshots of it.
 ---
 
 # Run ScoreMap
@@ -75,6 +75,21 @@ With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scor
 6. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
+
+## Check that a change looks the same
+
+To check that a change leaves the look as it was (or changes only what it should), compare the working tree with a base in one command, rather than screenshotting and diffing by hand. In `web/`, from PowerShell or Git Bash:
+
+```sh
+npm run looks-same -- main          # <base ref> [--out <folder>]
+```
+
+It takes a minute or two. It starts this clone's run (stopping it again at the end, even on failure), pauses `worldwide` at its start, and serves the base from a checkout of its own beside it, so the working tree and its uncommitted changes are never touched. Then it reports:
+
+- **A screenshot** of the middle of the United States (about twenty score cards, every status), the same or differing, with a diff image (differing pixels red). Logos and photos are hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
+- **Computed CSS**: every declaration whose computed value differs, hover and pressed states, keyframes and media queries included, so a 1 px change a screenshot can't show still shows.
+
+It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails. The screenshot can't show a game panel, phone width or a crowd of cards; check those by eye where a change touches them.
 
 ## Saved data
 

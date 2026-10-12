@@ -121,13 +121,14 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public bool Has(string name) => IsRealGames(name) || Scenarios.Contains(name);
 
     /// <summary>
-    /// Switches to the scenario <paramref name="name"/>, started afresh, or to real games, and returns the
-    /// <see cref="Polling"/> for it. A bad scenario file throws a <see cref="ScenarioFileException"/> and
-    /// leaves the running source as it was.
+    /// Switches to the scenario <paramref name="name"/>, started afresh, at <paramref name="speed"/> if
+    /// given (else at the speed it had), or to real games, and returns the <see cref="Polling"/> for it.
+    /// Started Paused, its games stand still as they start. A bad scenario file throws a
+    /// <see cref="ScenarioFileException"/> and leaves the running source, and the speed, as they were.
     /// </summary>
-    public PollingOptions SwitchTo(string name)
+    public PollingOptions SwitchTo(string name, Speed? speed = null)
     {
-        _running = Start(name);
+        _running = Start(name, speed);
         return Polling;
     }
 
@@ -150,12 +151,16 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
         _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
 
-    private Source Start(string name)
+    private Source Start(string name, Speed? speed = null)
     {
         if (IsRealGames(name))
+        {
+            if (speed is not null)
+                _clock.Restart(speed);
             return new Source(RealGames, _realGames, CanControlPlay: false);
+        }
         var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues, _teams);
-        _clock.Restart();
+        _clock.Restart(speed);
         return new Source(name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime);
     }
 

@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { writeFile } from 'node:fs/promises'
 import { playwright } from '@vitest/browser-playwright'
 import type { BrowserCommand } from 'vitest/node'
 import react from '@vitejs/plugin-react'
@@ -14,6 +15,14 @@ const browserTests = '{src,scripts}/**/*.browser.test.ts'
 /** Turns the device's reduce motion setting on or off for the test page (see motion.browser.test.ts). */
 const reduceMotion: BrowserCommand<[reduce: boolean]> = async ({ page }, reduce) => {
   await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' })
+}
+
+/** Where CARD_TRACE says to save a captured card trace, if anywhere (see captureCardTrace.browser.test.ts). */
+const cardTracePath: BrowserCommand<[]> = async () => process.env.CARD_TRACE || null
+
+/** Saves a captured card trace to CARD_TRACE, which may be outside the project, as a scratch file should be. */
+const saveCardTrace: BrowserCommand<[json: string]> = async (_, json) => {
+  await writeFile(process.env.CARD_TRACE!, json)
 }
 
 // https://vite.dev/config/
@@ -45,7 +54,7 @@ export default defineConfig({
             // Room for the tests' 800 × 600 globe.
             viewport: { width: 1024, height: 768 },
             instances: [{ browser: 'chromium' }],
-            commands: { reduceMotion },
+            commands: { reduceMotion, cardTracePath, saveCardTrace },
           },
         },
       },

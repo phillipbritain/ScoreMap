@@ -1,15 +1,25 @@
 # Replaying the card layout
 
-For score cards that jump about, or land in the wrong place, on a running globe. The layout (`web/src/globe/cardLayout.ts`) is a pure function of each frame's cards, scene and the frame before, so a pan captured from a dev run replays the same way every time, in seconds: a **tight** loop to measure a fix against, rather than eyeballing the globe.
+For score cards that jump about, or land in the wrong place, on a running globe. The layout (`web/src/globe/cardLayout.ts`) is a pure function of each frame's cards, scene and the frame before, so a captured pan replays the same way every time, in seconds: a **tight** loop to measure a fix against, rather than eyeballing the globe.
 
-1. **Start a dev run** (`aspire start`, see the run-scoremap skill), and take its web URL from `aspire describe`. In dev runs only, `window.scoremap` holds the map and the last 300 frames the cards were laid out from (`web/src/globe/layoutTrace.ts`).
-2. **Capture a pan.** Set the camera and pan at the top of `web/scripts/panGlobe.js` to the place showing the problem, then run it in the page:
+Capture a pan one of two ways, then replay it.
+
+1. **Capture a scene** you set up yourself, like the browser tests' crowds: a few seconds, with no dev run. Edit the scene and pan at the top of `web/scripts/captureCardTrace.browser.test.ts` (they start as the crowd from #122), then run it, naming where to save the trace:
+
+   ```sh
+   cd web
+   CARD_TRACE="$CLAUDE_JOB_DIR/tmp/trace.json" npx vitest run --project browser scripts/captureCardTrace.browser.test.ts
+   ```
+
+2. **Or capture a real drag** from a dev run, for games as the app shows them. Start a dev run (`aspire start`, see the run-scoremap skill), and take its web URL from `aspire describe`. In dev runs only, `window.scoremap` holds the map and the last 300 frames the cards were laid out from (`web/src/globe/layoutTrace.ts`). `web/scripts/panGlobe.js` pans it and returns those frames; set its camera and pan in `window.panGlobe` in the same eval:
 
    ```sh
    agent-browser set viewport 1280 800
    agent-browser open "$web"   # the run's web URL
-   agent-browser eval "$(cat web/scripts/panGlobe.js)" > "$CLAUDE_JOB_DIR/tmp/trace.json"
+   agent-browser eval "window.panGlobe = { camera: { center: [8, 51.5], zoom: 5 }, pan: [{ by: [-4, 0], frames: 250 }] }; $(cat web/scripts/panGlobe.js)" > "$CLAUDE_JOB_DIR/tmp/trace.json"
    ```
+
+   Keep traces and scratch scripts in `$CLAUDE_JOB_DIR/tmp`: a scratch `*.test.ts` under `web/` joins `npm test`.
 
 3. **Replay it** through the layout:
 

@@ -14,30 +14,17 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { runCommand } from '../command.ts'
-import { pageCheck, type PageCheck, type PageCheckAnswer } from './pageCheck.ts'
+import { agentBrowser, TimedOut } from '../agentBrowser.ts'
+import { pageCheck, type PageCheck } from './pageCheck.ts'
 
 const usage = 'Usage: npm run page -- reset <web URL> | ready | settled | read <selector> [property] | screenshot <file>'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
 
-// agent-browser is an npm script on Windows (agent-browser.cmd), which only the shell can start.
-const browser = (args: string[], input?: string) => runCommand('agent-browser', args, { cwd: process.cwd(), scratch, input, shell: true })
-
-function evaluate(script: string): unknown {
-  return JSON.parse(browser(['eval', '--stdin', '--json'], script)).data.result
-}
+const page = agentBrowser({ cwd: process.cwd(), scratch })
+const { browser, evaluate } = page
+const inPage = (check: PageCheck) => page.inPage(pageCheck, check)
 
 class Failed extends Error {}
-
-/** Runs a check in the page, again while it's waiting (up to two minutes), giving back its answer. */
-function inPage(check: PageCheck): Exclude<PageCheckAnswer, { waiting: string }> {
-  const end = Date.now() + 120_000
-  for (;;) {
-    const answer = evaluate(`(${pageCheck.toString()})(${JSON.stringify(check)})`) as PageCheckAnswer
-    if (!('waiting' in answer)) return answer
-    if (Date.now() > end) throw new Failed(`Timed out waiting for ${answer.waiting}`)
-  }
-}
 
 function main([command, ...args]: string[]): void {
   if (command === 'reset' && args.length === 1) {
@@ -74,7 +61,7 @@ try {
   main(process.argv.slice(2))
 } catch (error) {
   console.error((error as Error).message)
-  process.exitCode = error instanceof Failed ? 1 : 2
+  process.exitCode = error instanceof Failed || error instanceof TimedOut ? 1 : 2
 } finally {
   // The browser daemon, if this started it, may still hold the output files.
   try {

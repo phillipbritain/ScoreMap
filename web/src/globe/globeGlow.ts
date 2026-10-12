@@ -58,7 +58,9 @@ function onScreenRadius(map: MapLibreMap): number {
     const b = bearing * radians
     for (let degrees = 30; degrees <= 120; degrees += 1) {
       const d = degrees * radians
-      const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b))
+      // Kept within ±1: on a pole, rounding can land it just past, where asin gives NaN.
+      const sinLat2 = Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b)
+      const lat2 = Math.asin(Math.min(1, Math.max(-1, sinLat2)))
       const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2))
       const point = map.project([lng2 / radians, lat2 / radians])
       radius = Math.max(radius, Math.hypot(point.x - origin.x, point.y - origin.y))

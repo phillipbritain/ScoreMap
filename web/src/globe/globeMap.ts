@@ -203,6 +203,15 @@ export class GlobeMap {
     return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle && this.cards.steady()
   }
 
+  /**
+   * Whether the score cards have stopped moving: the last frame laid them out just as the frame
+   * before did. Unlike settled, this holds while the camera moves, so tests can tell the frame a
+   * pan stops on still had the cards settling.
+   */
+  cardsSteady(): boolean {
+    return this.cards.steady()
+  }
+
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     this.destroyed = true

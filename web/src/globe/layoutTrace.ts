@@ -21,11 +21,6 @@ interface LayoutTrace {
   stage: () => LoadingStage
   /** Whether the globe is still right now: wait for it after turning the camera (see GlobeMap.settled). */
   settled: () => boolean
-  /**
-   * Whether every game is on screen and still: the server's first snapshot of games has reached the
-   * globe, and the globe has settled. The scripts' old check, kept until they move to stage and settled.
-   */
-  ready: () => boolean
 }
 
 /** What the globe tells scripts of how far it has loaded. */
@@ -46,8 +41,7 @@ const framesKept = 300
 /** Puts the map on `window.scoremap`, with how far the globe has loaded, in dev runs. */
 export function traceLayouts(map: MapLibreMap, { stage, settled }: GlobeLoading): void {
   if (!import.meta.env.DEV) return
-  const ready = () => stage() !== 'waitingForGames' && settled()
-  window.scoremap = { map, frames: [], stage, settled, ready }
+  window.scoremap = { map, frames: [], stage, settled }
 }
 
 /** Keeps a frame the score cards were laid out from, in dev runs. */

@@ -405,8 +405,9 @@ describe('layOutCards', () => {
         }
         previous = layout.cards
       }
-      // No jumpier than before #88 (21), which made 130 here; the layout now makes 5.
-      expect(jumps).toBeLessThanOrEqual(20)
+      // No jumpier than the layout is now. Before #88 (21) it made 130 here, and after it 5; a change
+      // that makes fewer should lower this, so the next one can't make more unseen.
+      expect(jumps).toBeLessThanOrEqual(5)
     })
   })
 

@@ -377,9 +377,10 @@ const settings = {
   /**
    * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
    * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,
-   * and the rest of the ring it turns around).
+   * and the rest of the ring it turns around), and the text of the message under the spinner when
+   * loading is slow.
    */
-  loadingScreen: { dim: { color, opacity }, spinner: { color, track: color } },
+  loadingScreen: { dim: { color, opacity }, spinner: { color, track: color }, message: color },
   /**
    * A score card: its fill and text, a Disrupted game's, the drop shadow a starting game's card
    * settles with, and how strongly its header is tinted with its status's colour (0 is not at all, 1

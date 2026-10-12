@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["scripts/looksSame"]
+  "include": ["scripts/looksSame", "scripts/page", "scripts/command.ts"]
 }

@@ -8,7 +8,8 @@ import { baseStyleUrl } from './globeStyle'
 interface GlobeProps {
   /** The look of the globe and everything on it. Only read when the globe is created. */
   theme: Theme
-  games: readonly Game[]
+  /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
+  games: readonly Game[] | null
   /**
    * The game whose panel is open: its pin is highlighted, and the globe lifts it clear of the panel
    * if the panel would cover it.

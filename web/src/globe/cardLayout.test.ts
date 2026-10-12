@@ -351,6 +351,28 @@ describe('layOutCards', () => {
       expect(anyOverlap(placed(pair, [blocking]))).toBe(false)
     })
 
+    it('pushes cards along as the globe turns the last of a row off screen, rather than send it across the crowd', () => {
+      // Four games at one venue, in a strip of screen with no room above or below their cards: a sits
+      // over the venue, the rest in a row to its right, out to the screen's edge.
+      const strip: CardScene = { width: 1000, height: 140, pointer }
+      const row = (x: number) => ['a', 'b', 'c', 'd'].map((gameId) => card(gameId, x, 64))
+      const was = { a: { dx: 0, dy: 0 }, b: { dx: 120, dy: 0 }, c: { dx: 230, dy: 0 }, d: { dx: 340, dy: 0 } }
+      const before = row(600)
+      expect(boxesOf(before, layOutCards(before, strip, lastTime(was))).map(({ x, width }) => x + width / 2)).toEqual([653, 773, 883, 993])
+
+      // The globe turns the row 15 px right: d would reach 8 px off screen, and every spot near it is taken.
+      const now = row(615)
+      const layout = layOutCards(now, strip, lastTime(was))
+      const shifts = shiftsOf(layout)
+      for (const [gameId, shift] of Object.entries(was)) {
+        const moved = shifts.get(gameId)!
+        expect(Math.hypot(moved.dx - shift.dx, moved.dy - shift.dy), gameId).toBeLessThanOrEqual(cardJump)
+      }
+      const after = boxesOf(now, layout)
+      expect(anyOverlap(after)).toBe(false)
+      for (const c of after) expect(c.x + c.width / 2, c.gameId).toBeLessThanOrEqual(strip.width)
+    })
+
     it('keeps cards anchored as the globe pans across a crowd of venues', () => {
       // Forty venues packed in a spiral, panned across the screen 4 px a frame and spreading a little
       // as they go, as a globe's venues shift against each other while it turns.

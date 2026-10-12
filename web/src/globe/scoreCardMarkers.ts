@@ -184,6 +184,15 @@ export class ScoreCardMarkers {
   }
 
   /**
+   * Whether the cards have given up settling: they're still moving, but have asked for frames for as
+   * long as any layout takes to settle (see settleNextFrame), so they ask for no more. The map then
+   * goes idle with them unsettled, until something else draws a frame.
+   */
+  gaveUpSettling(): boolean {
+    return this.changed && this.changingSyncs > maxSettlingFrames
+  }
+
+  /**
    * Each frame's layout starts from the last, and the map draws a frame only when something on it
    * changes: so while the cards are still moving, ask for another frame, until they settle (for a
    * second at most, should a layout never settle).

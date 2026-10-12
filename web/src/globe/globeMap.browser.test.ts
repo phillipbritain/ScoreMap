@@ -15,6 +15,26 @@ import { isBehindGlobe } from './horizon'
 import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
+/**
+ * When true, every layout of the score cards nudges each card a fraction of a pixel the other way from
+ * the last: the cards never steady, though the layout the map draws (to the pixel) stays the same.
+ */
+const layout = vi.hoisted(() => ({ keepsShifting: false }))
+vi.mock('./cardLayout', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./cardLayout')>()
+  let nudge = 0.25
+  return {
+    ...original,
+    layOutCards: (...args: Parameters<typeof original.layOutCards>) => {
+      const laidOut = original.layOutCards(...args)
+      if (!layout.keepsShifting) return laidOut
+      nudge = -nudge
+      for (const placement of laidOut.cards.values()) placement.offset = { ...placement.offset, dx: placement.offset.dx + nudge }
+      return laidOut
+    },
+  }
+})
+
 applyTheme(document.documentElement, builtInTheme)
 
 /**
@@ -62,6 +82,7 @@ const opened: GlobeMap[] = []
 let container: HTMLElement
 
 afterEach(() => {
+  layout.keepsShifting = false
   for (const globe of opened.splice(0)) globe.destroy()
   container?.remove()
 })
@@ -490,6 +511,17 @@ describe('loading stage', () => {
     expect(globe.stage()).toBe('drawing')
 
     await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+  })
+
+  it('becomes ready once its score cards stop trying to settle, though their layout never steadies', async () => {
+    layout.keepsShifting = true
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(container.querySelectorAll('.score-card')).toHaveLength(2)
+    expect(globe.cardsSteady()).toBe(false)
+    expect(globe.settled()).toBe(false)
   })
 
   it('takes no keyboard input until it is ready, then takes it', async () => {

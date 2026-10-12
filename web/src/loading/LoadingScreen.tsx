@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { LoadingStage } from '../globe/globeMap'
 import { loadingScreenView } from './loadingScreenView'
 
+/** How often the loading screen looks again at how long it's been in a stage. */
+const tickMs = 250
+
 interface LoadingScreenProps {
   /** How far the globe's initial load has got (see GlobeMap.stage). */
   stage: LoadingStage
@@ -10,7 +13,8 @@ interface LoadingScreenProps {
 }
 
 /**
- * The loading screen (see GLOSSARY.md): the globe dimmed, with a ring spinner, until it's ready. Then
+ * The loading screen (see GLOSSARY.md): the globe dimmed, with a ring spinner, until it's ready, and a
+ * message under the spinner if a stage takes too long. Then
  * the dim fades away (at once with reduce motion: the CSS has no fade then) and the loading screen is
  * gone for good. What it shows comes from loadingScreenView; this only draws it.
  */
@@ -18,7 +22,18 @@ export function LoadingScreen({ stage, onGone }: LoadingScreenProps) {
   const element = useRef<HTMLDivElement>(null)
   const [gone, setGone] = useState(false)
   const latestOnGone = useRef(onGone)
-  const leaving = !loadingScreenView(stage).shown
+  // How long it's been in this stage: it starts again from nothing whenever the stage changes.
+  const [elapsed, setElapsed] = useState({ stage, ms: 0 })
+  const msInStage = elapsed.stage === stage ? elapsed.ms : 0
+  const view = loadingScreenView(stage, msInStage)
+  const leaving = !view.shown
+
+  useEffect(() => {
+    if (stage === 'ready') return
+    const since = performance.now()
+    const timer = setInterval(() => setElapsed({ stage, ms: performance.now() - since }), tickMs)
+    return () => clearInterval(timer)
+  }, [stage])
 
   useEffect(() => {
     latestOnGone.current = onGone
@@ -50,6 +65,7 @@ export function LoadingScreen({ stage, onGone }: LoadingScreenProps) {
       aria-busy={!leaving}
     >
       <div className="loading-screen__spinner" />
+      {view.message && <p className="loading-screen__message">{view.message}</p>}
     </div>
   )
 }

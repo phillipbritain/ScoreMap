@@ -7,7 +7,7 @@
 // Exits 0 when nothing differs (a screenshot it can't make repeatable is said so, not counted), 1
 // when something does, 2 when the check itself fails.
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
-import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync } from 'node:fs'
+import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -140,6 +140,8 @@ async function serveBase(base: BaseCheckout, server: string): Promise<{ url: str
     env,
     stdio: ['ignore', log, log],
   })
+  // Vite has the log now; letting go of it here lets the scratch folder be removed.
+  closeSync(log)
   const url = `http://localhost:${port}`
   await until(async () => (await fetch(url)).ok, 'the base to be served')
   return { url, vite }
@@ -276,10 +278,15 @@ async function main(args: string[]): Promise<number> {
   }
 }
 
+// The scratch folder's logs (each command's output, the base's Vite) are only worth keeping when the
+// check itself fails.
 main(process.argv.slice(2)).then(
-  (code) => process.exit(code),
+  (code) => {
+    rmSync(scratch, { recursive: true, force: true })
+    process.exit(code)
+  },
   (error: Error) => {
-    console.error(`\nThe check failed: ${error.message}`)
+    console.error(`\nThe check failed: ${error.message}\nLogs of what it ran are in ${scratch}`)
     process.exit(2)
   },
 )

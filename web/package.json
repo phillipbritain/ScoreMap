@@ -7,6 +7,7 @@
     "dev": "vite --strictPort",
     "build": "tsc -b && vite build",
     "lint": "oxlint --deny-warnings",
+    "looks-same": "node scripts/looksSame/looksSame.ts",
     "preview": "vite preview",
     "test": "vitest run --project unit",
     "test:browser": "vitest run --project browser",

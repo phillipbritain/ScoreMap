@@ -1,7 +1,7 @@
 import { execFileSync, execSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
+import { existsSync, lstatSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 
 /** The base, checked out on its own beside the working tree. */
 export interface BaseCheckout {
@@ -25,7 +25,7 @@ export interface CheckOutOptions {
  * else installed afresh.
  */
 export function checkOutBase(repo: string, ref: string, { install = npmCi }: CheckOutOptions = {}): BaseCheckout {
-  const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: 'pipe' }).trim()
+  const git = gitIn(repo)
   let commit: string
   try {
     commit = git('rev-parse', '--verify', '--quiet', `${ref}^{commit}`)
@@ -33,29 +33,17 @@ export function checkOutBase(repo: string, ref: string, { install = npmCi }: Che
     throw new Error(`The base "${ref}" isn't a commit in this repo`)
   }
 
-  const dir = mkdtempSync(join(tmpdir(), 'scoremap-base-'))
+  const dir = mkdtempSync(join(tmpdir(), checkoutPrefix))
   git('worktree', 'add', '--detach', '--quiet', dir, commit)
   const web = join(dir, 'web')
   const packages = join(web, 'node_modules')
   const ours = join(repo, 'web')
-  let linked = false
-  const remove = () => {
-    // The link goes first, on its own, so nothing removing the checkout can reach into the working
-    // tree's packages through it.
-    if (linked) unlinkSync(packages)
-    try {
-      git('worktree', 'remove', '--force', dir)
-    } finally {
-      rmSync(dir, { recursive: true, force: true })
-      git('worktree', 'prune')
-    }
-  }
+  const remove = () => removeCheckout(repo, dir)
 
   try {
     if (existsSync(join(ours, 'node_modules')) && sameFile(join(ours, 'package-lock.json'), join(web, 'package-lock.json'))) {
       // A junction on Windows, which needs no special rights.
       symlinkSync(join(ours, 'node_modules'), packages, 'junction')
-      linked = true
     } else {
       install(web)
     }
@@ -64,6 +52,46 @@ export function checkOutBase(repo: string, ref: string, { install = npmCi }: Che
     throw error
   }
   return { commit, web, remove }
+}
+
+/**
+ * Removes the base checkouts of the repo at `repo` that a check killed outright (its terminal
+ * closed, its task stopped) left behind, and gives the folders removed. A check removes its own as
+ * it ends, so any still registered with git are left over.
+ */
+export function removeLeftBaseCheckouts(repo: string): string[] {
+  const git = gitIn(repo)
+  // Forgets checkouts whose folders are gone already.
+  git('worktree', 'prune')
+  const temp = resolve(tmpdir()).toLowerCase()
+  const left = git('worktree', 'list', '--porcelain')
+    .split('\n')
+    .filter((line) => line.startsWith('worktree '))
+    .map((line) => resolve(line.slice('worktree '.length)))
+    .filter((dir) => dirname(dir).toLowerCase() === temp && basename(dir).startsWith(checkoutPrefix))
+  for (const dir of left) removeCheckout(repo, dir)
+  return left
+}
+
+const checkoutPrefix = 'scoremap-base-'
+
+const gitIn =
+  (repo: string) =>
+  (...args: string[]) =>
+    execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: 'pipe' }).trim()
+
+function removeCheckout(repo: string, dir: string): void {
+  const git = gitIn(repo)
+  // A link to the working tree's packages goes first, on its own, so nothing removing the checkout
+  // can reach into them through it.
+  const packages = join(dir, 'web', 'node_modules')
+  if (lstatSync(packages, { throwIfNoEntry: false })?.isSymbolicLink()) unlinkSync(packages)
+  try {
+    git('worktree', 'remove', '--force', dir)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+    git('worktree', 'prune')
+  }
 }
 
 /** Whether two text files say the same, whatever line endings git gave each. */

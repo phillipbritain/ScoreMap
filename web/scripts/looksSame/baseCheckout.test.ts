@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { checkOutBase } from './baseCheckout.ts'
+import { checkOutBase, removeLeftBaseCheckouts } from './baseCheckout.ts'
 
 let repo: string
 let base: string
@@ -30,7 +30,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  git('worktree', 'prune')
+  // Any a failing test left.
+  removeLeftBaseCheckouts(repo)
   rmSync(repo, { recursive: true, force: true })
 })
 
@@ -78,5 +79,34 @@ describe('checkOutBase', () => {
 
   it("says so when the base isn't a commit", () => {
     expect(() => checkOutBase(repo, 'no-such-branch', { install: () => {} })).toThrow(/no-such-branch/)
+  })
+})
+
+describe('removeLeftBaseCheckouts', () => {
+  it("removes the base checkouts a killed check left, leaving the working tree's packages be", () => {
+    // Killed before it could remove them: one sharing the working tree's packages, one with its own.
+    const linked = checkOutBase(repo, 'main', { install: () => {} })
+    write('web/package-lock.json', '{ "lockfileVersion": 3, "packages": {} }\n')
+    const installed = checkOutBase(repo, 'main', { install: (web) => mkdirSync(join(web, 'node_modules/vite'), { recursive: true }) })
+
+    const removed = removeLeftBaseCheckouts(repo)
+
+    expect(removed.sort()).toEqual([linked.web, installed.web].map((web) => join(web, '..')).sort())
+    expect(existsSync(linked.web)).toBe(false)
+    expect(existsSync(installed.web)).toBe(false)
+    expect(readFileSync(join(repo, 'web/node_modules/vite/package.json'), 'utf8')).toContain('vite')
+    expect(git('worktree', 'list').trim().split('\n')).toHaveLength(1)
+  })
+
+  it('leaves worktrees that are not base checkouts be', () => {
+    const other = mkdtempSync(join(tmpdir(), 'looks-same-other-'))
+    rmSync(other, { recursive: true })
+    git('worktree', 'add', '--detach', '--quiet', other, 'main')
+    try {
+      expect(removeLeftBaseCheckouts(repo)).toEqual([])
+      expect(existsSync(join(other, 'web/src/index.css'))).toBe(true)
+    } finally {
+      git('worktree', 'remove', '--force', other)
+    }
   })
 })

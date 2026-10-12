@@ -1,21 +1,6 @@
 import type { FeatureCollection } from 'geojson'
-import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
-
-declare global {
-  interface Window {
-    /**
-     * In dev runs, the globe's map, how far it has loaded and whether it's still (see
-     * src/globe/layoutTrace.ts). A base from before #128 says only whether every game is on screen
-     * and still (`ready`), and one from before #112 has only the map.
-     */
-    scoremap?: {
-      map: MapLibreMap
-      stage?: () => 'waitingForGames' | 'drawing' | 'ready'
-      settled?: () => boolean
-      ready?: () => boolean
-    }
-  }
-}
+import type { GeoJSONSource } from 'maplibre-gl'
+import '../scoremapWindow.ts'
 
 /** A camera as MapLibre's `jumpTo` takes it. */
 export interface Camera {

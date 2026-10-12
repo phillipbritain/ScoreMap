@@ -128,7 +128,7 @@ export class GlobeMap {
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
     map.on('render', this.syncCards)
     // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
-    map.on('render', this.busy)
+    map.on('render', this.drew)
     map.on('idle', this.goneIdle)
     map.on('click', pinClusterLayer, this.zoomToPinCluster)
     map.on('click', smallPinLayer, this.selectPin)
@@ -254,7 +254,7 @@ export class GlobeMap {
 
   private readonly syncCards = () => this.cards.sync()
 
-  private readonly busy = () => (this.idle = false)
+  private readonly drew = () => (this.idle = false)
   private readonly goneIdle = () => (this.idle = true)
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */

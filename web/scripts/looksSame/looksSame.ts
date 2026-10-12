@@ -145,8 +145,8 @@ async function serveBase(base: BaseCheckout, server: string): Promise<{ url: str
   return { url, vite }
 }
 
-// The one view screenshotted: crowded's games in London, a crowd of score cards in every status,
-// moved aside with trails, and card clusters.
+// The one view screenshotted: crowded's games in London, Live and Upcoming score cards packed close
+// enough that some move aside, with trails back to their venues.
 const scenario = 'crowded'
 const camera: Camera = { center: [-0.1276, 51.5072], zoom: 9 }
 const viewport: [number, number] = [1280, 800]

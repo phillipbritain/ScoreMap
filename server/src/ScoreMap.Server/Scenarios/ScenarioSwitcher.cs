@@ -59,7 +59,8 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         _realTime = realTime;
         _clock = new ScenarioClock(realTime, speed);
         BoardClock = new BoardTime(this);
-        _running = Start(startWith);
+        // At the speed the clock was just made with.
+        _running = Start(startWith, speed: null);
     }
 
     /// <summary>The running scenario's name, or <see cref="RealGames"/>.</summary>
@@ -151,7 +152,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
         _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
 
-    private Source Start(string name, Speed? speed = null)
+    private Source Start(string name, Speed? speed)
     {
         if (IsRealGames(name))
         {

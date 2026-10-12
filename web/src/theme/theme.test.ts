@@ -464,6 +464,10 @@ describe('the built-in theme', () => {
     expect(isStepOf('navy', '100', '900')(loadingScreen.spinner.track), stepOf(loadingScreen.spinner.track)).toBe(true)
   })
 
+  it('writes the loading screen’s slow-load message in off-white, as the spinner', () => {
+    expect(theme.loadingScreen.message).toBe('#f4f5f7')
+  })
+
   it('gives panels and controls no glow or drop shadow', () => {
     const { panel, settingsMenu, controls } = theme
     for (const shadow of [panel.shadow, settingsMenu.shadow, settingsMenu.gearOutline, controls.shadow]) expect(shadow.color).toBe('transparent')

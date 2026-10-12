@@ -22,11 +22,11 @@ export type PageCheckAnswer =
  * Runs a check in a dev run's page (sent there as its source text, so it's self-contained), through
  * `window.scoremap` and the DOM, without the caller writing a script of their own.
  *
- * agent-browser gives up on a script after 30 seconds, so a check waits at most `ms` (20 seconds)
+ * agent-browser gives up on a script after 30 seconds, so a check waits at most `waitMs` (20 seconds)
  * and then says what it's waiting for; it can be run again, picking up where it was.
  */
-export async function pageCheck(check: PageCheck, ms = 20_000): Promise<PageCheckAnswer> {
-  const end = Date.now() + ms
+export async function pageCheck(check: PageCheck, waitMs = 20_000): Promise<PageCheckAnswer> {
+  const end = Date.now() + waitMs
   const until = async (done: () => boolean, what: string) => {
     while (!done()) {
       if (Date.now() > end) return what

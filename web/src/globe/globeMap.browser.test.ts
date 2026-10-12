@@ -7,12 +7,12 @@ import type { Game, GameStatus } from '../games/game'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
+import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
-import type { ScoreCardMarkers } from './scoreCardMarkers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
 applyTheme(document.documentElement, builtInTheme)
@@ -474,60 +474,64 @@ describe('settling', () => {
 
   it('keeps cards from jumping as they settle after the globe stops panning across a crowd', async () => {
     const { globe, map } = openGlobe({ longitude: 14, latitude: 0, zoom: cardZoom + 1 })
-    const cards = (globe as unknown as { cards: ScoreCardMarkers }).cards
     // Fifty venues packed in a spiral, far too close for their cards to sit over them.
     const statuses: GameStatus[] = ['Live', 'Upcoming', 'Final']
-    globe.show(
+    const games = new Map(
       Array.from({ length: 50 }, (_, i) => {
         const r = 0.15 * Math.sqrt(i)
         const angle = i * 2.39996
         const id = `G${String(i).padStart(2, '0')}`
-        return game(id, { longitude: r * Math.cos(angle), latitude: r * Math.sin(angle), status: statuses[i % 3] })
+        return [id, game(id, { longitude: r * Math.cos(angle), latitude: r * Math.sin(angle), status: statuses[i % 3] })]
       }),
     )
+    globe.show([...games.values()])
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
 
-    // Where each card on the page is, by game, leaving out those in a card cluster.
-    const placedCards = () =>
+    // Where each card is from its venue, by game, leaving out those in a card cluster.
+    type Frame = Map<string, { dx: number; dy: number }>
+    const cardsFromVenues = (): Frame =>
       new Map(
         [...container.querySelectorAll<HTMLElement>('.score-card')]
           .filter((element) => !element.parentElement!.hasAttribute('data-in-card-cluster'))
           .map((element) => {
+            const gameId = element.dataset.gameId!
             const { x, y } = element.getBoundingClientRect()
-            return [element.dataset.gameId!, { x, y }] as const
+            const venue = venueOnPage(map, games.get(gameId)!)
+            return [gameId, { dx: x - venue.x, dy: y - venue.y }]
           }),
       )
+    // The games whose cards jumped from one frame to the next: the same cap as cardLayout's "keeps
+    // cards anchored as the globe pans across a crowd of venues".
+    const jumped = (was: Frame, now: Frame) =>
+      [...now].flatMap(([gameId, { dx, dy }]) => {
+        const before = was.get(gameId)
+        return before && Math.hypot(dx - before.dx, dy - before.dy) > cardJump ? [gameId] : []
+      })
 
-    // Panned a step a frame, as a drag pans it (about 6 px), bringing the crowd in from the left
-    // edge to near the middle, and on until a frame moves cards: so they're still settling as it stops.
+    // Panned a step a frame, as a drag pans it (about 6 px), bringing the crowd in from the left edge
+    // to near the middle, and on until a frame changes the layout: so the cards are still settling as
+    // it stops.
     let longitude = 14
-    while (longitude > 3 || (cards.steady() && longitude > -3)) {
+    while (longitude > 3 || (globe.cardsSteady() && longitude > -3)) {
       longitude -= 0.25
       map.jumpTo({ center: [longitude, 0] })
       await new Promise((resolve) => map.once('render', resolve))
     }
-    expect(cards.steady(), 'the pan stopped as the cards settled').toBe(false)
+    expect(globe.cardsSteady(), 'the pan stopped as the cards settled').toBe(false)
     // The cards in each frame from the camera stopping until they settle.
-    const frames = [placedCards()]
-    const record = () => frames.push(placedCards())
+    const frames = [cardsFromVenues()]
+    const record = () => frames.push(cardsFromVenues())
     map.on('render', record)
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     map.off('render', record)
 
-    // With the camera still, a card moving more than 24 px in a frame is a jump a viewer sees, as in
-    // cardLayout's "keeps cards anchored as the globe pans across a crowd of venues".
-    const jumps = frames.slice(1).flatMap((now, i) =>
-      [...now].flatMap(([gameId, { x, y }]) => {
-        const was = frames[i].get(gameId)
-        return was && Math.hypot(x - was.x, y - was.y) > 24 ? [`${gameId} in frame ${i + 1}`] : []
-      }),
-    )
+    const jumps = frames.slice(1).flatMap((now, i) => jumped(frames[i], now).map((gameId) => `${gameId} in frame ${i + 1}`))
     expect(jumps).toEqual([])
 
-    const settled = placedCards()
+    const settled = cardsFromVenues()
     expect(settled.size).toBeGreaterThan(0)
     await pause(500)
-    expect(placedCards()).toEqual(settled)
+    expect(cardsFromVenues()).toEqual(settled)
   })
 })
 

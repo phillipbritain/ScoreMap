@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["scripts/looksSame", "scripts/page", "scripts/command.ts", "scripts/agentBrowser.ts"]
+  "include": ["scripts/looksSame", "scripts/page", "scripts/command.ts", "scripts/agentBrowser.ts", "scripts/scoremapWindow.ts"]
 }

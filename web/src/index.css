@@ -977,6 +977,88 @@ body {
   cursor: not-allowed;
 }
 
+/* The loading screen, over the globe until ScoreMap is ready (see loading/LoadingScreen.tsx): the
+   globe dimmed in the theme's dim, which still lets it show through, and a ring spinner in the middle.
+   It takes the globe's pointer and touch input, so the camera can't move while loading; the settings
+   menu and the bottom stack come after it on the page, so they lie over it and stay usable. */
+.loading-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(
+    in srgb,
+    var(--loading-screen-dim-color) calc(var(--loading-screen-dim-opacity) * 100%),
+    transparent
+  );
+  touch-action: none;
+}
+
+/* Ready: the dim fades away, letting the globe have its input at once. */
+.loading-screen--leaving {
+  pointer-events: none;
+  animation: loading-screen-leave 0.4s ease-out forwards;
+}
+
+.loading-screen__spinner {
+  box-sizing: border-box;
+  width: var(--sizes-loading-screen-spinner);
+  height: var(--sizes-loading-screen-spinner);
+  border: var(--strokes-thick) solid var(--loading-screen-spinner-track);
+  border-top-color: var(--loading-screen-spinner-color);
+  border-radius: 50%;
+  animation: loading-screen-spin 0.9s linear infinite;
+}
+
+/* Under the spinner when a stage is slow, saying what's holding loading up. Placed from the middle, so
+   the spinner stays where it is when the message comes and goes. */
+.loading-screen__message {
+  position: absolute;
+  top: calc(50% + var(--sizes-loading-screen-spinner) / 2 + var(--spacing-l));
+  right: var(--spacing-l);
+  left: var(--spacing-l);
+  margin: 0;
+  color: var(--loading-screen-message);
+  font-size: var(--text-sizes-m);
+  text-align: center;
+}
+
+@keyframes loading-screen-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes loading-screen-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* The spinner without the turning: it fades in and out in place, for reduce motion. */
+@keyframes loading-screen-spinner-still {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* With reduce motion the spinner fades in place instead of turning, and the dim goes at once. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen__spinner {
+    animation: loading-screen-spinner-still 1.6s ease-in-out infinite;
+  }
+
+  .loading-screen--leaving {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 /* Along the bottom of the globe: the no-pins message centred, and below it the scenario pills and
    clock at the left (local runs only). */
 .bottom-stack {

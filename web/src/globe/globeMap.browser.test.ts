@@ -434,6 +434,75 @@ describe('score cards', () => {
   })
 })
 
+describe('loading stage', () => {
+  it('is waiting for games until it is given some, however long it has been open', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    expect(globe.stage()).toBe('waitingForGames')
+
+    await new Promise((resolve) => map.once('idle', resolve))
+    globe.show(null)
+    await pause(300)
+    expect(globe.stage()).toBe('waitingForGames')
+  })
+
+  it('is drawing the games it is given until it settles, then ready', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const crowd = ['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 }))
+    globe.show(crowd)
+    expect(globe.stage()).toBe('drawing')
+
+    // The stage in each frame, beside whether the globe had settled by then.
+    const frames: string[] = []
+    const record = () => frames.push(`${globe.settled() ? 'settled' : 'unsettled'}, ${globe.stage()}`)
+    map.on('render', record)
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    map.off('render', record)
+
+    expect(frames).toContain('unsettled, drawing')
+    expect(frames).not.toContain('unsettled, ready')
+    expect(frames).not.toContain('settled, drawing')
+    expect(globe.settled()).toBe(true)
+    expect(container.querySelectorAll('.score-card')).toHaveLength(crowd.length)
+  })
+
+  it('becomes ready given no games at all', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    globe.show([])
+    expect(globe.stage()).toBe('drawing')
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+  })
+
+  it('stays ready through a pan, a change of games and a fresh snapshot', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+
+    // Its stage in every frame from here on.
+    const stages = new Set<string>()
+    const record = () => stages.add(globe.stage())
+    map.on('render', record)
+
+    map.easeTo({ center: [10, 5], duration: 300 })
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    globe.show([game('A', { home: 7 }), game('B', { longitude: 0.3 }), game('C', { longitude: 10, latitude: 5 })])
+    expect(globe.settled()).toBe(false)
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    // A fresh snapshot, as after a reconnection: no games yet, then the games again.
+    globe.show(null)
+    globe.show([game('D', { longitude: 10, latitude: 5 })])
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    map.off('render', record)
+    expect([...stages]).toEqual(['ready'])
+  })
+})
+
 describe('settling', () => {
   /** Each score card on the page, by game, and where it is. */
   const cardsOnPage = () =>
@@ -452,7 +521,8 @@ describe('settling', () => {
     globe.show(crowd)
     expect(globe.settled()).toBe(false)
 
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(globe.settled()).toBe(true)
     const settled = cardsOnPage()
     expect(settled).toHaveLength(crowd.length)
     await pause(500)
@@ -463,7 +533,7 @@ describe('settling', () => {
   it('is unsettled by a change of games until the change has been shown and has settled', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show(crowd.slice(0, 2))
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
 
     globe.show(crowd)
     expect(globe.settled()).toBe(false)
@@ -485,7 +555,7 @@ describe('settling', () => {
       }),
     )
     globe.show([...games.values()])
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
 
     // Where each card is from its venue, by game, leaving out those in a card cluster.
     type Frame = Map<string, { dx: number; dy: number }>

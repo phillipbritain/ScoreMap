@@ -54,6 +54,13 @@ function inPage(step: PageStep): PageAnswer {
   const end = Date.now() + 120_000
   for (;;) {
     const answer = evaluate(`(${pageStep.toString()})(${JSON.stringify(step)})`) as PageAnswer
+    if ('tooOld' in answer) {
+      // The working tree's page can always say, so this is the base's.
+      throw new Error(
+        "The base is too old to compare: its page can't say when every game is on screen and still " +
+          '(window.scoremap.ready(), added in #112). Compare against a base that includes #112.',
+      )
+    }
     if (!('waiting' in answer)) return answer
     if (Date.now() > end) throw new Error(`Timed out waiting for ${answer.waiting}`)
   }
@@ -154,9 +161,9 @@ const camera: Camera = { center: [-0.1276, 51.5072], zoom: 9 }
 const viewport: [number, number] = [1280, 800]
 
 /** Screenshots the view of the app at `url` from a fresh page, and gives the page's CSS too if asked. */
-function capture(url: string, games: number, file: string, { css = false } = {}): CssDeclaration[] | undefined {
+function capture(url: string, file: string, { css = false } = {}): CssDeclaration[] | undefined {
   openApp(url, viewport, camera)
-  inPage({ step: 'show', games, camera })
+  inPage({ step: 'show', camera })
   inPage({ step: 'freeze' })
   browser('screenshot', file)
   return css ? (evaluate(`(${readCssDeclarations.toString()})()`) as CssDeclaration[]) : undefined
@@ -172,14 +179,14 @@ type Verdict =
  * again: if either's two differ, the globe drew differently from one page to the next, and the
  * difference between them can't be told from that; if neither's do, the change made it.
  */
-function compareSides(games: number, urls: { work: string; base: string }, out: string): Verdict {
+function compareSides(urls: { work: string; base: string }, out: string): Verdict {
   const shot = (side: 'work' | 'base', n: number) => join(out, `${side}${n}.png`)
   const first = compareScreenshots(readFileSync(shot('base', 1)), readFileSync(shot('work', 1)))
   if (!first.differing) return { result: 'same' }
 
   console.log('The screenshots differ; taking them again to rule out the globe drawing differently…')
   for (const side of ['work', 'base'] as const) {
-    capture(urls[side], games, shot(side, 2))
+    capture(urls[side], shot(side, 2))
     const again = compareScreenshots(readFileSync(shot(side, 1)), readFileSync(shot(side, 2)))
     if (again.differing) {
       const diff = join(out, `${side}-unrepeatable.png`)
@@ -260,9 +267,9 @@ async function main(args: string[]): Promise<number> {
     console.log(`Screenshotting ${games} games on ${scenario}, paused at its start…`)
 
     const urls = { work: web, base: baseUrl }
-    const workCss = capture(web, games, join(out, 'work1.png'), { css: true })!
-    const baseCss = capture(baseUrl, games, join(out, 'base1.png'), { css: true })!
-    const verdict = compareSides(games, urls, out)
+    const workCss = capture(web, join(out, 'work1.png'), { css: true })!
+    const baseCss = capture(baseUrl, join(out, 'base1.png'), { css: true })!
+    const verdict = compareSides(urls, out)
     const changes = cssChanges(baseCss, workCss)
     writeFileSync(join(out, 'css-changes.txt'), changes.map(describeChange).join('\n') + '\n')
 

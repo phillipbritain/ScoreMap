@@ -90,7 +90,7 @@ It takes about a minute. It starts this clone's run (stopping it again at the en
 - **A screenshot** of London's crowd of score cards, the same or differing, with a diff image (differing pixels red). It's taken once the page says every game is on screen and still (`window.scoremap.ready()`), with logos and photos hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
 - **Computed CSS**: every declaration whose computed value differs, hover and pressed states, keyframes and media queries included, so a 1 px change a screenshot can't show still shows.
 
-It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails. The screenshot has Live and Upcoming cards, but no Final or Disrupted ones, card cluster, game panel or phone width; check those by eye where a change touches them.
+It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails, as it does on a base without #112, whose page can't say when it's ready. The screenshot has Live and Upcoming cards, but no Final or Disrupted ones, card cluster, game panel or phone width; check those by eye where a change touches them.
 
 ## Saved data
 

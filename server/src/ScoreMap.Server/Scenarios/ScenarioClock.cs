@@ -42,11 +42,17 @@ public sealed class ScenarioClock : TimeProvider
 
     public override DateTimeOffset GetUtcNow() => Anchor.Reads;
 
-    /// <summary>Sets the clock to the real time, for a scenario starting, keeping the speed.</summary>
-    public void Restart()
+    /// <summary>
+    /// Sets the clock to the real time, for a scenario starting, running at <paramref name="speed"/> if
+    /// given, else keeping the speed.
+    /// </summary>
+    public void Restart(Speed? speed = null)
     {
         lock (_lock)
+        {
             _anchor = ClockAnchor.RealTime(_realTime);
+            _speed = speed ?? _speed;
+        }
     }
 
     /// <summary>Runs the clock at <paramref name="speed"/> from its reading now.</summary>

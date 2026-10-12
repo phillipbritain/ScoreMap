@@ -16,8 +16,11 @@ public static class ScenarioEndpoints
         string Running, IReadOnlyList<string> Scenarios, string Speed, IReadOnlyList<Speed> Speeds, bool CanControlPlay,
         ClockAnchor Clock);
 
-    /// <summary>A switch: a scenario's name, or "real" for real games.</summary>
-    public sealed record ScenarioSwitch(string? Name);
+    /// <summary>
+    /// A switch: a scenario's name, or "real" for real games, and the speed to start it at (the speed it
+    /// has, if left out): "Paused" starts it standing still at its start.
+    /// </summary>
+    public sealed record ScenarioSwitch(string? Name, string? Speed = null);
 
     /// <summary>A change of speed: the new speed's name.</summary>
     public sealed record SpeedChange(string? Speed);
@@ -50,9 +53,12 @@ public static class ScenarioEndpoints
                 return Results.NotFound("Scenarios are only available when ScoreMap runs locally");
             if (request.Name is not { } name || !switcher.Has(name))
                 return Results.NotFound($"There is no scenario \"{request.Name}\"");
+            Speed? speed = null;
+            if (request.Speed is not null && (speed = Speed.Named(request.Speed)) is null)
+                return NoSuchSpeed(request.Speed);
             try
             {
-                await poller.StartAfreshAsync(() => switcher.SwitchTo(name), cancellationToken);
+                await poller.StartAfreshAsync(() => switcher.SwitchTo(name, speed), cancellationToken);
             }
             catch (ScenarioFileException e)
             {
@@ -70,7 +76,7 @@ public static class ScenarioEndpoints
             if (services.GetService<ScenarioSwitcher>() is not { } switcher)
                 return Results.NotFound("Scenarios are only available when ScoreMap runs locally");
             if (Speed.Named(request.Speed) is not { } speed)
-                return Results.BadRequest($"There is no speed \"{request.Speed}\"; it must be one of {Speed.List}");
+                return NoSuchSpeed(request.Speed);
             try
             {
                 await poller.StartAfreshAsync(() => switcher.ChangeSpeed(speed), cancellationToken);
@@ -95,4 +101,8 @@ public static class ScenarioEndpoints
 
     private static ScenarioListing Listing(ScenarioSwitcher switcher) =>
         new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.CanControlPlay, switcher.Clock);
+
+    /// <summary>A switch's or a change of speed's refusal of a speed that isn't one of <see cref="Speed.All"/>.</summary>
+    private static IResult NoSuchSpeed(string? speed) =>
+        Results.BadRequest($"There is no speed \"{speed}\"; it must be one of {Speed.List}");
 }

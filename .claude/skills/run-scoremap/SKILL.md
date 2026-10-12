@@ -1,6 +1,6 @@
 ---
 name: run-scoremap
-description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, picking a scenario, or taking screenshots of it.
+description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, checking a change looks the same, picking a scenario, or taking screenshots of it.
 ---
 
 # Run ScoreMap
@@ -57,7 +57,7 @@ Everything happens on the scenario clock, from when the scenario starts or is sw
 To switch while running (each run's scenario and speed are its own):
 
 - **The controls** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the **media keys** set the speed: Play is Normal, Pause pauses, and Fast-forward goes to Fast and, pressed again, flips between Fast and Faster. The lit key is the speed (Fast-forward grows a third triangle at Faster), and there's no label. Picking a scenario or pressing a key changes every open tab. A speed change carries on from where the scenario is. The scenario clock shows beside them, or above them where the row is too narrow. Where the speed can't be controlled (real games, and scenarios whose games stand still: `edge-cases` and `empty`), the keys and the clock are hidden, leaving just the pill. `Shift+S` hides and shows the pill, the keys and the clock, for clean screenshots.
-- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
+- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
@@ -65,16 +65,32 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 
 With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`):
 
-1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file: `agent-browser open $web > /tmp/ab.txt 2>&1`, where `$web` is the run's web URL. Later commands can be piped.
+1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file, from Git Bash (PowerShell's `>` still reads it through a pipe, and waits the same): `agent-browser open $web > /tmp/ab.txt 2>&1`, where `$web` is the run's web URL. Later commands can be piped.
 2. **Reset to the start view.** The app saves the camera and settings to localStorage, including on `pagehide`, so clearing storage and then reloading the app writes them straight back. Clear it from a page that doesn't run the app:
    `open $web/favicon.svg`, `eval "localStorage.clear()"`, then `open $web`. localStorage is kept per URL, so a run on a new port starts without a saved camera.
    A dark, empty globe is usually a saved camera zoomed in over ocean; reset.
-3. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
-4. **Pick from the scenario pill by ref.** The globe's canvas covers the pill's list for clicks by text, so open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
-5. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
-6. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from.
+3. **Wait until it's drawn** before a screenshot or a measurement: `eval "window.scoremap.ready()"` is true once every game is on screen and still (the first games have arrived, tiles and pins are loaded, score cards have settled), and false again after any change until it settles. For screenshots to compare, start the scenario Paused too (see Scenarios).
+4. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `eval "document.querySelector('.game-panel')?.textContent"`.
+5. **Pick from the scenario pill by ref.** The globe's canvas covers the pill's list for clicks by text, so open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
+6. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
+7. **Measure with eval** where a screenshot can only suggest: element sizes (`getBoundingClientRect()`), whether an image loaded (`naturalWidth > 0`), which URL it came from. An eval gives up after 30 seconds, so wait for anything slower in a loop of short evals.
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
+
+## Check that a change looks the same
+
+To check that a change leaves the look as it was (or changes only what it should), compare the working tree with a base in one command, rather than screenshotting and diffing by hand. In `web/`, from PowerShell or Git Bash:
+
+```sh
+npm run looks-same -- main          # <base ref> [--out <folder>]
+```
+
+It takes about a minute. It starts this clone's run (stopping it again at the end, even on failure), starts `crowded` Paused, and serves the base from a checkout of its own beside it, so the working tree and its uncommitted changes are never touched. Then it reports:
+
+- **A screenshot** of London's crowd of score cards, the same or differing, with a diff image (differing pixels red). It's taken once the page says every game is on screen and still (`window.scoremap.ready()`), with logos and photos hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
+- **Computed CSS**: every declaration whose computed value differs, hover and pressed states, keyframes and media queries included, so a 1 px change a screenshot can't show still shows.
+
+It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails. The screenshot has Live and Upcoming cards, but no Final or Disrupted ones, card cluster, game panel or phone width; check those by eye where a change touches them.
 
 ## Saved data
 

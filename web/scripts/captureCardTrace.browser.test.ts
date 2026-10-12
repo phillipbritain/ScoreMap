@@ -70,7 +70,7 @@ it('captures a pan across a scene for the card layout replay', async ({ skip }) 
   const map = (globe as unknown as { map: MapLibreMap }).map
   try {
     globe.show(venues.map(game))
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
     // The frames from here on: the pan, then the cards settling once it stops.
     const { frames } = window.scoremap!
     frames.length = 0

@@ -4,10 +4,16 @@ import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl'
 declare global {
   interface Window {
     /**
-     * In dev runs, the globe's map and whether every game is on screen and still (see
-     * src/globe/layoutTrace.ts); a base from before #112 has only the map.
+     * In dev runs, the globe's map, how far it has loaded and whether it's still (see
+     * src/globe/layoutTrace.ts). A base from before #128 says only whether every game is on screen
+     * and still (`ready`), and one from before #112 has only the map.
      */
-    scoremap?: { map: MapLibreMap; ready?: () => boolean }
+    scoremap?: {
+      map: MapLibreMap
+      stage?: () => 'waitingForGames' | 'drawing' | 'ready'
+      settled?: () => boolean
+      ready?: () => boolean
+    }
   }
 }
 
@@ -19,9 +25,9 @@ export interface Camera {
 
 /** What the looks-same check asks of the page, one step at a time. */
 export type PageStep =
-  /** Waits for the page to say it's ready, then gives how many games there are. */
+  /** Waits for the globe to be ready, then gives how many games there are. */
   | { step: 'games' }
-  /** Hides what can't be repeated, turns the camera to the view and waits for the page to say it's ready. */
+  /** Hides what can't be repeated, turns the camera to the view and waits for the globe to settle. */
   | { step: 'show'; camera: Camera }
   /** Stops every animation, and keeps them stopped. */
   | { step: 'freeze' }
@@ -32,7 +38,7 @@ export type PageAnswer =
   | { frozen: true }
   /** Still waiting, for what's named, after as long as one step may take: run the step again. */
   | { waiting: string }
-  /** The page can't say when it's ready (`window.scoremap.ready()`): it's from before #112. */
+  /** The page can't say when it's ready (`stage()`, or before #128 `ready()`): it's from before #112. */
   | { tooOld: true }
 
 /**
@@ -58,24 +64,32 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
 
   try {
     await until(() => !!window.scoremap?.map, 'the globe (window.scoremap): is this a dev run?')
-    const { map, ready } = window.scoremap!
-    if (!ready) return { tooOld: true }
-    const settle = async () => {
+    const { map, stage, settled, ready } = window.scoremap!
+    // A base from before #128 says only ready(): whether every game is on screen and still, right now.
+    const checks =
+      stage && settled
+        ? { ready: { check: () => stage() === 'ready', name: 'stage() to be ready' }, still: { check: settled, name: 'settled()' } }
+        : ready && { ready: { check: ready, name: 'ready()' }, still: { check: ready, name: 'ready()' } }
+    if (!checks) return { tooOld: true }
+    /** Waits for the page's fonts, then for the globe to pass one of window.scoremap's checks. */
+    const globeTo = async (what: string, { check, name }: { check: () => boolean; name: string }) => {
       await document.fonts.ready
-      await until(ready, 'the globe to settle (window.scoremap.ready())')
+      await until(check, `the globe to ${what} (window.scoremap.${name})`)
     }
-    /** Turns the camera, and waits for the map to draw the turn (until then the page still says it's ready) and settle. */
+    /** Waits for the globe to be ready. */
+    const beReady = () => globeTo('be ready', checks.ready)
+    /** Turns the camera, and waits for the map to draw the turn (until then the globe still says it's still) and settle. */
     const turn = async (camera: Camera) => {
       let drawn = false
       map.once('render', () => (drawn = true))
       map.jumpTo(camera)
       await until(() => drawn, 'the map to draw the turn')
-      await settle()
+      await globeTo('settle', checks.still)
     }
 
     if (step.step === 'games') {
-      await settle()
-      // The page is only ready once the pins source has loaded (see GlobeMap.settled).
+      await beReady()
+      // The globe is only ready once the pins source has loaded (see GlobeMap.settled).
       const pins = (await map.getSource<GeoJSONSource>('pins')!.getData()) as FeatureCollection
       return { games: pins.features.length }
     }
@@ -87,7 +101,7 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
         style.textContent = 'img { visibility: hidden !important; }'
         document.head.append(style)
       }
-      await settle()
+      await beReady()
       // Score cards are laid out from where they were the frame before, and the games may have come
       // in any order. Zoomed out to small pins, no cards show, so back at the view they're laid out
       // afresh, all at once.

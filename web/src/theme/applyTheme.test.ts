@@ -124,11 +124,14 @@ describe('applyTheme', () => {
       // and the settings menu's eleven colours and shadows. A score card's header tint, the game
       // panel's glow of three, a speed key's opacity when off and the stars' two sizes.
       colours: 5 + 4 + 2 + 4 + 5 + 11 + 11 + 1 + 3 + 1 + 2,
+      // The loading screen's dim (a colour and an opacity), spinner (two colours) and message.
+      loadingScreen: 5,
       // Five text sizes, eight spacing steps, five radii and three strokes; the letter spacing of the
       // game panel's labels and a score card's header.
       scales: 5 + 8 + 5 + 3 + 2,
-      // The game panel's nine, a score card's five, the settings menu's five and the controls' two.
-      sizes: 9 + 5 + 5 + 2,
+      // The game panel's nine, a score card's five, the settings menu's five, the controls' two and the
+      // loading screen's spinner.
+      sizes: 9 + 5 + 5 + 2 + 1,
       // Eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a size).
       fonts: 11 * 2 + 5,
       // Six corners and the cut corner's two.

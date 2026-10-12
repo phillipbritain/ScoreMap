@@ -68,6 +68,11 @@ export class ScoreCardMarkers {
   private changed = true
   /** How many syncs in a row have changed something, to stop asking for frames that never settle. */
   private changingSyncs = 0
+  /**
+   * Whether the cards have given up settling (see gaveUpSettling): until the next change from outside
+   * (see settleAgain), they and their layout stay as the map last drew them.
+   */
+  private gaveUp = false
 
   /**
    * `theme` gives how far a card's pointer reaches below it to its venue and the colour of pulses
@@ -79,11 +84,14 @@ export class ScoreCardMarkers {
     this.theme = theme
     this.placeNames = placeNames
     this.onSelect = onSelect
+    // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
+    map.on('move', this.settleAgain)
   }
 
   /** Highlights the selected game's card, if it has one. */
   setSelected(gameId: string | null): void {
     this.selectedGameId = gameId
+    this.settleAgain()
     this.sync()
   }
 
@@ -95,6 +103,7 @@ export class ScoreCardMarkers {
 
   setGames(games: readonly Game[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
+    this.settleAgain()
     this.sync()
   }
 
@@ -163,7 +172,11 @@ export class ScoreCardMarkers {
       }
     }
 
-    if (this.layOut(keep)) changed = true
+    // Having given up settling, the cards stay as the map last drew them and their trails, so the two
+    // match, unless a card is new and has yet to be laid out.
+    const frozen = this.gaveUp && [...keep].every((gameId) => this.placed.get(gameId)!.offset)
+    if (this.gaveUp && !frozen) this.settleAgain()
+    if (!frozen && this.layOut(keep)) changed = true
 
     for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
@@ -172,7 +185,9 @@ export class ScoreCardMarkers {
       this.animating.delete(gameId)
       changed = true
     }
-    this.settleNextFrame(changed)
+    // Still unsettled, but asking for no frames: the map can go idle.
+    if (frozen) return
+    this.settleNextFrame(changed, pinsLoaded)
   }
 
   /**
@@ -184,14 +199,34 @@ export class ScoreCardMarkers {
   }
 
   /**
+   * Whether the cards have given up settling: their layout was still changing after as many frames as
+   * any layout takes to settle (see settleNextFrame). Until the next change from outside (a pan or
+   * zoom, new or changed games, or a selection), they ask for no more frames and give the map no new
+   * layout, staying just as the map last drew them and their trails, unsettled, so the map can go idle.
+   */
+  gaveUpSettling(): boolean {
+    return this.gaveUp
+  }
+
+  /** After a change from outside: a fresh layout, given to the map, and a full second to settle. */
+  private readonly settleAgain = () => {
+    this.gaveUp = false
+    this.changingSyncs = 0
+    this.layoutDrawn = ''
+  }
+
+  /**
    * Each frame's layout starts from the last, and the map draws a frame only when something on it
    * changes: so while the cards are still moving, ask for another frame, until they settle (for a
-   * second at most, should a layout never settle).
+   * second at most, should a layout never settle: then they give up, see gaveUpSettling).
    */
-  private settleNextFrame(changed: boolean): void {
+  private settleNextFrame(changed: boolean, pinsLoaded: boolean): void {
     this.changed = changed
     this.changingSyncs = changed ? this.changingSyncs + 1 : 0
-    if (changed && this.changingSyncs <= maxSettlingFrames) this.map.triggerRepaint()
+    if (!changed) return
+    if (this.changingSyncs <= maxSettlingFrames) this.map.triggerRepaint()
+    // Pins still loading aren't the layout failing to settle: they'll draw frames of their own.
+    else if (pinsLoaded) this.gaveUp = true
   }
 
   /** Where the cards placed now are. */

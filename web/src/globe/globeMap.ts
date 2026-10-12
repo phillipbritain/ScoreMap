@@ -72,7 +72,8 @@ export interface GlobeMapOptions {
 
 /**
  * How far the globe's initial load has got: waiting for the server's first snapshot of games, then
- * drawing them until it first settles, then ready (see GLOSSARY.md) for as long as the globe exists.
+ * drawing them until it first settles (or would but for score cards that have given up settling), then
+ * ready (see GLOSSARY.md) for as long as the globe exists.
  */
 export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready'
 
@@ -228,13 +229,19 @@ export class GlobeMap {
    * so tests and scripts wait on it after one. For the initial load, see stage.
    */
   settled(): boolean {
-    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle && this.cards.steady()
+    return this.stillButCards() && this.cards.steady()
+  }
+
+  /** Whether everything settled asks for holds, the score cards aside. */
+  private stillButCards(): boolean {
+    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle
   }
 
   /**
    * How far the initial load has got: waiting for games until it's first given some (see show),
-   * drawing until it first settles, then ready for good, through pans, changes of games, fresh
-   * snapshots and reconnections. Everything that waits for the globe to load reads this; settled
+   * drawing until it first settles, or would but for score cards that have given up settling (see
+   * noteReady), then ready for good, through pans, changes of games, fresh snapshots and
+   * reconnections. Everything that waits for the globe to load reads this; settled
    * says whether it's still right now.
    */
   stage(): LoadingStage {
@@ -302,12 +309,16 @@ export class GlobeMap {
   }
 
   /**
-   * Becomes ready the first time it has settled with games: checked as the map goes idle, after the
-   * score cards' sync on it. Only then can it become settled: every other change to the cards comes
-   * with a frame drawn or the globe unsettled.
+   * Becomes ready the first time it has settled with games, or would have but for score cards that
+   * have given up settling (see ScoreCardMarkers.gaveUpSettling): a layout that never steadies
+   * mustn't keep the loading screen up. Checked as the map goes idle, after the score cards' sync on
+   * it. Only then can it become settled: every other change to the cards comes with a frame drawn or
+   * the globe unsettled. Having given up, the cards ask for no frames and give the map nothing new
+   * to draw, so the map goes idle after them.
    */
   private noteReady(): void {
-    if (this.wasReady || !this.hasGames || !this.settled()) return
+    if (this.wasReady || !this.hasGames) return
+    if (!this.stillButCards() || !(this.cards.steady() || this.cards.gaveUpSettling())) return
     this.wasReady = true
     this.map.keyboard.enable()
     this.tellStage()

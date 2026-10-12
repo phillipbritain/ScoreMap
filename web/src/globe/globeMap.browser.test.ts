@@ -9,11 +9,36 @@ import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
-import { GlobeMap } from './globeMap'
+import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
+
+/**
+ * When set, every layout of the score cards nudges each card (and its trail) that many pixels the
+ * other way from the last, so the cards never steady. A fraction of a pixel leaves the layout the map
+ * draws (to the pixel) the same; a whole pixel changes it every frame.
+ */
+const layout = vi.hoisted(() => ({ shift: 0 }))
+vi.mock('./cardLayout', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./cardLayout')>()
+  let sign = 1
+  return {
+    ...original,
+    layOutCards: (...args: Parameters<typeof original.layOutCards>) => {
+      const laidOut = original.layOutCards(...args)
+      if (!layout.shift) return laidOut
+      sign = -sign
+      const nudge = sign * layout.shift
+      for (const placement of laidOut.cards.values()) {
+        placement.offset = { ...placement.offset, dx: placement.offset.dx + nudge }
+        if (placement.trail) placement.trail = { ...placement.trail, x1: placement.trail.x1 + nudge }
+      }
+      return laidOut
+    },
+  }
+})
 
 applyTheme(document.documentElement, builtInTheme)
 
@@ -62,6 +87,7 @@ const opened: GlobeMap[] = []
 let container: HTMLElement
 
 afterEach(() => {
+  layout.shift = 0
   for (const globe of opened.splice(0)) globe.destroy()
   container?.remove()
 })
@@ -73,11 +99,12 @@ function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   document.body.append(container)
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
-  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove })
+  const onStage = vi.fn<(stage: LoadingStage) => void>()
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove, onStage })
   opened.push(globe)
   // MapLibre's own map, to see what it draws; the tests drive the globe only through GlobeMap.
   const map = (globe as unknown as { map: MapLibreMap }).map
-  return { globe, map, onSelect, onCameraMove }
+  return { globe, map, onSelect, onCameraMove, onStage }
 }
 
 /**
@@ -434,6 +461,173 @@ describe('score cards', () => {
   })
 })
 
+describe('loading stage', () => {
+  it('is waiting for games until it is given some, however long it has been open', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    expect(globe.stage()).toBe('waitingForGames')
+
+    await new Promise((resolve) => map.once('idle', resolve))
+    globe.show(null)
+    await pause(300)
+    expect(globe.stage()).toBe('waitingForGames')
+  })
+
+  it('is drawing the games it is given until it settles, then ready', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const crowd = ['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 }))
+    globe.show(crowd)
+    expect(globe.stage()).toBe('drawing')
+
+    // The stage in each frame, beside whether the globe had settled by then.
+    const frames: string[] = []
+    const record = () => frames.push(`${globe.settled() ? 'settled' : 'unsettled'}, ${globe.stage()}`)
+    map.on('render', record)
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    map.off('render', record)
+
+    expect(frames).toContain('unsettled, drawing')
+    expect(frames).not.toContain('unsettled, ready')
+    expect(frames).not.toContain('settled, drawing')
+    expect(globe.settled()).toBe(true)
+    expect(container.querySelectorAll('.score-card')).toHaveLength(crowd.length)
+  })
+
+  it('tells its owner each time its stage moves on, without being asked', async () => {
+    const { globe, map, onStage } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    globe.show(null)
+    expect(onStage).not.toHaveBeenCalled()
+
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+    expect(onStage.mock.calls).toEqual([['drawing']])
+    await vi.waitFor(() => expect(onStage).toHaveBeenLastCalledWith('ready'), { timeout: 10_000 })
+
+    map.easeTo({ center: [10, 5], duration: 300 })
+    globe.show([game('A', { home: 7 })])
+    globe.show(null)
+    globe.show([game('A')])
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(onStage.mock.calls).toEqual([['drawing'], ['ready']])
+  })
+
+  it('becomes ready given no games at all', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    globe.show([])
+    expect(globe.stage()).toBe('drawing')
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+  })
+
+  it('becomes ready once its score cards stop trying to settle, though their layout never steadies', async () => {
+    layout.shift = 0.25
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(container.querySelectorAll('.score-card')).toHaveLength(2)
+    expect(globe.cardsSteady()).toBe(false)
+    expect(globe.settled()).toBe(false)
+  })
+
+  it('becomes ready and stops drawing once its score cards stop trying to settle, though they jump a pixel every frame', async () => {
+    layout.shift = 1
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(container.querySelectorAll('.score-card')).toHaveLength(2)
+    expect(globe.settled()).toBe(false)
+    const drawn = vi.fn()
+    map.on('render', drawn)
+    await pause(500)
+    expect(drawn).not.toHaveBeenCalled()
+  })
+
+  it('keeps every trail on its card through a long pan after its score cards give up settling', async () => {
+    layout.shift = 1
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Close enough together that their cards have to move aside for each other, with trails.
+    globe.show(['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 })))
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+
+    // How far each trail's end at its card is from the nearest moved card's edge, in pixels.
+    const trailsOffCards = async () => {
+      const page = map.getContainer().getBoundingClientRect()
+      const cards = [...container.querySelectorAll<HTMLElement>('[data-moved] .score-card')].map((element) =>
+        element.getBoundingClientRect(),
+      )
+      const trails = (await laidOut(map, 'trail')) as Feature<LineString>[]
+      expect(trails).not.toEqual([])
+      return trails.map(({ geometry }) => {
+        const { x, y } = map.project(geometry.coordinates[0] as [number, number])
+        const [px, py] = [page.x + x, page.y + y]
+        return Math.min(
+          ...cards.map(({ left, right, top, bottom }) => {
+            const outside = Math.hypot(Math.max(left - px, 0, px - right), Math.max(top - py, 0, py - bottom))
+            return outside > 0 ? outside : Math.min(px - left, right - px, py - top, bottom - py)
+          }),
+        )
+      })
+    }
+    for (const off of await trailsOffCards()) expect(off).toBeLessThan(1)
+
+    // Whether the map has gone idle since the camera last moved.
+    let idleSinceMoving = false
+    map.on('move', () => (idleSinceMoving = false))
+    map.on('idle', () => (idleSinceMoving = true))
+    map.easeTo({ center: [10, 5], duration: 2000 })
+    await vi.waitFor(() => expect(!map.isMoving() && idleSinceMoving).toBe(true), { timeout: 10_000 })
+    expect(globe.settled()).toBe(false)
+    for (const off of await trailsOffCards()) expect(off).toBeLessThan(1)
+  })
+
+  it('takes no keyboard input until it is ready, then takes it', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 3 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    map.getCanvas().focus()
+
+    await userEvent.keyboard('{ArrowRight}+')
+    await pause(500)
+    expect(map.getCenter().lng).toBe(0)
+    expect(map.getZoom()).toBe(3)
+
+    globe.show([game('A')])
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    map.getCanvas().focus()
+    await userEvent.keyboard('+')
+    await vi.waitFor(() => expect(map.getZoom()).toBeGreaterThan(3), { timeout: 5_000 })
+  })
+
+  it('stays ready through a pan, a change of games and a fresh snapshot', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+
+    // Its stage in every frame from here on.
+    const stages = new Set<string>()
+    const record = () => stages.add(globe.stage())
+    map.on('render', record)
+
+    map.easeTo({ center: [10, 5], duration: 300 })
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    globe.show([game('A', { home: 7 }), game('B', { longitude: 0.3 }), game('C', { longitude: 10, latitude: 5 })])
+    expect(globe.settled()).toBe(false)
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    // A fresh snapshot, as after a reconnection: no games yet, then the games again.
+    globe.show(null)
+    globe.show([game('D', { longitude: 10, latitude: 5 })])
+    expect(globe.stage()).toBe('ready')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+
+    map.off('render', record)
+    expect([...stages]).toEqual(['ready'])
+  })
+})
+
 describe('settling', () => {
   /** Each score card on the page, by game, and where it is. */
   const cardsOnPage = () =>
@@ -452,7 +646,8 @@ describe('settling', () => {
     globe.show(crowd)
     expect(globe.settled()).toBe(false)
 
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(globe.settled()).toBe(true)
     const settled = cardsOnPage()
     expect(settled).toHaveLength(crowd.length)
     await pause(500)
@@ -463,7 +658,7 @@ describe('settling', () => {
   it('is unsettled by a change of games until the change has been shown and has settled', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show(crowd.slice(0, 2))
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
 
     globe.show(crowd)
     expect(globe.settled()).toBe(false)
@@ -485,7 +680,7 @@ describe('settling', () => {
       }),
     )
     globe.show([...games.values()])
-    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
 
     // Where each card is from its venue, by game, leaving out those in a card cluster.
     type Frame = Map<string, { dx: number; dy: number }>

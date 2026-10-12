@@ -375,6 +375,13 @@ const settings = {
    */
   controls: { surface: color, shadow, on: { fill: color, text: color }, off: { opacity } },
   /**
+   * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
+   * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,
+   * and the rest of the ring it turns around), and the text of the message under the spinner when
+   * loading is slow.
+   */
+  loadingScreen: { dim: { color, opacity }, spinner: { color, track: color }, message: color },
+  /**
    * A score card: its fill and text, a Disrupted game's, the drop shadow a starting game's card
    * settles with, and how strongly its header is tinted with its status's colour (0 is not at all, 1
    * is the colour itself). Its outline, header line, light and glow are its status's colour.
@@ -450,7 +457,7 @@ const settings = {
    * lays cards out by this). The settings menu: its width, the gear, the "All leagues" chip's height,
    * and on that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The
    * scenario controls: a speed key and its icon. The game panel sits clear of the scenario controls by
-   * their keys' size.
+   * their keys' size. The loading screen: its spinner, across.
    */
   sizes: {
     panel: {
@@ -467,6 +474,7 @@ const settings = {
     card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
     settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
     controls: { key: pixels, icon: pixels },
+    loadingScreen: { spinner: pixels },
   },
 }
 

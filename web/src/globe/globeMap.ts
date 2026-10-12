@@ -63,7 +63,19 @@ export interface GlobeMapOptions {
   onSelect: (gameId: string) => void
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
+  /**
+   * Called each time the stage moves on (see stage): to drawing, then to ready, once each. Until
+   * ready, the globe takes no keyboard input (the loading screen's dim takes the pointer's and touch).
+   */
+  onStage: (stage: LoadingStage) => void
 }
+
+/**
+ * How far the globe's initial load has got: waiting for the server's first snapshot of games, then
+ * drawing them until it first settles (or would but for score cards that have given up settling), then
+ * ready (see GLOSSARY.md) for as long as the globe exists.
+ */
+export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready'
 
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
@@ -81,6 +93,7 @@ export class GlobeMap {
   private readonly removeGlow: () => void
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
+  private readonly onStage: (stage: LoadingStage) => void
   /** The games as the globe last showed them, which tells what has changed in the next ones. */
   private shown = new Map<string, Game>()
   /** The pins last given to the pin source, so it's reloaded only when they change. */
@@ -90,10 +103,17 @@ export class GlobeMap {
   private destroyed = false
   /** Whether the map has gone idle since it last drew a frame or was given anything to show (see settled). */
   private idle = false
+  /** Whether it has been given the server's first snapshot of games (see show). */
+  private hasGames = false
+  /** Whether it has settled since it was first given games: once true, it stays true (see stage). */
+  private wasReady = false
+  /** The stage last told to onStage. */
+  private toldStage: LoadingStage = 'waitingForGames'
 
-  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
+  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
+    this.onStage = onStage
     const map = new MapLibreMap({
       container,
       center: [startCamera.longitude, startCamera.latitude],
@@ -108,9 +128,11 @@ export class GlobeMap {
       // A double click while turning the globe is more often a slip than a wish to zoom in.
       doubleClickZoom: false,
     })
+    // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
+    map.keyboard.disable()
     this.map = map
     this.theme = theme
-    traceLayouts(map, () => this.settled())
+    traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map, theme)
@@ -148,8 +170,14 @@ export class GlobeMap {
    * Only a game shown both times can animate. A game coming into view (a new game, or one the
    * viewer's settings showed again) appears without one, and so does a game shown after a
    * reconnection if nothing about it worth noticing changed while the app was away.
+   *
+   * Given null (no games yet: the server's first snapshot hasn't arrived), it shows nothing and keeps
+   * waiting for games (see stage). An empty list is a snapshot with no games in it.
    */
-  show(games: readonly Game[]): void {
+  show(games: readonly Game[] | null): void {
+    if (!games) return
+    this.hasGames = true
+    this.tellStage()
     this.unsettle()
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
@@ -197,10 +225,28 @@ export class GlobeMap {
   /**
    * Whether everything the globe was last given is on screen and still: the pin source has loaded
    * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
-   * placed), and the score cards have settled. Tests and scripts wait on it before looking.
+   * placed), and the score cards have settled. Still right now: false again after any change or move,
+   * so tests and scripts wait on it after one. For the initial load, see stage.
    */
   settled(): boolean {
-    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle && this.cards.steady()
+    return this.stillButCards() && this.cards.steady()
+  }
+
+  /** Whether everything settled asks for holds, the score cards aside. */
+  private stillButCards(): boolean {
+    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle
+  }
+
+  /**
+   * How far the initial load has got: waiting for games until it's first given some (see show),
+   * drawing until it first settles, or would but for score cards that have given up settling (see
+   * noteReady), then ready for good, through pans, changes of games, fresh snapshots and
+   * reconnections. Everything that waits for the globe to load reads this; settled
+   * says whether it's still right now.
+   */
+  stage(): LoadingStage {
+    if (this.wasReady) return 'ready'
+    return this.hasGames ? 'drawing' : 'waitingForGames'
   }
 
   /**
@@ -257,7 +303,34 @@ export class GlobeMap {
   private readonly syncCards = () => this.cards.sync()
 
   private readonly drew = () => (this.idle = false)
-  private readonly goneIdle = () => (this.idle = true)
+  private readonly goneIdle = () => {
+    this.idle = true
+    this.noteReady()
+  }
+
+  /**
+   * Becomes ready the first time it has settled with games, or would have but for score cards that
+   * have given up settling (see ScoreCardMarkers.gaveUpSettling): a layout that never steadies
+   * mustn't keep the loading screen up. Checked as the map goes idle, after the score cards' sync on
+   * it. Only then can it become settled: every other change to the cards comes with a frame drawn or
+   * the globe unsettled. Having given up, the cards ask for no frames and give the map nothing new
+   * to draw, so the map goes idle after them.
+   */
+  private noteReady(): void {
+    if (this.wasReady || !this.hasGames) return
+    if (!this.stillButCards() || !(this.cards.steady() || this.cards.gaveUpSettling())) return
+    this.wasReady = true
+    this.map.keyboard.enable()
+    this.tellStage()
+  }
+
+  /** Tells onStage the stage, if it has moved on since it was last told. */
+  private tellStage(): void {
+    const stage = this.stage()
+    if (stage === this.toldStage) return
+    this.toldStage = stage
+    this.onStage(stage)
+  }
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */
   private unsettle(): void {

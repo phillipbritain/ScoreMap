@@ -6,9 +6,10 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
 import { Globe } from './globe/Globe'
-import { traceSnapshotShown } from './globe/layoutTrace'
+import type { LoadingStage } from './globe/globeMap'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
+import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
@@ -31,6 +32,9 @@ export default function App({ theme }: { theme: Theme }) {
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
+  const [stage, setStage] = useState<LoadingStage>('waitingForGames')
+  const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   const panel = useRef<HTMLElement>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
@@ -52,13 +56,10 @@ export default function App({ theme }: { theme: Theme }) {
     [setScenarioListing],
   )
   useEffect(() => store.save(viewerSettings), [viewerSettings])
-  // After the Globe's own effect has handed it the games: a child's effects run before its parent's.
-  useEffect(() => {
-    if (games) traceSnapshotShown()
-  }, [games])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
-  const message = noPinsMessage(games, visible)
+  // Not under the loading screen: only once it has gone.
+  const message = loadingScreenGone ? noPinsMessage(games, visible) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
@@ -69,13 +70,18 @@ export default function App({ theme }: { theme: Theme }) {
       <div className="globe-area">
         <Globe
           theme={theme}
-          games={visible}
+          // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
+          games={games && visible}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
           onSelectGame={setSelectedGameId}
           startCamera={camera}
           onCameraMove={store.saveCamera}
+          onStage={setStage}
         />
+        {/* Over the globe until it's ready, under the bottom stack and the settings menu, which come
+            after it so they stay usable while loading. */}
+        {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
         {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
             settings menu, so an open settings menu lies over them on a phone. */}
         <div className={scenarios.shown ? 'bottom-stack bottom-stack--scenario' : 'bottom-stack'}>

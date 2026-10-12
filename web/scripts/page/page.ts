@@ -31,7 +31,7 @@ const inPage = (check: PageCheck) => page.inPage(pageCheck, check)
 class Failed extends Error {}
 
 function main([command, ...args]: string[]): void {
-  const panning = command === 'pan' ? panArgs(args) : null
+  const panRequest = command === 'pan' ? panArgs(args) : null
   if (command === 'reset' && args.length === 1) {
     // The app writes its saved camera back as it leaves, so storage is cleared from a page that isn't the app.
     const url = args[0].replace(/\/$/, '')
@@ -56,8 +56,8 @@ function main([command, ...args]: string[]): void {
     const file = resolve(args[0])
     browser(['screenshot', file])
     console.log(`Screenshot saved to ${file}`)
-  } else if (panning) {
-    const { file, pan } = panning
+  } else if (panRequest) {
+    const { file, pan } = panRequest
     const { frames } = page.inPage(panGlobe, pan)
     writeFileSync(resolve(file), JSON.stringify(frames))
     console.log(`${frames.length} frames saved to ${resolve(file)}`)

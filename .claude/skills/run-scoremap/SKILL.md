@@ -63,13 +63,13 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 
 ## Drive it in a browser
 
-With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads the page. Use it rather than `agent-browser eval`: Claude Code's auto mode refuses Bash commands containing `eval` in a worktree, and `npm run page` runs its script in the page for you. It uses the same session, from `AGENT_BROWSER_SESSION`.
+With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads the page. Use it rather than `agent-browser eval`: Claude Code's auto mode refuses Bash commands containing `eval` in a worktree, and `npm run page` runs its script in the page for you. It uses the same session, from `AGENT_BROWSER_SESSION`, and runs from PowerShell or Git Bash, so it can stay in the shell that read `$web`.
 
 ```sh
 npm run page -- reset $web               # back to the start view (step 2)
 npm run page -- ready                    # waits for the page to be Ready (step 3)
 npm run page -- settled                  # waits for the globe to settle after a camera move
-npm run page -- read <selector> [prop]   # a property of the first match: textContent unless given, rect for its box
+npm run page -- read <selector> [prop]   # a property of the first match: textContent unless given (innerText for only what shows), rect for its box
 npm run page -- screenshot <file>        # once Ready and settled
 ```
 

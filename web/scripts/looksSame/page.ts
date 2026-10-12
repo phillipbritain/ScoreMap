@@ -66,29 +66,29 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
     await until(() => !!window.scoremap?.map, 'the globe (window.scoremap): is this a dev run?')
     const { map, stage, settled, ready } = window.scoremap!
     // A base from before #128 says only ready(): whether every game is on screen and still, right now.
-    const waits =
+    const checks =
       stage && settled
-        ? { loaded: () => stage() === 'ready', loadedName: 'stage() to be ready', still: settled, stillName: 'settled()' }
-        : ready && { loaded: ready, loadedName: 'ready()', still: ready, stillName: 'ready()' }
-    if (!waits) return { tooOld: true }
-    const { loaded, loadedName, still, stillName } = waits
-    /** Waits for the globe's first load. */
-    const load = async () => {
+        ? { ready: { check: () => stage() === 'ready', name: 'stage() to be ready' }, still: { check: settled, name: 'settled()' } }
+        : ready && { ready: { check: ready, name: 'ready()' }, still: { check: ready, name: 'ready()' } }
+    if (!checks) return { tooOld: true }
+    /** Waits for the page's fonts, then for the globe to pass one of window.scoremap's checks. */
+    const globeTo = async (what: string, { check, name }: { check: () => boolean; name: string }) => {
       await document.fonts.ready
-      await until(loaded, `the globe to load (window.scoremap.${loadedName})`)
+      await until(check, `the globe to ${what} (window.scoremap.${name})`)
     }
+    /** Waits for the globe to be ready. */
+    const beReady = () => globeTo('be ready', checks.ready)
     /** Turns the camera, and waits for the map to draw the turn (until then the globe still says it's still) and settle. */
     const turn = async (camera: Camera) => {
       let drawn = false
       map.once('render', () => (drawn = true))
       map.jumpTo(camera)
       await until(() => drawn, 'the map to draw the turn')
-      await document.fonts.ready
-      await until(still, `the globe to settle (window.scoremap.${stillName})`)
+      await globeTo('settle', checks.still)
     }
 
     if (step.step === 'games') {
-      await load()
+      await beReady()
       // The globe is only ready once the pins source has loaded (see GlobeMap.settled).
       const pins = (await map.getSource<GeoJSONSource>('pins')!.getData()) as FeatureCollection
       return { games: pins.features.length }
@@ -101,7 +101,7 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
         style.textContent = 'img { visibility: hidden !important; }'
         document.head.append(style)
       }
-      await load()
+      await beReady()
       // Score cards are laid out from where they were the frame before, and the games may have come
       // in any order. Zoomed out to small pins, no cards show, so back at the view they're laid out
       // afresh, all at once.

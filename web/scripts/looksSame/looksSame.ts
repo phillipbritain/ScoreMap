@@ -58,7 +58,7 @@ function inPage(step: PageStep): PageAnswer {
     if ('tooOld' in answer) {
       // The working tree's page can always say, so this is the base's.
       throw new Error(
-        "The base is too old to compare: its page can't say when the globe has loaded " +
+        "The base is too old to compare: its page can't say when the globe is ready " +
           '(window.scoremap.stage(), or ready() before it, added in #112). Compare against a base that includes #112.',
       )
     }

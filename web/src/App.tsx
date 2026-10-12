@@ -34,7 +34,7 @@ export default function App({ theme }: { theme: Theme }) {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
-  const [loaded, setLoaded] = useState(false)
+  const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   const panel = useRef<HTMLElement>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
@@ -59,7 +59,7 @@ export default function App({ theme }: { theme: Theme }) {
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   // Not under the loading screen: only once it has gone.
-  const message = loaded ? noPinsMessage(games, visible) : null
+  const message = loadingScreenGone ? noPinsMessage(games, visible) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
@@ -81,7 +81,7 @@ export default function App({ theme }: { theme: Theme }) {
         />
         {/* Over the globe until it's ready, under the bottom stack and the settings menu, which come
             after it so they stay usable while loading. */}
-        {!loaded && <LoadingScreen stage={stage} onGone={() => setLoaded(true)} />}
+        {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
         {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
             settings menu, so an open settings menu lies over them on a phone. */}
         <div className={scenarios.shown ? 'bottom-stack bottom-stack--scenario' : 'bottom-stack'}>

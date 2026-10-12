@@ -57,7 +57,7 @@ Everything happens on the scenario clock, from when the scenario starts or is sw
 To switch while running (each run's scenario and speed are its own):
 
 - **The controls** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the **media keys** set the speed: Play is Normal, Pause pauses, and Fast-forward goes to Fast and, pressed again, flips between Fast and Faster. The lit key is the speed (Fast-forward grows a third triangle at Faster), and there's no label. Picking a scenario or pressing a key changes every open tab. A speed change carries on from where the scenario is. The scenario clock shows beside them, or above them where the row is too narrow. Where the speed can't be controlled (real games, and scenarios whose games stand still: `edge-cases` and `empty`), the keys and the clock are hidden, leaving just the pill. `Shift+S` hides and shows the pill, the keys and the clock, for clean screenshots.
-- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
+- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
@@ -84,12 +84,12 @@ To check that a change leaves the look as it was (or changes only what it should
 npm run looks-same -- main          # <base ref> [--out <folder>]
 ```
 
-It takes a minute or two. It starts this clone's run (stopping it again at the end, even on failure), pauses `worldwide` at its start, and serves the base from a checkout of its own beside it, so the working tree and its uncommitted changes are never touched. Then it reports:
+It takes about a minute. It starts this clone's run (stopping it again at the end, even on failure), starts `crowded` Paused, and serves the base from a checkout of its own beside it, so the working tree and its uncommitted changes are never touched. Then it reports:
 
-- **A screenshot** of the middle of the United States (about twenty score cards, every status), the same or differing, with a diff image (differing pixels red). Logos and photos are hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
+- **A screenshot** of London's crowd of score cards, the same or differing, with a diff image (differing pixels red). It's taken once the page says every game is on screen and still (`window.scoremap.ready()`), with logos and photos hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
 - **Computed CSS**: every declaration whose computed value differs, hover and pressed states, keyframes and media queries included, so a 1 px change a screenshot can't show still shows.
 
-It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails. The screenshot can't show a game panel, phone width or a crowd of cards; check those by eye where a change touches them.
+It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails. The screenshot has Live and Upcoming cards, but no Final or Disrupted ones, card cluster, game panel or phone width; check those by eye where a change touches them.
 
 ## Saved data
 

@@ -65,6 +65,12 @@ export interface GlobeMapOptions {
   onCameraMove: (camera: Camera) => void
 }
 
+/**
+ * How far the globe's initial load has got: waiting for the server's first snapshot of games, then
+ * drawing them until it first settles, then ready (see GLOSSARY.md) for as long as the globe exists.
+ */
+export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready'
+
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
 
@@ -90,6 +96,10 @@ export class GlobeMap {
   private destroyed = false
   /** Whether the map has gone idle since it last drew a frame or was given anything to show (see settled). */
   private idle = false
+  /** Whether it has been given the server's first snapshot of games (see show). */
+  private hasGames = false
+  /** Whether it has settled since it was first given games: once true, it stays true (see stage). */
+  private wasReady = false
 
   constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
     this.onSelect = onSelect
@@ -110,7 +120,7 @@ export class GlobeMap {
     })
     this.map = map
     this.theme = theme
-    traceLayouts(map, () => this.settled())
+    traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map, theme)
@@ -148,8 +158,13 @@ export class GlobeMap {
    * Only a game shown both times can animate. A game coming into view (a new game, or one the
    * viewer's settings showed again) appears without one, and so does a game shown after a
    * reconnection if nothing about it worth noticing changed while the app was away.
+   *
+   * Given null (no games yet: the server's first snapshot hasn't arrived), it shows nothing and keeps
+   * waiting for games (see stage). An empty list is a snapshot with no games in it.
    */
-  show(games: readonly Game[]): void {
+  show(games: readonly Game[] | null): void {
+    if (!games) return
+    this.hasGames = true
     this.unsettle()
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
@@ -197,10 +212,23 @@ export class GlobeMap {
   /**
    * Whether everything the globe was last given is on screen and still: the pin source has loaded
    * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
-   * placed), and the score cards have settled. Tests and scripts wait on it before looking.
+   * placed), and the score cards have settled. Still right now: false again after any change or move,
+   * so tests and scripts wait on it after one. For the initial load, see stage.
    */
   settled(): boolean {
     return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle && this.cards.steady()
+  }
+
+  /**
+   * How far the initial load has got: waiting for games until it's first given some (see show),
+   * drawing until it first settles, then ready for good, through pans, changes of games, fresh
+   * snapshots and reconnections. Everything that waits for the globe to load reads this; settled
+   * says whether it's still right now.
+   */
+  stage(): LoadingStage {
+    this.noteReady()
+    if (this.wasReady) return 'ready'
+    return this.hasGames ? 'drawing' : 'waitingForGames'
   }
 
   /**
@@ -257,7 +285,15 @@ export class GlobeMap {
   private readonly syncCards = () => this.cards.sync()
 
   private readonly drew = () => (this.idle = false)
-  private readonly goneIdle = () => (this.idle = true)
+  private readonly goneIdle = () => {
+    this.idle = true
+    this.noteReady()
+  }
+
+  /** Becomes ready the first time it has settled with games: checked as the map goes idle, and when asked. */
+  private noteReady(): void {
+    if (!this.wasReady && this.hasGames && this.settled()) this.wasReady = true
+  }
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */
   private unsettle(): void {

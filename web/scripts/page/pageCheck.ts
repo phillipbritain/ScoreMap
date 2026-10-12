@@ -1,4 +1,4 @@
-// window.scoremap's type is declared in ../looksSame/page.ts, part of the same scripts build.
+import '../scoremapWindow.ts'
 
 /** What `npm run page` asks of the page. */
 export type PageCheck =

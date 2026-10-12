@@ -3,13 +3,16 @@ import '../scoremapWindow.ts'
 /** Where the camera starts and how the globe is panned from there, a few pixels a frame, as a slow drag would. */
 export interface Pan {
   camera: { center: [longitude: number, latitude: number]; zoom: number }
-  pan: { by: [x: number, y: number]; frames: number }[]
+  steps: { by: [x: number, y: number]; frames: number }[]
 }
+
+/** How many frames the page keeps (`framesKept` in src/globe/layoutTrace.ts): a longer pan loses its start. */
+export const framesKept = 300
 
 /** Over Los Angeles, panned east then north. */
 export const defaultPan: Pan = {
   camera: { center: [-118.5, 34.0], zoom: 4.2 },
-  pan: [
+  steps: [
     { by: [4, 0], frames: 120 },
     { by: [0, -4], frames: 80 },
   ],
@@ -23,9 +26,9 @@ export const defaultPan: Pan = {
  *
  * agent-browser gives up on a script after 30 seconds, so the waits take at most `waitMs` (20
  * seconds), then it says what it's waiting for without panning; it can be run again. The pan itself
- * takes a frame a step: the page keeps only the last 300 frames.
+ * takes a frame a step.
  */
-export async function panGlobe({ camera, pan }: Pan, waitMs = 20_000): Promise<{ frames: unknown[] } | { waiting: string }> {
+export async function panGlobe({ camera, steps }: Pan, waitMs = 20_000): Promise<{ frames: unknown[] } | { waiting: string }> {
   const end = Date.now() + waitMs
   const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
   const until = async (done: () => boolean, what: string) => {
@@ -48,7 +51,7 @@ export async function panGlobe({ camera, pan }: Pan, waitMs = 20_000): Promise<{
     (await until(() => drawn, 'the map to draw the turn')) ?? (await until(settled, 'the globe to settle (window.scoremap.settled())'))
   if (unsettled) return { waiting: unsettled }
   frames.length = 0
-  for (const { by, frames: count } of pan) {
+  for (const { by, frames: count } of steps) {
     for (let i = 0; i < count; i++) {
       map.panBy(by, { animate: false })
       await nextFrame()

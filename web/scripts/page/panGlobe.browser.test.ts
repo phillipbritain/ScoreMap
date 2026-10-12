@@ -41,7 +41,7 @@ describe('panGlobe', () => {
     setTimeout(() => (stage = 'ready'), 300)
     const answer = await panGlobe({
       camera: { center: [8, 51.5], zoom: 5 },
-      pan: [
+      steps: [
         { by: [-4, 0], frames: 2 },
         { by: [0, 3], frames: 1 },
       ],
@@ -52,7 +52,7 @@ describe('panGlobe', () => {
 
   it('says what it’s still waiting for once its time is up, without panning, to be run again', async () => {
     const { asked } = globe(() => 'drawing')
-    expect(await panGlobe({ camera: { center: [0, 0], zoom: 5 }, pan: [{ by: [1, 0], frames: 1 }] }, 200)).toEqual({
+    expect(await panGlobe({ camera: { center: [0, 0], zoom: 5 }, steps: [{ by: [1, 0], frames: 1 }] }, 200)).toEqual({
       waiting: 'the globe to be ready (window.scoremap.stage())',
     })
     expect(asked).toEqual([])

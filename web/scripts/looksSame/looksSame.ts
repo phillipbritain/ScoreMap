@@ -11,6 +11,7 @@ import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writ
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { agentBrowser } from '../agentBrowser.ts'
 import { runCommand } from '../command.ts'
 import { checkOutBase, removeLeftBaseCheckouts, type BaseCheckout } from './baseCheckout.ts'
 import { cssChanges, type CssChange } from './cssChanges.ts'
@@ -27,29 +28,21 @@ const session = sessionFor(process.pid)
 const run = (command: string, args: string[], options: { cwd?: string; input?: string; shell?: boolean } = {}) =>
   runCommand(command, args, { cwd: repo, scratch, ...options })
 
-// agent-browser is an npm script on Windows (agent-browser.cmd), which only the shell can start.
-const browser = (...args: string[]) => run('agent-browser', ['--session', session, ...args], { shell: true })
+const page = agentBrowser({ cwd: repo, scratch, session })
+const browser = (...args: string[]) => page.browser(args)
+const { evaluate } = page
 
 /** Runs a step of the check in the page, again while it's waiting (up to two minutes), giving back its answer. */
 function inPage(step: PageStep): PageAnswer {
-  const end = Date.now() + 120_000
-  for (;;) {
-    const answer = evaluate(`(${pageStep.toString()})(${JSON.stringify(step)})`) as PageAnswer
-    if ('tooOld' in answer) {
-      // The working tree's page can always say, so this is the base's.
-      throw new Error(
-        "The base is too old to compare: its page can't say when the globe is ready " +
-          '(window.scoremap.stage(), or ready() before it, added in #112). Compare against a base that includes #112.',
-      )
-    }
-    if (!('waiting' in answer)) return answer
-    if (Date.now() > end) throw new Error(`Timed out waiting for ${answer.waiting}`)
+  const answer = page.inPage(pageStep, step)
+  if ('tooOld' in answer) {
+    // The working tree's page can always say, so this is the base's.
+    throw new Error(
+      "The base is too old to compare: its page can't say when the globe is ready " +
+        '(window.scoremap.stage(), or ready() before it, added in #112). Compare against a base that includes #112.',
+    )
   }
-}
-
-function evaluate(script: string): unknown {
-  const answer = JSON.parse(run('agent-browser', ['--session', session, 'eval', '--stdin', '--json'], { shell: true, input: script }))
-  return answer.data.result
+  return answer
 }
 
 /**

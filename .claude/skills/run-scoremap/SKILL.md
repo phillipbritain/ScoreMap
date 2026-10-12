@@ -63,7 +63,7 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 
 ## Drive it in a browser
 
-With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads the page. Use it rather than `agent-browser eval`: Claude Code's auto mode refuses Bash commands containing `eval` in a worktree, and `npm run page` runs its script in the page for you. It uses the same session, from `AGENT_BROWSER_SESSION`, and exits 1 when the page doesn't do as asked (nothing matches, or a wait times out after two minutes).
+With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads the page. Use it rather than `agent-browser eval`: Claude Code's auto mode refuses Bash commands containing `eval` in a worktree, and `npm run page` runs its script in the page for you. It uses the same session, from `AGENT_BROWSER_SESSION`.
 
 ```sh
 npm run page -- reset $web               # back to the start view (step 2)
@@ -74,9 +74,9 @@ npm run page -- screenshot <file>        # once Ready and settled
 ```
 
 1. **Launch with output to a file.** The session's first command starts the browser daemon, which inherits that command's stdout, so piping it (`| tail`) waits forever for the pipe to close. Send the first command's output to a file, from Git Bash (PowerShell's `>` still reads it through a pipe, and waits the same): `agent-browser open $web > /tmp/ab.txt 2>&1`, where `$web` is the run's web URL. Later commands can be piped. (`npm run page -- reset $web` can be the first command too: it sends agent-browser's output to files of its own.)
-2. **Reset to the start view** with `npm run page -- reset $web`. The app saves the camera and settings to localStorage, including on `pagehide`, so clearing storage and then reloading the app writes them straight back; `reset` clears it from a page that doesn't run the app (`$web/favicon.svg`), then opens the app. localStorage is kept per URL, so a run on a new port starts without a saved camera.
+2. **Reset to the start view** (`reset`). The app saves the camera and settings to localStorage, so a run on the same port opens where the last one left off; a run on a new port starts without a saved camera.
    A dark, empty globe is usually a saved camera zoomed in over ocean; reset.
-3. **Wait until it's drawn** before a screenshot or a measurement: `npm run page -- ready` returns once the page is Ready (`window.scoremap.stage()` is `'ready'`: the first games are on the globe and everything on it has stopped moving), and it stays so. After moving the camera, `npm run page -- settled` waits until nothing on the globe is still moving (`window.scoremap.settled()`). `npm run page -- screenshot <file>` waits for both first. For screenshots to compare, start the scenario Paused too (see Scenarios).
+3. **Wait until it's drawn** before a measurement (`ready`): the page is Ready once the first games are on the globe and everything on it has stopped moving, and stays so. After moving the camera, wait for it to settle (`settled`). For screenshots to compare, start the scenario Paused too (see Scenarios).
 4. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `npm run page -- read .game-panel`.
 5. **Pick from the scenario pill by ref.** The globe's canvas covers the pill's list for clicks by text, so open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
 6. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.

@@ -8,14 +8,19 @@ export interface LaidOutFrame {
 }
 
 /**
- * In dev runs only, the map and what the score cards were last laid out from, on `window.scoremap`,
- * so a script driving the page can turn the globe and replay the frames through the layout (see
- * docs/agents/card-layout-replay.md).
+ * In dev runs only, the map, what the score cards were last laid out from, and whether the page is
+ * ready, on `window.scoremap`, so a script driving the page can turn the globe and replay the frames
+ * through the layout (see docs/agents/card-layout-replay.md), or wait to screenshot it.
  */
 interface LayoutTrace {
   map: MapLibreMap
   /** The latest frames, oldest first. */
   frames: LaidOutFrame[]
+  /**
+   * Whether every game is on screen and still: the server's first snapshot of games has reached the
+   * globe, and the globe has settled (see GlobeMap.settled).
+   */
+  ready: () => boolean
 }
 
 declare global {
@@ -27,9 +32,16 @@ declare global {
 // About a few seconds of frames, a few megabytes at most.
 const framesKept = 300
 
-/** Puts the map on `window.scoremap`, in dev runs. */
-export function traceLayouts(map: MapLibreMap): void {
-  if (import.meta.env.DEV) window.scoremap = { map, frames: [] }
+let snapshotShown = false
+
+/** Puts the map on `window.scoremap`, with whether the globe has settled, in dev runs. */
+export function traceLayouts(map: MapLibreMap, settled: () => boolean): void {
+  if (import.meta.env.DEV) window.scoremap = { map, frames: [], ready: () => snapshotShown && settled() }
+}
+
+/** Notes that the server's first snapshot of games has been handed to the globe, in dev runs. */
+export function traceSnapshotShown(): void {
+  if (import.meta.env.DEV) snapshotShown = true
 }
 
 /** Keeps a frame the score cards were laid out from, in dev runs. */

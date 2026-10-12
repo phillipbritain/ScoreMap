@@ -88,6 +88,8 @@ export class GlobeMap {
   private selectedGameId: string | null = null
   private clustering: PinLayout
   private destroyed = false
+  /** Whether the map has gone idle since it last drew a frame or was given anything to show (see settled). */
+  private idle = false
 
   constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
     this.onSelect = onSelect
@@ -108,7 +110,7 @@ export class GlobeMap {
     })
     this.map = map
     this.theme = theme
-    traceLayouts(map)
+    traceLayouts(map, () => this.settled())
     if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
     else map.setStyle(style)
     this.removeGlow = addGlobeGlow(map, theme)
@@ -120,6 +122,9 @@ export class GlobeMap {
     map.on('zoom', this.recluster)
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
     map.on('render', this.syncCards)
+    // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
+    map.on('render', this.drew)
+    map.on('idle', this.goneIdle)
     map.on('click', pinClusterLayer, this.zoomToPinCluster)
     map.on('click', smallPinLayer, this.selectPin)
     map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
@@ -141,6 +146,7 @@ export class GlobeMap {
    * reconnection if nothing about it worth noticing changed while the app was away.
    */
   show(games: readonly Game[]): void {
+    this.unsettle()
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
     // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
@@ -169,6 +175,7 @@ export class GlobeMap {
    */
   select(gameId: string | null, panel: ScreenBox | null = null): void {
     if (gameId === this.selectedGameId) return
+    this.unsettle()
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
     if (this.map.getLayer(selectedPinLayer)) this.map.setFilter(selectedPinLayer, selectedPin(gameId))
@@ -181,6 +188,15 @@ export class GlobeMap {
     // The venue straight up from where it is: panning by the lift would land short on the curved globe.
     const { width, height } = this.map.getContainer().getBoundingClientRect()
     this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
+  }
+
+  /**
+   * Whether everything the globe was last given is on screen and still: the pin source has loaded
+   * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
+   * placed), and the score cards have settled. Tests and scripts wait on it before looking.
+   */
+  settled(): boolean {
+    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle && this.cards.steady()
   }
 
   /** Removes the globe from the page, with everything it listens to. */
@@ -226,6 +242,15 @@ export class GlobeMap {
   }
 
   private readonly syncCards = () => this.cards.sync()
+
+  private readonly drew = () => (this.idle = false)
+  private readonly goneIdle = () => (this.idle = true)
+
+  /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */
+  private unsettle(): void {
+    this.idle = false
+    this.map.triggerRepaint()
+  }
 
   private readonly selectPin = (event: MapLayerMouseEvent) => {
     const gameId: unknown = event.features?.[0]?.properties?.gameId

@@ -50,6 +50,8 @@ A 30-second flaky loop is barely better than no loop; a 2-second deterministic o
 
 The goal is not a clean repro but a **higher reproduction rate**. Loop the trigger 100×, parallelise, add stress, narrow timing windows, inject sleeps. A 50%-flake bug is debuggable; 1% is not, so keep raising the rate until it's debuggable.
 
+**Reported flake, first loop: the reported commit.** Run the loop first on the commit the flake was reported against (a `git worktree` at that SHA; junction or symlink its `node_modules` to this clone's), not on HEAD. A change since the report can hide the bug without fixing it. If it goes red there and green on HEAD, read `git log <reported>..HEAD -- <files on the failing path>` for the change that hides it, then take it out on HEAD to get red again. Reach for stress only when the reported commit won't go red either.
+
 ### When you genuinely cannot build a loop
 
 Stop and say so explicitly. List what you tried. Ask the user for: (a) access to whatever environment reproduces it, (b) a redacted captured artifact (HAR file, log dump, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. Do **not** proceed to hypothesise without a loop.

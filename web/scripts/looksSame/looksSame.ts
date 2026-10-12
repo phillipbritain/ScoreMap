@@ -11,15 +11,16 @@ import { closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writ
 import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { checkOutBase, type BaseCheckout } from './baseCheckout.ts'
+import { checkOutBase, removeLeftBaseCheckouts, type BaseCheckout } from './baseCheckout.ts'
 import { cssChanges, type CssChange } from './cssChanges.ts'
 import { readCssDeclarations, type CssDeclaration } from './cssDeclarations.ts'
+import { leftSessions, sessionFor } from './leftSessions.ts'
 import { pageStep, type Camera, type PageAnswer, type PageStep } from './page.ts'
 import { compareScreenshots } from './screenshotDiff.ts'
 
 const repo = resolve(import.meta.dirname, '../../..')
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-looks-same-'))
-const session = `scoremap-looks-same-${process.pid}`
+const session = sessionFor(process.pid)
 
 /**
  * Runs a command to the end and gives its standard output. The output goes through files, not
@@ -102,16 +103,35 @@ async function until(ready: () => Promise<boolean>, what: string, ms = 120_000):
   }
 }
 
+/**
+ * Removes what an earlier check, killed outright (its terminal closed, its task stopped), left
+ * behind: its base checkouts and its browser sessions. Its dev run is this clone's, which the
+ * check's own replaces.
+ */
+function removeLeftovers(): void {
+  for (const dir of removeLeftBaseCheckouts(repo)) console.log(`Removed a base checkout an earlier check left: ${dir}`)
+  const { data } = JSON.parse(run('agent-browser', ['session', 'list', '--json'], { shell: true })) as { data: { sessions: string[] } }
+  for (const left of leftSessions(data.sessions)) {
+    run('agent-browser', ['--session', left, 'close'], { shell: true })
+    console.log(`Closed a browser session an earlier check left: ${left}`)
+  }
+}
+
 interface Run {
   web: string
   server: string
+  /** Whether this clone's dev run was going already, and the check's replaced it. */
+  replaced: boolean
 }
 
 /** Starts this clone's dev run (isolated if any other is going), and gives its URLs. */
 function startRun(): Run {
-  const others = JSON.parse(run('aspire', ['ps', '--format', 'json', '--nologo'])) as unknown[]
+  const runs = JSON.parse(run('aspire', ['ps', '--format', 'json', '--nologo'])) as { appHostPath: string }[]
+  const appHost = join(repo, 'server', 'src', 'ScoreMap.AppHost', 'ScoreMap.AppHost.csproj').toLowerCase()
+  const replaced = runs.some((other) => resolve(other.appHostPath).toLowerCase() === appHost)
+  if (replaced) console.log("This clone's dev run is going already: the check replaces it with its own, and stops that at the end.")
   console.log('Starting the dev run…')
-  run('aspire', ['start', '--nologo', '--non-interactive', ...(others.length ? ['--isolated'] : [])])
+  run('aspire', ['start', '--nologo', '--non-interactive', ...(runs.length ? ['--isolated'] : [])])
   run('aspire', ['wait', 'web', '--nologo'])
   const { resources } = JSON.parse(run('aspire', ['describe', '--format', 'json', '--nologo'])) as {
     resources: { displayName: string; urls: { name: string; url: string }[] }[]
@@ -120,7 +140,7 @@ function startRun(): Run {
   const web = urls('web')[0]?.url
   const server = urls('server').find((url) => url.name === 'http')?.url
   if (!web || !server) throw new Error(`Couldn't find the run's URLs in aspire describe`)
-  return { web: web.replace(/\/$/, ''), server: server.replace(/\/$/, '') }
+  return { web: web.replace(/\/$/, ''), server: server.replace(/\/$/, ''), replaced }
 }
 
 /**
@@ -242,15 +262,20 @@ async function main(args: string[]): Promise<number> {
   }
   process.once('SIGINT', stopOnInterrupt)
   try {
+    removeLeftovers()
+
     console.log(`Checking out ${baseRef}…`)
     const base = checkOutBase(repo, baseRef)
     cleanUp.push(() => base.remove())
 
+    let devRun: Run | undefined
     cleanUp.push(() => {
       console.log('Stopping the dev run…')
       run('aspire', ['stop', '--nologo'])
+      if (devRun?.replaced) console.log("This clone's dev run, going when the check started, is stopped: aspire start starts it again.")
     })
-    const { web, server } = startRun()
+    devRun = startRun()
+    const { web, server } = devRun
     await startPaused(server, scenario)
 
     const { url: baseUrl, vite } = await serveBase(base, server)

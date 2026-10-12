@@ -52,6 +52,16 @@ _Avoid_: Crunch time, close game
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city
 
+### Loading
+
+**Loading screen**:
+What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a spinner, and a message if it's slow. The settings menu and scenario pills can still be used, but the globe can't be moved yet.
+_Avoid_: Spinner (it's one part), splash, overlay, veil
+
+**Ready**:
+The moment, once each time ScoreMap is opened, that the first games are on the globe and everything has stopped moving: pins, score cards, trails and place names. The loading screen goes then, and doesn't come back.
+_Avoid_: Loaded, settled, done
+
 ### Look
 
 **Theme**:

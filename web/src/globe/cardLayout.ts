@@ -1,4 +1,5 @@
 import type { GameStatus } from '../games/game'
+import { cardJump } from './cardJump'
 import type { ScreenBox } from './gameCities'
 import { groupStatus, statusProminence } from './statusLook'
 
@@ -70,8 +71,9 @@ export interface CardLayout {
  * most prominent first, whichever is selected, so selecting a card never moves it; a card with no
  * room within reach joins a card cluster. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
- * card stays where it was while that still has room, moving only back over its venue, and a card
- * looking for room leaves others where they were, so cards don't jump about as the globe turns.
+ * card stays where it was while that still has room, moving only back over its venue, a card the
+ * globe turns off screen pushes the cards in its way along rather than leave them, and a card looking
+ * for room leaves others where they were, so cards don't jump about as the globe turns.
  */
 export function layOutCards(
   cards: readonly ScreenCard[],
@@ -97,7 +99,7 @@ export function layOutCards(
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
-  const { shifts, cardClusters } = arrange(boxes, names, scene)
+  const { shifts, cardClusters } = arrange(pushOnScreen(boxes, scene), names, scene)
 
   const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
   for (const box of boxes) {
@@ -369,6 +371,88 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     else cardClusters.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
   }
   return { shifts, cardClusters }
+}
+
+/** One way across the screen: where a card is along it, how far it was moved, and how big it is. */
+interface Axis {
+  centre: 'x' | 'y'
+  shift: 'dx' | 'dy'
+  size: 'width' | 'height'
+}
+const axes: readonly Axis[] = [
+  { centre: 'x', shift: 'dx', size: 'width' },
+  { centre: 'y', shift: 'dy', size: 'height' },
+]
+
+/**
+ * Brings the moved cards the globe has turned off screen since last time back on, by where they were
+ * then, pushing the moved cards in their way along with them. A crowd of cards reaching to the edge
+ * of the screen is packed against it, so as the globe turns the crowd towards that edge, the card
+ * there would otherwise find every spot near it taken, and leave for the room opening up on the far
+ * side of the crowd. A card is pushed no further than a jump, and a push stops at a card sitting over
+ * its venue or at the other edge of the screen, leaving the card to find room as it would. A card
+ * pushed onto a venue or a name finds room elsewhere (see arrange): the one card nearest the crowd
+ * leaves, rather than every card pushing it.
+ */
+function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
+  const was = new Map(cards.flatMap((card) => (card.previous ? [[card.gameId, card.previous] as const] : [])))
+  // By rank and then game order, as cards are arranged, so the same cards always land the same way.
+  const order = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+  for (const along of axes) {
+    for (const card of order) {
+      const at = was.get(card.gameId)
+      if (!at || (at.dx === 0 && at.dy === 0)) continue
+      const centre = card[along.centre] + at[along.shift]
+      const half = card[along.size] / 2
+      const by = Math.max(0, half - centre) || Math.min(0, screen[along.size] - half - centre)
+      if (by !== 0 && Math.abs(by) <= cardJump) push(cards, was, card, along, by, screen)
+    }
+  }
+  return cards.map((card) => (was.get(card.gameId) === card.previous ? card : { ...card, previous: was.get(card.gameId) }))
+}
+
+/**
+ * Pushes a card `by` pixels along an axis from where it was last time (`was`, updated if the push
+ * goes), and the moved cards in its way as far as it takes to keep the gap between them. Returns
+ * whether it went: not if it would push a card off screen, further than a jump, or from over its venue.
+ */
+function push(
+  cards: readonly CardBox[],
+  was: Map<string, ScreenOffset>,
+  pushed: CardBox,
+  along: Axis,
+  by: number,
+  screen: CardScene,
+): boolean {
+  const across = along === axes[0] ? axes[1] : axes[0]
+  const direction = Math.sign(by)
+  const pushes = new Map([[pushed.gameId, by]])
+  const where = (card: CardBox, axis: Axis) =>
+    card[axis.centre] + was.get(card.gameId)![axis.shift] + (axis === along ? (pushes.get(card.gameId) ?? 0) : 0)
+  const queue = [pushed]
+  for (const card of queue) {
+    const from = where(card, along)
+    if (from - card[along.size] / 2 < 0 || from + card[along.size] / 2 > screen[along.size]) return false
+    for (const other of cards) {
+      if (other === card || !was.has(other.gameId)) continue
+      // Cards beside each other across the push, give or take the drift, aren't in each other's way.
+      if (Math.abs(where(other, across) - where(card, across)) >= (card[across.size] + other[across.size]) / 2 + gap - drift) continue
+      const apart = (where(other, along) - from) * direction
+      const needed = (card[along.size] + other[along.size]) / 2 + gap
+      if (apart < 0 || apart >= needed) continue
+      const { dx, dy } = was.get(other.gameId)!
+      if (dx === 0 && dy === 0) return false
+      const distance = (pushes.get(other.gameId) ?? 0) + (needed - apart) * direction
+      if (Math.abs(distance) > cardJump) return false
+      pushes.set(other.gameId, distance)
+      queue.push(other)
+    }
+  }
+  for (const [gameId, distance] of pushes) {
+    const at = was.get(gameId)!
+    was.set(gameId, { ...at, [along.shift]: at[along.shift] + distance })
+  }
+  return true
 }
 
 /** Whether a line passes through a box, given by its centre and half its size. */

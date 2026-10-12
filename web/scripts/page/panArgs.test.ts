@@ -36,10 +36,16 @@ describe('panArgs', () => {
     [['trace.json', '--by', '-4,0,0']],
     [['trace.json', '--by', ',,5']],
     [['trace.json', '--center', ',']],
-    [['trace.json', '--by', '4,0,200', '--by', '0,4,101']],
     [['trace.json', '--by']],
     [['trace.json', '--tilt', '30']],
   ])('gives nothing for %j, to say how it’s used', (args) => {
     expect(panArgs(args)).toBeNull()
+  })
+
+  it('says why when the pan is longer than the page keeps', () => {
+    expect(panArgs(['trace.json', '--by', '4,0,200', '--by', '0,4,100'])).toHaveProperty('pan')
+    expect(panArgs(['trace.json', '--by', '4,0,200', '--by', '0,4,101'])).toEqual({
+      tooLong: 'The pan is 301 frames: the page keeps only the last 300, so make it 300 or fewer.',
+    })
   })
 })

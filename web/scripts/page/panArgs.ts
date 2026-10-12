@@ -3,9 +3,9 @@ import { defaultPan, framesKept, type Pan } from './panGlobe.ts'
 /**
  * Reads `npm run page -- pan`'s arguments: `<file> [--center <longitude>,<latitude>] [--zoom <zoom>]
  * [--by <x>,<y>,<frames>]...`, each left out keeping the default's. Gives null when they don't read,
- * or the pan is longer than the page keeps.
+ * and says so when the pan is longer than the page keeps.
  */
-export function panArgs(args: string[]): { file: string; pan: Pan } | null {
+export function panArgs(args: string[]): { file: string; pan: Pan } | { tooLong: string } | null {
   const [file, ...options] = args
   if (!file || file.startsWith('--')) return null
   let { center, zoom } = defaultPan.camera
@@ -20,6 +20,7 @@ export function panArgs(args: string[]): { file: string; pan: Pan } | null {
     else return null
   }
   const pan = { camera: { center, zoom }, steps: steps.length ? steps : defaultPan.steps }
-  if (pan.steps.reduce((frames, step) => frames + step.frames, 0) > framesKept) return null
+  const frames = pan.steps.reduce((total, step) => total + step.frames, 0)
+  if (frames > framesKept) return { tooLong: `The pan is ${frames} frames: the page keeps only the last ${framesKept}, so make it ${framesKept} or fewer.` }
   return { file, pan }
 }

@@ -15,7 +15,7 @@ Capture a pan one of two ways, then replay it.
 
    ```sh
    cd web
-   agent-browser set viewport 1280 800
+   agent-browser set viewport 1280 800 > /tmp/ab.txt 2>&1   # the session's first command: output to a file (run-scoremap)
    agent-browser open "$web"   # the run's web URL
    npm run page -- pan "$CLAUDE_JOB_DIR/tmp/trace.json" --center 8,51.5 --zoom 5 --by -4,0,250
    ```

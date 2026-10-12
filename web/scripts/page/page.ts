@@ -56,6 +56,9 @@ function main([command, ...args]: string[]): void {
     const file = resolve(args[0])
     browser(['screenshot', file])
     console.log(`Screenshot saved to ${file}`)
+  } else if (panRequest && 'tooLong' in panRequest) {
+    console.error(panRequest.tooLong)
+    process.exitCode = 2
   } else if (panRequest) {
     const { file, pan } = panRequest
     const { frames } = page.inPage(panGlobe, pan)

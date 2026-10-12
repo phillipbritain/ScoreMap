@@ -63,6 +63,8 @@ export interface GlobeMapOptions {
   onSelect: (gameId: string) => void
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
+  /** Called each time the stage moves on (see stage): to drawing, then to ready, once each. */
+  onStage?: (stage: LoadingStage) => void
 }
 
 /**
@@ -87,6 +89,7 @@ export class GlobeMap {
   private readonly removeGlow: () => void
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
+  private readonly onStage: (stage: LoadingStage) => void
   /** The games as the globe last showed them, which tells what has changed in the next ones. */
   private shown = new Map<string, Game>()
   /** The pins last given to the pin source, so it's reloaded only when they change. */
@@ -100,10 +103,13 @@ export class GlobeMap {
   private hasGames = false
   /** Whether it has settled since it was first given games: once true, it stays true (see stage). */
   private wasReady = false
+  /** The stage last told to onStage. */
+  private toldStage: LoadingStage = 'waitingForGames'
 
-  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove }: GlobeMapOptions) {
+  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
+    this.onStage = onStage ?? (() => {})
     const map = new MapLibreMap({
       container,
       center: [startCamera.longitude, startCamera.latitude],
@@ -165,6 +171,7 @@ export class GlobeMap {
   show(games: readonly Game[] | null): void {
     if (!games) return
     this.hasGames = true
+    this.tellStage()
     this.unsettle()
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
@@ -227,8 +234,7 @@ export class GlobeMap {
    */
   stage(): LoadingStage {
     this.noteReady()
-    if (this.wasReady) return 'ready'
-    return this.hasGames ? 'drawing' : 'waitingForGames'
+    return this.stageNow()
   }
 
   /**
@@ -290,9 +296,24 @@ export class GlobeMap {
     this.noteReady()
   }
 
+  private stageNow(): LoadingStage {
+    if (this.wasReady) return 'ready'
+    return this.hasGames ? 'drawing' : 'waitingForGames'
+  }
+
   /** Becomes ready the first time it has settled with games: checked as the map goes idle, and when asked. */
   private noteReady(): void {
-    if (!this.wasReady && this.hasGames && this.settled()) this.wasReady = true
+    if (this.wasReady || !this.hasGames || !this.settled()) return
+    this.wasReady = true
+    this.tellStage()
+  }
+
+  /** Tells onStage the stage, if it has moved on since it was last told. */
+  private tellStage(): void {
+    const stage = this.stageNow()
+    if (stage === this.toldStage) return
+    this.toldStage = stage
+    this.onStage(stage)
   }
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */

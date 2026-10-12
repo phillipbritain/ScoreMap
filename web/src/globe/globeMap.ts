@@ -122,6 +122,10 @@ export class GlobeMap {
     map.on('zoom', this.recluster)
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
     map.on('render', this.syncCards)
+    // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
+    // lets go of tiles held over from the last load after a frame's render event, and goes idle
+    // without drawing another frame (as after the reload on zooming in to cardZoom).
+    map.on('idle', this.syncCards)
     // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
     map.on('render', this.drew)
     map.on('idle', this.goneIdle)

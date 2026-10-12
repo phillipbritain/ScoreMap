@@ -39,6 +39,8 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 const liveLight = () => element('score-card score-card--live', 'score-card__light')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start', 'finish'] as const
+const spinner = () => element('loading-screen', 'loading-screen__spinner')
+const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
 
 describe('with reduce motion off', () => {
   it('blinks a Live score card’s status light', () => {
@@ -49,6 +51,24 @@ describe('with reduce motion off', () => {
   it.each(pinAnimations)('grows a pin’s %s ring', (animation) => {
     const transforms = keyframesOf(pinRing(animation)).map((keyframe) => keyframe.transform)
     expect(transforms.filter((transform) => transform !== undefined).length).toBeGreaterThan(1)
+  })
+
+  it('turns the loading screen’s spinner', () => {
+    const ring = spinner()
+    const keyframes = keyframesOf(ring)
+    const transforms = keyframes.map((keyframe) => keyframe.transform).filter((transform) => transform !== undefined)
+
+    expect(new Set(transforms).size).toBeGreaterThan(1)
+    expect(ring.getAnimations()[0].effect?.getComputedTiming().iterations).toBe(Infinity)
+  })
+
+  it('fades the loading screen out as it leaves', () => {
+    const screen = leavingLoadingScreen()
+    const opacities = keyframesOf(screen).map((keyframe) => Number(keyframe.opacity))
+
+    expect(opacities.at(0)).toBe(1)
+    expect(opacities.at(-1)).toBe(0)
+    expect(screen.getAnimations()[0].effect?.getComputedTiming().duration).toBeGreaterThan(0)
   })
 })
 
@@ -72,5 +92,20 @@ describe('with reduce motion on', () => {
     expect(opacities.at(0)).toBe(0)
     expect(Math.max(...opacities)).toBeGreaterThan(0)
     expect(opacities.at(-1)).toBe(0)
+  })
+
+  it('fades the loading screen’s spinner in and out in place, without turning', () => {
+    const keyframes = keyframesOf(spinner())
+
+    expect(keyframes.filter((keyframe) => 'transform' in keyframe)).toEqual([])
+    const opacities = keyframes.map((keyframe) => Number(keyframe.opacity))
+    expect(Math.min(...opacities)).toBeLessThan(Math.max(...opacities))
+  })
+
+  it('takes the loading screen away at once as it leaves, without fading', () => {
+    const screen = leavingLoadingScreen()
+
+    expect(screen.getAnimations()).toEqual([])
+    expect(getComputedStyle(screen).opacity).toBe('0')
   })
 })

@@ -9,7 +9,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
-import { GlobeMap } from './globeMap'
+import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
@@ -73,11 +73,12 @@ function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   document.body.append(container)
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
-  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove })
+  const onStage = vi.fn<(stage: LoadingStage) => void>()
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove, onStage })
   opened.push(globe)
   // MapLibre's own map, to see what it draws; the tests drive the globe only through GlobeMap.
   const map = (globe as unknown as { map: MapLibreMap }).map
-  return { globe, map, onSelect, onCameraMove }
+  return { globe, map, onSelect, onCameraMove, onStage }
 }
 
 /**
@@ -463,6 +464,24 @@ describe('loading stage', () => {
     expect(frames).not.toContain('settled, drawing')
     expect(globe.settled()).toBe(true)
     expect(container.querySelectorAll('.score-card')).toHaveLength(crowd.length)
+  })
+
+  it('tells its owner each time its stage moves on, without being asked', async () => {
+    const { globe, map, onStage } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    globe.show(null)
+    expect(onStage).not.toHaveBeenCalled()
+
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+    expect(onStage.mock.calls).toEqual([['drawing']])
+    await vi.waitFor(() => expect(onStage).toHaveBeenLastCalledWith('ready'), { timeout: 10_000 })
+
+    map.easeTo({ center: [10, 5], duration: 300 })
+    globe.show([game('A', { home: 7 })])
+    globe.show(null)
+    globe.show([game('A')])
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(onStage.mock.calls).toEqual([['drawing'], ['ready']])
   })
 
   it('becomes ready given no games at all', async () => {

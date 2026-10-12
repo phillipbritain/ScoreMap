@@ -455,6 +455,15 @@ describe('the built-in theme', () => {
     expect(live.clusterOpacity).toBeGreaterThan(final.clusterOpacity)
   })
 
+  it('dims the loading globe in the sky’s dark navy, still showing through, under an off-white spinner on a navy track', () => {
+    const { loadingScreen, page } = theme
+    expect(loadingScreen.dim.color).toBe(page.sky)
+    expect(loadingScreen.dim.opacity).toBeGreaterThan(0)
+    expect(loadingScreen.dim.opacity).toBeLessThan(1)
+    expect(loadingScreen.spinner.color).toBe('#f4f5f7')
+    expect(isStepOf('navy', '100', '900')(loadingScreen.spinner.track), stepOf(loadingScreen.spinner.track)).toBe(true)
+  })
+
   it('gives panels and controls no glow or drop shadow', () => {
     const { panel, settingsMenu, controls } = theme
     for (const shadow of [panel.shadow, settingsMenu.shadow, settingsMenu.gearOutline, controls.shadow]) expect(shadow.color).toBe('transparent')

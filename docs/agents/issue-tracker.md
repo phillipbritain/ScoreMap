@@ -5,7 +5,8 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 ## Conventions
 
 - **Create an issue**: `gh issue create --title "..." --body "..."`. Use a heredoc for multi-line bodies.
-- **Flaky test issue**: give the commit SHA it failed on, the exact command, and the failure count (e.g. 2 of 12), so a fix can start its loop on that commit.
+- **Flaky test issue**: give the commit SHA it failed on, the exact command, and the failure count (e.g. 2 of 12).
+- **Fixing a flaky test issue**: start the loop on the commit it was reported against (a `git worktree` at that SHA, its `web/node_modules` junctioned to this clone's), not HEAD: a later change can hide the flake without fixing it, as #104 hid #109. Red there but green on HEAD: find the hiding change in `git log <sha>..HEAD -- <files on the failing path>` and take it out on HEAD to get red again. Add stress only when the reported commit won't go red either.
 - **Read an issue**: `gh issue view <number> --json title,body,state,labels,comments --jq '.title, .state, .body, [.labels[].name], (.comments[].body)'`. (Plain `gh issue view <number> --comments` can print nothing from the agent's shell.)
 - **List issues**: `gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'` with appropriate `--label` and `--state` filters.
 - **Comment on an issue**: `gh issue comment <number> --body "..."`

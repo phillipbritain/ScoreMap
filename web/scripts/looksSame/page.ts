@@ -66,14 +66,16 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
     }
     /** Turns the camera, and waits for the map to draw the turn (until then the page still says it's ready) and settle. */
     const turn = async (camera: Camera) => {
-      const drawn = new Promise((resolve) => map.once('render', resolve))
+      let drawn = false
+      map.once('render', () => (drawn = true))
       map.jumpTo(camera)
-      await drawn
+      await until(() => drawn, 'the map to draw the turn')
       await settle()
     }
 
     if (step.step === 'games') {
       await settle()
+      // The page is only ready once the pins source has loaded (see GlobeMap.settled).
       const pins = (await map.getSource<GeoJSONSource>('pins')!.getData()) as FeatureCollection
       return { games: pins.features.length }
     }
@@ -108,6 +110,8 @@ export async function pageStep(step: PageStep): Promise<PageAnswer> {
       requestAnimationFrame(freeze)
     }
     freeze()
+    // Not waiting for the page, which was ready: letting the browser draw the stopped animations
+    // before the screenshot.
     await frames(2)
     return { frozen: true }
   } catch (error) {

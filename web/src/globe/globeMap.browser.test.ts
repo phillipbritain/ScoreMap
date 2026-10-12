@@ -16,20 +16,25 @@ import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
 /**
- * When true, every layout of the score cards nudges each card a fraction of a pixel the other way from
- * the last: the cards never steady, though the layout the map draws (to the pixel) stays the same.
+ * When set, every layout of the score cards nudges each card (and its trail) that many pixels the
+ * other way from the last, so the cards never steady. A fraction of a pixel leaves the layout the map
+ * draws (to the pixel) the same; a whole pixel changes it every frame.
  */
-const layout = vi.hoisted(() => ({ keepsShifting: false }))
+const layout = vi.hoisted(() => ({ shift: 0 }))
 vi.mock('./cardLayout', async (importOriginal) => {
   const original = await importOriginal<typeof import('./cardLayout')>()
-  let nudge = 0.25
+  let sign = 1
   return {
     ...original,
     layOutCards: (...args: Parameters<typeof original.layOutCards>) => {
       const laidOut = original.layOutCards(...args)
-      if (!layout.keepsShifting) return laidOut
-      nudge = -nudge
-      for (const placement of laidOut.cards.values()) placement.offset = { ...placement.offset, dx: placement.offset.dx + nudge }
+      if (!layout.shift) return laidOut
+      sign = -sign
+      const nudge = sign * layout.shift
+      for (const placement of laidOut.cards.values()) {
+        placement.offset = { ...placement.offset, dx: placement.offset.dx + nudge }
+        if (placement.trail) placement.trail = { ...placement.trail, x1: placement.trail.x1 + nudge }
+      }
       return laidOut
     },
   }
@@ -82,7 +87,7 @@ const opened: GlobeMap[] = []
 let container: HTMLElement
 
 afterEach(() => {
-  layout.keepsShifting = false
+  layout.shift = 0
   for (const globe of opened.splice(0)) globe.destroy()
   container?.remove()
 })
@@ -514,7 +519,7 @@ describe('loading stage', () => {
   })
 
   it('becomes ready once its score cards stop trying to settle, though their layout never steadies', async () => {
-    layout.keepsShifting = true
+    layout.shift = 0.25
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show([game('A'), game('B', { longitude: 0.3 })])
 
@@ -522,6 +527,58 @@ describe('loading stage', () => {
     expect(container.querySelectorAll('.score-card')).toHaveLength(2)
     expect(globe.cardsSteady()).toBe(false)
     expect(globe.settled()).toBe(false)
+  })
+
+  it('becomes ready and stops drawing once its score cards stop trying to settle, though they jump a pixel every frame', async () => {
+    layout.shift = 1
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 0.3 })])
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    expect(container.querySelectorAll('.score-card')).toHaveLength(2)
+    expect(globe.settled()).toBe(false)
+    const drawn = vi.fn()
+    map.on('render', drawn)
+    await pause(500)
+    expect(drawn).not.toHaveBeenCalled()
+  })
+
+  it('keeps every trail on its card through a long pan after its score cards give up settling', async () => {
+    layout.shift = 1
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Close enough together that their cards have to move aside for each other, with trails.
+    globe.show(['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 })))
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+
+    // How far each trail's end at its card is from the nearest moved card's edge, in pixels.
+    const trailsOffCards = async () => {
+      const page = map.getContainer().getBoundingClientRect()
+      const cards = [...container.querySelectorAll<HTMLElement>('[data-moved] .score-card')].map((element) =>
+        element.getBoundingClientRect(),
+      )
+      const trails = (await laidOut(map, 'trail')) as Feature<LineString>[]
+      expect(trails).not.toEqual([])
+      return trails.map(({ geometry }) => {
+        const { x, y } = map.project(geometry.coordinates[0] as [number, number])
+        const [px, py] = [page.x + x, page.y + y]
+        return Math.min(
+          ...cards.map(({ left, right, top, bottom }) => {
+            const outside = Math.hypot(Math.max(left - px, 0, px - right), Math.max(top - py, 0, py - bottom))
+            return outside > 0 ? outside : Math.min(px - left, right - px, py - top, bottom - py)
+          }),
+        )
+      })
+    }
+    for (const off of await trailsOffCards()) expect(off).toBeLessThan(1)
+
+    // Whether the map has gone idle since the camera last moved.
+    let idleSinceMoving = false
+    map.on('move', () => (idleSinceMoving = false))
+    map.on('idle', () => (idleSinceMoving = true))
+    map.easeTo({ center: [10, 5], duration: 2000 })
+    await vi.waitFor(() => expect(!map.isMoving() && idleSinceMoving).toBe(true), { timeout: 10_000 })
+    expect(globe.settled()).toBe(false)
+    for (const off of await trailsOffCards()) expect(off).toBeLessThan(1)
   })
 
   it('takes no keyboard input until it is ready, then takes it', async () => {

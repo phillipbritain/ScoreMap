@@ -313,8 +313,8 @@ export class GlobeMap {
    * have given up settling (see ScoreCardMarkers.gaveUpSettling): a layout that never steadies
    * mustn't keep the loading screen up. Checked as the map goes idle, after the score cards' sync on
    * it. Only then can it become settled: every other change to the cards comes with a frame drawn or
-   * the globe unsettled. The cards give up on a frame they ask no other after, so the map goes idle
-   * after it.
+   * the globe unsettled. Having given up, the cards ask for no frames and give the map nothing new
+   * to draw, so the map goes idle after them.
    */
   private noteReady(): void {
     if (this.wasReady || !this.hasGames) return

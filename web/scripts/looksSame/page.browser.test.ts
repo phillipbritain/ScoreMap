@@ -20,9 +20,9 @@ describe('pageStep', () => {
   })
 
   it('gives the games once the page says it’s ready', async () => {
-    let ready = false
-    globe(3, () => ready)
-    setTimeout(() => (ready = true), 300)
+    let settled = false
+    globe(3, () => settled)
+    setTimeout(() => (settled = true), 300)
     expect(await pageStep({ step: 'games' })).toEqual({ games: 3 })
   })
 })

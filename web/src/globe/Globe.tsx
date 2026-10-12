@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react'
 import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
-import { GlobeMap } from './globeMap'
+import { GlobeMap, type LoadingStage } from './globeMap'
 import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
@@ -22,17 +22,19 @@ interface GlobeProps {
   startCamera: Camera
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
+  /** Called each time the globe's initial load moves on a stage (see GlobeMap.stage). */
+  onStage: (stage: LoadingStage) => void
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove }: GlobeProps) {
+export function Globe({ theme, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, startCamera, theme })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, startCamera, theme }
-  }, [onSelectGame, onCameraMove, startCamera, theme])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme])
 
   useEffect(() => {
     if (!container.current) return
@@ -42,6 +44,7 @@ export function Globe({ theme, games, selectedGameId, panel, onSelectGame, start
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
       onCameraMove: (camera) => latest.current.onCameraMove(camera),
+      onStage: (stage) => latest.current.onStage(stage),
     })
     globe.current = instance
     return () => {

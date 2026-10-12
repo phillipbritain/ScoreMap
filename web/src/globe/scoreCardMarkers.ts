@@ -15,6 +15,9 @@ import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { selectedStacking, stacking, statusKey } from './statusLook'
 import { pinSize } from './zoomLevels'
 
+// About a second of frames: longer than any layout takes to settle.
+const maxSettlingFrames = 60
+
 interface PlacedCard {
   marker: Marker
   /** The card last drawn into the marker, so unchanged cards aren't redrawn every frame. */
@@ -58,6 +61,13 @@ export class ScoreCardMarkers {
   private cardClusters: PlacedCardCluster[] = []
   /** The layout last given to the map (see drawLayout), so it's given again only when it changes. */
   private layoutDrawn = ''
+  /**
+   * Whether the last sync changed any card (placed, redrawn, moved or removed), or couldn't yet read
+   * the pins: until one changes nothing, the cards are still settling (see steady).
+   */
+  private changed = true
+  /** How many syncs in a row have changed something, to stop asking for frames that never settle. */
+  private changingSyncs = 0
 
   /**
    * `theme` gives how far a card's pointer reaches below it to its venue and the colour of pulses
@@ -94,7 +104,9 @@ export class ScoreCardMarkers {
    */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
-    const pins = this.map.isSourceLoaded(pinSource)
+    const pinsLoaded = this.map.isSourceLoaded(pinSource)
+    let changed = !pinsLoaded
+    const pins = pinsLoaded
       ? pinSize(this.map.getZoom()) === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
@@ -134,6 +146,7 @@ export class ScoreCardMarkers {
           inCardCluster: false,
         }
         this.placed.set(gameId, placed)
+        changed = true
       } else {
         placed.marker.setLngLat(lngLat)
       }
@@ -146,17 +159,39 @@ export class ScoreCardMarkers {
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
+        changed = true
       }
     }
 
-    this.layOut(keep)
+    if (this.layOut(keep)) changed = true
 
     for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
       marker.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
+      changed = true
     }
+    this.settleNextFrame(changed)
+  }
+
+  /**
+   * Whether the cards have settled: the last frame laid them out just as the frame before did, with
+   * the pins they're placed from loaded.
+   */
+  steady(): boolean {
+    return !this.changed
+  }
+
+  /**
+   * Each frame's layout starts from the last, and the map draws a frame only when something on it
+   * changes: so while the cards are still moving, ask for another frame, until they settle (for a
+   * second at most, should a layout never settle).
+   */
+  private settleNextFrame(changed: boolean): void {
+    this.changed = changed
+    this.changingSyncs = changed ? this.changingSyncs + 1 : 0
+    if (changed && this.changingSyncs <= maxSettlingFrames) this.map.triggerRepaint()
   }
 
   /** Where the cards placed now are. */
@@ -166,9 +201,9 @@ export class ScoreCardMarkers {
 
   /**
    * Moves cards that would overlap apart, each with a trail back to its venue, and counts the games
-   * there's no room for (see cardLayout).
+   * there's no room for (see cardLayout). True if any card moved, or went into or out of a card cluster.
    */
-  private layOut(gameIds: ReadonlySet<string>): void {
+  private layOut(gameIds: ReadonlySet<string>): boolean {
     const cards = [...gameIds].map((gameId): CardOnGlobe => {
       const { marker, width, height } = this.placed.get(gameId)!
       const lngLat = marker.getLngLat()
@@ -192,6 +227,7 @@ export class ScoreCardMarkers {
     traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
+    let moved = false
     for (const [gameId, placed] of this.placed) {
       const placement = layout.cards.get(gameId)
       if (!placement) continue
@@ -200,16 +236,19 @@ export class ScoreCardMarkers {
         placed.offset = offset
         placed.marker.setOffset([offset.dx, offset.dy])
         placed.marker.getElement().toggleAttribute('data-moved', trail !== null)
+        moved = true
       }
       if (inCardCluster !== placed.inCardCluster) {
         placed.inCardCluster = inCardCluster
         // Hidden rather than removed, so the card keeps its size for laying out the next frame.
         placed.marker.getElement().toggleAttribute('data-in-card-cluster', inCardCluster)
+        moved = true
       }
     }
     const lngLats = new Map(cards.map((card) => [card.gameId, card.lngLat]))
     this.cardClusters = layout.cardClusters.map(({ gameIds }) => ({ gameIds, lngLat: lngLats.get(gameIds[0])! }))
     this.drawLayout(cards, layout)
+    return moved
   }
 
   /**

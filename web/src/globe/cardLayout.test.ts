@@ -358,7 +358,7 @@ describe('layOutCards', () => {
       const row = (x: number) => ['a', 'b', 'c', 'd'].map((gameId) => card(gameId, x, 64))
       const was = { a: { dx: 0, dy: 0 }, b: { dx: 120, dy: 0 }, c: { dx: 230, dy: 0 }, d: { dx: 340, dy: 0 } }
       const before = row(600)
-      expect(boxesOf(before, layOutCards(before, strip, lastTime(was))).map(({ x }) => x + 53)).toEqual([653, 773, 883, 993])
+      expect(boxesOf(before, layOutCards(before, strip, lastTime(was))).map(({ x, width }) => x + width / 2)).toEqual([653, 773, 883, 993])
 
       // The globe turns the row 15 px right: d would reach 8 px off screen, and every spot near it is taken.
       const now = row(615)

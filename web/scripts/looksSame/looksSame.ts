@@ -117,21 +117,17 @@ function removeLeftovers(): void {
   }
 }
 
-interface Run {
-  web: string
-  server: string
-  /** Whether this clone's dev run was going already, and the check's replaced it. */
-  replaced: boolean
-}
-
-/** Starts this clone's dev run (isolated if any other is going), and gives its URLs. */
-function startRun(): Run {
+/** Which dev runs are going on the machine: any at all, and this clone's. */
+function runsGoing(): { any: boolean; ours: boolean } {
   const runs = JSON.parse(run('aspire', ['ps', '--format', 'json', '--nologo'])) as { appHostPath: string }[]
   const appHost = join(repo, 'server', 'src', 'ScoreMap.AppHost', 'ScoreMap.AppHost.csproj').toLowerCase()
-  const replaced = runs.some((other) => resolve(other.appHostPath).toLowerCase() === appHost)
-  if (replaced) console.log("This clone's dev run is going already: the check replaces it with its own, and stops that at the end.")
+  return { any: runs.length > 0, ours: runs.some((other) => resolve(other.appHostPath).toLowerCase() === appHost) }
+}
+
+/** Starts this clone's dev run (isolated if any other run is going), and gives its URLs. */
+function startRun({ isolated }: { isolated: boolean }): { web: string; server: string } {
   console.log('Starting the dev run…')
-  run('aspire', ['start', '--nologo', '--non-interactive', ...(runs.length ? ['--isolated'] : [])])
+  run('aspire', ['start', '--nologo', '--non-interactive', ...(isolated ? ['--isolated'] : [])])
   run('aspire', ['wait', 'web', '--nologo'])
   const { resources } = JSON.parse(run('aspire', ['describe', '--format', 'json', '--nologo'])) as {
     resources: { displayName: string; urls: { name: string; url: string }[] }[]
@@ -140,7 +136,7 @@ function startRun(): Run {
   const web = urls('web')[0]?.url
   const server = urls('server').find((url) => url.name === 'http')?.url
   if (!web || !server) throw new Error(`Couldn't find the run's URLs in aspire describe`)
-  return { web: web.replace(/\/$/, ''), server: server.replace(/\/$/, ''), replaced }
+  return { web: web.replace(/\/$/, ''), server: server.replace(/\/$/, '') }
 }
 
 /**
@@ -268,14 +264,15 @@ async function main(args: string[]): Promise<number> {
     const base = checkOutBase(repo, baseRef)
     cleanUp.push(() => base.remove())
 
-    let devRun: Run | undefined
+    // Starting the check's dev run replaces this clone's, if it's going.
+    const runs = runsGoing()
+    if (runs.ours) console.log("This clone's dev run is going already: the check replaces it with its own, and stops that at the end.")
     cleanUp.push(() => {
       console.log('Stopping the dev run…')
       run('aspire', ['stop', '--nologo'])
-      if (devRun?.replaced) console.log("This clone's dev run, going when the check started, is stopped: aspire start starts it again.")
+      if (runs.ours) console.log("This clone's dev run, going when the check started, is stopped: aspire start starts it again.")
     })
-    devRun = startRun()
-    const { web, server } = devRun
+    const { web, server } = startRun({ isolated: runs.any })
     await startPaused(server, scenario)
 
     const { url: baseUrl, vite } = await serveBase(base, server)

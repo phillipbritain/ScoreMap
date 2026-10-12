@@ -158,6 +158,47 @@ public class ScenarioSpeedTests
     }
 
     [Fact]
+    public async Task A_switch_can_name_the_speed_to_start_at_so_a_scenario_starts_Paused_and_stands_still_at_its_start()
+    {
+        await using var server = new ScoreMapServer { Scenario = "other" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        server.WriteScenario("other", ScoresAtOneMinute.Replace("chiefs-bills", "other-game"));
+        var startedAt = server.Clock.GetUtcNow();
+        using var http = server.CreateClient();
+
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "paused" });
+
+        response.EnsureSuccessStatusCode();
+        var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+        Assert.NotNull(listing);
+        Assert.Equal(("test", "Paused"), (listing.Running, listing.Speed));
+        // Long past the score on the real clock, a browser still gets the games as they start, and
+        // the scenario clock still reads the start.
+        server.Clock.Advance(TimeSpan.FromMinutes(5));
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+        Assert.Equal(("chiefs-bills", 14), (snapshot.Single().Id, snapshot.Single().Home.Score));
+        await Task.Delay(100);
+        Assert.Empty(client.PendingChanges());
+        Assert.Equal(startedAt, (await ListingAsync(http)).Clock.Reads);
+    }
+
+    [Fact]
+    public async Task A_switch_naming_a_speed_not_in_the_list_is_refused_and_switches_nothing()
+    {
+        await using var server = new ScoreMapServer { Scenario = "other" };
+        server.WriteScenario("test", ScoresAtOneMinute);
+        server.WriteScenario("other", ScoresAtOneMinute.Replace("chiefs-bills", "other-game"));
+        using var http = server.CreateClient();
+
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "Slow" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync());
+        Assert.Equal(("other", "Normal"), ((await ListingAsync(http)).Running, (await ListingAsync(http)).Speed));
+    }
+
+    [Fact]
     public async Task Game_starts_and_pin_windows_are_on_the_scenario_clock()
     {
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };

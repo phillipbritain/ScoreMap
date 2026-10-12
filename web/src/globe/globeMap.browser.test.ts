@@ -492,6 +492,23 @@ describe('loading stage', () => {
     await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
   })
 
+  it('takes no keyboard input until it is ready, then takes it', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 3 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    map.getCanvas().focus()
+
+    await userEvent.keyboard('{ArrowRight}+')
+    await pause(500)
+    expect(map.getCenter().lng).toBe(0)
+    expect(map.getZoom()).toBe(3)
+
+    globe.show([game('A')])
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    map.getCanvas().focus()
+    await userEvent.keyboard('+')
+    await vi.waitFor(() => expect(map.getZoom()).toBeGreaterThan(3), { timeout: 5_000 })
+  })
+
   it('stays ready through a pan, a change of games and a fresh snapshot', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show([game('A'), game('B', { longitude: 0.3 })])

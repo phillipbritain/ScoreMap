@@ -129,8 +129,9 @@ describe('applyTheme', () => {
       // Five text sizes, eight spacing steps, five radii and three strokes; the letter spacing of the
       // game panel's labels and a score card's header.
       scales: 5 + 8 + 5 + 3 + 2,
-      // The game panel's nine, a score card's five, the settings menu's five and the controls' two.
-      sizes: 9 + 5 + 5 + 2,
+      // The game panel's nine, a score card's five, the settings menu's five, the controls' two and the
+      // loading screen's spinner.
+      sizes: 9 + 5 + 5 + 2 + 1,
       // Eleven page fonts (a family and a weight each) and the cluster count's (a font of four and a size).
       fonts: 11 * 2 + 5,
       // Six corners and the cut corner's two.

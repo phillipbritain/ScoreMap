@@ -200,7 +200,7 @@ A **scale** is a theme's set of named sizes, in pixels, that a kind of size is a
 | `strokes` | `thin`, `medium`, `thick` | 1, 2, 3 | `--strokes-thin` |
 
 - **Text sizes**: on the page, body text `l`; the game panel `m`, its team names `l`, scores `xl`, headings and secondary text `s`, labels and the photo credit `xs`; score cards `s`, their header line `xs`; the settings menu and the scenario controls `m`, the menu's counts and hint `s`; the loading screen's message `m`. On the globe, place names and cluster counts name their steps in the theme (see [Fonts](#fonts)).
-- **Spacing**: every padding, margin and gap on the page, and the loading screen's spinner, `3xl` across. Cards stay tight on the small steps and panels roomy on the large ones, from the same scale.
+- **Spacing**: every padding, margin and gap on the page. Cards stay tight on the small steps and panels roomy on the large ones, from the same scale.
 - **Radii**: used through the corners below. `pill` is large enough to round any control into a pill. Circles (clusters, the status light) stay circles whatever the radii.
 - **Strokes**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, the settings tab's underline `medium`, the game panel's top edge and the loading screen's spinner ring `thick`.
 
@@ -268,6 +268,7 @@ Sizes that aren't on a scale are free values: pixels, any number from 0 up (an o
 | `sizes.settingsMenu.width`, `.gear`, `.allLeagues` | The settings menu's width, the gear, the "All leagues" chip's height | 320, 28, 32 |
 | `sizes.settingsMenu.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `sizes.controls.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
+| `sizes.loadingScreen.spinner` | The loading screen's spinner, across | 32 |
 
 ## Fonts
 

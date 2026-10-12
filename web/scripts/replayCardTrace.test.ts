@@ -1,4 +1,4 @@
-// Replays frames a dev run laid its score cards out from (see scripts/panGlobe.js) through the layout,
+// Replays frames a dev run laid its score cards out from (see `npm run page -- pan`) through the layout,
 // frame by frame as the app does, and counts how often cards jump. Skipped unless CARD_TRACE names a
 // trace; CARD_LAYOUT_COMPARE names another cardLayout module to replay the same frames through. See
 // docs/agents/card-layout-replay.md.
@@ -16,7 +16,7 @@ const compare = process.env.CARD_LAYOUT_COMPARE
 const bigJump = 24
 
 it.skipIf(!trace)('replays a captured pan through the card layout', async () => {
-  // agent-browser gives the page's JSON string back as JSON, so it may be encoded twice.
+  // A trace saved with agent-browser eval, as before `npm run page -- pan`, may be encoded twice.
   let frames: unknown = JSON.parse(readFileSync(trace!, 'utf8'))
   if (typeof frames === 'string') frames = JSON.parse(frames)
   const layouts: [string, typeof layOutCards][] = [['current', layOutCards]]

@@ -35,4 +35,11 @@ describe('a CSS value naming a colour', () => {
     expect(namesColour('opacity 200ms ease-in-out')).toBe(false)
     expect(namesColour('red-alert-pulse 1s infinite')).toBe(false)
   })
+
+  it('names none in quoted text or a url', () => {
+    expect(namesColour("'Gold Sans', serif")).toBe(false)
+    expect(namesColour('"Gold"')).toBe(false)
+    expect(namesColour('url(tan.svg) no-repeat')).toBe(false)
+    expect(namesColour('url("tan.svg"), teal')).toBe(true)
+  })
 })

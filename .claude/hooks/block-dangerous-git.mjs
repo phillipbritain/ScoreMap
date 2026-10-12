@@ -1,6 +1,6 @@
-// PreToolUse hook for the Bash and PowerShell tools: blocks git commands that push to main,
-// force-push, or throw away local work, and gh commands that merge a pull request (only the user
-// merges, after reviewing on GitHub). Exits 2 with a message on stderr to block; 0 to allow.
+// PreToolUse hook for the Bash and PowerShell tools: blocks git commands that push to main or
+// force-push, and gh commands that merge a pull request (only the user merges, after reviewing on
+// GitHub). Commands that only change local work, such as reset --hard, are left to the agent. Exits 2 with a message on stderr to block; 0 to allow.
 // It matches command text, so it's an early warning, not a barrier. Nor is GitHub's branch rule
 // for Claude: commands run as the user, whose admin role can bypass it.
 import { execFileSync } from 'node:child_process'
@@ -31,26 +31,7 @@ function blockReason(words) {
   if (git === -1) return null
   const { subcommand, args, dir } = gitSubcommand(words.slice(git + 1))
 
-  switch (subcommand) {
-    case 'push':
-      return pushReason(args, dir)
-    case 'reset':
-      return args.includes('--hard') ? 'discards uncommitted changes (reset --hard)' : null
-    case 'clean':
-      return args.some((a) => /^-[a-zA-Z]*f/.test(a) || a === '--force') ? 'deletes untracked files (clean -f)' : null
-    case 'branch':
-      return args.includes('-D') || (args.includes('--delete') && args.includes('--force'))
-        ? 'deletes a branch even if it is unmerged (branch -D)'
-        : null
-    case 'checkout':
-      return args.includes('.') ? 'discards every uncommitted change (checkout .)' : null
-    case 'restore':
-      return args.includes('.') && !(args.includes('--staged') && !args.includes('--worktree'))
-        ? 'discards every uncommitted change (restore .)'
-        : null
-    default:
-      return null
-  }
+  return subcommand === 'push' ? pushReason(args, dir) : null
 }
 
 // gh pr merge, or the REST/GraphQL merge through gh api.

@@ -117,6 +117,10 @@
       "on": { "fill": "offWhite.500", "text": "navy.800" },
       "off": { "opacity": 0.6 }
     },
+    "loadingScreen": {
+      "dim": { "color": "navy.900", "opacity": 0.6 },
+      "spinner": { "color": "offWhite.500", "track": "navy.600" }
+    },
     "card": {
       "fill": "navy.700",
       "text": "offWhite.500",

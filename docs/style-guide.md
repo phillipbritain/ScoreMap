@@ -26,13 +26,13 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 
 The code reads only the resolved theme, never the JSON:
 
-- **The page** (the game panel, score cards, the settings menu, the scenario controls): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the settings in kebab case. `text.main` is `--text-main`, `status.live.color` is `--status-live-color`, `spacing.l` is `--spacing-l`, `panel.surface.top` is `--panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) names no colour, font, text size, spacing, radius, size in pixels or ems, or opacity of its own, outside its animations (an opacity of 1 or 0 only shows or hides a thing), and a test (`indexCss.test.ts`) fails if it does. The web app's TypeScript and the globe's map layers have tests of their own (see [What stays in code](#what-stays-in-code)).
+- **The page** (the game panel, score cards, the settings menu, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the settings in kebab case. `text.main` is `--text-main`, `status.live.color` is `--status-live-color`, `spacing.l` is `--spacing-l`, `panel.surface.top` is `--panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) names no colour, font, text size, spacing, radius, size in pixels or ems, or opacity of its own, outside its animations (an opacity of 1 or 0 only shows or hides a thing), and a test (`indexCss.test.ts`) fails if it does. The web app's TypeScript and the globe's map layers have tests of their own (see [What stays in code](#what-stays-in-code)).
 - **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen once**, in `web/src/main.tsx`: it's written to the page there and handed down through `App` and `Globe` to the globe.
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's spinner fades in and out in place instead of turning, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The palette
 
@@ -137,6 +137,9 @@ The dark theme gives every job a step but the four shadows, which are `transpare
 | `settingsMenu.chip.outline` | A league chip's outline | `navy.500` |
 | `settingsMenu.chip.badge` | The badge counting leagues on the "All leagues" chip | `navy.700` |
 | `settingsMenu.on.fill`, `settingsMenu.on.text` | A settings tab or league chip that's on | `offWhite.500`, `navy.800` |
+| `loadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `loadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `navy.900`, as the sky |
+| `loadingScreen.spinner.color` | The loading screen's ring spinner: the arc that turns | `offWhite.500` |
+| `loadingScreen.spinner.track` | The rest of the spinner's ring, that the arc turns around | `navy.600` |
 
 "On" is off-white everywhere (a settings tab, a league chip, a lit speed key, the selection), so chosen looks the same across the app.
 
@@ -196,9 +199,9 @@ A **scale** is a theme's set of named sizes, in pixels, that a kind of size is a
 | `strokes` | `thin`, `medium`, `thick` | 1, 2, 3 | `--strokes-thin` |
 
 - **Text sizes**: on the page, body text `l`; the game panel `m`, its team names `l`, scores `xl`, headings and secondary text `s`, labels and the photo credit `xs`; score cards `s`, their header line `xs`; the settings menu and the scenario controls `m`, the menu's counts and hint `s`. On the globe, place names and cluster counts name their steps in the theme (see [Fonts](#fonts)).
-- **Spacing**: every padding, margin and gap on the page. Cards stay tight on the small steps and panels roomy on the large ones, from the same scale.
+- **Spacing**: every padding, margin and gap on the page, and the loading screen's spinner, `3xl` across. Cards stay tight on the small steps and panels roomy on the large ones, from the same scale.
 - **Radii**: used through the corners below. `pill` is large enough to round any control into a pill. Circles (clusters, the status light) stay circles whatever the radii.
-- **Strokes**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, the settings tab's underline `medium`, the game panel's top edge `thick`.
+- **Strokes**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, the settings tab's underline `medium`, the game panel's top edge and the loading screen's spinner ring `thick`.
 
 ### Corners and the cut corner
 
@@ -248,6 +251,7 @@ Sizes that aren't on a scale are free values: pixels, any number from 0 up (an o
 | `panel.glow.y`, `.blur`, `.opacity` | The glow in the game's status colour along the game panel's top | 0, 0, 0 (none) |
 | `card.headerTint` | How strongly a score card's header is tinted with its status colour, 0 to 1 | 0.28 |
 | `controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |
+| `loadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `letterSpacing.label` | How far apart the letters of the game panel's league and labels are spaced, in ems | 0.14 |
 | `letterSpacing.cardHeader` | Likewise for a score card's header line | 0.06 |
 | `page.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |

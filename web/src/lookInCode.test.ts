@@ -1,6 +1,5 @@
 /// <reference types="node" />
 import { readdirSync, readFileSync } from 'node:fs'
-import { Color } from '@maplibre/maplibre-gl-style-spec'
 import type { LayerSpecification, StyleSpecification } from 'maplibre-gl'
 import ts from 'typescript'
 import { describe, expect, it } from 'vitest'
@@ -8,6 +7,7 @@ import { gameLayers } from './globe/gameLayers'
 import { globeStyle } from './globe/globeStyle'
 import { builtInTheme } from './theme/builtInTheme'
 import type { Theme } from './theme/theme'
+import { isColour } from './writtenColour'
 
 /*
  * Every colour, size and opacity in ScoreMap comes from the theme (docs/style-guide.md). The page's
@@ -37,12 +37,6 @@ const allows = (allowed: StillInCode, name: string, value: unknown) => allowed.v
 
 /** An opacity of 1 or 0 only shows or hides a thing. */
 const showsOrHides = (name: string, value: number) => /opacity/i.test(name) && (value === 0 || value === 1)
-
-/** A colour written out: #rgb to #rrggbbaa, or a colour function such as rgb(…). */
-const colourWithin = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i
-/** A colour's name, such as gold or teal, as the whole of a string. `transparent` is no colour. */
-const isColourName = (text: string) => /^[a-z]+$/i.test(text) && text.toLowerCase() !== 'transparent' && Color.parse(text) !== undefined
-const isColour = (text: string) => colourWithin.test(text) || isColourName(text.trim())
 
 /** A size written out in pixels, points or ems, such as 12px or 0.14em. */
 const writtenSize = /(^|[^\w.])\d*\.?\d+(px|pt|em|rem|ex|ch)\b/

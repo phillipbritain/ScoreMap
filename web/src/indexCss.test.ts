@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { namesColour } from './writtenColour'
 
 // Read from the file: Vitest hands CSS imports to tests empty, even ?raw ones.
 const css = readFileSync(new URL('./index.css', import.meta.url), 'utf8')
@@ -32,10 +33,6 @@ function withoutKeyframes(source: string): string {
 }
 
 const valueOf = (declaration: string) => declaration.slice(declaration.indexOf(':') + 1)
-
-/** A colour written out: #rgb or #rrggbb, a colour function such as rgb(…), or a common colour keyword. */
-const colour =
-  /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(|\b(white|black|gr[ae]y|silver|red|orange|yellow|gold|green|blue|navy|purple|pink)\b/i
 
 const propertyOf = (declaration: string) => declaration.slice(0, declaration.indexOf(':')).trim()
 const withoutThemeValues = (declaration: string) => valueOf(declaration).replace(/var\(--[-a-z0-9]+\)/g, '').trim()
@@ -87,7 +84,7 @@ describe('the page’s CSS', () => {
     const own = declarations(css)
       // A mask uses only how opaque its colours are, never what colour they are.
       .filter((declaration) => !declaration.startsWith('mask-image'))
-      .filter((declaration) => colour.test(valueOf(declaration).replace(/var\(--[-a-z0-9]+\)/g, '')))
+      .filter((declaration) => namesColour(withoutThemeValues(declaration)))
     expect(own).toEqual([])
   })
 })

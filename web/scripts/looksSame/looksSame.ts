@@ -58,8 +58,8 @@ function inPage(step: PageStep): PageAnswer {
     if ('tooOld' in answer) {
       // The working tree's page can always say, so this is the base's.
       throw new Error(
-        "The base is too old to compare: its page can't say when every game is on screen and still " +
-          '(window.scoremap.ready(), added in #112). Compare against a base that includes #112.',
+        "The base is too old to compare: its page can't say when the globe has loaded " +
+          '(window.scoremap.stage(), or ready() before it, added in #112). Compare against a base that includes #112.',
       )
     }
     if (!('waiting' in answer)) return answer

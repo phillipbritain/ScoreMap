@@ -14,12 +14,18 @@
     ...window.panGlobe,
   }
 
-  const { map, frames } = window.scoremap ?? {}
+  const { map, frames, stage, settled } = window.scoremap ?? {}
   if (!map) throw new Error('No window.scoremap: is this a dev run (npm run dev)?')
   const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()))
+  const until = async (done) => {
+    while (!done()) await nextFrame()
+  }
+  await until(() => stage() === 'ready')
+  // The cards settle where the camera starts, once the map has drawn the turn there.
+  const drawn = new Promise((resolve) => map.once('render', resolve))
   map.jumpTo(camera)
-  // Long enough for the cards to settle where the camera starts.
-  for (let i = 0; i < 30; i++) await nextFrame()
+  await drawn
+  await until(settled)
   frames.length = 0
   for (const { by, frames: count } of pan) {
     for (let i = 0; i < count; i++) {

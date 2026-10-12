@@ -457,7 +457,7 @@ const settings = {
    * lays cards out by this). The settings menu: its width, the gear, the "All leagues" chip's height,
    * and on that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The
    * scenario controls: a speed key and its icon. The game panel sits clear of the scenario controls by
-   * their keys' size.
+   * their keys' size. The loading screen: its spinner, across.
    */
   sizes: {
     panel: {
@@ -474,6 +474,7 @@ const settings = {
     card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
     settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
     controls: { key: pixels, icon: pixels },
+    loadingScreen: { spinner: pixels },
   },
 }
 

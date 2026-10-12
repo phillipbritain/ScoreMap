@@ -1004,8 +1004,8 @@ body {
 
 .loading-screen__spinner {
   box-sizing: border-box;
-  width: var(--spacing-3xl);
-  height: var(--spacing-3xl);
+  width: var(--sizes-loading-screen-spinner);
+  height: var(--sizes-loading-screen-spinner);
   border: var(--strokes-thick) solid var(--loading-screen-spinner-track);
   border-top-color: var(--loading-screen-spinner-color);
   border-radius: 50%;
@@ -1016,7 +1016,7 @@ body {
    the spinner stays where it is when the message comes and goes. */
 .loading-screen__message {
   position: absolute;
-  top: calc(50% + var(--spacing-3xl) / 2 + var(--spacing-l));
+  top: calc(50% + var(--sizes-loading-screen-spinner) / 2 + var(--spacing-l));
   right: var(--spacing-l);
   left: var(--spacing-l);
   margin: 0;

@@ -575,7 +575,8 @@ describe('loading stage', () => {
     let idleSinceMoving = false
     map.on('move', () => (idleSinceMoving = false))
     map.on('idle', () => (idleSinceMoving = true))
-    map.easeTo({ center: [10, 5], duration: 2000 })
+    // Over a pole on the glow's edge, as the glow test's is.
+    map.easeTo({ center: [12, 8], duration: 2000 })
     await vi.waitFor(() => expect(!map.isMoving() && idleSinceMoving).toBe(true), { timeout: 10_000 })
     expect(globe.settled()).toBe(false)
     for (const off of await trailsOffCards()) expect(off).toBeLessThan(1)
@@ -846,6 +847,32 @@ describe('animations', () => {
     await pause(300)
 
     expect(card('A')!.className).not.toContain('score-card--animate')
+  })
+})
+
+describe('glow', () => {
+  it('keeps drawing and lets the camera stop when the globe is eased to where a pole is a whole number of degrees away', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 4 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    const thrown: unknown[] = []
+    const onError = (event: ErrorEvent) => {
+      thrown.push(event.error)
+      event.preventDefault()
+    }
+    window.addEventListener('error', onError)
+    try {
+      let stopped = false
+      map.once('moveend', () => (stopped = true))
+      // 82° north of 8°N is the North Pole.
+      map.easeTo({ center: [12, 8], duration: 300 })
+      await vi.waitFor(() => expect(stopped).toBe(true), { timeout: 5_000 })
+    } finally {
+      window.removeEventListener('error', onError)
+    }
+
+    expect(thrown).toEqual([])
+    const glow = container.querySelector<HTMLElement>('.globe-glow')!
+    expect(Number.isFinite(parseFloat(glow.style.width))).toBe(true)
   })
 })
 

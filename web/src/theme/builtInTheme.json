@@ -172,7 +172,8 @@
       "panel": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24, "scoreWidth": 2.6 },
       "card": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6, "nameClearance": 4 },
       "settingsMenu": { "width": 320, "gear": 28, "allLeagues": 32, "countWidth": 3.2, "mark": 1 },
-      "controls": { "key": 34, "icon": 14 }
+      "controls": { "key": 34, "icon": 14 },
+      "loadingScreen": { "spinner": 32 }
     }
   }
 }

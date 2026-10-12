@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
 import { layOutCards, type CardLayout, type CardScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { cardJump } from './cardJump'
 import type { ScreenBox } from './gameCities'
 
 const pointer = 6
@@ -367,7 +368,7 @@ describe('layOutCards', () => {
             height: 60,
           }
         })
-      // How often a card with its venue on screen leaps more than 24 px from where it was.
+      // How often a card with its venue on screen leaps further than a jump from where it was.
       let jumps = 0
       let previous: CardLayout['cards'] = new Map()
       for (let frame = 0; frame < 100; frame++) {
@@ -378,7 +379,7 @@ describe('layOutCards', () => {
           const now = layout.cards.get(gameId)!
           if (!was || was.inCardCluster || now.inCardCluster) continue
           const onScreen = venueX >= 0 && venueX <= scene.width && venueY >= 0 && venueY <= scene.height
-          if (onScreen && Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > 24) jumps++
+          if (onScreen && Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > cardJump) jumps++
         }
         previous = layout.cards
       }

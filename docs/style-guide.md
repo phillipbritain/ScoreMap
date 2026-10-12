@@ -140,6 +140,7 @@ The dark theme gives every job a step but the four shadows, which are `transpare
 | `loadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `loadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `navy.900`, as the sky |
 | `loadingScreen.spinner.color` | The loading screen's ring spinner: the arc that turns | `offWhite.500` |
 | `loadingScreen.spinner.track` | The rest of the spinner's ring, that the arc turns around | `navy.600` |
+| `loadingScreen.message` | The message under the loading screen's spinner when loading is slow | `offWhite.500` |
 
 "On" is off-white everywhere (a settings tab, a league chip, a lit speed key, the selection), so chosen looks the same across the app.
 
@@ -198,7 +199,7 @@ A **scale** is a theme's set of named sizes, in pixels, that a kind of size is a
 | `radii` | `xs`, `s`, `m`, `l`, `pill` | 4, 6, 8, 12, 999 | `--radii-m` |
 | `strokes` | `thin`, `medium`, `thick` | 1, 2, 3 | `--strokes-thin` |
 
-- **Text sizes**: on the page, body text `l`; the game panel `m`, its team names `l`, scores `xl`, headings and secondary text `s`, labels and the photo credit `xs`; score cards `s`, their header line `xs`; the settings menu and the scenario controls `m`, the menu's counts and hint `s`. On the globe, place names and cluster counts name their steps in the theme (see [Fonts](#fonts)).
+- **Text sizes**: on the page, body text `l`; the game panel `m`, its team names `l`, scores `xl`, headings and secondary text `s`, labels and the photo credit `xs`; score cards `s`, their header line `xs`; the settings menu and the scenario controls `m`, the menu's counts and hint `s`; the loading screen's message `m`. On the globe, place names and cluster counts name their steps in the theme (see [Fonts](#fonts)).
 - **Spacing**: every padding, margin and gap on the page, and the loading screen's spinner, `3xl` across. Cards stay tight on the small steps and panels roomy on the large ones, from the same scale.
 - **Radii**: used through the corners below. `pill` is large enough to round any control into a pill. Circles (clusters, the status light) stay circles whatever the radii.
 - **Strokes**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, the settings tab's underline `medium`, the game panel's top edge and the loading screen's spinner ring `thick`.

@@ -1,0 +1,15 @@
+// slow-initial-load: worldwide's games, but the server is slow to send them: each browser that connects waits
+// 15 seconds (real time, whatever the speed) for its first games. For the loading screen: the dim and
+// spinner over an empty globe, the "Can't reach ScoreMap" message after 10 seconds, then the pins and
+// score cards coming in under the dim until the globe is ready and the dim fades. Picking it in the
+// scenario pill reloads the page so it starts slowly at once; reload, or pick it again, to watch again.
+{
+  "slowStart": "15s",
+  "fill": {
+    "count": 150,
+    "group": "worldwide",
+    "mix": { "live": 4, "upcoming": 3, "final": 2 }
+  },
+  "play": true,
+  "disrupted": 0.05
+}

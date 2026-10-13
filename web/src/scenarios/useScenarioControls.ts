@@ -19,6 +19,17 @@ export async function putScenarios(path: 'running' | 'speed', body: object): Pro
   return readListing(response)
 }
 
+/**
+ * Switches the server, and so every browser, to scenario `name`, started afresh: the running one too,
+ * which resets it. One that starts slowly (slow-initial-load) reloads this page instead of setting the
+ * listing, so its first load plays out slowly at once. Resolves once it has switched.
+ */
+export async function switchScenario(name: string, setListing: (listing: ScenarioListing) => void): Promise<void> {
+  const switched = await putScenarios('running', { name })
+  if (switched.startsSlowly) window.location.reload()
+  else setListing(switched)
+}
+
 export interface ScenarioControls {
   /** What the server says about scenarios; null until it has said. */
   listing: ScenarioListing | null

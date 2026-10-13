@@ -34,7 +34,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private readonly ScenarioClock _clock;
     private volatile Source _running;
 
-    private sealed record Source(string Name, IGameFeedProvider Feed, bool CanControlPlay);
+    private sealed record Source(string Name, IGameFeedProvider Feed, bool CanControlPlay, TimeSpan SlowStart = default);
 
     public ScenarioSwitcher(
         [FromKeyedServices(RealGamesKey)] IGameFeedProvider realGames,
@@ -91,6 +91,12 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// real time, do.
     /// </summary>
     public bool CanControlPlay => _running.CanControlPlay;
+
+    /// <summary>
+    /// How long, in real time, each browser that connects waits for its first games: the running
+    /// scenario's slow start, or none.
+    /// </summary>
+    public TimeSpan SlowStart => _running.SlowStart;
 
     /// <summary>How fast the scenario clock runs, kept wherever play can't be controlled.</summary>
     public Speed Speed => _clock.Speed;
@@ -162,7 +168,8 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         }
         var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues, _teams);
         _clock.Restart(speed);
-        return new Source(name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime);
+        return new Source(
+            name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
     }
 
     private static bool IsRealGames(string name) => name.Equals(RealGames, StringComparison.OrdinalIgnoreCase);

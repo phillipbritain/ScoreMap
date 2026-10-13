@@ -9,7 +9,7 @@ import { Globe } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
-import { LoadingScreen } from './loading/LoadingScreen'
+import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
@@ -53,6 +53,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
+  // A loading screen the theme tuner holds up to be looked at, apart from the real one (local runs only).
+  const [loadingPreview, setLoadingPreview] = useState<LoadingPreview>('off')
   const panel = useRef<HTMLElement>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
@@ -100,6 +102,13 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         {/* Over the globe until it's ready, under the bottom stack and the settings menu, which come
             after it so they stay usable while loading. */}
         {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
+        {loadingPreview !== 'off' && (
+          <LoadingScreen
+            stage={loadingPreview === 'leaving' ? 'ready' : 'waitingForGames'}
+            slow={loadingPreview === 'slow'}
+            onGone={() => setLoadingPreview('off')}
+          />
+        )}
         {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
             settings menu, so an open settings menu lies over them on a phone. */}
         <div className={scenarios.shown ? 'bottom-stack bottom-stack--scenario' : 'bottom-stack'}>
@@ -126,7 +135,13 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {ThemeTuner && tuning && (
           <Suspense>
-            <ThemeTuner builtIn={tuning.builtIn} initial={tuning.initial} onTheme={setTheme} />
+            <ThemeTuner
+              builtIn={tuning.builtIn}
+              initial={tuning.initial}
+              onTheme={setTheme}
+              loadingPreview={loadingPreview}
+              onLoadingPreview={setLoadingPreview}
+            />
           </Suspense>
         )}
       </div>

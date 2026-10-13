@@ -84,7 +84,21 @@ public static partial class ScenarioReader
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
         var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, lists) : null;
-        return new Scenario(name, games, timeline, play);
+        return new Scenario(name, games, timeline, play, ReadSlowStart(file.SlowStart, name, path));
+    }
+
+    /// <summary>
+    /// How long the server holds back each browser's first games (<c>"slowStart"</c>, such as <c>"12s"</c>),
+    /// in real time; none if left out.
+    /// </summary>
+    private static TimeSpan ReadSlowStart(string? slowStart, string scenario, string path)
+    {
+        if (slowStart is null)
+            return TimeSpan.Zero;
+        if (!RelativeTime.TryParse(slowStart, out var wait) || wait < TimeSpan.Zero)
+            throw new ScenarioFileException(scenario, path,
+                $"slowStart is \"{slowStart}\"; it's how long each browser waits for its first games, such as \"12s\"");
+        return wait;
     }
 
     /// <summary>Reads one game written out in full; throws <see cref="InvalidDataException"/> saying what's wrong with it.</summary>
@@ -186,7 +200,7 @@ public static partial class ScenarioReader
 
     // The file's own shape, kept apart from the model so the format can grow.
     private sealed record ScenarioFile(
-        List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted);
+        List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted, string? SlowStart);
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,

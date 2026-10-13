@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import { pickerEntries, pillLabel, type ScenarioListing } from './scenarioPicker'
-import { putScenarios } from './useScenarioControls'
+import { switchScenario } from './useScenarioControls'
 
 /**
  * The scenario picker (ADR-0009): a pill naming the running scenario, opening a list of every scenario
  * plus "Real games". Picking one switches the server, and so every browser: the server then sends every
- * browser the new listing over the games hub, so each pill follows.
+ * browser the new listing over the games hub, so each pill follows (see switchScenario).
  */
 export function ScenarioPill({
   listing,
@@ -21,9 +21,8 @@ export function ScenarioPill({
 
   const switchTo = (name: string) => {
     setSwitching(true)
-    putScenarios('running', { name })
-      .then((switched) => {
-        setListing(switched)
+    switchScenario(name, setListing)
+      .then(() => {
         if (details.current) details.current.open = false
       })
       .catch((error: unknown) => console.error(`Could not switch to ${name}`, error))

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { LoadingPreview } from '../loading/LoadingScreen'
 import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
@@ -31,6 +32,9 @@ interface ThemeTunerProps {
   initial: ThemeJson
   /** Called with the draft, resolved, each time it changes and resolves: the app's one way to change its theme. */
   onTheme: (theme: Theme) => void
+  /** The loading screen held up over the globe to be looked at, and the way to change it. */
+  loadingPreview: LoadingPreview
+  onLoadingPreview: (preview: LoadingPreview) => void
 }
 
 /**
@@ -39,9 +43,9 @@ interface ThemeTunerProps {
  * palette's colours, or steps lighter or darker, so it stays within the theme's colours; sizes,
  * opacities and fonts change in place. Changes show at once,
  * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
- * the theme's JSON.
+ * the theme's JSON. The loading screen, seen only once a page, can be held up over the globe to tune.
  */
-export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
+export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadingPreview }: ThemeTunerProps) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(initial)
   const [tabIndex, setTabIndex] = useState(0)
@@ -112,6 +116,11 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
               ))}
             </ul>
           )}
+          {/* On the loading screen's tab, and on every tab while it's held up (its ring and message take
+              settings from Shape and Type), so it can always be put away. */}
+          {(tab.paths.some((path) => path[1] === 'LoadingScreen') || loadingPreview !== 'off') && (
+            <LoadingPreviewControl preview={loadingPreview} onChange={onLoadingPreview} />
+          )}
           <div className="theme-tuner__body">
             {tab.paths.map((path) => (
               <Group key={path.join('.')} path={path} value={settingAt(draft, path)} context={context} title />
@@ -137,6 +146,32 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+const previews: [LoadingPreview, string][] = [
+  ['off', 'Off'],
+  ['spinner', 'Spinner'],
+  ['slow', 'Slow message'],
+]
+
+/**
+ * Holds the loading screen up over the globe, to tune its look: the dim and spinner, or those with the
+ * slow message, until put away; or plays its exit, the fade it goes with once ScoreMap is ready.
+ */
+function LoadingPreviewControl({ preview, onChange }: { preview: LoadingPreview; onChange: (preview: LoadingPreview) => void }) {
+  return (
+    <div className="theme-tuner__preview" role="group" aria-label="Loading screen">
+      <span className="theme-tuner__preview-name">Loading screen</span>
+      {previews.map(([choice, name]) => (
+        <button key={choice} type="button" aria-pressed={preview === choice} onClick={() => onChange(choice)}>
+          {name}
+        </button>
+      ))}
+      <button type="button" disabled={preview === 'off' || preview === 'leaving'} onClick={() => onChange('leaving')}>
+        Play exit
+      </button>
     </div>
   )
 }

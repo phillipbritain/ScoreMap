@@ -15,7 +15,7 @@ aspire ps                 # every run on the machine: its AppHost path (so its c
 aspire stop --all         # stops every run on the machine
 ```
 
-`start` is plain when `aspire ps` lists no run, and `--isolated` when it lists any, since a plain run wants fixed ports another may hold. One clone or worktree has one run: starting it again (even `--isolated`) stops the one going and starts afresh, which is also how to pick up a changed server. For a second run of your own, make a git worktree and start it there.
+`start` is plain when `aspire ps` lists no run, and `--isolated` when it lists any, since a plain run wants fixed ports another may hold. One clone or worktree has one run: starting it again (even `--isolated`) stops the one going and starts afresh. For a second run of your own, make a git worktree and start it there.
 
 **Its URLs.** The browser app is the `web` resource's URL and the server the `server`'s; in an isolated run both are random. Read them from `aspire describe --format json` (`.resources[]`, by `displayName`, `.urls[].url`):
 
@@ -29,7 +29,7 @@ $server = ($run | ? displayName -eq server).urls | ? name -eq http | % url
 
 **First time on a machine:** set up as the README says. Trusting the development certificate is a Windows prompt the user must accept: ask them to run `! aspire certs trust`. Untrusted, the server shows Unhealthy and `web` waits for it forever.
 
-**Stop the run before `dotnet test` or `dotnet build`** in the same clone once you've changed the server: the run holds `ScoreMap.Server.exe` in the clone's `bin\Debug`, so the build fails with MSB3027 ("The file is locked by: ScoreMap.Server"). Unchanged, it builds and tests fine alongside. `aspire start` afterwards picks up the change.
+**A run watches the server** (`features.defaultWatchEnabled` in `aspire.config.json`): a saved change under `server/` restarts it within seconds, with no `aspire start`. The restart puts it back on `worldwide` at Normal, so switch the scenario and speed again after each change. Changes under `web/` show straight away through Vite. `dotnet build` and `dotnet test` work alongside a run.
 
 Finish every run with `aspire stop`. Done means `aspire ps` no longer lists this clone.
 

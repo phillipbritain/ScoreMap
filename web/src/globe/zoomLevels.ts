@@ -1,4 +1,9 @@
-/** Small pins when zoomed out; score cards once a country fills the screen. */
+import { degreesApart, type GlobePoint } from './geo'
+
+/**
+ * Small pins when zoomed out; score cards once a country fills the screen, for games near the centre
+ * of the view (see hasCard).
+ */
 export type PinSize = 'small' | 'card'
 
 export interface PinLayout {
@@ -13,6 +18,17 @@ export interface PinLayout {
 
 /** Zoom at which pins switch from small markers to score cards (about one country on screen). */
 export const cardZoom = 3
+
+/**
+ * How far from the centre of the view a game's venue can be, in degrees of arc, and still have a score
+ * card. Farther games show as small pins, so cards don't crowd the globe's rim.
+ */
+export const cardRadius = 40
+
+/** Whether a game has a score card at card zoom: its venue is within cardRadius of the view's centre. */
+export function hasCard(centre: GlobePoint, venue: GlobePoint): boolean {
+  return degreesApart(centre, venue) <= cardRadius
+}
 
 /**
  * The furthest out the globe zooms: the whole globe on a laptop screen, with small pins and their

@@ -21,15 +21,15 @@ The marker for one game on the globe, placed at the game's venue.
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-While zoomed in, the panel a pin shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue.
+While zoomed in, the panel a pin near the centre of the view shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue. Farther out, pins stay small, so cards don't crowd the globe's rim.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Cluster**:
-Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected.
+Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the centre of a zoomed-in view turns the globe to it instead, and its games get score cards.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Pin cluster**:
-While zoomed out, a cluster of pins close enough to overlap.
+A cluster of small pins close enough to overlap: while zoomed out, or zoomed in, far from the centre of the view.
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:

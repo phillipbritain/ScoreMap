@@ -13,7 +13,7 @@ import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { selectedStacking, stacking, statusKey } from './statusLook'
-import { pinSize } from './zoomLevels'
+import { hasCard, pinSize } from './zoomLevels'
 
 // About a second of frames: longer than any layout takes to settle.
 const maxSettlingFrames = 60
@@ -109,7 +109,7 @@ export class ScoreCardMarkers {
 
   /**
    * Places, updates and removes cards to match what the pin source shows at the current zoom, on the
-   * side of the globe facing the viewer.
+   * side of the globe facing the viewer, for games near the centre of the view (see hasCard).
    */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
@@ -124,8 +124,13 @@ export class ScoreCardMarkers {
         // each change.
         this.placedPins()
     // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
-    // room in the layout with it): cards pop in and out as their venues cross the horizon.
-    const wanted = pins.filter(({ lngLat }) => !isBehindGlobe(this.map, lngLat))
+    // room in the layout with it): cards pop in and out as their venues cross the horizon. So do
+    // they as their venues cross the card radius, where they swap with small pins (see GlobeMap).
+    const { lng: longitude, lat: latitude } = this.map.getCenter()
+    const wanted = pins.filter(
+      ({ lngLat }) =>
+        !isBehindGlobe(this.map, lngLat) && hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }),
+    )
 
     const keep = new Set<string>()
     for (const { gameId, lngLat } of wanted) {

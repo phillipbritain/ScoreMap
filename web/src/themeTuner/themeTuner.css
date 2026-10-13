@@ -63,20 +63,57 @@
 
 .theme-tuner__tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px;
   border-bottom: 1px solid #444;
 }
 
+/* The whole theme's tabs, then the components', each under its own name. */
+.theme-tuner__tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.theme-tuner__tab-group-name {
+  color: #9a9a9a;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.theme-tuner__tab-group [role='tablist'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .theme-tuner__tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 2px 8px;
+}
+
+/* A tab with changes in it says how many, as the Theme button does for them all. */
+.theme-tuner__tabs .theme-tuner__badge {
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 15px;
 }
 
 .theme-tuner__tabs button[aria-selected='true'] {
   border-color: #e6e6e6;
   background: #e6e6e6;
   color: #1c1c1c;
+}
+
+/* A component's tabs are ruled off from the whole theme's. */
+.theme-tuner__tab-group--component {
+  padding-top: 6px;
+  border-top: 1px dashed #444;
 }
 
 .theme-tuner__problems {
@@ -191,7 +228,8 @@
   border-radius: 3px;
 }
 
-/* The palette's steps, a colour to a row from light to dark, over the rows below. */
+/* The palette's colours, then the theme's colours' steps, a colour to a row from light to dark, over
+   the rows below. */
 .theme-tuner__grid {
   position: absolute;
   top: calc(100% + 4px);
@@ -210,6 +248,26 @@
   display: flex;
   align-items: center;
   gap: 3px;
+}
+
+.theme-tuner__roles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.theme-tuner button.theme-tuner__role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.theme-tuner button.theme-tuner__role[aria-pressed='true'] {
+  border-color: #e6e6e6;
 }
 
 .theme-tuner__grid-name {

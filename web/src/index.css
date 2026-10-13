@@ -1,10 +1,11 @@
 /* Every colour, font, size, spacing, corner, line width, letter spacing, fade and shadow here comes
-   from the theme, which is written to the page's root as custom properties, one per setting (see
-   theme/theme.ts' customProperties): --text-main, --status-live-color, --fonts-body-family,
-   --text-sizes-m, --spacing-l, --corners-card, --strokes-thin, --panel-shadow, --sizes-card-pointer,
-   --letter-spacing-label and so on. Text sizes, spacing and line widths are steps of the theme's
-   scales; corners are its radii, each for a kind of corner. Motion (durations, easings and the
-   animations' own shapes), the starfield's pattern, and layout (percentages, line counts in lh, a
+   from the theme, which is written to the page's root as custom properties, one per setting, named as
+   MUI's CSS theme variables are (see theme/theme.ts' customProperties): --palette-text-primary,
+   --typography-body2-font-size, --spacing, --shape-border-width-thin, --palette-live-main, and a
+   component's own as --score-card-corner, --game-panel-shadow, --score-card-size-pointer and so on.
+   Text takes its weight and size from the theme's type styles, every space is a number of its spacing
+   unit (calc(3 * var(--spacing))), and corners are a component's own. Motion (durations, easings and
+   the animations' own shapes), the starfield's pattern, and layout (percentages, line counts in lh, a
    line height) stay here. */
 
 html,
@@ -15,10 +16,10 @@ body,
 }
 
 body {
-  background: var(--page-background);
-  font-family: var(--fonts-body-family);
-  font-weight: var(--fonts-body-weight);
-  font-size: var(--text-sizes-l);
+  background: var(--palette-background-default);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-body1-font-weight);
+  font-size: var(--typography-body1-font-size);
 }
 
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
@@ -31,8 +32,8 @@ body {
    star is the theme's small or large star, its brightness mixed into the theme's white, cool or warm
    star; where they are in the tile is the pattern's own. */
 .globe {
-  --star: var(--page-stars-size-small);
-  --big-star: var(--page-stars-size-large);
+  --star: var(--sky-stars-size-small);
+  --big-star: var(--sky-stars-size-large);
   position: relative;
   /* Keeps the score cards' stacking among themselves, so the menus and messages laid over the
      globe stay above every card. */
@@ -40,14 +41,14 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  background-color: var(--page-sky);
+  background-color: var(--sky-color);
   background-image:
-    radial-gradient(var(--star) var(--star) at 23px 41px, color-mix(in srgb, var(--page-stars-white) 80%, transparent), transparent),
-    radial-gradient(var(--star) var(--star) at 97px 130px, color-mix(in srgb, var(--page-stars-white) 60%, transparent), transparent),
-    radial-gradient(var(--big-star) var(--big-star) at 160px 72px, color-mix(in srgb, var(--page-stars-white) 90%, transparent), transparent),
-    radial-gradient(var(--star) var(--star) at 211px 188px, color-mix(in srgb, var(--page-stars-cool) 70%, transparent), transparent),
-    radial-gradient(var(--star) var(--star) at 61px 219px, color-mix(in srgb, var(--page-stars-white) 50%, transparent), transparent),
-    radial-gradient(var(--big-star) var(--big-star) at 132px 11px, color-mix(in srgb, var(--page-stars-warm) 70%, transparent), transparent);
+    radial-gradient(var(--star) var(--star) at 23px 41px, color-mix(in srgb, var(--sky-stars-white) 80%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 97px 130px, color-mix(in srgb, var(--sky-stars-white) 60%, transparent), transparent),
+    radial-gradient(var(--big-star) var(--big-star) at 160px 72px, color-mix(in srgb, var(--sky-stars-white) 90%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 211px 188px, color-mix(in srgb, var(--sky-stars-cool) 70%, transparent), transparent),
+    radial-gradient(var(--star) var(--star) at 61px 219px, color-mix(in srgb, var(--sky-stars-white) 50%, transparent), transparent),
+    radial-gradient(var(--big-star) var(--big-star) at 132px 11px, color-mix(in srgb, var(--sky-stars-warm) 70%, transparent), transparent);
   background-size: 240px 240px;
 }
 
@@ -59,39 +60,39 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   status colour (--status-color, set on the panel). One size whatever the game, so it never jumps
-   from one game to the next: the score block, the details and the photo each have a fixed width,
-   and every line of text is clipped to its slot. */
+   status colour (--status-color, set on the panel, with --status-contrast-text for text on it). One
+   size whatever the game, so it never jumps from one game to the next: the score block, the details
+   and the photo each have a fixed width, and every line of text is clipped to its slot. */
 .game-panel {
   position: absolute;
   left: 50%;
-  bottom: var(--spacing-l);
+  bottom: calc(3 * var(--spacing));
   z-index: 1;
   display: flex;
   box-sizing: border-box;
-  width: min(var(--sizes-panel-width), calc(100% - 2 * var(--spacing-l)));
-  height: var(--sizes-panel-height);
+  width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
+  height: var(--game-panel-size-height);
   /* The score block and photo are clipped to the panel's corners. */
   overflow: hidden;
-  border-top: var(--strokes-thick) solid var(--status-color);
-  border-radius: var(--corners-panel);
-  background: linear-gradient(180deg, var(--panel-surface-top), var(--panel-surface-bottom));
-  color: var(--text-main);
-  font-size: var(--text-sizes-m);
+  border-top: var(--shape-border-width-thick) solid var(--status-color);
+  border-radius: var(--game-panel-corner);
+  background: linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+  color: var(--palette-text-primary);
+  font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
   box-shadow:
-    var(--panel-shadow),
-    0 var(--panel-glow-y) var(--panel-glow-blur) color-mix(in srgb, var(--status-color) calc(var(--panel-glow-opacity) * 100%), transparent);
+    var(--game-panel-shadow),
+    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--status-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
-  --cut-corner: calc(var(--cut-corner-on) * var(--cut-corner-size));
+  --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
 /* Clear of the scenario pills and clock (local runs only): above their row, as tall as a speed key
    in the keys' padding, by the gap the bottom stack leaves between its rows. */
 .bottom-stack--scenario ~ .game-panel {
-  --controls-row: calc(var(--sizes-controls-key) + 2 * var(--spacing-2xs));
-  bottom: calc(var(--spacing-l) + var(--controls-row) + var(--spacing-m));
+  --controls-row: calc(var(--controls-size-key) + var(--spacing));
+  bottom: calc(3 * var(--spacing) + var(--controls-row) + 2 * var(--spacing));
 }
 
 /* The score block at the left, slanted on its right edge. One column that can't grow past the
@@ -100,44 +101,44 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: var(--spacing-2xs);
+  gap: calc(0.5 * var(--spacing));
   box-sizing: border-box;
-  width: var(--sizes-panel-score-block);
+  width: var(--game-panel-size-score-block);
   flex-shrink: 0;
-  padding: var(--spacing-m) var(--spacing-2xl) var(--spacing-m) var(--spacing-xl);
-  background: linear-gradient(180deg, var(--panel-score-block-top), var(--panel-score-block-bottom));
-  clip-path: polygon(0 0, 100% 0, calc(100% - var(--sizes-panel-slant)) 100%, 0 100%);
+  padding: calc(2 * var(--spacing)) calc(6 * var(--spacing)) calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  background: linear-gradient(180deg, var(--game-panel-score-block-top), var(--game-panel-score-block-bottom));
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
 /* Secondary text, tracked out like the country names on the globe. */
 .game-panel__league,
 .game-panel__label {
-  color: var(--text-secondary);
-  font-family: var(--fonts-heading-family);
-  font-size: var(--text-sizes-s);
-  font-weight: var(--fonts-heading-weight);
-  letter-spacing: var(--letter-spacing-label);
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
   text-transform: uppercase;
 }
 
 .game-panel__label {
-  margin-bottom: var(--spacing-2xs);
-  font-size: var(--text-sizes-xs);
+  margin-bottom: calc(0.5 * var(--spacing));
+  font-size: var(--typography-footnote-font-size);
 }
 
 .game-panel__team {
   display: flex;
   align-items: center;
-  gap: var(--spacing-m);
-  font-family: var(--fonts-team-family);
-  font-size: var(--text-sizes-l);
-  font-weight: var(--fonts-team-weight);
+  gap: calc(2 * var(--spacing));
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
 .game-panel__team img,
 .game-panel__logo {
-  width: var(--sizes-panel-logo);
-  height: var(--sizes-panel-logo);
+  width: var(--game-panel-size-logo);
+  height: var(--game-panel-size-logo);
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -153,13 +154,13 @@ body {
 /* Wide enough for three digits, so a score of 100 doesn't move anything. */
 .game-panel__team-score {
   box-sizing: border-box;
-  width: var(--sizes-panel-score-width);
+  width: var(--game-panel-size-score-width);
   flex-shrink: 0;
-  background: var(--panel-score-fill);
-  color: var(--panel-score-text);
-  font-family: var(--fonts-score-family);
-  font-size: var(--text-sizes-xl);
-  font-weight: var(--fonts-score-weight);
+  background: var(--game-panel-score-fill);
+  color: var(--game-panel-score-text);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
   font-variant-numeric: tabular-nums;
   text-align: center;
   transform: skewX(-10deg);
@@ -167,15 +168,15 @@ body {
 
 .game-panel__progress {
   justify-self: start;
-  max-width: calc(100% - var(--spacing-m));
-  margin-top: var(--spacing-xs);
-  padding: var(--spacing-2xs) var(--spacing-m);
+  max-width: calc(100% - 2 * var(--spacing));
+  margin-top: var(--spacing);
+  padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
   overflow: hidden;
   background: var(--status-color);
-  color: var(--text-on-status);
-  font-family: var(--fonts-heading-family);
-  font-size: var(--text-sizes-s);
-  font-weight: var(--fonts-heading-weight);
+  color: var(--status-contrast-text);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
   text-transform: uppercase;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -187,9 +188,9 @@ body {
   flex: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--spacing-xl);
+  gap: calc(4 * var(--spacing));
   min-width: 0;
-  padding: var(--spacing-l) var(--spacing-xl);
+  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
 }
 
@@ -204,8 +205,8 @@ body {
 }
 
 .game-panel__muted {
-  color: var(--text-secondary);
-  font-size: var(--text-sizes-s);
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
 }
 
 /* One line under a venue or time, kept even when empty. */
@@ -218,7 +219,7 @@ body {
 
 .game-panel__watch {
   display: grid;
-  gap: var(--spacing-2xs);
+  gap: calc(0.5 * var(--spacing));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -231,22 +232,22 @@ body {
 }
 
 .game-panel__watch a {
-  color: var(--text-link);
+  color: var(--palette-text-link);
 }
 
 .game-panel__unofficial {
-  color: var(--panel-unofficial);
-  font-size: var(--text-sizes-s);
+  color: var(--game-panel-unofficial);
+  font-size: var(--typography-caption-font-size);
 }
 
 /* The venue photo at the right, fading in from the details. A faint glow holds its place when
    there's no photo. */
 .game-panel__photo {
   position: relative;
-  width: var(--sizes-panel-photo);
+  width: var(--game-panel-size-photo);
   margin: 0;
   flex-shrink: 0;
-  background: radial-gradient(ellipse at 70% 50%, var(--panel-photo), transparent 70%);
+  background: radial-gradient(ellipse at 70% 50%, var(--game-panel-photo), transparent 70%);
 }
 
 .game-panel__photo img {
@@ -263,11 +264,11 @@ body {
   right: 0;
   bottom: 0;
   left: 0;
-  padding: var(--spacing-2xs) var(--spacing-s);
+  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
   overflow: hidden;
-  background: var(--panel-credit-fill);
-  color: var(--panel-credit-text);
-  font-size: var(--text-sizes-xs);
+  background: var(--game-panel-credit-fill);
+  color: var(--game-panel-credit-text);
+  font-size: var(--typography-footnote-font-size);
   white-space: nowrap;
   text-overflow: ellipsis;
   opacity: 0;
@@ -284,17 +285,17 @@ body {
 
 .game-panel__close {
   position: absolute;
-  top: var(--spacing-xs);
-  right: var(--spacing-xs);
-  width: var(--sizes-panel-close);
-  height: var(--sizes-panel-close);
+  top: var(--spacing);
+  right: var(--spacing);
+  width: var(--game-panel-size-close);
+  height: var(--game-panel-size-close);
   border: none;
   border-radius: 50%;
-  background: var(--panel-close);
-  color: var(--text-main);
-  font-family: var(--fonts-button-family);
-  font-size: var(--text-sizes-l);
-  font-weight: var(--fonts-button-weight);
+  background: var(--game-panel-close);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body1-font-size);
+  font-weight: var(--typography-button-font-weight);
   line-height: 1;
   cursor: pointer;
 }
@@ -303,13 +304,13 @@ body {
 @media (max-width: 640px) {
   .game-panel {
     flex-direction: column;
-    height: var(--sizes-panel-phone-height);
+    height: var(--game-panel-size-phone-height);
     clip-path: none;
   }
 
   /* The pills and the clock wrap to two rows on a phone. */
   .bottom-stack--scenario ~ .game-panel {
-    bottom: calc(var(--spacing-l) + 2 * (var(--controls-row) + var(--spacing-m)));
+    bottom: calc(3 * var(--spacing) + 2 * (var(--controls-row) + 2 * var(--spacing)));
   }
 
   .game-panel__score {
@@ -318,8 +319,8 @@ body {
   }
 
   .game-panel__details {
-    gap: var(--spacing-m);
-    padding: var(--spacing-m) var(--spacing-l);
+    gap: calc(2 * var(--spacing));
+    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   }
 
   .game-panel__photo {
@@ -327,34 +328,35 @@ body {
   }
 }
 
-/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how far
-   its score cards fade and how they glow. Score cards pick theirs by their status class. */
+/* How each status looks comes from the theme: its colour from the palette (--palette-live-main and so
+   on), and how far its score cards fade and how they glow from the score card's own
+   (--score-card-live-fade). Score cards pick theirs by their status class. */
 .score-card--live {
-  --status-card-color: var(--status-live-color);
-  --status-card-fade: var(--status-live-card-fade);
-  --status-card-glow-radius: var(--status-live-card-glow-radius);
-  --status-card-glow-opacity: var(--status-live-card-glow-opacity);
+  --status-card-color: var(--palette-live-main);
+  --status-card-fade: var(--score-card-live-fade);
+  --status-card-glow-radius: var(--score-card-live-glow-radius);
+  --status-card-glow-opacity: var(--score-card-live-glow-opacity);
 }
 
 .score-card--upcoming {
-  --status-card-color: var(--status-upcoming-color);
-  --status-card-fade: var(--status-upcoming-card-fade);
-  --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
-  --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
+  --status-card-color: var(--palette-upcoming-main);
+  --status-card-fade: var(--score-card-upcoming-fade);
+  --status-card-glow-radius: var(--score-card-upcoming-glow-radius);
+  --status-card-glow-opacity: var(--score-card-upcoming-glow-opacity);
 }
 
 .score-card--final {
-  --status-card-color: var(--status-final-color);
-  --status-card-fade: var(--status-final-card-fade);
-  --status-card-glow-radius: var(--status-final-card-glow-radius);
-  --status-card-glow-opacity: var(--status-final-card-glow-opacity);
+  --status-card-color: var(--palette-final-main);
+  --status-card-fade: var(--score-card-final-fade);
+  --status-card-glow-radius: var(--score-card-final-glow-radius);
+  --status-card-glow-opacity: var(--score-card-final-glow-opacity);
 }
 
 .score-card--disrupted {
-  --status-card-color: var(--status-disrupted-color);
-  --status-card-fade: var(--status-disrupted-card-fade);
-  --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
-  --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
+  --status-card-color: var(--palette-disrupted-main);
+  --status-card-fade: var(--score-card-disrupted-fade);
+  --status-card-glow-radius: var(--score-card-disrupted-glow-radius);
+  --status-card-glow-opacity: var(--score-card-disrupted-glow-opacity);
 }
 
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
@@ -364,21 +366,21 @@ body {
    its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
    are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
 .score-card {
-  --card-surface: var(--card-fill);
-  --card-ink: var(--card-text);
+  --card-surface: var(--score-card-fill);
+  --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
   --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
   display: grid;
-  gap: var(--spacing-2xs);
-  min-width: var(--sizes-card-min-width);
-  padding: 0 0 var(--spacing-xs);
-  border: var(--strokes-thin) solid var(--status-color);
-  border-radius: var(--corners-card);
+  gap: calc(0.5 * var(--spacing));
+  min-width: var(--score-card-size-min-width);
+  padding: 0 0 var(--spacing);
+  border: var(--shape-border-width-thin) solid var(--status-color);
+  border-radius: var(--score-card-corner);
   background: var(--card-surface);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
-  font-family: var(--fonts-card-clock-family);
-  font-size: var(--text-sizes-s);
-  font-weight: var(--fonts-card-clock-weight);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-subtitle2-font-size);
+  font-weight: var(--typography-subtitle2-font-weight);
   line-height: 1.2;
   text-transform: uppercase;
   /* The status's glow around the card, and a fainter one inside it. */
@@ -395,11 +397,11 @@ body {
 /* A small pointer down to the venue; the card sits above it. A square turned on its corner, sized
    and placed so its tip is the theme's card pointer below the card (the globe places cards by it). */
 .score-card::after {
-  --side: calc(var(--sizes-card-pointer) * 1.5);
+  --side: calc(var(--score-card-size-pointer) * 1.5);
   content: '';
   position: absolute;
   left: 50%;
-  bottom: calc(var(--side) * 0.7071 - var(--sizes-card-pointer) - var(--side) / 2);
+  bottom: calc(var(--side) * 0.7071 - var(--score-card-size-pointer) - var(--side) / 2);
   width: var(--side);
   height: var(--side);
   background: var(--status-color);
@@ -419,8 +421,8 @@ body {
 
 /* Greyed out: the game isn't being played as scheduled. */
 .score-card.score-card--disrupted {
-  --card-surface: var(--card-disrupted-fill);
-  --card-ink: var(--card-disrupted-text);
+  --card-surface: var(--score-card-disrupted-fill);
+  --card-ink: var(--score-card-disrupted-text);
 }
 
 .score-card--disrupted .score-card__logo {
@@ -431,24 +433,24 @@ body {
 .score-card--selected {
   --status-card-fade: 0;
   outline: var(--selection-width) solid var(--selection-color);
-  outline-offset: var(--spacing-2xs);
+  outline-offset: calc(0.5 * var(--spacing));
 }
 
 .score-card__header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  margin-bottom: var(--spacing-2xs);
-  padding: var(--spacing-2xs) var(--spacing-s);
-  border-bottom: var(--strokes-thin) solid var(--status-color);
-  background: color-mix(in srgb, var(--status-color) calc(var(--card-header-tint) * 100%), transparent);
-  font-size: var(--text-sizes-xs);
-  letter-spacing: var(--letter-spacing-card-header);
+  gap: var(--spacing);
+  margin-bottom: calc(0.5 * var(--spacing));
+  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
+  border-bottom: var(--shape-border-width-thin) solid var(--status-color);
+  background: color-mix(in srgb, var(--status-color) calc(var(--score-card-header-tint) * 100%), transparent);
+  font-size: var(--typography-footnote-font-size);
+  letter-spacing: var(--score-card-header-letter-spacing);
 }
 
 .score-card__light {
-  width: var(--sizes-card-light);
-  height: var(--sizes-card-light);
+  width: var(--score-card-size-light);
+  height: var(--score-card-size-light);
   border-radius: 50%;
   background: var(--status-color);
   /* Lit as its card glows. */
@@ -467,28 +469,28 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: calc(var(--sizes-card-logo) + var(--spacing-2xs)) 1fr auto;
+  grid-template-columns: calc(var(--score-card-size-logo) + 0.5 * var(--spacing)) 1fr auto;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: 0 var(--spacing-s);
+  gap: var(--spacing);
+  padding: 0 calc(1.5 * var(--spacing));
 }
 
 /* Faded into the card's fill with the rest of the card: the card behind it is solid. */
 .score-card__logo {
-  width: var(--sizes-card-logo);
-  height: var(--sizes-card-logo);
+  width: var(--score-card-size-logo);
+  height: var(--score-card-size-logo);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
 }
 
 .score-card__abbreviation {
-  font-family: var(--fonts-card-team-family);
-  font-weight: var(--fonts-card-team-weight);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
 .score-card__score {
-  font-family: var(--fonts-card-score-family);
-  font-weight: var(--fonts-card-score-weight);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-h6-font-weight);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -552,7 +554,7 @@ body {
     transform: scale(1);
     box-shadow:
       0 0 0 14px transparent,
-      0 1px 6px var(--card-shadow);
+      0 1px 6px var(--score-card-shadow);
   }
 }
 
@@ -563,7 +565,7 @@ body {
   }
   40% {
     filter: brightness(0.85) saturate(0.5);
-    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--status-final-color) 60%, transparent);
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--palette-final-main) 60%, transparent);
   }
 }
 
@@ -659,21 +661,21 @@ body {
    down to. */
 .settings-menu {
   position: absolute;
-  top: var(--spacing-l);
-  left: var(--spacing-l);
+  top: calc(3 * var(--spacing));
+  left: calc(3 * var(--spacing));
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--spacing-m);
-  max-height: calc(100% - 2 * var(--spacing-l));
+  gap: calc(2 * var(--spacing));
+  max-height: calc(100% - 6 * var(--spacing));
 }
 
 /* Just the gear, standing on the globe without a panel: in secondary text, with the theme's outline
    around it (the dark theme has none: controls cast no shadow), and without the disclosure triangle. */
 .settings-menu summary {
   display: flex;
-  color: var(--text-secondary);
+  color: var(--palette-text-secondary);
   cursor: pointer;
   list-style: none;
   filter: drop-shadow(var(--settings-menu-gear-outline));
@@ -684,38 +686,38 @@ body {
 }
 
 .settings-menu__icon {
-  width: var(--sizes-settings-menu-gear);
-  height: var(--sizes-settings-menu-gear);
+  width: var(--settings-menu-size-gear);
+  height: var(--settings-menu-size-gear);
 }
 
 /* The panel below the gear, on the settings menu's surface: the built-in theme's is the scenario
    pills' colour but solid, so score cards behind it don't show through. */
 .settings-menu__panel {
-  width: var(--sizes-settings-menu-width);
-  max-width: calc(100vw - 2 * var(--spacing-l));
+  width: var(--settings-menu-size-width);
+  max-width: calc(100vw - 6 * var(--spacing));
   overflow-y: auto;
-  border-radius: var(--corners-menu);
+  border-radius: var(--menu-corner);
   background: var(--settings-menu-surface);
-  color: var(--text-main);
-  font-size: var(--text-sizes-m);
+  color: var(--palette-text-primary);
+  font-size: var(--typography-body2-font-size);
   box-shadow: var(--settings-menu-shadow);
 }
 
 .settings-tabs {
   display: flex;
-  border-bottom: var(--strokes-thin) solid var(--divider);
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .settings-tab {
   flex: 1;
-  padding: var(--spacing-m);
+  padding: calc(2 * var(--spacing));
   border: none;
-  border-bottom: var(--strokes-medium) solid transparent;
+  border-bottom: var(--shape-border-width-medium) solid transparent;
   background: none;
   color: var(--settings-menu-tab);
-  font-family: var(--fonts-tab-family);
-  font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-tab-weight);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
   cursor: pointer;
 }
 
@@ -725,24 +727,24 @@ body {
 }
 
 .settings-tab-body {
-  padding: var(--spacing-l);
+  padding: calc(3 * var(--spacing));
 }
 
 .settings-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-s);
+  gap: calc(1.5 * var(--spacing));
 }
 
 .settings-chip {
-  padding: var(--spacing-xs) var(--spacing-l);
-  border: var(--strokes-thin) solid var(--settings-menu-chip-outline);
-  border-radius: var(--corners-control);
+  padding: var(--spacing) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--settings-menu-chip-outline);
+  border-radius: var(--controls-corner);
   background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--fonts-button-family);
-  font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-button-weight);
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -758,28 +760,28 @@ body {
 .settings-master {
   display: flex;
   align-items: center;
-  gap: var(--spacing-m);
-  margin-bottom: var(--spacing-l);
-  padding-bottom: var(--spacing-m);
-  border-bottom: var(--strokes-thin) solid var(--divider);
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(3 * var(--spacing));
+  padding-bottom: calc(2 * var(--spacing));
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .settings-master__chip {
   display: flex;
   align-items: center;
-  gap: var(--spacing-m);
-  height: var(--sizes-settings-menu-all-leagues);
-  padding: 0 var(--spacing-m);
-  font-size: var(--text-sizes-m);
+  gap: calc(2 * var(--spacing));
+  height: var(--settings-menu-size-all-leagues);
+  padding: 0 calc(2 * var(--spacing));
+  font-size: var(--typography-button-font-size);
 }
 
 /* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
    keeps its size whatever the state: the ✓ comes from a taller fallback font. */
 .settings-master__mark {
-  width: var(--sizes-settings-menu-mark);
-  height: var(--sizes-settings-menu-mark);
+  width: var(--settings-menu-size-mark);
+  height: var(--settings-menu-size-mark);
   line-height: 1;
-  margin-right: calc(-1 * var(--spacing-xs));
+  margin-right: calc(-1 * var(--spacing));
   text-align: center;
 }
 
@@ -790,13 +792,13 @@ body {
 
 /* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
 .settings-master__count {
-  min-width: var(--sizes-settings-menu-count-width);
-  padding: var(--spacing-2xs) var(--spacing-s);
-  border-radius: var(--corners-control);
+  min-width: var(--settings-menu-size-count-width);
+  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
+  border-radius: var(--controls-corner);
   background: var(--settings-menu-chip-badge);
   text-align: center;
-  color: var(--text-secondary);
-  font-size: var(--text-sizes-s);
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
 }
 
 .settings-master__chip--on .settings-master__count {
@@ -806,32 +808,32 @@ body {
 .settings-master__hint {
   flex: 1;
   color: var(--settings-menu-hint);
-  font-size: var(--text-sizes-s);
+  font-size: var(--typography-caption-font-size);
 }
 
 .settings-sport + .settings-sport {
-  margin-top: var(--spacing-l);
+  margin-top: calc(3 * var(--spacing));
 }
 
 .settings-sport__name {
   display: flex;
-  gap: var(--spacing-s);
-  margin-bottom: var(--spacing-s);
+  gap: calc(1.5 * var(--spacing));
+  margin-bottom: calc(1.5 * var(--spacing));
   padding: 0;
   border: none;
   background: none;
-  color: var(--text-main);
-  font-family: var(--fonts-tab-family);
-  font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-tab-weight);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
   cursor: pointer;
 }
 
 /* How many of the sport's leagues are on, such as 2/2. */
 .settings-sport__count {
   color: var(--settings-menu-count);
-  font-family: var(--fonts-button-family);
-  font-weight: var(--fonts-button-weight);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-button-font-weight);
 }
 
 /* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
@@ -842,7 +844,7 @@ body {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-end;
-  gap: var(--spacing-m);
+  gap: calc(2 * var(--spacing));
   max-width: 100%;
   pointer-events: auto;
 }
@@ -850,18 +852,18 @@ body {
 .scenario-pill {
   position: relative;
   min-width: 0;
-  border-radius: var(--corners-control);
+  border-radius: var(--controls-corner);
   background: var(--controls-surface);
-  color: var(--text-main);
-  font-size: var(--text-sizes-m);
+  color: var(--palette-text-primary);
+  font-size: var(--typography-button-font-size);
   box-shadow: var(--controls-shadow);
 }
 
 .scenario-pill summary {
-  padding: var(--spacing-m) var(--spacing-l);
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   cursor: pointer;
-  font-family: var(--fonts-scenario-pill-family);
-  font-weight: var(--fonts-scenario-pill-weight);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-button-font-weight);
   list-style: none;
   white-space: nowrap;
   overflow: hidden;
@@ -875,18 +877,18 @@ body {
 .scenario-pill ul {
   position: absolute;
   left: 0;
-  bottom: calc(100% + var(--spacing-s));
+  bottom: calc(100% + 1.5 * var(--spacing));
   min-width: 100%;
   /* Clear of the settings gear above, by a wide gap, and of the pills below. */
   max-height: calc(
-    100vh - (var(--spacing-l) + var(--sizes-settings-menu-gear) + var(--spacing-2xl)) -
-      (var(--spacing-l) + var(--sizes-controls-key) + 2 * var(--spacing-2xs) + var(--spacing-s))
+    100vh - (3 * var(--spacing) + var(--settings-menu-size-gear) + 6 * var(--spacing)) -
+      (3 * var(--spacing) + var(--controls-size-key) + var(--spacing) + 1.5 * var(--spacing))
   );
   overflow-y: auto;
   box-sizing: border-box;
   margin: 0;
-  padding: var(--spacing-s);
-  border-radius: var(--corners-menu);
+  padding: calc(1.5 * var(--spacing));
+  border-radius: var(--menu-corner);
   background: var(--controls-surface);
   box-shadow: var(--controls-shadow);
   list-style: none;
@@ -896,9 +898,9 @@ body {
 .scenario-pill button {
   display: block;
   width: 100%;
-  padding: var(--spacing-s) var(--spacing-m);
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   border: none;
-  border-radius: var(--corners-menu-item);
+  border-radius: var(--menu-item-corner);
   background: none;
   color: inherit;
   font: inherit;
@@ -907,12 +909,12 @@ body {
 }
 
 .scenario-pill button:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--palette-action-hover);
 }
 
 .scenario-pill button[aria-current='true'] {
-  font-family: var(--fonts-scenario-pill-family);
-  font-weight: var(--fonts-scenario-pill-weight);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-button-font-weight);
 }
 
 .scenario-pill button[aria-current='true']::before {
@@ -922,11 +924,11 @@ body {
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
   display: flex;
-  gap: var(--spacing-2xs);
-  padding: var(--spacing-2xs);
-  border-radius: var(--corners-control);
+  gap: calc(0.5 * var(--spacing));
+  padding: calc(0.5 * var(--spacing));
+  border-radius: var(--controls-corner);
   background: var(--controls-surface);
-  color: var(--text-main);
+  color: var(--palette-text-primary);
   box-shadow: var(--controls-shadow);
 }
 
@@ -934,11 +936,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--sizes-controls-key);
-  height: var(--sizes-controls-key);
+  width: var(--controls-size-key);
+  height: var(--controls-size-key);
   padding: 0;
   border: none;
-  border-radius: var(--corners-control);
+  border-radius: var(--controls-corner);
   background: none;
   color: inherit;
   opacity: var(--controls-off-opacity);
@@ -947,7 +949,7 @@ body {
 }
 
 .speed-keys button:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--palette-action-hover);
   opacity: 1;
 }
 
@@ -959,18 +961,18 @@ body {
 }
 
 .speed-keys svg {
-  width: var(--sizes-controls-icon);
-  height: var(--sizes-controls-icon);
+  width: var(--controls-size-icon);
+  height: var(--controls-size-icon);
   fill: currentColor;
 }
 
 /* At Faster, Fast-forward widens for its third triangle. */
 .speed-keys .speed-keys__fast-forward--faster {
-  width: calc(var(--sizes-controls-key) + var(--spacing-m));
+  width: calc(var(--controls-size-key) + 2 * var(--spacing));
 }
 
 .speed-keys .speed-keys__wide-icon {
-  width: calc(var(--sizes-controls-icon) + var(--spacing-s));
+  width: calc(var(--controls-size-icon) + 1.5 * var(--spacing));
 }
 
 .speed-keys button:disabled {
@@ -1004,9 +1006,9 @@ body {
 
 .loading-screen__spinner {
   box-sizing: border-box;
-  width: var(--sizes-loading-screen-spinner);
-  height: var(--sizes-loading-screen-spinner);
-  border: var(--strokes-thick) solid var(--loading-screen-spinner-track);
+  width: var(--loading-screen-spinner-size);
+  height: var(--loading-screen-spinner-size);
+  border: var(--shape-border-width-thick) solid var(--loading-screen-spinner-track);
   border-top-color: var(--loading-screen-spinner-color);
   border-radius: 50%;
   animation: loading-screen-spin 0.9s linear infinite;
@@ -1016,12 +1018,12 @@ body {
    the spinner stays where it is when the message comes and goes. */
 .loading-screen__message {
   position: absolute;
-  top: calc(50% + var(--sizes-loading-screen-spinner) / 2 + var(--spacing-l));
-  right: var(--spacing-l);
-  left: var(--spacing-l);
+  top: calc(50% + var(--loading-screen-spinner-size) / 2 + 3 * var(--spacing));
+  right: calc(3 * var(--spacing));
+  left: calc(3 * var(--spacing));
   margin: 0;
   color: var(--loading-screen-message);
-  font-size: var(--text-sizes-m);
+  font-size: var(--typography-body2-font-size);
   text-align: center;
 }
 
@@ -1063,37 +1065,37 @@ body {
    clock at the left (local runs only). */
 .bottom-stack {
   position: absolute;
-  right: var(--spacing-l);
-  bottom: var(--spacing-3xl);
-  left: var(--spacing-l);
+  right: calc(3 * var(--spacing));
+  bottom: calc(8 * var(--spacing));
+  left: calc(3 * var(--spacing));
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-m);
+  gap: calc(2 * var(--spacing));
   pointer-events: none;
 }
 
 .bottom-stack--scenario {
-  bottom: var(--spacing-l);
+  bottom: calc(3 * var(--spacing));
 }
 
 .no-pins {
   margin: 0;
-  padding: var(--spacing-m) var(--spacing-xl);
-  border-radius: var(--corners-message);
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  border-radius: var(--controls-message-corner);
   background: var(--controls-surface);
-  color: var(--text-main);
+  color: var(--palette-text-primary);
 }
 
 .scenario-clock {
-  padding: var(--spacing-m) var(--spacing-l);
-  border-radius: var(--corners-control);
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border-radius: var(--controls-corner);
   background: var(--controls-surface);
-  color: var(--text-main);
-  font-family: var(--fonts-scenario-clock-family);
-  font-size: var(--text-sizes-m);
-  font-weight: var(--fonts-scenario-clock-weight);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  font-weight: var(--typography-body2-font-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   box-shadow: var(--controls-shadow);

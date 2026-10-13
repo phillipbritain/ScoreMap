@@ -109,7 +109,7 @@ A named set of made-up games between real teams of their league at real venues, 
 _Avoid_: Dummy data, fake data, demo, simulation
 
 **Scenario clock**:
-The time a scenario's games are on. It reads 12:00 EST on 1 January of the current year when the scenario starts (or is reset), then runs at the scenario's speed, so an event in a scenario comes at the same reading every time it plays. Real games are on the real time.
+The time a scenario's games are on. It reads noon Eastern on 4 August 2026 when the scenario starts (or is reset), then runs at the scenario's speed, so an event in a scenario comes at the same reading every time it plays. Real games are on the real time.
 _Avoid_: Game clock (the clock within a game, such as 67'), fake time, virtual time
 
 **Play**:

@@ -1,6 +1,6 @@
 # Configuration
 
-How the server finds games and venues, and the files and settings that shape them. Paths are under `server/src/ScoreMap.Server/` unless they start elsewhere.
+How the server finds games and venues, and the files and settings that shape them. Files named here are under `server/src/ScoreMap.Server/`, and commands run from the repo root.
 
 ## Leagues
 

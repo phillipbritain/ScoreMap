@@ -18,7 +18,7 @@ const disputedLines = 'boundary_disputed'
  * buildings, land cover) is dropped.
  */
 export function globeStyle(base: StyleSpecification, theme: Theme): StyleSpecification {
-  const { globe } = theme
+  const globe = theme.components.Globe
   const byId = new Map(base.layers.map((layer) => [layer.id, layer]))
   const layer = (id: string) => {
     const found = byId.get(id)
@@ -55,7 +55,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme): StyleSpecifi
   }
 }
 
-type GlobeLine = Theme['globe']['coastlines']
+type GlobeLine = Theme['components']['Globe']['coastlines']
 
 /** A line in the theme's colour, at its widths as the map zooms, growing evenly from one to the next. */
 function linePaint({ color, width }: GlobeLine): LineLayerSpecification['paint'] {

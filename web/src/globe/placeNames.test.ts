@@ -56,10 +56,13 @@ describe('cityNameLook', () => {
   it("writes each kind of place's name at the theme's text sizes as the map zooms", () => {
     const theme: Theme = {
       ...builtInTheme,
-      placeNames: {
-        ...builtInTheme.placeNames,
-        city: { ...builtInTheme.placeNames.city, size: { '2': 10, '6': 20 } },
-        state: { ...builtInTheme.placeNames.state, size: { '5': 14 } },
+      components: {
+        ...builtInTheme.components,
+        PlaceNames: {
+          ...builtInTheme.components.PlaceNames,
+          city: { ...builtInTheme.components.PlaceNames.city, size: { '2': 10, '6': 20 } },
+          state: { ...builtInTheme.components.PlaceNames.state, size: { '5': 14 } },
+        },
       },
     }
     const size = (id: string, zoom: number) => atZoom(layout(id, theme)['text-size'], zoom)
@@ -78,10 +81,13 @@ describe('cityNameLook', () => {
     const font = (name: string) => globeFonts.get(name)!
     const theme: Theme = {
       ...builtInTheme,
-      placeNames: {
-        ...builtInTheme.placeNames,
-        city: { ...builtInTheme.placeNames.city, font: font('Metropolis Light') },
-        capital: { ...builtInTheme.placeNames.capital, font: font('Open Sans Bold Italic') },
+      components: {
+        ...builtInTheme.components,
+        PlaceNames: {
+          ...builtInTheme.components.PlaceNames,
+          city: { ...builtInTheme.components.PlaceNames.city, font: font('Metropolis Light') },
+          capital: { ...builtInTheme.components.PlaceNames.capital, font: font('Open Sans Bold Italic') },
+        },
       },
     }
     expect(layout('label_city', theme)['text-font']).toEqual(['Metropolis Light'])

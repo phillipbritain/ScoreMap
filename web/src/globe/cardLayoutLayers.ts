@@ -96,7 +96,7 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
-  const { cluster, trail } = theme
+  const { Cluster: cluster, Trail: trail } = theme.components
   // Each trail, venue and card cluster in its game's status colour (a card cluster's, see groupStatus).
   const statusColor = byStatus(theme, 'own', (look) => look.color)
   return [
@@ -172,8 +172,8 @@ export function cardLayoutLayers(
       filter: kindIs('cardCluster'),
       layout: {
         'text-field': ['to-string', ['get', 'count']],
-        'text-font': [theme.fonts.clusterCount.font.name],
-        'text-size': theme.fonts.clusterCount.size,
+        'text-font': [theme.components.Cluster.count.font.name],
+        'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
       paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },

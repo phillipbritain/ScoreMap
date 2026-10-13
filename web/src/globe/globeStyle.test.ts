@@ -45,19 +45,22 @@ const font = (name: string) => globeFonts.get(name)!
 /** A theme with a colour and font of its own for everything the globe draws, to tell them apart. */
 const theme: Theme = {
   ...builtInTheme,
-  globe: {
-    surface: '#000001',
-    coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
-    countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
-    stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
-    disputedBorders: { color: '#000005', width: { '0': 0.9 }, dash: [3, 1] },
-    halo: builtInTheme.globe.halo,
-  },
-  placeNames: {
-    city: { ...builtInTheme.placeNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light'), letterSpacing: 0.03 },
-    capital: { ...builtInTheme.placeNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold'), letterSpacing: 0 },
-    state: { ...builtInTheme.placeNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
-    country: { ...builtInTheme.placeNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
+  components: {
+    ...builtInTheme.components,
+    Globe: {
+      surface: '#000001',
+      coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
+      countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
+      stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
+      disputedBorders: { color: '#000005', width: { '0': 0.9 }, dash: [3, 1] },
+      halo: builtInTheme.components.Globe.halo,
+    },
+    PlaceNames: {
+      city: { ...builtInTheme.components.PlaceNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light'), letterSpacing: 0.03 },
+      capital: { ...builtInTheme.components.PlaceNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold'), letterSpacing: 0 },
+      state: { ...builtInTheme.components.PlaceNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
+      country: { ...builtInTheme.components.PlaceNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
+    },
   },
 }
 
@@ -231,7 +234,7 @@ describe('globeStyle', () => {
       label_country_1: 'country',
     } as const
     for (const [id, kind] of Object.entries(kinds)) {
-      const look = theme.placeNames[kind]
+      const look = theme.components.PlaceNames[kind]
       expect(paint(id)['text-color'], id).toBe(look.color)
       expect(paint(id)['text-halo-color'], id).toBe(look.outline.color)
       expect(paint(id)['text-halo-width'], id).toBe(look.outline.width)

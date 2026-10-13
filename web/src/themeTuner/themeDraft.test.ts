@@ -5,6 +5,7 @@ import {
   changes,
   changesIn,
   componentName,
+  rowChanged,
   describeChanges,
   loadDraft,
   saveDraft,
@@ -109,6 +110,22 @@ describe('changesIn', () => {
     expect(count('Score card')).toBe(2)
     expect(count('Palette')).toBe(1)
     expect(count('Pin')).toBe(0)
+  })
+})
+
+describe('rowChanged', () => {
+  it('marks the zoom level changed in a size by zoom, which counts as one change, and not the others', () => {
+    const width = ['components', 'Globe', 'coastlines', 'width']
+    const draft = withSetting(builtIn, [...width, '2'], 1)
+    expect(changes(builtIn, draft).map((change) => change.path)).toEqual([width])
+    expect(rowChanged(builtIn, draft, [...width, '2'])).toBe(true)
+    expect(rowChanged(builtIn, draft, [...width, '8'])).toBe(false)
+  })
+
+  it('marks a setting changed, and not one left as it was', () => {
+    const draft = withSetting(builtIn, ['components', 'Trail', 'width'], 3)
+    expect(rowChanged(builtIn, draft, ['components', 'Trail', 'width'])).toBe(true)
+    expect(rowChanged(builtIn, draft, ['components', 'Trail', 'opacity'])).toBe(false)
   })
 })
 

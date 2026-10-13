@@ -5,6 +5,7 @@ import {
   changes,
   changesIn,
   componentName,
+  rowChanged,
   describeChanges,
   isTypeStyleSize,
   numberRange,
@@ -66,7 +67,6 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
     builtIn,
     draft,
     colours,
-    changed: new Set(changed.map((change) => change.path.join('.'))),
     set: (path, value) => setDraft((current) => withSetting(current, path, value)),
   }
   const tab = tabs[tabIndex]
@@ -145,8 +145,6 @@ interface RowContext {
   builtIn: ThemeJson
   draft: ThemeJson
   colours: readonly ThemeColour[]
-  /** The changed settings' paths, joined with dots. */
-  changed: ReadonlySet<string>
   set: (path: SettingPath, value: Json) => void
 }
 
@@ -183,7 +181,7 @@ function Group({ path, value, context, title = false }: { path: SettingPath; val
 
 /** One setting: its name, its control, and a reset to the built-in theme's when it's changed. */
 function Row({ path, value, context, name }: { path: SettingPath; value: Json | undefined; context: RowContext; name: string }) {
-  const changed = context.changed.has(path.join('.'))
+  const changed = rowChanged(context.builtIn, context.draft, path)
   const original = settingAt(context.builtIn, path)
   return (
     <div className={changed ? 'theme-tuner__row theme-tuner__row--changed' : 'theme-tuner__row'}>

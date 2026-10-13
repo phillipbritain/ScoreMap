@@ -6,7 +6,7 @@ import { GlobeMap, type LoadingStage } from './globeMap'
 import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
-  /** The look of the globe and everything on it. Only read when the globe is created. */
+  /** The look of the globe and everything on it. A change restyles the globe in place (see GlobeMap.setTheme). */
   theme: Theme
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
@@ -53,6 +53,7 @@ export function Globe({ theme, games, selectedGameId, panel, onSelectGame, start
     }
   }, [])
 
+  useEffect(() => globe.current?.setTheme(theme), [theme])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.
   useEffect(() => globe.current?.show(games), [games])

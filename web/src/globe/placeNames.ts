@@ -256,9 +256,10 @@ export interface PlaceNames {
 
 /**
  * Keeps the place names on a map up to date: names the games' places as their tiles load, and shows
- * state names only while all of them fit (see showStateNamesWhenAllFit).
+ * state names only while all of them fit (see showStateNamesWhenAllFit). The names' boxes are worked
+ * out in the theme `theme` gives at the time.
  */
-export function addPlaceNames(map: MapLibreMap, theme: Theme): PlaceNames {
+export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames {
   let games: readonly Game[] = []
   let cities: City[] = []
   // True when the games or the map's loaded places have changed since the cities were found.
@@ -308,7 +309,7 @@ export function addPlaceNames(map: MapLibreMap, theme: Theme): PlaceNames {
       return cities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
         .map((city) =>
-          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme), measureText),
+          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme()), measureText),
         )
     },
     remove() {

@@ -6,6 +6,8 @@ import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
+import builtInJson from '../theme/builtInTheme.json'
+import { resolveTheme, type Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
@@ -959,6 +961,81 @@ describe('glow', () => {
     expect(thrown).toEqual([])
     const glow = container.querySelector<HTMLElement>('.globe-glow')!
     expect(Number.isFinite(parseFloat(glow.style.width))).toBe(true)
+  })
+})
+
+describe('changing theme', () => {
+  /** The built-in theme, with these changes to its JSON's settings. */
+  function themeWith(change: (settings: Record<string, any>) => void): Theme {
+    const json = structuredClone(builtInJson) as Record<string, any>
+    change(json.settings)
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    return result.theme
+  }
+
+  /** A game this many pixels east of the centre of the view. */
+  const gameEastBy = (map: MapLibreMap, id: string, pixels: number) => {
+    const { width, height } = map.getContainer().getBoundingClientRect()
+    const { lng, lat } = map.unproject([width / 2 + pixels, height / 2])
+    return game(id, { longitude: lng, latitude: lat })
+  }
+
+  afterEach(() => applyTheme(document.documentElement, builtInTheme))
+
+  it('restyles the games’ layers in place, without making the map again', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A')
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    let reloaded = false
+    map.once('style.load', () => (reloaded = true))
+
+    globe.setTheme(themeWith((settings) => ((settings.trail.width = 3), (settings.status.live.core.color = '#ff0000'))))
+
+    expect(map.getPaintProperty('trails', 'line-width')).toBe(3)
+    expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(drawnAt(map, smallPinLayer, a)).not.toEqual([])
+    expect(reloaded).toBe(false)
+  })
+
+  it('redraws the halo in the new theme', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const glow = container.querySelector<HTMLElement>('.globe-glow')!
+
+    globe.setTheme(themeWith((settings) => (settings.globe.surface = '#ff0000')))
+
+    expect(channels(getComputedStyle(glow).backgroundColor).slice(0, 3)).toEqual([255, 0, 0])
+  })
+
+  it('clusters small pins by the new theme’s glows, which a wider glow gathers from farther apart', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    const [a, b] = [gameEastBy(map, 'A', -20), gameEastBy(map, 'B', 20)]
+    globe.show([a, b])
+    await pinsDrawn(map, smallPinLayer, a, b)
+
+    globe.setTheme(themeWith((settings) => (settings.status.live.glow.radius = 60)))
+
+    await pinsDrawn(map, pinClusterLayer, a, b)
+  })
+
+  it('measures score cards afresh in the new theme’s sizes, moving apart cards that now overlap', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    await new Promise((resolve) => map.once('idle', resolve))
+    // Room for two cards side by side, but not two cards twice as wide.
+    const [a, b] = [gameEastBy(map, 'A', -70), gameEastBy(map, 'B', 70)]
+    globe.show([a, b])
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(container.querySelector('[data-moved]')).toBeNull()
+
+    const larger = themeWith((settings) => (settings.sizes.card.minWidth = 200))
+    // As the app does it: the page's CSS first, then the globe (see useTheme).
+    applyTheme(document.documentElement, larger)
+    globe.setTheme(larger)
+
+    await vi.waitFor(() => expect(container.querySelector('[data-moved]')).not.toBeNull(), { timeout: 10_000 })
   })
 })
 

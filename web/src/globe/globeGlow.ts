@@ -2,27 +2,35 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 import { radians } from './geo'
 
+/** The halo around a globe (see addGlobeGlow). */
+export interface GlobeGlow {
+  /** Draws it where the globe is now, in the theme as it is now. */
+  place(): void
+  remove(): void
+}
+
 /**
  * A soft, even halo around the globe in the theme's colours: an inner glow close to its edge and a
  * wider, fainter outer one. MapLibre's own atmosphere is lit from one side and its colour can't be
  * set, so this draws a circle the size of the globe, in the globe's surface colour, behind the map
- * canvas and gives it the glow. Returns a function that removes it.
+ * canvas and gives it the glow, in the theme `theme` gives each time it's placed.
  */
-export function addGlobeGlow(map: MapLibreMap, { globe }: Theme): () => void {
+export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
   const container = map.getContainer()
   const glow = document.createElement('div')
   glow.className = 'globe-glow'
-  glow.style.backgroundColor = globe.surface
   // Before the canvas, so the globe draws over it and only the halo shows.
   container.insertBefore(glow, container.firstChild)
 
   const place = () => {
+    const { globe } = theme()
     const radius = onScreenRadius(map)
     const centre = map.project(map.getCenter())
     // Each glow grows with the globe on screen, up to the theme's most.
     const size = ({ share, max }: { share: number; max: number }) => Math.min(radius * share, max)
     const shadow = ({ color, blur, spread }: Theme['globe']['halo']['inner']) => `0 0 ${size(blur)}px ${size(spread)}px ${color}`
     Object.assign(glow.style, {
+      backgroundColor: globe.surface,
       width: `${2 * radius}px`,
       height: `${2 * radius}px`,
       left: `${centre.x - radius}px`,
@@ -36,11 +44,14 @@ export function addGlobeGlow(map: MapLibreMap, { globe }: Theme): () => void {
   // and sizes taken before that are the flat map's.
   map.on('idle', place)
   place()
-  return () => {
-    map.off('move', place)
-    map.off('resize', place)
-    map.off('idle', place)
-    glow.remove()
+  return {
+    place,
+    remove() {
+      map.off('move', place)
+      map.off('resize', place)
+      map.off('idle', place)
+      glow.remove()
+    },
   }
 }
 

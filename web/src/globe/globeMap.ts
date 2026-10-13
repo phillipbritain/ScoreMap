@@ -3,6 +3,7 @@ import {
   Map as MapLibreMap,
   setWorkerUrl,
   type GeoJSONSource,
+  type LayerSpecification,
   type MapLayerMouseEvent,
   type StyleSpecification,
 } from 'maplibre-gl'
@@ -14,7 +15,7 @@ import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
 import { gameLayers } from './gameLayers'
-import { addGlobeGlow } from './globeGlow'
+import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
 import { isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
@@ -41,6 +42,7 @@ import {
   smallPinLayer,
 } from './pinLayers'
 import { pulse } from './pinPulse'
+import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { smallPinWidth } from './statusLook'
@@ -58,8 +60,8 @@ export type GlobeMapStyle = StyleSpecification | { url: string }
 export interface GlobeMapOptions {
   style: GlobeMapStyle
   /**
-   * The look of the globe: its map style (when made over from a base style), the halo, place
-   * names, pins and score cards.
+   * The look of the globe to start with: its map style (when made over from a base style), the halo,
+   * place names, pins and score cards. It changes with setTheme.
    */
   theme: Theme
   /** Where the globe opens. */
@@ -94,10 +96,12 @@ const cardClusterZoomPadding = 120
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
-  private readonly theme: Theme
+  private theme: Theme
+  /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
+  private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
   private readonly names: PlaceNames
-  private readonly removeGlow: () => void
+  private readonly glow: GlobeGlow
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
   private readonly onStage: (stage: LoadingStage) => void
@@ -142,11 +146,17 @@ export class GlobeMap {
     this.map = map
     this.theme = theme
     traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
-    if ('url' in style) map.setStyle(style.url, { transformStyle: (_previous, base) => globeStyle(base, theme) })
+    // Made over in the theme as it is when the base style loads, which setTheme may have changed by then.
+    const transformStyle = (_previous: unknown, base: StyleSpecification) => {
+      this.base = base
+      return globeStyle(base, this.theme)
+    }
+    if ('url' in style) map.setStyle(style.url, { transformStyle })
     else map.setStyle(style)
-    this.removeGlow = addGlobeGlow(map, theme)
-    this.names = addPlaceNames(map, theme)
-    this.cards = new ScoreCardMarkers(map, theme, this.names, (gameId) => this.onSelect(gameId))
+    const currentTheme = () => this.theme
+    this.glow = addGlobeGlow(map, currentTheme)
+    this.names = addPlaceNames(map, currentTheme)
+    this.cards = new ScoreCardMarkers(map, currentTheme, this.names, (gameId) => this.onSelect(gameId))
     this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
@@ -239,6 +249,32 @@ export class GlobeMap {
   }
 
   /**
+   * Changes the globe's look to this theme in place, without making it again: the map style's and the
+   * games' layers are restyled (just the properties that differ, see layerChanges), the halo redrawn,
+   * small pins reclustered by their new width, and score cards measured and laid out afresh. The
+   * page's CSS must already be in this theme, as score cards are drawn by it.
+   */
+  setTheme(theme: Theme): void {
+    if (theme === this.theme) return
+    const was = this.theme
+    this.theme = theme
+    this.unsettle()
+    const map = this.map
+    applyLayerChanges(map, [
+      ...(this.base ? layerChanges(globeStyle(this.base, was).layers, globeStyle(this.base, theme).layers) : []),
+      ...layerChanges(gameLayersIn(was, this.selectedGameId), gameLayersIn(theme, this.selectedGameId)),
+    ])
+    const footprint = pinFootprint(theme)
+    if (footprint.size !== pinFootprint(was).size && map.hasImage(footprint.image)) {
+      map.removeImage(footprint.image)
+      addBlankImage(map, footprint.image, footprint.size, footprint.size)
+    }
+    this.recluster()
+    this.glow.place()
+    this.cards.restyle()
+  }
+
+  /**
    * Whether everything the globe was last given is on screen and still: the pin source has loaded
    * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
    * placed), and the score cards have settled. Still right now: false again after any change or move,
@@ -280,7 +316,7 @@ export class GlobeMap {
     this.destroyed = true
     window.removeEventListener('pagehide', this.saveCamera)
     this.cards.clear()
-    this.removeGlow()
+    this.glow.remove()
     this.names.remove()
     this.map.remove()
   }
@@ -518,6 +554,12 @@ export class GlobeMap {
     const { lng, lat } = this.map.getCenter().wrap()
     this.onCameraMove({ longitude: lng, latitude: lat, zoom: this.map.getZoom() })
   }
+}
+
+/** Every layer the globe adds for the games in a theme, as gameLayers makes them. */
+function gameLayersIn(theme: Theme, selectedGameId: string | null): LayerSpecification[] {
+  const { belowNames, onTop } = gameLayers(theme, selectedGameId)
+  return [...belowNames, ...onTop]
 }
 
 /** A fully transparent image, for the pins' invisible footprints. */

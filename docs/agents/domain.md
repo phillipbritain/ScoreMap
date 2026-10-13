@@ -46,7 +46,7 @@ If the concept you need isn't in the glossary yet, that's a signal: either you'r
 
 ## ADRs record decisions
 
-An accepted ADR stays as written; details that change later belong in the code and docs. When the decision itself changes, write a new ADR that supersedes the old one, and add a line under the old one's title: "Superseded by ADR-NNNN", linking to it.
+An accepted ADR stays as written; details that change later belong in the code and docs. When the decision itself changes, write a new ADR that supersedes the old one, and set the old one's status to `superseded by ADR-NNNN` (the domain-modeling skill's `ADR-FORMAT.md`).
 
 ## Flag ADR conflicts
 

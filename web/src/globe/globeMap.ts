@@ -16,6 +16,7 @@ import type { Camera } from './camera'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
+import { isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
@@ -27,6 +28,10 @@ import {
   cardLayoutSourceSpec,
 } from './cardLayoutLayers'
 import {
+  outerPinClusterLayer,
+  outerPinSource,
+  outerSelectedPinLayer,
+  outerSmallPinLayer,
   pinFootprint,
   pinClusterLayer,
   pinSource,
@@ -39,7 +44,7 @@ import { pulse } from './pinPulse'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
 import { smallPinWidth } from './statusLook'
-import { cardZoom, clusterMaxZoom, maxZoom, minZoom, pinLayout, pinSize, type PinLayout } from './zoomLevels'
+import { cardZoom, clusterMaxZoom, hasCard, maxZoom, minZoom, pinLayout, pinSize, type PinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
@@ -82,8 +87,10 @@ const cardClusterZoomPadding = 120
 
 /**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
- * pin clusters; zoomed in, each pin becomes a score card, and cards with no room form card
- * clusters. Selecting any cluster zooms in until it splits.
+ * pin clusters; zoomed in, each pin near the centre of the view becomes a score card, and cards with
+ * no room form card clusters, while the pins farther out stay small and form pin clusters among
+ * themselves (see hasCard). Selecting a cluster zooms in until it splits, or centres the globe on
+ * one farther out.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
@@ -98,6 +105,8 @@ export class GlobeMap {
   private shown = new Map<string, Game>()
   /** The pins last given to the pin source, so it's reloaded only when they change. */
   private pinsKey = ''
+  /** The pins last given to the outer pin source, likewise. */
+  private outerPinsKey = ''
   private selectedGameId: string | null = null
   private clustering: PinLayout
   private destroyed = false
@@ -142,6 +151,8 @@ export class GlobeMap {
 
     map.on('style.load', this.addPins)
     map.on('zoom', this.recluster)
+    // Games cross the card radius as the globe turns, and zooming crosses cardZoom.
+    map.on('move', this.showOuterPins)
     // Cards follow the clustered source, which changes as the camera moves and data arrives.
     map.on('render', this.syncCards)
     // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
@@ -153,8 +164,10 @@ export class GlobeMap {
     map.on('idle', this.goneIdle)
     map.on('click', pinClusterLayer, this.zoomToPinCluster)
     map.on('click', smallPinLayer, this.selectPin)
+    map.on('click', outerPinClusterLayer, this.centreOnOuterPinCluster)
+    map.on('click', outerSmallPinLayer, this.selectPin)
     map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
-    for (const layer of [pinClusterLayer, smallPinLayer, cardClusterLayer]) {
+    for (const layer of [pinClusterLayer, smallPinLayer, outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer]) {
       map.on('mouseenter', layer, this.pointAt)
       map.on('mouseleave', layer, this.stopPointing)
     }
@@ -189,6 +202,7 @@ export class GlobeMap {
       this.pinsKey = pinsKey
       this.map.getSource<GeoJSONSource>(pinSource)?.setData(pins)
     }
+    this.showOuterPins()
     // Names first: cards are laid out around them.
     this.names.showGames(games)
     this.cards.setGames(games)
@@ -210,7 +224,9 @@ export class GlobeMap {
     this.unsettle()
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
-    if (this.map.getLayer(selectedPinLayer)) this.map.setFilter(selectedPinLayer, selectedPin(gameId))
+    for (const layer of [selectedPinLayer, outerSelectedPinLayer]) {
+      if (this.map.getLayer(layer)) this.map.setFilter(layer, selectedPin(gameId))
+    }
     const game = gameId === null ? undefined : this.shown.get(gameId)
     if (!game) return
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
@@ -234,7 +250,8 @@ export class GlobeMap {
 
   /** Whether everything settled asks for holds, the score cards aside. */
   private stillButCards(): boolean {
-    return !!this.map.getSource(pinSource) && this.map.isSourceLoaded(pinSource) && this.idle
+    const loaded = (source: string) => !!this.map.getSource(source) && this.map.isSourceLoaded(source)
+    return loaded(pinSource) && loaded(outerPinSource) && this.idle
   }
 
   /**
@@ -273,6 +290,9 @@ export class GlobeMap {
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
     map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), this.clustering))
+    map.addSource(outerPinSource, pinSourceSpec(pinFeatures([]), { size: 'small', clusterRadius: this.clustering.clusterRadius }))
+    this.outerPinsKey = ''
+    this.showOuterPins()
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
     const { image, size } = pinFootprint(this.theme)
@@ -284,15 +304,21 @@ export class GlobeMap {
   }
 
   // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score
-  // cards don't (see pinLayout).
+  // cards don't (see pinLayout). The outer pins are always small, so they always cluster.
   private readonly recluster = () => {
     const now = this.pinLayoutNow()
     const was = this.clustering
-    if (now.size === was.size && (now.size === 'card' || now.clusterRadius === was.clusterRadius)) return
+    if (now.size === was.size && now.clusterRadius === was.clusterRadius) return
     this.clustering = now
+    // Left alone as the radius changes at card zoom: reloading it would only hold back placing cards.
+    if (now.size === 'small' || was.size === 'small') {
+      void this.map
+        .getSource<GeoJSONSource>(pinSource)
+        ?.setClusterOptions({ cluster: now.size === 'small', clusterRadius: now.clusterRadius, clusterMaxZoom })
+    }
     void this.map
-      .getSource<GeoJSONSource>(pinSource)
-      ?.setClusterOptions({ cluster: now.size === 'small', clusterRadius: now.clusterRadius, clusterMaxZoom })
+      .getSource<GeoJSONSource>(outerPinSource)
+      ?.setClusterOptions({ cluster: true, clusterRadius: now.clusterRadius, clusterMaxZoom })
   }
 
   /** The pin layout at the map's zoom now, for small pins as wide as the theme's (see pinLayout). */
@@ -301,6 +327,29 @@ export class GlobeMap {
   }
 
   private readonly syncCards = () => this.cards.sync()
+
+  /**
+   * Gives the outer pin source the games with no score card at card zoom (see hasCard), on the side
+   * of the globe facing the viewer: reloaded only when they change, as games cross the card radius
+   * or the horizon. Zoomed out it's empty, as every game's small pin is in the pin source.
+   */
+  private readonly showOuterPins = () => {
+    const map = this.map
+    const source = map.getSource<GeoJSONSource>(outerPinSource)
+    if (!source) return
+    const { lng: longitude, lat: latitude } = map.getCenter()
+    const outer =
+      pinSize(map.getZoom()) === 'card'
+        ? [...this.shown.values()].filter(
+            ({ venue }) => !hasCard({ longitude, latitude }, venue) && !isBehindGlobe(map, [venue.longitude, venue.latitude]),
+          )
+        : []
+    const pins = pinFeatures(outer)
+    const pinsKey = JSON.stringify(pins)
+    if (pinsKey === this.outerPinsKey) return
+    this.outerPinsKey = pinsKey
+    source.setData(pins)
+  }
 
   private readonly drew = () => (this.idle = false)
   private readonly goneIdle = () => {
@@ -347,7 +396,19 @@ export class GlobeMap {
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
   // Selecting a pin cluster, and selecting a card cluster, both zoom in until
-  // their games split.
+  // their games split. Selecting an outer pin cluster brings its games' cards instead.
+
+  /**
+   * Centres the globe on an outer pin cluster, at the same zoom, so its games have score cards. The
+   * zoom is given: left out, MapLibre's globe would zoom out turning towards a pole, maybe past
+   * cardZoom, where every game would show as a small pin.
+   */
+  private readonly centreOnOuterPinCluster = (event: MapLayerMouseEvent) => {
+    const cluster = event.features?.[0]
+    if (!cluster) return
+    const center = (cluster.geometry as Point).coordinates as [number, number]
+    this.map.easeTo({ center, zoom: Math.max(this.map.getZoom(), cardZoom) })
+  }
 
   /**
    * Zooms in to where a pin cluster splits. Score cards aren't in pin clusters, so one splits by
@@ -394,21 +455,26 @@ export class GlobeMap {
   }
 
   /**
-   * Plays an animation where a game shows on the globe: its score card when zoomed in, its small pin
-   * when zoomed out, or the pin cluster it's in. Games not on the map (off screen) don't animate.
+   * Plays an animation where a game shows on the globe: its score card, its small pin (zoomed out, or
+   * far from the centre of the view), or the pin cluster it's in. Games not on the map (off screen)
+   * don't animate.
    */
   private async animate(game: Game, animation: PinAnimation): Promise<void> {
     const map = this.map
-    const source = map.getSource<GeoJSONSource>(pinSource)
+    const { lng: longitude, lat: latitude } = map.getCenter()
+    const zoomedIn = pinSize(map.getZoom()) === 'card'
+    const card = zoomedIn && hasCard({ longitude, latitude }, game.venue)
+    const sourceId = zoomedIn && !card ? outerPinSource : pinSource
+    const source = map.getSource<GeoJSONSource>(sourceId)
     // Not waiting for the source to load: it's still taking in the games just shown, and until then
     // it has the pins as they were, which are where the changed games still are.
     if (!source) return
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
-    const target = animationTarget(game.id, venue, map.querySourceFeatures(pinSource) as Feature<Point>[])
+    const target = animationTarget(game.id, venue, map.querySourceFeatures(sourceId) as Feature<Point>[])
     if (!target) return
 
     if (target.kind === 'pin') {
-      if (pinSize(map.getZoom()) === 'card') this.cards.animate(game.id, animation)
+      if (card) this.cards.animate(game.id, animation)
       else pulse(map, this.theme, target.lngLat, animation, 'pin')
       return
     }

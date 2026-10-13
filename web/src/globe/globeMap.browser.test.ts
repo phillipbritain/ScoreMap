@@ -12,7 +12,7 @@ import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
-import { pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
+import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom } from './zoomLevels'
 
 /**
@@ -458,6 +458,92 @@ describe('score cards', () => {
     const [trail] = (await laidOut(map, 'trail')) as Feature<LineString>[]
     const [, venue] = trail.geometry.coordinates
     expect(venue).toEqual([0, 0])
+  })
+})
+
+// Big enough to show the whole globe at cardZoom, about 440 pixels from its centre to its rim, so
+// games past the card radius are on screen.
+const wideGlobe = { width: 1000, height: 740 }
+
+describe('score cards near the centre of the view', () => {
+  // About 44° from 0°, 0°: past the card radius, on screen in a wide globe.
+  const outerVenue = { longitude: 38, latitude: 25 }
+
+  /** Whether a game's venue is on the globe's canvas, so what's drawn there can be found. */
+  function onCanvas(map: MapLibreMap, { venue }: Game) {
+    const { x, y } = map.project([venue.longitude, venue.latitude])
+    return x > 0 && x < wideGlobe.width && y > 0 && y < wideGlobe.height
+  }
+
+  it('shows a game near the centre as a score card, and one farther out as a small pin', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    const outer = game('OUTER', outerVenue)
+    globe.show([game('INNER', { longitude: 20 }), outer])
+    await cardShown('INNER')
+    expect(onCanvas(map, outer)).toBe(true)
+
+    await pinsDrawn(map, outerSmallPinLayer, outer)
+    expect(card('OUTER')).toBeNull()
+  })
+
+  it('clusters the pins farther out among themselves, leaving the games near the centre their cards', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    // Just inside the card radius, a few degrees from the outer games.
+    const inner = game('INNER', { longitude: 34, latitude: 22 })
+    const outer = [game('OUTER1', outerVenue), game('OUTER2', outerVenue)]
+    globe.show([inner, ...outer])
+    await cardShown('INNER')
+
+    await pinsDrawn(map, outerPinClusterLayer, outer[0])
+    expect(drawnAt(map, outerPinClusterLayer, outer[0]).map((f) => f.properties.point_count)).toContain(2)
+    expect(card('OUTER1')).toBeNull()
+    expect(card('OUTER2')).toBeNull()
+  })
+
+  it('gives a game a card once the globe turns its venue within the card radius', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    globe.show([game('OUTER', outerVenue)])
+    await pinsDrawn(map, outerSmallPinLayer, game('OUTER', outerVenue))
+
+    // At the zoom it was: MapLibre's globe would zoom out a little, turning north from the equator.
+    map.jumpTo({ center: [30, 20], zoom: cardZoom })
+
+    await cardShown('OUTER')
+    await vi.waitFor(() => expect(drawnAt(map, outerSmallPinLayer, game('OUTER', outerVenue))).toEqual([]))
+  })
+
+  it('tells the app when the viewer selects a pin farther out, and leaves the globe where it is', async () => {
+    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    const outer = game('OUTER', outerVenue)
+    globe.show([outer])
+    await pinsDrawn(map, outerSmallPinLayer, outer)
+
+    await userEvent.click(map.getCanvas(), { position: map.project([outerVenue.longitude, outerVenue.latitude]) })
+    await pause(500)
+
+    expect(onSelect).toHaveBeenCalledWith('OUTER')
+    expect(map.getCenter().lng).toBeCloseTo(0)
+    expect(map.getCenter().lat).toBeCloseTo(0)
+  })
+
+  it('centres the globe on a pin cluster farther out the viewer selects, at the same zoom, so its games have cards', async () => {
+    // Past cardZoom, where selecting a pin cluster zoomed out would zoom out to it.
+    const zoom = cardZoom + 0.2
+    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom }, wideGlobe)
+    const venue = outerVenue
+    globe.show([game('A', venue), game('B', venue)])
+    await pinsDrawn(map, outerPinClusterLayer, game('A', venue))
+    expect(onCanvas(map, game('A', venue))).toBe(true)
+
+    await userEvent.click(map.getCanvas(), { position: map.project([venue.longitude, venue.latitude]) })
+
+    await cameraSettles(
+      onCameraMove,
+      (camera) =>
+        camera.zoom === zoom && offBy(camera.longitude, venue.longitude) < 0.5 && offBy(camera.latitude, venue.latitude) < 0.5,
+    )
+    await cardShown('A')
+    await cardShown('B')
   })
 })
 

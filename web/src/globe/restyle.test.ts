@@ -6,10 +6,10 @@ import { resolveTheme, type Theme } from '../theme/theme'
 import { gameLayers } from './gameLayers'
 import { layerChanges } from './restyle'
 
-/** The built-in theme, with these changes to its JSON's settings. */
-function themeWith(change: (settings: Record<string, any>) => void): Theme {
+/** The built-in theme, with these changes to its JSON. */
+function themeWith(change: (json: Record<string, any>) => void): Theme {
   const json = structuredClone(builtInJson) as Record<string, any>
-  change(json.settings)
+  change(json)
   const result = resolveTheme(json)
   if (!result.ok) throw new Error(result.problems.join('\n'))
   return result.theme
@@ -26,14 +26,14 @@ describe('layerChanges', () => {
   })
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
-    const wider = themeWith((settings) => (settings.trail.width = 3))
+    const wider = themeWith((json) => (json.components.Trail.width = 3))
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
       { layer: 'trails', kind: 'paint', property: 'line-width', value: 3 },
     ])
   })
 
   it('sets a layout property too, such as a cluster count’s font', () => {
-    const bolder = themeWith((settings) => (settings.fonts.clusterCount.font = 'Open Sans Extra Bold'))
+    const bolder = themeWith((json) => (json.components.Cluster.count.font = 'Open Sans Extra Bold'))
     const changes = layerChanges(layersIn(builtInTheme), layersIn(bolder))
     expect(changes).toContainEqual({
       layer: 'card-cluster-counts',

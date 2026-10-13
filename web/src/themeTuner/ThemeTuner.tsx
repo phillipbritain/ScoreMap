@@ -3,20 +3,23 @@ import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
   changes,
+  changesIn,
+  componentName,
+  rowChanged,
   describeChanges,
+  isTypeStyleSize,
   numberRange,
-  paletteColours,
   saveDraft,
-  scaleOf,
   settingAt,
   shiftedJob,
   stepOfJob,
+  themeColours,
   tunerTabs,
   withSetting,
   type Json,
   type JsonObject,
-  type PaletteColour,
   type SettingPath,
+  type ThemeColour,
   type ThemeJson,
 } from './themeDraft'
 import './themeTuner.css'
@@ -32,8 +35,9 @@ interface ThemeTunerProps {
 
 /**
  * The theme tuner (local runs only): a panel for trying changes to the theme on the running app,
- * by part of the screen. A colour picks a step of the theme's palette, or steps lighter or darker,
- * so it stays within the palette; sizes, opacities and fonts change in place. Changes show at once,
+ * by part of the theme and of the screen. A colour picks a step of the theme's colours or one of its
+ * palette's colours, or steps lighter or darker, so it stays within the theme's colours; sizes,
+ * opacities and fonts change in place. Changes show at once,
  * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
  * the theme's JSON.
  */
@@ -43,7 +47,7 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
   const [tabIndex, setTabIndex] = useState(0)
   const [copied, setCopied] = useState<string | null>(null)
   const tabs = useMemo(() => tunerTabs(builtIn), [builtIn])
-  const palette = useMemo(() => paletteColours(draft), [draft])
+  const colours = useMemo(() => themeColours(draft), [draft])
   const changed = useMemo(() => changes(builtIn, draft), [builtIn, draft])
   const result = useMemo(() => resolveTheme(draft), [draft])
 
@@ -62,8 +66,7 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
   const context: RowContext = {
     builtIn,
     draft,
-    palette,
-    changed: new Set(changed.map((change) => change.path.join('.'))),
+    colours,
     set: (path, value) => setDraft((current) => withSetting(current, path, value)),
   }
   const tab = tabs[tabIndex]
@@ -75,11 +78,31 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
       </button>
       {open && (
         <div className="theme-tuner__panel">
-          <div className="theme-tuner__tabs" role="tablist">
-            {tabs.map(({ name }, i) => (
-              <button key={name} type="button" role="tab" aria-selected={i === tabIndex} onClick={() => setTabIndex(i)}>
-                {name}
-              </button>
+          <div className="theme-tuner__tabs">
+            {(['theme', 'component'] as const).map((kind) => (
+              <div key={kind} className={`theme-tuner__tab-group theme-tuner__tab-group--${kind}`}>
+                <span className="theme-tuner__tab-group-name">{kind === 'theme' ? 'Whole theme' : 'Components'}</span>
+                <div role="tablist" aria-label={kind === 'theme' ? 'Whole theme' : 'Components'}>
+                  {tabs.map((tab, i) => {
+                    if (tab.kind !== kind) return null
+                    const count = changesIn(tab, changed)
+                    return (
+                      <button
+                        key={tab.name}
+                        type="button"
+                        role="tab"
+                        title={tab.paths.map((path) => path.join('.')).join(', ')}
+                        aria-selected={i === tabIndex}
+                        aria-label={count ? `${tab.name}, ${count} changed` : undefined}
+                        onClick={() => setTabIndex(i)}
+                      >
+                        {tab.name}
+                        {count > 0 && <span className="theme-tuner__badge">{count}</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             ))}
           </div>
           {!result.ok && (
@@ -121,9 +144,7 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
 interface RowContext {
   builtIn: ThemeJson
   draft: ThemeJson
-  palette: readonly PaletteColour[]
-  /** The changed settings' paths, joined with dots. */
-  changed: ReadonlySet<string>
+  colours: readonly ThemeColour[]
   set: (path: SettingPath, value: Json) => void
 }
 
@@ -133,18 +154,24 @@ const isGroup = (value: Json | undefined): value is JsonObject =>
 /** A key as a label: "glowOpacity" as "glow opacity", a zoom level "4" as "zoom 4". */
 const label = (key: string) => (/^\d/.test(key) ? `zoom ${key}` : key.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`))
 
+/** A tab's top setting or group as a heading: a component's by its name ("Score card"), the rest key by key. */
+const heading = (path: SettingPath) =>
+  path[0] === 'components' && path[1] !== undefined
+    ? [componentName(path[1]), ...path.slice(2).map(label)].join(' › ')
+    : path.map(label).join(' › ')
+
 /** A setting, or a group of them under a heading. */
 function Group({ path, value, context, title = false }: { path: SettingPath; value: Json | undefined; context: RowContext; title?: boolean }) {
   if (!isGroup(value)) {
     return (
       <div className={title ? 'theme-tuner__group theme-tuner__group--top' : undefined}>
-        <Row path={path} value={value} context={context} name={title ? path.join(' › ') : label(path.at(-1)!)} />
+        <Row path={path} value={value} context={context} name={title ? heading(path) : label(path.at(-1)!)} />
       </div>
     )
   }
   return (
     <div className={title ? 'theme-tuner__group theme-tuner__group--top' : 'theme-tuner__group'}>
-      <div className="theme-tuner__heading">{title ? path.map(label).join(' › ') : label(path.at(-1)!)}</div>
+      <div className="theme-tuner__heading">{title ? heading(path) : label(path.at(-1)!)}</div>
       {Object.entries(value).map(([key, inner]) => (
         <Group key={key} path={[...path, key]} value={inner} context={context} />
       ))}
@@ -154,7 +181,7 @@ function Group({ path, value, context, title = false }: { path: SettingPath; val
 
 /** One setting: its name, its control, and a reset to the built-in theme's when it's changed. */
 function Row({ path, value, context, name }: { path: SettingPath; value: Json | undefined; context: RowContext; name: string }) {
-  const changed = context.changed.has(path.join('.'))
+  const changed = rowChanged(context.builtIn, context.draft, path)
   const original = settingAt(context.builtIn, path)
   return (
     <div className={changed ? 'theme-tuner__row theme-tuner__row--changed' : 'theme-tuner__row'}>
@@ -177,33 +204,39 @@ function Row({ path, value, context, name }: { path: SettingPath; value: Json | 
 
 function Control({ path, value, original, context }: { path: SettingPath; value: Json | undefined; original: Json | undefined; context: RowContext }) {
   const set = (next: Json) => context.set(path, next)
-  if (typeof value === 'boolean') return <input type="checkbox" checked={value} onChange={(event) => set(event.target.checked)} />
-  if (typeof value === 'number') {
-    const range = numberRange(path, typeof original === 'number' ? original : value)
+  const last = path.at(-1)
+  const range = numberRange(path, typeof original === 'number' ? original : typeof value === 'number' ? value : 0)
+  if (last === 'corner' && (typeof value === 'number' || value === 'pill')) {
+    // A number of corner radii, or fully round.
     return (
       <span className="theme-tuner__number">
-        <input type="range" {...range} value={value} onChange={(event) => set(Number(event.target.value))} />
-        <input type="number" step={range.step} value={value} onChange={(event) => event.target.value !== '' && set(Number(event.target.value))} />
+        <label>
+          <input type="checkbox" checked={value === 'pill'} onChange={(event) => set(event.target.checked ? 'pill' : typeof original === 'number' ? original : 1)} />
+          pill
+        </label>
+        {typeof value === 'number' && <NumberInput value={value} range={range} onChange={set} />}
       </span>
     )
   }
+  if (typeof value === 'boolean') return <input type="checkbox" checked={value} onChange={(event) => set(event.target.checked)} />
+  if (typeof value === 'number') return <NumberInput value={value} range={range} onChange={set} />
   if (Array.isArray(value)) {
     return <DashInput value={value as readonly number[]} onChange={set} />
   }
   if (typeof value !== 'string') return <span>{JSON.stringify(value)}</span>
-  const last = path.at(-1)
-  if (last === 'family') return <input type="text" className="theme-tuner__text" value={value} onChange={(event) => set(event.target.value)} />
-  const scale = scaleOf(path)
-  if (scale) {
-    const steps = settingAt(context.draft, [scale])
+  if (last === 'fontFamily') return <input type="text" className="theme-tuner__text" value={value} onChange={(event) => set(event.target.value)} />
+  if (isTypeStyleSize(path)) {
+    const styles = settingAt(context.draft, ['typography'])
     return (
       <select value={value} onChange={(event) => set(event.target.value)}>
-        {isGroup(steps) &&
-          Object.entries(steps).map(([step, pixels]) => (
-            <option key={step} value={step}>
-              {step} ({String(pixels)}px)
-            </option>
-          ))}
+        {isGroup(styles) &&
+          Object.entries(styles).flatMap(([name, style]) =>
+            isGroup(style) ? [
+              <option key={name} value={name}>
+                {name} ({String(style.fontSize)}px)
+              </option>,
+            ] : [],
+          )}
       </select>
     )
   }
@@ -216,7 +249,17 @@ function Control({ path, value, original, context }: { path: SettingPath; value:
       </select>
     )
   }
-  return <ColourJob job={value} palette={context.palette} onChange={set} />
+  // The palette's own colours name the theme's colours' steps; everything else may name the palette's.
+  return <ColourJob job={value} draft={context.draft} colours={context.colours} roles={path[0] !== 'palette'} onChange={set} />
+}
+
+function NumberInput({ value, range, onChange }: { value: number; range: { min: number; max: number; step: number }; onChange: (value: number) => void }) {
+  return (
+    <span className="theme-tuner__number">
+      <input type="range" {...range} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      <input type="number" step={range.step} value={value} onChange={(event) => event.target.value !== '' && onChange(Number(event.target.value))} />
+    </span>
+  )
 }
 
 /**
@@ -239,34 +282,69 @@ function DashInput({ value, onChange }: { value: readonly number[]; onChange: (v
   )
 }
 
-/** The colour a colour job shows as: its palette step's, or the colour given directly. */
-function colourOf(job: string, palette: readonly PaletteColour[]): string {
-  const named = stepOfJob(job)
-  return (named && palette.find((colour) => colour.name === named.colour)?.steps[named.step]) ?? job
+/** The colour a colour job shows as: the step it names, itself or through the palette, or the colour given directly. */
+function colourOf(job: string, draft: ThemeJson, colours: readonly ThemeColour[]): string {
+  const named = stepOfJob(job, draft)
+  const direct = settingAt(draft, ['palette', ...job.split('.')])
+  return (named && colours.find((colour) => colour.name === named.colour)?.steps[named.step]) ?? (typeof direct === 'string' ? direct : job)
+}
+
+/** The palette's colours, by their names in a colour job ("primary.dark", "divider"). */
+function paletteJobs(draft: ThemeJson): string[] {
+  const walk = (value: Json | undefined, name: string): string[] =>
+    typeof value === 'string' ? [name] : isGroup(value) ? Object.entries(value).flatMap(([key, inner]) => walk(inner, name ? `${name}.${key}` : key)) : []
+  return walk(settingAt(draft, ['palette']), '')
 }
 
 /**
- * A colour job, picked from the palette's steps (a grid of each colour from light to dark) or stepped
- * lighter or darker in its palette colour. Transparent is there for shadows and outlines.
+ * A colour job, picked from the theme's colours' steps (a grid of each colour from light to dark) or,
+ * where `roles` allows, the palette's colours, or stepped lighter or darker in its colour. Transparent
+ * is there for shadows and outlines.
  */
-function ColourJob({ job, palette, onChange }: { job: string; palette: readonly PaletteColour[]; onChange: (job: string) => void }) {
+function ColourJob({
+  job,
+  draft,
+  colours,
+  roles,
+  onChange,
+}: {
+  job: string
+  draft: ThemeJson
+  colours: readonly ThemeColour[]
+  roles: boolean
+  onChange: (job: string) => void
+}) {
   const [picking, setPicking] = useState(false)
-  const named = stepOfJob(job)
+  const named = stepOfJob(job, draft)
+  const pick = (option: string) => {
+    onChange(option)
+    setPicking(false)
+  }
   return (
     <span className="theme-tuner__colour">
       <button type="button" className="theme-tuner__swatch-button" onClick={() => setPicking(!picking)}>
-        <span className="theme-tuner__swatch" style={{ background: colourOf(job, palette) }} />
+        <span className="theme-tuner__swatch" style={{ background: colourOf(job, draft, colours) }} />
         {job}
       </button>
-      <button type="button" title="Lighter" aria-label="Lighter" disabled={!named || named.step === '100'} onClick={() => onChange(shiftedJob(job, -1))}>
+      <button type="button" title="Lighter" aria-label="Lighter" disabled={!named || named.step === '100'} onClick={() => onChange(shiftedJob(job, -1, draft))}>
         ▲
       </button>
-      <button type="button" title="Darker" aria-label="Darker" disabled={!named || named.step === '900'} onClick={() => onChange(shiftedJob(job, 1))}>
+      <button type="button" title="Darker" aria-label="Darker" disabled={!named || named.step === '900'} onClick={() => onChange(shiftedJob(job, 1, draft))}>
         ▼
       </button>
       {picking && (
         <span className="theme-tuner__grid">
-          {palette.map(({ name, steps }) => (
+          {roles && (
+            <span className="theme-tuner__roles">
+              {paletteJobs(draft).map((option) => (
+                <button key={option} type="button" title={option} aria-pressed={option === job} className="theme-tuner__role" onClick={() => pick(option)}>
+                  <span className="theme-tuner__swatch" style={{ background: colourOf(option, draft, colours) }} />
+                  {option}
+                </button>
+              ))}
+            </span>
+          )}
+          {colours.map(({ name, steps }) => (
             <span key={name} className="theme-tuner__grid-row">
               <span className="theme-tuner__grid-name">{name}</span>
               {Object.entries(steps).map(([step, hex]) => {
@@ -279,10 +357,7 @@ function ColourJob({ job, palette, onChange }: { job: string; palette: readonly 
                     aria-pressed={option === job}
                     className="theme-tuner__cell"
                     style={{ background: hex }}
-                    onClick={() => {
-                      onChange(option)
-                      setPicking(false)
-                    }}
+                    onClick={() => pick(option)}
                   />
                 )
               })}
@@ -292,10 +367,7 @@ function ColourJob({ job, palette, onChange }: { job: string; palette: readonly 
             type="button"
             className="theme-tuner__transparent"
             aria-pressed={job === 'transparent'}
-            onClick={() => {
-              onChange('transparent')
-              setPicking(false)
-            }}
+            onClick={() => pick('transparent')}
           >
             transparent
           </button>

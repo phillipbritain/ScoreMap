@@ -1,12 +1,15 @@
 import { globeFonts, type GlobeFont } from './globeFonts'
 import { isHexColor, paletteSteps, stepNames, type StepName } from './palette'
 
-/** What resolving a theme's settings reads from, and where it notes each problem it finds. */
+/** What resolving a theme reads from, and where it notes each problem it finds. */
 interface Resolving {
-  /** Every palette step, by its name in a colour job, such as "navy.700". */
-  steps: ReadonlyMap<string, string>
-  /** The theme's settings as its JSON gives them, where a size reads its scale's steps. */
-  settings: Readonly<Record<string, unknown>>
+  /**
+   * Every colour a colour job can name: each step of the theme's colours ("navy.700") and, outside
+   * the palette, each of the palette's colours ("primary.dark").
+   */
+  colours: ReadonlyMap<string, string | undefined>
+  /** The theme's JSON, where a size reads the type style, spacing unit or corner radius it's a number of. */
+  json: Readonly<Record<string, unknown>>
   problems: string[]
 }
 
@@ -20,11 +23,14 @@ interface Setting<T> {
   css?(value: T): string | Readonly<Record<string, string>>
 }
 
-/** A colour job: a palette step by name ("navy.700"), or a colour given directly ("#0b1526"). */
+/**
+ * A colour job: a step of the theme's colours by name ("navy.700"), outside the palette one of the
+ * palette's colours ("primary.dark"), or a colour given directly ("#0b1526").
+ */
 const color: Setting<string> = {
-  resolve(value, path, { steps, problems }) {
+  resolve(value, path, { colours, problems }) {
     if (typeof value !== 'string') {
-      problems.push(`${path} is ${shown(value)}, not a colour job: a palette step such as "navy.700", or a colour`)
+      problems.push(`${path} is ${shown(value)}, not a colour job: a colour’s step such as "navy.700", or a colour`)
       return undefined
     }
     if (directColor.test(value)) return value
@@ -32,9 +38,9 @@ const color: Setting<string> = {
       problems.push(`${path} is "${value}", not a colour CSS and MapLibre both read (${directColorForms})`)
       return undefined
     }
-    const step = steps.get(value)
-    if (step === undefined) problems.push(`${path} names "${value}", a step the palette doesn’t have`)
-    return step
+    // One of the palette's colours with a problem of its own has it reported there.
+    if (!colours.has(value)) problems.push(`${path} names "${value}", a colour the theme doesn’t have`)
+    return colours.get(value)
   },
 }
 
@@ -174,52 +180,68 @@ const fontFamily: Setting<string> = {
   },
 }
 
-/** A font for text on the page: its CSS font family and its weight. */
-const pageFont = { family: fontFamily, weight: numberFrom(1, 1000, 'a font weight from 1 to 1000') }
+/** The theme's type styles, by name, as MUI names its typography variants (plus footnote, smaller than a caption). */
+const typeStyles = ['h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline', 'footnote'] as const
 
 /**
- * The scales every text size, spacing, corner radius and the page's line widths (borders, dividers) are
- * a step of, and their steps' names. The page's CSS uses only these steps (as --text-sizes-m, --spacing-l,
- * --corners-card, --strokes-thin and so on), and a size elsewhere in a theme names one.
+ * A type style: its weight, its size in pixels, and how far apart its letters are spaced, in ems.
+ * Every type style is in the typography's font family.
  */
-const scales = {
-  textSizes: { what: 'text size', steps: ['xs', 's', 'm', 'l', 'xl'] },
-  spacing: { what: 'spacing', steps: ['2xs', 'xs', 's', 'm', 'l', 'xl', '2xl', '3xl'] },
-  radii: { what: 'radius', steps: ['xs', 's', 'm', 'l', 'pill'] },
-  strokes: { what: 'stroke', steps: ['thin', 'medium', 'thick'] },
-} as const
-
-type ScaleName = keyof typeof scales
-
-/** A scale's steps, each a number of pixels. */
-function scale<const Steps extends readonly string[]>(steps: Steps): Record<Steps[number], Setting<number>> {
-  return Object.fromEntries(steps.map((step) => [step, pixels])) as Record<Steps[number], Setting<number>>
+const typeStyle = {
+  fontWeight: numberFrom(1, 1000, 'a font weight from 1 to 1000'),
+  fontSize: pixels,
+  letterSpacing: tracking,
 }
 
-/** A size given as a step of its scale, by name ("m"), resolving to the pixels that step holds. */
-function stepOf(name: ScaleName): Setting<number> {
-  const { what, steps } = scales[name]
-  return {
-    resolve(value, path, { settings, problems }) {
-      if (typeof value === 'string' && (steps as readonly string[]).includes(value)) {
-        const size = (settings[name] as Record<string, unknown> | undefined)?.[value]
-        // A step that isn't a number of pixels is the scale's own problem, reported there.
-        return typeof size === 'number' && size >= 0 ? size : undefined
-      }
-      problems.push(`${path} is ${JSON.stringify(value)}, not a step of the ${what} scale (${steps.join(', ')})`)
-      return undefined
-    },
-    css: inPixels,
-  }
+/** A text size given as a type style by name ("caption"), resolving to that style's size in pixels. */
+const textSize: Setting<number> = {
+  resolve(value, path, { json, problems }) {
+    if (typeof value === 'string' && (typeStyles as readonly string[]).includes(value)) {
+      const size = (json.typography as Record<string, Record<string, unknown> | undefined> | undefined)?.[value]?.fontSize
+      // A type style without a size in pixels is the type style's own problem, reported there.
+      return typeof size === 'number' && size >= 0 ? size : undefined
+    }
+    problems.push(`${path} is ${JSON.stringify(value)}, not a type style (${typeStyles.join(', ')})`)
+    return undefined
+  },
+  css: inPixels,
 }
 
-const textSize = stepOf('textSizes')
-const spacing = stepOf('spacing')
-const radius = stepOf('radii')
+/** A size as a number of spacing units (`spacing`), as MUI's theme.spacing takes one, resolving to pixels. */
+const spaces: Setting<number> = {
+  resolve(value, path, resolving) {
+    const units = numberFrom(0, Infinity, 'a number of spacing units').resolve(value, path, resolving)
+    const unit = resolving.json.spacing
+    // A spacing unit that isn't a number of pixels is its own problem, reported there.
+    return units !== undefined && typeof unit === 'number' && unit >= 0 ? units * unit : undefined
+  },
+  css: inPixels,
+}
+
+/** How round a fully round ("pill") corner is, in pixels: more than half of anything it rounds. */
+const pill = 999
 
 /**
- * A size on the globe as the map zooms: a size at each of some zoom levels, by zoom ({ "4": "s",
- * "11": "xl" } for text, { "2": 0.6, "8": 1.2 } for a line), changing smoothly from one to the next.
+ * A corner's radius as a number of the theme's corner radius (`shape.borderRadius`), as MUI's sx takes
+ * one, or "pill" for fully round; resolving to pixels.
+ */
+const corner: Setting<number> = {
+  resolve(value, path, { json, problems }) {
+    if (value === 'pill') return pill
+    if (typeof value !== 'number' || value < 0) {
+      problems.push(`${path} is ${JSON.stringify(value)}, not a number of corner radii (shape.borderRadius) or "pill"`)
+      return undefined
+    }
+    const radius = (json.shape as Record<string, unknown> | undefined)?.borderRadius
+    // A corner radius that isn't a number of pixels is its own problem, reported there.
+    return typeof radius === 'number' && radius >= 0 ? value * radius : undefined
+  },
+  css: inPixels,
+}
+
+/**
+ * A size on the globe as the map zooms: a size at each of some zoom levels, by zoom ({ "4": "caption",
+ * "11": "h6" } for text, { "2": 0.6, "8": 1.2 } for a line), changing smoothly from one to the next.
  * Read by the globe, not the page's CSS, so not written to it.
  */
 function byZoom(size: Setting<number>, what: string): Setting<Readonly<Record<string, number>>> {
@@ -263,8 +285,8 @@ const haloGlow = { color, blur: withGlobe, spread: withGlobe }
 
 /**
  * A kind of place's name on the globe: its colour, the outline around its letters (its colour, and
- * how wide and blurred it is), its font, its size as the map zooms, and how far apart its letters are
- * spaced, in ems (state and country names are in capitals, which want more).
+ * how wide and blurred it is), its font, its size as the map zooms (each a type style's size), and how
+ * far apart its letters are spaced, in ems (state and country names are in capitals, which want more).
  */
 const placeName = {
   color,
@@ -274,207 +296,240 @@ const placeName = {
   letterSpacing: tracking,
 }
 
-/**
- * How a game's status looks on the globe, alike on small pins, score cards and clusters: its colour,
- * the small pin's bright core (its colour, radius, opacity, and the width of the ring of status colour
- * around it) and the soft glow around that (its radius, out to where it has faded to nothing, and its
- * opacity at the middle), how opaque a pin cluster or card cluster showing as this status is (its
- * disc, outline and count alike), and its score cards: how far they fade, and how far and how
- * strongly they glow in its colour (a radius of 0 is no glow). A card stays solid as it fades: its
- * status colour, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way,
- * leaving a blank card).
- */
-const statusLook = {
-  color,
-  core: { color, radius: pixels, opacity, ring: pixels },
-  glow: { radius: pixels, opacity },
-  clusterOpacity: opacity,
-  card: { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radius: pixels, opacity } },
+/** The game statuses, by their names in the theme: each has a colour in the palette, and its own look in some components. */
+const statuses = ['live', 'upcoming', 'final', 'disrupted'] as const
+
+/** A setting, or group, for each game status (see statuses). */
+function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], S> {
+  return Object.fromEntries(statuses.map((status) => [status, look])) as Record<(typeof statuses)[number], S>
 }
 
-/** Every setting a theme has, by where it sits in the theme's settings. */
-const settings = {
-  textSizes: scale(scales.textSizes.steps),
-  spacing: scale(scales.spacing.steps),
-  radii: scale(scales.radii.steps),
-  strokes: scale(scales.strokes.steps),
+/**
+ * How a score card fades and glows for a status: how far it fades, and how far and how strongly it
+ * glows in its status's colour (a radius of 0 is no glow). A card stays solid as it fades: its status
+ * colour, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way, leaving
+ * a blank card).
+ */
+const cardStatus = { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radius: pixels, opacity } }
+
+/**
+ * A colour's role in the palette, as MUI's palette has them: its main shade, a lighter and a darker
+ * one, and the colour of text written on its main shade.
+ */
+const colourRole = { main: color, light: color, dark: color, contrastText: color }
+
+/**
+ * The palette, shaped as MUI's is: what each colour is for, each naming a step of the theme's colours
+ * ("navy.500") or giving a colour directly. A colour job outside the palette can name one of these
+ * ("primary.dark", "text.secondary", "divider") as well as a step.
+ */
+const palette = {
+  primary: colourRole,
+  secondary: colourRole,
+  error: colourRole,
+  warning: colourRole,
   /**
-   * How far apart letters are spaced on the page, in ems: the game panel's league and labels, tracked
-   * out like the country names on the globe, and a score card's header line.
+   * Each game status's colour, as MUI's palette takes colours of a theme's own: a game's small pin's
+   * ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's
+   * outline, glow and count, its pulse, and the game panel's top edge and progress line, whose text is
+   * the status's contrastText.
    */
-  letterSpacing: { label: tracking, cardHeader: tracking },
-  /**
-   * The globe: its surface (land and sea alike); its coastlines, country borders, state lines and
-   * disputed borders, the disputed ones dashed in this pattern; and the halo around its edge, a glow
-   * close to the edge and a wider, fainter one outside it.
-   */
-  globe: {
-    surface: color,
-    coastlines: globeLine,
-    countryBorders: globeLine,
-    stateLines: globeLine,
-    disputedBorders: { ...globeLine, dash: dashes },
-    halo: { inner: haloGlow, outer: haloGlow },
-  },
-  placeNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
-  status: { live: statusLook, upcoming: statusLook, final: statusLook, disrupted: statusLook },
-  /**
-   * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
-   * colour, in a glow as strong as this much of its status's small pins' glow, so a cluster of a
-   * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
-   * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
-   * wide as a pin cluster of some games.
-   */
-  cluster: {
-    fill: color,
-    radius: { few: pixels, some: pixels, many: pixels },
-    glowRadius: { few: pixels, some: pixels, many: pixels },
-    outlineWidth: pixels,
-    glowOpacity: opacity,
-  },
-  /**
-   * A moved score card's trail back to its venue: a line this wide and opaque in its game's status
-   * colour, in a soft glow, to a dot ringed in that colour.
-   */
-  trail: {
-    width: pixels,
-    opacity,
-    glow: { width: pixels, blur: pixels, opacity },
-    venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
-  },
-  /** The selected game's small pin ring and score card outline: their colour and width. */
-  selection: { color, width: pixels },
-  /**
-   * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
-   * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
-   */
-  pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
-  /**
-   * Behind the globe: the page itself, and the sky around the globe with its scattering of stars,
-   * white, cool and warm, small and large.
-   */
-  page: {
-    background: color,
-    sky: color,
-    stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } },
-  },
+  ...byStatus(colourRole),
+  /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
+  background: { default: color, paper: color },
   /**
    * Text on the game panel, the settings menu and the scenario controls: main text; secondary text
    * (the game panel's league and labels and the lines under a venue or time, the settings gear,
-   * league chips that are off and the count on the "All leagues" chip); links; and text written on a
-   * status's colour (the game panel's progress line).
+   * league chips that are off and the count on the "All leagues" chip); and links.
    */
-  text: { main: color, secondary: color, link: color, onStatus: color },
+  text: { primary: color, secondary: color, link: color },
   /** The lines between a menu's parts. */
   divider: color,
   /** Behind a control under the pointer. */
-  hover: color,
+  action: { hover: color },
+}
+
+/** Every setting a theme has but its colours, by where it sits in the theme. */
+const settings = {
+  palette,
   /**
-   * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
-   * surface and drop shadow, a speed key that's on, and how opaque one that's off is.
+   * The page's text, shaped as MUI's typography is: one font family, and type styles, each a weight,
+   * size and letter spacing. Body text is body1, and the game panel and menus body2; the game panel's
+   * team names are subtitle1, its scores h6, and its league, labels and progress line overline (the
+   * labels tracked out, like the country names on the globe); a score card's clock line is subtitle2,
+   * its team abbreviations subtitle1's weight and scores h6's; tabs, chips, buttons and the scenario
+   * pill are button, and the scenario clock body2; captions and footnotes are the smaller lines.
    */
-  controls: { surface: color, shadow, on: { fill: color, text: color }, off: { opacity } },
-  /**
-   * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
-   * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,
-   * and the rest of the ring it turns around), and the text of the message under the spinner when
-   * loading is slow.
-   */
-  loadingScreen: { dim: { color, opacity }, spinner: { color, track: color }, message: color },
-  /**
-   * A score card: its fill and text, a Disrupted game's, the drop shadow a starting game's card
-   * settles with, and how strongly its header is tinted with its status's colour (0 is not at all, 1
-   * is the colour itself). Its outline, header line, light and glow are its status's colour.
-   */
-  card: { fill: color, text: color, disrupted: { fill: color, text: color }, shadow: color, headerTint: opacity },
-  /**
-   * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
-   * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-   * button and the panel's drop shadow. Its top edge is the game's status colour, and it glows in that
-   * colour, this far up, this blurred and this strongly.
-   */
-  panel: {
-    surface: { top: color, bottom: color },
-    scoreBlock: { top: color, bottom: color },
-    score: { fill: color, text: color },
-    unofficial: color,
-    photo: color,
-    credit: { fill: color, text: color },
-    close: color,
-    shadow,
-    glow: { y: offset, blur: pixels, opacity },
+  typography: {
+    fontFamily,
+    ...(Object.fromEntries(typeStyles.map((name) => [name, typeStyle])) as Record<(typeof typeStyles)[number], typeof typeStyle>),
   },
+  /** The spacing unit, in pixels: every space on the page is a number of these, as MUI's theme.spacing gives them. */
+  spacing: pixels,
   /**
-   * The settings menu: its surface and drop shadow, an outline around the gear (a shadow), a tab
-   * that's off, the count of a sport's leagues that are on, the hint beside "All leagues", a league
-   * chip's outline and the badge counting leagues, and a tab or chip that's on.
+   * The corner radius every corner is a number of (see corner), and the page's line widths (borders,
+   * dividers): thin, medium and thick.
    */
-  settingsMenu: {
-    surface: color,
-    shadow,
-    gearOutline: shadow,
-    tab: color,
-    count: color,
-    hint: color,
-    chip: { outline: color, badge: color },
-    on: { fill: color, text: color },
-  },
-  /**
-   * A font for each kind of text. On the page: body text; the game panel's headings (its league,
-   * labels and progress line), team names and scores; the settings menu's tabs and sport names;
-   * buttons (league chips, the game panel's close button); the scenario pill and the scenario it
-   * has on; the scenario clock; and a score card's clock line, team abbreviations and scores. On the
-   * globe, the count on a pin or card cluster, in a font the map's font server has (ADR-0006), and
-   * its size. Place names have theirs by kind of place.
-   */
-  fonts: {
-    body: pageFont,
-    heading: pageFont,
-    team: pageFont,
-    score: pageFont,
-    tab: pageFont,
-    button: pageFont,
-    scenarioPill: pageFont,
-    scenarioClock: pageFont,
-    card: { clock: pageFont, team: pageFont, score: pageFont },
-    clusterCount: { font: globeFont, size: textSize },
-  },
-  /**
-   * Corners, each a step of the radius scale: a score card's; the game panel's; a menu's (the settings
-   * menu, the list of scenarios); an item's in a menu; a message's (such as "No games right now.");
-   * and a control's (the scenario pill and clock, the speed keys, league chips).
-   */
-  corners: { card: radius, panel: radius, menu: radius, menuItem: radius, message: radius, control: radius },
-  /** The game panel's bottom left corner cut off, like a broadcast graphic, or not: this far along each side. */
-  cutCorner: { on: onOff, size: spacing },
-  /**
-   * How big things are, in pixels, or in ems where they go with their text. The game panel: its width
-   * at most, its height, and its height on a phone, where the details go below the score block; the
-   * score block's width and how far its right edge slants; the venue photo's width; a team's logo; the
-   * close button; and a team's score box, in ems of its digits. A score card: its narrowest, a team's
-   * logo, how far its pointer reaches below it to the venue (the globe reads this to place cards), its
-   * status light, and how far it keeps clear of the letters of a city named for its game (the globe
-   * lays cards out by this). The settings menu: its width, the gear, the "All leagues" chip's height,
-   * and on that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The
-   * scenario controls: a speed key and its icon. The game panel sits clear of the scenario controls by
-   * their keys' size. The loading screen: its spinner, across.
-   */
-  sizes: {
-    panel: {
-      width: pixels,
-      height: pixels,
-      phoneHeight: pixels,
-      scoreBlock: pixels,
-      slant: pixels,
-      photo: pixels,
-      logo: pixels,
-      close: pixels,
-      scoreWidth: ems,
+  shape: { borderRadius: pixels, borderWidth: { thin: pixels, medium: pixels, thick: pixels } },
+  /** How each part of ScoreMap looks, by part, as MUI's components hold each component's own look. */
+  components: {
+    /**
+     * The globe: its surface (land and sea alike); its coastlines, country borders, state lines and
+     * disputed borders, the disputed ones dashed in this pattern; and the halo around its edge, a glow
+     * close to the edge and a wider, fainter one outside it.
+     */
+    Globe: {
+      surface: color,
+      coastlines: globeLine,
+      countryBorders: globeLine,
+      stateLines: globeLine,
+      disputedBorders: { ...globeLine, dash: dashes },
+      halo: { inner: haloGlow, outer: haloGlow },
     },
-    card: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
-    settingsMenu: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
-    controls: { key: pixels, icon: pixels },
-    loadingScreen: { spinner: pixels },
+    PlaceNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
+    /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
+    Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
+    /**
+     * A game's small pin, by its status: its bright core (its colour, radius, opacity, and the width of
+     * the ring of status colour around it) and the soft glow around that, in its status's colour (its
+     * radius, out to where it has faded to nothing, and its opacity at the middle). Small pins gather
+     * into pin clusters by the widest glow.
+     */
+    Pin: byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
+    /**
+     * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
+     * colour, in a glow as strong as this much of its status's small pins' glow, so a cluster of a
+     * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
+     * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
+     * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
+     * at a type style's size. By the status it shows as, how opaque it is: its disc, outline and count alike.
+     */
+    Cluster: {
+      fill: color,
+      radius: { few: pixels, some: pixels, many: pixels },
+      glowRadius: { few: pixels, some: pixels, many: pixels },
+      outlineWidth: pixels,
+      glowOpacity: opacity,
+      count: { font: globeFont, size: textSize },
+      ...byStatus({ opacity }),
+    },
+    /**
+     * A moved score card's trail back to its venue: a line this wide and opaque in its game's status
+     * colour, in a soft glow, to a dot ringed in that colour.
+     */
+    Trail: {
+      width: pixels,
+      opacity,
+      glow: { width: pixels, blur: pixels, opacity },
+      venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
+    },
+    /** The selected game's small pin ring and score card outline: their colour and width. */
+    Selection: { color, width: pixels },
+    /**
+     * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
+     * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
+     */
+    Pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
+    /**
+     * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's tinted with its status's colour, 0 not at all and 1
+     * the colour itself, and how far apart its letters are spaced, in ems) and its corners. Its
+     * outline, header line, light and glow are its status's colour. Its size: its narrowest, a team's
+     * logo, how far its pointer reaches below it to the venue (the globe reads this to place cards),
+     * its status light, and how far it keeps clear of the letters of a city named for its game (the
+     * globe lays cards out by this). By its status, how it fades and glows (see cardStatus), and a
+     * Disrupted game's fill and text.
+     */
+    ScoreCard: {
+      fill: color,
+      text: color,
+      shadow: color,
+      header: { tint: opacity, letterSpacing: tracking },
+      corner,
+      size: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
+      live: cardStatus,
+      upcoming: cardStatus,
+      final: cardStatus,
+      disrupted: { fill: color, text: color, ...cardStatus },
+    },
+    /**
+     * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
+     * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
+     * button and the panel's drop shadow. Its top edge is the game's status colour, and it glows in that
+     * colour, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
+     * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
+     * width at most, its height, and its height on a phone, where the details go below the score block;
+     * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
+     * the close button; and a team's score box, in ems of its digits. It sits clear of the scenario
+     * controls by their keys' size.
+     */
+    GamePanel: {
+      surface: { top: color, bottom: color },
+      scoreBlock: { top: color, bottom: color },
+      score: { fill: color, text: color },
+      unofficial: color,
+      photo: color,
+      credit: { fill: color, text: color },
+      close: color,
+      shadow,
+      glow: { y: offset, blur: pixels, opacity },
+      corner,
+      cutCorner: { on: onOff, size: spaces },
+      size: {
+        width: pixels,
+        height: pixels,
+        phoneHeight: pixels,
+        scoreBlock: pixels,
+        slant: pixels,
+        photo: pixels,
+        logo: pixels,
+        close: pixels,
+        scoreWidth: ems,
+      },
+    },
+    /** A menu's corners (the settings menu, the list of scenarios). */
+    Menu: { corner },
+    /** An item's corners in a menu. */
+    MenuItem: { corner },
+    /**
+     * The settings menu: its surface and drop shadow, an outline around the gear (a shadow), a tab
+     * that's off, the count of a sport's leagues that are on, the hint beside "All leagues", a league
+     * chip's outline and the badge counting leagues, and a tab or chip that's on. Its size: its width,
+     * the gear, the "All leagues" chip's height, and on that chip, the narrowest its count is and the
+     * box its mark (✓ or –) sits in, in ems.
+     */
+    SettingsMenu: {
+      surface: color,
+      shadow,
+      gearOutline: shadow,
+      tab: color,
+      count: color,
+      hint: color,
+      chip: { outline: color, badge: color },
+      on: { fill: color, text: color },
+      size: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
+    },
+    /**
+     * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
+     * surface and drop shadow, a speed key that's on, and how opaque one that's off is. A control's
+     * corners (the scenario pill and clock, the speed keys, league chips) and the message's. Its size: a
+     * speed key and its icon.
+     */
+    Controls: {
+      surface: color,
+      shadow,
+      on: { fill: color, text: color },
+      off: { opacity },
+      corner,
+      message: { corner },
+      size: { key: pixels, icon: pixels },
+    },
+    /**
+     * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
+     * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,
+     * and the rest of the ring it turns around, and how big it is across), and the text of the message
+     * under the spinner when loading is slow.
+     */
+    LoadingScreen: { dim: { color, opacity }, spinner: { color, track: color, size: pixels }, message: color },
   },
 }
 
@@ -485,40 +540,64 @@ export type Theme = Resolved<typeof settings>
 
 export type ThemeResult = { ok: true; theme: Theme } | { ok: false; problems: string[] }
 
+/** The parts of a theme's JSON: its colours, and its settings. */
+const parts = ['colors', ...Object.keys(settings)]
+
 /** Reads a theme from its parsed JSON. */
 export function resolveTheme(json: unknown): ThemeResult {
-  if (!isObject(json)) return { ok: false, problems: [`a theme is ${shown(json)}, not an object with a palette and settings`] }
+  if (!isObject(json)) return { ok: false, problems: [`a theme is ${shown(json)}, not an object with ${parts.join(', ')}`] }
   const problems: string[] = []
   for (const key of Object.keys(json)) {
-    if (key !== 'palette' && key !== 'settings') problems.push(`${key} isn’t part of a theme: a theme has a palette and settings`)
+    if (!parts.includes(key)) problems.push(`${key} isn’t part of a theme: a theme has ${parts.join(', ')}`)
   }
-  const { palette, settings: values } = json
-  const resolving: Resolving = {
-    steps: paletteByStep(palette, problems),
-    settings: isObject(values) ? values : {},
-    problems,
-  }
-  const theme = resolveAll(settings, values, 'settings', resolving) as Theme
+  // The palette names the colours' steps; everything else may name its colours too.
+  const steps = stepsOfColours(json.colors, problems)
+  const resolvedPalette = resolveAll(palette, json.palette, 'palette', { colours: steps, json, problems })
+  const colours = new Map<string, string | undefined>([...steps, ...paletteColours(resolvedPalette)])
+  const { palette: _, ...rest } = settings
+  const resolving: Resolving = { colours, json, problems }
+  const theme = {
+    palette: resolvedPalette,
+    ...Object.fromEntries(Object.entries(rest).map(([key, schema]) => [key, resolveAll(schema, json[key], key, resolving)])),
+  } as Theme
   return problems.length ? { ok: false, problems } : { ok: true, theme }
+}
+
+/**
+ * Each of the palette's colours, by its name in a colour job ("primary.dark", "divider"), and what it
+ * resolved to: nothing, where it has a problem.
+ */
+function paletteColours(resolved: unknown): [string, string | undefined][] {
+  const found: [string, string | undefined][] = []
+  const walk = (schema: object, value: unknown, name: string) => {
+    if (isSetting(schema)) found.push([name, typeof value === 'string' ? value : undefined])
+    else for (const [key, inner] of Object.entries(schema)) walk(inner, isObject(value) ? value[key] : undefined, name ? `${name}.${key}` : key)
+  }
+  walk(palette, resolved, '')
+  return found
 }
 
 /** Whether a value from a theme's JSON is an object of named values (not an array or null). */
 const isObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** Every step of the palette's colours, by its name in a colour job; a colour with problems has none. */
-function paletteByStep(palette: unknown, problems: string[]): Map<string, string> {
+/** Every step of the theme's colours, by its name in a colour job; a colour with problems has none. */
+function stepsOfColours(colors: unknown, problems: string[]): Map<string, string> {
   const byStep = new Map<string, string>()
-  if (palette === undefined) problems.push('palette is missing')
-  else if (!isObject(palette)) problems.push(`palette is ${shown(palette)}, not colours by name`)
-  for (const [name, colour] of Object.entries(isObject(palette) ? palette : {})) {
-    const path = `palette.${name}`
+  if (colors === undefined) problems.push('colors is missing')
+  else if (!isObject(colors)) problems.push(`colors is ${shown(colors)}, not colours by name`)
+  for (const [name, colour] of Object.entries(isObject(colors) ? colors : {})) {
+    const path = `colors.${name}`
+    if (Object.hasOwn(palette, name)) {
+      problems.push(`${path} is named as one of the palette’s colours are, so a colour job naming it would be unclear`)
+      continue
+    }
     if (!isObject(colour)) {
       problems.push(`${path} is ${shown(colour)}, not a colour with a base`)
       continue
     }
     const { base, steps = {}, ...unknown } = colour
-    for (const key of Object.keys(unknown)) problems.push(`${path}.${key} isn’t part of a palette colour: it has a base and steps`)
+    for (const key of Object.keys(unknown)) problems.push(`${path}.${key} isn’t part of a colour: it has a base and steps`)
     // A colour that can't be worked out has no steps; one with only an unknown part still does.
     const before = problems.length
     if (!isHexColor(base)) problems.push(`${path}.base is ${shown(base)}, not a #rrggbb colour`)
@@ -564,11 +643,13 @@ function resolveAll(schema: object, value: unknown, path: string, resolving: Res
 
 /**
  * The resolved theme as CSS custom properties, one for each setting, named by where it sits in the
- * theme's settings, in kebab case: `status.live.color` is --status-live-color, `spacing.l` is
- * --spacing-l and `placeNames.city.font` gives --place-names-city-font-family, -weight and -style.
- * Sizes are written in pixels ("12px"), or in ems where they go with their text ("0.14em"), and on
- * or off as 1 or 0. What only the globe reads (sizes by zoom, a dash pattern, the halo's sizes)
- * isn't written.
+ * theme, in kebab case, as MUI's CSS theme variables are: `palette.text.primary` is
+ * --palette-text-primary, `typography.body2.fontSize` is --typography-body2-font-size and `spacing`
+ * is --spacing. A component's settings are named by the component alone: `components.ScoreCard.fill`
+ * is --score-card-fill, and `components.PlaceNames.city.font` gives --place-names-city-font-family,
+ * -weight and -style. Sizes are written in pixels ("12px"), or in ems where they go with their text
+ * ("0.14em"), and on or off as 1 or 0. What only the globe reads (sizes by zoom, a dash pattern, the
+ * halo's sizes) isn't written.
  */
 export function customProperties(theme: Theme): Map<string, string> {
   const properties = new Map<string, string>()
@@ -580,11 +661,15 @@ export function customProperties(theme: Theme): Map<string, string> {
     if (isSetting(schema)) write(schema.css ? schema.css(value) : value, name)
     else {
       const values = value as Record<string, unknown>
-      for (const [key, inner] of Object.entries(schema)) walk(inner, values[key], `${name}-${kebabCase(key)}`)
+      for (const [key, inner] of Object.entries(schema)) {
+        // A component's settings are named by the component alone.
+        walk(inner, values[key], schema === settings && key === 'components' ? name : `${name}-${kebabCase(key)}`)
+      }
     }
   }
   walk(settings, theme, '-')
   return properties
 }
 
-const kebabCase = (key: string) => key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+/** A setting's name in kebab case: "contrastText" is "contrast-text" and "ScoreCard" "score-card". */
+const kebabCase = (key: string) => key.replace(/[A-Z]/g, (letter, at: number) => `${at ? '-' : ''}${letter.toLowerCase()}`)

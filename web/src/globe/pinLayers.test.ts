@@ -10,8 +10,8 @@ import { pinClusterLayers, selectedPinLayerSpec, zoomedOutPins } from './pinLaye
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
   const json = structuredClone(builtIn) as Record<string, any>
-  json.settings.fonts.clusterCount = { font: 'Metropolis Semi Bold', size: 'l' }
-  json.settings.textSizes.l = 16
+  json.components.Cluster.count = { font: 'Metropolis Semi Bold', size: 'body1' }
+  json.typography.body1.fontSize = 16
   const result = resolveTheme(json)
   if (!result.ok) throw new Error(result.problems.join('\n'))
   return result.theme
@@ -33,10 +33,10 @@ const paintOf = (layers: readonly LayerSpecification[], id: string) =>
 /** The built-in theme, with clusters and trails in sizes of their own. */
 function sizedTheme(): Theme {
   const json = structuredClone(builtIn) as Record<string, any>
-  json.settings.cluster.radius = { few: 10, some: 14, many: 20 }
-  json.settings.cluster.glowRadius = { few: 21, some: 27, many: 35 }
-  json.settings.cluster.outlineWidth = 2
-  json.settings.trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
+  json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
+  json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
+  json.components.Cluster.outlineWidth = 2
+  json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
   const result = resolveTheme(json)
   if (!result.ok) throw new Error(result.problems.join('\n'))
   return result.theme
@@ -54,9 +54,9 @@ describe('clusters', () => {
 
   it('glow as small pins of the status they show as do, as strongly as the theme says, or not at all', () => {
     const json = structuredClone(builtIn) as Record<string, any>
-    json.settings.status.live.glow.opacity = 0.8
-    json.settings.status.final.glow.opacity = 0
-    json.settings.cluster.glowOpacity = 0.5
+    json.components.Pin.live.glow.opacity = 0.8
+    json.components.Pin.final.glow.opacity = 0
+    json.components.Cluster.glowOpacity = 0.5
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
     const pinClusterGlow = paintOf(pinClusterLayers(result.theme, zoomedOutPins), 'pin-cluster-glows')['circle-opacity']
@@ -69,8 +69,8 @@ describe('clusters', () => {
 
   it('fade as the status they show as says, disc, outline and count alike, on pin clusters and card clusters', () => {
     const json = structuredClone(builtIn) as Record<string, any>
-    json.settings.status.live.clusterOpacity = 1
-    json.settings.status.final.clusterOpacity = 0.4
+    json.components.Cluster.live.opacity = 1
+    json.components.Cluster.final.opacity = 0.4
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
     /** How opaque a cluster's disc, outline and count are, for a cluster with these properties. */
@@ -109,7 +109,7 @@ describe('trails', () => {
 describe('the selected pin', () => {
   it("is ringed in the theme's selection colour and width, out to as far as a small pin reaches", () => {
     const json = structuredClone(builtIn) as Record<string, any>
-    json.settings.selection = { color: '#00ff00', width: 4 }
+    json.components.Selection = { color: '#00ff00', width: 4 }
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
     expect(selectedPinLayerSpec(result.theme, 'a', zoomedOutPins).paint).toMatchObject({

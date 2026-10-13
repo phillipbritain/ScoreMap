@@ -18,25 +18,24 @@ import {
 /** A theme whose status looks are each unlike the built-in theme's, and unlike each other's. */
 function testTheme(): Theme {
   const json = structuredClone(builtIn) as Record<string, any>
-  json.settings.status = {
-    live: look('#ff0000', 4, 20),
-    upcoming: look('#00ff00', 3, 12),
-    final: look('#0000ff', 2, 6),
-    disrupted: look('#808080', 1, 5),
+  const looks = {
+    live: ['#ff0000', 4, 20],
+    upcoming: ['#00ff00', 3, 12],
+    final: ['#0000ff', 2, 6],
+    disrupted: ['#808080', 1, 5],
+  } as const
+  for (const [status, [color, coreRadius, glowRadius]] of Object.entries(looks)) {
+    json.palette[status].main = color
+    json.components.Pin[status] = {
+      core: { color: '#ffffff', radius: coreRadius, opacity: 0.9, ring: 1 },
+      glow: { radius: glowRadius, opacity: 0.5 },
+    }
+    json.components.Cluster[status].opacity = coreRadius / 4
+    Object.assign(json.components.ScoreCard[status], { fade: 0, glow: { radius: glowRadius / 2, opacity: 0.5 } })
   }
   const result = resolveTheme(json)
   if (!result.ok) throw new Error(result.problems.join('\n'))
   return result.theme
-}
-
-function look(color: string, coreRadius: number, glowRadius: number) {
-  return {
-    color,
-    core: { color: '#ffffff', radius: coreRadius, opacity: 0.9, ring: 1 },
-    glow: { radius: glowRadius, opacity: 0.5 },
-    clusterOpacity: coreRadius / 4,
-    card: { fade: 0, glow: { radius: glowRadius / 2, opacity: 0.5 } },
-  }
 }
 
 const theme = testTheme()
@@ -101,11 +100,11 @@ describe('byStatus', () => {
 })
 
 describe('the status look', () => {
-  it("is each status's look from the theme", () => {
+  it("is each status's look, gathered from the palette, Pin, Cluster and ScoreCard", () => {
     expect(statusLook(theme, 'Live')).toMatchObject({ color: '#ff0000', glow: { radius: 20 }, clusterOpacity: 1 })
     expect(statusLook(theme, 'Upcoming')).toMatchObject({ color: '#00ff00', core: { radius: 3 } })
     expect(statusLook(theme, 'Final')).toMatchObject({ color: '#0000ff', clusterOpacity: 0.5 })
-    expect(statusLook(theme, 'Disrupted')).toMatchObject({ color: '#808080', glow: { radius: 5 } })
+    expect(statusLook(theme, 'Disrupted')).toMatchObject({ color: '#808080', glow: { radius: 5 }, card: { fade: 0, glow: { radius: 2.5 } } })
   })
 
   it('draws Live on top, then Upcoming, then Final and Disrupted alike', () => {
@@ -121,7 +120,7 @@ describe('the status look', () => {
   it("measures a small pin by the widest glow in the theme, of which the inner part shows", () => {
     expect(smallPinWidth(theme)).toBe(Math.round(2 * 0.6 * 20))
     const json = structuredClone(builtIn) as Record<string, any>
-    json.settings.status.final.glow.radius = 30
+    json.components.Pin.final.glow.radius = 30
     const wideFinal = resolveTheme(json)
     expect(wideFinal.ok && smallPinWidth(wideFinal.theme)).toBe(36)
   })

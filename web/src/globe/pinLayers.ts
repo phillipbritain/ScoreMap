@@ -13,6 +13,45 @@ export const pinSource = 'pins'
 export const pinClusterLayer = 'pin-clusters'
 export const smallPinLayer = 'pins'
 
+/**
+ * The source of games far from the centre of the view at card zoom, which show as small pins rather
+ * than score cards (see hasCard), clustered among themselves. GlobeMap keeps it up to date as the
+ * globe turns.
+ */
+export const outerPinSource = 'outer-pins'
+export const outerPinClusterLayer = 'outer-pin-clusters'
+export const outerSmallPinLayer = 'outer-pins'
+
+/**
+ * A set of small pins and pin clusters: the games' own while zoomed out, or the outer games' at card
+ * zoom. Each has its own source and layers, drawn alike.
+ */
+export interface PinSet {
+  source: string
+  /** Before each of the set's layer ids. */
+  prefix: string
+  minzoom?: number
+  /**
+   * Past which its small pins don't show. Its pin clusters' layers stay on: zoomed in, the pin source
+   * doesn't cluster, so they draw nothing, but they keep its tiles loaded for the score cards to be
+   * read from (see ScoreCardMarkers.sync).
+   */
+  maxzoom?: number
+}
+
+export const zoomedOutPins: PinSet = { source: pinSource, prefix: '', maxzoom: cardZoom }
+export const outerPins: PinSet = { source: outerPinSource, prefix: 'outer-', minzoom: cardZoom }
+
+/** A layer in a pin set: its id, source and zooms (a pin cluster layer's without the maxzoom). */
+function inSet({ source, prefix, minzoom, maxzoom }: PinSet, id: string, { clusters = false } = {}) {
+  return {
+    id: prefix + id,
+    source,
+    ...(minzoom === undefined ? {} : { minzoom }),
+    ...(maxzoom === undefined || clusters ? {} : { maxzoom }),
+  }
+}
+
 /** The pins' source, clustering small pins as the pin layout at the zoom it's added at says. */
 export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, clusterRadius }: PinLayout): GeoJSONSourceSpecification {
   return {
@@ -31,14 +70,16 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
  * theme's cluster), the disc, outline and count faded as their status's clusters are, as card
  * clusters are (see cardLayoutLayers).
  */
-export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
+export function pinClusterLayers(
+  theme: Theme,
+  set: PinSet,
+): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
   const { cluster } = theme
   const clusterOpacity = byStatus(theme, 'pinCluster', (look) => look.clusterOpacity)
   return [
     {
-      id: 'pin-cluster-glows',
+      ...inSet(set, 'pin-cluster-glows', { clusters: true }),
       type: 'circle',
-      source: pinSource,
       filter: ['has', 'point_count'],
       paint: {
         'circle-radius': byCount(cluster.glowRadius),
@@ -48,9 +89,8 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       },
     },
     {
-      id: pinClusterLayer,
+      ...inSet(set, pinClusterLayer, { clusters: true }),
       type: 'circle',
-      source: pinSource,
       filter: ['has', 'point_count'],
       layout: { 'circle-sort-key': byStatus(theme, 'pinCluster', (look) => look.stacking) },
       paint: {
@@ -63,9 +103,8 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
       },
     },
     {
-      id: 'pin-cluster-counts',
+      ...inSet(set, 'pin-cluster-counts', { clusters: true }),
       type: 'symbol',
-      source: pinSource,
       filter: ['has', 'point_count'],
       layout: {
         'text-field': ['get', 'point_count_abbreviated'],
@@ -79,18 +118,17 @@ export function pinClusterLayers(theme: Theme): [CircleLayerSpecification, Circl
 }
 
 /**
- * Small pins for single games while zoomed out, each a bright core in a soft glow (see StatusLook);
- * zoomed in, score cards take over (see scoreCardMarkers). The glows are a layer beneath the cores,
- * so a core is never dimmed by a neighbour's glow.
+ * Small pins for single games, each a bright core in a soft glow (see StatusLook): every game's
+ * while zoomed out, and zoomed in, those far from the centre of the view, as score cards take over
+ * near it (see scoreCardMarkers). The glows are a layer beneath the cores, so a core is never dimmed
+ * by a neighbour's glow.
  */
-export function smallPinLayers(theme: Theme): [CircleLayerSpecification, CircleLayerSpecification] {
+export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecification, CircleLayerSpecification] {
   return [
     {
-      id: 'pin-glows',
+      ...inSet(set, 'pin-glows'),
       type: 'circle',
-      source: pinSource,
       filter: ['!', ['has', 'point_count']],
-      maxzoom: cardZoom,
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
         'circle-color': byStatus(theme, 'own', (look) => look.color),
@@ -99,11 +137,9 @@ export function smallPinLayers(theme: Theme): [CircleLayerSpecification, CircleL
       },
     },
     {
-      id: smallPinLayer,
+      ...inSet(set, smallPinLayer),
       type: 'circle',
-      source: pinSource,
       filter: ['!', ['has', 'point_count']],
-      maxzoom: cardZoom,
       layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
@@ -117,18 +153,17 @@ export function smallPinLayers(theme: Theme): [CircleLayerSpecification, CircleL
 }
 
 export const selectedPinLayer = 'pin-selected'
+export const outerSelectedPinLayer = 'outer-pin-selected'
 
 /**
  * A ring around the selected game's small pin, in the theme's selection colour and width, reaching as
- * far as a small pin does (see panelClearance); zoomed in, its score card is outlined instead.
+ * far as a small pin does (see panelClearance); a score card is outlined instead.
  */
-export function selectedPinLayerSpec(theme: Theme, gameId: string | null): CircleLayerSpecification {
+export function selectedPinLayerSpec(theme: Theme, gameId: string | null, set: PinSet): CircleLayerSpecification {
   return {
-    id: selectedPinLayer,
+    ...inSet(set, selectedPinLayer),
     type: 'circle',
-    source: pinSource,
     filter: selectedPin(gameId),
-    maxzoom: cardZoom,
     paint: {
       'circle-radius': smallPinReach - theme.selection.width,
       'circle-color': 'transparent',
@@ -163,13 +198,13 @@ export function pinFootprint(theme: Theme): { image: string; size: number } {
 
 const pinFootprintImage = 'pin-footprint'
 
-/** Each small pin, while zoomed out. */
-export const pinFootprintLayerSpec: SymbolLayerSpecification = {
-  id: 'pin-footprints',
-  type: 'symbol',
-  source: pinSource,
-  filter: ['!', ['has', 'point_count']],
-  maxzoom: cardZoom,
-  layout: { 'icon-image': pinFootprintImage, 'icon-allow-overlap': true },
-  paint: { 'icon-opacity': 0 },
+/** Each small pin in a pin set. */
+export function pinFootprintLayerSpec(set: PinSet): SymbolLayerSpecification {
+  return {
+    ...inSet(set, 'pin-footprints'),
+    type: 'symbol',
+    filter: ['!', ['has', 'point_count']],
+    layout: { 'icon-image': pinFootprintImage, 'icon-allow-overlap': true },
+    paint: { 'icon-opacity': 0 },
+  }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { furthestOutZoom, minZoom, pinLayout } from './zoomLevels'
+import { cardRadius, furthestOutZoom, hasCard, minZoom, pinLayout } from './zoomLevels'
 
 // A small pin 18 pixels across, as the built-in theme's Live pins are.
 const smallPinWidth = 18
@@ -34,5 +34,28 @@ describe('furthestOutZoom', () => {
     expect(furthestOutZoom(0)).toBe(minZoom)
     expect(furthestOutZoom(60)).toBeCloseTo(minZoom - 1)
     expect(furthestOutZoom(-60)).toBeCloseTo(minZoom - 1)
+  })
+})
+
+describe('hasCard', () => {
+  const kansas = { longitude: -97, latitude: 39 }
+
+  it('gives a card to a game within the card radius of the centre of the view', () => {
+    expect(hasCard(kansas, kansas)).toBe(true)
+    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 })).toBe(true) // New York
+    expect(hasCard(kansas, { longitude: -122.3, latitude: 47.6 })).toBe(true) // Seattle
+  })
+
+  it('leaves a game farther out as a small pin', () => {
+    expect(hasCard(kansas, { longitude: -0.1, latitude: 51.5 })).toBe(false) // London
+    expect(hasCard(kansas, { longitude: -157.9, latitude: 21.3 })).toBe(false) // Honolulu
+  })
+
+  it('measures the radius along the globe, the same in every direction', () => {
+    const equator = { longitude: 0, latitude: 0 }
+    expect(hasCard(equator, { longitude: cardRadius, latitude: 0 })).toBe(true)
+    expect(hasCard(equator, { longitude: 0, latitude: -cardRadius })).toBe(true)
+    expect(hasCard(equator, { longitude: cardRadius + 0.5, latitude: 0 })).toBe(false)
+    expect(hasCard(equator, { longitude: 0, latitude: cardRadius + 0.5 })).toBe(false)
   })
 })

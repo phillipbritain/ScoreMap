@@ -4,7 +4,6 @@
  * listing what differs from the built-in theme. Local runs only.
  */
 import { paletteSteps, stepNames, type StepName } from '../theme/palette'
-import type { Theme } from '../theme/theme'
 
 export type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json }
 export type JsonObject = { readonly [key: string]: Json }
@@ -99,16 +98,6 @@ function isLeafGroup(path: SettingPath): boolean {
 /** The changes as lines to read or paste: `trail.width: 1.25 → 2`. */
 export function describeChanges(list: readonly Change[]): string {
   return list.map(({ path, from, to }) => `${path.join('.')}: ${JSON.stringify(from)} → ${JSON.stringify(to)}`).join('\n')
-}
-
-/**
- * What of a theme the globe reads (its map style, pins, clusters, trails, place names and score
- * card placement), as one string: the globe is made again when it changes, since it reads its theme
- * only as it's made. The rest reaches the page through CSS custom properties, at once.
- */
-export function globeLook(theme: Theme): string {
-  const { globe, placeNames, status, cluster, trail, selection, pulse, fonts, sizes } = theme
-  return JSON.stringify([globe, placeNames, status, cluster, trail, selection, pulse, fonts.clusterCount, sizes.card])
 }
 
 /** What a scale-step setting is a step of, if it's one: a corner of the radius scale, a place name's size of the text sizes. */

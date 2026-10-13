@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { applyTheme } from '../theme/applyTheme'
 import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
@@ -27,19 +26,16 @@ interface ThemeTunerProps {
   builtIn: ThemeJson
   /** The draft to start with: one saved in this browser, or the built-in theme. */
   initial: ThemeJson
-  /** Called with the draft, resolved, once it has settled for a moment (the globe is made again for it). */
+  /** Called with the draft, resolved, each time it changes and resolves: the app's one way to change its theme. */
   onTheme: (theme: Theme) => void
 }
-
-/** How long the draft settles before the globe is made again for it, so a slider's drag doesn't remake it at every step. */
-const settleMs = 300
 
 /**
  * The theme tuner (local runs only): a panel for trying changes to the theme on the running app,
  * by part of the screen. A colour picks a step of the theme's palette, or steps lighter or darker,
- * so it stays within the palette; sizes, opacities and fonts change in place. Changes show at once on
- * the page, and on the globe once they've settled. The draft is kept in this browser, and its changes
- * can be copied to put into the theme's JSON.
+ * so it stays within the palette; sizes, opacities and fonts change in place. Changes show at once,
+ * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
+ * the theme's JSON.
  */
 export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
   const [open, setOpen] = useState(false)
@@ -53,10 +49,7 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
 
   useEffect(() => {
     saveDraft(window.localStorage, builtIn, draft)
-    if (!result.ok) return
-    applyTheme(document.documentElement, result.theme)
-    const timer = window.setTimeout(() => onTheme(result.theme), settleMs)
-    return () => window.clearTimeout(timer)
+    if (result.ok) onTheme(result.theme)
   }, [builtIn, draft, result, onTheme])
 
   const copy = (what: string, text: string) => {

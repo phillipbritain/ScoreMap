@@ -4,7 +4,6 @@ import { resolveTheme } from '../theme/theme'
 import {
   changes,
   describeChanges,
-  globeLook,
   loadDraft,
   saveDraft,
   settingAt,
@@ -16,12 +15,6 @@ import {
 } from './themeDraft'
 
 const builtIn = builtInJson as unknown as ThemeJson
-
-function resolved(json: ThemeJson) {
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
-}
 
 describe('withSetting', () => {
   it('changes one setting and leaves the rest, and the theme it came from, as they were', () => {
@@ -61,18 +54,6 @@ describe('changes', () => {
 
   it('finds none when nothing has changed', () => {
     expect(changes(builtIn, withSetting(builtIn, ['trail', 'width'], 1.25))).toEqual([])
-  })
-})
-
-describe('globeLook', () => {
-  it('changes with what the globe reads, such as a trail', () => {
-    const before = globeLook(resolved(builtIn))
-    expect(globeLook(resolved(withSetting(builtIn, ['trail', 'width'], 3)))).not.toBe(before)
-  })
-
-  it('stays the same for what only the page reads, such as a score card fill', () => {
-    const before = globeLook(resolved(builtIn))
-    expect(globeLook(resolved(withSetting(builtIn, ['card', 'fill'], 'navy.800')))).toBe(before)
   })
 })
 

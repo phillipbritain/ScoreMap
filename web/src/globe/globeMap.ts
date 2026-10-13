@@ -12,6 +12,7 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
+import { addOuterPins } from './cardRadius.prototype'
 import type { Camera } from './camera'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow } from './globeGlow'
@@ -281,6 +282,8 @@ export class GlobeMap {
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of layers.belowNames) map.addLayer(layer, belowNames)
     for (const layer of layers.onTop) map.addLayer(layer)
+    // PROTOTYPE: games beyond the card radius as small pins.
+    addOuterPins(map, this.theme, () => [...this.shown.values()], (gameId) => this.onSelect(gameId))
   }
 
   // Small pins form pin clusters, with a radius that changes in steps between whole zoom levels; score

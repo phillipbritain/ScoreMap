@@ -10,6 +10,7 @@ import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
+import { withinCardRadius } from './cardRadius.prototype'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { selectedStacking, stacking, statusKey } from './statusLook'
@@ -125,7 +126,8 @@ export class ScoreCardMarkers {
         this.placedPins()
     // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
     // room in the layout with it): cards pop in and out as their venues cross the horizon.
-    const wanted = pins.filter(({ lngLat }) => !isBehindGlobe(this.map, lngLat))
+    // PROTOTYPE: and only within the card radius of the view's centre.
+    const wanted = pins.filter(({ lngLat }) => !isBehindGlobe(this.map, lngLat) && withinCardRadius(this.map, lngLat))
 
     const keep = new Set<string>()
     for (const { gameId, lngLat } of wanted) {

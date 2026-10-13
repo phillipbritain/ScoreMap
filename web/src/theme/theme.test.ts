@@ -13,12 +13,12 @@ function resolved(json: unknown): Theme {
   return result.theme
 }
 
-/** A palette's step, as a colour job naming it resolves to. */
-function step(palette: unknown, name: string): string {
+/** A step of the theme's colours, with these colours too, as a colour job naming it resolves to. */
+function step(colors: unknown, name: string): string {
   const json = themeJson()
-  json.palette = { ...json.palette, ...(palette as object) }
-  json.settings.globe.surface = name
-  return resolved(json).globe.surface
+  json.colors = { ...json.colors, ...(colors as object) }
+  json.components.Globe.surface = name
+  return resolved(json).components.Globe.surface
 }
 
 /**
@@ -53,7 +53,7 @@ describe('oklch, the tests’ measure', () => {
 const steps = ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 
 describe('resolveTheme', () => {
-  it("works out a palette colour's steps, lighter one way and darker the other, keeping its hue", () => {
+  it("works out a colour's steps, lighter one way and darker the other, keeping its hue", () => {
     const navy = { navy: { base: '#2b4d7d' } }
     expect(step(navy, 'navy.500')).toBe('#2b4d7d')
     const looks = steps.map((name) => oklch(step(navy, `navy.${name}`)))
@@ -71,271 +71,314 @@ describe('resolveTheme', () => {
     }
   })
 
-  it('resolves a colour job from a step name, in any of the palette’s colours', () => {
-    const palette = { navy: { base: '#2b4d7d' }, gold: { base: '#d4ac63' } }
-    expect(step(palette, 'gold.500')).toBe('#d4ac63')
-    expect(step(palette, 'navy.500')).toBe('#2b4d7d')
+  it('resolves a colour job from a step name, in any of the theme’s colours', () => {
+    const colors = { navy: { base: '#2b4d7d' }, gold: { base: '#d4ac63' } }
+    expect(step(colors, 'gold.500')).toBe('#d4ac63')
+    expect(step(colors, 'navy.500')).toBe('#2b4d7d')
+  })
+
+  it('resolves a colour job outside the palette from one of the palette’s colours, as the palette has it', () => {
+    const json = themeJson()
+    json.palette.primary.dark = 'navy.800'
+    json.palette.divider = '#123456'
+    json.components.Globe.surface = 'primary.dark'
+    json.components.ScoreCard.fill = 'divider'
+    json.status.live.color = 'background.paper'
+    const theme = resolved(json)
+    expect(theme.palette.primary.dark).toBe(step({}, 'navy.800'))
+    expect(theme.components.Globe.surface).toBe(theme.palette.primary.dark)
+    expect(theme.components.ScoreCard.fill).toBe('#123456')
+    expect(theme.status.live.color).toBe(theme.palette.background.paper)
+  })
+
+  it('rejects a palette colour naming another of the palette’s, or a colour named as one of the palette’s are, but only there', () => {
+    const json = themeJson()
+    json.colors.primary = { base: '#2b4d7d' }
+    json.palette.secondary.main = 'primary.main'
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: [
+        'colors.primary is named as one of the palette’s colours are, so a colour job naming it would be unclear',
+        'palette.secondary.main names "primary.main", a colour the theme doesn’t have',
+      ],
+    })
   })
 
   it('resolves a colour job from a colour given directly', () => {
     const json = themeJson()
-    json.settings.globe.surface = '#123456'
-    json.settings.globe.coastlines.color = 'rgba(255, 255, 255, 0.7)'
+    json.components.Globe.surface = '#123456'
+    json.components.Globe.coastlines.color = 'rgba(255, 255, 255, 0.7)'
     const theme = resolved(json)
-    expect(theme.globe.surface).toBe('#123456')
-    expect(theme.globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
+    expect(theme.components.Globe.surface).toBe('#123456')
+    expect(theme.components.Globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
   })
 
   it('takes transparent as a colour given directly, for a shadow or glow that isn’t there', () => {
     const json = themeJson()
-    json.settings.panel.shadow.color = 'transparent'
-    expect(resolved(json).panel.shadow.color).toBe('transparent')
+    json.components.GamePanel.shadow.color = 'transparent'
+    expect(resolved(json).components.GamePanel.shadow.color).toBe('transparent')
   })
 
   it('takes a colour given directly in any form both CSS and MapLibre read', () => {
     const forms = ['#abc', '#abcd', '#a1b2c3', '#A1B2C3D4', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'rgb(10% 20% 30% / 50%)', 'hsl(210 40% 30%)', 'hsla(210deg, 40%, 30%, .5)']
     for (const form of forms) {
       const json = themeJson()
-      json.settings.globe.surface = form
-      expect(resolveTheme(json), form).toMatchObject({ ok: true, theme: { globe: { surface: form } } })
+      json.components.Globe.surface = form
+      expect(resolveTheme(json), form).toMatchObject({ ok: true, theme: { components: { Globe: { surface: form } } } })
     }
   })
 
   it('rejects a colour given directly that isn’t well formed', () => {
     const json = themeJson()
-    json.settings.globe.surface = '#12'
-    json.settings.globe.halo.inner.color = 'foo('
-    json.settings.globe.halo.outer.color = 'rgb(1, 2)'
-    json.settings.card.fill = '#12345'
-    json.settings.card.text = 'rgb(1, 2%, 3)'
-    json.settings.divider = 7
+    json.components.Globe.surface = '#12'
+    json.components.Globe.halo.inner.color = 'foo('
+    json.components.Globe.halo.outer.color = 'rgb(1, 2)'
+    json.components.ScoreCard.fill = '#12345'
+    json.components.ScoreCard.text = 'rgb(1, 2%, 3)'
+    json.palette.divider = 7
     const why = 'not a colour CSS and MapLibre both read (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent)'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        `settings.globe.surface is "#12", ${why}`,
-        `settings.globe.halo.inner.color is "foo(", ${why}`,
-        `settings.globe.halo.outer.color is "rgb(1, 2)", ${why}`,
-        'settings.divider is 7, not a colour job: a palette step such as "navy.700", or a colour',
-        `settings.card.fill is "#12345", ${why}`,
-        `settings.card.text is "rgb(1, 2%, 3)", ${why}`,
+        'palette.divider is 7, not a colour job: a colour’s step such as "navy.700", or a colour',
+        `components.Globe.surface is "#12", ${why}`,
+        `components.Globe.halo.inner.color is "foo(", ${why}`,
+        `components.Globe.halo.outer.color is "rgb(1, 2)", ${why}`,
+        `components.ScoreCard.fill is "#12345", ${why}`,
+        `components.ScoreCard.text is "rgb(1, 2%, 3)", ${why}`,
       ],
     })
   })
 
-  it('rejects a theme that isn’t an object with a palette and settings, rather than failing', () => {
+  it('rejects a theme that isn’t an object of its parts, rather than failing', () => {
+    const parts = 'colors, palette, typography, spacing, shape, status, components'
     for (const json of [null, undefined, 'dark', 42, []]) {
       expect(resolveTheme(json), JSON.stringify(json)).toEqual({
         ok: false,
-        problems: [`a theme is ${JSON.stringify(json) ?? 'undefined'}, not an object with a palette and settings`],
+        problems: [`a theme is ${JSON.stringify(json) ?? 'undefined'}, not an object with ${parts}`],
       })
     }
-    expect(resolveTheme({ palette: null, settings: 'dark' })).toEqual({
+    expect(resolveTheme({ ...themeJson(), components: 'dark' })).toEqual({
       ok: false,
-      problems: ['palette is null, not colours by name', 'settings is "dark", not a group of settings'],
+      problems: ['components is "dark", not a group of settings'],
     })
+    const colourless = resolveTheme({ ...themeJson(), colors: null })
+    expect(!colourless.ok && colourless.problems[0]).toBe('colors is null, not colours by name')
   })
 
-  it('rejects a palette colour or a group of settings that isn’t an object', () => {
+  it('rejects one of the theme’s colours or a group of settings that isn’t an object', () => {
     const json = themeJson()
-    json.palette.teal = '#008080'
-    json.settings.globe.halo = '#ffffff'
-    json.settings.text = null
+    json.colors.teal = '#008080'
+    json.components.Globe.halo = '#ffffff'
+    json.palette.text = null
     const result = resolveTheme(json)
     expect(!result.ok && result.problems).toEqual([
-      'palette.teal is "#008080", not a colour with a base',
-      'settings.globe.halo is "#ffffff", not a group of settings',
-      'settings.text is null, not a group of settings',
+      'colors.teal is "#008080", not a colour with a base',
+      'palette.text is null, not a group of settings',
+      'components.Globe.halo is "#ffffff", not a group of settings',
     ])
   })
 
   it('rejects settings the theme doesn’t know, alongside every other problem', () => {
     const json = themeJson()
     json.mode = 'dark'
-    json.palette.navy.shade = 'deep'
-    json.settings.globe.surfce = 'navy.500'
-    json.settings.textSizes.xxl = 24
-    json.settings.panel.shadow.spread = 4
-    json.settings.divider = 'navy.950'
+    json.colors.navy.shade = 'deep'
+    json.components.Globe.surfce = 'navy.500'
+    json.typography.h1 = { fontWeight: 300, fontSize: 96, letterSpacing: 0 }
+    json.components.GamePanel.shadow.spread = 4
+    json.palette.divider = 'navy.950'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'mode isn’t part of a theme: a theme has a palette and settings',
-        'palette.navy.shade isn’t part of a palette colour: it has a base and steps',
-        'settings.textSizes.xxl isn’t a setting a theme has',
-        'settings.globe.surfce isn’t a setting a theme has',
-        'settings.divider names "navy.950", a step the palette doesn’t have',
-        'settings.panel.shadow.spread isn’t a setting a theme has',
+        'mode isn’t part of a theme: a theme has colors, palette, typography, spacing, shape, status, components',
+        'colors.navy.shade isn’t part of a colour: it has a base and steps',
+        'palette.divider names "navy.950", a colour the theme doesn’t have',
+        'typography.h1 isn’t a setting a theme has',
+        'components.Globe.surfce isn’t a setting a theme has',
+        'components.GamePanel.shadow.spread isn’t a setting a theme has',
       ],
     })
   })
 
-  it('rejects a colour job naming a step the palette doesn’t have', () => {
+  it('rejects a colour job naming a colour the theme doesn’t have', () => {
     const json = themeJson()
-    json.palette.navy = { base: '#2b4d7d' }
-    json.settings.globe.surface = 'navy.950'
-    json.settings.globe.halo.inner.color = 'teal.500'
+    json.colors.navy = { base: '#2b4d7d' }
+    json.components.Globe.surface = 'navy.950'
+    json.components.Globe.halo.inner.color = 'teal.500'
+    json.components.Globe.halo.outer.color = 'primary.darker'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'settings.globe.surface names "navy.950", a step the palette doesn’t have',
-        'settings.globe.halo.inner.color names "teal.500", a step the palette doesn’t have',
+        'components.Globe.surface names "navy.950", a colour the theme doesn’t have',
+        'components.Globe.halo.inner.color names "teal.500", a colour the theme doesn’t have',
+        'components.Globe.halo.outer.color names "primary.darker", a colour the theme doesn’t have',
       ],
     })
   })
 
   it('gives globe text a font of the map’s font server, with the CSS family and weight to measure it by', () => {
     const json = themeJson()
-    json.settings.placeNames.city.font = 'Open Sans Semibold'
-    json.settings.placeNames.state.font = 'Metropolis Light Italic'
+    json.components.PlaceNames.city.font = 'Open Sans Semibold'
+    json.components.PlaceNames.state.font = 'Metropolis Light Italic'
     const theme = resolved(json)
-    expect(theme.placeNames.city.font).toEqual({ name: 'Open Sans Semibold', family: 'Open Sans', weight: 600, style: 'normal' })
-    expect(theme.placeNames.state.font).toEqual({ name: 'Metropolis Light Italic', family: 'Metropolis', weight: 300, style: 'italic' })
+    expect(theme.components.PlaceNames.city.font).toEqual({ name: 'Open Sans Semibold', family: 'Open Sans', weight: 600, style: 'normal' })
+    expect(theme.components.PlaceNames.state.font).toEqual({ name: 'Metropolis Light Italic', family: 'Metropolis', weight: 300, style: 'italic' })
   })
 
   it('rejects a globe font the map’s font server doesn’t have', () => {
     const json = themeJson()
-    json.settings.placeNames.city.font = 'Comic Sans Regular'
+    json.components.PlaceNames.city.font = 'Comic Sans Regular'
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['settings.placeNames.city.font is "Comic Sans Regular", a font fonts.openmaptiles.org doesn’t have (ADR-0006)'],
+      problems: ['components.PlaceNames.city.font is "Comic Sans Regular", a font fonts.openmaptiles.org doesn’t have (ADR-0006)'],
     })
   })
 
   it('lists every problem a theme has, not just the first', () => {
     const json = themeJson()
-    delete json.settings.globe.stateLines
-    json.settings.globe.surface = 'navy.950'
-    json.settings.placeNames.country.font = 'Roboto Regular'
+    delete json.components.Globe.stateLines
+    json.components.Globe.surface = 'navy.950'
+    json.components.PlaceNames.country.font = 'Roboto Regular'
     const result = resolveTheme(json)
     expect(result.ok).toBe(false)
     expect(!result.ok && result.problems).toEqual([
-      expect.stringMatching(/^settings\.globe\.surface names "navy\.950"/),
-      'settings.globe.stateLines is missing',
-      expect.stringMatching(/^settings\.placeNames\.country\.font is "Roboto Regular"/),
+      expect.stringMatching(/^components\.Globe\.surface names "navy\.950"/),
+      'components.Globe.stateLines is missing',
+      expect.stringMatching(/^components\.PlaceNames\.country\.font is "Roboto Regular"/),
     ])
   })
 
-  it('rejects a palette colour that isn’t a #rrggbb colour, or a hand-set step the palette doesn’t have', () => {
+  it('rejects one of the theme’s colours that isn’t a #rrggbb colour, or a hand-set step it doesn’t have', () => {
     const json = themeJson()
-    json.palette.teal = { base: 'teal' }
-    json.palette.sand = { base: '#d4ac63', steps: { '950': '#000000', '800': 'dark' } }
+    json.colors.teal = { base: 'teal' }
+    json.colors.sand = { base: '#d4ac63', steps: { '950': '#000000', '800': 'dark' } }
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'palette.teal.base is "teal", not a #rrggbb colour',
-        'palette.sand.steps.800 is "dark", not a #rrggbb colour',
-        'palette.sand.steps.950 isn’t a step: steps are 100 to 900',
+        'colors.teal.base is "teal", not a #rrggbb colour',
+        'colors.sand.steps.800 is "dark", not a #rrggbb colour',
+        'colors.sand.steps.950 isn’t a step: steps are 100 to 900',
       ],
     })
   })
 
   it('rejects a size that isn’t a number of pixels, or an opacity that isn’t from 0 to 1', () => {
     const json = themeJson()
-    json.settings.status.live.glow.radius = '15px'
-    json.settings.status.final.core.ring = -1
-    json.settings.status.upcoming.glow.opacity = 1.5
-    json.settings.cluster.glowOpacity = 'half'
+    json.status.live.glow.radius = '15px'
+    json.status.final.core.ring = -1
+    json.status.upcoming.glow.opacity = 1.5
+    json.components.Cluster.glowOpacity = 'half'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'settings.status.live.glow.radius is "15px", not a number of pixels',
-        'settings.status.upcoming.glow.opacity is 1.5, not an opacity from 0 to 1',
-        'settings.status.final.core.ring is -1, not a number of pixels',
-        'settings.cluster.glowOpacity is "half", not an opacity from 0 to 1',
+        'status.live.glow.radius is "15px", not a number of pixels',
+        'status.upcoming.glow.opacity is 1.5, not an opacity from 0 to 1',
+        'status.final.core.ring is -1, not a number of pixels',
+        'components.Cluster.glowOpacity is "half", not an opacity from 0 to 1',
       ],
     })
   })
 
   it('rejects a shadow without its colour or with an offset that isn’t a number', () => {
     const json = themeJson()
-    json.settings.panel.shadow = { x: 0, y: '8px', blur: 30 }
+    json.components.GamePanel.shadow = { x: 0, y: '8px', blur: 30 }
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['settings.panel.shadow.y is "8px", not a number of pixels', 'settings.panel.shadow.color is missing'],
+      problems: ['components.GamePanel.shadow.y is "8px", not a number of pixels', 'components.GamePanel.shadow.color is missing'],
     })
   })
 
-  it('rejects a text size, spacing or radius that isn’t one of its scale’s steps', () => {
+  it('rejects a text size that isn’t a type style, or a spacing or corner that isn’t a number of its unit', () => {
     const json = themeJson()
-    json.settings.fonts.clusterCount.size = 'xxl'
-    json.settings.placeNames.city.size = { '4': 's', '11': 12 }
-    json.settings.cutCorner.size = '5xl'
-    json.settings.corners.card = 'huge'
+    json.components.Cluster.count.size = 'h1'
+    json.components.PlaceNames.city.size = { '4': 'caption', '11': 12 }
+    json.components.GamePanel.cutCorner.size = 'xl'
+    json.components.ScoreCard.corner = 'huge'
+    const styles = 'h6, subtitle1, subtitle2, body1, body2, button, caption, overline, footnote'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'settings.placeNames.city.size.11 is 12, not a step of the text size scale (xs, s, m, l, xl)',
-        'settings.fonts.clusterCount.size is "xxl", not a step of the text size scale (xs, s, m, l, xl)',
-        'settings.corners.card is "huge", not a step of the radius scale (xs, s, m, l, pill)',
-        'settings.cutCorner.size is "5xl", not a step of the spacing scale (2xs, xs, s, m, l, xl, 2xl, 3xl)',
+        `components.PlaceNames.city.size.11 is 12, not a type style (${styles})`,
+        `components.Cluster.count.size is "h1", not a type style (${styles})`,
+        'components.ScoreCard.corner is "huge", not a number of corner radii (shape.borderRadius) or "pill"',
+        'components.GamePanel.cutCorner.size is "xl", not a number of spacing units',
       ],
     })
   })
 
-  it('rejects a scale whose step isn’t a number of pixels', () => {
+  it('rejects a type style, spacing unit or corner radius that isn’t a number of pixels', () => {
     const json = themeJson()
-    json.settings.textSizes.m = '13px'
-    delete json.settings.spacing['2xl']
+    json.typography.body2.fontSize = '13px'
+    delete json.typography.caption.letterSpacing
+    json.spacing = '4px'
+    json.shape.borderRadius = -2
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['settings.textSizes.m is "13px", not a number of pixels', 'settings.spacing.2xl is missing'],
+      problems: [
+        'typography.body2.fontSize is "13px", not a number of pixels',
+        'typography.caption.letterSpacing is missing',
+        'spacing is "4px", not a number of pixels',
+        'shape.borderRadius is -2, not a number of pixels',
+      ],
     })
   })
 
-  it('gives a size, spacing or radius the pixels its scale step holds', () => {
+  it('gives a text size its type style’s size, a spacing its units in pixels and a corner its radii in pixels', () => {
     const json = themeJson()
-    json.settings.textSizes.xl = 20
-    json.settings.spacing.xl = 18
-    json.settings.radii.l = 10
-    json.settings.fonts.clusterCount.size = 'xl'
-    json.settings.placeNames.country.size = { '1': 'xl', '4.5': 'xl' }
-    json.settings.cutCorner.size = 'xl'
-    json.settings.corners.menu = 'l'
+    json.typography.h6.fontSize = 22
+    json.spacing = 5
+    json.shape.borderRadius = 3
+    json.components.Cluster.count.size = 'h6'
+    json.components.PlaceNames.country.size = { '1': 'h6', '4.5': 'h6' }
+    json.components.GamePanel.cutCorner.size = 2.5
+    json.components.Menu.corner = 2
+    json.components.Controls.corner = 'pill'
     const theme = resolved(json)
-    expect(theme.fonts.clusterCount.size).toBe(20)
-    expect(theme.placeNames.country.size).toEqual({ '1': 20, '4.5': 20 })
-    expect(theme.cutCorner.size).toBe(18)
-    expect(theme.corners.menu).toBe(10)
+    expect(theme.components.Cluster.count.size).toBe(22)
+    expect(theme.components.PlaceNames.country.size).toEqual({ '1': 22, '4.5': 22 })
+    expect(theme.components.GamePanel.cutCorner.size).toBe(12.5)
+    expect(theme.components.Menu.corner).toBe(6)
+    expect(theme.components.Controls.corner).toBe(999)
   })
 
   it('rejects text on the globe sized at no zoom level, or at one that isn’t a number', () => {
     const json = themeJson()
-    json.settings.placeNames.city.size = {}
-    json.settings.placeNames.state.size = { far: 'xs' }
+    json.components.PlaceNames.city.size = {}
+    json.components.PlaceNames.state.size = { far: 'footnote' }
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'settings.placeNames.city.size gives no zoom levels: it needs a text size at one zoom level at least',
-        'settings.placeNames.state.size.far isn’t a zoom level',
+        'components.PlaceNames.city.size gives no zoom levels: it needs a text size at one zoom level at least',
+        'components.PlaceNames.state.size.far isn’t a zoom level',
       ],
     })
   })
 
   it('rejects a dash pattern, a size in ems or a halo’s share of the globe that isn’t one', () => {
     const json = themeJson()
-    json.settings.globe.disputedBorders.dash = [2]
-    json.settings.globe.halo.inner.blur = { share: '12%', max: 60 }
-    json.settings.letterSpacing.label = '0.14em'
-    json.settings.sizes.panel.scoreWidth = -1
+    json.components.Globe.disputedBorders.dash = [2]
+    json.components.Globe.halo.inner.blur = { share: '12%', max: 60 }
+    json.typography.overline.letterSpacing = '0.14em'
+    json.components.GamePanel.size.scoreWidth = -1
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'settings.letterSpacing.label is "0.14em", not a number of ems',
-        'settings.globe.disputedBorders.dash is [2], not a dash pattern: dash and gap lengths in line widths, such as [2, 2]',
-        'settings.globe.halo.inner.blur.share is "12%", not a share of the globe’s radius, such as 0.12',
-        'settings.sizes.panel.scoreWidth is -1, not a number of ems',
+        'typography.overline.letterSpacing is "0.14em", not a number of ems',
+        'components.Globe.disputedBorders.dash is [2], not a dash pattern: dash and gap lengths in line widths, such as [2, 2]',
+        'components.Globe.halo.inner.blur.share is "12%", not a share of the globe’s radius, such as 0.12',
+        'components.GamePanel.size.scoreWidth is -1, not a number of ems',
       ],
     })
   })
 
   it('rejects a theme missing a setting', () => {
     const json = themeJson()
-    delete json.settings.globe.coastlines
-    delete json.settings.globe.halo
+    delete json.components.Globe.coastlines
+    delete json.components.Globe.halo
+    delete json.palette.warning
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['settings.globe.coastlines is missing', 'settings.globe.halo is missing'],
+      problems: ['palette.warning is missing', 'components.Globe.coastlines is missing', 'components.Globe.halo is missing'],
     })
   })
 })

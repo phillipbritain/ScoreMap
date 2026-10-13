@@ -70,7 +70,9 @@ describe('cityNameBox', () => {
   })
 
   it("keeps the theme's clearance for score cards around the name's letters", () => {
-    const theme = { ...builtInTheme, sizes: { ...builtInTheme.sizes, card: { ...builtInTheme.sizes.card, nameClearance: 7 } } }
+    const { components } = builtInTheme
+    const scoreCard = { ...components.ScoreCard, size: { ...components.ScoreCard.size, nameClearance: 7 } }
+    const theme = { ...builtInTheme, components: { ...components, ScoreCard: scoreCard } }
     const clear = { ...cityNameLook(4, false, theme), maxWidth: 100 }
     const box = cityNameBox(tampa, { x: 100, y: 200 }, clear, measure)
     expect(box.width).toBe(measure(tampa.name) + 2 * 7)

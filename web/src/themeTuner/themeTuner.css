@@ -191,7 +191,8 @@
   border-radius: 3px;
 }
 
-/* The palette's steps, a colour to a row from light to dark, over the rows below. */
+/* The palette's colours, then the theme's colours' steps, a colour to a row from light to dark, over
+   the rows below. */
 .theme-tuner__grid {
   position: absolute;
   top: calc(100% + 4px);
@@ -210,6 +211,26 @@
   display: flex;
   align-items: center;
   gap: 3px;
+}
+
+.theme-tuner__roles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  margin-bottom: 3px;
+}
+
+.theme-tuner button.theme-tuner__role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.theme-tuner button.theme-tuner__role[aria-pressed='true'] {
+  border-color: #e6e6e6;
 }
 
 .theme-tuner__grid-name {

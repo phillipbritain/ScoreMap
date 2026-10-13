@@ -74,7 +74,7 @@ export function pinClusterLayers(
   theme: Theme,
   set: PinSet,
 ): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
-  const { cluster } = theme
+  const cluster = theme.components.Cluster
   const clusterOpacity = byStatus(theme, 'pinCluster', (look) => look.clusterOpacity)
   return [
     {
@@ -108,8 +108,8 @@ export function pinClusterLayers(
       filter: ['has', 'point_count'],
       layout: {
         'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': [theme.fonts.clusterCount.font.name],
-        'text-size': theme.fonts.clusterCount.size,
+        'text-font': [theme.components.Cluster.count.font.name],
+        'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
       paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color), 'text-opacity': clusterOpacity },
@@ -165,10 +165,10 @@ export function selectedPinLayerSpec(theme: Theme, gameId: string | null, set: P
     type: 'circle',
     filter: selectedPin(gameId),
     paint: {
-      'circle-radius': smallPinReach - theme.selection.width,
+      'circle-radius': smallPinReach - theme.components.Selection.width,
       'circle-color': 'transparent',
-      'circle-stroke-width': theme.selection.width,
-      'circle-stroke-color': theme.selection.color,
+      'circle-stroke-width': theme.components.Selection.width,
+      'circle-stroke-color': theme.components.Selection.color,
     },
   }
 }
@@ -179,7 +179,7 @@ export function selectedPin(gameId: string | null): ExpressionSpecification {
 }
 
 /** A pin cluster's size by how many games are in it: a few (up to 4), some (up to 14), or many. */
-function byCount({ few, some, many }: Theme['cluster']['radius']): ExpressionSpecification {
+function byCount({ few, some, many }: Theme['components']['Cluster']['radius']): ExpressionSpecification {
   return ['step', ['get', 'point_count'], few, 5, some, 15, many]
 }
 

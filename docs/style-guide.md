@@ -13,21 +13,19 @@ A theme is shaped as a [Material UI](https://mui.com/material-ui/customization/t
 ```json
 {
   "colors": { "navy": { "base": "#2b4d7d" }, "...": {} },
-  "palette": { "primary": { "main": "navy.500", "...": "" }, "text": { "primary": "offWhite.500", "...": "" }, "...": {} },
+  "palette": { "primary": { "main": "navy.500", "...": "" }, "live": { "main": "gold.500", "...": "" }, "...": {} },
   "typography": { "fontFamily": "'Open Sans Variable', …", "body2": { "fontWeight": 400, "fontSize": 14, "letterSpacing": 0 }, "...": {} },
   "spacing": 4,
   "shape": { "borderRadius": 4, "borderWidth": { "thin": 1, "medium": 2, "thick": 3 } },
-  "status": { "live": { "color": "secondary.main", "...": {} }, "...": {} },
-  "components": { "ScoreCard": { "fill": "primary.dark", "corner": 1.5, "...": {} }, "...": {} }
+  "components": { "ScoreCard": { "fill": "primary.dark", "final": { "fade": 0.45, "...": {} }, "...": {} }, "...": {} }
 }
 ```
 
 - The **theme colours** (`colors`) name a few base colours. Each is worked out into steps from light to dark (see [The theme's colours](#the-themes-colours)), as MUI's own colours (`@mui/material/colors`) come in steps.
-- The **palette** says what the main colours are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colours (see [The palette](#the-palette)).
+- The **palette** says what the main colours are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, and a colour for each game status (`live`, `upcoming`, `final`, `disrupted`), as MUI takes colours of a theme's own, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colours (see [The palette](#the-palette)).
 - The **typography** is one font family and the type styles, MUI's typography variants: `h6`, `subtitle1`, `body2` and so on (see [Typography](#typography)).
 - **`spacing`** is the spacing unit every space on the page is a number of, as MUI's `theme.spacing` is, and **`shape`** the corner radius every corner is a number of and the page's line widths (see [Spacing and shape](#spacing-and-shape)).
-- **`status`** is how each game status looks, a part of its own as MUI lets a theme add (see [How a game's status shows](#how-a-games-status-shows)).
-- **`components`** has each part of ScoreMap's own look, by part, as MUI's `components` has each component's: the globe, place names, clusters, trails, score cards, the game panel, the menus, the controls and the loading screen. A part's colour jobs name a step or one of the palette's colours (`primary.dark`, `text.secondary`), so changing the palette changes every part that uses it.
+- **`components`** has each part of ScoreMap's own look, by part, as MUI's `components` has each component's: the globe, place names, pins, clusters, trails, score cards, the game panel, the menus, the controls and the loading screen. A part that looks different by game status has a group for each (`components.Pin.live`, `components.ScoreCard.final`), as MUI's components style each colour they come in (see [How a game's status shows](#how-a-games-status-shows)). A part's colour jobs name a step or one of the palette's colours (`primary.dark`, `text.secondary`), so changing the palette changes every part that uses it.
 
 Every setting is required, and nothing else is allowed: a theme missing a setting, or with one it doesn't know, is rejected (see [What checking rejects](#what-checking-rejects)). This is where a theme differs most from MUI's, which fills in whatever it isn't given: ScoreMap's built-in theme is the only one, so a setting left out is a mistake, not a default.
 
@@ -35,7 +33,7 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 
 The code reads only the resolved theme, never the JSON:
 
-- **The page** (the game panel, score cards, the settings menu, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `status.live.color` is `--status-live-color`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colours, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
+- **The page** (the game panel, score cards, the settings menu, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colours, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
 - **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is. On a local run the theme tuner changes the theme this way (see [Making or changing a theme](#making-or-changing-a-theme)).
 
@@ -82,18 +80,18 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | Every game | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. No part names it, as the statuses' colours name gold's steps themselves | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge; `contrastText` is the game panel's progress line, written on it (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted; `navy.800` |
 | `palette.error`, `palette.warning` | Kept for errors and warnings, or league colours: no part uses them yet | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
 | `palette.text.primary` | Main text on the game panel, the settings menu and the scenario controls | `offWhite.500` |
 | `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; the settings gear; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
 | `palette.text.link` | Links (the game panel's stream links) | `offWhite.500` |
-| `palette.text.onStatus` | Text written on a status's colour: the game panel's progress line | `navy.800` |
 | `palette.divider` | The lines between a menu's parts (under the settings tabs, under "All leagues") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
 
-`text.link` and `text.onStatus` are ScoreMap's own, beside MUI's `text.primary` and `text.secondary`. MUI works out a colour's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives all four, so each is a step that can be seen and changed.
+The statuses' colours and `text.link` are ScoreMap's own, beside MUI's. MUI works out a colour's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives all four, so each is a step that can be seen and changed.
 
 ## Colour jobs
 
@@ -125,8 +123,8 @@ The dark theme names one of the palette's colours where a job is what that palet
 
 | Setting | What it colours | Dark theme |
 | --- | --- | --- |
-| `status.<status>.color` | A game's colour, by status (`live`, `upcoming`, `final`, `disrupted`): its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line | `secondary.main` for Live, Upcoming and Final; `offWhite.700` (grey) for Disrupted |
-| `status.<status>.core.color` | A small pin's bright core | Live `gold.100`; Upcoming and Final `secondary.main`; Disrupted `offWhite.700` |
+| `palette.<status>.main` | A game's colour, by status (`live`, `upcoming`, `final`, `disrupted`; see [The palette](#the-palette)) | `gold.500` for Live, Upcoming and Final; `offWhite.700` (grey) for Disrupted |
+| `components.Pin.<status>.core.color` | A small pin's bright core | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
 | `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
 | `components.ScoreCard.fill` | A score card's fill, solid | `primary.dark` |
@@ -178,28 +176,28 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 
 Score cards stay solid as they fade, so the map never shows through the scores: a card fades by colour, its status colour, text and logos mixed into its fill, not by being see-through.
 
-Each status still has its own colour job, though three point at the same gold (`secondary.main`), so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new job.
+Each status still has its own colour in the palette, though three are the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new setting.
 
-Each status's look, `status.<status>`, a part of the theme of its own:
+A status's colour is the palette's; the rest of its look is each component's own, as MUI's components style each colour they come in, so a component's tab in the tuner holds all of how it looks:
 
 | Setting | What it is |
 | --- | --- |
-| `color` | The game's colour (see [Games on the globe](#games-on-the-globe)) |
-| `core.color`, `core.radius`, `core.opacity` | A small pin's bright core: its colour, radius in pixels and opacity |
-| `core.ring` | The width of the ring of status colour around the core, in pixels (0 is no ring) |
-| `glow.radius`, `glow.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
-| `clusterOpacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike |
-| `card.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its status colour (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill (a Disrupted game's fill for a Disrupted card). The selected game's card doesn't fade |
-| `card.glow.radius`, `card.glow.opacity` | How far and how strongly its score cards glow in its colour (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
+| `palette.<status>` | The game's colour, and the text written on it (see [The palette](#the-palette)) |
+| `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its colour, radius in pixels and opacity |
+| `components.Pin.<status>.core.ring` | The width of the ring of status colour around the core, in pixels (0 is no ring) |
+| `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
+| `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike |
+| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its status colour (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill (a Disrupted game's fill for a Disrupted card). The selected game's card doesn't fade |
+| `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its colour (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
 
 The dark theme's:
 
 | Status | Colour | Pin core | Pin glow | Cluster | Card fade | Card glow |
 | --- | --- | --- | --- | --- | --- | --- |
-| Live | `secondary.main` | `gold.100`, 3.5px, opacity 1, 1.5px ring | 15px at 0.8 | 1 | 0 | 12px at 0.8 |
-| Upcoming | `secondary.main` | `secondary.main`, 3px, 0.9, no ring | 9px at 0.4 | 0.9 | 0.15 | 4px at 0.3 |
-| Final | `secondary.main` | `secondary.main`, 2.5px, 0.5, no ring | none | 0.55 | 0.45 | none |
-| Disrupted | `offWhite.700` | `offWhite.700`, 2.5px, 0.7, no ring | none | 0.6 | 0.3 | none |
+| Live | `gold.500` | `gold.100`, 3.5px, opacity 1, 1.5px ring | 15px at 0.8 | 1 | 0 | 12px at 0.8 |
+| Upcoming | `gold.500` | `upcoming.main`, 3px, 0.9, no ring | 9px at 0.4 | 0.9 | 0.15 | 4px at 0.3 |
+| Final | `gold.500` | `final.main`, 2.5px, 0.5, no ring | none | 0.55 | 0.45 | none |
+| Disrupted | `offWhite.700` | `disrupted.main`, 2.5px, 0.7, no ring | none | 0.6 | 0.3 | none |
 
 The card fades are what the cards' opacities were before cards were made solid (1 minus 1, 0.85, 0.55 and 0.7), so they look as close to that as a solid card can.
 
@@ -324,7 +322,7 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 
 A theme is checked when it's resolved, and every problem is listed, not just the first; checking never throws, whatever it's given. Checking rejects:
 
-- a theme that isn't an object, or that has anything but `colors`, `palette`, `typography`, `spacing`, `shape`, `status` and `components`;
+- a theme that isn't an object, or that has anything but `colors`, `palette`, `typography`, `spacing`, `shape` and `components`;
 - missing colours, or colours, one of the theme's colours or a group of settings that isn't an object, or a colour named as one of the palette's parts are;
 - a missing setting anywhere in the theme, and **a setting the theme doesn't know** (a misspelt one shows as itself, as well as the real one missing), or a part of one of the theme's colours other than `base` and `steps`;
 - one of the theme's colours whose base isn't a `#rrggbb` colour, or a hand-set step that isn't `100` to `900` or isn't a `#rrggbb` colour;
@@ -344,12 +342,12 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
-To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape, and each status's look), then a tab for each component, named as it is (Score card, Game panel, Loading screen…) and set apart in teal, as it changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
+To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…) and set apart in teal, as it changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
 
 1. **Colours first.** Choose the base colours and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
-2. **Then the palette:** which steps are the primary and secondary colours, the background, the text, the divider and hover.
+2. **Then the palette:** which steps are the primary and secondary colours, each status's colour, the background, the text, the divider and hover.
 3. **Point every colour job at one of the palette's colours or a step**, using the tables above. Keep a colour given directly for a true one-off.
-4. **Set the typography, spacing, shape, each component's sizes and fonts and each status's look.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through each status's opacities, core and colours.
+4. **Set the typography, spacing, shape, and each component's sizes, fonts and looks by status.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through the statuses' colours and the pins', clusters' and score cards' opacities and cores.
 5. **Run the tests** (`npm test` in `web/`). Checking reports what's wrong with the theme (see [What checking rejects](#what-checking-rejects)). No test holds the theme's choices, so a different look changes no test.
 6. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios (the `run-scoremap` skill), on the globe zoomed out and in, with the game panel and settings menu open, and on a phone-sized window.
 

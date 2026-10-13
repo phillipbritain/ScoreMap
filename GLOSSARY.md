@@ -73,7 +73,7 @@ A theme's named base colours (`colors`), each worked out into steps from light (
 _Avoid_: Colour scheme, swatches, tokens
 
 **Palette**:
-What a theme's main colours are for, as MUI's palette has them: primary, secondary, error and warning (each a main shade, a lighter and a darker one, and the text on it), the background, text, the divider and hover. Each names a step of the theme colours.
+What a theme's main colours are for, as MUI's palette has them: primary, secondary, error and warning, and a colour for each game status (each a main shade, a lighter and a darker one, and the text on it), the background, text, the divider and hover. Each names a step of the theme colours. The rest of how a status looks is each component's own: a pin's, a cluster's, a score card's.
 _Avoid_: Colour scheme, tokens
 
 **Colour job**:

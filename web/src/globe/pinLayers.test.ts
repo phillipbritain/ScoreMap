@@ -54,8 +54,8 @@ describe('clusters', () => {
 
   it('glow as small pins of the status they show as do, as strongly as the theme says, or not at all', () => {
     const json = structuredClone(builtIn) as Record<string, any>
-    json.status.live.glow.opacity = 0.8
-    json.status.final.glow.opacity = 0
+    json.components.Pin.live.glow.opacity = 0.8
+    json.components.Pin.final.glow.opacity = 0
     json.components.Cluster.glowOpacity = 0.5
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
@@ -69,8 +69,8 @@ describe('clusters', () => {
 
   it('fade as the status they show as says, disc, outline and count alike, on pin clusters and card clusters', () => {
     const json = structuredClone(builtIn) as Record<string, any>
-    json.status.live.clusterOpacity = 1
-    json.status.final.clusterOpacity = 0.4
+    json.components.Cluster.live.opacity = 1
+    json.components.Cluster.final.opacity = 0.4
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
     /** How opaque a cluster's disc, outline and count are, for a cluster with these properties. */

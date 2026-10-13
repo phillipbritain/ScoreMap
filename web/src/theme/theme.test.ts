@@ -83,12 +83,12 @@ describe('resolveTheme', () => {
     json.palette.divider = '#123456'
     json.components.Globe.surface = 'primary.dark'
     json.components.ScoreCard.fill = 'divider'
-    json.status.live.color = 'background.paper'
+    json.components.Pin.live.core.color = 'background.paper'
     const theme = resolved(json)
     expect(theme.palette.primary.dark).toBe(step({}, 'navy.800'))
     expect(theme.components.Globe.surface).toBe(theme.palette.primary.dark)
     expect(theme.components.ScoreCard.fill).toBe('#123456')
-    expect(theme.status.live.color).toBe(theme.palette.background.paper)
+    expect(theme.components.Pin.live.core.color).toBe(theme.palette.background.paper)
   })
 
   it('rejects a palette colour naming another of the palette’s, or a colour named as one of the palette’s are, but only there', () => {
@@ -151,7 +151,7 @@ describe('resolveTheme', () => {
   })
 
   it('rejects a theme that isn’t an object of its parts, rather than failing', () => {
-    const parts = 'colors, palette, typography, spacing, shape, status, components'
+    const parts = 'colors, palette, typography, spacing, shape, components'
     for (const json of [null, undefined, 'dark', 42, []]) {
       expect(resolveTheme(json), JSON.stringify(json)).toEqual({
         ok: false,
@@ -190,7 +190,7 @@ describe('resolveTheme', () => {
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'mode isn’t part of a theme: a theme has colors, palette, typography, spacing, shape, status, components',
+        'mode isn’t part of a theme: a theme has colors, palette, typography, spacing, shape, components',
         'colors.navy.shade isn’t part of a colour: it has a base and steps',
         'palette.divider names "navy.950", a colour the theme doesn’t have',
         'typography.h1 isn’t a setting a theme has',
@@ -264,16 +264,16 @@ describe('resolveTheme', () => {
 
   it('rejects a size that isn’t a number of pixels, or an opacity that isn’t from 0 to 1', () => {
     const json = themeJson()
-    json.status.live.glow.radius = '15px'
-    json.status.final.core.ring = -1
-    json.status.upcoming.glow.opacity = 1.5
+    json.components.Pin.live.glow.radius = '15px'
+    json.components.Pin.final.core.ring = -1
+    json.components.Pin.upcoming.glow.opacity = 1.5
     json.components.Cluster.glowOpacity = 'half'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'status.live.glow.radius is "15px", not a number of pixels',
-        'status.upcoming.glow.opacity is 1.5, not an opacity from 0 to 1',
-        'status.final.core.ring is -1, not a number of pixels',
+        'components.Pin.live.glow.radius is "15px", not a number of pixels',
+        'components.Pin.upcoming.glow.opacity is 1.5, not an opacity from 0 to 1',
+        'components.Pin.final.core.ring is -1, not a number of pixels',
         'components.Cluster.glowOpacity is "half", not an opacity from 0 to 1',
       ],
     })

@@ -25,8 +25,8 @@ describe('applyTheme', () => {
       themeWith((json) => {
         json.palette.text.primary = '#eeeeee'
         json.components.Globe.surface = '#123456'
-        json.status.live.color = '#ff0000'
-        json.status.upcoming.core.radius = 4.5
+        json.palette.live.main = '#ff0000'
+        json.components.Pin.upcoming.core.radius = 4.5
         json.components.Cluster.glowOpacity = 0.3
         json.components.ScoreCard.header.tint = 0.4
         json.components.Selection = { color: '#00ff00', width: 3 }
@@ -34,8 +34,8 @@ describe('applyTheme', () => {
     )
     expect(properties.get('--palette-text-primary')).toBe('#eeeeee')
     expect(properties.get('--globe-surface')).toBe('#123456')
-    expect(properties.get('--status-live-color')).toBe('#ff0000')
-    expect(properties.get('--status-upcoming-core-radius')).toBe('4.5px')
+    expect(properties.get('--palette-live-main')).toBe('#ff0000')
+    expect(properties.get('--pin-upcoming-core-radius')).toBe('4.5px')
     expect(properties.get('--cluster-glow-opacity')).toBe('0.3')
     expect(properties.get('--score-card-header-tint')).toBe('0.4')
     expect(properties.get('--selection-color')).toBe('#00ff00')
@@ -120,15 +120,15 @@ describe('applyTheme', () => {
     // Widths by zoom (lines' and place names' sizes), the disputed borders' dash pattern and the halo's
     // sizes are for the globe, not the page, so aren't written.
     const written = {
-      // Four colour roles of four; the background's two, four kinds of text, a divider and hover.
-      palette: 4 * 4 + 2 + 4 + 1 + 1,
+      // Four colour roles and four statuses' colours, of four each; the background's two, three kinds of
+      // text, a divider and hover.
+      palette: 8 * 4 + 2 + 3 + 1 + 1,
       // A font family, and nine type styles of three.
       typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // Four statuses, each with a colour, a core of four, a glow of two, a cluster opacity and a score
-      // card's fade and glow of two.
-      status: 4 * 11,
+      // A small pin's core of four and glow of two, for each of four statuses.
+      pin: 4 * 6,
       // A surface, four kinds of line (their colours) and two halo colours.
       globe: 7,
       // Four kinds of place name, each with a colour, an outline (its colour, width and blur), a
@@ -136,16 +136,17 @@ describe('applyTheme', () => {
       placeNames: 4 * 9,
       // The sky's colour, three stars and two star sizes.
       sky: 1 + 3 + 2,
-      // A cluster's fill, three radii, three glow radii, outline width and glow opacity, and its
-      // count's font (of four) and size.
-      cluster: 9 + 5,
+      // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
+      // font (of four) and size, and its opacity for each of four statuses.
+      cluster: 9 + 5 + 4,
       // A trail's width and opacity, its glow's three and its venue's three.
       trail: 8,
       selection: 2,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, Disrupted fill and text, shadow, header's two, corner and five sizes.
-      scoreCard: 5 + 2 + 1 + 5,
+      // A score card's fill, text, shadow, header's two, corner and five sizes; for each of four statuses
+      // its fade and glow of two, and a Disrupted card's fill and text.
+      scoreCard: 3 + 2 + 1 + 5 + 4 * 3 + 2,
       // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two and nine sizes.
       gamePanel: 11 + 3 + 1 + 2 + 9,
       // A menu's corner and a menu item's.

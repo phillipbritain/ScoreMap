@@ -43,7 +43,11 @@ export function GamePanel({ game, onClose, ref }: GamePanelProps) {
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's status colour, as its score card is.
-  const statusStyle = { '--status-color': `var(--status-${statusKey(game.status)}-color)` } as CSSProperties
+  const key = statusKey(game.status)
+  const statusStyle = {
+    '--status-color': `var(--palette-${key}-main)`,
+    '--status-contrast-text': `var(--palette-${key}-contrast-text)`,
+  } as CSSProperties
 
   return (
     <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">

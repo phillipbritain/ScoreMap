@@ -8,7 +8,7 @@ import { paletteSteps, stepNames, type StepName } from '../theme/palette'
 export type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json }
 export type JsonObject = { readonly [key: string]: Json }
 
-/** A theme's JSON: its colours, palette, typography, spacing, shape, statuses and components. */
+/** A theme's JSON: its colours, palette, typography, spacing, shape and components. */
 export type ThemeJson = JsonObject
 
 /** Where a setting sits in a theme, key by key: ["components", "Trail", "glow", "width"]. */
@@ -148,8 +148,8 @@ export function componentName(key: string): string {
 }
 
 /**
- * The tuner's tabs: first the parts of the whole theme (the palette, the typography, spacing and shape,
- * and each status's look), then a tab for each component, named as it is. Other has whatever those
+ * The tuner's tabs: first the parts of the whole theme (the palette, the typography, spacing and
+ * shape), then a tab for each component, named as it is. Other has whatever those
  * don't, so every setting but the theme's colours themselves can be tuned; it's left out when there's
  * nothing in it.
  */
@@ -159,7 +159,6 @@ export function tunerTabs(json: ThemeJson): TunerTab[] {
     { name: 'Palette', kind: 'theme', paths: [['palette']] },
     { name: 'Type', kind: 'theme', paths: [['typography']] },
     { name: 'Shape', kind: 'theme', paths: [['spacing'], ['shape']] },
-    { name: 'Status', kind: 'theme', paths: [['status']] },
     ...components.map((key): TunerTab => ({ name: componentName(key), kind: 'component', paths: [['components', key]] })),
   ]
   const shown = tabs.flatMap((tab) => tab.paths)

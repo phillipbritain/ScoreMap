@@ -1,7 +1,7 @@
 /* Every colour, font, size, spacing, corner, line width, letter spacing, fade and shadow here comes
    from the theme, which is written to the page's root as custom properties, one per setting, named as
    MUI's CSS theme variables are (see theme/theme.ts' customProperties): --palette-text-primary,
-   --typography-body2-font-size, --spacing, --shape-border-width-thin, --status-live-color, and a
+   --typography-body2-font-size, --spacing, --shape-border-width-thin, --palette-live-main, and a
    component's own as --score-card-corner, --game-panel-shadow, --score-card-size-pointer and so on.
    Text takes its weight and size from the theme's type styles, every space is a number of its spacing
    unit (calc(3 * var(--spacing))), and corners are a component's own. Motion (durations, easings and
@@ -60,9 +60,9 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   status colour (--status-color, set on the panel). One size whatever the game, so it never jumps
-   from one game to the next: the score block, the details and the photo each have a fixed width,
-   and every line of text is clipped to its slot. */
+   status colour (--status-color, set on the panel, with --status-contrast-text for text on it). One
+   size whatever the game, so it never jumps from one game to the next: the score block, the details
+   and the photo each have a fixed width, and every line of text is clipped to its slot. */
 .game-panel {
   position: absolute;
   left: 50%;
@@ -173,7 +173,7 @@ body {
   padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
   overflow: hidden;
   background: var(--status-color);
-  color: var(--palette-text-on-status);
+  color: var(--status-contrast-text);
   font-family: var(--typography-font-family);
   font-size: var(--typography-overline-font-size);
   font-weight: var(--typography-overline-font-weight);
@@ -328,34 +328,35 @@ body {
   }
 }
 
-/* How each status looks comes from the theme (--status-live-color and so on): its colour, and how far
-   its score cards fade and how they glow. Score cards pick theirs by their status class. */
+/* How each status looks comes from the theme: its colour from the palette (--palette-live-main and so
+   on), and how far its score cards fade and how they glow from the score card's own
+   (--score-card-live-fade). Score cards pick theirs by their status class. */
 .score-card--live {
-  --status-card-color: var(--status-live-color);
-  --status-card-fade: var(--status-live-card-fade);
-  --status-card-glow-radius: var(--status-live-card-glow-radius);
-  --status-card-glow-opacity: var(--status-live-card-glow-opacity);
+  --status-card-color: var(--palette-live-main);
+  --status-card-fade: var(--score-card-live-fade);
+  --status-card-glow-radius: var(--score-card-live-glow-radius);
+  --status-card-glow-opacity: var(--score-card-live-glow-opacity);
 }
 
 .score-card--upcoming {
-  --status-card-color: var(--status-upcoming-color);
-  --status-card-fade: var(--status-upcoming-card-fade);
-  --status-card-glow-radius: var(--status-upcoming-card-glow-radius);
-  --status-card-glow-opacity: var(--status-upcoming-card-glow-opacity);
+  --status-card-color: var(--palette-upcoming-main);
+  --status-card-fade: var(--score-card-upcoming-fade);
+  --status-card-glow-radius: var(--score-card-upcoming-glow-radius);
+  --status-card-glow-opacity: var(--score-card-upcoming-glow-opacity);
 }
 
 .score-card--final {
-  --status-card-color: var(--status-final-color);
-  --status-card-fade: var(--status-final-card-fade);
-  --status-card-glow-radius: var(--status-final-card-glow-radius);
-  --status-card-glow-opacity: var(--status-final-card-glow-opacity);
+  --status-card-color: var(--palette-final-main);
+  --status-card-fade: var(--score-card-final-fade);
+  --status-card-glow-radius: var(--score-card-final-glow-radius);
+  --status-card-glow-opacity: var(--score-card-final-glow-opacity);
 }
 
 .score-card--disrupted {
-  --status-card-color: var(--status-disrupted-color);
-  --status-card-fade: var(--status-disrupted-card-fade);
-  --status-card-glow-radius: var(--status-disrupted-card-glow-radius);
-  --status-card-glow-opacity: var(--status-disrupted-card-glow-opacity);
+  --status-card-color: var(--palette-disrupted-main);
+  --status-card-fade: var(--score-card-disrupted-fade);
+  --status-card-glow-radius: var(--score-card-disrupted-glow-radius);
+  --status-card-glow-opacity: var(--score-card-disrupted-glow-opacity);
 }
 
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
@@ -564,7 +565,7 @@ body {
   }
   40% {
     filter: brightness(0.85) saturate(0.5);
-    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--status-final-color) 60%, transparent);
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--palette-final-main) 60%, transparent);
   }
 }
 

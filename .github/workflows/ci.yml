@@ -37,18 +37,9 @@ jobs:
       - run: npm run build
       - run: npm test
 
-      # Chromium for the browser tests, cached by Playwright's version so it's only downloaded when that changes.
-      - id: playwright
-        run: echo "version=$(npm ls playwright --json | jq -r '.dependencies.playwright.version')" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v6
-        id: chromium
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-      - if: steps.chromium.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+      # Chromium for the browser tests. Not cached: CI only runs on pull requests, and GitHub
+      # doesn't share one pull request's cache with another, so a cache would never be hit.
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
 
   server:

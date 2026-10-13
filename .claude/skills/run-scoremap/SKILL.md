@@ -7,7 +7,7 @@ description: Start, stop and drive ScoreMap locally (server, browser app, a brow
 
 ## Start and stop
 
-ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite together, from one clone or git worktree. Setup and the basic commands (`aspire start`, `wait web`, `describe`, `stop`) are in the README's "Run locally"; wait for `web` before using a run. Runs from different clones and worktrees go side by side, each with its own server, so its own scenario and speed. Run the commands with the PowerShell tool, from the repo root (or the worktree's root). For runs side by side:
+ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite together, from one clone or git worktree. Setup and the basic commands (`aspire start`, `aspire wait web`, `aspire describe`, `aspire stop`) are in the README's "Run locally"; wait for `web` before using a run. Runs from different clones and worktrees go side by side, each with its own server, so its own scenario and speed. Run the commands with the PowerShell tool, from the repo root (or the worktree's root). For runs side by side:
 
 ```powershell
 aspire start --isolated   # any further run, from another worktree: random ports

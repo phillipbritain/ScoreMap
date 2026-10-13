@@ -99,11 +99,15 @@ export function showsFasterIcon(speed: SpeedName): boolean {
   return mediaKeys[speed].fasterIcon
 }
 
-/** What the clock reads at the real time `now` (ms since the epoch): run forward from the server's anchor at the speed. */
+/**
+ * What the clock reads at the real time `now` (ms since the epoch): run forward from the server's
+ * anchor at the speed. Never before the anchor's reading, as `now` can be a little older than the
+ * anchor (the last tick, before a reset's listing came), which would show 11:59:59 for 12:00:00.
+ */
 export function clockReading(listing: ScenarioListing, now: number): Date {
   const times = listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
   const { at, reads } = listing.clock
-  return new Date(Date.parse(reads) + (now - Date.parse(at)) * times)
+  return new Date(Date.parse(reads) + Math.max(0, now - Date.parse(at)) * times)
 }
 
 /** The parts of a keydown event that decide whether it hides or shows the scenario controls. */

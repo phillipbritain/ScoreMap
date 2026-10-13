@@ -109,6 +109,10 @@ describe('the clock', () => {
     expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:01:20Z'))
   })
 
+  it('reads no earlier than the server said, for a time just before its anchor', () => {
+    expect(clockReading(local, at - 50)).toEqual(new Date(clock.reads))
+  })
+
   it('stands still while paused', () => {
     expect(clockReading({ ...local, speed: 'Paused' }, at + 10_000)).toEqual(new Date(clock.reads))
   })

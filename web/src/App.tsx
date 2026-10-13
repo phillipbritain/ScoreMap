@@ -11,6 +11,7 @@ import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
+import { PrototypeSwitcher } from './PrototypeSwitcher'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
@@ -67,6 +68,7 @@ export default function App({ theme }: { theme: Theme }) {
 
   return (
     <div className="app">
+      <PrototypeSwitcher />
       <div className="globe-area">
         <Globe
           theme={theme}

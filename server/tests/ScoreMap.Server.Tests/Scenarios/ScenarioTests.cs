@@ -46,7 +46,7 @@ public class ScenarioTests
         Assert.Equal("Arrowhead Stadium", game.Venue.Name);
         Assert.Equal("Kansas City", game.Venue.City);
         Assert.Equal(2, game.Period);
-        Assert.Equal(server.Clock.GetUtcNow().AddMinutes(-40), game.StartTime);
+        Assert.Equal(ScenarioClock.StartsAt.AddMinutes(-40), game.StartTime);
         Assert.Equal(0, server.Feed.Fetches(Nfl));
     }
 
@@ -70,7 +70,7 @@ public class ScenarioTests
               ]
             }
             """);
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         await using var client = await server.ConnectClientAsync();
         Assert.Empty(await client.NextSnapshotAsync());
 

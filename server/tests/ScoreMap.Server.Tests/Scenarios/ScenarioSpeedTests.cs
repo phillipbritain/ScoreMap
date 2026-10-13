@@ -50,7 +50,8 @@ public class ScenarioSpeedTests
         // renaming one here means renaming it there.
         Assert.Equal([new("Paused", 0), new("Normal", 1), new("Fast", 2), new("Faster", 8)], listing.Speeds);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.At);
-        Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.Reads);
+        // Noon Eastern on 4 August 2026, whenever it starts.
+        Assert.Equal(new DateTimeOffset(2026, 8, 4, 16, 0, 0, TimeSpan.Zero), listing.Clock.Reads);
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public class ScenarioSpeedTests
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", ScoresAtOneMinute);
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         using var http = server.CreateClient();
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
@@ -110,7 +111,7 @@ public class ScenarioSpeedTests
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", ScoresAtOneMinute);
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         using var http = server.CreateClient();
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
@@ -138,7 +139,7 @@ public class ScenarioSpeedTests
     }
 
     [Fact]
-    public async Task Switching_scenarios_or_picking_the_running_one_again_keeps_the_speed_and_starts_the_clock_at_the_real_time()
+    public async Task Switching_scenarios_or_picking_the_running_one_again_keeps_the_speed_and_starts_the_clock_at_the_scenario_start()
     {
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
         server.WriteScenario("test", ScoresAtOneMinute);
@@ -153,7 +154,7 @@ public class ScenarioSpeedTests
             var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
             Assert.NotNull(listing);
             Assert.Equal("Faster", listing.Speed);
-            Assert.Equal((server.Clock.GetUtcNow(), server.Clock.GetUtcNow()), (listing.Clock.At, listing.Clock.Reads));
+            Assert.Equal((server.Clock.GetUtcNow(), ScenarioClock.StartsAt), (listing.Clock.At, listing.Clock.Reads));
         }
     }
 
@@ -163,7 +164,7 @@ public class ScenarioSpeedTests
         await using var server = new ScoreMapServer { Scenario = "other" };
         server.WriteScenario("test", ScoresAtOneMinute);
         server.WriteScenario("other", ScoresAtOneMinute.Replace("chiefs-bills", "other-game"));
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         using var http = server.CreateClient();
 
         var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "paused" });
@@ -218,7 +219,7 @@ public class ScenarioSpeedTests
               ]
             }
             """);
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         await using var client = await server.ConnectClientAsync();
         Assert.Empty(await client.NextSnapshotAsync());
 
@@ -237,7 +238,7 @@ public class ScenarioSpeedTests
     {
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Fast" };
         server.WriteScenario("test", ScoresAtOneMinute);
-        var startedAt = server.Clock.GetUtcNow();
+        var startedAt = ScenarioClock.StartsAt;
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 

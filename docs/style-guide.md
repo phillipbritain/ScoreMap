@@ -336,6 +336,8 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
+To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting, by what it changes on screen (the globe, place names, pins, score cards, trails, the scales and the rest of the page). A colour job picks a step from a grid of the palette's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the palette; numbers have sliders, and scale steps and globe fonts a list. A change shows at once on the page, and on the globe a moment later, when the globe is made again where the camera was. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
+
 1. **Palette first.** Choose the base colours and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Point every colour job at a step**, using the tables above. Keep a colour given directly for a true one-off.
 3. **Set the scales, corners, sizes, fonts and each status's look.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through each status's opacities, core and colours.

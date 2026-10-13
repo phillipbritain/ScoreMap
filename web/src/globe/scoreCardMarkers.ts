@@ -54,7 +54,7 @@ export class ScoreCardMarkers {
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
-  private readonly theme: Theme
+  private readonly theme: () => Theme
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
   /** Games with no room for a card, as last laid out. */
@@ -75,11 +75,11 @@ export class ScoreCardMarkers {
   private gaveUp = false
 
   /**
-   * `theme` gives how far a card's pointer reaches below it to its venue and the colour of pulses
-   * over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
+   * `theme` gives the theme as it is now, for how far a card's pointer reaches below it to its venue
+   * and the colour of pulses over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
    * a game's id when its card is selected.
    */
-  constructor(map: MapLibreMap, theme: Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
+  constructor(map: MapLibreMap, theme: () => Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
     this.map = map
     this.theme = theme
     this.placeNames = placeNames
@@ -91,6 +91,20 @@ export class ScoreCardMarkers {
   /** Highlights the selected game's card, if it has one. */
   setSelected(gameId: string | null): void {
     this.selectedGameId = gameId
+    this.settleAgain()
+    this.sync()
+  }
+
+  /**
+   * After a change of theme, with the page's CSS already in it: each card measured afresh, as its
+   * text, spacing and sizes may have changed, and laid out again.
+   */
+  restyle(): void {
+    for (const placed of this.placed.values()) {
+      const cardElement = placed.marker.getElement().firstElementChild as HTMLElement
+      placed.width = cardElement.offsetWidth
+      placed.height = cardElement.offsetHeight
+    }
     this.settleAgain()
     this.sync()
   }
@@ -261,7 +275,7 @@ export class ScoreCardMarkers {
     const scene = {
       width: canvas.clientWidth,
       height: canvas.clientHeight,
-      pointer: this.theme.sizes.card.pointer,
+      pointer: this.theme().sizes.card.pointer,
       names: this.placeNames.nameBoxes(),
     }
     traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
@@ -324,7 +338,7 @@ export class ScoreCardMarkers {
   animate(gameId: string, animation: PinAnimation): boolean {
     const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
     if (cardCluster) {
-      pulse(this.map, this.theme, cardCluster.lngLat, animation, 'cluster')
+      pulse(this.map, this.theme(), cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined

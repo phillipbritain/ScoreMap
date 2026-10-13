@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { SettingsMenu } from './settings/SettingsMenu'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
@@ -16,6 +16,12 @@ import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
 import type { Theme } from './theme/theme'
+import { globeLook, type ThemeJson } from './themeTuner/themeDraft'
+
+// The theme tuner, on local runs only: left out of a build.
+const ThemeTuner = import.meta.env.DEV
+  ? lazy(() => import('./themeTuner/ThemeTuner').then(({ ThemeTuner }) => ({ default: ThemeTuner })))
+  : null
 
 const store = settingsStore(() => window.localStorage)
 
@@ -27,8 +33,22 @@ function openingCamera() {
   })
 }
 
-/** The app, in a theme: the page's CSS reads it from the page's root (see applyTheme), the globe from here. */
-export default function App({ theme }: { theme: Theme }) {
+interface AppProps {
+  /** The theme to start in. */
+  theme: Theme
+  /** On a local run, where the theme tuner starts: the built-in theme's JSON, and the draft to start from. */
+  tuning?: { builtIn: ThemeJson; initial: ThemeJson }
+}
+
+/**
+ * The app, in a theme: the page's CSS reads it from the page's root (see applyTheme), the globe from
+ * here. On a local run the theme tuner can change it as it runs.
+ */
+export default function App({ theme: startTheme, tuning }: AppProps) {
+  const [theme, setTheme] = useState(startTheme)
+  // The globe reads its theme only as it's made, so it's made again, where the camera last settled,
+  // when the theme tuner changes what it reads; a change only the page reads leaves it be.
+  const globeKey = useMemo(() => globeLook(theme), [theme])
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
@@ -37,7 +57,9 @@ export default function App({ theme }: { theme: Theme }) {
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   const panel = useRef<HTMLElement>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
-  const [camera] = useState(openingCamera)
+  // Read again when the globe is made again, from where the camera last settled.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- globeKey is when to read it again
+  const camera = useMemo(() => openingCamera(), [globeKey])
   const leagues = useLeagues()
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls()
@@ -69,6 +91,7 @@ export default function App({ theme }: { theme: Theme }) {
     <div className="app">
       <div className="globe-area">
         <Globe
+          key={globeKey}
           theme={theme}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
@@ -106,6 +129,11 @@ export default function App({ theme }: { theme: Theme }) {
             settings menu, so an open settings menu lies over it on a phone. */}
         {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
+        {ThemeTuner && tuning && (
+          <Suspense>
+            <ThemeTuner builtIn={tuning.builtIn} initial={tuning.initial} onTheme={setTheme} />
+          </Suspense>
+        )}
       </div>
     </div>
   )

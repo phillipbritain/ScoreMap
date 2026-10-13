@@ -49,7 +49,7 @@ Pick the scenario that brings out what you're checking, and you know what should
 | `edge-cases` | an unfindable venue pinned at its city (Reykjavík), a 2–2 tie (Munich), long team names (Chicago), missing logos (Edmonton), three-digit scores (San Francisco); nothing changes, so they stay that way | layout at the extremes |
 | `slow-initial-load` | `worldwide`'s games, but each browser that connects waits 15 s (real time, at any speed) for its first games. Picking it in the pill reloads that tab so the slow load starts at once; press Reset, or reload, to watch it again. Other tabs carry on until reloaded | the loading screen on a slow first load: the spinner over an empty globe, "Can't reach ScoreMap" after 10 s, then pins and score cards coming in under the dim before it fades. To tune the loading screen's look, hold it up from the theme tuner's Loading screen tab instead |
 
-Everything happens on the scenario clock, from when the scenario starts or is switched to, so at Faster (8×) a Final or Disrupted game drops out 7.5 s after it finishes or is disrupted. Switching to the running scenario starts it afresh; switching keeps the speed.
+Everything happens on the scenario clock, which reads 12:00 EST on 1 January of the current year whenever a scenario starts, is switched to or is reset (real games show the real time), so an event comes at the same reading every time: note it on the clock, press Reset, and watch for it again. At Faster (8×) a Final or Disrupted game drops out 7.5 s after it finishes or is disrupted. Switching to the running scenario starts it afresh; switching keeps the speed.
 
 To switch while running (each run's scenario and speed are its own):
 

@@ -8,10 +8,10 @@ namespace ScoreMap.Server.Scenarios;
 /// <summary>
 /// The game feed provider when ScoreMap runs locally (ADR-0009): answers from the running scenario,
 /// or from real games, and can be switched between them while the server runs. One source at a time
-/// serves every browser. Picking a scenario starts it afresh, with the scenario clock set to the real
-/// time and running at the speed it had; the speed can be changed while a scenario runs. Make switches
-/// and changes of speed through <see cref="Poller.StartAfreshAsync"/>, between the poller's fetches, so
-/// none reads the old scenario on the new clock.
+/// serves every browser. Picking a scenario starts it afresh, with the scenario clock set to its start
+/// (12:00 EST on 1 January) and running at the speed it had; the speed can be changed while a
+/// scenario runs. Make switches and changes of speed through <see cref="Poller.StartAfreshAsync"/>,
+/// between the poller's fetches, so none reads the old scenario on the new clock.
 /// </summary>
 public sealed class ScenarioSwitcher : IGameFeedProvider
 {

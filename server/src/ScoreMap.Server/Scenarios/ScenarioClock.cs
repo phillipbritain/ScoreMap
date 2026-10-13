@@ -1,10 +1,11 @@
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// The scenario clock (ADR-0009): the time a running scenario's games are on. It reads the real time
-/// when the scenario starts, then runs at <see cref="Speed"/>. A change of speed carries on from the
-/// clock's reading. Only <see cref="GetUtcNow"/> runs at the speed: timers and
-/// timestamps stay on the real clock, as nothing should wait on scenario time.
+/// The scenario clock (ADR-0009): the time a running scenario's games are on. It reads
+/// <see cref="StartFor"/> (12:00 EST on 1 January this year) when the scenario starts, then runs at
+/// <see cref="Speed"/>, so an event in a scenario comes at the same reading each time it starts. A
+/// change of speed carries on from the clock's reading. Only <see cref="GetUtcNow"/> runs at the
+/// speed: timers and timestamps stay on the real clock, as nothing should wait on scenario time.
 /// </summary>
 public sealed class ScenarioClock : TimeProvider
 {
@@ -17,7 +18,7 @@ public sealed class ScenarioClock : TimeProvider
     {
         _realTime = realTime;
         _speed = speed;
-        _anchor = ClockAnchor.RealTime(realTime);
+        _anchor = Start(realTime);
     }
 
     /// <summary>How fast the clock runs.</summary>
@@ -43,14 +44,14 @@ public sealed class ScenarioClock : TimeProvider
     public override DateTimeOffset GetUtcNow() => Anchor.Reads;
 
     /// <summary>
-    /// Sets the clock to the real time, for a scenario starting, running at <paramref name="speed"/> if
-    /// given, else keeping the speed.
+    /// Sets the clock to <see cref="StartFor"/>, for a scenario starting, running at
+    /// <paramref name="speed"/> if given, else keeping the speed.
     /// </summary>
     public void Restart(Speed? speed = null)
     {
         lock (_lock)
         {
-            _anchor = ClockAnchor.RealTime(_realTime);
+            _anchor = Start(_realTime);
             _speed = speed ?? _speed;
         }
     }
@@ -63,6 +64,18 @@ public sealed class ScenarioClock : TimeProvider
             _anchor = AnchorNow();
             _speed = speed;
         }
+    }
+
+    /// <summary>
+    /// What the clock reads as a scenario starts at the real time <paramref name="realNow"/>: 12:00 EST
+    /// on 1 January of its year, so a scenario plays out at the same readings every time.
+    /// </summary>
+    public static DateTimeOffset StartFor(DateTimeOffset realNow) => new(realNow.Year, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
+
+    private static ClockAnchor Start(TimeProvider realTime)
+    {
+        var now = realTime.GetUtcNow();
+        return new ClockAnchor(now, StartFor(now));
     }
 
     private ClockAnchor AnchorNow()

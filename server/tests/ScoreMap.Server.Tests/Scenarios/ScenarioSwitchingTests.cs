@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 using static ScoreMap.Server.Tests.Support.TestGames;
@@ -116,7 +117,7 @@ public class ScenarioSwitchingTests
         Assert.Equivalent(
             new[] { (GameChangeKind.Removed, "real-game"), (GameChangeKind.Added, "a") },
             changes.Select(c => (c.Kind, c.Game.Id)));
-        Assert.Equal(server.Clock.GetUtcNow().AddMinutes(-40), changes.Single(c => c.Kind == GameChangeKind.Added).Game.StartTime);
+        Assert.Equal(ScenarioClock.StartsAt.AddMinutes(-40), changes.Single(c => c.Kind == GameChangeKind.Added).Game.StartTime);
     }
 
     [Fact]

@@ -7,15 +7,11 @@ description: Start, stop and drive ScoreMap locally (server, browser app, a brow
 
 ## Start and stop
 
-ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite together, from one clone or git worktree. Runs from different clones and worktrees go side by side, each with its own server, so its own scenario and speed. Run these with the PowerShell tool, from the repo root (or the worktree's root):
+ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite together, from one clone or git worktree. Setup and the basic commands (`aspire start`, `aspire wait web`, `aspire describe`, `aspire stop`) are in the README's "Run locally"; wait for `web` before using a run. Runs from different clones and worktrees go side by side, each with its own server, so its own scenario and speed. Run the commands with the PowerShell tool, from the repo root (or the worktree's root). For runs side by side:
 
 ```powershell
-aspire start              # the first run on the machine: in the background, returns once Aspire is up
 aspire start --isolated   # any further run, from another worktree: random ports
-aspire wait web           # waits until the browser app answers; do this before using it
-aspire describe           # this clone's run: each resource's state, health and URLs
 aspire ps                 # every run on the machine: its AppHost path (so its clone), PIDs, dashboard URL
-aspire stop               # stops this clone's run
 aspire stop --all         # stops every run on the machine
 ```
 
@@ -31,7 +27,7 @@ $server = ($run | ? displayName -eq server).urls | ? name -eq http | % url
 
 **Logs** are in the run's dashboard (`aspire ps` gives its URL, with its login token), or `aspire logs server` and `aspire logs web` (`-f` to follow).
 
-**First time on a machine:** install the Aspire CLI with its install script (`irm https://aspire.dev/install.ps1 | iex` in PowerShell; a new shell then finds `aspire`). If `aspire` isn't found in Git Bash but `aspire.cmd` is, it was installed as a dotnet tool: use `aspire.cmd` there, or the PowerShell tool and trust the development certificate once with `aspire certs trust` (a Windows prompt the user must accept: ask them to run `! aspire certs trust`). Untrusted, the server shows Unhealthy and `web` waits for it forever.
+**First time on a machine:** set up as the README says. Trusting the development certificate is a Windows prompt the user must accept: ask them to run `! aspire certs trust`. Untrusted, the server shows Unhealthy and `web` waits for it forever.
 
 **Stop the run before `dotnet test` or `dotnet build`** in the same clone once you've changed the server: the run holds `ScoreMap.Server.exe` in the clone's `bin\Debug`, so the build fails with MSB3027 ("The file is locked by: ScoreMap.Server"). Unchanged, it builds and tests fine alongside. `aspire start` afterwards picks up the change.
 
@@ -57,7 +53,7 @@ Everything happens on the scenario clock, from when the scenario starts or is sw
 To switch while running (each run's scenario and speed are its own):
 
 - **The controls** at the bottom left: the scenario pill ("Scenario: <name> ▾") lists the scenarios and "Real games", and the **media keys** set the speed: Play is Normal, Pause pauses, and Fast-forward goes to Fast and, pressed again, flips between Fast and Faster. The lit key is the speed (Fast-forward grows a third triangle at Faster), and there's no label. Picking a scenario or pressing a key changes every open tab. A speed change carries on from where the scenario is. The scenario clock shows beside them, or above them where the row is too narrow. Where the speed can't be controlled (real games, and scenarios whose games stand still: `edge-cases` and `empty`), the keys and the clock are hidden, leaving just the pill. `Shift+S` hides and shows the pill, the keys and the clock, for clean screenshots.
-- **From a script**, against the run's server URL (or its web URL, which passes `/api` on): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
+- **From a script**, against the run's server URL (or its web URL): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
@@ -86,4 +82,4 @@ On real games, few or no pins usually means few games right now: pins show from 
 
 ## Saved data
 
-The server saves its lookups in `server/src/ScoreMap.Server/data/` (git-ignored): `venue-locations.json` and `venue-photos.json`. Each clone or worktree has its own. To look venues up afresh, `aspire stop`, delete the file, and `aspire start` again.
+To look venues up afresh, `aspire stop`, delete the saved lookup (which file: `docs/configuration.md`, "Venues"), and `aspire start` again.

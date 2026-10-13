@@ -117,7 +117,7 @@ public class ScenarioSwitchingTests
         Assert.Equivalent(
             new[] { (GameChangeKind.Removed, "real-game"), (GameChangeKind.Added, "a") },
             changes.Select(c => (c.Kind, c.Game.Id)));
-        Assert.Equal(ScenarioClock.StartFor(server.Clock.GetUtcNow()).AddMinutes(-40), changes.Single(c => c.Kind == GameChangeKind.Added).Game.StartTime);
+        Assert.Equal(ScenarioClock.StartsAt.AddMinutes(-40), changes.Single(c => c.Kind == GameChangeKind.Added).Game.StartTime);
     }
 
     [Fact]

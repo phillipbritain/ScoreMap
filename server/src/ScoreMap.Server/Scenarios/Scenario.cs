@@ -6,9 +6,13 @@ namespace ScoreMap.Server.Scenarios;
 /// A named set of made-up games at real venues, shown in place of real games when ScoreMap runs
 /// locally (ADR-0009). Read from a scenario file by <see cref="ScenarioReader"/>, checked against
 /// the configured leagues. With a <see cref="Timeline"/>, its games change as the script says; with
-/// <see cref="Play"/>, they play like real games, at random (see <see cref="ScenarioPlay"/>).
+/// <see cref="Play"/>, they play like real games, at random (see <see cref="ScenarioPlay"/>). With a
+/// <see cref="SlowStart"/>, the server holds back each browser's first games that long, in real time,
+/// so the loading screen can be watched (see <see cref="Hubs.GamesHub"/>).
 /// </summary>
-public sealed record Scenario(string Name, IReadOnlyList<ScenarioGame> Games, ScenarioTimeline? Timeline = null, PlaySettings? Play = null)
+public sealed record Scenario(
+    string Name, IReadOnlyList<ScenarioGame> Games, ScenarioTimeline? Timeline = null, PlaySettings? Play = null,
+    TimeSpan SlowStart = default)
 {
     /// <summary>Whether its games change over time, with play or a timeline, rather than standing still.</summary>
     public bool ChangesOverTime => Play is not null || Timeline is not null;

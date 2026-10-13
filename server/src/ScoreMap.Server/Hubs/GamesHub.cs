@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.SignalR;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Scenarios;
 
 namespace ScoreMap.Server.Hubs;
 
 /// <summary>
 /// The SignalR hub browsers connect to. Sends a snapshot of current games on connect
 /// (including every automatic reconnect), and tells the poller who is connected.
-/// Change events are pushed to it by the <see cref="Poller"/>.
+/// Change events are pushed to it by the <see cref="Poller"/>. Run locally on a scenario with a slow
+/// start, it holds back the snapshot that long first, so the loading screen can be watched (ADR-0009).
 /// </summary>
-public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hub
+public sealed class GamesHub(Poller poller, BrowserConnections connections, IServiceProvider services, TimeProvider realTime) : Hub
 {
     public const string Path = "/hubs/games";
 
@@ -29,6 +31,8 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hu
     {
         try
         {
+            if (services.GetService<ScenarioSwitcher>()?.SlowStart is { } slowStart && slowStart > TimeSpan.Zero)
+                await Task.Delay(slowStart, realTime, Context.ConnectionAborted);
             await poller.SendSnapshotAsync(
                 Context.ConnectionId,
                 games => Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted),
@@ -36,7 +40,7 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections) : Hu
         }
         catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
         {
-            // The browser left (closed or reloaded the page) before its snapshot was ready. Nothing
+            // The browser left (closed or reloaded the page) before its snapshot was ready or sent. Nothing
             // went wrong, so return quietly rather than let SignalR log it as an error.
             return;
         }

@@ -67,7 +67,7 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 ]
 
 /** The kinds of place the globe names, each with its own look in the theme. */
-type PlaceKind = keyof Theme['placeNames']
+type PlaceKind = keyof Theme['components']['PlaceNames']
 
 /**
  * States and countries in capitals; city names as they are. Their colours, outlines, fonts, sizes and
@@ -76,7 +76,7 @@ type PlaceKind = keyof Theme['placeNames']
 const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
 
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
-const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.placeNames[kind].size).flat()
+const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.components.PlaceNames[kind].size).flat()
 
 function placeKind(layerId: string): PlaceKind {
   if (layerId === 'label_city_capital') return 'capital'
@@ -88,7 +88,7 @@ function placeKind(layerId: string): PlaceKind {
 /** A place name in the theme's look for its kind of place, in capitals or not (see capitals). */
 function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
   const kind = placeKind(layer.id)
-  const look = theme.placeNames[kind]
+  const look = theme.components.PlaceNames[kind]
   const named = {
     ...layer,
     layout: {
@@ -216,12 +216,12 @@ export function cityNameLook(zoom: number, capital: boolean, theme: Theme): City
   const kind = capital ? 'capital' : 'city'
   const size = atZoom(sizeStops(kind, theme), zoom)
   return {
-    font: cssFont(theme.placeNames[kind].font, size),
+    font: cssFont(theme.components.PlaceNames[kind].font, size),
     size,
     offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
     maxWidth: cityNameMaxWidth * size,
-    letterSpacing: theme.placeNames[kind].letterSpacing,
-    clearance: theme.sizes.card.nameClearance,
+    letterSpacing: theme.components.PlaceNames[kind].letterSpacing,
+    clearance: theme.components.ScoreCard.size.nameClearance,
   }
 }
 /** A globe font as a CSS font at this size, for measuring text in it on the page. */

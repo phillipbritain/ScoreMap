@@ -275,7 +275,7 @@ export class ScoreCardMarkers {
     const scene = {
       width: canvas.clientWidth,
       height: canvas.clientHeight,
-      pointer: this.theme().sizes.card.pointer,
+      pointer: this.theme().components.ScoreCard.size.pointer,
       names: this.placeNames.nameBoxes(),
     }
     traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })

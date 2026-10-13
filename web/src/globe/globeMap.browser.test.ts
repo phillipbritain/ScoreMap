@@ -230,7 +230,7 @@ describe('score cards', () => {
     // Far enough apart that none is moved aside.
     globe.show([game('L'), game('F', { longitude: 6, status: 'Final' }), game('D', { longitude: -6, status: 'Disrupted' })])
     const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
-    const { card: look, status } = builtInTheme
+    const { components: { ScoreCard: look }, status } = builtInTheme
 
     for (const shown of [live, final, disrupted]) {
       expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
@@ -965,10 +965,10 @@ describe('glow', () => {
 })
 
 describe('changing theme', () => {
-  /** The built-in theme, with these changes to its JSON's settings. */
-  function themeWith(change: (settings: Record<string, any>) => void): Theme {
+  /** The built-in theme, with these changes to its JSON. */
+  function themeWith(change: (json: Record<string, any>) => void): Theme {
     const json = structuredClone(builtInJson) as Record<string, any>
-    change(json.settings)
+    change(json)
     const result = resolveTheme(json)
     if (!result.ok) throw new Error(result.problems.join('\n'))
     return result.theme
@@ -991,7 +991,7 @@ describe('changing theme', () => {
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
-    globe.setTheme(themeWith((settings) => ((settings.trail.width = 3), (settings.status.live.core.color = '#ff0000'))))
+    globe.setTheme(themeWith((json) => ((json.components.Trail.width = 3), (json.status.live.core.color = '#ff0000'))))
 
     expect(map.getPaintProperty('trails', 'line-width')).toBe(3)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
@@ -1004,7 +1004,7 @@ describe('changing theme', () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const glow = container.querySelector<HTMLElement>('.globe-glow')!
 
-    globe.setTheme(themeWith((settings) => (settings.globe.surface = '#ff0000')))
+    globe.setTheme(themeWith((json) => (json.components.Globe.surface = '#ff0000')))
 
     expect(channels(getComputedStyle(glow).backgroundColor).slice(0, 3)).toEqual([255, 0, 0])
   })
@@ -1016,7 +1016,7 @@ describe('changing theme', () => {
     globe.show([a, b])
     await pinsDrawn(map, smallPinLayer, a, b)
 
-    globe.setTheme(themeWith((settings) => (settings.status.live.glow.radius = 60)))
+    globe.setTheme(themeWith((json) => (json.status.live.glow.radius = 60)))
 
     await pinsDrawn(map, pinClusterLayer, a, b)
   })
@@ -1030,7 +1030,7 @@ describe('changing theme', () => {
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     expect(container.querySelector('[data-moved]')).toBeNull()
 
-    const larger = themeWith((settings) => (settings.sizes.card.minWidth = 200))
+    const larger = themeWith((json) => (json.components.ScoreCard.size.minWidth = 200))
     // As the app does it: the page's CSS first, then the globe (see useTheme).
     applyTheme(document.documentElement, larger)
     globe.setTheme(larger)

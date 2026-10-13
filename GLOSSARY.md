@@ -65,20 +65,24 @@ _Avoid_: Loaded, settled, done
 ### Look
 
 **Theme**:
-The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded: a palette and the settings that use it. ScoreMap has one, built in.
+The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded, shaped as a Material UI theme is: its colours, a palette, typography, spacing and shape, each status's look, and each part's own look under its components. ScoreMap has one, built in.
 _Avoid_: Skin, style (the globe's map style is MapLibre's), card style
 
-**Palette**:
-A theme's named base colours, each worked out into steps from light (100) to dark (900), its base colour at 500. A theme's colour jobs, such as the globe's surface or a city's name, each name a step, such as `navy.700`, or give a colour directly.
+**Theme colours**:
+A theme's named base colours (`colors`), each worked out into steps from light (100) to dark (900), its base colour at 500, such as `navy.700`.
 _Avoid_: Colour scheme, swatches, tokens
 
-**Colour job**:
-What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
-_Avoid_: Token, role, semantic colour
+**Palette**:
+What a theme's main colours are for, as MUI's palette has them: primary, secondary, error and warning (each a main shade, a lighter and a darker one, and the text on it), the background, text, the divider and hover. Each names a step of the theme colours.
+_Avoid_: Colour scheme, tokens
 
-**Scale**:
-A theme's few named sizes, from small to large, that every size of one kind is a step of: text sizes, spacing, corner radii and line widths each have one. A theme sets how big each step is.
-_Avoid_: Token, ramp, size table
+**Colour job**:
+What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. It names a step of the theme colours, such as `navy.700`, or one of the palette's colours, such as `primary.dark`, or gives a colour directly. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
+_Avoid_: Token, semantic colour
+
+**Type style**:
+One of a theme's kinds of text, named as MUI's typography variants are (`body2`, `button`, `caption`…): a weight, a size and a letter spacing, in the theme's one font family. Each kind of text on the page is one, and text on the globe takes one's size.
+_Avoid_: Variant, text size, font role
 
 ### Game status
 

@@ -1,179 +1,176 @@
 {
-  "palette": {
+  "colors": {
     "gold": { "base": "#d4ac63" },
     "red": { "base": "#cd2435" },
     "orange": { "base": "#e56335" },
     "navy": { "base": "#2b4d7d" },
     "offWhite": { "base": "#f4f5f7" }
   },
-  "settings": {
-    "textSizes": { "xs": 11, "s": 12, "m": 14, "l": 16, "xl": 20 },
-    "spacing": { "2xs": 2, "xs": 4, "s": 6, "m": 8, "l": 12, "xl": 16, "2xl": 24, "3xl": 32 },
-    "radii": { "xs": 4, "s": 6, "m": 8, "l": 12, "pill": 999 },
-    "strokes": { "thin": 1, "medium": 2, "thick": 3 },
-    "letterSpacing": { "label": 0.14, "cardHeader": 0.06 },
-    "globe": {
-      "surface": "navy.500",
-      "coastlines": { "color": "navy.300", "width": { "2": 0.6, "8": 1.2 } },
-      "countryBorders": { "color": "navy.300", "width": { "2": 0.6, "8": 1.4 } },
+  "palette": {
+    "primary": { "main": "navy.500", "light": "navy.300", "dark": "navy.700", "contrastText": "offWhite.500" },
+    "secondary": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
+    "error": { "main": "red.500", "light": "red.300", "dark": "red.700", "contrastText": "offWhite.500" },
+    "warning": { "main": "orange.500", "light": "orange.300", "dark": "orange.700", "contrastText": "navy.800" },
+    "background": { "default": "navy.900", "paper": "navy.800" },
+    "text": { "primary": "offWhite.500", "secondary": "offWhite.600", "link": "offWhite.500", "onStatus": "navy.800" },
+    "divider": "navy.600",
+    "action": { "hover": "navy.600" }
+  },
+  "typography": {
+    "fontFamily": "'Open Sans Variable', 'Open Sans', sans-serif",
+    "h6": { "fontWeight": 700, "fontSize": 20, "letterSpacing": 0 },
+    "subtitle1": { "fontWeight": 700, "fontSize": 16, "letterSpacing": 0 },
+    "subtitle2": { "fontWeight": 600, "fontSize": 12, "letterSpacing": 0 },
+    "body1": { "fontWeight": 400, "fontSize": 16, "letterSpacing": 0 },
+    "body2": { "fontWeight": 400, "fontSize": 14, "letterSpacing": 0 },
+    "button": { "fontWeight": 600, "fontSize": 14, "letterSpacing": 0 },
+    "caption": { "fontWeight": 400, "fontSize": 12, "letterSpacing": 0 },
+    "overline": { "fontWeight": 700, "fontSize": 12, "letterSpacing": 0.14 },
+    "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 }
+  },
+  "spacing": 4,
+  "shape": { "borderRadius": 4, "borderWidth": { "thin": 1, "medium": 2, "thick": 3 } },
+  "status": {
+    "live": {
+      "color": "secondary.main",
+      "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
+      "glow": { "radius": 15, "opacity": 0.8 },
+      "clusterOpacity": 1,
+      "card": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } }
+    },
+    "upcoming": {
+      "color": "secondary.main",
+      "core": { "color": "secondary.main", "radius": 3, "opacity": 0.9, "ring": 0 },
+      "glow": { "radius": 9, "opacity": 0.4 },
+      "clusterOpacity": 0.9,
+      "card": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } }
+    },
+    "final": {
+      "color": "secondary.main",
+      "core": { "color": "secondary.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
+      "glow": { "radius": 0, "opacity": 0 },
+      "clusterOpacity": 0.55,
+      "card": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
+    },
+    "disrupted": {
+      "color": "offWhite.700",
+      "core": { "color": "offWhite.700", "radius": 2.5, "opacity": 0.7, "ring": 0 },
+      "glow": { "radius": 0, "opacity": 0 },
+      "clusterOpacity": 0.6,
+      "card": { "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
+    }
+  },
+  "components": {
+    "Globe": {
+      "surface": "primary.main",
+      "coastlines": { "color": "primary.light", "width": { "2": 0.6, "8": 1.2 } },
+      "countryBorders": { "color": "primary.light", "width": { "2": 0.6, "8": 1.4 } },
       "stateLines": { "color": "navy.400", "width": { "3": 0.5, "8": 1 } },
       "disputedBorders": { "color": "navy.400", "width": { "0": 0.8 }, "dash": [2, 2] },
       "halo": {
         "inner": { "color": "navy.400", "blur": { "share": 0.12, "max": 60 }, "spread": { "share": 0.04, "max": 20 } },
-        "outer": { "color": "navy.700", "blur": { "share": 0.35, "max": 160 }, "spread": { "share": 0.08, "max": 40 } }
+        "outer": { "color": "primary.dark", "blur": { "share": 0.35, "max": 160 }, "spread": { "share": 0.08, "max": 40 } }
       }
     },
-    "placeNames": {
+    "PlaceNames": {
       "city": {
         "color": "navy.200",
         "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
-        "size": { "4": "s", "7": "m", "11": "xl" },
+        "size": { "4": "caption", "7": "body2", "11": "h6" },
         "letterSpacing": 0
       },
       "capital": {
         "color": "navy.100",
         "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
-        "size": { "4": "m", "7": "l", "11": "xl" },
+        "size": { "4": "body2", "7": "body1", "11": "h6" },
         "letterSpacing": 0
       },
       "state": {
-        "color": "navy.300",
+        "color": "primary.light",
         "outline": { "color": "navy.600", "width": 1.2, "blur": 0 },
         "font": "Open Sans Regular",
-        "size": { "3": "xs", "8": "m" },
+        "size": { "3": "footnote", "8": "body2" },
         "letterSpacing": 0.25
       },
       "country": {
         "color": "navy.200",
         "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
-        "size": { "1": "xs", "4": "l" },
+        "size": { "1": "footnote", "4": "body1" },
         "letterSpacing": 0.12
       }
     },
-    "status": {
-      "live": {
-        "color": "gold.500",
-        "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
-        "glow": { "radius": 15, "opacity": 0.8 },
-        "clusterOpacity": 1,
-        "card": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } }
-      },
-      "upcoming": {
-        "color": "gold.500",
-        "core": { "color": "gold.500", "radius": 3, "opacity": 0.9, "ring": 0 },
-        "glow": { "radius": 9, "opacity": 0.4 },
-        "clusterOpacity": 0.9,
-        "card": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } }
-      },
-      "final": {
-        "color": "gold.500",
-        "core": { "color": "gold.500", "radius": 2.5, "opacity": 0.5, "ring": 0 },
-        "glow": { "radius": 0, "opacity": 0 },
-        "clusterOpacity": 0.55,
-        "card": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
-      },
-      "disrupted": {
-        "color": "offWhite.700",
-        "core": { "color": "offWhite.700", "radius": 2.5, "opacity": 0.7, "ring": 0 },
-        "glow": { "radius": 0, "opacity": 0 },
-        "clusterOpacity": 0.6,
-        "card": { "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
-      }
+    "Sky": {
+      "color": "background.default",
+      "stars": { "white": "offWhite.500", "cool": "navy.100", "warm": "gold.100", "size": { "small": 1, "large": 1.5 } }
     },
-    "cluster": {
-      "fill": "navy.700",
+    "Cluster": {
+      "fill": "primary.dark",
       "radius": { "few": 11, "some": 13, "many": 16 },
       "glowRadius": { "few": 22, "some": 26, "many": 32 },
       "outlineWidth": 1.5,
-      "glowOpacity": 0.6
+      "glowOpacity": 0.6,
+      "count": { "font": "Open Sans Bold", "size": "caption" }
     },
-    "trail": {
+    "Trail": {
       "width": 1.25,
       "opacity": 0.9,
       "glow": { "width": 4, "blur": 3, "opacity": 0.35 },
       "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
     },
-    "selection": { "color": "offWhite.500", "width": 2 },
-    "pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
-    "page": {
-      "background": "navy.900",
-      "sky": "navy.900",
-      "stars": { "white": "offWhite.500", "cool": "navy.100", "warm": "gold.100", "size": { "small": 1, "large": 1.5 } }
+    "Selection": { "color": "offWhite.500", "width": 2 },
+    "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
+    "ScoreCard": {
+      "fill": "primary.dark",
+      "text": "text.primary",
+      "disrupted": { "fill": "primary.dark", "text": "offWhite.700" },
+      "shadow": "background.default",
+      "header": { "tint": 0.28, "letterSpacing": 0.06 },
+      "corner": 1.5,
+      "size": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6, "nameClearance": 4 }
     },
-    "text": {
-      "main": "offWhite.500",
-      "secondary": "offWhite.600",
-      "link": "offWhite.500",
-      "onStatus": "navy.800"
-    },
-    "divider": "navy.600",
-    "hover": "navy.600",
-    "controls": {
-      "surface": "navy.800",
-      "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "on": { "fill": "offWhite.500", "text": "navy.800" },
-      "off": { "opacity": 0.6 }
-    },
-    "loadingScreen": {
-      "dim": { "color": "navy.900", "opacity": 0.6 },
-      "spinner": { "color": "offWhite.500", "track": "navy.600" },
-      "message": "offWhite.500"
-    },
-    "card": {
-      "fill": "navy.700",
-      "text": "offWhite.500",
-      "disrupted": { "fill": "navy.700", "text": "offWhite.700" },
-      "shadow": "navy.900",
-      "headerTint": 0.28
-    },
-    "panel": {
-      "surface": { "top": "navy.800", "bottom": "navy.800" },
-      "scoreBlock": { "top": "navy.700", "bottom": "navy.700" },
-      "score": { "fill": "navy.600", "text": "offWhite.500" },
-      "unofficial": "offWhite.600",
+    "GamePanel": {
+      "surface": { "top": "background.paper", "bottom": "background.paper" },
+      "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
+      "score": { "fill": "navy.600", "text": "text.primary" },
+      "unofficial": "text.secondary",
       "photo": "navy.600",
-      "credit": { "fill": "navy.900", "text": "offWhite.600" },
-      "close": "navy.700",
+      "credit": { "fill": "background.default", "text": "text.secondary" },
+      "close": "primary.dark",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "glow": { "y": 0, "blur": 0, "opacity": 0 }
+      "glow": { "y": 0, "blur": 0, "opacity": 0 },
+      "corner": 2,
+      "cutCorner": { "on": false, "size": 4 },
+      "size": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24, "scoreWidth": 2.6 }
     },
-    "settingsMenu": {
-      "surface": "navy.800",
+    "Menu": { "corner": 2 },
+    "MenuItem": { "corner": 1.5 },
+    "SettingsMenu": {
+      "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "gearOutline": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "tab": "offWhite.600",
-      "count": "offWhite.600",
-      "hint": "offWhite.600",
-      "chip": { "outline": "navy.500", "badge": "navy.700" },
-      "on": { "fill": "offWhite.500", "text": "navy.800" }
+      "tab": "text.secondary",
+      "count": "text.secondary",
+      "hint": "text.secondary",
+      "chip": { "outline": "primary.main", "badge": "primary.dark" },
+      "on": { "fill": "offWhite.500", "text": "navy.800" },
+      "size": { "width": 320, "gear": 28, "allLeagues": 32, "countWidth": 3.2, "mark": 1 }
     },
-    "fonts": {
-      "body": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 400 },
-      "heading": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
-      "team": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
-      "score": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
-      "tab": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
-      "button": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
-      "scenarioPill": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
-      "scenarioClock": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 400 },
-      "card": {
-        "clock": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 600 },
-        "team": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 },
-        "score": { "family": "'Open Sans Variable', 'Open Sans', sans-serif", "weight": 700 }
-      },
-      "clusterCount": { "font": "Open Sans Bold", "size": "s" }
+    "Controls": {
+      "surface": "background.paper",
+      "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
+      "on": { "fill": "offWhite.500", "text": "navy.800" },
+      "off": { "opacity": 0.6 },
+      "corner": "pill",
+      "message": { "corner": 2 },
+      "size": { "key": 34, "icon": 14 }
     },
-    "corners": { "card": "s", "panel": "m", "menu": "m", "menuItem": "s", "message": "m", "control": "pill" },
-    "cutCorner": { "on": false, "size": "xl" },
-    "sizes": {
-      "panel": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24, "scoreWidth": 2.6 },
-      "card": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6, "nameClearance": 4 },
-      "settingsMenu": { "width": 320, "gear": 28, "allLeagues": 32, "countWidth": 3.2, "mark": 1 },
-      "controls": { "key": 34, "icon": 14 },
-      "loadingScreen": { "spinner": 32 }
+    "LoadingScreen": {
+      "dim": { "color": "background.default", "opacity": 0.6 },
+      "spinner": { "color": "text.primary", "track": "navy.600", "size": 32 },
+      "message": "text.primary"
     }
   }
 }

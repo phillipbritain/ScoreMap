@@ -4,8 +4,8 @@ Until the dark theme, a game's status was its colour: orange for Live, amber for
 
 ## Consequences
 
-- Each status keeps its own colour job in the theme, even though the dark theme points three of them at the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new job.
-- Each status's glow (on small pins, on score cards, and on clusters, which glow as their status's pins do) and how much it fades are theme settings, alongside its colour.
+- Each status keeps its own colour in the theme's palette (`palette.live` and so on, ADR-0014), even though the dark theme gives three of them the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new setting.
+- Each status's glow and how much it fades are theme settings, each with the component it shows on: a small pin's core and glow are the Pin's, a cluster's opacity the Cluster's (which glows as its status's pins do), a score card's fade and glow the ScoreCard's.
 - Glow means a game: panels and controls have no glow and no drop shadow, so nothing else on screen looks lit.
 - A pulse plays in the game's own colour, and a score, a start and a finish are told apart by the pulse's shape, never by its colour.
 - The small pins' clustering footprint comes from the widest glow, so a theme that widens Live's glow makes pins gather into pin clusters sooner.

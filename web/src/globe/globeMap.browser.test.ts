@@ -230,7 +230,7 @@ describe('score cards', () => {
     // Far enough apart that none is moved aside.
     globe.show([game('L'), game('F', { longitude: 6, status: 'Final' }), game('D', { longitude: -6, status: 'Disrupted' })])
     const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
-    const { components: { ScoreCard: look }, status } = builtInTheme
+    const { components: { ScoreCard: look }, palette } = builtInTheme
 
     for (const shown of [live, final, disrupted]) {
       expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
@@ -238,7 +238,7 @@ describe('score cards', () => {
     }
     expect(channels(getComputedStyle(live).color).slice(0, 3).map(Math.round)).toEqual(hexChannels(look.text))
     expect(between(getComputedStyle(final).color, look.text, look.fill)).toBe(true)
-    expect(between(getComputedStyle(final).borderTopColor, status.final.color, look.fill)).toBe(true)
+    expect(between(getComputedStyle(final).borderTopColor, palette.final.main, look.fill)).toBe(true)
     expect(between(getComputedStyle(disrupted).color, look.disrupted.text, look.disrupted.fill)).toBe(true)
   })
 })
@@ -991,7 +991,7 @@ describe('changing theme', () => {
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
-    globe.setTheme(themeWith((json) => ((json.components.Trail.width = 3), (json.status.live.core.color = '#ff0000'))))
+    globe.setTheme(themeWith((json) => ((json.components.Trail.width = 3), (json.components.Pin.live.core.color = '#ff0000'))))
 
     expect(map.getPaintProperty('trails', 'line-width')).toBe(3)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
@@ -1016,7 +1016,7 @@ describe('changing theme', () => {
     globe.show([a, b])
     await pinsDrawn(map, smallPinLayer, a, b)
 
-    globe.setTheme(themeWith((json) => (json.status.live.glow.radius = 60)))
+    globe.setTheme(themeWith((json) => (json.components.Pin.live.glow.radius = 60)))
 
     await pinsDrawn(map, pinClusterLayer, a, b)
   })

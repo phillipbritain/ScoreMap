@@ -8,7 +8,7 @@ The app is still being shaped, so keep the process light:
 
 - **A small change** (a tweak, a fix, or a feature touching a few files) is built directly on one branch with one PR: no ticket split, integration branch or subagent worktrees. `/implement-spec` is for features with several parts.
 - **Tests cover behaviour** in the core logic: card layout, scenarios, polling, the ESPN feed and the game board. No test asserts a choice of look (#141); how it looks is checked by eye (`docs/style-guide.md`).
-- **While working**, run the tests for what changed. Before a PR, run lint, types and unit tests, plus the browser tests when `web/src/globe/` or `web/scripts/page/` changed and the server tests when `server/` changed. CI runs everything on every PR.
+- **While working**, run the tests for what changed: the browser tests for `web/src/globe/` and `web/scripts/page/`, the server tests for `server/`. CI runs lint, types and every test on each PR, and must pass before a merge; fix any failure before asking for one.
 - **A retro or review** proposes a new check, script or tool only when the same mistake has cost real time more than once; otherwise it notes the mistake.
 - **Docs change** when behaviour or a decision changes, not for every tweak. Each fact lives in one place: the README for setup and pointers, `docs/configuration.md` for configuration, the `run-scoremap` skill for scenarios and driving the app.
 

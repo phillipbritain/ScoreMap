@@ -176,6 +176,14 @@ export function tunerTabs(json: ThemeJson): TunerTab[] {
   return others.length ? [...tabs, { name: 'Other', kind: 'theme', paths: others }] : tabs
 }
 
+/**
+ * Whether the tuner's row for this path differs from the built-in theme: a setting, or one zoom level
+ * of a size by zoom, which the tuner shows a row to each though it counts as one change.
+ */
+export function rowChanged(builtIn: ThemeJson, draft: ThemeJson, path: SettingPath): boolean {
+  return JSON.stringify(settingAt(draft, path)) !== JSON.stringify(settingAt(builtIn, path))
+}
+
 /** How many of the changes are to settings the tab shows. */
 export function changesIn(tab: TunerTab, list: readonly Change[]): number {
   return list.filter(({ path }) => tab.paths.some((start) => start.every((key, i) => path[i] === key))).length

@@ -1,0 +1,13 @@
+# Themes shaped like MUI's, without MUI
+
+ScoreMap's theme (ADR-0011) had grown by where things show: a palette of named colours and their steps, then settings for the globe, cards, the panel and menus, with scales of text sizes, spacing, radii and strokes, and a font for each kind of text. We reshaped it as a [Material UI](https://mui.com/material-ui/customization/theming/) theme is, so its parts are where someone who knows MUI looks for them: a `palette` of colours by what they're for (`primary`, `secondary`, `error`, `warning`, each `main`, `light`, `dark` and `contrastText`; `background`, `text`, `divider`, `action`), `typography` as one font family and type styles named as MUI's variants are (`h6`, `subtitle1`, `body2`, `button`, `caption`, `overline`…), a `spacing` unit every space is a number of, `shape` for the corner radius and line widths, and `components` holding each part's own look, from the globe to the game panel. The named colours and their OKLCH steps stay, as `colors`, much as MUI's own colours come in steps outside its palette; `status` stays a part of its own, as MUI lets a theme add. The page reads it through CSS custom properties named as MUI's CSS theme variables are (`--palette-text-primary`, `--spacing`).
+
+We took the shape, not the library. MUI would bring Emotion and its components, and their Material look we'd spend our time undoing; most of what ScoreMap draws is on the globe, where MapLibre needs the values themselves, not styled components. The page keeps its own stylesheet.
+
+## Consequences
+
+- A colour job may name one of the palette's colours (`primary.dark`, `text.secondary`) as well as a step, as MUI's `sx` does, so changing the palette changes every part that uses it. The palette itself names steps, never another of its colours, and no colour may be named as one of the palette's parts are, so a name is never unclear.
+- Kinds of text share type styles, as MUI's components share variants, rather than each having its own font: the scenario pill, the tabs and the chips are all `button`, so one can't change apart from the rest without a style of its own. Sizes on the globe (place names, cluster counts) name a type style, whose size they take.
+- Spaces and corners are numbers of a unit (`calc(3 * var(--spacing))`, a corner of `1.5` radii, or `"pill"`), not named steps of a scale.
+- Every setting is still required, as ADR-0011 has it; unlike MUI, nothing is filled in from defaults, and the palette gives `light`, `dark` and `contrastText` rather than having them worked out from `main`.
+- The look didn't change: every value the page and the globe read is what it was before.

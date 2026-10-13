@@ -18,7 +18,7 @@ import {
 /** A theme whose status looks are each unlike the built-in theme's, and unlike each other's. */
 function testTheme(): Theme {
   const json = structuredClone(builtIn) as Record<string, any>
-  json.settings.status = {
+  json.status = {
     live: look('#ff0000', 4, 20),
     upcoming: look('#00ff00', 3, 12),
     final: look('#0000ff', 2, 6),
@@ -121,7 +121,7 @@ describe('the status look', () => {
   it("measures a small pin by the widest glow in the theme, of which the inner part shows", () => {
     expect(smallPinWidth(theme)).toBe(Math.round(2 * 0.6 * 20))
     const json = structuredClone(builtIn) as Record<string, any>
-    json.settings.status.final.glow.radius = 30
+    json.status.final.glow.radius = 30
     const wideFinal = resolveTheme(json)
     expect(wideFinal.ok && smallPinWidth(wideFinal.theme)).toBe(36)
   })

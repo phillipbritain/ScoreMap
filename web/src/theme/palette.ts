@@ -1,15 +1,15 @@
 /**
- * A theme's palette: named base colours, each worked out into steps from light to dark (see
- * paletteSteps). The theme's colour jobs name a step, such as "navy.700".
+ * A theme's colours: named base colours, each worked out into steps from light to dark (see
+ * paletteSteps). The theme's palette and colour jobs name a step, such as "navy.700".
  */
 
-/** Each palette colour's steps, lightest first; the base colour is 500. */
+/** Each of a theme's colours' steps, lightest first; the base colour is 500. */
 export const stepNames = ['100', '200', '300', '400', '500', '600', '700', '800', '900'] as const
 export type StepName = (typeof stepNames)[number]
 const baseStep = stepNames.indexOf('500')
 
 /**
- * A palette colour's steps, worked out in OKLCH at the base colour's hue: lighter steps go evenly in
+ * A theme colour's steps, worked out in OKLCH at the base colour's hue: lighter steps go evenly in
  * lightness from the base towards white, darker ones evenly towards black, with the lightest and
  * darkest a fifth of the way short of them. Each keeps the base colour's chroma, or as much of it as
  * sRGB can show at that lightness, so its hue doesn't drift. Hand-set steps replace worked-out ones.

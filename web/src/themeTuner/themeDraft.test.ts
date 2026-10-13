@@ -3,6 +3,7 @@ import builtInJson from '../theme/builtInTheme.json'
 import { resolveTheme } from '../theme/theme'
 import {
   changes,
+  componentName,
   describeChanges,
   loadDraft,
   saveDraft,
@@ -81,6 +82,26 @@ describe('tunerTabs', () => {
     expect(tabs.Palette).toEqual([['palette']])
     expect(tabs.Type).toEqual([['typography']])
     expect(tabs.Shape).toEqual([['spacing'], ['shape']])
+  })
+
+  it('gives each component a tab of its own, named as the glossary names it, after the whole theme’s', () => {
+    const tabs = tunerTabs(builtIn)
+    const components = tabs.filter((tab) => tab.kind === 'component')
+    expect(components.map((tab) => tab.name)).toContain('Score card')
+    expect(components.map((tab) => tab.name)).toContain('Game panel')
+    expect(components.map((tab) => tab.name)).toContain('Loading screen')
+    expect(components.find((tab) => tab.name === 'Game panel')?.paths).toEqual([['components', 'GamePanel']])
+    expect(components.length).toBe(Object.keys(builtIn.components as object).length)
+    expect(tabs.findIndex((tab) => tab.kind === 'component')).toBeGreaterThan(tabs.findLastIndex((tab) => tab.kind === 'theme'))
+    expect(tabs.map((tab) => tab.name)).not.toContain('Other')
+  })
+})
+
+describe('componentName', () => {
+  it('writes a component’s name in words, as the glossary does', () => {
+    expect(componentName('ScoreCard')).toBe('Score card')
+    expect(componentName('PlaceNames')).toBe('Place names')
+    expect(componentName('Cluster')).toBe('Cluster')
   })
 })
 

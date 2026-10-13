@@ -63,10 +63,31 @@
 
 .theme-tuner__tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px;
   border-bottom: 1px solid #444;
+}
+
+/* The whole theme's tabs, then the components', each under its own name. */
+.theme-tuner__tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.theme-tuner__tab-group-name {
+  color: #9a9a9a;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.theme-tuner__tab-group [role='tablist'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .theme-tuner__tabs button {
@@ -77,6 +98,28 @@
   border-color: #e6e6e6;
   background: #e6e6e6;
   color: #1c1c1c;
+}
+
+/* A component's tab is for that one part, so it's set apart from the whole theme's: teal, and ruled off. */
+.theme-tuner__tab-group--component {
+  padding-top: 6px;
+  border-top: 1px dashed #444;
+}
+
+.theme-tuner__tab-group--component .theme-tuner__tab-group-name {
+  color: #6fc2b4;
+}
+
+.theme-tuner__tab-group--component button {
+  border-color: #2f6f64;
+  background: #17302c;
+  color: #cfeee8;
+}
+
+.theme-tuner__tab-group--component button[aria-selected='true'] {
+  border-color: #6fc2b4;
+  background: #6fc2b4;
+  color: #10201d;
 }
 
 .theme-tuner__problems {

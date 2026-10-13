@@ -128,51 +128,39 @@ export function numberRange(path: SettingPath, builtIn: number): { min: number; 
   return { min: 0, max: Math.max(10, Math.ceil(builtIn * 3)), step: builtIn >= 20 ? 1 : builtIn >= 4 ? 0.25 : 0.05 }
 }
 
-/** A part of the theme the tuner shows together, under one tab. */
+/**
+ * A part of the theme the tuner shows together, under one tab: a part of the whole theme (the palette,
+ * say), or one component's own look.
+ */
 export interface TunerTab {
   name: string
+  kind: 'theme' | 'component'
   paths: readonly SettingPath[]
 }
 
-const statuses = ['live', 'upcoming', 'final', 'disrupted']
+/**
+ * A component's name as the glossary writes it, from its name in the theme: ScoreCard is "Score card",
+ * GamePanel "Game panel".
+ */
+export function componentName(key: string): string {
+  const words = key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
 
 /**
- * The tuner's tabs, by part of the theme and by what they change on screen. A setting may show under
- * more than one; Page has whatever the others don't, so every setting but the theme's colours themselves
- * can be tuned.
+ * The tuner's tabs: first the parts of the whole theme (the palette, the typography, spacing and shape,
+ * and each status's look), then a tab for each component, named as it is. Other has whatever those
+ * don't, so every setting but the theme's colours themselves can be tuned; it's left out when there's
+ * nothing in it.
  */
 export function tunerTabs(json: ThemeJson): TunerTab[] {
+  const components = isObject(json.components) ? Object.keys(json.components) : []
   const tabs: TunerTab[] = [
-    { name: 'Palette', paths: [['palette']] },
-    { name: 'Type', paths: [['typography']] },
-    { name: 'Shape', paths: [['spacing'], ['shape']] },
-    { name: 'Globe', paths: [['components', 'Globe'], ['components', 'Sky']] },
-    { name: 'Names', paths: [['components', 'PlaceNames']] },
-    {
-      name: 'Pins',
-      paths: [
-        ...statuses.flatMap((status) => [
-          ['status', status, 'color'],
-          ['status', status, 'core'],
-          ['status', status, 'glow'],
-          ['status', status, 'clusterOpacity'],
-        ]),
-        ['components', 'Cluster'],
-        ['components', 'Selection'],
-        ['components', 'Pulse'],
-      ],
-    },
-    {
-      name: 'Cards',
-      paths: [
-        ['components', 'ScoreCard'],
-        ...statuses.flatMap((status) => [
-          ['status', status, 'color'],
-          ['status', status, 'card'],
-        ]),
-      ],
-    },
-    { name: 'Trails', paths: [['components', 'Trail']] },
+    { name: 'Palette', kind: 'theme', paths: [['palette']] },
+    { name: 'Type', kind: 'theme', paths: [['typography']] },
+    { name: 'Shape', kind: 'theme', paths: [['spacing'], ['shape']] },
+    { name: 'Status', kind: 'theme', paths: [['status']] },
+    ...components.map((key): TunerTab => ({ name: componentName(key), kind: 'component', paths: [['components', key]] })),
   ]
   const shown = tabs.flatMap((tab) => tab.paths)
   const startsWith = (path: SettingPath, start: SettingPath) => start.every((key, i) => path[i] === key)
@@ -183,8 +171,10 @@ export function tunerTabs(json: ThemeJson): TunerTab[] {
     return Object.entries(value).flatMap(([key, inner]) => rest(inner, [...path, key]))
   }
   // The colours themselves aren't tuned here: a colour job picks one of their steps.
-  const settings = Object.entries(json).filter(([key]) => key !== 'colors')
-  return [...tabs, { name: 'Page', paths: settings.flatMap(([key, value]) => rest(value, [key])) }]
+  const others = Object.entries(json)
+    .filter(([key]) => key !== 'colors')
+    .flatMap(([key, value]) => rest(value, [key]))
+  return others.length ? [...tabs, { name: 'Other', kind: 'theme', paths: others }] : tabs
 }
 
 const storageKey = 'scoremap.themeDraft'

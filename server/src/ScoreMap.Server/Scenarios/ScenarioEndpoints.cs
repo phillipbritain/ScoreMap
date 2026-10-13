@@ -10,11 +10,13 @@ public static class ScenarioEndpoints
     /// What the browser's scenario pill, media keys and clock show: the running scenario (or "real") and
     /// every scenario file, the speed (by name) and the speeds there are, whether play can be controlled
     /// (the browser hides the media keys and clock where it can't), and where the clock games are on is
-    /// (the scenario clock, or the real time while real games run), for the browser to run forward.
+    /// (the scenario clock, or the real time while real games run), for the browser to run forward, and
+    /// whether the running scenario holds back each browser's first games (the browser that switches to
+    /// it reloads, to start slowly).
     /// </summary>
     public sealed record ScenarioListing(
         string Running, IReadOnlyList<string> Scenarios, string Speed, IReadOnlyList<Speed> Speeds, bool CanControlPlay,
-        ClockAnchor Clock);
+        ClockAnchor Clock, bool StartsSlowly = false);
 
     /// <summary>
     /// A switch: a scenario's name, or "real" for real games, and the speed to start it at (the speed it
@@ -100,7 +102,8 @@ public static class ScenarioEndpoints
     }
 
     private static ScenarioListing Listing(ScenarioSwitcher switcher) =>
-        new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.CanControlPlay, switcher.Clock);
+        new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.CanControlPlay, switcher.Clock,
+            StartsSlowly: switcher.SlowStart > TimeSpan.Zero);
 
     /// <summary>A switch's or a change of speed's refusal of a speed that isn't one of <see cref="Speed.All"/>.</summary>
     private static IResult NoSuchSpeed(string? speed) =>

@@ -116,6 +116,31 @@
   border-top: 1px dashed #444;
 }
 
+/* Holds the loading screen up, under the tabs. */
+.theme-tuner__preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #444;
+}
+
+.theme-tuner__preview-name {
+  margin-right: 4px;
+  color: #9a9a9a;
+}
+
+.theme-tuner__preview button {
+  padding: 2px 8px;
+}
+
+.theme-tuner__preview button[aria-pressed='true'] {
+  border-color: #e6e6e6;
+  background: #e6e6e6;
+  color: #1c1c1c;
+}
+
 .theme-tuner__problems {
   margin: 0;
   padding: 8px 8px 8px 24px;

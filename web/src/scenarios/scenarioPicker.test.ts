@@ -24,9 +24,18 @@ const local: ScenarioListing = {
   ],
   canControlPlay: true,
   clock,
+  startsSlowly: false,
 }
 // What the deployed server says: no scenarios.
-const deployed: ScenarioListing = { running: 'real', scenarios: [], speed: 'Normal', speeds: [], canControlPlay: false, clock }
+const deployed: ScenarioListing = {
+  running: 'real',
+  scenarios: [],
+  speed: 'Normal',
+  speeds: [],
+  canControlPlay: false,
+  clock,
+  startsSlowly: false,
+}
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {

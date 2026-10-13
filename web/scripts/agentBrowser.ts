@@ -5,14 +5,11 @@ export interface Waiting {
   waiting: string
 }
 
-/**
- * agent-browser, for the scripts that drive a dev run's page: in the session given, or else the one
- * AGENT_BROWSER_SESSION names, as agent-browser itself does.
- */
-export function agentBrowser({ cwd, scratch, session }: { cwd: string; scratch: string; session?: string }) {
+/** agent-browser, for the scripts that drive a dev run's page, in the session AGENT_BROWSER_SESSION names. */
+export function agentBrowser({ cwd, scratch }: { cwd: string; scratch: string }) {
   // agent-browser is an npm script on Windows (agent-browser.cmd), which only the shell can start.
   const browser = (args: string[], input?: string) =>
-    runCommand('agent-browser', [...(session ? ['--session', session] : []), ...args], { cwd, scratch, input, shell: true })
+    runCommand('agent-browser', args, { cwd, scratch, input, shell: true })
 
   /** Runs a script in the page, giving back what it comes to. */
   const evaluate = (script: string): unknown => {

@@ -2,7 +2,7 @@ namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
 /// The scenario clock (ADR-0009): the time a running scenario's games are on. It reads
-/// <see cref="StartFor"/> (12:00 EST on 1 January this year) when the scenario starts, then runs at
+/// <see cref="StartsAt"/> (noon Eastern on 4 August 2026) when the scenario starts, then runs at
 /// <see cref="Speed"/>, so an event in a scenario comes at the same reading each time it starts. A
 /// change of speed carries on from the clock's reading. Only <see cref="GetUtcNow"/> runs at the
 /// speed: timers and timestamps stay on the real clock, as nothing should wait on scenario time.
@@ -44,7 +44,7 @@ public sealed class ScenarioClock : TimeProvider
     public override DateTimeOffset GetUtcNow() => Anchor.Reads;
 
     /// <summary>
-    /// Sets the clock to <see cref="StartFor"/>, for a scenario starting, running at
+    /// Sets the clock to <see cref="StartsAt"/>, for a scenario starting, running at
     /// <paramref name="speed"/> if given, else keeping the speed.
     /// </summary>
     public void Restart(Speed? speed = null)
@@ -67,16 +67,12 @@ public sealed class ScenarioClock : TimeProvider
     }
 
     /// <summary>
-    /// What the clock reads as a scenario starts at the real time <paramref name="realNow"/>: 12:00 EST
-    /// on 1 January of its year, so a scenario plays out at the same readings every time.
+    /// What the clock reads as a scenario starts: noon Eastern (EDT) on 4 August 2026, so a scenario
+    /// plays out at the same readings every time.
     /// </summary>
-    public static DateTimeOffset StartFor(DateTimeOffset realNow) => new(realNow.Year, 1, 1, 12, 0, 0, TimeSpan.FromHours(-5));
+    public static readonly DateTimeOffset StartsAt = new(2026, 8, 4, 12, 0, 0, TimeSpan.FromHours(-4));
 
-    private static ClockAnchor Start(TimeProvider realTime)
-    {
-        var now = realTime.GetUtcNow();
-        return new ClockAnchor(now, StartFor(now));
-    }
+    private static ClockAnchor Start(TimeProvider realTime) => new(realTime.GetUtcNow(), StartsAt);
 
     private ClockAnchor AnchorNow()
     {

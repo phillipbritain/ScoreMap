@@ -142,6 +142,27 @@ public sealed class ScenarioReaderTests : IDisposable
         Assert.Contains("no venue list", error.Message);
     }
 
+    [Fact]
+    public void A_slow_start_is_read_as_a_wait_and_is_none_when_left_out()
+    {
+        File.WriteAllText(Path.Combine(_folder, "slow.json"), $$"""{ "slowStart": "1m30s", "games": [ {{Game()}} ] }""");
+
+        Assert.Equal(TimeSpan.FromSeconds(90), ScenarioReader.Read(_folder, "slow", Leagues, Venues).SlowStart);
+        Assert.Equal(TimeSpan.Zero, Read(Game()).SlowStart);
+    }
+
+    [Theory]
+    [InlineData("soon")]
+    [InlineData("-5s")]
+    public void A_slow_start_that_isnt_a_wait_is_rejected(string slowStart)
+    {
+        File.WriteAllText(Path.Combine(_folder, "slow.json"), $$"""{ "slowStart": "{{slowStart}}", "games": [ {{Game()}} ] }""");
+
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "slow", Leagues, Venues));
+
+        Assert.Contains($"slowStart is \"{slowStart}\"", error.Message);
+    }
+
     private Scenario Read(params string[] games)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""{ "games": [ {{string.Join(", ", games)}} ] }""");

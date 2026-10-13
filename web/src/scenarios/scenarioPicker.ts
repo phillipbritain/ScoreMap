@@ -27,6 +27,8 @@ export interface ScenarioListing {
   canControlPlay: boolean
   /** The clock `reads` this at the real time `at` (both ISO 8601); from here it runs at the speed. */
   clock: { at: string; reads: string }
+  /** Whether the running scenario holds back each browser's first games, to watch the loading screen (slow-initial-load). */
+  startsSlowly: boolean
 }
 
 /** The name that stands for real games, as the server writes it. */

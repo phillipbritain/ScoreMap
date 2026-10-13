@@ -26,7 +26,7 @@ public class ShippedScenarioTests
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
-        Assert.Equal(["crowded", "edge-cases", "empty", "worldwide"], listing.Scenarios);
+        Assert.Equal(["crowded", "edge-cases", "empty", "slow-initial-load", "worldwide"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
@@ -37,6 +37,7 @@ public class ShippedScenarioTests
     [Theory]
     [InlineData("crowded", true)]
     [InlineData("worldwide", true)]
+    [InlineData("slow-initial-load", true)]
     [InlineData("edge-cases", false)]
     [InlineData("empty", false)]
     public async Task Play_can_be_controlled_only_in_the_scenarios_that_play(string name, bool canControlPlay)
@@ -49,9 +50,10 @@ public class ShippedScenarioTests
         Assert.Equal(canControlPlay, (await response.Content.ReadFromJsonAsync<ScenarioListing>())?.CanControlPlay);
     }
 
+    // Not slow-initial-load, whose first games wait on the real clock: it fills from worldwide's venues.
     public static TheoryData<string> ScenariosAtListedVenues => new(
         Directory.GetFiles(ShippedFolder, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>()
-            .Where(name => name != "edge-cases"));
+            .Where(name => name is not ("edge-cases" or "slow-initial-load")));
 
     [Theory]
     [MemberData(nameof(ScenariosAtListedVenues))]

@@ -1,6 +1,6 @@
 ---
 name: run-scoremap
-description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, checking a change looks the same, picking a scenario, or taking screenshots of it.
+description: Start, stop and drive ScoreMap locally (server, browser app, a browser on it). Use when running the app, checking a change in the real app, picking a scenario, or taking screenshots of it.
 ---
 
 # Run ScoreMap
@@ -83,21 +83,6 @@ npm run page -- screenshot <file>        # once Ready and settled
 7. **Measure with `npm run page -- read`** where a screenshot can only suggest: an element's size (`read <selector> rect`), whether an image loaded (`read <selector> naturalWidth`, more than 0), which URL it came from (`read <selector> currentSrc`).
 
 On real games, few or no pins usually means few games right now: pins show from 3 hours before a game until 2 hours after it ends.
-
-## Check that a change looks the same
-
-To check that a change leaves the look as it was (or changes only what it should), compare the working tree with a base in one command, rather than screenshotting and diffing by hand. In `web/`, from PowerShell or Git Bash:
-
-```sh
-npm run looks-same -- main          # <base ref> [--out <folder>]
-```
-
-It takes about a minute. It starts this clone's run (stopping it again at the end, even on failure; a run already going is replaced, and it says so), starts `crowded` Paused, and serves the base from a checkout of its own beside it, so the working tree and its uncommitted changes are never touched. A check killed outright (its terminal closed, its task stopped) can't tidy up; the next one removes what it left, its base checkout and browser session, and says so. Then it reports:
-
-- **A screenshot** of London's crowd of score cards, the same or differing, with a diff image (differing pixels red). It's taken once the globe is ready (`window.scoremap.stage()`) and has settled after turning to the view (`settled()`), with logos and photos hidden and animations stopped. Where the base and the working tree differ, each is screenshotted again: if either's two differ, the globe drew differently from one page to the next, and it says it can't make the screenshot repeatable rather than report a difference.
-- **Computed CSS**: every declaration whose computed value differs, hover and pressed states, keyframes and media queries included, so a 1 px change a screenshot can't show still shows.
-
-It exits 0 when nothing differs, 1 when something does, 2 when the check itself fails, as it does on a base without #112, whose page can't say when it's ready. The screenshot has Live and Upcoming cards, but no Final or Disrupted ones, card cluster, game panel or phone width; check those by eye where a change touches them.
 
 ## Saved data
 

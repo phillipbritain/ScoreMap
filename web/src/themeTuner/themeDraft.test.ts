@@ -94,6 +94,7 @@ describe('tunerTabs', () => {
     expect(components.length).toBe(Object.keys(builtIn.components as object).length)
     expect(tabs.findIndex((tab) => tab.kind === 'component')).toBeGreaterThan(tabs.findLastIndex((tab) => tab.kind === 'theme'))
     expect(tabs.map((tab) => tab.name)).not.toContain('Other')
+    expect(components.find((tab) => tab.name === 'Pin')?.paths).toEqual([['components', 'Pin']])
   })
 })
 

@@ -5,12 +5,18 @@ import type { Theme } from '../theme/theme'
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer, Final fades and
  * Disrupted is greyed out, alike on small pins, score cards, pin clusters and card clusters. Each
- * status's look (its colour, the small pin's core and glow, and a cluster's opacity) comes from the
- * theme; what isn't look stays here: which status draws on top, the order of prominence, and how a
- * cluster picks its status. Map layers read the look through style expressions (see byStatus), and the
- * page's CSS through the theme's custom properties (see applyTheme).
+ * status's look comes from the theme, gathered here from where it sits there: its colour from the
+ * palette, the small pin's core and glow from the Pin component, a cluster's opacity from Cluster and a
+ * score card's fade and glow from ScoreCard. What isn't look stays here: which status draws on top, the
+ * order of prominence, and how a cluster picks its status. Map layers read the look through style
+ * expressions (see byStatus), and the page's CSS through the theme's custom properties (see applyTheme).
  */
-export type StatusLook = Theme['status'][keyof Theme['status']] & {
+export interface StatusLook {
+  color: string
+  core: Theme['components']['Pin']['live']['core']
+  glow: Theme['components']['Pin']['live']['glow']
+  clusterOpacity: number
+  card: Theme['components']['ScoreCard']['live']
   /** Which draws on top where pins or score cards overlap: highest first. */
   stacking: number
 }
@@ -19,15 +25,24 @@ export type StatusLook = Theme['status'][keyof Theme['status']] & {
 export const stacking: Readonly<Record<GameStatus, number>> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
 
 /**
- * A status's name in the theme: its key among the theme's status looks, and so in the custom
- * properties the page's CSS reads (--status-live-color) and the score cards' status classes
- * (score-card--live). "live" for Live.
+ * A status's name in the theme: its key among the palette's colours and the components' looks by
+ * status, and so in the custom properties the page's CSS reads (--palette-live-main) and the score
+ * cards' status classes (score-card--live). "live" for Live.
  */
-export const statusKey = (status: GameStatus): keyof Theme['status'] => status.toLowerCase() as Lowercase<GameStatus>
+export const statusKey = (status: GameStatus): keyof Theme['components']['Pin'] => status.toLowerCase() as Lowercase<GameStatus>
 
 /** A status's look, from the theme. */
 export function statusLook(theme: Theme, status: GameStatus): StatusLook {
-  return { ...theme.status[statusKey(status)], stacking: stacking[status] }
+  const key = statusKey(status)
+  const { Pin, Cluster, ScoreCard } = theme.components
+  const { fade, glow } = ScoreCard[key]
+  return {
+    color: theme.palette[key].main,
+    ...Pin[key],
+    clusterOpacity: Cluster[key].opacity,
+    card: { fade, glow },
+    stacking: stacking[status],
+  }
 }
 
 /** The selected game's score card draws above every other card. */
@@ -38,7 +53,7 @@ export const selectedStacking = Math.max(...Object.values(stacking)) + 1
  * nothing at its edge, so only about the inner 60% of it shows.
  */
 export function smallPinWidth(theme: Theme): number {
-  return Math.round(2 * 0.6 * Math.max(...Object.values(theme.status).map((look) => look.glow.radius)))
+  return Math.round(2 * 0.6 * Math.max(...Object.values(theme.components.Pin).map((look) => look.glow.radius)))
 }
 
 /** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */

@@ -11,8 +11,12 @@
     "secondary": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
     "error": { "main": "red.500", "light": "red.300", "dark": "red.700", "contrastText": "offWhite.500" },
     "warning": { "main": "orange.500", "light": "orange.300", "dark": "orange.700", "contrastText": "navy.800" },
+    "live": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
+    "upcoming": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
+    "final": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
+    "disrupted": { "main": "offWhite.700", "light": "offWhite.600", "dark": "offWhite.800", "contrastText": "navy.800" },
     "background": { "default": "navy.900", "paper": "navy.800" },
-    "text": { "primary": "offWhite.500", "secondary": "offWhite.600", "link": "offWhite.500", "onStatus": "navy.800" },
+    "text": { "primary": "offWhite.500", "secondary": "offWhite.600", "link": "offWhite.500" },
     "divider": "navy.600",
     "action": { "hover": "navy.600" }
   },
@@ -29,36 +33,9 @@
     "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 }
   },
   "spacing": 4,
-  "shape": { "borderRadius": 4, "borderWidth": { "thin": 1, "medium": 2, "thick": 3 } },
-  "status": {
-    "live": {
-      "color": "secondary.main",
-      "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
-      "glow": { "radius": 15, "opacity": 0.8 },
-      "clusterOpacity": 1,
-      "card": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } }
-    },
-    "upcoming": {
-      "color": "secondary.main",
-      "core": { "color": "secondary.main", "radius": 3, "opacity": 0.9, "ring": 0 },
-      "glow": { "radius": 9, "opacity": 0.4 },
-      "clusterOpacity": 0.9,
-      "card": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } }
-    },
-    "final": {
-      "color": "secondary.main",
-      "core": { "color": "secondary.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
-      "glow": { "radius": 0, "opacity": 0 },
-      "clusterOpacity": 0.55,
-      "card": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
-    },
-    "disrupted": {
-      "color": "offWhite.700",
-      "core": { "color": "offWhite.700", "radius": 2.5, "opacity": 0.7, "ring": 0 },
-      "glow": { "radius": 0, "opacity": 0 },
-      "clusterOpacity": 0.6,
-      "card": { "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
-    }
+  "shape": {
+    "borderRadius": 4,
+    "borderWidth": { "thin": 1, "medium": 2, "thick": 3 }
   },
   "components": {
     "Globe": {
@@ -106,13 +83,35 @@
       "color": "background.default",
       "stars": { "white": "offWhite.500", "cool": "navy.100", "warm": "gold.100", "size": { "small": 1, "large": 1.5 } }
     },
+    "Pin": {
+      "live": {
+        "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 15, "opacity": 0.8 }
+      },
+      "upcoming": {
+        "core": { "color": "upcoming.main", "radius": 3, "opacity": 0.9, "ring": 0 },
+        "glow": { "radius": 9, "opacity": 0.4 }
+      },
+      "final": {
+        "core": { "color": "final.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
+        "glow": { "radius": 0, "opacity": 0 }
+      },
+      "disrupted": {
+        "core": { "color": "disrupted.main", "radius": 2.5, "opacity": 0.7, "ring": 0 },
+        "glow": { "radius": 0, "opacity": 0 }
+      }
+    },
     "Cluster": {
       "fill": "primary.dark",
       "radius": { "few": 11, "some": 13, "many": 16 },
       "glowRadius": { "few": 22, "some": 26, "many": 32 },
       "outlineWidth": 1.5,
       "glowOpacity": 0.6,
-      "count": { "font": "Open Sans Bold", "size": "caption" }
+      "count": { "font": "Open Sans Bold", "size": "caption" },
+      "live": { "opacity": 1 },
+      "upcoming": { "opacity": 0.9 },
+      "final": { "opacity": 0.55 },
+      "disrupted": { "opacity": 0.6 }
     },
     "Trail": {
       "width": 1.25,
@@ -125,11 +124,14 @@
     "ScoreCard": {
       "fill": "primary.dark",
       "text": "text.primary",
-      "disrupted": { "fill": "primary.dark", "text": "offWhite.700" },
       "shadow": "background.default",
       "header": { "tint": 0.28, "letterSpacing": 0.06 },
       "corner": 1.5,
-      "size": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6, "nameClearance": 4 }
+      "size": { "minWidth": 92, "logo": 16, "pointer": 6, "light": 6, "nameClearance": 4 },
+      "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
+      "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
+      "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } },
+      "disrupted": { "fill": "primary.dark", "text": "offWhite.700", "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
     },
     "GamePanel": {
       "surface": { "top": "background.paper", "bottom": "background.paper" },
@@ -143,7 +145,17 @@
       "glow": { "y": 0, "blur": 0, "opacity": 0 },
       "corner": 2,
       "cutCorner": { "on": false, "size": 4 },
-      "size": { "width": 940, "height": 127, "phoneHeight": 236, "scoreBlock": 290, "slant": 16, "photo": 180, "logo": 28, "close": 24, "scoreWidth": 2.6 }
+      "size": {
+        "width": 940,
+        "height": 127,
+        "phoneHeight": 236,
+        "scoreBlock": 290,
+        "slant": 16,
+        "photo": 180,
+        "logo": 28,
+        "close": 24,
+        "scoreWidth": 2.6
+      }
     },
     "Menu": { "corner": 2 },
     "MenuItem": { "corner": 1.5 },

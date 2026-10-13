@@ -176,6 +176,11 @@ export function tunerTabs(json: ThemeJson): TunerTab[] {
   return others.length ? [...tabs, { name: 'Other', kind: 'theme', paths: others }] : tabs
 }
 
+/** How many of the changes are to settings the tab shows. */
+export function changesIn(tab: TunerTab, list: readonly Change[]): number {
+  return list.filter(({ path }) => tab.paths.some((start) => start.every((key, i) => path[i] === key))).length
+}
+
 const storageKey = 'scoremap.themeDraft'
 
 /**

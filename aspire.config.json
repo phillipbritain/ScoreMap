@@ -1,5 +1,8 @@
 {
   "appHost": {
     "path": "server/src/ScoreMap.AppHost/ScoreMap.AppHost.csproj"
+  },
+  "features": {
+    "defaultWatchEnabled": "true"
   }
 }

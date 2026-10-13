@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 
@@ -102,7 +104,7 @@ public class ShippedScenarioTests
     [Fact]
     public async Task Worldwide_has_a_close_basketball_game_coming_into_clutch_time()
     {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
 
@@ -144,7 +146,7 @@ public class ShippedScenarioTests
     [InlineData("crowded")]
     public async Task Games_start_finish_get_disrupted_and_drop_out_for_new_ones(string name)
     {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await StartAsync(server, name);
         await client.NextSnapshotAsync();
 
@@ -191,16 +193,19 @@ public class ShippedScenarioTests
     }
 
     /// <summary>
-    /// Moves the clock on a second at a time, as the poller fetches every second, until the browser
-    /// gets a change that is <paramref name="wanted"/>, and returns the changes it got until then.
-    /// Fails if there is none <paramref name="within"/> the given time, saying what it was waiting for
-    /// (<paramref name="waitingFor"/>, such as "a game finishing") and the kinds of change it saw instead.
+    /// Moves the clock on a second at a time, so the poller fetches once a step (it fetches at least
+    /// every second), until the browser gets a change that is <paramref name="wanted"/>, and returns
+    /// the changes it got until then. Fails if there is none <paramref name="within"/> the given
+    /// scenario time, saying what it was waiting for (<paramref name="waitingFor"/>, such as "a game
+    /// finishing") and the kinds of change it saw instead. A test waiting long runs its scenario at
+    /// Faster, so each step covers 8 seconds of scenario time.
     /// </summary>
     private static async Task<List<GameChange>> AdvanceUntilAsync(
         ScoreMapServer server, TestClient client, string waitingFor, Func<GameChange, bool> wanted, TimeSpan within)
     {
+        var step = TimeSpan.FromSeconds(1) * server.Services.GetRequiredService<ScenarioSwitcher>().Speed.Times;
         var changes = new List<GameChange>();
-        for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += TimeSpan.FromSeconds(1))
+        for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += step)
         {
             server.Clock.Advance(TimeSpan.FromSeconds(1));
             await Task.Delay(10);

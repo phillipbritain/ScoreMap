@@ -3,6 +3,7 @@ import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
   changes,
+  componentName,
   describeChanges,
   isTypeStyleSize,
   numberRange,
@@ -76,11 +77,27 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
       </button>
       {open && (
         <div className="theme-tuner__panel">
-          <div className="theme-tuner__tabs" role="tablist">
-            {tabs.map(({ name }, i) => (
-              <button key={name} type="button" role="tab" aria-selected={i === tabIndex} onClick={() => setTabIndex(i)}>
-                {name}
-              </button>
+          <div className="theme-tuner__tabs">
+            {(['theme', 'component'] as const).map((kind) => (
+              <div key={kind} className={`theme-tuner__tab-group theme-tuner__tab-group--${kind}`}>
+                <span className="theme-tuner__tab-group-name">{kind === 'theme' ? 'Whole theme' : 'Components'}</span>
+                <div role="tablist" aria-label={kind === 'theme' ? 'Whole theme' : 'Components'}>
+                  {tabs.map(({ name, kind: tabKind, paths }, i) =>
+                    tabKind === kind ? (
+                      <button
+                        key={name}
+                        type="button"
+                        role="tab"
+                        title={paths.map((path) => path.join('.')).join(', ')}
+                        aria-selected={i === tabIndex}
+                        onClick={() => setTabIndex(i)}
+                      >
+                        {name}
+                      </button>
+                    ) : null,
+                  )}
+                </div>
+              </div>
             ))}
           </div>
           {!result.ok && (
@@ -134,18 +151,24 @@ const isGroup = (value: Json | undefined): value is JsonObject =>
 /** A key as a label: "glowOpacity" as "glow opacity", a zoom level "4" as "zoom 4". */
 const label = (key: string) => (/^\d/.test(key) ? `zoom ${key}` : key.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`))
 
+/** A tab's top setting or group as a heading: a component's by its name ("Score card"), the rest key by key. */
+const heading = (path: SettingPath) =>
+  path[0] === 'components' && path[1] !== undefined
+    ? [componentName(path[1]), ...path.slice(2).map(label)].join(' › ')
+    : path.map(label).join(' › ')
+
 /** A setting, or a group of them under a heading. */
 function Group({ path, value, context, title = false }: { path: SettingPath; value: Json | undefined; context: RowContext; title?: boolean }) {
   if (!isGroup(value)) {
     return (
       <div className={title ? 'theme-tuner__group theme-tuner__group--top' : undefined}>
-        <Row path={path} value={value} context={context} name={title ? path.join(' › ') : label(path.at(-1)!)} />
+        <Row path={path} value={value} context={context} name={title ? heading(path) : label(path.at(-1)!)} />
       </div>
     )
   }
   return (
     <div className={title ? 'theme-tuner__group theme-tuner__group--top' : 'theme-tuner__group'}>
-      <div className="theme-tuner__heading">{title ? path.map(label).join(' › ') : label(path.at(-1)!)}</div>
+      <div className="theme-tuner__heading">{title ? heading(path) : label(path.at(-1)!)}</div>
       {Object.entries(value).map(([key, inner]) => (
         <Group key={key} path={[...path, key]} value={inner} context={context} />
       ))}

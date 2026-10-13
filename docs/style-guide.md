@@ -339,7 +339,7 @@ ScoreMap has one theme, built in, so making a theme today means changing `web/sr
 1. **Palette first.** Choose the base colours and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Point every colour job at a step**, using the tables above. Keep a colour given directly for a true one-off.
 3. **Set the scales, corners, sizes, fonts and each status's look.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through each status's opacities, core and colours.
-4. **Run the tests** (`npm test` in `web/`). Checking reports what's wrong with the theme: a setting missing, unknown or malformed. No test holds the theme's choices, so a different look changes no test.
+4. **Run the tests** (`npm test` in `web/`). Checking reports what's wrong with the theme (see [What checking rejects](#what-checking-rejects)). No test holds the theme's choices, so a different look changes no test.
 5. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios (the `run-scoremap` skill), on the globe zoomed out and in, with the game panel and settings menu open, and on a phone-sized window.
 
 ### Adding a setting
@@ -359,4 +359,4 @@ Some of the look is in code on purpose, as behaviour or layout rather than a the
 - which kinds of place are named in capitals (states and countries);
 - which text size, spacing step and stroke each thing on the page uses (the CSS), and which status is most prominent and draws on top (the status look, `web/src/globe/statusLook.ts`).
 
-No test holds the code to this list; that's for review. While a look is being tried, a one-off value may go straight into the CSS or the TypeScript. Once it's settled, it moves into the theme (see [Adding a setting](#adding-a-setting)), unless it belongs on this list.
+No test holds the code to this list; that's for review. While a look is being tried, a value may go straight into the CSS or the TypeScript. Once it's settled, it moves into the theme (see [Adding a setting](#adding-a-setting)), unless it belongs on this list.

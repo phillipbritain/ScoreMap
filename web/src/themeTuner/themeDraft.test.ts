@@ -3,6 +3,7 @@ import builtInJson from '../theme/builtInTheme.json'
 import { resolveTheme } from '../theme/theme'
 import {
   changes,
+  changesIn,
   componentName,
   describeChanges,
   loadDraft,
@@ -95,6 +96,19 @@ describe('tunerTabs', () => {
     expect(tabs.findIndex((tab) => tab.kind === 'component')).toBeGreaterThan(tabs.findLastIndex((tab) => tab.kind === 'theme'))
     expect(tabs.map((tab) => tab.name)).not.toContain('Other')
     expect(components.find((tab) => tab.name === 'Pin')?.paths).toEqual([['components', 'Pin']])
+  })
+})
+
+describe('changesIn', () => {
+  it('counts the changes to settings a tab shows, and only those', () => {
+    let draft = withSetting(builtIn, ['components', 'ScoreCard', 'fill'], 'navy.800')
+    draft = withSetting(draft, ['components', 'ScoreCard', 'final', 'fade'], 0.6)
+    draft = withSetting(draft, ['palette', 'divider'], 'navy.700')
+    const list = changes(builtIn, draft)
+    const count = (name: string) => changesIn(tunerTabs(builtIn).find((tab) => tab.name === name)!, list)
+    expect(count('Score card')).toBe(2)
+    expect(count('Palette')).toBe(1)
+    expect(count('Pin')).toBe(0)
   })
 })
 

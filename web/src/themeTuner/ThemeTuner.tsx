@@ -3,6 +3,7 @@ import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
   changes,
+  changesIn,
   componentName,
   describeChanges,
   isTypeStyleSize,
@@ -82,20 +83,24 @@ export function ThemeTuner({ builtIn, initial, onTheme }: ThemeTunerProps) {
               <div key={kind} className={`theme-tuner__tab-group theme-tuner__tab-group--${kind}`}>
                 <span className="theme-tuner__tab-group-name">{kind === 'theme' ? 'Whole theme' : 'Components'}</span>
                 <div role="tablist" aria-label={kind === 'theme' ? 'Whole theme' : 'Components'}>
-                  {tabs.map(({ name, kind: tabKind, paths }, i) =>
-                    tabKind === kind ? (
+                  {tabs.map((tab, i) => {
+                    if (tab.kind !== kind) return null
+                    const count = changesIn(tab, changed)
+                    return (
                       <button
-                        key={name}
+                        key={tab.name}
                         type="button"
                         role="tab"
-                        title={paths.map((path) => path.join('.')).join(', ')}
+                        title={tab.paths.map((path) => path.join('.')).join(', ')}
                         aria-selected={i === tabIndex}
+                        aria-label={count ? `${tab.name}, ${count} changed` : undefined}
                         onClick={() => setTabIndex(i)}
                       >
-                        {name}
+                        {tab.name}
+                        {count > 0 && <span className="theme-tuner__badge">{count}</span>}
                       </button>
-                    ) : null,
-                  )}
+                    )
+                  })}
                 </div>
               </div>
             ))}

@@ -91,7 +91,17 @@
 }
 
 .theme-tuner__tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 2px 8px;
+}
+
+/* A tab with changes in it says how many, as the Theme button does for them all. */
+.theme-tuner__tabs .theme-tuner__badge {
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 15px;
 }
 
 .theme-tuner__tabs button[aria-selected='true'] {

@@ -131,9 +131,9 @@ describe('applyTheme', () => {
       pin: 4 * 6,
       // A surface, four kinds of line (their colours) and two halo colours.
       globe: 7,
-      // Four kinds of place name, each with a colour, an outline (its colour, width and blur), a
+      // Three kinds of place name (city, state and country), each with a colour, an outline (its colour, width and blur), a
       // font (its name, family, weight and style) and letter spacing.
-      placeNames: 4 * 9,
+      placeNames: 3 * 9,
       // The sky's colour, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's

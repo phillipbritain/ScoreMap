@@ -114,7 +114,7 @@ The dark theme names one of the palette's colours where a job is what that palet
 | `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.400` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |
-| `components.PlaceNames.<kind>.color` | A kind of place's name: `city`, `capital`, `state`, `country` | city `navy.200`, capital `navy.100`, state `primary.light`, country `navy.200` |
+| `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | city `navy.200`, state `primary.light`, country `navy.200` |
 | `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.600` for every kind |
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
@@ -312,9 +312,9 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 
 | Setting | Which text | Dark theme |
 | --- | --- | --- |
-| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, capital `Open Sans Bold`, state `Open Sans Regular`, country `Open Sans Bold` |
-| `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; capital `body2`, `body1`, `h6` at 4, 7, 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
-| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city and capital 0, state 0.25, country 0.12 |
+| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, state `Open Sans Regular`, country `Open Sans Bold` |
+| `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
+| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.25, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
 | `components.Cluster.count.size` | Its size, a type style's | `caption` |
 

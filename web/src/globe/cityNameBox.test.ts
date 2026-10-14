@@ -7,7 +7,7 @@ describe('cityNameBox', () => {
   // Every letter 10 px wide.
   const measure = (text: string) => text.length * 10
   // Wide enough for the longest word below, "Santísima", to fit on a line.
-  const look = { ...cityNameLook(4, false, builtInTheme), maxWidth: 100 }
+  const look = { ...cityNameLook(4, builtInTheme), maxWidth: 100 }
 
   it('sits centred below the dot, past the offset, with room for the outline', () => {
     const box = cityNameBox('Tampa', { x: 100, y: 200 }, look, measure)
@@ -22,7 +22,7 @@ describe('cityNameBox', () => {
     const { components } = builtInTheme
     const scoreCard = { ...components.ScoreCard, size: { ...components.ScoreCard.size, nameClearance: 7 } }
     const theme = { ...builtInTheme, components: { ...components, ScoreCard: scoreCard } }
-    const clear = { ...cityNameLook(4, false, theme), maxWidth: 100 }
+    const clear = { ...cityNameLook(4, theme), maxWidth: 100 }
     const box = cityNameBox('Tampa', { x: 100, y: 200 }, clear, measure)
     expect(box.width).toBe(measure('Tampa') + 2 * 7)
     expect(box.y - box.height / 2).toBe(200 + clear.offset - 7)

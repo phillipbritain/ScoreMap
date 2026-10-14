@@ -1,11 +1,14 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import {
+  hasColours,
   isLeagueOn,
   leaguesBySport,
   sportSwitch,
   withAllLeagues,
   withLeague,
   withSport,
+  withSportColour,
+  withoutColours,
   type League,
   type ViewerSettings,
 } from './viewerSettings'
@@ -14,6 +17,8 @@ interface SettingsMenuProps {
   leagues: readonly League[]
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
+  /** The theme's own colour for games, which a sport with no colour picked shows as, as #rrggbb. */
+  accent: string
 }
 
 type Tab = 'leagues' | 'display'
@@ -31,9 +36,11 @@ const displaySwitches = [
 /**
  * The settings menu, opened from a gear icon, in two tabs. Leagues, first as the most used: an "All
  * leagues" chip to switch every league at once, then leagues grouped under their sport, each a chip
- * to switch on or off. Display: "Live only" and "Show Disrupted games" as chips.
+ * to switch on or off, and beside each sport's name a swatch of its games' colour, which opens the
+ * browser's colour picker, and a control to clear it; "Reset colours" clears every colour. Display:
+ * "Live only" and "Show Disrupted games" as chips.
  */
-export function SettingsMenu({ leagues, settings, onChange }: SettingsMenuProps) {
+export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMenuProps) {
   const [tab, setTab] = useState<Tab>('leagues')
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
   const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
@@ -86,17 +93,25 @@ export function SettingsMenu({ leagues, settings, onChange }: SettingsMenuProps)
                 const on = group.leagues.filter((league) => isLeagueOn(settings, league.name)).length
                 return (
                   <div key={group.sport} className="settings-sport">
-                    {/* Switches every league in the sport on, or off when they're all on already. */}
-                    <button
-                      type="button"
-                      className="settings-sport__name"
-                      onClick={() => onChange(withSport(settings, group, sportSwitch(settings, group) !== 'on'))}
-                    >
-                      {group.sport}{' '}
-                      <span className="settings-sport__count">
-                        {on}/{group.leagues.length}
-                      </span>
-                    </button>
+                    <div className="settings-sport__head">
+                      {/* Switches every league in the sport on, or off when they're all on already. */}
+                      <button
+                        type="button"
+                        className="settings-sport__name"
+                        onClick={() => onChange(withSport(settings, group, sportSwitch(settings, group) !== 'on'))}
+                      >
+                        {group.sport}{' '}
+                        <span className="settings-sport__count">
+                          {on}/{group.leagues.length}
+                        </span>
+                      </button>
+                      <ColourSwatch
+                        name={group.sport}
+                        colour={settings.sportColours[group.sport] ?? null}
+                        accent={accent}
+                        onChange={(colour) => onChange(withSportColour(settings, group.sport, colour))}
+                      />
+                    </div>
                     <div className="settings-chips">
                       {group.leagues.map((league) => (
                         <Chip
@@ -113,6 +128,14 @@ export function SettingsMenu({ leagues, settings, onChange }: SettingsMenuProps)
                   </div>
                 )
               })}
+              <button
+                type="button"
+                className="settings-reset"
+                disabled={!hasColours(settings)}
+                onClick={() => onChange(withoutColours(settings))}
+              >
+                Reset colours
+              </button>
             </>
           ) : (
             <div className="settings-chips">
@@ -135,6 +158,52 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
     <button type="button" aria-pressed={on} className="settings-chip" onClick={onClick}>
       {children}
     </button>
+  )
+}
+
+/**
+ * A sport's colour as a swatch, which opens the browser's colour picker: its games show in the colour
+ * picked at once, as it's picked. With none picked, it shows the theme's own colour, hollow; with one,
+ * a control beside it clears it.
+ */
+function ColourSwatch({
+  name,
+  colour,
+  accent,
+  onChange,
+}: {
+  name: string
+  colour: string | null
+  accent: string
+  onChange: (colour: string | null) => void
+}) {
+  return (
+    <span className="settings-colour">
+      <label
+        className={colour ? 'settings-colour__swatch settings-colour__swatch--picked' : 'settings-colour__swatch'}
+        style={{ '--swatch-color': colour ?? accent } as CSSProperties}
+        title={colour ? `${name}'s colour: click to change` : `Pick a colour for ${name}`}
+      >
+        <input
+          type="color"
+          className="settings-colour__input"
+          aria-label={`${name} colour`}
+          value={colour ?? accent}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
+      {colour && (
+        <button
+          type="button"
+          className="settings-colour__clear"
+          aria-label={`Clear ${name} colour`}
+          title={`Clear ${name}'s colour`}
+          onClick={() => onChange(null)}
+        >
+          ×
+        </button>
+      )}
+    </span>
   )
 }
 

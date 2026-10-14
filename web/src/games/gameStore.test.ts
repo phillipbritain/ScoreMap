@@ -2,7 +2,7 @@
 import type { Game } from './game'
 import { applyChange } from './gameStore'
 
-function game(id: string, homeScore: number | null = null): Game {
+function game(id: string, homeScore: string | null = null): Game {
   return {
     id,
     league: 'NFL',
@@ -48,21 +48,21 @@ describe('applyChange', () => {
   it.each(['ScoreChanged', 'Started', 'Finished', 'Updated'] as const)(
     'replaces the game in place when it is %s',
     (kind) => {
-      const games = applyChange([game('1', 0), game('2', 0)], { kind, game: game('1', 7) })
+      const games = applyChange([game('1', '0'), game('2', '0')], { kind, game: game('1', '7') })
 
-      expect(games).toEqual([game('1', 7), game('2', 0)])
+      expect(games).toEqual([game('1', '7'), game('2', '0')])
     },
   )
 
   it('adds a changed game it did not have, so a missed event cannot lose a pin', () => {
-    const games = applyChange([], { kind: 'ScoreChanged', game: game('1', 7) })
+    const games = applyChange([], { kind: 'ScoreChanged', game: game('1', '7') })
 
-    expect(games).toEqual([game('1', 7)])
+    expect(games).toEqual([game('1', '7')])
   })
 
   it('does not duplicate a game added twice', () => {
-    const games = applyChange([game('1', 0)], { kind: 'Added', game: game('1', 3) })
+    const games = applyChange([game('1', '0')], { kind: 'Added', game: game('1', '3') })
 
-    expect(games).toEqual([game('1', 3)])
+    expect(games).toEqual([game('1', '3')])
   })
 })

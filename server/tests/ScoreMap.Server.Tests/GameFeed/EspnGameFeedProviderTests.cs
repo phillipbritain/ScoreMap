@@ -88,6 +88,42 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task Cricket_chase_in_progress_carries_runs_wickets_overs_and_target()
+    {
+        var games = await FetchFixtureAsync("cricket-live.json", "cricket/8656");
+
+        var game = Assert.Single(games, g => g.Id == "1551869");
+        Assert.Equal((ProviderStatus.InProgress, 2), (game.Status, game.Period));
+        // "100/6 (13/20 ov, target 187)" chasing "186/6".
+        Assert.Equal((100, new ProviderInnings(6, "13", 20, 187)), (game.Home.Score, game.Home.Innings));
+        Assert.Equal((186, new ProviderInnings(6)), (game.Away.Score, game.Away.Innings));
+        Assert.Equal(new ProviderVenue("Mangaung Oval, Bloemfontein", "Bloemfontein", "", "South Africa", "59042"), game.Venue);
+    }
+
+    [Fact]
+    public async Task Cricket_side_all_out_has_its_runs_without_wickets()
+    {
+        var games = await FetchFixtureAsync("cricket-ipl-2026.json", "cricket/8048");
+
+        var game = Assert.Single(games, g => g.Id == "1527676");
+        Assert.Equal(ProviderStatus.Final, game.Status);
+        // "127" all out, chased down with "128/2 (12.1/20 ov, target 128)".
+        Assert.Equal((127, new ProviderInnings(null)), (game.Away.Score, game.Away.Innings));
+        Assert.Equal((128, new ProviderInnings(2, "12.1", 20, 128)), (game.Home.Score, game.Home.Innings));
+    }
+
+    [Fact]
+    public async Task Cricket_side_that_never_batted_has_no_score()
+    {
+        var games = await FetchFixtureAsync("cricket-ipl-2026.json", "cricket/8048");
+
+        // No result: the home side batted first, and rain stopped play before the away side batted.
+        var game = Assert.Single(games, g => g.Id == "1527685");
+        Assert.Equal((25, new ProviderInnings(2, "3.4", 20)), (game.Home.Score, game.Home.Innings));
+        Assert.Equal((null, null), (game.Away.Score, game.Away.Innings));
+    }
+
+    [Fact]
     public async Task College_football_final_is_reported()
     {
         var games = await FetchFixtureAsync("college-football.json", "football/college-football");

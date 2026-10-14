@@ -24,14 +24,15 @@ public sealed class ScenarioPlayTests : IDisposable
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "soccer/uefa.champions", Name = "Champions League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "soccer/fifa.world", Name = "World Cup", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
+        new() { Key = "cricket/8048", Name = "IPL", Sport = Sport.Cricket, PlannedLength = TimeSpan.FromMinutes(210) },
     ];
 
-    // 100 venues around the world, the first 10 of them also in "london".
-    private static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 100)
+    // 120 venues around the world, the first 10 of them also in "london".
+    private static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 120)
         .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
 
-    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 100 games at a time,
+    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 110 games at a time,
     // so with 60 games showing, play has to steer clear of the teams already playing.
     private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
         l => l.Name,
@@ -45,6 +46,7 @@ public sealed class ScenarioPlayTests : IDisposable
         [Sport.Baseball] = 12,
         [Sport.Hockey] = 8,
         [Sport.Soccer] = 6,
+        [Sport.Cricket] = 260,
     };
 
     private const string SixtyLiveGames = """{ "fill": { "count": 60, "group": "worldwide" }, "play": true }""";
@@ -185,19 +187,19 @@ public sealed class ScenarioPlayTests : IDisposable
     public void Play_keeps_a_game_on_when_no_teams_are_free_to_replace_it()
     {
         // The written-out game's teams aren't in the team list, so when it finishes, replacing it frees none,
-        // and the fill has taken every team.
+        // and the fill has taken every team (20 in each of 11 leagues).
         var feed = Watched(Read("""
             {
               "games": [ { "id": "written", "league": "NBA", "home": { "name": "Made Up Home", "abbreviation": "MUH", "score": 99 },
                            "away": { "name": "Made Up Away", "abbreviation": "MUA", "score": 97 },
                            "venue": { "name": "Stadium 100", "city": "City 100" }, "startsIn": "-2h", "status": "final" } ],
-              "fill": { "count": 100, "group": "worldwide" },
+              "fill": { "count": 110, "group": "worldwide" },
               "play": true,
               "disrupted": 0
             }
             """), TimeSpan.FromMinutes(5), speed: 1);
 
-        Assert.All(feed, games => Assert.Equal(101, games.Count));
+        Assert.All(feed, games => Assert.Equal(111, games.Count));
         Assert.All(feed, games => Assert.Contains(games, game => game.Id == "written"));
     }
 

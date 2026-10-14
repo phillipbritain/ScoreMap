@@ -108,9 +108,8 @@
     },
     "Trail": {
       "width": 1.25,
-      "opacity": 0.9,
-      "seeThrough": { "on": true, "opacity": 0.7 },
-      "glow": { "width": 4, "blur": 3, "opacity": 0.35 },
+      "opacity": 0.63,
+      "glow": { "width": 4, "blur": 3, "opacity": 0.25 },
       "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
     },
     "Selection": { "color": "offWhite.500", "width": 2 },
@@ -124,7 +123,7 @@
       "fill": "primary.dark",
       "text": "text.primary",
       "shadow": "background.default",
-      "seeThrough": { "on": true, "opacity": 0.75 },
+      "fillOpacity": 0.75,
       "header": { "tint": 0.28, "letterSpacing": 0.06 },
       "corner": 1.5,
       "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "light": 6, "nameClearance": 4 },

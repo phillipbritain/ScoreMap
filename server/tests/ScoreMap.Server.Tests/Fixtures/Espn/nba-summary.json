@@ -1,0 +1,171 @@
+{
+ "header": {
+  "id": "401810164",
+  "competitions": [
+   {
+    "id": "401810164",
+    "competitors": [
+     {
+      "id": "8",
+      "homeAway": "home",
+      "score": "99",
+      "team": {
+       "id": "8",
+       "abbreviation": "DET",
+       "displayName": "Detroit Pistons"
+      }
+     },
+     {
+      "id": "1",
+      "homeAway": "away",
+      "score": "98",
+      "team": {
+       "id": "1",
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Hawks"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "plays": [
+  {
+   "id": "401810164650",
+   "sequenceNumber": "650",
+   "type": {
+    "id": "155",
+    "text": "Defensive Rebound"
+   },
+   "text": "Nickeil Alexander-Walker defensive rebound",
+   "awayScore": 95,
+   "homeScore": 99,
+   "period": {
+    "number": 4,
+    "displayValue": "4th Quarter"
+   },
+   "clock": {
+    "displayValue": "8.1"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "team": {
+    "id": "1"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "id": "4278039"
+     }
+    }
+   ],
+   "wallclock": "2025-12-02T02:13:41Z",
+   "shootingPlay": false,
+   "coordinate": {
+    "x": -214748340,
+    "y": -214748365
+   },
+   "pointsAttempted": 0,
+   "shortDescription": "Rebound"
+  },
+  {
+   "id": "401810164651",
+   "sequenceNumber": "651",
+   "type": {
+    "id": "92",
+    "text": "Jump Shot"
+   },
+   "text": "Nickeil Alexander-Walker makes 22-foot three point jumper (Jalen Johnson assists)",
+   "awayScore": 98,
+   "homeScore": 99,
+   "period": {
+    "number": 4,
+    "displayValue": "4th Quarter"
+   },
+   "clock": {
+    "displayValue": "1.8"
+   },
+   "scoringPlay": true,
+   "scoreValue": 3,
+   "team": {
+    "id": "1"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "id": "4278039"
+     }
+    },
+    {
+     "athlete": {
+      "id": "4701230"
+     }
+    }
+   ],
+   "wallclock": "2025-12-02T02:14:17Z",
+   "shootingPlay": true,
+   "coordinate": {
+    "x": 2,
+    "y": 3
+   },
+   "pointsAttempted": 3,
+   "shortDescription": "+3 Points"
+  },
+  {
+   "id": "401810164676",
+   "sequenceNumber": "676",
+   "type": {
+    "id": "412",
+    "text": "End Period"
+   },
+   "text": "End of the 4th Quarter",
+   "awayScore": 98,
+   "homeScore": 99,
+   "period": {
+    "number": 4,
+    "displayValue": "4th Quarter"
+   },
+   "clock": {
+    "displayValue": "0.0"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "wallclock": "2025-12-02T02:20:25Z",
+   "shootingPlay": false,
+   "coordinate": {
+    "x": -214748340,
+    "y": -214748365
+   },
+   "pointsAttempted": 0,
+   "shortDescription": "End of 4th"
+  },
+  {
+   "id": "401810164677",
+   "sequenceNumber": "677",
+   "type": {
+    "id": "402",
+    "text": "End Game"
+   },
+   "text": "End of Game",
+   "awayScore": 98,
+   "homeScore": 99,
+   "period": {
+    "number": 4,
+    "displayValue": "4th Quarter"
+   },
+   "clock": {
+    "displayValue": "0.0"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "wallclock": "2025-12-02T02:20:29Z",
+   "shootingPlay": false,
+   "coordinate": {
+    "x": -214748340,
+    "y": -214748365
+   },
+   "pointsAttempted": 0,
+   "shortDescription": "End of Game"
+  }
+ ]
+}

@@ -401,4 +401,248 @@ public class EspnGameFeedProviderTests
 
         Assert.Null(game.Home.HomeCity);
     }
+
+    private static string Fixture(string name) =>
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", name));
+
+    private static EspnGameFeedProvider ProviderOver(StubHttpHandler handler) => new(
+        new HttpClient(handler) { BaseAddress = new Uri("https://espn.test/sports/") },
+        new FakeTimeProvider(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero)));
+
+    [Fact]
+    public async Task Teams_carry_their_poll_ranking_and_record_and_the_game_its_attendance()
+    {
+        var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
+
+        var game = Assert.Single(games, g => g.Id == "401752865");
+        Assert.Equal(("ILL", 17, "5-2"), (game.Home.Abbreviation, game.Home.Rank, game.Home.Record));
+        Assert.Equal(("OSU", 1, "6-0"), (game.Away.Abbreviation, game.Away.Rank, game.Away.Record));
+        Assert.Equal(60670, game.Attendance);
+    }
+
+    [Fact]
+    public async Task Unranked_teams_have_no_rank_and_an_attendance_of_nought_is_none()
+    {
+        // ESPN ranks every team outside its poll 99.
+        var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
+
+        var game = Assert.Single(games, g => g.Id == "401761625");
+        Assert.Equal((null, null), (game.Home.Rank, game.Away.Rank));
+        Assert.Null(game.Attendance);
+    }
+
+    [Fact]
+    public async Task Soccer_record_is_wins_draws_and_losses()
+    {
+        var games = await FetchFixtureAsync("soccer-eng1-goals-and-cards.json", "soccer/eng.1");
+
+        var game = Assert.Single(games, g => g.Id == "740656");
+        Assert.Equal(("ARS", "5-1-1"), (game.Home.Abbreviation, game.Home.Record));
+        Assert.Equal(("WHU", "1-1-5"), (game.Away.Abbreviation, game.Away.Record));
+    }
+
+    [Fact]
+    public async Task Game_carries_its_note()
+    {
+        var games = await FetchFixtureAsync("mlb.json", "baseball/mlb");
+
+        Assert.Equal("NLDS - Game 2", Assert.Single(games, g => g.Id == "401908014").Note);
+    }
+
+    [Fact]
+    public async Task Game_without_notes_has_no_note()
+    {
+        var games = await FetchFixtureAsync("soccer-eng1-goals-and-cards.json", "soccer/eng.1");
+
+        Assert.All(games, g => Assert.Null(g.Note));
+    }
+
+    [Fact]
+    public async Task Scheduled_game_carries_its_betting_line()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("nfl-scheduled-odds.json", Nfl));
+
+        Assert.Equal(ProviderStatus.Scheduled, game.Status);
+        Assert.Equal(new ProviderOdds("SEA -2.5", 40.5, "DraftKings"), game.Odds);
+    }
+
+    [Fact]
+    public async Task Soccer_game_carries_its_goals_and_cards_in_order_and_its_last_goal()
+    {
+        var games = await FetchFixtureAsync("soccer-eng1-goals-and-cards.json", "soccer/eng.1");
+
+        var game = Assert.Single(games, g => g.Id == "740656");
+        Assert.Equal([
+            new ProviderKeyEvent(KeyEventKind.Goal, "ARS", "Declan Rice", "38'"),
+            new ProviderKeyEvent(KeyEventKind.YellowCard, "WHU", "Crysencio Summerville", "58'"),
+            new ProviderKeyEvent(KeyEventKind.PenaltyGoal, "ARS", "Bukayo Saka", "67'"),
+            new ProviderKeyEvent(KeyEventKind.YellowCard, "WHU", "Lucas Paquetá", "69'"),
+        ], game.KeyEvents);
+        Assert.Equal(new ProviderScoringPlay("ARS", "Penalty: Bukayo Saka", null, "67'"), game.LastScore);
+    }
+
+    [Fact]
+    public async Task Soccer_card_without_a_named_player_is_still_listed()
+    {
+        var games = await FetchFixtureAsync("soccer-eng1-goals-and-cards.json", "soccer/eng.1");
+
+        var game = Assert.Single(games, g => g.Id == "740660");
+        Assert.Equal(new ProviderKeyEvent(KeyEventKind.RedCard, "CHE", null, "90'+7'"), game.KeyEvents[^1]);
+        Assert.Equal(new ProviderScoringPlay("CHE", "Goal: Estêvão", null, "90'+5'"), game.LastScore);
+    }
+
+    [Fact]
+    public async Task Soccer_and_cricket_never_ask_for_a_summary()
+    {
+        var handler = new StubHttpHandler(request => request.RequestUri!.AbsolutePath.Contains("/scoreboard")
+            ? Fixture(request.RequestUri.AbsolutePath.Contains("soccer") ? "soccer-eng1-goals-and-cards.json" : "cricket-live.json")
+            : throw new InvalidOperationException("Asked for a summary"));
+        var provider = ProviderOver(handler);
+
+        await provider.FetchScoreboardAsync("soccer/eng.1", CancellationToken.None);
+        var cricket = await provider.FetchScoreboardAsync("cricket/8656", CancellationToken.None);
+
+        Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/summary"));
+        Assert.All(cricket, game => Assert.Null(game.LastScore));
+    }
+
+    [Fact]
+    public async Task Football_last_score_is_the_summarys_last_scoring_play()
+    {
+        var provider = ProviderOver(StubHttpHandler.Serving(
+            ("https://espn.test/sports/football/college-football/scoreboard", Fixture("college-football-ranked.json")),
+            ("https://espn.test/sports/football/college-football/summary?event=401752865", Fixture("college-football-summary.json"))));
+
+        var games = await provider.FetchScoreboardAsync("football/college-football", CancellationToken.None);
+
+        var game = Assert.Single(games, g => g.Id == "401752865");
+        Assert.Equal(new ProviderScoringPlay("ILL",
+            "Collin Dixon 4 Yd pass from Luke Altmyer (Two-Point Pass Conversion Failed)", 4, "4:25"), game.LastScore);
+    }
+
+    /// <summary>A basketball game, ATL at DET, under way at <paramref name="home"/>–<paramref name="away"/>, as ESPN's scoreboard has it.</summary>
+    private static string BasketballScoreboard(int home, int away) => $$$$"""
+        {"events":[{"id":"401810164","date":"2026-10-04T17:00Z","competitions":[{"venue":{"fullName":"Little Caesars Arena"},
+          "competitors":[
+            {"id":"8","homeAway":"home","team":{"id":"8","abbreviation":"DET","displayName":"Detroit Pistons"},"score":"{{{{home}}}}"},
+            {"id":"1","homeAway":"away","team":{"id":"1","abbreviation":"ATL","displayName":"Atlanta Hawks"},"score":"{{{{away}}}}"}],
+          "status":{"displayClock":"1.8","period":4,"type":{"name":"STATUS_IN_PROGRESS","state":"in"}}}]}]}
+        """;
+
+    private static StubHttpHandler BasketballServing(Func<string> scoreboard, Func<string> summary) =>
+        new(request => request.RequestUri!.AbsolutePath.Contains("/scoreboard") ? scoreboard() : summary());
+
+    [Fact]
+    public async Task Basketball_last_score_is_the_last_scoring_play_among_every_play()
+    {
+        var provider = ProviderOver(BasketballServing(() => BasketballScoreboard(99, 98), () => Fixture("nba-summary.json")));
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+
+        // The summary goes on past it, with a rebound and the end of the game.
+        Assert.Equal(new ProviderScoringPlay("ATL",
+            "Nickeil Alexander-Walker makes 22-foot three point jumper (Jalen Johnson assists)", 4, "1.8"), game.LastScore);
+    }
+
+    [Fact]
+    public async Task Baseball_last_score_says_which_half_of_the_inning()
+    {
+        var scoreboard = """
+            {"events":[{"id":"401907972","date":"2026-10-04T17:00Z","competitions":[{"venue":{"fullName":"Truist Park"},
+              "competitors":[
+                {"id":"15","homeAway":"home","team":{"id":"15","abbreviation":"ATL","displayName":"Atlanta Braves"},"score":"3"},
+                {"id":"22","homeAway":"away","team":{"id":"22","abbreviation":"PHI","displayName":"Philadelphia Phillies"},"score":"4"}],
+              "status":{"period":10,"type":{"name":"STATUS_FINAL","state":"post"}}}]}]}
+            """;
+        var provider = ProviderOver(BasketballServing(() => scoreboard, () => Fixture("mlb-summary.json")));
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("baseball/mlb", CancellationToken.None));
+
+        Assert.Equal(("PHI", "Bohm homered to right (357 feet).", 10, ProviderPeriodPhase.InningTop),
+            (game.LastScore!.Team, game.LastScore.Text, game.LastScore.Period, game.LastScore.Phase));
+    }
+
+    [Fact]
+    public async Task Summary_is_asked_for_again_only_once_the_score_changes()
+    {
+        var (home, away) = (99, 98);
+        var handler = BasketballServing(() => BasketballScoreboard(home, away), () => Fixture("nba-summary.json"));
+        var provider = ProviderOver(handler);
+        int Summaries() => handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary"));
+
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        var unchanged = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        Assert.Equal(1, Summaries());
+        Assert.NotNull(unchanged.LastScore);
+
+        (home, away) = (101, 98);
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        Assert.Equal(2, Summaries());
+    }
+
+    [Fact]
+    public async Task Summary_behind_the_scoreboard_is_asked_for_again_next_time()
+    {
+        // The scoreboard has a basket the summary doesn't have yet: its last scoring play left it 99-98.
+        var handler = BasketballServing(() => BasketballScoreboard(101, 98), () => Fixture("nba-summary.json"));
+        var provider = ProviderOver(handler);
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+
+        Assert.Equal("ATL", game.LastScore?.Team);
+        Assert.Equal(2, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
+    }
+
+    [Fact]
+    public async Task Games_not_started_or_still_scoreless_never_ask_for_a_summary()
+    {
+        var handler = BasketballServing(() => BasketballScoreboard(0, 0), () => throw new InvalidOperationException("Asked for a summary"));
+        var provider = ProviderOver(handler);
+
+        var scoreless = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        await FetchFixtureAsync("nfl-scheduled-odds.json", Nfl);
+
+        Assert.Null(scoreless.LastScore);
+        Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/summary"));
+    }
+
+    public static TheoryData<string> SummaryFailures => ["error status", "timeout", "not JSON"];
+
+    [Theory]
+    [MemberData(nameof(SummaryFailures))]
+    public async Task A_failed_summary_keeps_the_last_score_it_had_and_is_tried_again(string failure)
+    {
+        var (home, failing) = (99, false);
+        var handler = BasketballServing(() => BasketballScoreboard(home, 98), () => !failing ? Fixture("nba-summary.json") : failure switch
+        {
+            "error status" => StubHttpHandler.ServerError,
+            "timeout" => throw new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
+                new TimeoutException("The operation was canceled.")),
+            _ => "<html>Service Unavailable</html>",
+        });
+        var provider = ProviderOver(handler);
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+
+        (home, failing) = (101, true);
+        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+
+        Assert.Equal((101, "ATL"), (game.Home.Score, game.LastScore?.Team));
+        Assert.Equal(3, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
+    }
+
+    [Fact]
+    public async Task Cancelling_while_a_summary_is_asked_for_cancels_the_fetch()
+    {
+        using var cancel = new CancellationTokenSource();
+        var handler = BasketballServing(() => BasketballScoreboard(99, 98), () =>
+        {
+            cancel.Cancel();
+            throw new TaskCanceledException("Cancelled", null, cancel.Token);
+        });
+        var provider = ProviderOver(handler);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.FetchScoreboardAsync("basketball/nba", cancel.Token));
+    }
 }

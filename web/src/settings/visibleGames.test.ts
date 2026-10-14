@@ -13,14 +13,20 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     delayed: false,
     disruption: null,
     endTime: null,
-    home: { abbreviation: 'HOM', fullName: 'Home', logoUrl: null, score: null },
-    away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null },
+    home: { abbreviation: 'HOM', fullName: 'Home', logoUrl: null, score: null, rank: null, record: null },
+    away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null, rank: null, record: null },
     clock: null,
     period: null,
     clutchTime: false,
     venue: { name: null, city: null, region: null, country: null, latitude: 0, longitude: 0, timeZone: null, photo: null },
     broadcasters: [],
     streamLinks: [],
+    note: null,
+    attendance: null,
+    odds: null,
+    situation: null,
+    lastScore: null,
+    keyEvents: [],
   }
 }
 

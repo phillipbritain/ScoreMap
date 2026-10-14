@@ -7,6 +7,7 @@ import {
   withAllLeagues,
   withLeague,
   withSport,
+  withLeagueColour,
   withSportColour,
   withoutColours,
   type League,
@@ -17,7 +18,7 @@ interface SettingsMenuProps {
   leagues: readonly League[]
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
-  /** The theme's own colour for games, which a sport with no colour picked shows as, as #rrggbb. */
+  /** The theme's own colour for games, which a sport or league with no colour picked shows as, as #rrggbb. */
   accent: string
 }
 
@@ -36,8 +37,9 @@ const displaySwitches = [
 /**
  * The settings menu, opened from a gear icon, in two tabs. Leagues, first as the most used: an "All
  * leagues" chip to switch every league at once, then leagues grouped under their sport, each a chip
- * to switch on or off, and beside each sport's name a swatch of its games' colour, which opens the
- * browser's colour picker, and a control to clear it; "Reset colours" clears every colour. Display:
+ * to switch on or off. Beside each sport's name and each league's chip is a swatch of its games' colour,
+ * which opens the browser's colour picker, and a control to clear it; a league with no colour of its own
+ * shows its sport's, marked as taken from the sport. "Reset colours" clears every colour. Display:
  * "Live only" and "Show Disrupted games" as chips.
  */
 export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMenuProps) {
@@ -91,6 +93,11 @@ export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMe
               </div>
               {leaguesBySport(leagues).map((group) => {
                 const on = group.leagues.filter((league) => isLeagueOn(settings, league.name)).length
+                const sportColour = settings.sportColours[group.sport] ?? null
+                // What a league with no colour of its own shows in: its sport's, else the theme's.
+                const fromSport = sportColour
+                  ? { colour: sportColour, from: `${group.sport}'s` }
+                  : { colour: accent, from: "the theme's" }
                 return (
                   <div key={group.sport} className="settings-sport">
                     <div className="settings-sport__head">
@@ -107,22 +114,29 @@ export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMe
                       </button>
                       <ColourSwatch
                         name={group.sport}
-                        colour={settings.sportColours[group.sport] ?? null}
-                        accent={accent}
+                        colour={sportColour}
+                        taken={{ colour: accent, from: "the theme's" }}
                         onChange={(colour) => onChange(withSportColour(settings, group.sport, colour))}
                       />
                     </div>
                     <div className="settings-chips">
                       {group.leagues.map((league) => (
-                        <Chip
-                          key={league.name}
-                          on={isLeagueOn(settings, league.name)}
-                          onClick={() =>
-                            onChange(withLeague(settings, league.name, !isLeagueOn(settings, league.name)))
-                          }
-                        >
-                          {league.name}
-                        </Chip>
+                        <span key={league.name} className="settings-league">
+                          <Chip
+                            on={isLeagueOn(settings, league.name)}
+                            onClick={() =>
+                              onChange(withLeague(settings, league.name, !isLeagueOn(settings, league.name)))
+                            }
+                          >
+                            {league.name}
+                          </Chip>
+                          <ColourSwatch
+                            name={league.name}
+                            colour={settings.leagueColours[league.name] ?? null}
+                            taken={fromSport}
+                            onChange={(colour) => onChange(withLeagueColour(settings, league.name, colour))}
+                          />
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -162,33 +176,39 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 }
 
 /**
- * A sport's colour as a swatch, which opens the browser's colour picker: its games show in the colour
- * picked at once, as it's picked. With none picked, it shows the theme's own colour, hollow; with one,
+ * A sport's or league's colour as a swatch, which opens the browser's colour picker: its games show in
+ * the colour picked at once, as it's picked. With none picked, it shows hollow in the colour its games
+ * take instead (the theme's, or a league's sport's), and says where that colour is taken from; with one,
  * a control beside it clears it.
  */
 function ColourSwatch({
   name,
   colour,
-  accent,
+  taken,
   onChange,
 }: {
   name: string
   colour: string | null
-  accent: string
+  /** The colour its games take with none picked, and whose it is ("Football's", "the theme's"). */
+  taken: { colour: string; from: string }
   onChange: (colour: string | null) => void
 }) {
   return (
     <span className="settings-colour">
       <label
         className={colour ? 'settings-colour__swatch settings-colour__swatch--picked' : 'settings-colour__swatch'}
-        style={{ '--swatch-color': colour ?? accent } as CSSProperties}
-        title={colour ? `${name}'s colour: click to change` : `Pick a colour for ${name}`}
+        style={{ '--swatch-color': colour ?? taken.colour } as CSSProperties}
+        title={
+          colour
+            ? `${name}'s colour: click to change`
+            : `${name} takes ${taken.from} colour: click to pick its own`
+        }
       >
         <input
           type="color"
           className="settings-colour__input"
           aria-label={`${name} colour`}
-          value={colour ?? accent}
+          value={colour ?? taken.colour}
           onChange={(event) => onChange(event.target.value)}
         />
       </label>

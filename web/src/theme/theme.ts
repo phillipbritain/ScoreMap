@@ -434,7 +434,7 @@ const settings = {
      * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's tinted with its status's colour, 0 not at all and 1
      * the colour itself, and how far apart its letters are spaced, in ems) and its corners. Its
      * outline, header line, light and glow are its status's colour. Its size: its narrowest, a team's
-     * logo, how far its pointer reaches below it to the venue (the globe reads this to place cards),
+     * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
      * globe lays cards out by this). By its status, how it fades and glows (see cardStatus), and a
      * Disrupted game's fill and text.
@@ -445,7 +445,7 @@ const settings = {
       shadow: color,
       header: { tint: opacity, letterSpacing: tracking },
       corner,
-      size: { minWidth: pixels, logo: pixels, pointer: pixels, light: pixels, nameClearance: pixels },
+      size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,

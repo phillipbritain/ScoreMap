@@ -45,7 +45,7 @@ function replay(frames: LaidOutFrame[], layOut: typeof layOutCards) {
         ? 'out of a card cluster'
         : now.inCardCluster
           ? 'into a card cluster'
-          : `${was.trail ? 'moved' : 'over its venue'} → ${now.trail ? 'moved' : 'over its venue'}`
+          : `${was.moved ? 'moved' : 'above its venue'} → ${now.moved ? 'moved' : 'above its venue'}`
       kinds[kind] = (kinds[kind] ?? 0) + 1
       const onScreen = venueX >= 0 && venueX <= scene.width && venueY >= 0 && venueY <= scene.height
       if (!onScreen || was.inCardCluster || now.inCardCluster || moved <= bigJump) continue

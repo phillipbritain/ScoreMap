@@ -127,7 +127,7 @@ The dark theme names one of the palette's colours where a job is what that palet
 | `components.Pin.<status>.core.color` | A small pin's bright core. One that's its status's colour is drawn in the game's colour; any other (Live's paler core) stays, so status shows by brightness | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
 | `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
-| `components.ScoreCard.fill` | A score card's fill, solid unless the card is see-through (see [See-through cards and trails](#see-through-cards-and-trails)) | `primary.dark` |
+| `components.ScoreCard.fill` | A score card's fill, as opaque as its fill opacity (see [See-through cards and trails](#see-through-cards-and-trails)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
 | `components.ScoreCard.disrupted.fill`, `.text` | A Disrupted game's score card fill and text | `primary.dark`, `offWhite.700` |
 | `components.ScoreCard.shadow` | The drop shadow a starting game's score card settles with | `background.default` |
@@ -174,7 +174,7 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.
 
-A score card fades by colour, not by being see-through: its game's colour, text and logos are mixed into its fill. A see-through card (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
+A score card fades by colour, not by being see-through: its game's colour, text and logos are mixed into its fill. A card the map shows through (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
 
 Each status still has its own colour in the palette, though three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A colour the viewer picks takes the place of its status's, and text written on it (the game panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
 
@@ -211,11 +211,11 @@ How status reaches the rest of the globe:
 
 ### See-through cards and trails
 
-Score cards and trails can let the map show through, so coastlines, borders and place names under them can still be seen where games crowd. Each has a `seeThrough` setting: `on`, written to CSS as `1` or `0` as the cut corner's is, and an `opacity`, used only when it's on. A see-through score card's fill and drop shadow are that opaque, while its text, logos, scores, outline, status light and glow are not, so the score stays readable and the card keeps its status look (Live's glow, Final's fade). A see-through trail's line and glow are multiplied by that opacity, on top of their own. Try it on and off, and its strength, in the theme tuner on a local run.
+Score cards and trails can let the map show through, so coastlines, borders and place names under them can still be seen where games crowd. Each has one opacity to tune, where 1 is solid: the score card's `fillOpacity`, and the trail's own `opacity` (its glow keeps its own, for how strong the glow is). A score card's fill and drop shadow are that opaque, while its text, logos, scores, outline, status light and glow are not, so the score stays readable and the card keeps its status look (Live's glow, Final's fade). Tune them in the theme tuner on a local run.
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a see-through card turns solid, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, not on top of the trail's opacity or see-through; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card's fill turns solid, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
 
 ## Typography
 
@@ -286,9 +286,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
-| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue | 1.25, 0.9 |
-| `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.35 |
-| `components.Trail.seeThrough.on`, `.opacity` | Whether trails are see-through, and how opaque their line and glow are then, on top of their own opacity (see [See-through cards and trails](#see-through-cards-and-trails)) | on, 0.7 |
+| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 1.25, 0.63 |
+| `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot | 5, 1 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
@@ -305,8 +304,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.GamePanel.shadow`, `components.SettingsMenu.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
 | `components.SettingsMenu.gearOutline` | The outline around the settings gear, as a shadow | none (`transparent`, blur 0) |
 | `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's colour along the game panel's top | 0, 0, 0 (none) |
-| `components.ScoreCard.seeThrough.on`, `.opacity` | Whether score cards are see-through, and how opaque their fill and drop shadow are then, 0 to 1 (see [See-through cards and trails](#see-through-cards-and-trails)) | on, 0.75 |
-| `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether a see-through card turns solid (see [Hover](#hover)) | 2.5, on |
+| `components.ScoreCard.fillOpacity` | How opaque score cards' fill and drop shadow are, 0 to 1, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 0.75 |
+| `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether its fill turns solid (see [Hover](#hover)) | 2.5, on |
 | `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's colour, 0 to 1. The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |

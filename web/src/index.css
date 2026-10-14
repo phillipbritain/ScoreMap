@@ -375,19 +375,17 @@ body {
 
    A card fades (Final, say) by colour: its game's colour (--card-color, for its outline, header,
    light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
-   fade into the fill likewise. A see-through card's fill (and drop shadow) is the theme's see-through
-   opacity, so the map shows through behind its text, logos, scores and light, which stay as they are.
+   fade into the fill likewise. Its fill (and drop shadow) is the theme's fill opacity, so below 1 the
+   map shows through behind its text, logos, scores and light, which stay as they are.
 
    With the pointer on it, its border is bolder (a ring around it, so the card keeps its size and
-   doesn't move) and, if the theme says so, a see-through card turns solid (see components.Hover). */
+   doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
 .score-card {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
-  /* How opaque the fill is: solid, or the see-through opacity when see-through is on. */
-  --card-fill-opacity: calc(
-    100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * 100%
-  );
+  /* How opaque the fill is, from the theme. */
+  --card-fill-opacity: calc(var(--score-card-fill-opacity) * 100%);
   --card-color: color-mix(in srgb, var(--game-color), var(--card-surface) var(--fade));
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;
@@ -423,10 +421,7 @@ body {
 @media (hover: hover) {
   .score-card:hover {
     --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
-    --card-fill-opacity: calc(
-      100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * (1 - var(--hover-card-solid)) *
-        100%
-    );
+    --card-fill-opacity: calc(100% - (1 - var(--score-card-fill-opacity)) * (1 - var(--hover-card-solid)) * 100%);
   }
 }
 

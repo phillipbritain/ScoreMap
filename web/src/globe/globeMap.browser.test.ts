@@ -231,8 +231,8 @@ describe('score cards', () => {
     const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
     const { components: { ScoreCard: look }, palette } = builtInTheme
 
-    // Every card's fill as opaque as the theme's see-through says, whatever its status.
-    const fillOpacity = look.seeThrough.on ? look.seeThrough.opacity : 1
+    // Every card's fill as opaque as the theme says, whatever its status.
+    const fillOpacity = look.fillOpacity
     for (const shown of [live, final, disrupted]) {
       expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
       expect(channels(getComputedStyle(shown).backgroundColor)[3], shown.dataset.gameId).toBeCloseTo(fillOpacity, 2)

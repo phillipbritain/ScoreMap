@@ -395,14 +395,10 @@ describe('resolveTheme', () => {
       ],
     })
   })
-  it('rejects a theme without the score card’s or the trail’s see-through setting', () => {
+  it('rejects a theme without the score card’s fill opacity', () => {
     const json = themeJson()
-    delete json.components.ScoreCard.seeThrough
-    delete json.components.Trail.seeThrough.on
-    expect(resolveTheme(json)).toEqual({
-      ok: false,
-      problems: ['components.Trail.seeThrough.on is missing', 'components.ScoreCard.seeThrough is missing'],
-    })
+    delete json.components.ScoreCard.fillOpacity
+    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.ScoreCard.fillOpacity is missing'] })
   })
   it('rejects a theme without its hover settings', () => {
     const json = themeJson()

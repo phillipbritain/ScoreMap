@@ -3,9 +3,11 @@ import type { LayerSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
 import builtIn from '../theme/builtInTheme.json'
 import { resolveTheme, type Theme } from '../theme/theme'
-import { cardLayoutLayers } from './cardLayoutLayers'
+import type { GameStatus } from '../games/game'
+import type { CardLayout } from './cardLayout'
+import { cardLayoutFeatures, cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
-import { pinClusterLayers, pinClusterSpacing, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
+import { pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
 
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
@@ -21,13 +23,19 @@ const countLayout = (layers: readonly LayerSpecification[], id: string) =>
   (layers.find((l) => l.id === id) as SymbolLayerSpecification).layout
 
 /**
- * What a style expression gives for a feature with these properties, as MapLibre works it out, and
- * with this feature state (what the globe sets as it runs: a game hovered, say).
+ * What a style expression gives for a feature with these properties, as MapLibre works it out, with
+ * this feature state (what the globe sets as it runs: a game hovered, say), and with what a cluster
+ * property has gathered so far when it's gathering one.
  */
-function evaluate(value: unknown, properties: Record<string, unknown>, state: Record<string, unknown> = {}): unknown {
+function evaluate(
+  value: unknown,
+  properties: Record<string, unknown>,
+  state: Record<string, unknown> = {},
+  accumulated: unknown = null,
+): unknown {
   const parsed = createExpression(value as ExpressionSpecification, 'test')
   if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
-  return parsed.value.evaluate({ zoom: 0 }, { type: 'Point', properties } as never, state as never)
+  return parsed.value.evaluate({ zoom: 0, accumulated } as never, { type: 'Point', properties } as never, state as never)
 }
 
 const paintOf = (layers: readonly LayerSpecification[], id: string) =>
@@ -157,6 +165,103 @@ describe("a game's colour", () => {
     ]) {
       expect(evaluate(paint(id)[property], game), id).toBe('#123456')
     }
+  })
+})
+
+describe("a cluster's colour", () => {
+  /** The built-in theme, its accent (Live's colour) and Disrupted's colour each unlike any game's below. */
+  function colourTheme(): Theme {
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.palette.live.main = '#ff0000'
+    json.palette.disrupted.main = '#808080'
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    return result.theme
+  }
+
+  interface ClusteredGame {
+    status: GameStatus
+    color: string
+  }
+
+  /** The properties the pin source gives a pin cluster of these games' pins, as MapLibre gathers them. */
+  function pinClusterOf(games: readonly ClusteredGame[]): Record<string, unknown> {
+    const { clusterProperties } = pinSourceSpec({ type: 'FeatureCollection', features: [] }, { size: 'small', clusterRadius: 35 })
+    return Object.fromEntries(
+      Object.entries(clusterProperties as Record<string, [unknown, unknown]>).map(([key, [operator, perPin]]) => {
+        const reduce = typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator
+        const mapped = games.map((game) => evaluate(perPin, { ...game }))
+        return [key, mapped.reduce((gathered, next) => evaluate(reduce, { [key]: next }, {}, gathered))]
+      }),
+    )
+  }
+
+  /** The properties of a card cluster of these games' cards. */
+  function cardClusterOf(games: readonly ClusteredGame[]): Record<string, unknown> {
+    const cards = games.map(({ status, color }, i) => ({
+      gameId: `${i}`,
+      status,
+      color,
+      venueX: 0,
+      venueY: 0,
+      width: 100,
+      height: 60,
+      lngLat: [0, 0] as [number, number],
+    }))
+    const layout: CardLayout = {
+      cards: new Map(cards.map(({ gameId }) => [gameId, { offset: { dx: 0, dy: -6 }, inCardCluster: true, moved: false, trail: null }])),
+      cardClusters: [{ gameIds: cards.map(({ gameId }) => gameId), status: 'Live', x: 0, y: 0 }],
+    }
+    const { features } = cardLayoutFeatures(cards, layout, (x, y) => [x, y], { dot: 6, cluster: () => 12 })
+    return features.find((feature) => feature.properties?.kind === 'cardCluster')!.properties!
+  }
+
+  /** The colours a pin cluster and a card cluster of these games show in: glow, outline and count, each. */
+  function coloursOf(games: readonly ClusteredGame[]): string[] {
+    const theme = colourTheme()
+    const pinLayers = pinClusterLayers(theme, zoomedOutPins)
+    const cardLayers = cardLayoutLayers(theme)
+    const pinCluster = { ...pinClusterOf(games), point_count: games.length }
+    const cardCluster = cardClusterOf(games)
+    return [
+      ...[
+        ['pin-cluster-glows', 'circle-color'],
+        ['pin-clusters', 'circle-stroke-color'],
+        ['pin-cluster-counts', 'text-color'],
+      ].map(([id, property]) => evaluate(paintOf(pinLayers, id)[property], pinCluster) as string),
+      ...[
+        ['card-cluster-glows', 'circle-color'],
+        ['card-clusters', 'circle-stroke-color'],
+        ['card-cluster-counts', 'text-color'],
+      ].map(([id, property]) => evaluate(paintOf(cardLayers, id)[property], cardCluster) as string),
+    ]
+  }
+
+  const everywhere = (colour: string) => Array(6).fill(colour)
+
+  it('is the colour its games share, on pin clusters and card clusters alike', () => {
+    const games: ClusteredGame[] = [
+      { status: 'Live', color: '#123456' },
+      { status: 'Final', color: '#123456' },
+      { status: 'Upcoming', color: '#123456' },
+    ]
+    expect(coloursOf(games)).toEqual(everywhere('#123456'))
+  })
+
+  it("is the theme's accent when its games' colours differ", () => {
+    const games: ClusteredGame[] = [
+      { status: 'Live', color: '#123456' },
+      { status: 'Live', color: '#123456' },
+      { status: 'Final', color: '#654321' },
+    ]
+    expect(coloursOf(games)).toEqual(everywhere('#ff0000'))
+  })
+
+  it("leaves out Disrupted games, showing Disrupted's colour only when all its games are", () => {
+    const disrupted: ClusteredGame = { status: 'Disrupted', color: '#808080' }
+    const someDisrupted: ClusteredGame[] = [disrupted, { status: 'Live', color: '#123456' }, disrupted, { status: 'Upcoming', color: '#123456' }]
+    expect(coloursOf(someDisrupted)).toEqual(everywhere('#123456'))
+    expect(coloursOf([disrupted, disrupted])).toEqual(everywhere('#808080'))
   })
 })
 

@@ -178,9 +178,37 @@ export function selectedPin(gameId: string | null): ExpressionSpecification {
   return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
 }
 
-/** A pin cluster's size by how many games are in it: a few (up to 4), some (up to 14), or many. */
-function byCount({ few, some, many }: Theme['components']['Cluster']['radius']): ExpressionSpecification {
-  return ['step', ['get', 'point_count'], few, 5, some, 15, many]
+/**
+ * How far apart on screen small pins and pin clusters must be not to overlap: as far as the two widest
+ * reach together, the widest small pin (see smallPinWidth) or the widest pin cluster, outline and all.
+ * MapLibre clusters with one radius for pins and pin clusters alike, so pins are clustered this far
+ * apart, though two small pins alone could come closer. MapLibre measures on a flat map, not the
+ * globe, so pins may still overlap a little far from the equator or near the globe's edge.
+ */
+export function pinClusterSpacing(theme: Theme): number {
+  const { radius, outlineWidth } = theme.components.Cluster
+  return Math.ceil(Math.max(smallPinWidth(theme), 2 * (Math.max(radius.few, radius.some, radius.many) + outlineWidth)))
+}
+
+/** How many games a cluster holds from which it's of some, and of many. */
+const clusterCounts = { some: 5, many: 15 }
+
+/**
+ * A cluster's size by how many games are in it, read from a feature's count property: a few (up to
+ * 4), some (up to 14), or many.
+ */
+export function byCount(
+  { few, some, many }: Theme['components']['Cluster']['radius'],
+  count = 'point_count',
+): ExpressionSpecification {
+  return ['step', ['get', count], few, clusterCounts.some, some, clusterCounts.many, many]
+}
+
+/** How far a cluster of this many games reaches from its middle, outline and all (drawn outside its radius). */
+export function clusterReach(theme: Theme, count: number): number {
+  const { radius, outlineWidth } = theme.components.Cluster
+  const size = count < clusterCounts.some ? radius.few : count < clusterCounts.many ? radius.some : radius.many
+  return size + outlineWidth
 }
 
 /**

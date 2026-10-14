@@ -6,7 +6,7 @@ import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
 import { cardLayoutFeatures, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
-import { pinSource } from './pinLayers'
+import { clusterReach, pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
@@ -75,7 +75,7 @@ export class ScoreCardMarkers {
   private gaveUp = false
 
   /**
-   * `theme` gives the theme as it is now, for how far a card's pointer reaches below it to its venue
+   * `theme` gives the theme as it is now, for how far above its venue a card sits
    * and the colour of pulses over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
    * a game's id when its card is selected.
    */
@@ -163,7 +163,7 @@ export class ScoreCardMarkers {
           event.stopPropagation()
           this.onSelect(gameId)
         })
-        // Above the venue, its pointer's tip on the spot (see layOut); the city's name sits below its dot.
+        // Above the venue, its trail down to it (see layOut); the city's name sits below its dot.
         const marker = new Marker({ element, anchor: 'bottom' })
         placed = {
           marker: marker.setLngLat(lngLat).addTo(this.map),
@@ -269,13 +269,13 @@ export class ScoreCardMarkers {
     const previous = new Map<string, CardPlacement>()
     for (const gameId of gameIds) {
       const { offset, inCardCluster } = this.placed.get(gameId)!
-      if (offset) previous.set(gameId, { offset, inCardCluster, trail: null })
+      if (offset) previous.set(gameId, { offset, inCardCluster, moved: false, trail: null })
     }
     const canvas = this.map.getCanvas()
     const scene = {
       width: canvas.clientWidth,
       height: canvas.clientHeight,
-      pointer: this.theme().components.ScoreCard.size.pointer,
+      venueGap: this.theme().components.ScoreCard.size.venueGap,
       names: this.placeNames.nameBoxes(),
     }
     traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
@@ -285,11 +285,11 @@ export class ScoreCardMarkers {
     for (const [gameId, placed] of this.placed) {
       const placement = layout.cards.get(gameId)
       if (!placement) continue
-      const { offset, inCardCluster, trail } = placement
+      const { offset, inCardCluster, moved: movedAside } = placement
       if (offset.dx !== placed.offset?.dx || offset.dy !== placed.offset?.dy) {
         placed.offset = offset
         placed.marker.setOffset([offset.dx, offset.dy])
-        placed.marker.getElement().toggleAttribute('data-moved', trail !== null)
+        placed.marker.getElement().toggleAttribute('data-moved', movedAside)
         moved = true
       }
       if (inCardCluster !== placed.inCardCluster) {
@@ -318,7 +318,11 @@ export class ScoreCardMarkers {
     )
     if (drawn === this.layoutDrawn) return
     this.layoutDrawn = drawn
-    void source.setData(cardLayoutFeatures(cards, layout, (x, y) => this.map.unproject([x, y]).toArray()))
+    const theme = this.theme()
+    const { ring } = theme.components.Trail.venue
+    const unproject = (x: number, y: number) => this.map.unproject([x, y]).toArray()
+    const venueSizes = { dot: ring.radius + ring.width, cluster: (count: number) => clusterReach(theme, count) }
+    void source.setData(cardLayoutFeatures(cards, layout, unproject, venueSizes))
   }
 
   /** The games in each card cluster on screen now. */

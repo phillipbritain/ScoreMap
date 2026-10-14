@@ -4,18 +4,18 @@ import { layOutCards, type CardLayout, type CardScene, type ScreenCard, type Scr
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 
-const pointer = 6
-const scene: CardScene = { width: 1000, height: 800, pointer }
+const venueGap = 16
+const scene: CardScene = { width: 1000, height: 800, venueGap }
 // The middle of the screen, where most of these cards are, with room all round.
 const mx = 500
 const my = 400
 
-// A card 106 by 60 that would sit centred at (x, y), its venue just below it as score cards sit.
+// A card 106 by 60 that would sit centred at (x, y), its venue the venue gap below it as score cards sit.
 const card = (gameId: string, x: number, y: number, status: GameStatus = 'Live'): ScreenCard => ({
   gameId,
   status,
   venueX: x,
-  venueY: y + 30 + pointer,
+  venueY: y + 30 + venueGap,
   width: 106,
   height: 60,
 })
@@ -36,7 +36,7 @@ const lay = (cards: ScreenCard[], names: ScreenBox[] = []) => layOutCards(cards,
 function shiftsOf({ cards }: CardLayout): Map<string, ScreenOffset> {
   const shifts = new Map<string, ScreenOffset>()
   for (const [gameId, { offset, inCardCluster }] of cards) {
-    if (!inCardCluster) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + pointer })
+    if (!inCardCluster) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + venueGap })
   }
   return shifts
 }
@@ -53,7 +53,7 @@ function boxesOf(cards: ScreenCard[], layout: CardLayout): Box[] {
 const placed = (cards: ScreenCard[], names: ScreenBox[] = []): Box[] => boxesOf(cards, lay(cards, names))
 
 const unmoved = (cards: ScreenCard[]): Box[] =>
-  cards.map((c) => ({ ...c, x: c.venueX, y: c.venueY - pointer - c.height / 2 }))
+  cards.map((c) => ({ ...c, x: c.venueX, y: c.venueY - venueGap - c.height / 2 }))
 
 function overlaps(a: ScreenBox, b: ScreenBox): boolean {
   return Math.abs(a.x - b.x) < (a.width + b.width) / 2 && Math.abs(a.y - b.y) < (a.height + b.height) / 2
@@ -77,11 +77,26 @@ function anyOverlap(cards: ScreenBox[]): boolean {
 const trailLength = (c: Box) =>
   Math.hypot(Math.max(0, Math.abs(c.venueX - c.x) - c.width / 2), Math.max(0, Math.abs(c.venueY - c.y) - c.height / 2))
 
-const sitting = { offset: { dx: 0, dy: -pointer }, inCardCluster: false, trail: null }
+const sitting = (c: ScreenCard) => ({
+  offset: { dx: 0, dy: -venueGap },
+  inCardCluster: false,
+  moved: false,
+  trail: { x1: c.venueX, y1: c.venueY - venueGap, x2: c.venueX, y2: c.venueY },
+})
 
 describe('layOutCards', () => {
-  it('sits a card with room just above its venue, its pointer on the spot, with no trail', () => {
-    expect(lay([card('a', mx, my)]).cards.get('a')).toEqual(sitting)
+  it('sits a card with room the venue gap above its venue, with a trail down to it', () => {
+    const a = card('a', mx, my)
+    expect(lay([a]).cards.get('a')).toEqual(sitting(a))
+  })
+
+  it('never brings a moved card nearer its venue than the venue gap', () => {
+    const packed = [card('a', mx, my), card('b', mx, my), card('c', mx, my), card('d', mx + 20, my + 10)]
+    const layout = lay(packed)
+    for (const [i, c] of boxesOf(packed, layout).entries()) {
+      expect(layout.cards.get(packed[i].gameId)!.trail, c.gameId).not.toBeNull()
+      expect(trailLength(c), c.gameId).toBeGreaterThanOrEqual(venueGap)
+    }
   })
 
   it('gives games at the same venue a card each, side by side, clear of the venue', () => {
@@ -149,9 +164,12 @@ describe('layOutCards', () => {
 
   it('takes the nearest spot, its trail crossing another card, when keeping clear would take it more than 40 px further', () => {
     // Two games at one venue at the foot of the screen: b can't go below, and every spot of b's whose
-    // trail misses a's card (the side of it, low down, far out) is a long way off.
-    const pair = [card('a', mx, scene.height - 56), card('b', mx, scene.height - 56)]
-    const [a, b] = placed(pair)
+    // trail misses a's card (the side of it, low down, far out) is a long way off. With a narrower venue
+    // gap, which leaves no room for b's trail to pass under a.
+    const narrow = 6
+    const at = (gameId: string) => ({ ...card(gameId, mx, scene.height - 56), venueY: scene.height - 56 + 30 + narrow })
+    const pair = [at('a'), at('b')]
+    const [a, b] = boxesOf(pair, layOutCards(pair, { ...scene, venueGap: narrow }))
     expect([a.x, a.y]).toEqual([mx, scene.height - 56])
     expect(trailLength(b)).toBeLessThan(65)
     expect(lineCrossesCard(b.x, b.y, b.venueX, b.venueY, a)).toBe(true)
@@ -161,7 +179,7 @@ describe('layOutCards', () => {
     const packed = [card('a', mx, my), card('b', mx, my)]
     const layout = lay(packed)
     const after = placed(packed)
-    const i = packed.findIndex((c) => layout.cards.get(c.gameId)!.trail !== null)
+    const i = packed.findIndex((c) => layout.cards.get(c.gameId)!.moved)
     const trail = layout.cards.get(packed[i].gameId)!.trail!
     const box = after[i]
     expect([trail.x2, trail.y2]).toEqual([box.venueX, box.venueY])
@@ -179,7 +197,7 @@ describe('layOutCards', () => {
     expect(layout.cardClusters).toEqual([])
     const after = boxesOf(pair, layout)
     for (const c of after) expect(overlaps(c, name)).toBe(false)
-    expect(Math.max(...after.map((c) => Math.hypot(c.x - c.venueX, c.y - (c.venueY - pointer - c.height / 2))))).toBeGreaterThan(160)
+    expect(Math.max(...after.map((c) => Math.hypot(c.x - c.venueX, c.y - (c.venueY - venueGap - c.height / 2))))).toBeGreaterThan(160)
   })
 
   it('keeps moved cards wholly on screen', () => {
@@ -188,7 +206,7 @@ describe('layOutCards', () => {
     const layout = lay(corner)
     expect(layout.cardClusters).toEqual([])
     for (const [i, c] of boxesOf(corner, layout).entries()) {
-      if (!layout.cards.get(corner[i].gameId)!.trail) continue
+      if (!layout.cards.get(corner[i].gameId)!.moved) continue
       expect(c.x - c.width / 2, c.gameId).toBeGreaterThanOrEqual(0)
       expect(c.y + c.height / 2, c.gameId).toBeLessThanOrEqual(scene.height)
     }
@@ -224,16 +242,6 @@ describe('layOutCards', () => {
       const under = [{ x: mx, y: my + 40, width: 80, height: 20 }]
       expect(shiftsOf(lay([card('a', mx, my), card('b', mx + 5, my)], under)).size).toBe(2)
     })
-
-    it('moves a card aside rather than have its pointer reach through a name', () => {
-      // Another city's name over the venue: clear of the card above it, not of the pointer down to it.
-      const a = card('a', mx, my)
-      const over = { x: mx, y: a.venueY + 6, width: 80, height: 16 }
-      expect(overlaps(unmoved([a])[0], { ...over, width: over.width + 8, height: over.height + 8 })).toBe(false)
-      const placement = lay([a], [over]).cards.get('a')!
-      expect(placement.inCardCluster).toBe(false)
-      expect(placement.trail).not.toBeNull()
-    })
   })
 
   it('makes room for several overlapping cards', () => {
@@ -254,7 +262,7 @@ describe('layOutCards', () => {
   })
 
   describe('on a small screen, with room for only a few cards', () => {
-    const small: CardScene = { width: 400, height: 300, pointer }
+    const small: CardScene = { width: 400, height: 300, venueGap }
     const layIn = (cards: ScreenCard[]) => layOutCards(cards, small)
 
     it("groups games with no room for a card into a count at the first one's venue, the rest nearby joining it", () => {
@@ -264,7 +272,7 @@ describe('layOutCards', () => {
       const { cardClusters } = layout
       expect(cardClusters).toHaveLength(1)
       expect(shiftsOf(layout).size + cardClusters[0].gameIds.length).toBe(20)
-      for (const gameId of cardClusters[0].gameIds) expect(layout.cards.get(gameId)).toEqual({ ...sitting, inCardCluster: true })
+      for (const gameId of cardClusters[0].gameIds) expect(layout.cards.get(gameId)).toMatchObject({ offset: { dx: 0, dy: -venueGap }, inCardCluster: true, trail: null })
       const first = many.find((c) => c.gameId === cardClusters[0].gameIds[0])!
       expect([cardClusters[0].x, cardClusters[0].y]).toEqual([first.venueX, first.venueY])
     })
@@ -286,10 +294,10 @@ describe('layOutCards', () => {
     const pair = [card('a', mx, my), card('b', mx, my)]
     const lastTime = (shifts: Record<string, ScreenOffset>) =>
       new Map(
-        Object.entries(shifts).map(([gameId, { dx, dy }]) => [gameId, { offset: { dx, dy: dy - pointer }, inCardCluster: false, trail: null }]),
+        Object.entries(shifts).map(([gameId, { dx, dy }]) => [gameId, { offset: { dx, dy: dy - venueGap }, inCardCluster: false, moved: dx !== 0 || dy !== 0, trail: null }]),
       )
     const trailOf = (shift: ScreenOffset) => {
-      const b = { ...pair[1], x: pair[1].venueX + shift.dx, y: pair[1].venueY - pointer - 30 + shift.dy }
+      const b = { ...pair[1], x: pair[1].venueX + shift.dx, y: pair[1].venueY - venueGap - 30 + shift.dy }
       return trailLength(b)
     }
 
@@ -323,8 +331,8 @@ describe('layOutCards', () => {
     })
 
     it('keeps a moved card where it was as the globe turns its neighbour a pixel closer', () => {
-      // b moved down just clear of a's venue; as the globe turns, b's venue edges a pixel higher than a's.
-      const b = { dx: 0, dy: 72 }
+      // b moved down the venue gap below its venue; as the globe turns, b's venue edges a pixel higher than a's.
+      const b = { dx: 0, dy: 92 }
       expect(shiftsOf(lay([card('a', mx, my), card('b', mx + 1, my)])).get('b')).toEqual(b)
       const layout = layOutCards([card('a', mx, my), card('b', mx + 1, my - 1)], scene, lastTime({ a: { dx: 0, dy: 0 }, b }))
       expect(shiftsOf(layout).get('b')).toEqual(b)
@@ -335,7 +343,7 @@ describe('layOutCards', () => {
       // venue a rounding error inside the card above it.
       const at = (venueX: number, venueY: number): ScreenCard => ({ gameId: 'a', status: 'Live', venueX, venueY, width: 94, height: 61 })
       const frames = [at(526.7053513415644, -53.395523840588766), at(523.7689444446646, -53.4684770992202)]
-      for (const frame of frames) expect(lay([frame]).cards.get('a')).toEqual(sitting)
+      for (const frame of frames) expect(lay([frame]).cards.get('a')).toEqual(sitting(frame))
     })
 
     it('moves a card back over its venue once there is room there', () => {
@@ -354,7 +362,7 @@ describe('layOutCards', () => {
     it('pushes cards along as the globe turns the last of a row off screen, rather than send it across the crowd', () => {
       // Four games at one venue, in a strip of screen with no room above or below their cards: a sits
       // over the venue, the rest in a row to its right, out to the screen's edge.
-      const strip: CardScene = { width: 1000, height: 140, pointer }
+      const strip: CardScene = { width: 1000, height: 140, venueGap }
       const row = (x: number) => ['a', 'b', 'c', 'd'].map((gameId) => card(gameId, x, 64))
       const was = { a: { dx: 0, dy: 0 }, b: { dx: 120, dy: 0 }, c: { dx: 230, dy: 0 }, d: { dx: 340, dy: 0 } }
       const before = row(600)
@@ -413,7 +421,7 @@ describe('layOutCards', () => {
 
   it("leaves cards well off screen where they'd sit, however they overlap", () => {
     const { cards, cardClusters } = lay([card('a', -500, 100), card('b', -500, 100), card('c', 400, 1200)])
-    for (const placement of cards.values()) expect(placement).toEqual(sitting)
+    for (const placement of cards.values()) expect(placement).toMatchObject({ offset: { dx: 0, dy: -venueGap }, moved: false })
     expect(cardClusters).toEqual([])
   })
 })

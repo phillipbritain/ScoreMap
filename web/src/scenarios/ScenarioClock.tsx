@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { clockTime } from '../panel/dualTime'
-import { clockReading, nextTick, type ScenarioListing } from './scenarioPicker'
+import { clockReading, untilNextSecond, type ScenarioListing } from './scenarioPicker'
 
 /**
  * The scenario clock (ADR-0009), run forward in the browser from where the server last said it was.
@@ -11,7 +11,7 @@ export function ScenarioClock({ listing }: { listing: ScenarioListing }) {
   const [now, setNow] = useState(Date.now)
 
   useEffect(() => {
-    const delay = nextTick(listing, Date.now())
+    const delay = untilNextSecond(listing, Date.now())
     if (delay === null) return
     const tick = setTimeout(() => setNow(Date.now()), delay)
     return () => clearTimeout(tick)

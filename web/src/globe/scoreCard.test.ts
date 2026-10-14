@@ -16,7 +16,7 @@ const arrowhead: Game = {
   clock: '4:12',
   period: 3,
   clutchTime: false,
-  venue: { name: 'Arrowhead', city: 'Kansas City', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
+  venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
   broadcasters: [],
   streamLinks: [],
 }

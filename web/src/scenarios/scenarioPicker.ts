@@ -105,9 +105,26 @@ export function showsFasterIcon(speed: SpeedName): boolean {
  * anchor (the last tick, before a reset's listing came), which would show 11:59:59 for 12:00:00.
  */
 export function clockReading(listing: ScenarioListing, now: number): Date {
-  const times = listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
   const { at, reads } = listing.clock
-  return new Date(Date.parse(reads) + Math.max(0, now - Date.parse(at)) * times)
+  return new Date(Date.parse(reads) + Math.max(0, now - Date.parse(at)) * speedTimes(listing))
+}
+
+/**
+ * How long from the real time `now` (ms since the epoch) until the second the clock shows changes, in
+ * whole ms of real time rounded up, so a timer set for it lands on or after the change. Null while
+ * the clock stands still, when there is nothing to wait for.
+ */
+export function untilNextSecond(listing: ScenarioListing, now: number): number | null {
+  const times = speedTimes(listing)
+  if (times === 0) return null
+  const reading = clockReading(listing, now).getTime()
+  const toNextSecond = 1000 - (((reading % 1000) + 1000) % 1000)
+  const beforeAnchor = Math.max(0, Date.parse(listing.clock.at) - now)
+  return Math.ceil(beforeAnchor + toNextSecond / times)
+}
+
+function speedTimes(listing: ScenarioListing): number {
+  return listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
 }
 
 /** The parts of a keydown event that decide whether it hides or shows the scenario controls. */

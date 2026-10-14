@@ -1,4 +1,5 @@
 import type { Camera } from '../globe/camera'
+import { isHexColor } from '../theme/palette'
 import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -72,12 +73,19 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, liveOnly, showDisrupted } = fields
+  const { hiddenLeagues, liveOnly, showDisrupted, sportColours } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     liveOnly: typeof liveOnly === 'boolean' ? liveOnly : firstVisitSettings.liveOnly,
     showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
+    sportColours: coloursFromSaved(sportColours),
   }
+}
+
+/** Saved colours by name, keeping each that is a #rrggbb colour. */
+function coloursFromSaved(saved: unknown): Record<string, string> {
+  if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return {}
+  return Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => isHexColor(entry[1])))
 }

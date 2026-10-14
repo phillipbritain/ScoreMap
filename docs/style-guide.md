@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow) and [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colours.md) (viewers pick the colours games show in) and [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## What a theme is
 
@@ -167,7 +167,7 @@ Beside the palette's background, text, divider and hover:
 
 ## How a game's status shows
 
-A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map and only six to eight colours can be told apart on one, so it's kept to stand for a game's league later, when several leagues are shown at once. Until then the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled.
+A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport, in a colour the viewer picks in the settings menu (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
 
 - **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
 - **Upcoming** glows less and is a little dimmer.
@@ -176,7 +176,7 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 
 A score card fades by colour, not by being see-through: its status colour, text and logos are mixed into its fill. A see-through card (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
 
-Each status still has its own colour in the palette, though three are the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new setting.
+Each status still has its own colour in the palette, though three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A colour the viewer picks takes the place of its status's, and text written on it (the game panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
 
 A status's colour is the palette's; the rest of its look is each component's own, as MUI's components style each colour they come in, so a component's tab in the tuner holds all of how it looks:
 

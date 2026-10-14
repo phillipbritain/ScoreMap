@@ -55,6 +55,7 @@ export class ScoreCardMarkers {
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
+  private readonly colourOf: (game: Game) => string
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
   /** Games with no room for a card, as last laid out. */
@@ -75,13 +76,21 @@ export class ScoreCardMarkers {
   private gaveUp = false
 
   /**
-   * `theme` gives the theme as it is now, for how far above its venue a card sits
-   * and the colour of pulses over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
-   * a game's id when its card is selected.
+   * `theme` gives the theme as it is now, for how far above its venue a card sits; `colourOf` gives a
+   * game's colour as it is now (see gameColour), for its card, its trail and its pulses over card
+   * clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with a game's id
+   * when its card is selected.
    */
-  constructor(map: MapLibreMap, theme: () => Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
+  constructor(
+    map: MapLibreMap,
+    theme: () => Theme,
+    colourOf: (game: Game) => string,
+    placeNames: PlaceNames,
+    onSelect: (gameId: string) => void,
+  ) {
     this.map = map
     this.theme = theme
+    this.colourOf = colourOf
     this.placeNames = placeNames
     this.onSelect = onSelect
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
@@ -96,8 +105,9 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it: each card measured afresh, as its
-   * text, spacing and sizes may have changed, and laid out again.
+   * After a change of theme, with the page's CSS already in it, or of the games' colours: each card
+   * redrawn in its game's colour, measured afresh, as its text, spacing and sizes may have changed,
+   * and laid out again.
    */
   restyle(): void {
     for (const placed of this.placed.values()) {
@@ -152,8 +162,9 @@ export class ScoreCardMarkers {
       if (!game) continue
       keep.add(gameId)
       const card = scoreCard(game)
+      const color = this.colourOf(game)
       const selected = gameId === this.selectedGameId
-      const drawn = JSON.stringify({ card, selected })
+      const drawn = JSON.stringify({ card, color, selected })
       let placed = this.placed.get(gameId)
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.
@@ -183,7 +194,7 @@ export class ScoreCardMarkers {
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
-        drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
+        drawScoreCard(cardElement, card, color, selected, this.animating.get(gameId))
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -262,8 +273,17 @@ export class ScoreCardMarkers {
       const { marker, width, height } = this.placed.get(gameId)!
       const lngLat = marker.getLngLat()
       const venue = this.map.project(lngLat)
-      const { status } = this.games.get(gameId)!
-      return { gameId, status, venueX: venue.x, venueY: venue.y, width, height, lngLat: lngLat.toArray() }
+      const game = this.games.get(gameId)!
+      return {
+        gameId,
+        status: game.status,
+        venueX: venue.x,
+        venueY: venue.y,
+        width,
+        height,
+        lngLat: lngLat.toArray(),
+        color: this.colourOf(game),
+      }
     })
     // Where the cards were last frame, so they stay put while they still have room.
     const previous = new Map<string, CardPlacement>()
@@ -278,7 +298,7 @@ export class ScoreCardMarkers {
       venueGap: this.theme().components.ScoreCard.size.venueGap,
       names: this.placeNames.nameBoxes(),
     }
-    traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
     let moved = false
@@ -341,8 +361,9 @@ export class ScoreCardMarkers {
    */
   animate(gameId: string, animation: PinAnimation): boolean {
     const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
-    if (cardCluster) {
-      pulse(this.map, this.theme(), cardCluster.lngLat, animation, 'cluster')
+    const game = this.games.get(gameId)
+    if (cardCluster && game) {
+      pulse(this.map, this.colourOf(game), cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
@@ -375,8 +396,10 @@ export class ScoreCardMarkers {
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
-function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean, animation?: PinAnimation): void {
+function drawScoreCard(element: HTMLElement, card: ScoreCard, color: string, selected: boolean, animation?: PinAnimation): void {
   element.className = `score-card score-card--${statusKey(card.status)}`
+  // In its game's colour, in place of its status's from the page's CSS.
+  element.style.setProperty('--status-card-color', color)
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId

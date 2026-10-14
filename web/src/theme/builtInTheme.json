@@ -114,6 +114,11 @@
       "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
     },
     "Selection": { "color": "offWhite.500", "width": 2 },
+    "Hover": {
+      "card": { "borderWidth": 2.5, "solid": true },
+      "trail": { "width": 2.5, "opacity": 1 },
+      "venue": { "radius": 3.5, "glow": { "radius": 12, "opacity": 0.6 } }
+    },
     "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
     "ScoreCard": {
       "fill": "primary.dark",

@@ -396,6 +396,15 @@ describe('resolveTheme', () => {
       problems: ['components.Trail.seeThrough.on is missing', 'components.ScoreCard.seeThrough is missing'],
     })
   })
+  it('rejects a theme without its hover settings', () => {
+    const json = themeJson()
+    delete json.components.Hover.card.solid
+    delete json.components.Hover.venue
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['components.Hover.card.solid is missing', 'components.Hover.venue is missing'],
+    })
+  })
 })
 
 describe('the built-in theme', () => {

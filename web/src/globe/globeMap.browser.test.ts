@@ -1000,9 +1000,9 @@ describe('changing theme', () => {
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
-    globe.setTheme(themeWith((json) => ((json.components.Trail.width = 3), (json.components.Pin.live.core.color = '#ff0000'))))
+    globe.setTheme(themeWith((json) => ((json.components.Trail.glow.width = 6), (json.components.Pin.live.core.color = '#ff0000'))))
 
-    expect(map.getPaintProperty('trails', 'line-width')).toBe(3)
+    expect(map.getPaintProperty('trail-glows', 'line-width')).toBe(6)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     expect(drawnAt(map, smallPinLayer, a)).not.toEqual([])

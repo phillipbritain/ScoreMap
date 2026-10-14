@@ -4,7 +4,7 @@ import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
-import { cardLayoutFeatures, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
+import { cardLayoutFeatures, cardLayoutSource, hoveredState, type CardOnGlobe } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { clusterReach, pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
@@ -51,6 +51,8 @@ export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
   private games = new Map<string, Game>()
   private selectedGameId: string | null = null
+  /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
+  private hoveredGameId: string | null = null
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
@@ -163,6 +165,14 @@ export class ScoreCardMarkers {
           event.stopPropagation()
           this.onSelect(gameId)
         })
+        // A mouse or pen on the card picks out its trail and venue dot; a touch has no hover (the
+        // card's own hover look is CSS, for devices that hover). The card stays where it is.
+        element.addEventListener('pointerenter', (event) => {
+          if (event.pointerType !== 'touch') this.hover(gameId)
+        })
+        element.addEventListener('pointerleave', () => {
+          if (this.hoveredGameId === gameId) this.hover(null)
+        })
         // Above the venue, its trail down to it (see layOut); the city's name sits below its dot.
         const marker = new Marker({ element, anchor: 'bottom' })
         placed = {
@@ -199,6 +209,7 @@ export class ScoreCardMarkers {
 
     for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
+      if (gameId === this.hoveredGameId) this.hover(null)
       marker.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
@@ -365,7 +376,20 @@ export class ScoreCardMarkers {
     return true
   }
 
+  /**
+   * Marks a game's trail and venue dot hovered on the map, and the last game's no longer: the map's
+   * feature state, which the trail layers read, so the layout and its trails aren't drawn again.
+   */
+  private hover(gameId: string | null): void {
+    const was = this.hoveredGameId
+    this.hoveredGameId = gameId
+    if (!this.map.getSource(cardLayoutSource)) return
+    if (was !== null) this.map.setFeatureState({ source: cardLayoutSource, id: was }, { [hoveredState]: false })
+    if (gameId !== null) this.map.setFeatureState({ source: cardLayoutSource, id: gameId }, { [hoveredState]: true })
+  }
+
   clear(): void {
+    this.hover(null)
     for (const { marker } of this.placed.values()) marker.remove()
     this.cardClusters = []
     this.placed.clear()

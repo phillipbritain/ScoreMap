@@ -362,13 +362,18 @@ body {
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores.
 
-   Solid, so the map never shows through the scores. A card fades (Final, say) by colour instead:
-   its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
-   are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
+   A card fades (Final, say) by colour: its status colour (--status-color, for its outline, header,
+   light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
+   fade into the fill likewise. A see-through card's fill (and drop shadow) is the theme's see-through
+   opacity, so the map shows through behind its text, logos, scores and light, which stay as they are. */
 .score-card {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
+  /* How opaque the fill is: solid, or the see-through opacity when see-through is on. */
+  --card-fill-opacity: calc(
+    100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * 100%
+  );
   --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
   display: grid;
   gap: calc(0.5 * var(--spacing));
@@ -376,7 +381,7 @@ body {
   padding: 0 0 var(--spacing);
   border: var(--shape-border-width-thin) solid var(--status-color);
   border-radius: var(--score-card-corner);
-  background: var(--card-surface);
+  background: color-mix(in srgb, var(--card-surface) var(--card-fill-opacity), transparent);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
   font-family: var(--typography-font-family);
   font-size: var(--typography-subtitle2-font-size);
@@ -455,7 +460,7 @@ body {
   padding: 0 calc(1.5 * var(--spacing));
 }
 
-/* Faded into the card's fill with the rest of the card: the card behind it is solid. */
+/* Faded with the rest of the card, by its status's fade. */
 .score-card__logo {
   width: var(--score-card-size-logo);
   height: var(--score-card-size-logo);
@@ -534,7 +539,7 @@ body {
     transform: scale(1);
     box-shadow:
       0 0 0 14px transparent,
-      0 1px 6px var(--score-card-shadow);
+      0 1px 6px color-mix(in srgb, var(--score-card-shadow) var(--card-fill-opacity), transparent);
   }
 }
 

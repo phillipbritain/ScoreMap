@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   clockReading,
+  nextTick,
   pickerEntries,
   pillLabel,
   showsScenarioControls,
@@ -115,6 +116,35 @@ describe('the clock', () => {
 
   it('stands still while paused', () => {
     expect(clockReading({ ...local, speed: 'Paused' }, at + 10_000)).toEqual(new Date(clock.reads))
+  })
+})
+
+describe('the next tick of the scenario clock', () => {
+  const at = Date.parse(clock.at)
+
+  it('never comes while paused', () => {
+    expect(nextTick({ ...local, speed: 'Paused' }, at + 10_000)).toBeNull()
+  })
+
+  it('comes when the second shown changes, at each speed', () => {
+    // 300 ms past the anchor: Normal reads :00.3, Fast :00.6, Faster :02.4.
+    expect(nextTick({ ...local, speed: 'Normal' }, at + 300)).toBe(700)
+    expect(nextTick({ ...local, speed: 'Fast' }, at + 300)).toBe(200)
+    expect(nextTick({ ...local, speed: 'Faster' }, at + 300)).toBe(75)
+  })
+
+  it('comes a whole second on from a reading on the second', () => {
+    expect(nextTick({ ...local, speed: 'Normal' }, at)).toBe(1000)
+    expect(nextTick({ ...local, speed: 'Faster' }, at)).toBe(125)
+  })
+
+  it('waits out a time before the anchor, where the clock stands at its reading', () => {
+    expect(nextTick({ ...local, speed: 'Normal' }, at - 50)).toBe(1050)
+  })
+
+  it('lands on or after the change, never just before it', () => {
+    // At Faster, 1000 ms of reading is 125 ms of real time; from :00.001 the change is 124.875 ms away.
+    expect(nextTick({ ...local, speed: 'Faster', clock: { ...clock, reads: '2026-10-04T20:00:00.001Z' } }, at)).toBe(125)
   })
 })
 

@@ -88,8 +88,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   // Changing only when a colour does, so other settings don't recolour the globe.
-  const { sportColours } = viewerSettings
-  const colours = useMemo((): PickedColours => ({ sportColours }), [sportColours])
+  const { sportColours, leagueColours } = viewerSettings
+  const colours = useMemo((): PickedColours => ({ sportColours, leagueColours }), [sportColours, leagueColours])
   // Not under the loading screen: only once it has gone.
   const message = loadingScreenGone ? noPinsMessage(games, visible) : null
 

@@ -26,9 +26,9 @@ describe('layerChanges', () => {
   })
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
-    const wider = themeWith((json) => (json.components.Trail.width = 3))
+    const wider = themeWith((json) => (json.components.Trail.glow.width = 6))
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
-      { layer: 'trails', kind: 'paint', property: 'line-width', value: 3 },
+      { layer: 'trail-glows', kind: 'paint', property: 'line-width', value: 6 },
     ])
   })
 

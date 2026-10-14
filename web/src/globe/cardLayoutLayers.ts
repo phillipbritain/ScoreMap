@@ -1,5 +1,6 @@
 import type {
   CircleLayerSpecification,
+  DataDrivenPropertyValueSpecification,
   ExpressionSpecification,
   GeoJSONSourceSpecification,
   LineLayerSpecification,
@@ -21,9 +22,22 @@ import { byStatus, groupStatus } from './statusLook'
 export const cardLayoutSource = 'card-layout'
 export const cardClusterLayer = 'card-clusters'
 
+/**
+ * A trail and the venue dot it ends at are known by their game's id, so the globe can mark them
+ * hovered while the pointer is on the game's card (see hovered).
+ */
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = {
   type: 'geojson',
   data: { type: 'FeatureCollection', features: [] },
+  promoteId: 'gameId',
+}
+
+/** The feature state the globe sets on a game's trail and venue dot while the pointer is on its card. */
+export const hoveredState = 'hovered'
+
+/** A paint value that's `hover` for a trail or venue dot whose card the pointer is on, and `otherwise` for the rest. */
+function hovered<T extends number>(hover: T, otherwise: T): DataDrivenPropertyValueSpecification<number> {
+  return ['case', ['boolean', ['feature-state', hoveredState], false], hover, otherwise]
 }
 
 /** A score card as it's laid out on screen, with its venue on the globe and its game's colour (see gameColour). */
@@ -67,12 +81,12 @@ export function cardLayoutFeatures(
     for (const card of mark.cards) {
       const { trail } = layout.cards.get(card.gameId)!
       features.push(
-        feature({ kind: 'trail', color: card.color }, { type: 'LineString', coordinates: [unproject(trail!.x1, trail!.y1), lngLat] }),
+        feature({ kind: 'trail', color: card.color, gameId: card.gameId }, { type: 'LineString', coordinates: [unproject(trail!.x1, trail!.y1), lngLat] }),
       )
     }
     features.push(
       mark.cards.length === 1
-        ? feature({ kind: 'venue', color: mark.cards[0].color }, { type: 'Point', coordinates: lngLat })
+        ? feature({ kind: 'venue', color: mark.cards[0].color, gameId: mark.cards[0].gameId }, { type: 'Point', coordinates: lngLat })
         : feature(
             {
               kind: 'venueCluster',
@@ -141,10 +155,12 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  * up. Added beneath the place names, so every name draws over them.
  *
  * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
- * to a point ringed in it; a see-through trail's line and glow let the map show through more. A venue
- * cluster and a card cluster are each a disc outlined and lit in its games' colour (see
- * clusterColour), with the count in it, as a pin cluster is (see the theme's cluster): a venue
- * cluster as wide as a pin cluster of as many games, a card cluster as one of some.
+ * to a point ringed in it; a see-through trail's line and glow let the map show through more. While
+ * the pointer is on a card, its trail and venue dot are drawn bolder, as the theme's hover says, the
+ * dot lit in a glow of its own. A venue cluster and a card cluster are each a disc outlined and lit
+ * in its games' colour (see clusterColour), with the count in it, as a pin cluster is (see the
+ * theme's cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one
+ * of some.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -155,12 +171,13 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
+  CircleLayerSpecification,
   SymbolLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
-  const { Cluster: cluster, Trail: trail } = theme.components
+  const { Cluster: cluster, Trail: trail, Hover: hover } = theme.components
   // How much of a trail's own opacity shows: all of it, unless the trail is see-through.
   const seen = trail.seeThrough.on ? trail.seeThrough.opacity : 1
   // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
@@ -185,7 +202,23 @@ export function cardLayoutLayers(
       type: 'line',
       source: cardLayoutSource,
       filter: kindIs('trail'),
-      paint: { 'line-color': gameColor, 'line-width': trail.width, 'line-opacity': trail.opacity * seen },
+      paint: {
+        'line-color': gameColor,
+        'line-width': hovered(hover.trail.width, trail.width),
+        'line-opacity': hovered(hover.trail.opacity, trail.opacity * seen),
+      },
+    },
+    {
+      id: 'trail-venue-glows',
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('venue'),
+      paint: {
+        'circle-radius': hovered(hover.venue.glow.radius, 0),
+        'circle-color': gameColor,
+        'circle-blur': 1,
+        'circle-opacity': hovered(hover.venue.glow.opacity, 0),
+      },
     },
     {
       id: 'trail-venue-rings',
@@ -195,7 +228,7 @@ export function cardLayoutLayers(
       paint: {
         'circle-radius': trail.venue.ring.radius,
         'circle-color': 'transparent',
-        'circle-stroke-width': trail.venue.ring.width,
+        'circle-stroke-width': hovered(hover.trail.width, trail.venue.ring.width),
         'circle-stroke-color': gameColor,
       },
     },
@@ -204,7 +237,7 @@ export function cardLayoutLayers(
       type: 'circle',
       source: cardLayoutSource,
       filter: kindIs('venue'),
-      paint: { 'circle-radius': trail.venue.radius, 'circle-color': gameColor },
+      paint: { 'circle-radius': hovered(hover.venue.radius, trail.venue.radius), 'circle-color': gameColor },
     },
     {
       id: 'venue-cluster-glows',

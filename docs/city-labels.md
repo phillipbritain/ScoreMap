@@ -22,6 +22,8 @@ All in `web/src/globe/cityLabelSettings.json`:
 | `gameCityKm` | How far a game's city label may be from it, in kilometres: 50. |
 | `bigList` | Cities that are Big whatever their population, each by its `name` and `country` exactly as the city list has them (`"United States of America"`, say). |
 
+On a local run, the Behaviour tuner (top right, beside Theme) changes `gameCityKm` on the running app, to try values by eye; its switch rings each game at that reach. Its draft is kept in that browser; "Copy changes" gives the value to put in the file.
+
 A test fails when a Big list entry matches no city in the list. Where a name and country match more than one city (there are five Springfields in the US), all of them are Big.
 
 ## The city list

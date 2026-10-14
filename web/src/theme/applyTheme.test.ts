@@ -156,9 +156,9 @@ describe('applyTheme', () => {
     // Widths by zoom (lines' and place names' sizes), the disputed borders' dash pattern and the halo's
     // sizes are for the globe, not the page, so aren't written.
     const written = {
-      // Four colour roles and four statuses' colours, of four each; the background's two, three kinds of
-      // text, a divider and hover.
-      palette: 8 * 4 + 2 + 3 + 1 + 1,
+      // Four colour roles of four each, and four statuses' colours of three; the background's two, three
+      // kinds of text, a divider and hover.
+      palette: 4 * 4 + 4 * 3 + 2 + 3 + 1 + 1,
       // A font family, and nine type styles of three.
       typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.

@@ -1,16 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import builtIn from './builtInTheme.json'
 import { applyTheme } from './applyTheme'
-import { resolveTheme, type Theme } from './theme'
-
-/** The built-in theme, with these changes to its JSON. */
-function themeWith(change: (json: Record<string, any>) => void): Theme {
-  const json = structuredClone(builtIn) as Record<string, any>
-  change(json)
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
-}
+import { themeWith } from './testTheme'
+import type { Theme } from './theme'
 
 /** The custom properties applyTheme writes to a stand-in for the page's root. */
 function propertiesOf(theme: Theme): Map<string, string> {

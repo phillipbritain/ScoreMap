@@ -200,6 +200,12 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('has no capital look: national capitals are named in the city look', () => {
+    const json = themeJson()
+    json.components.PlaceNames.capital = { ...json.components.PlaceNames.city }
+    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.PlaceNames.capital isn’t a setting a theme has'] })
+  })
+
   it('rejects a colour job naming a colour the theme doesn’t have', () => {
     const json = themeJson()
     json.colors.navy = { base: '#2b4d7d' }

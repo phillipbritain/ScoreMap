@@ -98,39 +98,36 @@ function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): La
 // City names show from this zoom, as the base style's do.
 const cityNameMinZoom = 3
 
-/** The city name layers' ids: Big cities with no game near, and the games' cities, by kind. */
-const cityNameLayerIds = {
-  big: { city: 'city_names', capital: 'capital_names' },
-  game: { city: 'city_names_game', capital: 'capital_names_game' },
-} as const
+/** The city name layers' ids: Big cities with no game near, and the games' cities. */
+const cityNameLayerIds = { big: 'city_names', game: 'city_names_game' } as const
 
 /**
- * The layers naming the cities in the city name source (see addPlaceNames), from zoom 3, each in the
- * theme's city or capital look, with no dot: just the name, around where the city is. The games'
+ * The layers naming the cities in the city name source (see addPlaceNames), from zoom 3, all in the
+ * theme's city look, national capitals included, with no dot: just the name, around where the city is. The games'
  * cities are always written below where they are, whatever else is there, and cards are laid out around them. Big cities
  * with no game near are written where they have room, most populous first, giving way to cards and
  * other names.
  */
 function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerSpecification[] } {
-  const layer = (game: boolean, kind: 'city' | 'capital'): LayerSpecification => {
+  const layer = (game: boolean): LayerSpecification => {
     const city: SymbolLayerSpecification = {
-      id: cityNameLayerIds[game ? 'game' : 'big'][kind],
+      id: cityNameLayerIds[game ? 'game' : 'big'],
       type: 'symbol',
       source: cityNameSource,
       minzoom: cityNameMinZoom,
-      filter: ['all', ['==', ['get', 'game'], game], ['==', ['get', 'capital'], kind === 'capital']],
+      filter: ['==', ['get', 'game'], game],
       layout: {
         'text-field': ['get', 'name'],
         'text-max-width': cityNameMaxWidth,
         ...(game ? {} : { 'symbol-sort-key': ['-', ['get', 'population']] }),
       },
     }
-    const placed = cityNamePlacement(placeName(city, kind, theme))
+    const placed = cityNamePlacement(placeName(city, 'city', theme))
     if (!game || placed.type !== 'symbol') return placed
     // Always below the dot, where cards are laid out around it, and written whatever else is there.
     return { ...placed, layout: { ...placed.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true } }
   }
-  return { big: [layer(false, 'city'), layer(false, 'capital')], game: [layer(true, 'city'), layer(true, 'capital')] }
+  return { big: [layer(false)], game: [layer(true)] }
 }
 
 /** Where a city's name goes around its dot. */
@@ -170,19 +167,16 @@ export interface CityNameLook {
   clearance: number
 }
 
-/**
- * How a city's name looks at a zoom level: a capital's or another city's, worked out from the same
- * theme the map draws it with.
- */
-export function cityNameLook(zoom: number, capital: boolean, theme: Theme): CityNameLook {
-  const kind = capital ? 'capital' : 'city'
-  const size = atZoom(sizeStops(kind, theme), zoom)
+/** How a city's name looks at a zoom level, worked out from the same theme the map draws it with. */
+export function cityNameLook(zoom: number, theme: Theme): CityNameLook {
+  const look = theme.components.PlaceNames.city
+  const size = atZoom(sizeStops('city', theme), zoom)
   return {
-    font: cssFont(theme.components.PlaceNames[kind].font, size),
+    font: cssFont(look.font, size),
     size,
     offset: (zoom < cardZoom ? cityNameOffset.small : cityNameOffset.card) * size,
     maxWidth: cityNameMaxWidth * size,
-    letterSpacing: theme.components.PlaceNames[kind].letterSpacing,
+    letterSpacing: look.letterSpacing,
     clearance: theme.components.ScoreCard.size.nameClearance,
   }
 }
@@ -254,7 +248,7 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
         .map((city) =>
-          cityNameBox(city.name, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme()), measureText),
+          cityNameBox(city.name, map.project([city.longitude, city.latitude]), cityNameLook(zoom, theme()), measureText),
         )
     },
     remove() {
@@ -268,7 +262,7 @@ export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels): Fe
   const feature = (city: ListedCity, game: boolean): Feature<Point> => ({
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
-    properties: { name: city.name, capital: city.capital, population: city.population, game },
+    properties: { name: city.name, population: city.population, game },
   })
   return {
     type: 'FeatureCollection',

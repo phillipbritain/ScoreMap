@@ -19,9 +19,9 @@ export interface CardScene {
   /** The map's size on screen. Cards whose venues are well off it aren't laid out. */
   width: number
   height: number
-  /** How far a card's pointer reaches below the card, down to its venue. */
-  pointer: number
-  /** Where the names of games' cities are written, which cards and their pointers keep clear of. */
+  /** How far a card keeps from its venue at the least, its trail between: it sits this far above it. */
+  venueGap: number
+  /** Where the names of games' cities are written, which cards keep clear of. */
   names?: readonly ScreenBox[]
 }
 
@@ -41,11 +41,13 @@ export interface Segment {
 
 /** Where one card goes. */
 export interface CardPlacement {
-  /** Where the card's bottom centre sits, from its venue: just above it, or moved aside. */
+  /** Where the card's bottom centre sits, from its venue: the venue gap above it, or moved aside. */
   offset: ScreenOffset
   /** True when there's no room for the card and its game is counted in a card cluster instead. */
   inCardCluster: boolean
-  /** From the edge of a moved card to its venue; null for a card that isn't moved. */
+  /** Whether the card was moved aside from above its venue to make room. */
+  moved: boolean
+  /** From the edge of the card to its venue; null for a card in a card cluster. */
   trail: Segment | null
 }
 
@@ -65,9 +67,10 @@ export interface CardLayout {
 }
 
 /**
- * Lays out the score cards on screen. Each sits above its venue, its pointer's tip on the spot, unless
- * that overlaps another card, a venue or a city's name: then it's moved aside, wholly on screen and
- * as near its venue as it can be, with a trail back to it (see arrange). Cards get room by status,
+ * Lays out the score cards on screen. Each sits the venue gap above its venue, with a short trail down
+ * to it, unless that overlaps another card, a venue or a city's name: then it's moved aside, wholly on
+ * screen and as near its venue as it can be but never nearer than the gap, its trail following it (see
+ * arrange). Cards get room by status,
  * most prominent first, whichever is selected, so selecting a card never moves it; a card with no
  * room within reach joins a card cluster. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
@@ -80,7 +83,12 @@ export function layOutCards(
   scene: CardScene,
   previous: ReadonlyMap<string, CardPlacement> = new Map(),
 ): CardLayout {
-  const unmoved: CardPlacement = { offset: { dx: 0, dy: -scene.pointer }, inCardCluster: false, trail: null }
+  const sitting = (card: ScreenCard): CardPlacement => ({
+    offset: { dx: 0, dy: -scene.venueGap },
+    inCardCluster: false,
+    moved: false,
+    trail: { x1: card.venueX, y1: card.venueY - scene.venueGap, x2: card.venueX, y2: card.venueY },
+  })
   const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
   const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
   const boxes = cards
@@ -89,30 +97,30 @@ export function layOutCards(
       (card): CardBox => ({
         gameId: card.gameId,
         x: card.venueX,
-        y: card.venueY - scene.pointer - card.height / 2,
+        y: card.venueY - scene.venueGap - card.height / 2,
         width: card.width,
         height: card.height,
         venueX: card.venueX,
         venueY: card.venueY,
         rank: rank(card),
-        previous: shiftOf(previous.get(card.gameId), scene.pointer),
+        previous: shiftOf(previous.get(card.gameId), scene.venueGap),
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
   const { shifts, cardClusters } = arrange(pushOnScreen(boxes, scene), names, scene)
 
-  const placements = new Map(cards.map((card) => [card.gameId, unmoved]))
+  const placements = new Map(cards.map((card) => [card.gameId, sitting(card)]))
   for (const box of boxes) {
     const shift = shifts.get(box.gameId)
     if (!shift) {
-      placements.set(box.gameId, { ...unmoved, inCardCluster: true })
+      placements.set(box.gameId, { offset: { dx: 0, dy: -scene.venueGap }, inCardCluster: true, moved: false, trail: null })
       continue
     }
-    const moved = shift.dx !== 0 || shift.dy !== 0
     placements.set(box.gameId, {
-      offset: { dx: shift.dx, dy: shift.dy - scene.pointer },
+      offset: { dx: shift.dx, dy: shift.dy - scene.venueGap },
       inCardCluster: false,
-      trail: moved ? trail(box, shift) : null,
+      moved: isMoved(shift),
+      trail: trail(box, shift),
     })
   }
   return {
@@ -130,12 +138,12 @@ function nearScreen(x: number, y: number, { width, height }: CardScene): boolean
 }
 
 /** How far a card was moved from where it would sit, if it had room. */
-function shiftOf(placement: CardPlacement | undefined, pointer: number): ScreenOffset | undefined {
+function shiftOf(placement: CardPlacement | undefined, venueGap: number): ScreenOffset | undefined {
   if (!placement || placement.inCardCluster) return undefined
-  return { dx: placement.offset.dx, dy: placement.offset.dy + pointer }
+  return { dx: placement.offset.dx, dy: placement.offset.dy + venueGap }
 }
 
-/** A moved card's trail: from where a line from the card's centre to its venue leaves the card. */
+/** A card's trail: from where a line from the card's centre to its venue leaves the card. */
 function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
   const centreX = box.x + dx
   const centreY = box.y + dy
@@ -148,12 +156,12 @@ function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
 /** One score card where it would sit undisturbed, in screen pixels. */
 interface CardBox {
   gameId: string
-  /** The card's centre, above its venue. */
+  /** The card's centre, the venue gap above its venue. */
   x: number
   y: number
   width: number
   height: number
-  /** The venue the card points at, which no card may cover. */
+  /** The card's venue, which no card may cover. */
   venueX: number
   venueY: number
   /** Which cards get room first where there isn't room for all: lowest first, then in game order. */
@@ -234,8 +242,8 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * Finds room for score cards that would overlap. Cards are placed one at a time, by rank and then
  * game order so the same cards always land the same way: each stays where it would sit if that's
  * clear, or else is moved to the spot with the shortest trail that keeps on screen, overlaps no card
- * already placed and covers no venue, so every venue (a moved card's trail's end) stays in sight. No
- * card covers a name in `names`, nor reaches its pointer through one; trails may cross them. A spot
+ * already placed, covers no venue, so every venue (a trail's end) stays in sight, and keeps the venue
+ * gap from its own venue. No card covers a name in `names`; trails may cross them. A spot
  * whose trail crosses no card and that sits on no trail is taken over a nearer one while its trail
  * is at most clearTrailAllowance longer. A card with no spot within reach joins a card cluster
  * instead. So cards don't jump about as the globe turns, a card keeps where it was last time while it
@@ -245,7 +253,7 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
 function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: CardScene): Arrangement {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const placed: CardBox[] = []
-  // From each moved card's centre to its venue: the part outside the card is its trail.
+  // From each card's centre to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
   const shifts = new Map<string, ScreenOffset>()
   const cardClusters: Omit<CardCluster, 'status'>[] = []
@@ -255,16 +263,13 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
     const cardsNear = placed.filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
-    // A card's own venue is under its pointer's tip, so it only keeps out the card moved (see fits).
+    // A card keeps the venue gap from its own venue rather than the venue's spot (see ownVenue).
     const venuesNear = boxes.filter((other) => other !== card && near(other.venueX, other.venueY, venueRadius, venueRadius))
     const namesNear = names.filter((name) => near(name.x, name.y, name.width / 2, name.height / 2))
     const trailsNear = trails.filter(
       (trail) =>
         near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
     )
-    // Half the pointer from the bottom of the card down to its venue, which is about as wide as it is long.
-    const halfPointer = (card.venueY - card.y - card.height / 2) / 2
-
     // What the card keeps clear of (cards, venues and names), each as the box its centre stays out of.
     const keepOutBox = (x: number, y: number, halfWidth: number, halfHeight: number): ScreenBox => ({
       x,
@@ -277,7 +282,8 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       ...venuesNear.map((other) => keepOutBox(other.venueX, other.venueY, venueRadius, venueRadius)),
       ...namesNear.map((name) => keepOutBox(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)),
     ]
-    const ownVenue = keepOutBox(card.venueX, card.venueY, venueRadius, venueRadius)
+    // Where the card's centre stays out of, to keep the venue gap from its own venue.
+    const ownVenue = keepOutBox(card.venueX, card.venueY, screen.venueGap, screen.venueGap)
     // Where the cards still to be placed were last time, which this card keeps out of unless it was there.
     const held = boxes
       .slice(index + 1)
@@ -310,17 +316,10 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       // A card that isn't moved sits where it would whatever the screen's edges, as its venue may be off it.
       if (moved && !onScreen) return false
       if (isKeptOut(x, y, slack)) return false
+      // Sitting above its venue, it's the gap away by its making: measured, a rounding error could put it inside.
       if (moved && inside(ownVenue, x, y, slack)) return false
       const wasHere = card.previous !== undefined && dx === card.previous.dx && dy === card.previous.dy
-      if (!wasHere && held.some((box) => inside(box, x, y, 0))) return false
-      return (
-        moved ||
-        namesNear.every(
-          (name) =>
-            Math.abs(card.venueX - name.x) >= halfPointer + name.width / 2 + gap ||
-            Math.abs(card.venueY - halfPointer - name.y) >= halfPointer + name.height / 2 + gap,
-        )
-      )
+      return wasHere || !held.some((box) => inside(box, x, y, 0))
     }
 
     // Whether a card moved this way would keep clear of trails: its own crossing no card, and no trail
@@ -331,7 +330,6 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       const halfWidth = card.width / 2 + gap
       const halfHeight = card.height / 2 + gap
       if (trailsNear.some((trail) => crosses(trail, x, y, halfWidth, halfHeight))) return false
-      if (dx === 0 && dy === 0) return true
       const own = { x1: x, y1: y, x2: card.venueX, y2: card.venueY }
       return cardsNear.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     }
@@ -363,7 +361,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       const x = card.x + shift.dx
       const y = card.y + shift.dy
       placed.push({ ...card, x, y })
-      if (shift.dx !== 0 || shift.dy !== 0) trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
+      trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
       continue
     }
     const cardCluster = cardClusters.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= cardClusterRadius)
@@ -447,7 +445,7 @@ function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
   return cards.map((card) => (was.get(card.gameId) === card.previous ? card : { ...card, previous: was.get(card.gameId) }))
 }
 
-/** Whether a card was moved from where it would sit: it had room, somewhere other than over its venue. */
+/** Whether a card was moved from where it would sit: it had room, somewhere other than above its venue. */
 function isMoved(shift: ScreenOffset | undefined): shift is ScreenOffset {
   return shift !== undefined && (shift.dx !== 0 || shift.dy !== 0)
 }

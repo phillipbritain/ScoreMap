@@ -11,6 +11,8 @@ export interface GameTeam {
 export interface GameVenue {
   name: string | null
   city: string | null
+  /** Its state, province or the like: in full for a US state or Canadian province ("Arizona"), as the feed gives it otherwise; null when there's none. */
+  region: string | null
   country: string | null
   latitude: number
   longitude: number

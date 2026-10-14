@@ -332,6 +332,9 @@ const seeThrough = { on: onOff, opacity }
  */
 const colourRole = { main: color, light: color, dark: color, contrastText: color }
 
+/** A game status's colour in the palette: its main shade, and a lighter and a darker one. */
+const statusColour = { main: color, light: color, dark: color }
+
 /**
  * The palette, shaped as MUI's is: what each colour is for, each naming a step of the theme's colours
  * ("navy.500") or giving a colour directly. A colour job outside the palette can name one of these
@@ -349,14 +352,14 @@ const palette = {
   error: colourRole,
   warning: colourRole,
   /**
-   * Each game status's colour, as MUI's palette takes colours of a theme's own: a game's small pin's
-   * ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's
-   * outline, glow and count, its pulse, and the game panel's top edge and progress line, unless the
-   * viewer picked a colour for the game's sport (see gameColour). Text on the progress line is the
-   * theme's main text or paper surface, whichever reads better on the colour (see palette's textOn), so
-   * contrastText is no longer read for statuses.
+   * Each game status's colour, as MUI's palette takes colours of a theme's own: the colour a game
+   * shows in, by its status, unless the viewer picked one for its sport or league (see gameColour): a
+   * small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a
+   * cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line.
+   * Text written on it is the theme's main text or paper surface, whichever reads better on the colour
+   * (see palette's textOn), so a status has no contrastText of its own.
    */
-  ...byStatus(colourRole),
+  ...byStatus(statusColour),
   /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
   background: { default: color, paper: color },
   /**

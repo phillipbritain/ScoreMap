@@ -2,12 +2,17 @@ import { useEffect, useRef, type RefObject } from 'react'
 import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
+import type { CityLabelSettings } from './cityLabels'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
   /** The look of the globe and everything on it. A change restyles the globe in place (see GlobeMap.setTheme). */
   theme: Theme
+  /** What decides which cities are labelled. A change relabels them in place (see GlobeMap.setCityLabelSettings). */
+  cityLabels: CityLabelSettings
+  /** Whether each game is ringed at the reach its city label may be within (a local-run tool). */
+  showGameCityReach: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
   /**
@@ -27,20 +32,21 @@ interface GlobeProps {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage }: GlobeProps) {
+export function Globe({ theme, cityLabels, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels])
 
   useEffect(() => {
     if (!container.current) return
     const instance = new GlobeMap(container.current, {
       style: { url: baseStyleUrl },
       theme: latest.current.theme,
+      cityLabels: latest.current.cityLabels,
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
       onCameraMove: (camera) => latest.current.onCameraMove(camera),
@@ -54,6 +60,8 @@ export function Globe({ theme, games, selectedGameId, panel, onSelectGame, start
   }, [])
 
   useEffect(() => globe.current?.setTheme(theme), [theme])
+  useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])
+  useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.
   useEffect(() => globe.current?.show(games), [games])

@@ -8,6 +8,7 @@ import type {
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
+import { clusterColour, sharedColorProperty, sharedColour } from './clusterColour'
 import { byCount } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 
@@ -73,7 +74,12 @@ export function cardLayoutFeatures(
       mark.cards.length === 1
         ? feature({ kind: 'venue', color: mark.cards[0].color }, { type: 'Point', coordinates: lngLat })
         : feature(
-            { kind: 'venueCluster', status: groupStatus(mark.cards.map((card) => card.status)), count: mark.cards.length },
+            {
+              kind: 'venueCluster',
+              status: groupStatus(mark.cards.map((card) => card.status)),
+              [sharedColorProperty]: sharedColour(mark.cards),
+              count: mark.cards.length,
+            },
             { type: 'Point', coordinates: lngLat },
           ),
     )
@@ -81,9 +87,10 @@ export function cardLayoutFeatures(
   for (const { gameIds, status } of layout.cardClusters) {
     const first = byGame.get(gameIds[0])
     if (!first) continue
+    const clustered = gameIds.flatMap((id) => byGame.get(id) ?? [])
     features.push(
       feature(
-        { kind: 'cardCluster', status, count: gameIds.length, firstGameId: gameIds[0] },
+        { kind: 'cardCluster', status, [sharedColorProperty]: sharedColour(clustered), count: gameIds.length, firstGameId: gameIds[0] },
         { type: 'Point', coordinates: first.lngLat },
       ),
     )
@@ -135,9 +142,9 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  *
  * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
  * to a point ringed in it; a see-through trail's line and glow let the map show through more. A venue
- * cluster and a card cluster are each a disc outlined and lit in the
- * colour of its most prominent game, with the count in it, as a pin cluster is (see the theme's
- * cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one of some.
+ * cluster and a card cluster are each a disc outlined and lit in its games' colour (see
+ * clusterColour), with the count in it, as a pin cluster is (see the theme's cluster): a venue
+ * cluster as wide as a pin cluster of as many games, a card cluster as one of some.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -157,9 +164,9 @@ export function cardLayoutLayers(
   // How much of a trail's own opacity shows: all of it, unless the trail is see-through.
   const seen = trail.seeThrough.on ? trail.seeThrough.opacity : 1
   // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
-  // its status colour (see groupStatus).
+  // its games' (see clusterColour).
   const gameColor: ExpressionSpecification = ['get', 'color']
-  const statusColor = byStatus(theme, 'own', (look) => look.color)
+  const clusterColor = clusterColour(theme)
   return [
     {
       id: 'trail-glows',
@@ -206,7 +213,7 @@ export function cardLayoutLayers(
       filter: kindIs('venueCluster'),
       paint: {
         'circle-radius': byCount(cluster.glowRadius, 'count'),
-        'circle-color': statusColor,
+        'circle-color': clusterColor,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -221,7 +228,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': statusColor,
+        'circle-stroke-color': clusterColor,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -236,7 +243,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
     {
       id: 'card-cluster-glows',
@@ -245,7 +252,7 @@ export function cardLayoutLayers(
       filter: kindIs('cardCluster'),
       paint: {
         'circle-radius': cluster.glowRadius.some,
-        'circle-color': statusColor,
+        'circle-color': clusterColor,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -261,7 +268,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': statusColor,
+        'circle-stroke-color': clusterColor,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -276,7 +283,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
   ]
 }

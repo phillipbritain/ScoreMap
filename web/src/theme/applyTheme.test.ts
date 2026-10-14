@@ -71,17 +71,9 @@ describe('applyTheme', () => {
     expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
   })
 
-  it('writes the score card’s and the trail’s see-through switch as 1 or 0, with its opacity', () => {
-    const properties = propertiesOf(
-      themeWith((json) => {
-        json.components.ScoreCard.seeThrough = { on: true, opacity: 0.6 }
-        json.components.Trail.seeThrough = { on: false, opacity: 0.5 }
-      }),
-    )
-    expect(properties.get('--score-card-see-through-on')).toBe('1')
-    expect(properties.get('--score-card-see-through-opacity')).toBe('0.6')
-    expect(properties.get('--trail-see-through-on')).toBe('0')
-    expect(properties.get('--trail-see-through-opacity')).toBe('0.5')
+  it('writes the score card’s fill opacity', () => {
+    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.fillOpacity = 0.6)))
+    expect(properties.get('--score-card-fill-opacity')).toBe('0.6')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
@@ -166,17 +158,17 @@ describe('applyTheme', () => {
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
       // font (of four) and size, and its opacity for each of four statuses.
       cluster: 9 + 5 + 4,
-      // A trail's width and opacity, its see-through switch and opacity, its glow's three and its venue's three.
-      trail: 10,
+      // A trail's width and opacity, its glow's three and its venue's three.
+      trail: 8,
       selection: 2,
       // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two.
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, see-through switch and opacity, header's two, corner, five sizes
+      // A score card's fill, text, shadow, fill opacity, header's two, corner, five sizes
       // and logo plate of three; for each of four statuses its fade and glow of two, and a Disrupted card's
       // fill and text.
-      scoreCard: 3 + 2 + 2 + 1 + 5 + 3 + 4 * 3 + 2,
+      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 4 * 3 + 2,
       // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 11 + 3 + 1 + 2 + 9 + 3,

@@ -45,7 +45,7 @@ function sizedTheme(): Theme {
     json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
     json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
     json.components.Cluster.outlineWidth = 2
-    json.components.Trail = { width: 1.5, opacity: 0.8, seeThrough: { on: false, opacity: 0.5 }, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
+    json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
   })
 }
 
@@ -117,16 +117,9 @@ describe('trails', () => {
     expect(drawn(theme, 'trail-venue-glows', 'circle-opacity')).toBe(0)
   })
 
-  it('let the map show through when see-through: their line and glow that much more see-through', () => {
-    const theme = sizedTheme()
-    const seeThrough = { ...theme, components: { ...theme.components, Trail: { ...theme.components.Trail, seeThrough: { on: true, opacity: 0.5 } } } }
-    expect(drawn(seeThrough, 'trails', 'line-opacity')).toBe(0.4)
-    expect(paintOf(cardLayoutLayers(seeThrough), 'trail-glows')).toMatchObject({ 'line-opacity': 0.15 })
-  })
-
-  it("draw a hovered card's trail and venue dot from the hover settings, see-through or not", () => {
+  it("draw a hovered card's trail and venue dot from the hover settings, whatever the trail's own opacity", () => {
     const theme = themeWith((json) => {
-      json.components.Trail.seeThrough = { on: true, opacity: 0.5 }
+      json.components.Trail.opacity = 0.5
       json.components.Hover.trail = { width: 3, opacity: 0.95 }
       json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
     })

@@ -155,7 +155,7 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  * up. Added beneath the place names, so every name draws over them.
  *
  * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
- * to a point ringed in it; a see-through trail's line and glow let the map show through more. While
+ * to a point ringed in it; below a solid opacity, the map shows through it. While
  * the pointer is on a card, its trail and venue dot are drawn bolder, as the theme's hover says, the
  * dot lit in a glow of its own. A venue cluster and a card cluster are each a disc outlined and lit
  * in its games' colour (see clusterColour), with the count in it, as a pin cluster is (see the
@@ -178,8 +178,6 @@ export function cardLayoutLayers(
   SymbolLayerSpecification,
 ] {
   const { Cluster: cluster, Trail: trail, Hover: hover } = theme.components
-  // How much of a trail's own opacity shows: all of it, unless the trail is see-through.
-  const seen = trail.seeThrough.on ? trail.seeThrough.opacity : 1
   // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
   // its games' (see clusterColour).
   const gameColor: ExpressionSpecification = ['get', 'color']
@@ -194,7 +192,7 @@ export function cardLayoutLayers(
         'line-color': gameColor,
         'line-width': trail.glow.width,
         'line-blur': trail.glow.blur,
-        'line-opacity': trail.glow.opacity * seen,
+        'line-opacity': trail.glow.opacity,
       },
     },
     {
@@ -205,7 +203,7 @@ export function cardLayoutLayers(
       paint: {
         'line-color': gameColor,
         'line-width': hovered(hover.trail.width, trail.width),
-        'line-opacity': hovered(hover.trail.opacity, trail.opacity * seen),
+        'line-opacity': hovered(hover.trail.opacity, trail.opacity),
       },
     },
     {

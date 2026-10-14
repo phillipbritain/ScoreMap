@@ -25,6 +25,34 @@ public static class ClockLine
         };
     }
 
+    /// <summary>
+    /// When in a game a score came, in the clock line's style: "Q1 5:58", "OT 2:10", "P3 13:31", "H2 0:45",
+    /// "Top 7th", "23'". Just its clock when the period isn't known, and null when neither is.
+    /// </summary>
+    public static string? When(ProviderScoringPlay play, League league)
+    {
+        if (play.Period is not { } period)
+            return play.Clock;
+        var name = league.Sport switch
+        {
+            Sport.Football or Sport.Basketball => PeriodName(period, league.Regulation, league.Regulation == 2 ? "H" : "Q"),
+            Sport.Hockey => PeriodName(period, league.Regulation, "P"),
+            Sport.Baseball => play.Phase switch
+            {
+                ProviderPeriodPhase.InningTop => $"Top {Ordinal(period)}",
+                ProviderPeriodPhase.InningBottom => $"Bot {Ordinal(period)}",
+                _ => Ordinal(period),
+            },
+            _ => null,
+        };
+        if (name is null || league.Sport == Sport.Baseball)
+            return name ?? play.Clock;
+        return play.Clock is { } clock ? $"{name} {clock}" : name;
+    }
+
+    private static string PeriodName(int period, int regulation, string prefix) =>
+        period > regulation ? OvertimeName(period - regulation) : $"{prefix}{period}";
+
     /// <summary>Soccer counts minutes up: "67'", "HT", "ET HT", "Pens", "FT", "AET".</summary>
     private static string? Halves(ProviderGame game, int period, int regulation)
     {
@@ -99,7 +127,7 @@ public static class ClockLine
         if (game.Phase == ProviderPeriodPhase.Shootout)
             return "SO";
 
-        var name = overtime ? OvertimeName(period - regulation) : $"{prefix}{period}";
+        var name = PeriodName(period, regulation, prefix);
         if (game.Phase == ProviderPeriodPhase.Break)
             return period * 2 == regulation ? "Halftime" : $"End {name}";
         return $"{name} {game.DisplayClock}";

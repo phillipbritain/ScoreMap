@@ -45,6 +45,21 @@ function rgbToHex(rgb: Rgb): string {
 const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
 const fromLinear = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055)
 
+/**
+ * How far apart two #rrggbb colours stand in lightness, as WCAG's contrast ratio: from 1 (the same) to
+ * 21 (black and white).
+ */
+export function contrastRatio(a: string, b: string): number {
+  const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+/** WCAG's relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const [r, g, b] = hexToRgb(hex).map(toLinear)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
 // Björn Ottosson's OKLab, from linear sRGB and back.
 function toOklch(rgb: Rgb): { l: number; c: number; h: number } {
   const [r, g, b] = rgb.map(toLinear)

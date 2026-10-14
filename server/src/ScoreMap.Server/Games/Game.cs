@@ -26,11 +26,13 @@ public sealed record Game(
 public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
 
 /// <summary>
-/// Where a game is played. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
+/// Where a game is played. <see cref="Region"/> is its state, province or the like, spelled out in full
+/// for a US state or Canadian province ("Arizona", "Ontario"), as the feed gives it otherwise, and null
+/// where the feed gives none. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
 /// or null when the venue could not be placed. <see cref="Photo"/> is null until a photo of the venue
 /// has been found, and stays null for a venue that has none.
 /// </summary>
-public sealed record GameVenue(string? Name, string? City, string? Country, double Latitude, double Longitude, string? TimeZone,
+public sealed record GameVenue(string? Name, string? City, string? Region, string? Country, double Latitude, double Longitude, string? TimeZone,
     VenuePhoto? Photo = null);
 
 /// <summary>

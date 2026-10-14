@@ -9,6 +9,7 @@ const unproject = (x: number, y: number): [number, number] => [x / 10, -y / 10]
 const card = (gameId: string, venueX: number, venueY: number, lngLat: [number, number]): CardOnGlobe => ({
   gameId,
   status: 'Live',
+  color: `#${gameId}${gameId}${gameId}${gameId}${gameId}${gameId}`,
   venueX,
   venueY,
   width: 100,
@@ -20,6 +21,7 @@ const sitting: CardPlacement = { offset: { dx: 0, dy: -6 }, inCardCluster: false
 const moved: CardPlacement = { offset: { dx: 120, dy: -6 }, inCardCluster: false, moved: true, trail: { x1: 170, y1: 200, x2: 100, y2: 200 } }
 const clustered: CardPlacement = { ...sitting, inCardCluster: true }
 
+// Each in a colour of its own: a's is #aaaaaa.
 const a = card('a', 100, 200, [10, -20.5])
 const b = card('b', 100, 200, [10, -20.5])
 const c = card('c', 300, 400, [30, -40.5])
@@ -43,28 +45,28 @@ const features = (kind: string, cards: CardOnGlobe[] = [a, b, { ...c, status: 'F
   cardLayoutFeatures(cards, layout, unproject, venueSizes).features.filter((feature) => feature.properties?.kind === kind)
 
 describe('cardLayoutFeatures', () => {
-  it("draws a card's trail, named for its game, from the card's edge, turned back into a place, to its venue, moved or not", () => {
+  it("draws a card's trail from the card's edge, turned back into a place, to its venue, moved or not, in its game's colour, named for its game", () => {
     expect(features('trail', [a])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'trail', status: 'Live', gameId: 'a' },
+        properties: { kind: 'trail', color: '#aaaaaa', gameId: 'a' },
         geometry: { type: 'LineString', coordinates: [[10, -19.4], [10, -20.5]] },
       } satisfies Feature<LineString>,
     ])
     expect(features('trail', [b])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'trail', status: 'Live', gameId: 'b' },
+        properties: { kind: 'trail', color: '#bbbbbb', gameId: 'b' },
         geometry: { type: 'LineString', coordinates: [[17, -20], [10, -20.5]] },
       } satisfies Feature<LineString>,
     ])
   })
 
-  it("marks a card's venue, named for its game, where its trail ends, but not a venue whose cards are in a card cluster", () => {
+  it("marks a card's venue, where its trail ends, in its game's colour, named for its game, but not a venue whose cards are in a card cluster", () => {
     expect(features('venue', [a, { ...c, status: 'Final' }, d])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'venue', status: 'Live', gameId: 'a' },
+        properties: { kind: 'venue', color: '#aaaaaa', gameId: 'a' },
         geometry: { type: 'Point', coordinates: [10, -20.5] },
       } satisfies Feature<Point>,
     ])
@@ -98,7 +100,7 @@ describe('cardLayoutFeatures', () => {
     const trail = { x1: 0, y1: 0, x2: 0, y2: 0 }
     const e = { ...card('e', 500, 500, [50, -50]), status: 'Upcoming' as const }
     const f = card('f', 510, 500, [51, -50])
-    const g = card('g', 600, 500, [60, -50])
+    const g = { ...card('g', 600, 500, [60, -50]), color: '#999999' }
     const h = card('h', 522, 500, [52.2, -50])
     const movedAway = (...cards: CardOnGlobe[]): CardLayout => ({
       cards: new Map(cards.map(({ gameId }) => [gameId, { ...moved, trail }])),
@@ -114,13 +116,15 @@ describe('cardLayoutFeatures', () => {
     it('show as a venue cluster in the middle of their venues, with the count and the status the most prominent shows as', () => {
       // e and f 10 pixels apart, g well clear of them.
       expect(marks('venueCluster', e, f, g)).toEqual([['Live', 2, [50.5, -50]]])
-      expect(marks('venue', e, f, g)).toEqual([['Live', undefined, [60, -50]]])
+      expect(drawn('venue', e, f, g).map(({ properties, geometry }) => [properties?.color, (geometry as Point).coordinates])).toEqual([
+        ['#999999', [60, -50]],
+      ])
     })
 
-    it('have their trails meet at the venue cluster, each in its own status', () => {
-      expect(drawn('trail', e, f).map(({ properties, geometry }) => [properties?.status, (geometry as LineString).coordinates[1]])).toEqual([
-        ['Upcoming', [50.5, -50]],
-        ['Live', [50.5, -50]],
+    it("have their trails meet at the venue cluster, each in its own game's colour", () => {
+      expect(drawn('trail', e, f).map(({ properties, geometry }) => [properties?.color, (geometry as LineString).coordinates[1]])).toEqual([
+        ['#eeeeee', [50.5, -50]],
+        ['#ffffff', [50.5, -50]],
       ])
     })
 

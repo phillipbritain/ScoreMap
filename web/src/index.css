@@ -135,12 +135,21 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
+/* A logo sits on its plate, so a logo near the panel's colour can still be seen. With no logo, the
+   space it would take is left empty, plate and all. */
 .game-panel__team img,
 .game-panel__logo {
+  box-sizing: content-box;
   width: var(--game-panel-size-logo);
   height: var(--game-panel-size-logo);
+  padding: var(--game-panel-logo-plate-padding);
+  border-radius: var(--game-panel-logo-plate-corner);
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.game-panel__team img {
+  background: var(--game-panel-logo-plate-fill);
 }
 
 .game-panel__team-name {
@@ -330,7 +339,8 @@ body {
 
 /* How each status looks comes from the theme: its colour from the palette (--palette-live-main and so
    on), and how far its score cards fade and how they glow from the score card's own
-   (--score-card-live-fade). Score cards pick theirs by their status class. */
+   (--score-card-live-fade). Score cards pick theirs by their status class, but for their colour, which
+   each card is given as its game's (--status-card-color, see gameColour). */
 .score-card--live {
   --status-card-color: var(--palette-live-main);
   --status-card-fade: var(--score-card-live-fade);
@@ -474,16 +484,21 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: calc(var(--score-card-size-logo) + 0.5 * var(--spacing)) 1fr auto;
+  grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) 1fr auto;
   align-items: center;
   gap: var(--spacing);
   padding: 0 calc(1.5 * var(--spacing));
 }
 
-/* Faded with the rest of the card, by its status's fade. */
+/* On its plate, so a logo near the card's fill can still be seen. Faded with the rest of the card,
+   plate and all, by its status's fade. */
 .score-card__logo {
+  box-sizing: content-box;
   width: var(--score-card-size-logo);
   height: var(--score-card-size-logo);
+  padding: var(--score-card-logo-plate-padding);
+  border-radius: var(--score-card-logo-plate-corner);
+  background: var(--score-card-logo-plate-fill);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
 }
@@ -785,8 +800,8 @@ body {
   font-size: var(--typography-button-font-size);
 }
 
-/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
+/* âœ“ when all are on, â€“ when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the âœ“ comes from a taller fallback font. */
 .settings-master__mark {
   width: var(--settings-menu-size-mark);
   height: var(--settings-menu-size-mark);
@@ -839,6 +854,83 @@ body {
   cursor: pointer;
 }
 
+/* A sport's name, then the swatch of its games' colour. */
+.settings-sport__head {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(1.5 * var(--spacing));
+
+  .settings-sport__name {
+    margin-bottom: 0;
+  }
+}
+
+.settings-colour {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+/* The browser's own colour input, hidden inside the swatch that opens it. Hollow, a ring of the
+   theme's colour, while no colour is picked; filled with the colour once one is. */
+.settings-colour__swatch {
+  position: relative;
+  width: calc(4 * var(--spacing));
+  height: calc(4 * var(--spacing));
+  border: var(--shape-border-width-medium) solid var(--swatch-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.settings-colour__swatch--picked {
+  background: var(--swatch-color);
+}
+
+.settings-colour__swatch:has(:focus-visible) {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
+}
+
+.settings-colour__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.settings-colour__clear {
+  padding: 0 var(--spacing);
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* "Reset colours", under the sports. */
+.settings-reset {
+  margin-top: calc(3 * var(--spacing));
+  padding: var(--spacing) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--settings-menu-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.settings-reset:disabled {
+  opacity: var(--controls-off-opacity);
+  cursor: default;
+}
+
 /* How many of the sport's leagues are on, such as 2/2. */
 .settings-sport__count {
   color: var(--settings-menu-count);
@@ -850,6 +942,8 @@ body {
    the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
+  /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
+  --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
   align-self: flex-start;
   display: flex;
   flex-wrap: wrap-reverse;
@@ -869,8 +963,18 @@ body {
   box-shadow: var(--controls-shadow);
 }
 
+/* Over the globe while the scenario list is open, to take the press that closes it (see ScenarioPill). */
+.scenario-pill__cover {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .scenario-pill summary {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   cursor: pointer;
   font-family: var(--typography-font-family);
   font-weight: var(--typography-button-font-weight);
@@ -928,11 +1032,13 @@ body {
 }
 
 .scenario-pill button[aria-current='true']::before {
-  content: '✓ ';
+  content: 'âœ“ ';
 }
 
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
   display: flex;
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
@@ -1099,7 +1205,10 @@ body {
 }
 
 .scenario-clock {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   border-radius: var(--controls-corner);
   background: var(--controls-surface);
   color: var(--palette-text-primary);

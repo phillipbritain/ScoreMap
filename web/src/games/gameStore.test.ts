@@ -20,6 +20,7 @@ function game(id: string, homeScore: number | null = null): Game {
     venue: {
       name: null,
       city: 'Kansas City',
+      region: 'Missouri',
       country: 'USA',
       latitude: 39.0489,
       longitude: -94.4839,

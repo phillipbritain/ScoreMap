@@ -1,13 +1,17 @@
 import { useState, type CSSProperties, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
-import { statusKey } from '../globe/statusLook'
 import { dualTime } from './dualTime'
+import { venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
+  /** The game's colour (see gameColour), for the panel's top edge, glow and progress line. */
+  colour: string
+  /** The colour of text on the game's colour, readable on it (see textOn). */
+  textOnColour: string
   onClose: () => void
   /** The panel's element, so the globe can keep the selected pin clear of it. */
   ref?: Ref<HTMLElement>
@@ -26,9 +30,9 @@ interface PanelLink {
  * another doesn't make it jump: long text is clipped, with the full text on hover. Re-renders with
  * each new snapshot, so it stays current while open.
  */
-export function GamePanel({ game, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
-  const place = [venue.city, venue.country].filter(Boolean).join(', ')
+  const place = venuePlace(venue)
   const venueName = venue.name ?? 'Unknown venue'
   const progress = progressLine(game, 'full')
   // A Final game shows when it ended; any other, when it starts.
@@ -42,12 +46,8 @@ export function GamePanel({ game, onClose, ref }: GamePanelProps) {
   // A photo that fails to load is left out, with its credit, rather than shown broken.
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
-  // Lit in the game's status colour, as its score card is.
-  const key = statusKey(game.status)
-  const statusStyle = {
-    '--status-color': `var(--palette-${key}-main)`,
-    '--status-contrast-text': `var(--palette-${key}-contrast-text)`,
-  } as CSSProperties
+  // Lit in the game's colour, as its score card is.
+  const statusStyle = { '--status-color': colour, '--status-contrast-text': textOnColour } as CSSProperties
 
   return (
     <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">

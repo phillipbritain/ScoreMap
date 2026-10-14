@@ -1,6 +1,6 @@
 import type { GameStatus } from '../games/game'
 import { cardJump } from './cardJump'
-import type { ScreenBox } from './gameCities'
+import type { ScreenBox } from './cityNameBox'
 import { groupStatus, statusProminence } from './statusLook'
 
 /** One game's score card, as the map shows it: its venue on screen and the card's measured size. */

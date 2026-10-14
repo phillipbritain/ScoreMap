@@ -434,6 +434,18 @@ const settings = {
     /** The selected game's small pin ring and score card outline: their colour and width. */
     Selection: { color, width: pixels },
     /**
+     * A score card the pointer is on, and its game on the globe, picked out: the card's border this
+     * wide, and solid even when cards are see-through, or not; its trail this wide and opaque (outright,
+     * not on top of the trail's own opacity or see-through); and the venue dot its trail ends at this
+     * big, in a glow of its status's colour this wide and strong. Its card doesn't move. Where the game
+     * is also the selected one, selection's look wins where they differ.
+     */
+    Hover: {
+      card: { borderWidth: pixels, solid: onOff },
+      trail: { width: pixels, opacity },
+      venue: { radius: pixels, glow: { radius: pixels, opacity } },
+    },
+    /**
      * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
      * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
      */

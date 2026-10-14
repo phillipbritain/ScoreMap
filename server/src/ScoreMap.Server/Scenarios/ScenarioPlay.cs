@@ -93,12 +93,8 @@ public sealed class ScenarioPlay
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
                     played.Through = 0;
-                    played.Game = played.Game with
-                    {
-                        Status = ProviderStatus.InProgress,
-                        Home = played.Game.Home with { Score = 0 },
-                        Away = played.Game.Away with { Score = 0 },
-                    };
+                    var (home, away) = played.Sport.Start(played.Game.Home, played.Game.Away);
+                    played.Game = played.Game with { Status = ProviderStatus.InProgress, Home = home, Away = away };
                     played.Game = Position(played);
                     break;
                 case ProviderStatus.InProgress:
@@ -112,32 +108,28 @@ public sealed class ScenarioPlay
         }
     }
 
-    /// <summary>One step of a Live game: it may score, then its clock moves on, perhaps to a break or the end.</summary>
+    /// <summary>
+    /// One step of a Live game: it may score, then its clock moves on, perhaps to a break or the end (in
+    /// cricket, sooner when an innings is over early).
+    /// </summary>
     private void Play(PlayedGame played, DateTimeOffset at)
     {
         var sport = played.Sport;
         var step = Step / played.League.PlannedLength;
-        if (sport.IsPlaying(played.Through))
-        {
-            played.Game = played.Game with
-            {
-                Home = Score(played.Game.Home, sport, step),
-                Away = Score(played.Game.Away, sport, step),
-            };
-        }
-        played.Through += step;
+        var (home, away) = sport.Step(played.Game.Home, played.Game.Away, played.Through, step, _random);
+        played.Game = played.Game with { Home = home, Away = away };
+        played.Through = sport.After(home, away, played.Through + step);
         if (played.Through < 1)
         {
             played.Game = Position(played);
             return;
         }
 
-        var game = played.Game;
-        var (home, away) = sport.Settled(game.Home.Score ?? 0, game.Away.Score ?? 0, _random);
-        played.Game = game with
+        (home, away) = sport.Settled(home, away, _random);
+        played.Game = played.Game with
         {
-            Home = game.Home with { Score = home },
-            Away = game.Away with { Score = away },
+            Home = home,
+            Away = away,
             Status = ProviderStatus.Final,
             Period = sport.Regulation,
             Phase = ProviderPeriodPhase.Playing,
@@ -172,9 +164,6 @@ public sealed class ScenarioPlay
 
     private static bool IsDisrupted(ProviderStatus status) =>
         status is ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled;
-
-    private ProviderTeam Score(ProviderTeam team, SportPlay sport, double step) =>
-        team with { Score = sport.ScoreStep(team.Score ?? 0, step, _random) };
 
     private static ProviderGame Position(PlayedGame played)
     {

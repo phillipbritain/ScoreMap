@@ -24,7 +24,7 @@ public class ScenarioTeamListTests
     public void Every_configured_league_has_its_teams_and_the_list_has_no_other_league()
     {
         Assert.Equal(ConfiguredLeagues.Order(), Teams.Keys.Order());
-        Assert.All(Teams, league => Assert.True(league.Value.Count >= 12, $"{league.Key} has {league.Value.Count} teams"));
+        Assert.All(Teams, league => Assert.True(league.Value.Count >= 10, $"{league.Key} has {league.Value.Count} teams"));
     }
 
     [Fact]

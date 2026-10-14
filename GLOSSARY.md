@@ -5,7 +5,7 @@ A globe showing sports games happening around the world, with live scores, so fa
 ## Language
 
 **Sport**:
-A kind of game, such as football, basketball or soccer. Sports group leagues in the settings menu. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
+A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in the settings menu. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
 _Avoid_: American football, football (for soccer)
 
 **League**:

@@ -11,10 +11,10 @@
     "secondary": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
     "error": { "main": "red.500", "light": "red.300", "dark": "red.700", "contrastText": "offWhite.500" },
     "warning": { "main": "orange.500", "light": "orange.300", "dark": "orange.700", "contrastText": "navy.800" },
-    "live": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
-    "upcoming": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
-    "final": { "main": "gold.500", "light": "gold.300", "dark": "gold.700", "contrastText": "navy.800" },
-    "disrupted": { "main": "offWhite.700", "light": "offWhite.600", "dark": "offWhite.800", "contrastText": "navy.800" },
+    "live": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
+    "upcoming": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
+    "final": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
+    "disrupted": { "main": "offWhite.700", "light": "offWhite.600", "dark": "offWhite.800" },
     "background": { "default": "navy.900", "paper": "navy.800" },
     "text": { "primary": "offWhite.500", "secondary": "offWhite.600", "link": "offWhite.500" },
     "divider": "navy.600",
@@ -55,13 +55,6 @@
         "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
         "size": { "4": "caption", "7": "body2", "11": "h6" },
-        "letterSpacing": 0
-      },
-      "capital": {
-        "color": "navy.100",
-        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
-        "font": "Open Sans Bold",
-        "size": { "4": "body2", "7": "body1", "11": "h6" },
         "letterSpacing": 0
       },
       "state": {
@@ -115,19 +108,26 @@
     },
     "Trail": {
       "width": 1.25,
-      "opacity": 0.9,
-      "glow": { "width": 4, "blur": 3, "opacity": 0.35 },
+      "opacity": 0.63,
+      "glow": { "width": 4, "blur": 3, "opacity": 0.25 },
       "venue": { "radius": 2, "ring": { "radius": 5, "width": 1 } }
     },
     "Selection": { "color": "offWhite.500", "width": 2 },
+    "Hover": {
+      "card": { "borderWidth": 2.5, "solid": true },
+      "trail": { "width": 2.5, "opacity": 1 },
+      "venue": { "radius": 3.5, "glow": { "radius": 12, "opacity": 0.6 } }
+    },
     "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
     "ScoreCard": {
       "fill": "primary.dark",
       "text": "text.primary",
       "shadow": "background.default",
+      "fillOpacity": 0.75,
       "header": { "tint": 0.28, "letterSpacing": 0.06 },
       "corner": 1.5,
       "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "light": 6, "nameClearance": 4 },
+      "logo": { "plate": { "fill": "offWhite.500", "padding": 0.5, "corner": 0.5 } },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } },
@@ -145,6 +145,7 @@
       "glow": { "y": 0, "blur": 0, "opacity": 0 },
       "corner": 2,
       "cutCorner": { "on": false, "size": 4 },
+      "logo": { "plate": { "fill": "offWhite.500", "padding": 1, "corner": 1 } },
       "size": {
         "width": 940,
         "height": 127,

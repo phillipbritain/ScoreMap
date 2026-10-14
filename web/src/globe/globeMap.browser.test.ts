@@ -6,8 +6,7 @@ import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
-import builtInJson from '../theme/builtInTheme.json'
-import { resolveTheme, type Theme } from '../theme/theme'
+import { themeWith } from '../theme/testTheme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
@@ -79,7 +78,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     clock,
     period: null,
     clutchTime: false,
-    venue: { name: null, city: null, country: null, latitude, longitude, timeZone: null, photo: null },
+    venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null },
     broadcasters: [],
     streamLinks: [],
   }
@@ -225,16 +224,18 @@ function between(colour: string, from: string, to: string): boolean {
 }
 
 describe('score cards', () => {
-  it('keeps every card solid, fading a Final or Disrupted game’s by colour into its fill', async () => {
+  it('fades a Final or Disrupted game’s card by colour into its fill, not by opacity', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     // Far enough apart that none is moved aside.
     globe.show([game('L'), game('F', { longitude: 6, status: 'Final' }), game('D', { longitude: -6, status: 'Disrupted' })])
     const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
     const { components: { ScoreCard: look }, palette } = builtInTheme
 
+    // Every card's fill as opaque as the theme says, whatever its status.
+    const fillOpacity = look.fillOpacity
     for (const shown of [live, final, disrupted]) {
       expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
-      expect(channels(getComputedStyle(shown).backgroundColor)[3], shown.dataset.gameId).toBe(1)
+      expect(channels(getComputedStyle(shown).backgroundColor)[3], shown.dataset.gameId).toBeCloseTo(fillOpacity, 2)
     }
     expect(channels(getComputedStyle(live).color).slice(0, 3).map(Math.round)).toEqual(hexChannels(look.text))
     expect(between(getComputedStyle(final).color, look.text, look.fill)).toBe(true)
@@ -974,15 +975,6 @@ describe('glow', () => {
 })
 
 describe('changing theme', () => {
-  /** The built-in theme, with these changes to its JSON. */
-  function themeWith(change: (json: Record<string, any>) => void): Theme {
-    const json = structuredClone(builtInJson) as Record<string, any>
-    change(json)
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    return result.theme
-  }
-
   /** A game this many pixels east of the centre of the view. */
   const gameEastBy = (map: MapLibreMap, id: string, pixels: number) => {
     const { width, height } = map.getContainer().getBoundingClientRect()
@@ -1000,9 +992,9 @@ describe('changing theme', () => {
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
-    globe.setTheme(themeWith((json) => ((json.components.Trail.width = 3), (json.components.Pin.live.core.color = '#ff0000'))))
+    globe.setTheme(themeWith((json) => ((json.components.Trail.glow.width = 6), (json.components.Pin.live.core.color = '#ff0000'))))
 
-    expect(map.getPaintProperty('trails', 'line-width')).toBe(3)
+    expect(map.getPaintProperty('trail-glows', 'line-width')).toBe(6)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     expect(drawnAt(map, smallPinLayer, a)).not.toEqual([])

@@ -97,8 +97,12 @@ What a theme's main colours are for, as MUI's palette has them: primary, seconda
 _Avoid_: Colour scheme, tokens
 
 **Colour job**:
-What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. It names a step of the theme colours, such as `navy.700`, or one of the palette's colours, such as `primary.dark`, or gives a colour directly. A game's status shows by its glow and brightness; its colour is kept to stand for its league.
+What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. It names a step of the theme colours, such as `navy.700`, or one of the palette's colours, such as `primary.dark`, or gives a colour directly. A game's status shows by its glow and brightness; its colour stands for its league or sport (see Game colour).
 _Avoid_: Token, semantic colour
+
+**Game colour**:
+The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in the settings menu, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
+_Avoid_: Status colour (for a game's colour), team colour
 
 **Type style**:
 One of a theme's kinds of text, named as MUI's typography variants are (`body2`, `button`, `caption`…): a weight, a size and a letter spacing, in the theme's one font family. Each kind of text on the page is one, and text on the globe takes one's size.

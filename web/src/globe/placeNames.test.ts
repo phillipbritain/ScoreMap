@@ -33,26 +33,23 @@ const zooms = [2, 3, 4, 4.5, 5.5, 7, 8.25, 11, 12.9]
 
 describe('cityNameLook', () => {
   it('predicts the size the map writes a city name at, at every zoom', () => {
-    for (const [id, capital] of [
-      ['city_names', false],
-      ['capital_names_game', true],
-    ] as const) {
+    for (const id of ['city_names', 'city_names_game']) {
       for (const zoom of zooms) {
-        expect(cityNameLook(zoom, capital, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
+        expect(cityNameLook(zoom, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
       }
     }
   })
 
   it("predicts how far below its dot the map writes a city's name, at every zoom", () => {
     for (const zoom of zooms) {
-      const look = cityNameLook(zoom, false, builtInTheme)
+      const look = cityNameLook(zoom, builtInTheme)
       const ems = atZoom(layout('city_names')['text-radial-offset'], zoom)
       expect(look.offset, `at ${zoom}`).toBeCloseTo(ems * look.size, 6)
     }
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {
-    expect(cityNameLook(7, true, builtInTheme)).toMatchObject({ size: 16, maxWidth: 128 })
+    expect(cityNameLook(7, builtInTheme)).toMatchObject({ size: 14, maxWidth: 112 })
   })
 
   it("writes each kind of place's name at the theme's text sizes as the map zooms", () => {
@@ -74,7 +71,7 @@ describe('cityNameLook', () => {
     expect(size('city_names', 4)).toBeLessThan(20)
     expect(size('city_names', 6)).toBeCloseTo(20, 6)
     expect(size('city_names', 9)).toBeCloseTo(20, 6)
-    expect(cityNameLook(9, false, theme).size).toBeCloseTo(20, 6)
+    expect(cityNameLook(9, theme).size).toBeCloseTo(20, 6)
     expect(size('label_state', 3)).toBe(14)
     expect(size('label_state', 7)).toBe(14)
   })
@@ -88,14 +85,12 @@ describe('cityNameLook', () => {
         PlaceNames: {
           ...builtInTheme.components.PlaceNames,
           city: { ...builtInTheme.components.PlaceNames.city, font: font('Metropolis Light') },
-          capital: { ...builtInTheme.components.PlaceNames.capital, font: font('Open Sans Bold Italic') },
         },
       },
     }
     expect(layout('city_names', theme)['text-font']).toEqual(['Metropolis Light'])
-    expect(cityNameLook(5, false, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
-    expect(layout('capital_names', theme)['text-font']).toEqual(['Open Sans Bold Italic'])
-    expect(cityNameLook(5, true, theme).font).toMatch(/^italic 700 [\d.]+px "Open Sans", sans-serif$/)
+    expect(layout('city_names_game', theme)['text-font']).toEqual(['Metropolis Light'])
+    expect(cityNameLook(5, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
   })
 })
 

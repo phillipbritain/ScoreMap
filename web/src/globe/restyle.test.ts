@@ -1,19 +1,10 @@
 import type { LayerSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import builtInJson from '../theme/builtInTheme.json'
 import { builtInTheme } from '../theme/builtInTheme'
-import { resolveTheme, type Theme } from '../theme/theme'
+import { themeWith } from '../theme/testTheme'
+import type { Theme } from '../theme/theme'
 import { gameLayers } from './gameLayers'
 import { layerChanges } from './restyle'
-
-/** The built-in theme, with these changes to its JSON. */
-function themeWith(change: (json: Record<string, any>) => void): Theme {
-  const json = structuredClone(builtInJson) as Record<string, any>
-  change(json)
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
-}
 
 const layersIn = (theme: Theme): LayerSpecification[] => {
   const { belowNames, onTop } = gameLayers(theme, null)
@@ -26,9 +17,9 @@ describe('layerChanges', () => {
   })
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
-    const wider = themeWith((json) => (json.components.Trail.width = 3))
+    const wider = themeWith((json) => (json.components.Trail.glow.width = 6))
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
-      { layer: 'trails', kind: 'paint', property: 'line-width', value: 3 },
+      { layer: 'trail-glows', kind: 'paint', property: 'line-width', value: 6 },
     ])
   })
 

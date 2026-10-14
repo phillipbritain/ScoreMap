@@ -1,18 +1,18 @@
 import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
-import type { Theme } from '../theme/theme'
+import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
-import { cardLayoutFeatures, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
+import { cardLayoutFeatures, cardLayoutSource, hoveredState, type CardOnGlobe } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { clusterReach, pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
-import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { selectedStacking, stacking, statusKey } from './statusLook'
+import { headerText, scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
+import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
 
 // About a second of frames: longer than any layout takes to settle.
@@ -51,10 +51,13 @@ export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
   private games = new Map<string, Game>()
   private selectedGameId: string | null = null
+  /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
+  private hoveredGameId: string | null = null
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
+  private readonly colourOf: (game: Game) => string
   private readonly placeNames: PlaceNames
   private readonly onSelect: (gameId: string) => void
   /** Games with no room for a card, as last laid out. */
@@ -75,13 +78,21 @@ export class ScoreCardMarkers {
   private gaveUp = false
 
   /**
-   * `theme` gives the theme as it is now, for how far above its venue a card sits
-   * and the colour of pulses over card clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with
-   * a game's id when its card is selected.
+   * `theme` gives the theme as it is now, for how far above its venue a card sits; `colourOf` gives a
+   * game's colour as it is now (see gameColour), for its card, its trail and its pulses over card
+   * clusters; `placeNames` gives the names cards keep clear of; `onSelect` is called with a game's id
+   * when its card is selected.
    */
-  constructor(map: MapLibreMap, theme: () => Theme, placeNames: PlaceNames, onSelect: (gameId: string) => void) {
+  constructor(
+    map: MapLibreMap,
+    theme: () => Theme,
+    colourOf: (game: Game) => string,
+    placeNames: PlaceNames,
+    onSelect: (gameId: string) => void,
+  ) {
     this.map = map
     this.theme = theme
+    this.colourOf = colourOf
     this.placeNames = placeNames
     this.onSelect = onSelect
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
@@ -96,8 +107,9 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it: each card measured afresh, as its
-   * text, spacing and sizes may have changed, and laid out again.
+   * After a change of theme, with the page's CSS already in it, or of the games' colours: each card
+   * redrawn in its game's colour, measured afresh, as its text, spacing and sizes may have changed,
+   * and laid out again.
    */
   restyle(): void {
     for (const placed of this.placed.values()) {
@@ -152,8 +164,10 @@ export class ScoreCardMarkers {
       if (!game) continue
       keep.add(gameId)
       const card = scoreCard(game)
+      const color = this.colourOf(game)
+      const header = headerText(color, card.status, this.theme())
       const selected = gameId === this.selectedGameId
-      const drawn = JSON.stringify({ card, selected })
+      const drawn = JSON.stringify({ card, color, header, selected })
       let placed = this.placed.get(gameId)
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.
@@ -162,6 +176,14 @@ export class ScoreCardMarkers {
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           this.onSelect(gameId)
+        })
+        // A mouse or pen on the card picks out its trail and venue dot; a touch has no hover (the
+        // card's own hover look is CSS, for devices that hover). The card stays where it is.
+        element.addEventListener('pointerenter', (event) => {
+          if (event.pointerType !== 'touch') this.hover(gameId)
+        })
+        element.addEventListener('pointerleave', () => {
+          if (this.hoveredGameId === gameId) this.hover(null)
         })
         // Above the venue, its trail down to it (see layOut); the city's name sits below its dot.
         const marker = new Marker({ element, anchor: 'bottom' })
@@ -183,7 +205,7 @@ export class ScoreCardMarkers {
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
-        drawScoreCard(cardElement, card, selected, this.animating.get(gameId))
+        drawScoreCard(cardElement, card, { color, header }, selected, this.animating.get(gameId))
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -199,6 +221,7 @@ export class ScoreCardMarkers {
 
     for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
+      if (gameId === this.hoveredGameId) this.hover(null)
       marker.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
@@ -262,8 +285,17 @@ export class ScoreCardMarkers {
       const { marker, width, height } = this.placed.get(gameId)!
       const lngLat = marker.getLngLat()
       const venue = this.map.project(lngLat)
-      const { status } = this.games.get(gameId)!
-      return { gameId, status, venueX: venue.x, venueY: venue.y, width, height, lngLat: lngLat.toArray() }
+      const game = this.games.get(gameId)!
+      return {
+        gameId,
+        status: game.status,
+        venueX: venue.x,
+        venueY: venue.y,
+        width,
+        height,
+        lngLat: lngLat.toArray(),
+        color: this.colourOf(game),
+      }
     })
     // Where the cards were last frame, so they stay put while they still have room.
     const previous = new Map<string, CardPlacement>()
@@ -278,7 +310,7 @@ export class ScoreCardMarkers {
       venueGap: this.theme().components.ScoreCard.size.venueGap,
       names: this.placeNames.nameBoxes(),
     }
-    traceLayout({ cards: cards.map(({ lngLat: _lngLat, ...card }) => card), scene })
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
     let moved = false
@@ -341,8 +373,9 @@ export class ScoreCardMarkers {
    */
   animate(gameId: string, animation: PinAnimation): boolean {
     const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
-    if (cardCluster) {
-      pulse(this.map, this.theme(), cardCluster.lngLat, animation, 'cluster')
+    const game = this.games.get(gameId)
+    if (cardCluster && game) {
+      pulse(this.map, this.colourOf(game), cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
@@ -365,7 +398,20 @@ export class ScoreCardMarkers {
     return true
   }
 
+  /**
+   * Marks a game's trail and venue dot hovered on the map, and the last game's no longer: the map's
+   * feature state, which the trail layers read, so the layout and its trails aren't drawn again.
+   */
+  private hover(gameId: string | null): void {
+    const was = this.hoveredGameId
+    this.hoveredGameId = gameId
+    if (!this.map.getSource(cardLayoutSource)) return
+    if (was !== null) this.map.setFeatureState({ source: cardLayoutSource, id: was }, { [hoveredState]: false })
+    if (gameId !== null) this.map.setFeatureState({ source: cardLayoutSource, id: gameId }, { [hoveredState]: true })
+  }
+
   clear(): void {
+    this.hover(null)
     for (const { marker } of this.placed.values()) marker.remove()
     this.cardClusters = []
     this.placed.clear()
@@ -375,8 +421,17 @@ export class ScoreCardMarkers {
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
-function drawScoreCard(element: HTMLElement, card: ScoreCard, selected: boolean, animation?: PinAnimation): void {
+/** A score card's colours: its game's (see gameColour), and its header's text, readable on its tint (see headerText). */
+interface CardColours {
+  color: string
+  header: string
+}
+
+function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColours, selected: boolean, animation?: PinAnimation): void {
   element.className = `score-card score-card--${statusKey(card.status)}`
+  // In its game's colour, in place of its status's from the page's CSS.
+  element.style.setProperty('--game-color', color)
+  element.style.setProperty('--header-text', headerColor)
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId

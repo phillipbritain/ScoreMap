@@ -163,7 +163,7 @@ public sealed class GameBoard(
         var timeZone = location.FoundBy == LocationSource.Nowhere
             ? null
             : TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
-        return new GameVenue(venue?.Name, venue?.City, venue?.Country, latitude, longitude, timeZone);
+        return new GameVenue(venue?.Name, venue?.City, RegionName.InFull(venue?.Region), venue?.Country, latitude, longitude, timeZone);
     }
 
     private static GameTeam ToTeam(ProviderTeam team) =>

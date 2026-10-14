@@ -58,7 +58,6 @@ const theme: Theme = {
     },
     PlaceNames: {
       city: { ...builtInTheme.components.PlaceNames.city, color: '#100001', outline: outline('#200001', 2.5, 0.25), font: font('Open Sans Light'), letterSpacing: 0.03 },
-      capital: { ...builtInTheme.components.PlaceNames.capital, color: '#100002', outline: outline('#200002', 3, 0.75), font: font('Open Sans Extra Bold'), letterSpacing: 0 },
       state: { ...builtInTheme.components.PlaceNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
       country: { ...builtInTheme.components.PlaceNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
     },
@@ -90,11 +89,9 @@ describe('globeStyle', () => {
       'boundary_2',
       'boundary_disputed',
       'city_names',
-      'capital_names',
       'label_state',
       'label_country_1',
       'city_names_game',
-      'capital_names_game',
     ])
   })
 
@@ -154,23 +151,23 @@ describe('globeStyle', () => {
       )
       .map((l) => l.id)
 
-  it("names each city from the city list in one layer, by whether it's a game's and a capital", () => {
+  it("names each city from the city list in one layer, by whether it's a game's, a national capital like any other", () => {
     expect(style().sources[cityNameSource]).toMatchObject({ type: 'geojson' })
     expect(namedBy(osaka, false)).toEqual(['city_names'])
-    expect(namedBy(tokyo, false)).toEqual(['capital_names'])
+    expect(namedBy(tokyo, false)).toEqual(['city_names'])
     expect(namedBy(kobe, true)).toEqual(['city_names_game'])
-    expect(namedBy(tokyo, true)).toEqual(['capital_names_game'])
+    expect(namedBy(tokyo, true)).toEqual(['city_names_game'])
   })
 
   it('names cities from zoom 3', () => {
-    for (const id of ['city_names', 'capital_names', 'city_names_game', 'capital_names_game']) {
+    for (const id of ['city_names', 'city_names_game']) {
       expect(layer(id)?.minzoom, id).toBe(3)
       expect(layout(id)['text-field'], id).toEqual(['get', 'name'])
     }
   })
 
   it('places the more populous of two Big cities first, so a nearby smaller one gives way', () => {
-    for (const id of ['city_names', 'capital_names']) {
+    for (const id of ['city_names']) {
       const parsed = createExpression(layout(id)['symbol-sort-key'] as ExpressionSpecification, id)
       if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
       const key = (city: ListedCity) => parsed.value.evaluate({ zoom: 5 }, { type: 'Point', properties: properties(city, false) } as never)
@@ -179,14 +176,14 @@ describe('globeStyle', () => {
   })
 
   it('puts Big city names below their dot by preference, moving to another side when a card is there', () => {
-    for (const id of ['city_names', 'capital_names']) {
+    for (const id of ['city_names']) {
       expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
       expect(layout(id)['text-allow-overlap'], id).toBeUndefined()
     }
   })
 
   it("always writes a game's city below its dot, whatever else is there", () => {
-    for (const id of ['city_names_game', 'capital_names_game']) {
+    for (const id of ['city_names_game']) {
       expect(layout(id)['text-variable-anchor'], id).toEqual(['top'])
       expect(layout(id)['text-allow-overlap'], id).toBe(true)
     }
@@ -205,8 +202,6 @@ describe('globeStyle', () => {
     const kinds = {
       city_names: 'city',
       city_names_game: 'city',
-      capital_names: 'capital',
-      capital_names_game: 'capital',
       label_state: 'state',
       label_country_1: 'country',
     } as const
@@ -222,12 +217,12 @@ describe('globeStyle', () => {
 
   it('writes state and country names in capitals, city names as they are', () => {
     for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
-    for (const id of ['city_names', 'capital_names_game']) expect(layout(id)['text-transform'], id).toBe('none')
+    for (const id of ['city_names', 'city_names_game']) expect(layout(id)['text-transform'], id).toBe('none')
   })
 
   it("spaces each kind of place's name out as far as the theme says", () => {
     expect(layout('city_names')['text-letter-spacing']).toBe(0.03)
-    expect(layout('capital_names')['text-letter-spacing']).toBe(0)
+    expect(layout('city_names_game')['text-letter-spacing']).toBe(0.03)
     expect(layout('label_state')['text-letter-spacing']).toBe(0.3)
     expect(layout('label_country_1')['text-letter-spacing']).toBe(0.2)
   })

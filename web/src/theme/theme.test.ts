@@ -381,6 +381,15 @@ describe('resolveTheme', () => {
       problems: ['palette.warning is missing', 'components.Globe.coastlines is missing', 'components.Globe.halo is missing'],
     })
   })
+  it('rejects a theme without the score card’s or the trail’s see-through setting', () => {
+    const json = themeJson()
+    delete json.components.ScoreCard.seeThrough
+    delete json.components.Trail.seeThrough.on
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['components.Trail.seeThrough.on is missing', 'components.ScoreCard.seeThrough is missing'],
+    })
+  })
 })
 
 describe('the built-in theme', () => {

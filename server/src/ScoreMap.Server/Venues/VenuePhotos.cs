@@ -8,8 +8,8 @@ namespace ScoreMap.Server.Venues;
 /// <summary>
 /// Each venue's photo for the game panel. Searches run in the background, one at a time, so
 /// asking for a photo never waits: it returns the photo found so far (none at first) and the
-/// game picks it up on a later poll. Every answer, no photo too, is saved to a file with the
-/// search's <see cref="Preference"/>, so each venue is searched for only once under it. A failed
+/// game picks it up on a later poll. Every answer, no photo too, is saved to a file marked with its
+/// <see cref="SavedFileVersion"/>, so each venue is searched for only once under it. A failed
 /// search isn't saved; the venue is searched for again after <see cref="RetryAfterFailure"/>.
 /// </summary>
 public sealed class VenuePhotos
@@ -18,10 +18,11 @@ public sealed class VenuePhotos
     public static readonly TimeSpan RetryAfterFailure = TimeSpan.FromMinutes(30);
 
     /// <summary>
-    /// Which photos the search prefers, saved with its answers: 1 was ESPN's outside ("day") photo, 2 its
-    /// inside ("interior") one. Answers saved under another preference are dropped, so each venue is searched for again.
+    /// The saved-photos file's version, raised whenever the search changes which photo it prefers, so
+    /// answers found the old way are dropped and each venue is searched for again: 1 preferred ESPN's
+    /// outside ("day") photo, 2 its inside ("interior") one.
     /// </summary>
-    private const int Preference = 2;
+    private const int SavedFileVersion = 2;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
@@ -122,7 +123,7 @@ public sealed class VenuePhotos
     }
 
     /// <summary>
-    /// The saved answers, or none when there's no file or it was saved under an older <see cref="Preference"/>
+    /// The saved answers, or none when there's no file or it's of an older <see cref="SavedFileVersion"/>
     /// (a file from before it was saved is a bare map of answers, read as having none), so every venue is searched for again.
     /// </summary>
     private Dictionary<string, VenuePhoto?> Load()
@@ -131,7 +132,7 @@ public sealed class VenuePhotos
             return new Dictionary<string, VenuePhoto?>();
         using var file = File.OpenRead(_savedPhotosPath);
         var saved = JsonSerializer.Deserialize<SavedPhotos>(file, Json);
-        return saved is { Preference: Preference, Photos: { } photos } ? photos : new Dictionary<string, VenuePhoto?>();
+        return saved is { Version: SavedFileVersion, Photos: { } photos } ? photos : new Dictionary<string, VenuePhoto?>();
     }
 
     /// <summary>Saves through a temp file, so a crash mid-write never leaves a half-written file. Searches run one at a time, so saves do too.</summary>
@@ -140,10 +141,10 @@ public sealed class VenuePhotos
         Directory.CreateDirectory(Path.GetDirectoryName(_savedPhotosPath)!);
         var temp = _savedPhotosPath + ".tmp";
         await using (var file = File.Create(temp))
-            await JsonSerializer.SerializeAsync(file, new SavedPhotos(Preference, saved), Json, cancellationToken);
+            await JsonSerializer.SerializeAsync(file, new SavedPhotos(SavedFileVersion, saved), Json, cancellationToken);
         File.Move(temp, _savedPhotosPath, overwrite: true);
     }
 
-    /// <summary>The saved-photos file: the search preference its answers were found under, and the answers by venue.</summary>
-    private sealed record SavedPhotos(int Preference, Dictionary<string, VenuePhoto?>? Photos);
+    /// <summary>The saved-photos file: its version (see <see cref="SavedFileVersion"/>), and the answers by venue.</summary>
+    private sealed record SavedPhotos(int Version, Dictionary<string, VenuePhoto?>? Photos);
 }

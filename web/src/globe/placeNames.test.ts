@@ -1,10 +1,13 @@
 import { createExpression, type ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec'
-import type { StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
+import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
+import type { FeatureCollection } from 'geojson'
 import { describe, expect, it } from 'vitest'
+import type { Game } from '../games/game'
 import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
-import { cityNameLook, placeNameLayers } from './placeNames'
+import { cityLabelSettings } from './cityLabels'
+import { addPlaceNames, cityNameLook, placeNameLayers } from './placeNames'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -93,5 +96,28 @@ describe('cityNameLook', () => {
     expect(cityNameLook(5, false, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
     expect(layout('capital_names', theme)['text-font']).toEqual(['Open Sans Bold Italic'])
     expect(cityNameLook(5, true, theme).font).toMatch(/^italic 700 [\d.]+px "Open Sans", sans-serif$/)
+  })
+})
+
+describe('addPlaceNames', () => {
+  // A map with just the city name source, keeping the features last given to it.
+  function mapWithCityNames() {
+    let features: FeatureCollection | null = null
+    const source = { setData: (data: FeatureCollection) => (features = data) } as unknown as GeoJSONSource
+    const map = { getSource: () => source, on: () => map, off: () => map } as unknown as MapLibreMap
+    const gameCities = () => features!.features.filter((f) => f.properties!.game).map((f) => f.properties!.name as string)
+    return { map, gameCities }
+  }
+  // Everglades City, about 100 km from Miami.
+  const evergladesGame = { venue: { longitude: -81.3851, latitude: 25.8573 } } as Game
+
+  it('names the shown games afresh by new settings', () => {
+    const { map, gameCities } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 50 })
+    names.showGames([evergladesGame])
+    expect(gameCities()).toEqual([])
+
+    names.setSettings({ ...cityLabelSettings, gameCityKm: 150 })
+    expect(gameCities()).toEqual(['Miami'])
   })
 })

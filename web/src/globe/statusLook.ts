@@ -1,6 +1,6 @@
 import type { ExpressionSpecification } from 'maplibre-gl'
 import type { GameStatus } from '../games/game'
-import type { Theme } from '../theme/theme'
+import { statusKey, type Theme } from '../theme/theme'
 
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer, Final fades and
@@ -23,13 +23,6 @@ export interface StatusLook {
 
 /** Which status draws on top where pins or score cards overlap: highest first. */
 export const stacking: Readonly<Record<GameStatus, number>> = { Live: 2, Upcoming: 1, Final: 0, Disrupted: 0 }
-
-/**
- * A status's name in the theme: its key among the palette's colours and the components' looks by
- * status, and so in the custom properties the page's CSS reads (--palette-live-main) and the score
- * cards' status classes (score-card--live). "live" for Live.
- */
-export const statusKey = (status: GameStatus): keyof Theme['components']['Pin'] => status.toLowerCase() as Lowercase<GameStatus>
 
 /** A status's look, from the theme. */
 export function statusLook(theme: Theme, status: GameStatus): StatusLook {

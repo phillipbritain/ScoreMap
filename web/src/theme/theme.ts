@@ -1,3 +1,4 @@
+import type { GameStatus } from '../games/game'
 import { globeFonts, type GlobeFont } from './globeFonts'
 import { isHexColor, paletteSteps, stepNames, type StepName } from './palette'
 
@@ -299,6 +300,13 @@ const placeName = {
 /** The game statuses, by their names in the theme: each has a colour in the palette, and its own look in some components. */
 const statuses = ['live', 'upcoming', 'final', 'disrupted'] as const
 
+/**
+ * A game status's name in the theme: its key among the palette's colours and the components' looks
+ * by status, and so in the custom properties the page's CSS reads (--palette-live-main) and the score
+ * cards' status classes (score-card--live). "live" for Live.
+ */
+export const statusKey = (status: GameStatus): (typeof statuses)[number] => status.toLowerCase() as Lowercase<GameStatus>
+
 /** A setting, or group, for each game status (see statuses). */
 function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], S> {
   return Object.fromEntries(statuses.map((status) => [status, look])) as Record<(typeof statuses)[number], S>
@@ -345,7 +353,7 @@ const palette = {
    * ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's
    * outline, glow and count, its pulse, and the game panel's top edge and progress line, unless the
    * viewer picked a colour for the game's sport (see gameColour). Text on the progress line is the
-   * theme's main text or paper surface, whichever reads better on the colour (see textOn), so
+   * theme's main text or paper surface, whichever reads better on the colour (see palette's textOn), so
    * contrastText is no longer read for statuses.
    */
   ...byStatus(colourRole),

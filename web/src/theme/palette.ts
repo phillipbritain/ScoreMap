@@ -54,6 +54,17 @@ export function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+/**
+ * The colour of text written on a colour: whichever of a light and a dark text colour stands out
+ * from it more, so text stays readable whatever the colour (a viewer's pick, say). The light one
+ * where any of them isn't #rrggbb, as a theme may give its colours directly, and their contrast
+ * can't then be measured.
+ */
+export function textOn(colour: string, light: string, dark: string): string {
+  if (![colour, light, dark].every(isHexColor)) return light
+  return contrastRatio(colour, dark) > contrastRatio(colour, light) ? dark : light
+}
+
 /** WCAG's relative luminance of a #rrggbb colour. */
 function luminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex).map(toLinear)

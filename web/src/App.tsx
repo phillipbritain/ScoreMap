@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { SettingsMenu } from './settings/SettingsMenu'
-import { gameColour, textOn, type PickedColours } from './settings/gameColour'
+import { gameColour, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
@@ -17,6 +17,7 @@ import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
+import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import type { ThemeJson } from './themeTuner/themeDraft'
@@ -152,7 +153,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             ref={panel}
             game={selectedGame}
             colour={selectedColour}
-            textOnColour={textOn(selectedColour, theme)}
+            textOnColour={textOn(selectedColour, theme.palette.text.primary, theme.palette.background.paper)}
             onClose={() => setSelectedGameId(null)}
           />
         )}

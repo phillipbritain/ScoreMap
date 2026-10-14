@@ -1,7 +1,5 @@
 import type { Game } from '../games/game'
-import { statusKey } from '../globe/statusLook'
-import { contrastRatio } from '../theme/palette'
-import type { Theme } from '../theme/theme'
+import { statusKey, type Theme } from '../theme/theme'
 import type { ViewerSettings } from './viewerSettings'
 
 /** The colours a viewer has picked, as their settings hold them. */
@@ -19,17 +17,6 @@ export type ColouredGame = Pick<Game, 'league' | 'sport' | 'status'>
  */
 export function gameColour(colours: PickedColours, game: ColouredGame, theme: Theme): string {
   return pickedColour(colours, game) ?? theme.palette[statusKey(game.status)].main
-}
-
-/**
- * The colour of text written on a game's colour (the game panel's progress line, say): whichever of
- * the theme's light text and dark surface stands out from it more, so it stays readable whatever colour
- * the viewer picks.
- */
-export function textOn(colour: string, theme: Theme): string {
-  const light = theme.palette.text.primary
-  const dark = theme.palette.background.paper
-  return contrastRatio(colour, dark) > contrastRatio(colour, light) ? dark : light
 }
 
 /**

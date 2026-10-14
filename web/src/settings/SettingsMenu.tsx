@@ -18,7 +18,10 @@ interface SettingsMenuProps {
   leagues: readonly League[]
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
-  /** The theme's own colour for games, which a sport or league with no colour picked shows as, as #rrggbb. */
+  /**
+   * The theme's accent (see accentColour), as #rrggbb, which a sport or league with no colour picked
+   * shows hollow: its games take the theme's colour for their status.
+   */
   accent: string
 }
 
@@ -46,6 +49,8 @@ export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMe
   const [tab, setTab] = useState<Tab>('leagues')
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
   const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
+  // What a sport or league with no colour picked shows: the accent, hollow, its games in the theme's colours.
+  const fromTheme = { colour: accent, takes: "the theme's colours, by status" }
   return (
     <details className="settings-menu">
       <summary aria-label="Settings" title="Settings">
@@ -95,9 +100,7 @@ export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMe
                 const on = group.leagues.filter((league) => isLeagueOn(settings, league.name)).length
                 const sportColour = settings.sportColours[group.sport] ?? null
                 // What a league with no colour of its own shows in: its sport's, else the theme's.
-                const fromSport = sportColour
-                  ? { colour: sportColour, from: `${group.sport}'s` }
-                  : { colour: accent, from: "the theme's" }
+                const fromSport = sportColour ? { colour: sportColour, takes: `${group.sport}'s colour` } : fromTheme
                 return (
                   <div key={group.sport} className="settings-sport">
                     <div className="settings-sport__head">
@@ -115,7 +118,7 @@ export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMe
                       <ColourSwatch
                         name={group.sport}
                         colour={sportColour}
-                        taken={{ colour: accent, from: "the theme's" }}
+                        taken={fromTheme}
                         onChange={(colour) => onChange(withSportColour(settings, group.sport, colour))}
                       />
                     </div>
@@ -178,8 +181,8 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 /**
  * A sport's or league's colour as a swatch, which opens the browser's colour picker: its games show in
  * the colour picked at once, as it's picked. With none picked, it shows hollow in the colour its games
- * take instead (the theme's, or a league's sport's), and says where that colour is taken from; with one,
- * a control beside it clears it.
+ * take instead (a league's sport's, or the theme's accent, its games then taking the theme's colour for
+ * their status), and says what they take; with one, a control beside it clears it.
  */
 function ColourSwatch({
   name,
@@ -189,8 +192,11 @@ function ColourSwatch({
 }: {
   name: string
   colour: string | null
-  /** The colour its games take with none picked, and whose it is ("Football's", "the theme's"). */
-  taken: { colour: string; from: string }
+  /**
+   * The colour it shows hollow with none picked, and what its games take then ("Football's colour",
+   * "the theme's colours, by status").
+   */
+  taken: { colour: string; takes: string }
   onChange: (colour: string | null) => void
 }) {
   return (
@@ -201,7 +207,7 @@ function ColourSwatch({
         title={
           colour
             ? `${name}'s colour: click to change`
-            : `${name} takes ${taken.from} colour: click to pick its own`
+            : `${name} takes ${taken.takes}: click to pick its own`
         }
       >
         <input

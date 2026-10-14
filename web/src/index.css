@@ -774,8 +774,8 @@ body {
   font-size: var(--typography-button-font-size);
 }
 
-/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
+/* âœ“ when all are on, â€“ when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the âœ“ comes from a taller fallback font. */
 .settings-master__mark {
   width: var(--settings-menu-size-mark);
   height: var(--settings-menu-size-mark);
@@ -839,6 +839,8 @@ body {
    the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
+  /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
+  --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
   align-self: flex-start;
   display: flex;
   flex-wrap: wrap-reverse;
@@ -858,8 +860,18 @@ body {
   box-shadow: var(--controls-shadow);
 }
 
+/* Over the globe while the scenario list is open, to take the press that closes it (see ScenarioPill). */
+.scenario-pill__cover {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .scenario-pill summary {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   cursor: pointer;
   font-family: var(--typography-font-family);
   font-weight: var(--typography-button-font-weight);
@@ -917,11 +929,13 @@ body {
 }
 
 .scenario-pill button[aria-current='true']::before {
-  content: '✓ ';
+  content: 'âœ“ ';
 }
 
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
   display: flex;
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
@@ -1088,7 +1102,10 @@ body {
 }
 
 .scenario-clock {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   border-radius: var(--controls-corner);
   background: var(--controls-surface);
   color: var(--palette-text-primary);

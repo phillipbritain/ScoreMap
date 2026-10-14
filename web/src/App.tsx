@@ -144,7 +144,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
         {BehaviourTuner && ThemeTuner && tuning && (
-          <div className="dev-tools">
+          // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
+          <div className="dev-tools" hidden={!scenarios.devToolsShown}>
             <Suspense>
               <BehaviourTuner
                 builtIn={builtInBehaviour}

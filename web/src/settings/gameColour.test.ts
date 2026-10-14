@@ -3,7 +3,7 @@ import type { GameStatus } from '../games/game'
 import builtIn from '../theme/builtInTheme.json'
 import { resolveTheme, type Theme } from '../theme/theme'
 import { gameColour, textOn } from './gameColour'
-import { firstVisitSettings, hasColours, withoutColours, withSportColour } from './viewerSettings'
+import { firstVisitSettings, hasColours, withLeagueColour, withoutColours, withSportColour } from './viewerSettings'
 
 /** A theme whose statuses each have a colour of their own, unlike any a viewer picks below. */
 function testTheme(): Theme {
@@ -62,6 +62,31 @@ describe('gameColour', () => {
     expect(gameColour(settings, nflGame('Live'), theme)).toBe('#654321')
   })
 
+  it("is the colour the viewer picked for the game's league, over its sport's", () => {
+    const settings = withLeagueColour(withSportColour(firstVisitSettings, 'Football', '#123456'), 'NFL', '#abcdef')
+
+    expect(gameColour(settings, nflGame('Live'), theme)).toBe('#abcdef')
+    expect(gameColour(settings, { league: 'NCAA Football', sport: 'Football', status: 'Live' }, theme)).toBe('#123456')
+  })
+
+  it("goes back to its sport's colour when a league's colour is cleared, and to the theme's with neither", () => {
+    const picked = withLeagueColour(withSportColour(firstVisitSettings, 'Football', '#123456'), 'NFL', '#abcdef')
+    const leagueCleared = withLeagueColour(picked, 'NFL', null)
+    const bothCleared = withSportColour(leagueCleared, 'Football', null)
+
+    expect(gameColour(leagueCleared, nflGame('Live'), theme)).toBe('#123456')
+    expect(gameColour(bothCleared, nflGame('Live'), theme)).toBe('#ff0000')
+    expect(hasColours(bothCleared)).toBe(false)
+  })
+
+  it("is the league's colour with no colour for its sport, and always the Disrupted colour when Disrupted", () => {
+    const settings = withLeagueColour(firstVisitSettings, 'NFL', '#abcdef')
+
+    expect(gameColour(settings, nflGame('Final'), theme)).toBe('#abcdef')
+    expect(gameColour(settings, nflGame('Disrupted'), theme)).toBe('#808080')
+    expect(hasColours(settings)).toBe(true)
+  })
+
   it('is written on in whichever of the theme\'s text colours, light or dark, stands out from it more', () => {
     const light = theme.palette.text.primary
     const dark = theme.palette.background.paper
@@ -78,7 +103,7 @@ describe('gameColour', () => {
       'Basketball',
       '#abcdef',
     )
-    const reset = withoutColours(picked)
+    const reset = withoutColours(withLeagueColour(picked, 'NFL', '#fedcba'))
 
     expect(gameColour(reset, nflGame('Live'), theme)).toBe('#ff0000')
     expect(gameColour(reset, { league: 'NBA', sport: 'Basketball', status: 'Live' }, theme)).toBe('#ff0000')

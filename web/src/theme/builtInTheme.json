@@ -57,13 +57,6 @@
         "size": { "4": "caption", "7": "body2", "11": "h6" },
         "letterSpacing": 0
       },
-      "capital": {
-        "color": "navy.100",
-        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
-        "font": "Open Sans Bold",
-        "size": { "4": "body2", "7": "body1", "11": "h6" },
-        "letterSpacing": 0
-      },
       "state": {
         "color": "primary.light",
         "outline": { "color": "navy.600", "width": 1.2, "blur": 0 },

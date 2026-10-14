@@ -9,7 +9,7 @@ import type {
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
-import { clusterColour, sharedColorProperty, sharedColour } from './clusterColour'
+import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
 import { byCount } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 
@@ -91,7 +91,7 @@ export function cardLayoutFeatures(
             {
               kind: 'venueCluster',
               status: groupStatus(mark.cards.map((card) => card.status)),
-              [sharedColorProperty]: sharedColour(mark.cards),
+              [sharedColorProperty]: sharedColourKey(mark.cards),
               count: mark.cards.length,
             },
             { type: 'Point', coordinates: lngLat },
@@ -104,7 +104,7 @@ export function cardLayoutFeatures(
     const clustered = gameIds.flatMap((id) => byGame.get(id) ?? [])
     features.push(
       feature(
-        { kind: 'cardCluster', status, [sharedColorProperty]: sharedColour(clustered), count: gameIds.length, firstGameId: gameIds[0] },
+        { kind: 'cardCluster', status, [sharedColorProperty]: sharedColourKey(clustered), count: gameIds.length, firstGameId: gameIds[0] },
         { type: 'Point', coordinates: first.lngLat },
       ),
     )
@@ -183,7 +183,7 @@ export function cardLayoutLayers(
   // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
   // its games' (see clusterColour).
   const gameColor: ExpressionSpecification = ['get', 'color']
-  const clusterColor = clusterColour(theme)
+  const clusterPaint = clusterColour(theme)
   return [
     {
       id: 'trail-glows',
@@ -246,7 +246,7 @@ export function cardLayoutLayers(
       filter: kindIs('venueCluster'),
       paint: {
         'circle-radius': byCount(cluster.glowRadius, 'count'),
-        'circle-color': clusterColor,
+        'circle-color': clusterPaint,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -261,7 +261,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': clusterColor,
+        'circle-stroke-color': clusterPaint,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -276,7 +276,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': clusterColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
     {
       id: 'card-cluster-glows',
@@ -285,7 +285,7 @@ export function cardLayoutLayers(
       filter: kindIs('cardCluster'),
       paint: {
         'circle-radius': cluster.glowRadius.some,
-        'circle-color': clusterColor,
+        'circle-color': clusterPaint,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -301,7 +301,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': clusterColor,
+        'circle-stroke-color': clusterPaint,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -316,7 +316,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': clusterColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
   ]
 }

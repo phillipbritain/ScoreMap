@@ -306,7 +306,7 @@ export class GlobeMap {
   private showPins(): void {
     // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
     // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
-    const pins = pinFeatures([...this.shown.values()], this.colours, this.theme)
+    const pins = pinFeatures([...this.shown.values()], this.colourOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey !== this.pinsKey) {
       this.pinsKey = pinsKey
@@ -389,10 +389,10 @@ export class GlobeMap {
     const map = this.map
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colours, this.theme), this.clustering))
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colourOf), this.clustering))
     map.addSource(
       outerPinSource,
-      pinSourceSpec(pinFeatures([], this.colours, this.theme), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
+      pinSourceSpec(pinFeatures([], this.colourOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
     )
     this.outerPinsKey = ''
     this.showOuterPins()
@@ -447,7 +447,7 @@ export class GlobeMap {
             ({ venue }) => !hasCard({ longitude, latitude }, venue) && !isBehindGlobe(map, [venue.longitude, venue.latitude]),
           )
         : []
-    const pins = pinFeatures(outer, this.colours, this.theme)
+    const pins = pinFeatures(outer, this.colourOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey === this.outerPinsKey) return
     this.outerPinsKey = pinsKey

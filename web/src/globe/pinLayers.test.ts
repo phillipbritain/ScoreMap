@@ -1,8 +1,8 @@
 import { createExpression, type ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec'
 import type { LayerSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import { describe, expect, it } from 'vitest'
-import builtIn from '../theme/builtInTheme.json'
-import { resolveTheme, type Theme } from '../theme/theme'
+import { themeWith } from '../theme/testTheme'
+import type { Theme } from '../theme/theme'
 import type { GameStatus } from '../games/game'
 import type { CardLayout } from './cardLayout'
 import { cardLayoutFeatures, cardLayoutLayers } from './cardLayoutLayers'
@@ -11,12 +11,10 @@ import { pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpe
 
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
-  const json = structuredClone(builtIn) as Record<string, any>
-  json.components.Cluster.count = { font: 'Metropolis Semi Bold', size: 'body1' }
-  json.typography.body1.fontSize = 16
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
+  return themeWith((json) => {
+    json.components.Cluster.count = { font: 'Metropolis Semi Bold', size: 'body1' }
+    json.typography.body1.fontSize = 16
+  })
 }
 
 const countLayout = (layers: readonly LayerSpecification[], id: string) =>
@@ -43,14 +41,12 @@ const paintOf = (layers: readonly LayerSpecification[], id: string) =>
 
 /** The built-in theme, with clusters and trails in sizes of their own. */
 function sizedTheme(): Theme {
-  const json = structuredClone(builtIn) as Record<string, any>
-  json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
-  json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
-  json.components.Cluster.outlineWidth = 2
-  json.components.Trail = { width: 1.5, opacity: 0.8, seeThrough: { on: false, opacity: 0.5 }, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
+  return themeWith((json) => {
+    json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
+    json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
+    json.components.Cluster.outlineWidth = 2
+    json.components.Trail = { width: 1.5, opacity: 0.8, seeThrough: { on: false, opacity: 0.5 }, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
+  })
 }
 
 describe('clusters', () => {
@@ -64,36 +60,34 @@ describe('clusters', () => {
   })
 
   it('glow as small pins of the status they show as do, as strongly as the theme says, or not at all', () => {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.components.Pin.live.glow.opacity = 0.8
-    json.components.Pin.final.glow.opacity = 0
-    json.components.Cluster.glowOpacity = 0.5
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    const pinClusterGlow = paintOf(pinClusterLayers(result.theme, zoomedOutPins), 'pin-cluster-glows')['circle-opacity']
+    const theme = themeWith((json) => {
+      json.components.Pin.live.glow.opacity = 0.8
+      json.components.Pin.final.glow.opacity = 0
+      json.components.Cluster.glowOpacity = 0.5
+    })
+    const pinClusterGlow = paintOf(pinClusterLayers(theme, zoomedOutPins), 'pin-cluster-glows')['circle-opacity']
     expect(evaluate(pinClusterGlow, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toBeCloseTo(0.4, 6)
     expect(evaluate(pinClusterGlow, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toBe(0)
-    const cardClusterGlow = paintOf(cardLayoutLayers(result.theme), 'card-cluster-glows')['circle-opacity']
+    const cardClusterGlow = paintOf(cardLayoutLayers(theme), 'card-cluster-glows')['circle-opacity']
     expect(evaluate(cardClusterGlow, { status: 'Live' })).toBeCloseTo(0.4, 6)
     expect(evaluate(cardClusterGlow, { status: 'Final' })).toBe(0)
   })
 
   it('fade as the status they show as says, disc, outline and count alike, on pin clusters and card clusters', () => {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.components.Cluster.live.opacity = 1
-    json.components.Cluster.final.opacity = 0.4
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
+    const theme = themeWith((json) => {
+      json.components.Cluster.live.opacity = 1
+      json.components.Cluster.final.opacity = 0.4
+    })
     /** How opaque a cluster's disc, outline and count are, for a cluster with these properties. */
     const faded = (layers: readonly LayerSpecification[], [disc, count]: [string, string], properties: Record<string, unknown>) =>
       [paintOf(layers, disc)['circle-opacity'], paintOf(layers, disc)['circle-stroke-opacity'], paintOf(layers, count)['text-opacity']].map(
         (opacity) => evaluate(opacity, properties),
       )
-    const pinClusters = pinClusterLayers(result.theme, zoomedOutPins)
+    const pinClusters = pinClusterLayers(theme, zoomedOutPins)
     const pinCluster: [string, string] = ['pin-clusters', 'pin-cluster-counts']
     expect(faded(pinClusters, pinCluster, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toEqual([1, 1, 1])
     expect(faded(pinClusters, pinCluster, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toEqual([0.4, 0.4, 0.4])
-    const cardClusters = cardLayoutLayers(result.theme)
+    const cardClusters = cardLayoutLayers(theme)
     const cardCluster: [string, string] = ['card-clusters', 'card-cluster-counts']
     expect(faded(cardClusters, cardCluster, { status: 'Live' })).toEqual([1, 1, 1])
     expect(faded(cardClusters, cardCluster, { status: 'Final' })).toEqual([0.4, 0.4, 0.4])
@@ -131,13 +125,12 @@ describe('trails', () => {
   })
 
   it("draw a hovered card's trail and venue dot from the hover settings, see-through or not", () => {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.components.Trail.seeThrough = { on: true, opacity: 0.5 }
-    json.components.Hover.trail = { width: 3, opacity: 0.95 }
-    json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    const hovered = (id: string, property: string) => drawn(result.theme, id, property, true)
+    const theme = themeWith((json) => {
+      json.components.Trail.seeThrough = { on: true, opacity: 0.5 }
+      json.components.Hover.trail = { width: 3, opacity: 0.95 }
+      json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
+    })
+    const hovered = (id: string, property: string) => drawn(theme, id, property, true)
     expect([hovered('trails', 'line-width'), hovered('trails', 'line-opacity')]).toEqual([3, 0.95])
     expect(hovered('trail-venues', 'circle-radius')).toBe(4)
     expect(hovered('trail-venue-rings', 'circle-stroke-width')).toBe(3)
@@ -146,13 +139,23 @@ describe('trails', () => {
 })
 
 describe("a game's colour", () => {
-  const game = { status: 'Live', color: '#123456', coreColor: '#654321' }
+  const game = { status: 'Live', color: '#123456' }
 
-  it('lights a small pin: its glow and ring in the colour, its core in the core colour', () => {
+  it('lights a small pin: its glow and ring in the colour', () => {
     const paint = (id: string) => paintOf(smallPinLayers(sizedTheme(), zoomedOutPins), id)
     expect(evaluate(paint('pin-glows')['circle-color'], game)).toBe('#123456')
     expect(evaluate(paint('pins')['circle-stroke-color'], game)).toBe('#123456')
-    expect(evaluate(paint('pins')['circle-color'], game)).toBe('#654321')
+  })
+
+  it("lights a small pin's core in the colour, but where the theme gives its status a bright core of its own", () => {
+    // A Live pin's core paler than Live's colour; an Upcoming pin's core just Upcoming's colour.
+    const theme = themeWith((json) => {
+      json.components.Pin.live.core.color = '#ffcccc'
+      json.components.Pin.upcoming.core.color = 'upcoming.main'
+    })
+    const core = paintOf(smallPinLayers(theme, zoomedOutPins), 'pins')['circle-color']
+    expect(evaluate(core, game)).toBe('#ffcccc')
+    expect(evaluate(core, { ...game, status: 'Upcoming' })).toBe('#123456')
   })
 
   it("lights a moved card's trail, its glow and the venue it ends at", () => {
@@ -171,12 +174,10 @@ describe("a game's colour", () => {
 describe("a cluster's colour", () => {
   /** The built-in theme, its accent (Live's colour) and Disrupted's colour each unlike any game's below. */
   function colourTheme(): Theme {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.palette.live.main = '#ff0000'
-    json.palette.disrupted.main = '#808080'
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    return result.theme
+    return themeWith((json) => {
+      json.palette.live.main = '#ff0000'
+      json.palette.disrupted.main = '#808080'
+    })
   }
 
   interface ClusteredGame {
@@ -272,21 +273,19 @@ describe('pinClusterSpacing', () => {
   })
 
   it('keeps small pins apart when they are wider than any pin cluster', () => {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.components.Pin.live.glow.radius = 60
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    expect(pinClusterSpacing(result.theme)).toBe(72)
+    const theme = themeWith((json) => {
+      json.components.Pin.live.glow.radius = 60
+    })
+    expect(pinClusterSpacing(theme)).toBe(72)
   })
 })
 
 describe('the selected pin', () => {
   it("is ringed in the theme's selection colour and width, out to as far as a small pin reaches", () => {
-    const json = structuredClone(builtIn) as Record<string, any>
-    json.components.Selection = { color: '#00ff00', width: 4 }
-    const result = resolveTheme(json)
-    if (!result.ok) throw new Error(result.problems.join('\n'))
-    expect(selectedPinLayerSpec(result.theme, 'a', zoomedOutPins).paint).toMatchObject({
+    const theme = themeWith((json) => {
+      json.components.Selection = { color: '#00ff00', width: 4 }
+    })
+    expect(selectedPinLayerSpec(theme, 'a', zoomedOutPins).paint).toMatchObject({
       'circle-radius': smallPinReach - 4,
       'circle-stroke-width': 4,
       'circle-stroke-color': '#00ff00',

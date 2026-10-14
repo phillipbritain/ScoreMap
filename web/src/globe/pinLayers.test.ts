@@ -5,7 +5,7 @@ import builtIn from '../theme/builtInTheme.json'
 import { resolveTheme, type Theme } from '../theme/theme'
 import { cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
-import { pinClusterLayers, selectedPinLayerSpec, zoomedOutPins } from './pinLayers'
+import { pinClusterLayers, pinClusterSpacing, selectedPinLayerSpec, zoomedOutPins } from './pinLayers'
 
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
@@ -103,6 +103,21 @@ describe('trails', () => {
     expect(paint('trail-glows')).toMatchObject({ 'line-width': 5, 'line-blur': 2, 'line-opacity': 0.3 })
     expect(paint('trail-venues')).toMatchObject({ 'circle-radius': 3 })
     expect(paint('trail-venue-rings')).toMatchObject({ 'circle-radius': 6, 'circle-stroke-width': 1.5 })
+  })
+})
+
+describe('pinClusterSpacing', () => {
+  it('keeps the widest pin clusters apart, outline and all', () => {
+    // Pin clusters reach 20 pixels, and 2 more with their outline; small pins 9.
+    expect(pinClusterSpacing(sizedTheme())).toBe(44)
+  })
+
+  it('keeps small pins apart when they are wider than any pin cluster', () => {
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.components.Pin.live.glow.radius = 60
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    expect(pinClusterSpacing(result.theme)).toBe(72)
   })
 })
 

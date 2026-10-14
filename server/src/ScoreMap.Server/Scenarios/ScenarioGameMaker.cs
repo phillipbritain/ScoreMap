@@ -64,19 +64,21 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
 
     /// <summary>
     /// Live: started up to 90% of a game ago, standing where its sport would be that far through its
-    /// planned length: its period, clock, phase (perhaps a break) and score.
+    /// planned length (in cricket, perhaps further, past an innings over early): its period, clock,
+    /// phase (perhaps a break) and score.
     /// </summary>
     private static ScenarioGame UnderWay(ScenarioGame game, League league, SportPlay sport, Random random)
     {
         var minutesIn = random.Next(1, (int)(league.PlannedLength.TotalMinutes * 0.9) + 1);
-        var through = minutesIn / league.PlannedLength.TotalMinutes;
+        var (home, away, through) = sport.PlayTo(
+            game.Home, game.Away, minutesIn / league.PlannedLength.TotalMinutes, random, mayFinish: false);
         var (period, clock, phase) = sport.Position(through);
         return game with
         {
             StartsIn = Minutes(-minutesIn),
             Status = ProviderStatus.InProgress,
-            Home = game.Home with { Score = sport.ScoreAt(through, random) },
-            Away = game.Away with { Score = sport.ScoreAt(through, random) },
+            Home = home,
+            Away = away,
             Period = period,
             Clock = clock,
             Phase = phase,
@@ -91,13 +93,14 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     private static ScenarioGame Finished(ScenarioGame game, League league, SportPlay sport, Random random)
     {
         var startsIn = -(league.PlannedLength + Minutes(random.Next(5, 61)));
-        var (home, away) = sport.Settled(sport.ScoreAt(1, random), sport.ScoreAt(1, random), random);
+        var (playedHome, playedAway, _) = sport.PlayTo(game.Home, game.Away, 1, random, mayFinish: true);
+        var (home, away) = sport.Settled(playedHome, playedAway, random);
         return game with
         {
             StartsIn = startsIn,
             Status = ProviderStatus.Final,
-            Home = game.Home with { Score = home },
-            Away = game.Away with { Score = away },
+            Home = home,
+            Away = away,
             Period = sport.Regulation,
         };
     }

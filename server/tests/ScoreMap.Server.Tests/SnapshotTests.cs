@@ -33,12 +33,28 @@ public class SnapshotTests
         Assert.Equal("NFL", game.League);
         Assert.Equal("Football", game.Sport);
         Assert.Equal(kickoff, game.StartTime);
-        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", 21), game.Home);
-        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", 17), game.Away);
+        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", "21"), game.Home);
+        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", "17"), game.Away);
         Assert.Equal("Q3 4:12", game.Clock);
         Assert.Equal(3, game.Period);
         Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "Missouri", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
         Assert.Equal([new GameBroadcaster("CBS", "USA", null)], game.Broadcasters);
+    }
+
+    [Theory]
+    [InlineData("186/6", "100/6 (13/20 ov, target 187)", "186/6", "100/6")]
+    [InlineData("127", "128/2 (12.1/20 ov, target 128)", "127", "128/2")]
+    [InlineData("54/1 (6.3/20 ov)", null, "54/1", null)]
+    public async Task A_cricket_score_is_runs_and_wickets_or_runs_alone_when_all_out(
+        string? away, string? home, string? awayScore, string? homeScore)
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("cricket/8048", ClockLineTests.CricketGame(server, ProviderStatus.InProgress, 2, ProviderPeriodPhase.Playing, home, away));
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal(("Cricket", awayScore, homeScore), (game.Sport, game.Away.Score, game.Home.Score));
     }
 
     [Fact]

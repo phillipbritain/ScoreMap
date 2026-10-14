@@ -24,7 +24,7 @@ public class FeedFailureTests
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 
         var change = await client.NextChangeAsync();
-        Assert.Equal((GameChangeKind.ScoreChanged, 52), (change.Kind, change.Game.Home.Score));
+        Assert.Equal((GameChangeKind.ScoreChanged, "52"), (change.Kind, change.Game.Home.Score));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class FeedFailureTests
 
         await using var second = await server.ConnectClientAsync();
         var game = Assert.Single(await second.NextSnapshotAsync());
-        Assert.Equal(("401", 21), (game.Id, game.Home.Score));
+        Assert.Equal(("401", "21"), (game.Id, game.Home.Score));
         Assert.Empty(first.PendingChanges());
     }
 

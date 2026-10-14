@@ -37,7 +37,7 @@ public class SnapshotTests
         Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", 17), game.Away);
         Assert.Equal("Q3 4:12", game.Clock);
         Assert.Equal(3, game.Period);
-        Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
+        Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "Missouri", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
         Assert.Equal([new GameBroadcaster("CBS", "USA", null)], game.Broadcasters);
     }
 
@@ -55,6 +55,52 @@ public class SnapshotTests
         var game = Assert.Single(await client.NextSnapshotAsync());
 
         Assert.Equal("Europe/London", game.Venue.TimeZone);
+    }
+
+    [Fact]
+    public async Task A_venue_in_a_Canadian_province_names_the_province_in_full()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
+        {
+            Venue = new ProviderVenue("Scotiabank Arena", "Toronto", "ON", "Canada"),
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal("Ontario", game.Venue.Region);
+    }
+
+    [Fact]
+    public async Task A_venue_with_no_region_has_none()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
+        {
+            Venue = new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"),
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Null(game.Venue.Region);
+        Assert.Equal("England", game.Venue.Country);
+    }
+
+    [Fact]
+    public async Task A_region_that_is_not_a_US_state_or_Canadian_province_is_passed_on_as_given()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
+        {
+            Venue = new ProviderVenue("Estadio Azteca", "Mexico City", "CDMX", "Mexico"),
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal("CDMX", game.Venue.Region);
     }
 
     [Fact]

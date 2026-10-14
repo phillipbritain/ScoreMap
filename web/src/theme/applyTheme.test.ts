@@ -93,6 +93,12 @@ describe('applyTheme', () => {
     expect(properties.get('--trail-see-through-opacity')).toBe('0.5')
   })
 
+  it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
+    const properties = propertiesOf(themeWith((json) => (json.components.Hover.card = { borderWidth: 3, solid: false })))
+    expect(properties.get('--hover-card-border-width')).toBe('3px')
+    expect(properties.get('--hover-card-solid')).toBe('0')
+  })
+
   it('writes a logo plate on the score card and game panel: its colour, its padding in spacing units and its corner in radii, in pixels', () => {
     const properties = propertiesOf(
       themeWith((json) => {
@@ -172,6 +178,8 @@ describe('applyTheme', () => {
       // A trail's width and opacity, its see-through switch and opacity, its glow's three and its venue's three.
       trail: 10,
       selection: 2,
+      // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two.
+      hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
       // A score card's fill, text, shadow, see-through switch and opacity, header's two, corner, five sizes

@@ -123,6 +123,7 @@ export function numberRange(path: SettingPath, builtIn: number): { min: number; 
   if (last === 'fontWeight') return { min: 100, max: 900, step: 50 }
   // In spacing units, and in corner radii.
   if (path.at(-2) === 'cutCorner' && last === 'size') return { min: 0, max: 10, step: 0.5 }
+  if (path.at(-2) === 'plate' && last === 'padding') return { min: 0, max: 4, step: 0.25 }
   if (last === 'corner') return { min: 0, max: 6, step: 0.25 }
   if (last === 'x' || last === 'y') return { min: -40, max: 40, step: 1 }
   return { min: 0, max: Math.max(10, Math.ceil(builtIn * 3)), step: builtIn >= 20 ? 1 : builtIn >= 4 ? 0.25 : 0.05 }

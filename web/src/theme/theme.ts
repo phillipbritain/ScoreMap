@@ -313,6 +313,12 @@ function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], 
 const cardStatus = { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radius: pixels, opacity } }
 
 /**
+ * Whether something lets the map show through, so coastlines, borders and place names under it can
+ * still be seen, and if so how opaque it is then (1 is solid).
+ */
+const seeThrough = { on: onOff, opacity }
+
+/**
  * A colour's role in the palette, as MUI's palette has them: its main shade, a lighter and a darker
  * one, and the colour of text written on its main shade.
  */
@@ -323,6 +329,12 @@ const colourRole = { main: color, light: color, dark: color, contrastText: color
  * ("navy.500") or giving a colour directly. A colour job outside the palette can name one of these
  * ("primary.dark", "text.secondary", "divider") as well as a step.
  */
+/**
+ * The plate a team's logo sits on, so that a logo near the colour of what's behind it can still be
+ * seen: its colour, how far it reaches past the logo (in spacing units) and its corners.
+ */
+const logoPlate = { fill: color, padding: spaces, corner }
+
 const palette = {
   primary: colourRole,
   secondary: colourRole,
@@ -388,7 +400,7 @@ const settings = {
       disputedBorders: { ...globeLine, dash: dashes },
       halo: { inner: haloGlow, outer: haloGlow },
     },
-    PlaceNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
+    PlaceNames: { city: placeName, state: placeName, country: placeName },
     /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
     Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
     /**
@@ -417,11 +429,13 @@ const settings = {
     },
     /**
      * A moved score card's trail back to its venue: a line this wide and opaque in its game's status
-     * colour, in a soft glow, to a dot ringed in that colour.
+     * colour, in a soft glow, to a dot ringed in that colour. See-through, or not: its line and glow
+     * are then this much more see-through, on top of their own opacity.
      */
     Trail: {
       width: pixels,
       opacity,
+      seeThrough,
       glow: { width: pixels, blur: pixels, opacity },
       venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
     },
@@ -438,16 +452,19 @@ const settings = {
      * outline, header line, light and glow are its status's colour. Its size: its narrowest, a team's
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
-     * globe lays cards out by this). By its status, how it fades and glows (see cardStatus), and a
-     * Disrupted game's fill and text.
+     * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
+     * fades and glows (see cardStatus), and a Disrupted game's fill and text. See-through, or not: its
+     * fill and drop shadow are then this opaque, while its text, logos, scores and status light stay solid.
      */
     ScoreCard: {
       fill: color,
       text: color,
       shadow: color,
+      seeThrough,
       header: { tint: opacity, letterSpacing: tracking },
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
+      logo: { plate: logoPlate },
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,
@@ -461,7 +478,8 @@ const settings = {
      * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
      * width at most, its height, and its height on a phone, where the details go below the score block;
      * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
-     * the close button; and a team's score box, in ems of its digits. It sits clear of the scenario
+     * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
+     * logoPlate). It sits clear of the scenario
      * controls by their keys' size.
      */
     GamePanel: {
@@ -476,6 +494,7 @@ const settings = {
       glow: { y: offset, blur: pixels, opacity },
       corner,
       cutCorner: { on: onOff, size: spaces },
+      logo: { plate: logoPlate },
       size: {
         width: pixels,
         height: pixels,

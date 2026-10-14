@@ -8,8 +8,8 @@ using ScoreMap.Server.Games;
 namespace ScoreMap.Server.Venues;
 
 /// <summary>
-/// Finds a venue's photo, trying in order: ESPN's own main ("day") photo of the venue from its core
-/// API, which covers most US venues; then the image Wikidata gives for the venue (property P18),
+/// Finds a venue's photo, preferring one from inside, trying in order: ESPN's own "interior" photo of
+/// the venue from its core API, then its main ("day") one, which cover most US venues; then the image Wikidata gives for the venue (property P18),
 /// found through the Wikidata item OpenStreetMap links the venue to, served by Wikimedia Commons with
 /// its author and licence. Both are asked for a photo about twice the game panel's width.
 /// </summary>
@@ -27,9 +27,9 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
         await EspnPhotoAsync(leagueKey, venue, cancellationToken) ?? await CommonsPhotoAsync(venue, cancellationToken);
 
     /// <summary>
-    /// ESPN's main photo of the venue, resized by ESPN's image combiner, or null when it has none. That's
-    /// its "day" image: for football venues ESPN also has an "interior" one, which is left out, and the
-    /// day image is from outside; for arenas and ballparks the day image is the only one, of the bowl.
+    /// ESPN's photo of the venue, resized by ESPN's image combiner, or null when it has none. Its
+    /// "interior" image (of the field, for football venues) is taken first, then its main "day" one,
+    /// which for football venues is from outside and for arenas and ballparks is of the bowl.
     /// </summary>
     private async Task<VenuePhoto?> EspnPhotoAsync(string leagueKey, ProviderVenue venue, CancellationToken cancellationToken)
     {
@@ -42,9 +42,10 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
 
         var details = await GetJsonAsync<EspnVenue>(
             $"{EspnCoreApi}{sport}/leagues/{league}/venues/{Uri.EscapeDataString(venue.Id)}", cancellationToken);
-        var main = details?.Images?.FirstOrDefault(i =>
-            i.Href is not null && i.Rel is { } rel && rel.Contains("day") && !rel.Contains("interior"));
-        if (main?.Href is not { } href)
+        var images = details?.Images?.Where(i => i.Href is not null && i.Rel is not null).ToList() ?? [];
+        var best = images.FirstOrDefault(i => i.Rel!.Contains("interior"))
+            ?? images.FirstOrDefault(i => i.Rel!.Contains("day"));
+        if (best?.Href is not { } href)
             return null;
         return new VenuePhoto(
             href.StartsWith(EspnImages, StringComparison.OrdinalIgnoreCase)

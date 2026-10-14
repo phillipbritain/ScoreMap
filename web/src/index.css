@@ -135,12 +135,21 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
+/* A logo sits on its plate, so a logo near the panel's colour can still be seen. With no logo, the
+   space it would take is left empty, plate and all. */
 .game-panel__team img,
 .game-panel__logo {
+  box-sizing: content-box;
   width: var(--game-panel-size-logo);
   height: var(--game-panel-size-logo);
+  padding: var(--game-panel-logo-plate-padding);
+  border-radius: var(--game-panel-logo-plate-corner);
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.game-panel__team img {
+  background: var(--game-panel-logo-plate-fill);
 }
 
 .game-panel__team-name {
@@ -454,16 +463,21 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: calc(var(--score-card-size-logo) + 0.5 * var(--spacing)) 1fr auto;
+  grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) 1fr auto;
   align-items: center;
   gap: var(--spacing);
   padding: 0 calc(1.5 * var(--spacing));
 }
 
-/* Faded with the rest of the card, by its status's fade. */
+/* On its plate, so a logo near the card's fill can still be seen. Faded with the rest of the card,
+   plate and all, by its status's fade. */
 .score-card__logo {
+  box-sizing: content-box;
   width: var(--score-card-size-logo);
   height: var(--score-card-size-logo);
+  padding: var(--score-card-logo-plate-padding);
+  border-radius: var(--score-card-logo-plate-corner);
+  background: var(--score-card-logo-plate-fill);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
 }

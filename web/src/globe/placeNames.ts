@@ -98,7 +98,7 @@ function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): La
 const cityNameMinZoom = 3
 
 /** The city name layers' ids: Big cities with no game near, and the games' cities, by kind. */
-export const cityNameLayerIds = {
+const cityNameLayerIds = {
   big: { city: 'city_names', capital: 'capital_names' },
   game: { city: 'city_names_game', capital: 'capital_names_game' },
 } as const
@@ -259,7 +259,7 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames 
 }
 
 /** The labelled cities as the city name source's features, marking the games' cities. */
-export function cityNameFeatures({ gameCities, bigCities }: CityLabels): FeatureCollection<Point> {
+export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels): FeatureCollection<Point> {
   const feature = (city: ListedCity, game: boolean): Feature<Point> => ({
     type: 'Feature',
     geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
@@ -267,7 +267,7 @@ export function cityNameFeatures({ gameCities, bigCities }: CityLabels): Feature
   })
   return {
     type: 'FeatureCollection',
-    features: [...gameCities.map((city) => feature(city, true)), ...bigCities.map((city) => feature(city, false))],
+    features: [...gameCities.map((city) => feature(city, true)), ...otherBigCities.map((city) => feature(city, false))],
   }
 }
 

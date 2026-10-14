@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cityLabels, cityList, cityLabelSettings, notInList, type CityLabelSettings, type ListedCity } from './cityLabels'
+import type { GlobePoint } from './geo'
 
 const city = (name: string, population: number, longitude: number, latitude: number, capital = false): ListedCity => ({
   name,
@@ -25,18 +26,18 @@ const evergladesCity = { longitude: -81.3851, latitude: 25.8573 }
 
 const settings: CityLabelSettings = { bigCityPopulation: 4_000_000, gameCityKm: 50, bigList: [] }
 
-const labels = (venues: { longitude: number; latitude: number }[], given: Partial<CityLabelSettings> = {}) =>
+const labels = (venues: GlobePoint[], given: Partial<CityLabelSettings> = {}) =>
   cityLabels(venues, cities, { ...settings, ...given })
 const names = (list: readonly ListedCity[]) => list.map((c) => c.name).sort()
 
 describe('cityLabels', () => {
   it('labels Big cities by metro population, whether or not a game is near', () => {
-    expect(names(labels([]).bigCities)).toEqual(['Miami'])
+    expect(names(labels([]).otherBigCities)).toEqual(['Miami'])
     expect(labels([]).gameCities).toEqual([])
   })
 
   it('labels a city on the Big list as Big, whatever its population', () => {
-    expect(names(labels([], { bigList: [{ name: 'Orlando', country: 'United States of America' }] }).bigCities)).toEqual([
+    expect(names(labels([], { bigList: [{ name: 'Orlando', country: 'United States of America' }] }).otherBigCities)).toEqual([
       'Miami',
       'Orlando',
     ])
@@ -49,9 +50,9 @@ describe('cityLabels', () => {
 
   it('labels no Small city for a game with a label already within 50 km', () => {
     // Hard Rock Stadium is between Miami and Fort Lauderdale; Miami is Big.
-    const { gameCities, bigCities } = labels([hardRockStadium])
+    const { gameCities, otherBigCities } = labels([hardRockStadium])
     expect(names(gameCities)).toEqual(['Miami'])
-    expect(bigCities).toEqual([])
+    expect(otherBigCities).toEqual([])
   })
 
   it('labels no city for a game with none within 50 km', () => {
@@ -68,7 +69,7 @@ describe('cityLabels', () => {
   })
 
   it('changes with the settings', () => {
-    expect(names(labels([], { bigCityPopulation: 2_000_000 }).bigCities)).toEqual(['Miami', 'Tampa'])
+    expect(names(labels([], { bigCityPopulation: 2_000_000 }).otherBigCities)).toEqual(['Miami', 'Tampa'])
     // Miami is 116 km from Everglades City.
     expect(names(labels([evergladesCity], { gameCityKm: 150 }).gameCities)).toEqual(['Miami'])
   })

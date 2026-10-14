@@ -35,6 +35,7 @@ const arrowhead: Game = {
   venue: {
     name: 'GEHA Field at Arrowhead Stadium',
     city: 'Kansas City',
+    region: 'Missouri',
     country: 'USA',
     latitude: 39.0489,
     longitude: -94.4839,

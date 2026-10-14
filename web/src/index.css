@@ -2,7 +2,7 @@
    from the theme, which is written to the page's root as custom properties, one per setting, named as
    MUI's CSS theme variables are (see theme/theme.ts' customProperties): --palette-text-primary,
    --typography-body2-font-size, --spacing, --shape-border-width-thin, --palette-live-main, and a
-   component's own as --score-card-corner, --game-panel-shadow, --score-card-size-pointer and so on.
+   component's own as --score-card-corner, --game-panel-shadow, --score-card-size-logo and so on.
    Text takes its weight and size from the theme's type styles, every space is a number of its spacing
    unit (calc(3 * var(--spacing))), and corners are a component's own. Motion (durations, easings and
    the animations' own shapes), the starfield's pattern, and layout (percentages, line counts in lh, a
@@ -390,28 +390,8 @@ body {
       color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
-  /* Animations grow the card from its pointer, which stays on the venue. */
+  /* Animations grow the card from its bottom middle, nearest its venue as it usually sits. */
   transform-origin: 50% 100%;
-}
-
-/* A small pointer down to the venue; the card sits above it. A square turned on its corner, sized
-   and placed so its tip is the theme's card pointer below the card (the globe places cards by it). */
-.score-card::after {
-  --side: calc(var(--score-card-size-pointer) * 1.5);
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--side) * 0.7071 - var(--score-card-size-pointer) - var(--side) / 2);
-  width: var(--side);
-  height: var(--side);
-  background: var(--status-color);
-  transform: translateX(-50%) rotate(45deg);
-}
-
-/* Cards moved aside to make room for another (see globe/cardLayout.ts) trail back to their venues
-   instead of pointing down; the map draws the trails (see globe/cardLayoutLayers.ts). */
-[data-moved] > .score-card::after {
-  display: none;
 }
 
 /* No room for this card: its game is counted in a card cluster instead, which the map draws. */

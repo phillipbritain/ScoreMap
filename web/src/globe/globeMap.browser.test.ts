@@ -447,19 +447,28 @@ describe('score cards', () => {
 
     expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
     expect(await laidOut(map, 'cardCluster')).toEqual([])
-    expect(await laidOut(map, 'trail')).toEqual([])
+    // Only the near card's own trail, down to its venue.
+    expect(await laidOut(map, 'trail')).toHaveLength(1)
   })
 
-  it('has the map draw a trail from a moved card to its venue, and a ringed point on the venue', async () => {
+  it('has the map draw a trail from a card to its venue, and a ringed point on the venue', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
-    const [a, b] = [game('A'), game('B')]
-    globe.show([a, b])
-    await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
+    const a = game('A')
+    globe.show([a])
 
     await vi.waitFor(() => expect(drawnAt(map, 'trail-venues', a)).not.toEqual([]), { timeout: 10_000 })
     const [trail] = (await laidOut(map, 'trail')) as Feature<LineString>[]
     const [, venue] = trail.geometry.coordinates
     expect(venue).toEqual([0, 0])
+  })
+
+  it('has the trails of cards at one venue meet at a venue cluster there', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const [a, b] = [game('A'), game('B')]
+    globe.show([a, b])
+
+    await vi.waitFor(() => expect(drawnAt(map, 'venue-clusters', a)).not.toEqual([]), { timeout: 10_000 })
+    expect(drawnAt(map, 'trail-venues', a)).toEqual([])
   })
 })
 
@@ -641,7 +650,7 @@ describe('loading stage', () => {
     // How far each trail's end at its card is from the nearest moved card's edge, in pixels.
     const trailsOffCards = async () => {
       const page = map.getContainer().getBoundingClientRect()
-      const cards = [...container.querySelectorAll<HTMLElement>('[data-moved] .score-card')].map((element) =>
+      const cards = [...container.querySelectorAll<HTMLElement>(':not([data-in-card-cluster]) > .score-card')].map((element) =>
         element.getBoundingClientRect(),
       )
       const trails = (await laidOut(map, 'trail')) as Feature<LineString>[]

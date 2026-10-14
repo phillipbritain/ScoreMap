@@ -34,6 +34,7 @@ import {
   outerPinSource,
   outerSelectedPinLayer,
   outerSmallPinLayer,
+  pinClusterSpacing,
   pinFootprint,
   pinClusterLayer,
   pinSource,
@@ -47,7 +48,6 @@ import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
-import { smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, hasCard, maxZoom, minZoom, pinLayout, pinSize, type PinLayout } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
@@ -264,7 +264,7 @@ export class GlobeMap {
   /**
    * Changes the globe's look to this theme in place, without making it again: the map style's and the
    * games' layers are restyled (just the properties that differ, see layerChanges), the halo redrawn,
-   * small pins reclustered by their new width, and score cards measured and laid out afresh. The
+   * small pins reclustered by their new widths and their clusters', and score cards measured and laid out afresh. The
    * page's CSS must already be in this theme, as score cards are drawn by it.
    */
   setTheme(theme: Theme): void {
@@ -393,9 +393,9 @@ export class GlobeMap {
       ?.setClusterOptions({ cluster: true, clusterRadius: now.clusterRadius, clusterMaxZoom })
   }
 
-  /** The pin layout at the map's zoom now, for small pins as wide as the theme's (see pinLayout). */
+  /** The pin layout at the map's zoom now, for small pins and pin clusters as wide as the theme's (see pinLayout). */
   private pinLayoutNow(): PinLayout {
-    return pinLayout(this.map.getZoom(), smallPinWidth(this.theme))
+    return pinLayout(this.map.getZoom(), pinClusterSpacing(this.theme))
   }
 
   private readonly syncCards = () => this.cards.sync()

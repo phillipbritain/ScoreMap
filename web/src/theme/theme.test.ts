@@ -382,9 +382,17 @@ describe('resolveTheme', () => {
     delete json.components.Globe.coastlines
     delete json.components.Globe.halo
     delete json.palette.warning
+    delete json.components.ScoreCard.logo
+    delete json.components.GamePanel.logo.plate
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['palette.warning is missing', 'components.Globe.coastlines is missing', 'components.Globe.halo is missing'],
+      problems: [
+        'palette.warning is missing',
+        'components.Globe.coastlines is missing',
+        'components.Globe.halo is missing',
+        'components.ScoreCard.logo is missing',
+        'components.GamePanel.logo.plate is missing',
+      ],
     })
   })
   it('rejects a theme without the score card’s or the trail’s see-through setting', () => {

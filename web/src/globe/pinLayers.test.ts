@@ -5,7 +5,7 @@ import builtIn from '../theme/builtInTheme.json'
 import { resolveTheme, type Theme } from '../theme/theme'
 import { cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
-import { pinClusterLayers, pinClusterSpacing, selectedPinLayerSpec, zoomedOutPins } from './pinLayers'
+import { pinClusterLayers, pinClusterSpacing, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
 
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
@@ -134,6 +134,29 @@ describe('trails', () => {
     expect(hovered('trail-venues', 'circle-radius')).toBe(4)
     expect(hovered('trail-venue-rings', 'circle-stroke-width')).toBe(3)
     expect([hovered('trail-venue-glows', 'circle-radius'), hovered('trail-venue-glows', 'circle-opacity')]).toEqual([14, 0.7])
+  })
+})
+
+describe("a game's colour", () => {
+  const game = { status: 'Live', color: '#123456', coreColor: '#654321' }
+
+  it('lights a small pin: its glow and ring in the colour, its core in the core colour', () => {
+    const paint = (id: string) => paintOf(smallPinLayers(sizedTheme(), zoomedOutPins), id)
+    expect(evaluate(paint('pin-glows')['circle-color'], game)).toBe('#123456')
+    expect(evaluate(paint('pins')['circle-stroke-color'], game)).toBe('#123456')
+    expect(evaluate(paint('pins')['circle-color'], game)).toBe('#654321')
+  })
+
+  it("lights a moved card's trail, its glow and the venue it ends at", () => {
+    const paint = (id: string) => paintOf(cardLayoutLayers(sizedTheme()), id)
+    for (const [id, property] of [
+      ['trails', 'line-color'],
+      ['trail-glows', 'line-color'],
+      ['trail-venues', 'circle-color'],
+      ['trail-venue-rings', 'circle-stroke-color'],
+    ]) {
+      expect(evaluate(paint(id)[property], game), id).toBe('#123456')
+    }
   })
 })
 

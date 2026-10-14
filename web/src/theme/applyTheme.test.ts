@@ -99,6 +99,23 @@ describe('applyTheme', () => {
     expect(properties.get('--hover-card-solid')).toBe('0')
   })
 
+  it('writes a logo plate on the score card and game panel: its colour, its padding in spacing units and its corner in radii, in pixels', () => {
+    const properties = propertiesOf(
+      themeWith((json) => {
+        json.spacing = 4
+        json.shape.borderRadius = 2
+        json.components.ScoreCard.logo = { plate: { fill: '#f0f0f0', padding: 0.5, corner: 1 } }
+        json.components.GamePanel.logo = { plate: { fill: '#e0e0e0', padding: 1, corner: 'pill' } }
+      }),
+    )
+    expect(properties.get('--score-card-logo-plate-fill')).toBe('#f0f0f0')
+    expect(properties.get('--score-card-logo-plate-padding')).toBe('2px')
+    expect(properties.get('--score-card-logo-plate-corner')).toBe('2px')
+    expect(properties.get('--game-panel-logo-plate-fill')).toBe('#e0e0e0')
+    expect(properties.get('--game-panel-logo-plate-padding')).toBe('4px')
+    expect(properties.get('--game-panel-logo-plate-corner')).toBe('999px')
+  })
+
   it('writes the typography as its font family and each type style’s weight, size in pixels and letter spacing in ems', () => {
     const properties = propertiesOf(
       themeWith((json) => {
@@ -165,11 +182,13 @@ describe('applyTheme', () => {
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, see-through switch and opacity, header's two, corner and five
-      // sizes; for each of four statuses its fade and glow of two, and a Disrupted card's fill and text.
-      scoreCard: 3 + 2 + 2 + 1 + 5 + 4 * 3 + 2,
-      // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two and nine sizes.
-      gamePanel: 11 + 3 + 1 + 2 + 9,
+      // A score card's fill, text, shadow, see-through switch and opacity, header's two, corner, five sizes
+      // and logo plate of three; for each of four statuses its fade and glow of two, and a Disrupted card's
+      // fill and text.
+      scoreCard: 3 + 2 + 2 + 1 + 5 + 3 + 4 * 3 + 2,
+      // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
+      // and logo plate of three.
+      gamePanel: 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
       // The settings menu's eleven colours and shadows and five sizes.

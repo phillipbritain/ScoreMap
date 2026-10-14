@@ -5,6 +5,7 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
+import { clusterColour, pinClusterSharedColour } from './clusterColour'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
@@ -60,15 +61,16 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
     cluster: size === 'small',
     clusterRadius,
     clusterMaxZoom,
-    // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus).
-    clusterProperties: pinClusterStatusCounts,
+    // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus), and
+    // the colour its games share, for its colour (see clusterColour).
+    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColour },
   }
 }
 
 /**
- * Pin clusters: discs outlined and lit in their status colour, with the count in it too (see the
- * theme's cluster), the disc, outline and count faded as their status's clusters are, as card
- * clusters are (see cardLayoutLayers).
+ * Pin clusters: discs outlined and lit in their games' colour (see clusterColour), with the count in
+ * it too (see the theme's cluster), the disc, outline and count faded as their status's clusters are,
+ * as card clusters are (see cardLayoutLayers).
  */
 export function pinClusterLayers(
   theme: Theme,
@@ -83,7 +85,7 @@ export function pinClusterLayers(
       filter: ['has', 'point_count'],
       paint: {
         'circle-radius': byCount(cluster.glowRadius),
-        'circle-color': byStatus(theme, 'pinCluster', (look) => look.color),
+        'circle-color': clusterColour(theme),
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -98,7 +100,7 @@ export function pinClusterLayers(
         'circle-color': cluster.fill,
         'circle-opacity': clusterOpacity,
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': byStatus(theme, 'pinCluster', (look) => look.color),
+        'circle-stroke-color': clusterColour(theme),
         'circle-stroke-opacity': clusterOpacity,
       },
     },
@@ -112,16 +114,21 @@ export function pinClusterLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': byStatus(theme, 'pinCluster', (look) => look.color), 'text-opacity': clusterOpacity },
+      paint: { 'text-color': clusterColour(theme), 'text-opacity': clusterOpacity },
     },
   ]
 }
+
+/** A small pin's game's colour (see gameColour). */
+const gameColor: ExpressionSpecification = ['get', 'color']
 
 /**
  * Small pins for single games, each a bright core in a soft glow (see StatusLook): every game's
  * while zoomed out, and zoomed in, those far from the centre of the view, as score cards take over
  * near it (see scoreCardMarkers). The glows are a layer beneath the cores, so a core is never dimmed
- * by a neighbour's glow.
+ * by a neighbour's glow. Glow, ring and core are in the game's colour, but for a core the theme gives
+ * a status of its own, apart from the status's colour (Live's paler core, say): colour stands for the
+ * game's league, and status shows by glow and brightness (ADR-0017).
  */
 export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecification, CircleLayerSpecification] {
   return [
@@ -131,7 +138,7 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
-        'circle-color': byStatus(theme, 'own', (look) => look.color),
+        'circle-color': gameColor,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity),
       },
@@ -143,10 +150,10 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
-        'circle-color': byStatus(theme, 'own', (look) => look.core.color),
+        'circle-color': byStatus(theme, 'own', (look) => (look.core.color === look.color ? gameColor : look.core.color)),
         'circle-opacity': byStatus(theme, 'own', (look) => look.core.opacity),
         'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
-        'circle-stroke-color': byStatus(theme, 'own', (look) => look.color),
+        'circle-stroke-color': gameColor,
       },
     },
   ]

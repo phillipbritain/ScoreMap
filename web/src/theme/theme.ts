@@ -1,3 +1,4 @@
+import type { GameStatus } from '../games/game'
 import { globeFonts, type GlobeFont } from './globeFonts'
 import { isHexColor, paletteSteps, stepNames, type StepName } from './palette'
 
@@ -299,6 +300,13 @@ const placeName = {
 /** The game statuses, by their names in the theme: each has a colour in the palette, and its own look in some components. */
 const statuses = ['live', 'upcoming', 'final', 'disrupted'] as const
 
+/**
+ * A game status's name in the theme: its key among the palette's colours and the components' looks
+ * by status, and so in the custom properties the page's CSS reads (--palette-live-main) and the score
+ * cards' status classes (score-card--live). "live" for Live.
+ */
+export const statusKey = (status: GameStatus): (typeof statuses)[number] => status.toLowerCase() as Lowercase<GameStatus>
+
 /** A setting, or group, for each game status (see statuses). */
 function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], S> {
   return Object.fromEntries(statuses.map((status) => [status, look])) as Record<(typeof statuses)[number], S>
@@ -306,7 +314,7 @@ function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], 
 
 /**
  * How a score card fades and glows for a status: how far it fades, and how far and how strongly it
- * glows in its status's colour (a radius of 0 is no glow). A card stays solid as it fades: its status
+ * glows in its game's colour (a radius of 0 is no glow). A card stays solid as it fades: its game's
  * colour, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way, leaving
  * a blank card).
  */
@@ -318,23 +326,34 @@ const cardStatus = { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radiu
  */
 const colourRole = { main: color, light: color, dark: color, contrastText: color }
 
+/** A game status's colour in the palette: its main shade, and a lighter and a darker one. */
+const statusColour = { main: color, light: color, dark: color }
+
 /**
  * The palette, shaped as MUI's is: what each colour is for, each naming a step of the theme's colours
  * ("navy.500") or giving a colour directly. A colour job outside the palette can name one of these
  * ("primary.dark", "text.secondary", "divider") as well as a step.
  */
+/**
+ * The plate a team's logo sits on, so that a logo near the colour of what's behind it can still be
+ * seen: its colour, how far it reaches past the logo (in spacing units) and its corners.
+ */
+const logoPlate = { fill: color, padding: spaces, corner }
+
 const palette = {
   primary: colourRole,
   secondary: colourRole,
   error: colourRole,
   warning: colourRole,
   /**
-   * Each game status's colour, as MUI's palette takes colours of a theme's own: a game's small pin's
-   * ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's
-   * outline, glow and count, its pulse, and the game panel's top edge and progress line, whose text is
-   * the status's contrastText.
+   * Each game status's colour, as MUI's palette takes colours of a theme's own: the colour a game
+   * shows in, by its status, unless the viewer picked one for its sport or league (see gameColour): a
+   * small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a
+   * cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line.
+   * Text written on it is the theme's main text or paper surface, whichever reads better on the colour
+   * (see palette's textOn), so a status has no contrastText of its own.
    */
-  ...byStatus(colourRole),
+  ...byStatus(statusColour),
   /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
   background: { default: color, paper: color },
   /**
@@ -386,19 +405,21 @@ const settings = {
       disputedBorders: { ...globeLine, dash: dashes },
       halo: { inner: haloGlow, outer: haloGlow },
     },
-    PlaceNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
+    PlaceNames: { city: placeName, state: placeName, country: placeName },
     /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
     Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
     /**
      * A game's small pin, by its status: its bright core (its colour, radius, opacity, and the width of
-     * the ring of status colour around it) and the soft glow around that, in its status's colour (its
-     * radius, out to where it has faded to nothing, and its opacity at the middle). Small pins gather
-     * into pin clusters by the widest glow.
+     * the ring of the game's colour around it) and the soft glow around that, in the game's colour (its
+     * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose colour
+     * is just its status's palette colour is in the game's colour; any other (Live's paler core, say)
+     * stays as given, so status still shows by brightness. Small pins gather into pin clusters by the
+     * widest glow.
      */
     Pin: byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
     /**
-     * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its status's
-     * colour, in a glow as strong as this much of its status's small pins' glow, so a cluster of a
+     * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its games'
+     * colour (the theme's accent where they differ), in a glow as strong as this much of its status's small pins' glow, so a cluster of a
      * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
      * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
      * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
@@ -414,8 +435,8 @@ const settings = {
       ...byStatus({ opacity }),
     },
     /**
-     * A moved score card's trail back to its venue: a line this wide and opaque in its game's status
-     * colour, in a soft glow, to a dot ringed in that colour.
+     * A moved score card's trail back to its venue: a line this wide and opaque in its game's colour
+     * (below 1, the map shows through it), in a soft glow, to a dot ringed in that colour.
      */
     Trail: {
       width: pixels,
@@ -426,26 +447,42 @@ const settings = {
     /** The selected game's small pin ring and score card outline: their colour and width. */
     Selection: { color, width: pixels },
     /**
+     * A score card the pointer is on, and its game on the globe, picked out: the card's border this
+     * wide, and solid whatever the cards' fill opacity, or not; its trail this wide and opaque (in place
+     * of the trail's own opacity); and the venue dot its trail ends at this
+     * big, in a glow of its game's colour this wide and strong. Its card doesn't move. Where the game
+     * is also the selected one, selection's look wins where they differ.
+     */
+    Hover: {
+      card: { borderWidth: pixels, solid: onOff },
+      trail: { width: pixels, opacity },
+      venue: { radius: pixels, glow: { radius: pixels, opacity } },
+    },
+    /**
      * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
      * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
      */
     Pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
     /**
-     * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's tinted with its status's colour, 0 not at all and 1
-     * the colour itself, and how far apart its letters are spaced, in ems) and its corners. Its
-     * outline, header line, light and glow are its status's colour. Its size: its narrowest, a team's
+     * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's
+     * tinted with its game's colour, 0 not at all and 1 the colour itself, its text then the card's text
+     * or fill, whichever reads better on the tint, and how far apart its letters are spaced, in ems) and
+     * its corners. Its outline, header line, light and glow are its game's colour. Its size: its narrowest, a team's
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
-     * globe lays cards out by this). By its status, how it fades and glows (see cardStatus), and a
-     * Disrupted game's fill and text.
+     * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
+     * fades and glows (see cardStatus), and a Disrupted game's fill and text. How opaque its fill and
+     * drop shadow are (below 1, the map shows through), while its text, logos, scores and status light stay solid.
      */
     ScoreCard: {
       fill: color,
       text: color,
       shadow: color,
+      fillOpacity: opacity,
       header: { tint: opacity, letterSpacing: tracking },
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
+      logo: { plate: logoPlate },
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,
@@ -454,12 +491,13 @@ const settings = {
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
      * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-     * button and the panel's drop shadow. Its top edge is the game's status colour, and it glows in that
+     * button and the panel's drop shadow. Its top edge is the game's colour, and it glows in that
      * colour, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
      * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
      * width at most, its height, and its height on a phone, where the details go below the score block;
      * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
-     * the close button; and a team's score box, in ems of its digits. It sits clear of the scenario
+     * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
+     * logoPlate). It sits clear of the scenario
      * controls by their keys' size.
      */
     GamePanel: {
@@ -474,6 +512,7 @@ const settings = {
       glow: { y: offset, blur: pixels, opacity },
       corner,
       cutCorner: { on: onOff, size: spaces },
+      logo: { plate: logoPlate },
       size: {
         width: pixels,
         height: pixels,

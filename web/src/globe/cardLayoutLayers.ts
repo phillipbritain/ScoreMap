@@ -1,5 +1,7 @@
 import type {
   CircleLayerSpecification,
+  DataDrivenPropertyValueSpecification,
+  ExpressionSpecification,
   GeoJSONSourceSpecification,
   LineLayerSpecification,
   SymbolLayerSpecification,
@@ -7,6 +9,7 @@ import type {
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
+import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
 import { byCount } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 
@@ -19,14 +22,28 @@ import { byStatus, groupStatus } from './statusLook'
 export const cardLayoutSource = 'card-layout'
 export const cardClusterLayer = 'card-clusters'
 
+/**
+ * A trail and the venue dot it ends at are known by their game's id, so the globe can mark them
+ * hovered while the pointer is on the game's card (see hovered).
+ */
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = {
   type: 'geojson',
   data: { type: 'FeatureCollection', features: [] },
+  promoteId: 'gameId',
 }
 
-/** A score card as it's laid out on screen, with its venue on the globe. */
+/** The feature state the globe sets on a game's trail and venue dot while the pointer is on its card. */
+export const hoveredState = 'hovered'
+
+/** A paint value that's `hover` for a trail or venue dot whose card the pointer is on, and `otherwise` for the rest. */
+function hovered<T extends number>(hover: T, otherwise: T): DataDrivenPropertyValueSpecification<number> {
+  return ['case', ['boolean', ['feature-state', hoveredState], false], hover, otherwise]
+}
+
+/** A score card as it's laid out on screen, with its venue on the globe and its game's colour (see gameColour). */
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]
+  color: string
 }
 
 /** How far a trail's venue dot reaches, and a venue cluster of this many games, ring or outline and all. */
@@ -64,22 +81,30 @@ export function cardLayoutFeatures(
     for (const card of mark.cards) {
       const { trail } = layout.cards.get(card.gameId)!
       features.push(
-        feature({ kind: 'trail', status: card.status }, { type: 'LineString', coordinates: [unproject(trail!.x1, trail!.y1), lngLat] }),
+        feature({ kind: 'trail', color: card.color, gameId: card.gameId }, { type: 'LineString', coordinates: [unproject(trail!.x1, trail!.y1), lngLat] }),
       )
     }
-    const status = groupStatus(mark.cards.map((card) => card.status))
     features.push(
       mark.cards.length === 1
-        ? feature({ kind: 'venue', status }, { type: 'Point', coordinates: lngLat })
-        : feature({ kind: 'venueCluster', status, count: mark.cards.length }, { type: 'Point', coordinates: lngLat }),
+        ? feature({ kind: 'venue', color: mark.cards[0].color, gameId: mark.cards[0].gameId }, { type: 'Point', coordinates: lngLat })
+        : feature(
+            {
+              kind: 'venueCluster',
+              status: groupStatus(mark.cards.map((card) => card.status)),
+              [sharedColorProperty]: sharedColourKey(mark.cards),
+              count: mark.cards.length,
+            },
+            { type: 'Point', coordinates: lngLat },
+          ),
     )
   }
   for (const { gameIds, status } of layout.cardClusters) {
     const first = byGame.get(gameIds[0])
     if (!first) continue
+    const clustered = gameIds.flatMap((id) => byGame.get(id) ?? [])
     features.push(
       feature(
-        { kind: 'cardCluster', status, count: gameIds.length, firstGameId: gameIds[0] },
+        { kind: 'cardCluster', status, [sharedColorProperty]: sharedColourKey(clustered), count: gameIds.length, firstGameId: gameIds[0] },
         { type: 'Point', coordinates: first.lngLat },
       ),
     )
@@ -129,10 +154,13 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  * Moved cards' trails, the venues and venue clusters they end at, and card clusters, from the bottom
  * up. Added beneath the place names, so every name draws over them.
  *
- * A trail is a thin line lit in its game's status colour, like a score card's outline, in a soft glow,
- * to a point ringed in it. A venue cluster and a card cluster are each a disc outlined and lit in the
- * colour of its most prominent game, with the count in it, as a pin cluster is (see the theme's
- * cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one of some.
+ * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
+ * to a point ringed in it; below a solid opacity, the map shows through it. While
+ * the pointer is on a card, its trail and venue dot are drawn bolder, as the theme's hover says, the
+ * dot lit in a glow of its own. A venue cluster and a card cluster are each a disc outlined and lit
+ * in its games' colour (see clusterColour), with the count in it, as a pin cluster is (see the
+ * theme's cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one
+ * of some.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -143,14 +171,17 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
+  CircleLayerSpecification,
   SymbolLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
-  const { Cluster: cluster, Trail: trail } = theme.components
-  // Each trail, venue and cluster in its game's status colour (a cluster's, see groupStatus).
-  const statusColor = byStatus(theme, 'own', (look) => look.color)
+  const { Cluster: cluster, Trail: trail, Hover: hover } = theme.components
+  // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
+  // its games' (see clusterColour).
+  const gameColor: ExpressionSpecification = ['get', 'color']
+  const clusterPaint = clusterColour(theme)
   return [
     {
       id: 'trail-glows',
@@ -158,7 +189,7 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('trail'),
       paint: {
-        'line-color': statusColor,
+        'line-color': gameColor,
         'line-width': trail.glow.width,
         'line-blur': trail.glow.blur,
         'line-opacity': trail.glow.opacity,
@@ -169,7 +200,23 @@ export function cardLayoutLayers(
       type: 'line',
       source: cardLayoutSource,
       filter: kindIs('trail'),
-      paint: { 'line-color': statusColor, 'line-width': trail.width, 'line-opacity': trail.opacity },
+      paint: {
+        'line-color': gameColor,
+        'line-width': hovered(hover.trail.width, trail.width),
+        'line-opacity': hovered(hover.trail.opacity, trail.opacity),
+      },
+    },
+    {
+      id: 'trail-venue-glows',
+      type: 'circle',
+      source: cardLayoutSource,
+      filter: kindIs('venue'),
+      paint: {
+        'circle-radius': hovered(hover.venue.glow.radius, 0),
+        'circle-color': gameColor,
+        'circle-blur': 1,
+        'circle-opacity': hovered(hover.venue.glow.opacity, 0),
+      },
     },
     {
       id: 'trail-venue-rings',
@@ -179,8 +226,8 @@ export function cardLayoutLayers(
       paint: {
         'circle-radius': trail.venue.ring.radius,
         'circle-color': 'transparent',
-        'circle-stroke-width': trail.venue.ring.width,
-        'circle-stroke-color': statusColor,
+        'circle-stroke-width': hovered(hover.trail.width, trail.venue.ring.width),
+        'circle-stroke-color': gameColor,
       },
     },
     {
@@ -188,7 +235,7 @@ export function cardLayoutLayers(
       type: 'circle',
       source: cardLayoutSource,
       filter: kindIs('venue'),
-      paint: { 'circle-radius': trail.venue.radius, 'circle-color': statusColor },
+      paint: { 'circle-radius': hovered(hover.venue.radius, trail.venue.radius), 'circle-color': gameColor },
     },
     {
       id: 'venue-cluster-glows',
@@ -197,7 +244,7 @@ export function cardLayoutLayers(
       filter: kindIs('venueCluster'),
       paint: {
         'circle-radius': byCount(cluster.glowRadius, 'count'),
-        'circle-color': statusColor,
+        'circle-color': clusterPaint,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -212,7 +259,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': statusColor,
+        'circle-stroke-color': clusterPaint,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -227,7 +274,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
     {
       id: 'card-cluster-glows',
@@ -236,7 +283,7 @@ export function cardLayoutLayers(
       filter: kindIs('cardCluster'),
       paint: {
         'circle-radius': cluster.glowRadius.some,
-        'circle-color': statusColor,
+        'circle-color': clusterPaint,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
       },
@@ -252,7 +299,7 @@ export function cardLayoutLayers(
         'circle-color': cluster.fill,
         'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': statusColor,
+        'circle-stroke-color': clusterPaint,
         'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
       },
     },
@@ -267,7 +314,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': statusColor, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
   ]
 }

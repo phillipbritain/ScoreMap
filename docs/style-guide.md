@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow) and [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colours.md) (viewers pick the colours games show in) and [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## What a theme is
 
@@ -22,7 +22,7 @@ A theme is shaped as a [Material UI](https://mui.com/material-ui/customization/t
 ```
 
 - The **theme colours** (`colors`) name a few base colours. Each is worked out into steps from light to dark (see [The theme's colours](#the-themes-colours)), as MUI's own colours (`@mui/material/colors`) come in steps.
-- The **palette** says what the main colours are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, and a colour for each game status (`live`, `upcoming`, `final`, `disrupted`), as MUI takes colours of a theme's own, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colours (see [The palette](#the-palette)).
+- The **palette** says what the main colours are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; a colour for each game status (`live`, `upcoming`, `final`, `disrupted`), as MUI takes colours of a theme's own, each a `main`, `light` and `dark` shade; and the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colours (see [The palette](#the-palette)).
 - The **typography** is one font family and the type styles, MUI's typography variants: `h6`, `subtitle1`, `body2` and so on (see [Typography](#typography)).
 - **`spacing`** is the spacing unit every space on the page is a number of, as MUI's `theme.spacing` is, and **`shape`** the corner radius every corner is a number of and the page's line widths (see [Spacing and shape](#spacing-and-shape)).
 - **`components`** has each part of ScoreMap's own look, by part, as MUI's `components` has each component's: the globe, place names, pins, clusters, trails, score cards, the game panel, the menus, the controls and the loading screen. A part that looks different by game status has a group for each (`components.Pin.live`, `components.ScoreCard.final`), as MUI's components style each colour they come in (see [How a game's status shows](#how-a-games-status-shows)). A part's colour jobs name a step or one of the palette's colours (`primary.dark`, `text.secondary`), so changing the palette changes every part that uses it.
@@ -81,8 +81,8 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
 | `palette.secondary` | The accent: gold, as every game is today. No part names it, as the statuses' colours name gold's steps themselves | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
-| `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge; `contrastText` is the game panel's progress line, written on it (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted; `navy.800` |
-| `palette.error`, `palette.warning` | Kept for errors and warnings, or league colours: no part uses them yet | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
+| `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
+| `palette.error`, `palette.warning` | Kept for errors and warnings: no part uses them yet (league colours are the viewer's, in the settings menu) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
 | `palette.text.primary` | Main text on the game panel, the settings menu and the scenario controls | `offWhite.500` |
@@ -91,7 +91,7 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | `palette.divider` | The lines between a menu's parts (under the settings tabs, under "All leagues") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
 
-The statuses' colours and `text.link` are ScoreMap's own, beside MUI's. MUI works out a colour's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives all four, so each is a step that can be seen and changed.
+The statuses' colours and `text.link` are ScoreMap's own, beside MUI's. MUI works out a colour's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives them all (a status's colour has no `contrastText`), so each is a step that can be seen and changed.
 
 ## Colour jobs
 
@@ -114,7 +114,7 @@ The dark theme names one of the palette's colours where a job is what that palet
 | `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.400` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |
-| `components.PlaceNames.<kind>.color` | A kind of place's name: `city`, `capital`, `state`, `country` | city `navy.200`, capital `navy.100`, state `primary.light`, country `navy.200` |
+| `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | city `navy.200`, state `primary.light`, country `navy.200` |
 | `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.600` for every kind |
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
@@ -124,10 +124,10 @@ The dark theme names one of the palette's colours where a job is what that palet
 | Setting | What it colours | Dark theme |
 | --- | --- | --- |
 | `palette.<status>.main` | A game's colour, by status (`live`, `upcoming`, `final`, `disrupted`; see [The palette](#the-palette)) | `gold.500` for Live, Upcoming and Final; `offWhite.700` (grey) for Disrupted |
-| `components.Pin.<status>.core.color` | A small pin's bright core | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
+| `components.Pin.<status>.core.color` | A small pin's bright core. One that's its status's colour is drawn in the game's colour; any other (Live's paler core) stays, so status shows by brightness | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
 | `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
-| `components.ScoreCard.fill` | A score card's fill, solid | `primary.dark` |
+| `components.ScoreCard.fill` | A score card's fill, as opaque as its fill opacity (see [See-through cards and trails](#see-through-cards-and-trails)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
 | `components.ScoreCard.disrupted.fill`, `.text` | A Disrupted game's score card fill and text | `primary.dark`, `offWhite.700` |
 | `components.ScoreCard.shadow` | The drop shadow a starting game's score card settles with | `background.default` |
@@ -167,16 +167,16 @@ Beside the palette's background, text, divider and hover:
 
 ## How a game's status shows
 
-A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map and only six to eight colours can be told apart on one, so it's kept to stand for a game's league later, when several leagues are shown at once. Until then the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled.
+A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a colour the viewer picks in the settings menu (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
 
 - **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.
 
-Score cards stay solid as they fade, so the map never shows through the scores: a card fades by colour, its status colour, text and logos mixed into its fill, not by being see-through.
+A score card fades by colour, not by being see-through: its game's colour, text and logos are mixed into its fill. A card the map shows through (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
 
-Each status still has its own colour in the palette, though three are the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new setting.
+Each status still has its own colour in the palette, though three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A colour the viewer picks takes the place of its status's, and text written on it (the game panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
 
 A status's colour is the palette's; the rest of its look is each component's own, as MUI's components style each colour they come in, so a component's tab in the tuner holds all of how it looks:
 
@@ -184,10 +184,10 @@ A status's colour is the palette's; the rest of its look is each component's own
 | --- | --- |
 | `palette.<status>` | The game's colour, and the text written on it (see [The palette](#the-palette)) |
 | `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its colour, radius in pixels and opacity |
-| `components.Pin.<status>.core.ring` | The width of the ring of status colour around the core, in pixels (0 is no ring) |
+| `components.Pin.<status>.core.ring` | The width of the ring of the game's colour around the core, in pixels (0 is no ring) |
 | `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
 | `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike |
-| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its status colour (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill (a Disrupted game's fill for a Disrupted card). The selected game's card doesn't fade |
+| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's colour (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill (a Disrupted game's fill for a Disrupted card). The selected game's card doesn't fade |
 | `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its colour (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
 
 The dark theme's:
@@ -203,11 +203,19 @@ The card fades are what the cards' opacities were before cards were made solid (
 
 How status reaches the rest of the globe:
 
-- **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48.
-- **Pulses** play in the colour of the pin's, score card's or cluster's status after the change. A score, a start and a finish are told apart by the pulse's shape, never its colour.
+- **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's colour (outline, glow and count) is the game colour its games share, or the accent (`palette.live.main`) when their colours differ; Disrupted games don't count, so a cluster is Disrupted's grey only when all its games are.
+- **Pulses** play in the game's colour, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its colour.
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
 - **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows, the settings gear's outline among them, are `transparent` and the game panel's glow has opacity 0.
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
+
+### See-through cards and trails
+
+Score cards and trails can let the map show through, so coastlines, borders and place names under them can still be seen where games crowd. Each has one opacity to tune, where 1 is solid: the score card's `fillOpacity`, and the trail's own `opacity` (its glow keeps its own, for how strong the glow is). A score card's fill and drop shadow are that opaque, while its text, logos, scores, outline, status light and glow are not, so the score stays readable and the card keeps its status look (Live's glow, Final's fade). Tune them in the theme tuner on a local run.
+
+### Hover
+
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card's fill turns solid, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
 
 ## Typography
 
@@ -250,6 +258,18 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 
 The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
 
+### Logo plates
+
+Every team logo, on a score card and in the game panel, sits on a **plate**: a block of a colour that contrasts with the card's fill and the panel, so that a logo near their colour (a navy logo on a navy card) can still be seen. A missing logo leaves its space empty, with no plate. A score card's plate fades into its fill with the logo as the card fades, and goes grey with it on a Disrupted card.
+
+| Setting | What it is | Dark theme |
+| --- | --- | --- |
+| `components.ScoreCard.logo.plate.fill`, `components.GamePanel.logo.plate.fill` | The plate's colour (a colour job) | `offWhite.500`, `offWhite.500` |
+| `components.ScoreCard.logo.plate.padding`, `components.GamePanel.logo.plate.padding` | How far the plate reaches past the logo on each side, in spacing units. The logo keeps its size (`size.logo`); the plate adds to it | 0.5 (2px), 1 (4px) |
+| `components.ScoreCard.logo.plate.corner`, `components.GamePanel.logo.plate.corner` | The plate's corners, in corner radii or `"pill"` | 0.5 (2px), 1 (4px) |
+
+The logos are ESPN's usual ones, drawn for a light background, which the plate gives them. ESPN also lists a logo for dark backgrounds for most teams, but for about half of them it's the same picture, and the feed's scoreboard doesn't carry it, so ScoreMap doesn't use it: the plate is the fix for every team alike.
+
 ## Other sizes
 
 Sizes that aren't a type style's, a number of spacing units or of corner radii are free values: pixels, any number from 0 up (an offset may be negative), or ems where a size goes with its text and should grow with it (letter spacing, which may be negative, and boxes sized to their characters). The dark theme keeps the look before it for all of these.
@@ -266,11 +286,14 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
-| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue | 1.25, 0.9 |
-| `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.35 |
+| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 1.25, 0.63 |
+| `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot | 5, 1 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
+| `components.Hover.trail.width`, `.opacity` | A hovered card's trail, and its venue dot ring's width (see [Hover](#hover)) | 2.5, 1 |
+| `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
+| `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's colour | 12, 0.6 |
 | `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 36 |
 | `components.Pulse.ring.lively`, `.calm` | How thick a pulse's ring is, for a score or a start, and for a finish | 3, 2 |
 
@@ -280,8 +303,10 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | --- | --- | --- |
 | `components.GamePanel.shadow`, `components.SettingsMenu.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
 | `components.SettingsMenu.gearOutline` | The outline around the settings gear, as a shadow | none (`transparent`, blur 0) |
-| `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's status colour along the game panel's top | 0, 0, 0 (none) |
-| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its status colour, 0 to 1 | 0.28 |
+| `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's colour along the game panel's top | 0, 0, 0 (none) |
+| `components.ScoreCard.fillOpacity` | How opaque score cards' fill and drop shadow are, 0 to 1, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 0.75 |
+| `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether its fill turns solid (see [Hover](#hover)) | 2.5, on |
+| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's colour, 0 to 1. The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
@@ -312,9 +337,9 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 
 | Setting | Which text | Dark theme |
 | --- | --- | --- |
-| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, capital `Open Sans Bold`, state `Open Sans Regular`, country `Open Sans Bold` |
-| `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; capital `body2`, `body1`, `h6` at 4, 7, 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
-| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city and capital 0, state 0.25, country 0.12 |
+| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, state `Open Sans Regular`, country `Open Sans Bold` |
+| `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
+| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.25, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
 | `components.Cluster.count.size` | Its size, a type style's | `caption` |
 

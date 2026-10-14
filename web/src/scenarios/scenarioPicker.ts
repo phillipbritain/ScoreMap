@@ -46,6 +46,14 @@ export function showsScenarioControls(listing: ScenarioListing | null, controls:
   return listing !== null && listing.scenarios.length > 0 && !controls.hidden
 }
 
+/**
+ * Whether the dev tools (the Behaviour and Theme buttons, and their open panels) show on a local run:
+ * unless Shift+S has hidden them along with the scenario controls.
+ */
+export function showsDevTools(controls: { hidden: boolean }): boolean {
+  return !controls.hidden
+}
+
 /** The scenario pill's text, before its ▾. */
 export function pillLabel(listing: ScenarioListing): string {
   return `Scenario: ${displayName(listing.running)}`
@@ -127,7 +135,7 @@ function speedTimes(listing: ScenarioListing): number {
   return listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
 }
 
-/** The parts of a keydown event that decide whether it hides or shows the scenario controls. */
+/** The parts of a keydown event that decide whether it hides or shows the scenario controls and dev tools. */
 export interface KeyPress {
   key: string
   shiftKey: boolean
@@ -139,7 +147,10 @@ export interface KeyPress {
 
 const textFields = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
-/** Whether a key press hides or shows the scenario controls: Shift+S, unless typed into a text field. */
+/**
+ * Whether a key press hides or shows the scenario controls and the dev tools: Shift+S, unless typed
+ * into a text field.
+ */
 export function togglesScenarioControls(press: KeyPress): boolean {
   if (press.target && (textFields.has(press.target.tagName) || press.target.isContentEditable)) return false
   return press.key.toUpperCase() === 'S' && press.shiftKey && !press.ctrlKey && !press.altKey && !press.metaKey

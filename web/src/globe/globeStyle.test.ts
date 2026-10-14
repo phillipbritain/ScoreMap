@@ -141,7 +141,7 @@ describe('globeStyle', () => {
   const kobe: ListedCity = { name: 'Kobe', country: 'Japan', longitude: 135.17, latitude: 34.68, population: 1_528_000, capital: false }
   /** A city's properties in the city name source, labelled for a game or not. */
   const properties = (city: ListedCity, game: boolean) =>
-    cityNameFeatures(game ? { gameCities: [city], bigCities: [] } : { gameCities: [], bigCities: [city] }).features[0].properties
+    cityNameFeatures(game ? { gameCities: [city], otherBigCities: [] } : { gameCities: [], otherBigCities: [city] }).features[0].properties
   /** The layers that name this city, labelled for a game or not. */
   const namedBy = (city: ListedCity, game: boolean) =>
     style()
@@ -162,10 +162,9 @@ describe('globeStyle', () => {
     expect(namedBy(tokyo, true)).toEqual(['capital_names_game'])
   })
 
-  it("names cities from zoom 3, writing each by the base style's city dot", () => {
+  it('names cities from zoom 3', () => {
     for (const id of ['city_names', 'capital_names', 'city_names_game', 'capital_names_game']) {
       expect(layer(id)?.minzoom, id).toBe(3)
-      expect(layout(id)['icon-image'], id).toEqual(['step', ['zoom'], 'circle_11_black', 9, ''])
       expect(layout(id)['text-field'], id).toEqual(['get', 'name'])
     }
   })

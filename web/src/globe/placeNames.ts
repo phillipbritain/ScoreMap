@@ -267,10 +267,11 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames 
 
   /**
    * Finds the place named for each game among the places loaded so far, however small, and has the
-   * map always write those places' names (see gameCityName).
+   * map always write those places' names (see gameCityName). Not while the globe moves: reading every
+   * loaded place as each new tile comes in made dragging it stutter, so it waits until it stops.
    */
   const findCities = () => {
-    if (!stale || !map.getSource(placeTiles.source)) return
+    if (!stale || map.isMoving() || !map.getSource(placeTiles.source)) return
     stale = false
     const places = new Map<number, City>()
     for (const feature of map.querySourceFeatures(placeTiles.source, {
@@ -296,6 +297,7 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames 
   }
   map.on('sourcedata', onSourceData)
   map.on('render', findCities)
+  map.on('moveend', findCities)
   const stopStateNameFit = showStateNamesWhenAllFit(map)
 
   return {
@@ -315,6 +317,7 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames 
     remove() {
       map.off('sourcedata', onSourceData)
       map.off('render', findCities)
+      map.off('moveend', findCities)
       stopStateNameFit()
     },
   }
@@ -337,8 +340,8 @@ function measureText(text: string, font: string, size: number): number {
 // A letter's width in ems, roughly, where there's no canvas to measure with.
 const fallbackLetterWidth = 0.6
 
-// How often to check whether state names fit, at most: often enough to follow the globe as it
-// turns, rarely enough not to slow it.
+// How often to check whether state names fit, at most, while the globe is still but the map is
+// drawing (tiles coming in, cards moving): often enough to follow it, rarely enough not to slow it.
 const checkEveryMs = 250
 
 /**
@@ -346,7 +349,8 @@ const checkEveryMs = 250
  * name, card and pin. Where any would give way, none show, so the map never names some states and
  * not their neighbours. The names are still placed while unseen (see hiddenStateNames), which is how
  * the map tells whether they'd fit; being the last names placed, they never push another name aside.
- * Returns a function that stops it.
+ * Not checked while the globe moves, as reading every state name made dragging it stutter; they stay
+ * shown or hidden until it stops. Returns a function that stops it.
  */
 function showStateNamesWhenAllFit(map: MapLibreMap): () => void {
   let shown = false
@@ -359,7 +363,7 @@ function showStateNamesWhenAllFit(map: MapLibreMap): () => void {
     map.setPaintProperty(stateNames, 'text-opacity', show ? 1 : 0)
   }
   const checkNowAndThen = () => {
-    if (performance.now() - lastCheck >= checkEveryMs) check()
+    if (!map.isMoving() && performance.now() - lastCheck >= checkEveryMs) check()
   }
   map.on('render', checkNowAndThen)
   // Once more when the map settles, which the checks along the way may have just missed.

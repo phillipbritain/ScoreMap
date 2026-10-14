@@ -624,7 +624,7 @@ export class GlobeMap {
 }
 
 /** No colours picked: every game in the theme's colours. */
-const noColours: PickedColours = { sportColours: {} }
+const noColours: PickedColours = { sportColours: {}, leagueColours: {} }
 
 /** Every layer the globe adds for the games in a theme, as gameLayers makes them. */
 function gameLayersIn(theme: Theme, selectedGameId: string | null): LayerSpecification[] {

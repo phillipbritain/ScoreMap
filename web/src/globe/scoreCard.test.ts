@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from '../games/game'
-import { scoreCard } from './scoreCard'
+import { themeWith } from '../theme/testTheme'
+import { headerText, scoreCard } from './scoreCard'
 
 const arrowhead: Game = {
   id: '401',
@@ -16,7 +17,7 @@ const arrowhead: Game = {
   clock: '4:12',
   period: 3,
   clutchTime: false,
-  venue: { name: 'Arrowhead', city: 'Kansas City', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
+  venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
   broadcasters: [],
   streamLinks: [],
 }
@@ -62,5 +63,28 @@ describe('scoreCard', () => {
     const suspended: Game = { ...arrowhead, status: 'Disrupted', disruption: 'Suspended', clock: null }
 
     expect(scoreCard(suspended)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
+  })
+})
+
+describe("a score card's header text", () => {
+  // A dark card with light text, its header strongly tinted with the game's colour.
+  const theme = themeWith((json) => {
+    Object.assign(json.components.ScoreCard, { fill: '#101828', text: '#eeeeee' })
+    json.components.ScoreCard.header.tint = 0.8
+    Object.assign(json.components.ScoreCard.disrupted, { fill: '#202020', text: '#909090' })
+  })
+
+  it("is the card's text on a header tinted with a dark colour", () => {
+    expect(headerText('#123456', 'Live', theme)).toBe('#eeeeee')
+  })
+
+  it("is the card's fill on a header tinted with a pale colour, so it stays readable", () => {
+    expect(headerText('#fff8c0', 'Live', theme)).toBe('#101828')
+    expect(headerText('#ffff00', 'Final', theme)).toBe('#101828')
+  })
+
+  it("is a Disrupted card's own text or fill", () => {
+    expect(headerText('#123456', 'Disrupted', theme)).toBe('#909090')
+    expect(headerText('#ffffff', 'Disrupted', theme)).toBe('#202020')
   })
 })

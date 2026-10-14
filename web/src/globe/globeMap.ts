@@ -11,6 +11,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import { gameColour, type PickedColours } from '../settings/gameColour'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
@@ -68,6 +69,8 @@ export interface GlobeMapOptions {
   theme: Theme
   /** What decides which cities are labelled, to start with: the app's own unless given. It changes with setCityLabelSettings. */
   cityLabels?: CityLabelSettings
+  /** The colours the viewer picked for games, to start with: none unless given. They change with setColours. */
+  colours?: PickedColours
   /** Where the globe opens. */
   startCamera: Camera
   /** Called with a game's id when the viewer selects its pin or score card. */
@@ -101,6 +104,8 @@ const cardClusterZoomPadding = 120
 export class GlobeMap {
   private readonly map: MapLibreMap
   private theme: Theme
+  /** The colours the viewer picked for games (see gameColour). */
+  private colours: PickedColours
   /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
   private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
@@ -132,7 +137,11 @@ export class GlobeMap {
   /** The stage last told to onStage. */
   private toldStage: LoadingStage = 'waitingForGames'
 
-  constructor(container: HTMLElement, { style, theme, cityLabels = cityLabelSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
+  constructor(
+    container: HTMLElement,
+    { style, theme, cityLabels = cityLabelSettings, colours = noColours, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+  ) {
+    this.colours = colours
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     this.onStage = onStage
@@ -168,7 +177,7 @@ export class GlobeMap {
     // Before the pins' layers are added on style load, so they're drawn under the pins.
     this.reachRings = addReachRings(map)
     this.names = addPlaceNames(map, currentTheme, cityLabels)
-    this.cards = new ScoreCardMarkers(map, currentTheme, this.names, (gameId) => this.onSelect(gameId))
+    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.names, (gameId) => this.onSelect(gameId))
     this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
@@ -216,15 +225,7 @@ export class GlobeMap {
     this.unsettle()
     const before = this.shown
     this.shown = new Map(games.map((game) => [game.id, game]))
-    // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
-    // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
-    const pins = pinFeatures(games)
-    const pinsKey = JSON.stringify(pins)
-    if (pinsKey !== this.pinsKey) {
-      this.pinsKey = pinsKey
-      this.map.getSource<GeoJSONSource>(pinSource)?.setData(pins)
-    }
-    this.showOuterPins()
+    this.showPins()
     // Names first: cards are laid out around them.
     this.names.showGames(games)
     if (this.reachShown) this.showReachRings()
@@ -284,7 +285,34 @@ export class GlobeMap {
     }
     this.recluster()
     this.glow.place()
+    // The pins carry their games' colours, which may be the theme's.
+    this.showPins()
     this.cards.restyle()
+  }
+
+  /** Shows each game in these colours from now on (see gameColour): its pin, score card, trail and pulses. */
+  setColours(colours: PickedColours): void {
+    if (colours === this.colours) return
+    this.colours = colours
+    this.unsettle()
+    this.showPins()
+    this.cards.restyle()
+  }
+
+  /** A game's colour, in the colours and theme the globe has now. */
+  private readonly colourOf = (game: Game): string => gameColour(this.colours, game, this.theme)
+
+  /** Gives the pin sources the games shown, each in its colour, when they've changed. */
+  private showPins(): void {
+    // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
+    // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
+    const pins = pinFeatures([...this.shown.values()], this.colourOf)
+    const pinsKey = JSON.stringify(pins)
+    if (pinsKey !== this.pinsKey) {
+      this.pinsKey = pinsKey
+      this.map.getSource<GeoJSONSource>(pinSource)?.setData(pins)
+    }
+    this.showOuterPins()
   }
 
   /** Labels cities by these settings from now on (on a local run, from the behaviour tuner). */
@@ -361,8 +389,11 @@ export class GlobeMap {
     const map = this.map
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()]), this.clustering))
-    map.addSource(outerPinSource, pinSourceSpec(pinFeatures([]), { size: 'small', clusterRadius: this.clustering.clusterRadius }))
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colourOf), this.clustering))
+    map.addSource(
+      outerPinSource,
+      pinSourceSpec(pinFeatures([], this.colourOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
+    )
     this.outerPinsKey = ''
     this.showOuterPins()
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
@@ -416,7 +447,7 @@ export class GlobeMap {
             ({ venue }) => !hasCard({ longitude, latitude }, venue) && !isBehindGlobe(map, [venue.longitude, venue.latitude]),
           )
         : []
-    const pins = pinFeatures(outer)
+    const pins = pinFeatures(outer, this.colourOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey === this.outerPinsKey) return
     this.outerPinsKey = pinsKey
@@ -547,7 +578,7 @@ export class GlobeMap {
 
     if (target.kind === 'pin') {
       if (card) this.cards.animate(game.id, animation)
-      else pulse(map, this.theme, target.lngLat, animation, 'pin')
+      else pulse(map, this.colourOf(game), target.lngLat, animation, 'pin')
       return
     }
 
@@ -556,7 +587,7 @@ export class GlobeMap {
       const leaves = await source.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])
       if (this.destroyed) return
       if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
-        pulse(map, this.theme, lngLat, animation, 'cluster')
+        pulse(map, this.colourOf(game), lngLat, animation, 'cluster')
         return
       }
     }
@@ -591,6 +622,9 @@ export class GlobeMap {
     this.onCameraMove({ longitude: lng, latitude: lat, zoom: this.map.getZoom() })
   }
 }
+
+/** No colours picked: every game in the theme's colours. */
+const noColours: PickedColours = { sportColours: {}, leagueColours: {} }
 
 /** Every layer the globe adds for the games in a theme, as gameLayers makes them. */
 function gameLayersIn(theme: Theme, selectedGameId: string | null): LayerSpecification[] {

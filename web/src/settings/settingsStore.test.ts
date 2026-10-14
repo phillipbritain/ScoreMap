@@ -22,6 +22,8 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA', 'MLS'],
       liveOnly: true,
       showDisrupted: false,
+      sportColours: { Football: '#123456', Soccer: '#abcdef' },
+      leagueColours: { NFL: '#fedcba' },
     }
 
     settingsStore(() => storage).save(chosen)
@@ -76,7 +78,56 @@ describe('settingsStore', () => {
       hiddenLeagues: ['NBA'],
       liveOnly: false,
       showDisrupted: true,
+      sportColours: {},
+      leagueColours: {},
     })
+  })
+
+  it('loads settings saved before colours could be picked with no colours', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: false }))
+
+    expect(settingsStore(() => storage).load()).toEqual({
+      hiddenLeagues: ['NBA'],
+      liveOnly: true,
+      showDisrupted: false,
+      sportColours: {},
+      leagueColours: {},
+    })
+  })
+
+  it('keeps each saved colour it understands and drops the rest', () => {
+    const storage = memoryStorage()
+    storage.setItem(
+      'scoremap.settings',
+      JSON.stringify({ sportColours: { Football: '#123456', Soccer: 'red', Hockey: 7, Baseball: '#12345' } }),
+    )
+
+    expect(settingsStore(() => storage).load().sportColours).toEqual({ Football: '#123456' })
+  })
+
+  it('loads settings saved before leagues could be coloured with no league colours, keeping sport colours', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ sportColours: { Football: '#123456' } }))
+
+    const loaded = settingsStore(() => storage).load()
+
+    expect(loaded.sportColours).toEqual({ Football: '#123456' })
+    expect(loaded.leagueColours).toEqual({})
+  })
+
+  it('keeps each saved league colour it understands and drops the rest', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ leagueColours: { NFL: '#abcdef', NBA: 'blue', MLS: 3 } }))
+
+    expect(settingsStore(() => storage).load().leagueColours).toEqual({ NFL: '#abcdef' })
+  })
+
+  it.each([['red'], [['#123456']], [null]])('loads no colours when what was saved for them is %j', (sportColours) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ sportColours }))
+
+    expect(settingsStore(() => storage).load().sportColours).toEqual({})
   })
 
   it.each(['hud', 'led', 'broadcast', 'tactical', 'neon', 'white'])(
@@ -92,6 +143,8 @@ describe('settingsStore', () => {
         hiddenLeagues: ['NBA', 'MLS'],
         liveOnly: true,
         showDisrupted: false,
+        sportColours: {},
+      leagueColours: {},
       })
     },
   )

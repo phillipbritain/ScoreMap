@@ -200,6 +200,12 @@ describe('resolveTheme', () => {
     })
   })
 
+  it('has no capital look: national capitals are named in the city look', () => {
+    const json = themeJson()
+    json.components.PlaceNames.capital = { ...json.components.PlaceNames.city }
+    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.PlaceNames.capital isn’t a setting a theme has'] })
+  })
+
   it('rejects a colour job naming a colour the theme doesn’t have', () => {
     const json = themeJson()
     json.colors.navy = { base: '#2b4d7d' }
@@ -376,9 +382,31 @@ describe('resolveTheme', () => {
     delete json.components.Globe.coastlines
     delete json.components.Globe.halo
     delete json.palette.warning
+    delete json.components.ScoreCard.logo
+    delete json.components.GamePanel.logo.plate
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['palette.warning is missing', 'components.Globe.coastlines is missing', 'components.Globe.halo is missing'],
+      problems: [
+        'palette.warning is missing',
+        'components.Globe.coastlines is missing',
+        'components.Globe.halo is missing',
+        'components.ScoreCard.logo is missing',
+        'components.GamePanel.logo.plate is missing',
+      ],
+    })
+  })
+  it('rejects a theme without the score card’s fill opacity', () => {
+    const json = themeJson()
+    delete json.components.ScoreCard.fillOpacity
+    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.ScoreCard.fillOpacity is missing'] })
+  })
+  it('rejects a theme without its hover settings', () => {
+    const json = themeJson()
+    delete json.components.Hover.card.solid
+    delete json.components.Hover.venue
+    expect(resolveTheme(json)).toEqual({
+      ok: false,
+      problems: ['components.Hover.card.solid is missing', 'components.Hover.venue is missing'],
     })
   })
 })

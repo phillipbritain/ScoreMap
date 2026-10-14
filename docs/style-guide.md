@@ -127,7 +127,7 @@ The dark theme names one of the palette's colours where a job is what that palet
 | `components.Pin.<status>.core.color` | A small pin's bright core | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
 | `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
-| `components.ScoreCard.fill` | A score card's fill, solid | `primary.dark` |
+| `components.ScoreCard.fill` | A score card's fill, solid unless the card is see-through (see [See-through cards and trails](#see-through-cards-and-trails)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
 | `components.ScoreCard.disrupted.fill`, `.text` | A Disrupted game's score card fill and text | `primary.dark`, `offWhite.700` |
 | `components.ScoreCard.shadow` | The drop shadow a starting game's score card settles with | `background.default` |
@@ -174,7 +174,7 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.
 
-Score cards stay solid as they fade, so the map never shows through the scores: a card fades by colour, its status colour, text and logos mixed into its fill, not by being see-through.
+A score card fades by colour, not by being see-through: its status colour, text and logos are mixed into its fill. A see-through card (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
 
 Each status still has its own colour in the palette, though three are the same gold, so league colours, or a theme that shows status its own way (a light theme, where glows barely show), can change them without a new setting.
 
@@ -208,6 +208,10 @@ How status reaches the rest of the globe:
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
 - **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows, the settings gear's outline among them, are `transparent` and the game panel's glow has opacity 0.
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
+
+### See-through cards and trails
+
+Score cards and trails can let the map show through, so coastlines, borders and place names under them can still be seen where games crowd. Each has a `seeThrough` setting: `on`, written to CSS as `1` or `0` as the cut corner's is, and an `opacity`, used only when it's on. A see-through score card's fill and drop shadow are that opaque, while its text, logos, scores, outline, status light and glow are not, so the score stays readable and the card keeps its status look (Live's glow, Final's fade). A see-through trail's line and glow are multiplied by that opacity, on top of their own. Try it on and off, and its strength, in the theme tuner on a local run.
 
 ## Typography
 
@@ -268,6 +272,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue | 1.25, 0.9 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.35 |
+| `components.Trail.seeThrough.on`, `.opacity` | Whether trails are see-through, and how opaque their line and glow are then, on top of their own opacity (see [See-through cards and trails](#see-through-cards-and-trails)) | on, 0.7 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot | 5, 1 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
@@ -281,6 +286,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.GamePanel.shadow`, `components.SettingsMenu.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
 | `components.SettingsMenu.gearOutline` | The outline around the settings gear, as a shadow | none (`transparent`, blur 0) |
 | `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's status colour along the game panel's top | 0, 0, 0 (none) |
+| `components.ScoreCard.seeThrough.on`, `.opacity` | Whether score cards are see-through, and how opaque their fill and drop shadow are then, 0 to 1 (see [See-through cards and trails](#see-through-cards-and-trails)) | on, 0.75 |
 | `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its status colour, 0 to 1 | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |

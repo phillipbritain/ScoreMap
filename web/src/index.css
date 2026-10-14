@@ -800,8 +800,8 @@ body {
   font-size: var(--typography-button-font-size);
 }
 
-/* âœ“ when all are on, â€“ when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the âœ“ comes from a taller fallback font. */
+/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
 .settings-master__mark {
   width: var(--settings-menu-size-mark);
   height: var(--settings-menu-size-mark);
@@ -1044,7 +1044,7 @@ body {
 }
 
 .scenario-pill button[aria-current='true']::before {
-  content: 'âœ“ ';
+  content: '✓ ';
 }
 
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */

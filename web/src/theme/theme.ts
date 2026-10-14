@@ -331,8 +331,10 @@ const palette = {
   /**
    * Each game status's colour, as MUI's palette takes colours of a theme's own: a game's small pin's
    * ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's
-   * outline, glow and count, its pulse, and the game panel's top edge and progress line, whose text is
-   * the status's contrastText.
+   * outline, glow and count, its pulse, and the game panel's top edge and progress line, unless the
+   * viewer picked a colour for the game's sport (see gameColour). Text on the progress line is the
+   * theme's main text or paper surface, whichever reads better on the colour (see textOn), so
+   * contrastText is no longer read for statuses.
    */
   ...byStatus(colourRole),
   /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */

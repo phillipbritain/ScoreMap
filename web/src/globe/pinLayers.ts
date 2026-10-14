@@ -131,7 +131,7 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
-        'circle-color': byStatus(theme, 'own', (look) => look.color),
+        'circle-color': ['get', 'color'],
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity),
       },
@@ -143,10 +143,10 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
-        'circle-color': byStatus(theme, 'own', (look) => look.core.color),
+        'circle-color': ['get', 'coreColor'],
         'circle-opacity': byStatus(theme, 'own', (look) => look.core.opacity),
         'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
-        'circle-stroke-color': byStatus(theme, 'own', (look) => look.color),
+        'circle-stroke-color': ['get', 'color'],
       },
     },
   ]

@@ -9,13 +9,19 @@ export interface ViewerSettings {
   liveOnly: boolean
   /** "Show Disrupted games": shows postponed, suspended and canceled games. */
   showDisrupted: boolean
+  /**
+   * The colour the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
+   * in it (see gameColour). A sport with none takes the theme's colours.
+   */
+  sportColours: Readonly<Record<string, string>>
 }
 
-/** Every league on, "Live only" off and Disrupted games shown. */
+/** Every league on, "Live only" off, Disrupted games shown and no colours picked. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   liveOnly: false,
   showDisrupted: true,
+  sportColours: {},
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {
@@ -50,6 +56,22 @@ export function withAllLeagues(settings: ViewerSettings, leagues: readonly Leagu
     leagues.map((league) => league.name),
     on,
   )
+}
+
+/** The settings with a sport's colour picked, or cleared (null) so its games take the theme's colours again. */
+export function withSportColour(settings: ViewerSettings, sport: string, colour: string | null): ViewerSettings {
+  const { [sport]: _cleared, ...others } = settings.sportColours
+  return { ...settings, sportColours: colour === null ? others : { ...others, [sport]: colour } }
+}
+
+/** "Reset colours": the settings with every colour cleared. */
+export function withoutColours(settings: ViewerSettings): ViewerSettings {
+  return { ...settings, sportColours: {} }
+}
+
+/** Whether the viewer has picked any colour, so there's something for "Reset colours" to clear. */
+export function hasColours(settings: ViewerSettings): boolean {
+  return Object.keys(settings.sportColours).length > 0
 }
 
 function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: boolean): ViewerSettings {

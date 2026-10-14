@@ -312,7 +312,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.size.width` | The game panel's width at most | 940 |
-| `components.GamePanel.size.height`, `.phoneHeight` | Its height, and its height on a phone, where the details go below the score block | 127, 236 |
+| `components.GamePanel.size.height`, `.phoneHeight` | The strip's height, and its height on a phone, where the details go below the score block. The band under it, for the last score and the rest, adds three lines of its own (six on a phone) | 127, 236 |
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's width, and how far its right edge slants | 290, 16 |
 | `components.GamePanel.size.photo`, `.logo`, `.close` | The venue photo's width, a team's logo, the close button | 180, 28, 24 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |

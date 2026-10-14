@@ -1,52 +1,46 @@
 import type {
   DataDrivenPropertyValueSpecification,
-  ExpressionSpecification,
-  FilterSpecification,
+  GeoJSONSource,
+  GeoJSONSourceSpecification,
   LayerSpecification,
   Map as MapLibreMap,
-  MapSourceDataEvent,
   StyleSpecification,
+  SymbolLayerSpecification,
 } from 'maplibre-gl'
+import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
-import { cityNameBox, cityOfPlace, gameCities, type City, type ScreenBox } from './gameCities'
-import { degreesApart } from './geo'
+import { cityLabels, cityLabelSettings, cityList, type CityLabels, type ListedCity } from './cityLabels'
+import { cityNameBox, type ScreenBox } from './cityNameBox'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
 
-// Name layers of the base style.
-const stateNames = 'label_state'
-// City names, national capitals included; only major cities are named (see majorCity), and other
-// cities only where a game is (see gameCityName).
-const cityNames = new Set(['label_city', 'label_city_capital'])
-// Towns and villages, named only where a game is.
-const townNames = new Set(['label_town', 'label_village'])
-// Place names the globe leaves out: towns, villages (but for games') and other small places.
-const droppedNames = new Set([...townNames, 'label_other'])
+// Place names of the base style the globe drops: its cities and capitals (city names are all the
+// globe's own, from the city list: see cityNameLayers), towns, villages and other small places.
+const droppedNames = new Set(['label_city', 'label_city_capital', 'label_town', 'label_village', 'label_other'])
 
-/** The tiles' source and layer of places, cities among them. */
-const placeTiles = { source: 'openmaptiles', sourceLayer: 'place' }
+/** The tiles' source layer of places: the base style's place names, such as states and countries. */
+const placeTiles = 'place'
+
+/** The source of the cities the globe names, from the city list (see cityLabels). */
+export const cityNameSource = 'cityNames'
+
+/** The city name source as the style starts it, empty until addPlaceNames fills it. */
+export const cityNameSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
 /**
- * The base style's place names in the theme's colours, outlines and fonts, by kind of place. Major cities
- * are named, and also the place where each game is, however small, in layers of their own that are
- * placed before every other name. Goes after the globe's lines, the game cities' names last.
+ * The globe's place names: the base style's states and countries, and the city names from the city
+ * list (see cityNameLayers), each in the theme's look for its kind of place. Big cities with no game
+ * near come first, so every other name is placed before them; the games' cities come last, placed
+ * before everything. Goes after the globe's lines.
  */
 export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSpecification[] {
-  if (!base.layers.some((l) => l.id === stateNames)) {
-    // Fails loudly if the base style renames it, rather than silently losing state names.
-    throw new Error(`The base map style has no layer "${stateNames}"`)
-  }
   const names = base.layers
-    .filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles.sourceLayer && !droppedNames.has(l.id))
-    .map((l) => placeName(l, theme))
-    .map((l) => (cityNames.has(l.id) ? exceptGameCities(majorCitiesOnly(cityNamePlacement(l))) : l))
-  // Last, so they're placed first: every other name gives way to them.
-  const gameCityNames = base.layers
-    .filter((l) => cityNames.has(l.id) || townNames.has(l.id))
-    .map((l) => gameCityName(cityNamePlacement(placeName(l, theme))))
-  return [...names, ...gameCityNames]
+    .filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles && !droppedNames.has(l.id))
+    .map((l) => placeName(l, l.id.startsWith('label_country') ? 'country' : 'state', theme))
+  const { big, game } = cityNameLayers(theme)
+  return [...big, ...names, ...game]
 }
 
 /**
@@ -54,7 +48,7 @@ export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSp
  * them and stay readable.
  */
 export function firstPlaceNameLayer(style: StyleSpecification): string | undefined {
-  return style.layers.find((l) => l.type === 'symbol' && l['source-layer'] === placeTiles.sourceLayer)?.id
+  return style.layers.find((l) => l.type === 'symbol' && (l.source === cityNameSource || l['source-layer'] === placeTiles))?.id
 }
 
 const zoomBase = 1.2
@@ -78,18 +72,10 @@ const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
 const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.components.PlaceNames[kind].size).flat()
 
-function placeKind(layerId: string): PlaceKind {
-  if (layerId === 'label_city_capital') return 'capital'
-  if (layerId === stateNames) return 'state'
-  if (layerId.startsWith('label_country')) return 'country'
-  return 'city'
-}
-
 /** A place name in the theme's look for its kind of place, in capitals or not (see capitals). */
-function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification {
-  const kind = placeKind(layer.id)
+function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): LayerSpecification {
   const look = theme.components.PlaceNames[kind]
-  const named = {
+  return {
     ...layer,
     layout: {
       ...(layer.type === 'symbol' ? layer.layout : {}),
@@ -106,46 +92,58 @@ function placeName(layer: LayerSpecification, theme: Theme): LayerSpecification 
       'text-halo-blur': look.outline.blur,
     },
   } as LayerSpecification
-  // State names from zoom 3 (about one country on screen) until city names take over past zoom 8;
-  // the base style starts them at zoom 5. Unseen until all of them in view fit (see showStateNamesWhenAllFit).
-  return layer.id === stateNames ? hiddenStateNames({ ...named, minzoom: 3, maxzoom: 8 }) : named
 }
 
-function hiddenStateNames(layer: LayerSpecification): LayerSpecification {
-  if (layer.type !== 'symbol') return layer
-  return { ...layer, paint: { ...layer.paint, 'text-opacity': 0, 'text-opacity-transition': { duration: 300 } } }
-}
+// City names show from this zoom, as the base style's do.
+const cityNameMinZoom = 3
 
-/** A city ranked 1 (largest) to 4, such as New York, Dallas or Nashville; smaller cities aren't named. */
-const majorCity: ExpressionSpecification = ['<=', ['coalesce', ['get', 'rank'], 99], 4]
-
-/** The places a game's venue can be named by, among the tiles' places: cities, towns and villages. */
-export const gameCityPlaces: ExpressionSpecification = ['in', ['get', 'class'], ['literal', ['city', 'town', 'village']]]
+/** The city name layers' ids: Big cities with no game near, and the games' cities, by kind. */
+const cityNameLayerIds = {
+  big: { city: 'city_names', capital: 'capital_names' },
+  game: { city: 'city_names_game', capital: 'capital_names_game' },
+} as const
 
 /**
- * Names only major cities, at every zoom. Where two names would collide, the larger city (lower
- * rank) is placed first, so a nearby smaller city gives way.
+ * The layers naming the cities in the city name source (see addPlaceNames), from zoom 3, each with
+ * the base style's city dot and in the theme's city or capital look. The games' cities are always
+ * written below their dots, whatever else is there, and cards are laid out around them. Big cities
+ * with no game near are written where they have room, most populous first, giving way to cards and
+ * other names.
  */
-function majorCitiesOnly(layer: LayerSpecification): LayerSpecification {
-  if (layer.type !== 'symbol') return layer
-  return {
-    ...layer,
-    filter: ['all', (layer.filter as ExpressionSpecification | undefined) ?? true, majorCity],
-    layout: { ...layer.layout, 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99] },
+function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerSpecification[] } {
+  const layer = (game: boolean, kind: 'city' | 'capital'): LayerSpecification => {
+    const city: SymbolLayerSpecification = {
+      id: cityNameLayerIds[game ? 'game' : 'big'][kind],
+      type: 'symbol',
+      source: cityNameSource,
+      minzoom: cityNameMinZoom,
+      filter: ['all', ['==', ['get', 'game'], game], ['==', ['get', 'capital'], kind === 'capital']],
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-max-width': cityNameMaxWidth,
+        // The base style's city dot, a little bigger for a capital, until zoom 9.
+        'icon-image': ['step', ['zoom'], 'circle_11_black', 9, ''],
+        'icon-size': kind === 'capital' ? 0.5 : 0.4,
+        'icon-allow-overlap': true,
+        'icon-optional': false,
+        ...(game ? {} : { 'symbol-sort-key': ['-', ['get', 'population']] }),
+      },
+    }
+    const placed = cityNamePlacement(placeName(city, kind, theme))
+    if (!game || placed.type !== 'symbol') return placed
+    // Always below the dot, where cards are laid out around it, and written whatever else is there.
+    return { ...placed, layout: { ...placed.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true } }
   }
+  return { big: [layer(false, 'city'), layer(false, 'capital')], game: [layer(true, 'city'), layer(true, 'capital')] }
 }
 
-/**
- * Where a city's name goes around its dot. The base style's fixed offset for its single anchor is
- * dropped for the radial offset below.
- */
+/** Where a city's name goes around its dot. */
 function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
   if (layer.type !== 'symbol') return layer
-  const { 'text-anchor': _anchor, 'text-offset': _offset, ...layout } = layer.layout ?? {}
   return {
     ...layer,
     layout: {
-      ...layout,
+      ...layer.layout,
       // Below the city's dot by preference, clear of its own game's score card above the venue; if
       // another card covers that spot, the name moves to another side (see cardLayoutLayers' cardFootprint).
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
@@ -159,38 +157,6 @@ function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
 // How far a city's name sits from its dot, in ems: clear of a round small pin zoomed out, a score
 // card's pointer zoomed in.
 const cityNameOffset = { small: 1.2, card: 1 }
-
-/**
- * The global state listing the places named for their games (see gameCities), by their features'
- * ids: cities, towns or villages. Their names always show, below their dots, and nothing else is
- * written over them: score cards are laid out around them, and trails pass beneath them.
- */
-export const gameCitiesState = 'gameCities'
-const isGameCity: ExpressionSpecification = ['in', ['id'], ['global-state', gameCitiesState]]
-
-/** The style's global state the place names read, as it starts: no places named for games yet. */
-export const placeNameState: StyleSpecification['state'] = { [gameCitiesState]: { default: [] } }
-
-/**
- * A place name layer's twin for the places named for their games, whatever their size; the city
- * layers themselves leave them out, and town and village names show only here.
- */
-function gameCityName(layer: LayerSpecification): LayerSpecification {
-  if (layer.type !== 'symbol') return layer
-  return {
-    ...layer,
-    id: `${layer.id}_game`,
-    filter: ['all', layer.filter as ExpressionSpecification, isGameCity],
-    // Always below the dot, where cards are laid out around it, and written whatever else is there.
-    layout: { ...layer.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true },
-  }
-}
-
-/** Leaves the cities named for their games to gameCityName's layers. */
-function exceptGameCities(layer: LayerSpecification): LayerSpecification {
-  if (layer.type !== 'symbol') return layer
-  return { ...layer, filter: ['all', layer.filter as ExpressionSpecification, ['!', isGameCity]] }
-}
 
 /** Where and how big a city's name is written below its dot, so cards can keep clear of it. */
 export interface CityNameLook {
@@ -244,10 +210,10 @@ function atZoom(stops: readonly number[], zoom: number): number {
 
 /** The place names on a map with the globe's style. */
 export interface PlaceNames {
-  /** Names the places where these games are, however small (see gameCities). */
+  /** Names the cities for these games, the games shown (see cityLabels). */
   showGames(games: readonly Game[]): void
   /**
-   * Where the names of the games' places are written on screen, for cards to keep clear of: those on
+   * Where the names of the games' cities are written on screen, for cards to keep clear of: those on
    * the side of the globe facing the viewer, as MapLibre writes no others.
    */
   nameBoxes(): ScreenBox[]
@@ -255,71 +221,53 @@ export interface PlaceNames {
 }
 
 /**
- * Keeps the place names on a map up to date: names the games' places as their tiles load, and shows
- * state names only while all of them fit (see showStateNamesWhenAllFit). The names' boxes are worked
- * out in the theme `theme` gives at the time.
+ * Keeps the city names on a map up to date with the games shown: the Big cities, and the cities
+ * labelled for the games (see cityLabels). The names' boxes are worked out in the theme `theme`
+ * gives at the time.
  */
 export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames {
-  let games: readonly Game[] = []
-  let cities: City[] = []
-  // True when the games or the map's loaded places have changed since the cities were found.
-  let stale = true
+  let labels: CityLabels = cityLabels([], cityList, cityLabelSettings)
+  // The venues the labels were chosen for, so games changing only their scores change nothing.
+  let venuesKey = ''
 
-  /**
-   * Finds the place named for each game among the places loaded so far, however small, and has the
-   * map always write those places' names (see gameCityName). Not while the globe moves: reading every
-   * loaded place as each new tile comes in made dragging it stutter, so it waits until it stops.
-   */
-  const findCities = () => {
-    if (!stale || map.isMoving() || !map.getSource(placeTiles.source)) return
-    stale = false
-    const places = new Map<number, City>()
-    for (const feature of map.querySourceFeatures(placeTiles.source, {
-      sourceLayer: placeTiles.sourceLayer,
-      filter: gameCityPlaces,
-    })) {
-      const city = cityOfPlace(feature)
-      if (city && !places.has(city.id)) places.set(city.id, city)
-    }
-    const found = gameCities(
-      games.map((game) => game.venue),
-      [...places.values()],
-    )
-    const ids = found.map((city) => city.id).sort((a, b) => a - b)
-    if (ids.join() !== cities.map((city) => city.id).sort((a, b) => a - b).join()) {
-      map.setGlobalStateProperty(gameCitiesState, ids)
-    }
-    cities = found
-  }
-  // New place tiles may hold a game's place.
-  const onSourceData = (event: MapSourceDataEvent) => {
-    if (event.sourceId === placeTiles.source && event.tile) stale = true
-  }
-  map.on('sourcedata', onSourceData)
-  map.on('render', findCities)
-  map.on('moveend', findCities)
-  const stopStateNameFit = showStateNamesWhenAllFit(map)
+  const showLabels = () => map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels))
+  // The style starts with no cities (see cityNameSourceSpec).
+  map.on('style.load', showLabels)
 
   return {
-    showGames(next) {
-      games = next
-      stale = true
-      findCities()
+    showGames(games) {
+      const venues = games.map((game) => game.venue)
+      const key = venues.map((venue) => `${venue.longitude},${venue.latitude}`).sort().join(';')
+      if (key === venuesKey) return
+      venuesKey = key
+      labels = cityLabels(venues, cityList, cityLabelSettings)
+      showLabels()
     },
     nameBoxes() {
       const zoom = map.getZoom()
-      return cities
+      if (zoom < cityNameMinZoom) return []
+      return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
         .map((city) =>
-          cityNameBox(city, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme()), measureText),
+          cityNameBox(city.name, map.project([city.longitude, city.latitude]), cityNameLook(zoom, city.capital, theme()), measureText),
         )
     },
     remove() {
-      map.off('sourcedata', onSourceData)
-      map.off('render', findCities)
-      map.off('moveend', findCities)
-      stopStateNameFit()
+      map.off('style.load', showLabels)
     },
+  }
+}
+
+/** The labelled cities as the city name source's features, marking the games' cities. */
+export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels): FeatureCollection<Point> {
+  const feature = (city: ListedCity, game: boolean): Feature<Point> => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
+    properties: { name: city.name, capital: city.capital, population: city.population, game },
+  })
+  return {
+    type: 'FeatureCollection',
+    features: [...gameCities.map((city) => feature(city, true)), ...otherBigCities.map((city) => feature(city, false))],
   }
 }
 
@@ -329,74 +277,23 @@ let measuring: CanvasRenderingContext2D | null | undefined
 /**
  * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
  * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
- * wider than Open Sans, which errs on the side of room.
+ * wider than Open Sans, which errs on the side of room. Kept once measured, as the same names are
+ * measured every frame while the globe moves at one zoom.
  */
 function measureText(text: string, font: string, size: number): number {
+  const key = `${font}|${text}`
+  const known = measured.get(key)
+  if (known !== undefined) return known
   measuring ??= document.createElement('canvas').getContext('2d')
   if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = font
-  return measuring.measureText(text).width
+  // Zooming measures each name at many sizes, so the oldest are let go.
+  if (measured.size >= measuredKept) measured.clear()
+  const width = measuring.measureText(text).width
+  measured.set(key, width)
+  return width
 }
+const measured = new Map<string, number>()
+const measuredKept = 2000
 // A letter's width in ems, roughly, where there's no canvas to measure with.
 const fallbackLetterWidth = 0.6
-
-// How often to check whether state names fit, at most, while the globe is still but the map is
-// drawing (tiles coming in, cards moving): often enough to follow it, rarely enough not to slow it.
-const checkEveryMs = 250
-
-/**
- * Shows state names all or none: only while every state name in view fits, clear of every other
- * name, card and pin. Where any would give way, none show, so the map never names some states and
- * not their neighbours. The names are still placed while unseen (see hiddenStateNames), which is how
- * the map tells whether they'd fit; being the last names placed, they never push another name aside.
- * Not checked while the globe moves, as reading every state name made dragging it stutter; they stay
- * shown or hidden until it stops. Returns a function that stops it.
- */
-function showStateNamesWhenAllFit(map: MapLibreMap): () => void {
-  let shown = false
-  let lastCheck = 0
-  const check = () => {
-    lastCheck = performance.now()
-    const show = allStateNamesFit(map)
-    if (show === shown || !map.getLayer(stateNames)) return
-    shown = show
-    map.setPaintProperty(stateNames, 'text-opacity', show ? 1 : 0)
-  }
-  const checkNowAndThen = () => {
-    if (!map.isMoving() && performance.now() - lastCheck >= checkEveryMs) check()
-  }
-  map.on('render', checkNowAndThen)
-  // Once more when the map settles, which the checks along the way may have just missed.
-  map.on('idle', check)
-  return () => {
-    map.off('render', checkNowAndThen)
-    map.off('idle', check)
-  }
-}
-
-/** Whether every state in view has its name placed: none dropped for want of room. */
-function allStateNamesFit(map: MapLibreMap): boolean {
-  const layer = map.getLayer(stateNames)
-  if (!layer) return false
-  const zoom = map.getZoom()
-  if (zoom < layer.minzoom || zoom >= layer.maxzoom) return false
-
-  const inView = new Set<string | number>()
-  const canvas = map.getCanvas()
-  const centre = map.getCenter()
-  for (const { id, geometry } of map.querySourceFeatures(placeTiles.source, {
-    sourceLayer: placeTiles.sourceLayer,
-    filter: map.getFilter(stateNames) as FilterSpecification | undefined,
-  })) {
-    if (id === undefined || inView.has(id) || geometry.type !== 'Point') continue
-    const [longitude, latitude] = geometry.coordinates
-    // On the near side of the globe; the far side projects onto the screen too.
-    if (degreesApart({ longitude: centre.lng, latitude: centre.lat }, { longitude, latitude }) >= 90) continue
-    const { x, y } = map.project([longitude, latitude])
-    if (x >= 0 && x <= canvas.clientWidth && y >= 0 && y <= canvas.clientHeight) inView.add(id)
-  }
-  if (inView.size === 0) return false
-
-  const placed = new Set(map.queryRenderedFeatures({ layers: [stateNames] }).map((f) => f.id))
-  return [...inView].every((id) => placed.has(id))
-}

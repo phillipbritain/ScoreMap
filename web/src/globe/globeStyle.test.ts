@@ -10,7 +10,8 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts, glyphsUrl } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { globeStyle } from './globeStyle'
-import { firstPlaceNameLayer, gameCitiesState, gameCityPlaces } from './placeNames'
+import type { ListedCity } from './cityLabels'
+import { cityNameFeatures, cityNameSource, firstPlaceNameLayer } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -81,21 +82,19 @@ function atZoom(value: unknown, zoom: number): number {
 }
 
 describe('globeStyle', () => {
-  it("keeps only the lines and place names, dropping roads, land cover, points of interest, and towns and villages but for games'", () => {
+  it("keeps only the lines and state and country names, dropping roads, land cover, points of interest and the base style's cities, towns and villages for its own city names", () => {
     expect(style().layers.map((l) => l.id)).toEqual([
       'background',
       'coastline',
       'boundary_3',
       'boundary_2',
       'boundary_disputed',
-      'label_city',
+      'city_names',
+      'capital_names',
       'label_state',
-      'label_city_capital',
       'label_country_1',
-      'label_village_game',
-      'label_city_game',
-      'label_town_game',
-      'label_city_capital_game',
+      'city_names_game',
+      'capital_names_game',
     ])
   })
 
@@ -131,92 +130,72 @@ describe('globeStyle', () => {
     expect(outlined('river')).toBe(false)
   })
 
-  it('shows state lines at every zoom and state names from zoom 3 to 8', () => {
+  it("shows state lines at every zoom, and state names at the base style's zooms", () => {
     expect(layer('boundary_3')?.minzoom).toBe(0)
-    expect(layer('label_state')).toMatchObject({ minzoom: 3, maxzoom: 8 })
+    expect(layer('label_state')).toMatchObject({ minzoom: 5, maxzoom: 8 })
+    expect(paint('label_state')).not.toHaveProperty('text-opacity')
   })
 
-  it('starts state names unseen, until all of them in view fit', () => {
-    expect(layer('label_state')).toMatchObject({ paint: { 'text-opacity': 0 } })
-  })
-
-  it('names only major cities, capitals included, at every zoom', () => {
-    for (const id of ['label_city', 'label_city_capital']) {
-      const { filter } = featureFilter((layer(id) as { filter: FilterSpecification }).filter, `${id}.filter`)
-      const named = (zoom: number, rank: number) =>
-        filter({ zoom }, { type: 1, properties: { class: 'city', capital: 2, rank } } as never)
-      expect(named(3, 1)).toBe(true) // New York
-      expect(named(3, 4)).toBe(true) // Nashville, Ottawa
-      expect(named(10, 4)).toBe(true)
-      expect(named(10, 5)).toBe(false) // Austin, Orlando
-      expect(named(3, 5)).toBe(false)
-    }
-  })
-
-  it("keeps the base style's own city filters", () => {
-    const { filter } = featureFilter((layer('label_city') as { filter: FilterSpecification }).filter, 'f')
-    expect(filter({ zoom: 5 }, { type: 1, properties: { class: 'town', rank: 1 } } as never)).toBe(false)
-  })
-
-  it('places larger cities first, so a nearby smaller city gives way', () => {
-    for (const id of ['label_city', 'label_city_capital']) {
-      expect(layer(id)).toMatchObject({
-        layout: { 'symbol-sort-key': ['coalesce', ['get', 'rank'], 99] },
-      })
-    }
-  })
-
-  it('puts city names below their dot by preference, moving to another side when a card is there', () => {
-    for (const id of ['label_city', 'label_city_capital']) {
-      const layout = layer(id)?.layout as Record<string, unknown>
-      expect(layout['text-variable-anchor']).toEqual(['top', 'bottom', 'left', 'right'])
-      // A fixed anchor or offset would stop the name moving.
-      expect(layout).not.toHaveProperty('text-anchor')
-      expect(layout).not.toHaveProperty('text-offset')
-    }
-  })
-
-  it("names a game's city only in its own layer, placed before every other name and always written below its dot", () => {
-    const cityFeature = { type: 1, id: 42, properties: { class: 'city', capital: 0, rank: 3 } } as never
-    const otherCity = { type: 1, id: 7, properties: { class: 'city', capital: 0, rank: 3 } } as never
-    const state = { [gameCitiesState]: [42] }
-    const named = (id: string, feature: never) =>
-      featureFilter((layer(id) as { filter: FilterSpecification }).filter, 'f', state).filter({ zoom: 5 }, feature)
-    expect(named('label_city_game', cityFeature)).toBe(true)
-    expect(named('label_city', cityFeature)).toBe(false)
-    expect(named('label_city_game', otherCity)).toBe(false)
-    expect(named('label_city', otherCity)).toBe(true)
-
-    const layout = layer('label_city_game')?.layout as Record<string, unknown>
-    expect(layout['text-variable-anchor']).toEqual(['top'])
-    expect(layout['text-allow-overlap']).toBe(true)
-    expect(style().state).toEqual({ [gameCitiesState]: { default: [] } })
-  })
-
-  it("names a game's place however small: a minor city or a town", () => {
-    const state = { [gameCitiesState]: [42] }
-    const named = (id: string, properties: Record<string, unknown>) =>
-      featureFilter((layer(id) as { filter: FilterSpecification }).filter, 'f', state).filter(
-        { zoom: 10 },
-        { type: 1, id: 42, properties } as never,
+  const tokyo: ListedCity = { name: 'Tokyo', country: 'Japan', longitude: 139.75, latitude: 35.69, population: 35_676_000, capital: true }
+  const osaka: ListedCity = { name: 'Osaka', country: 'Japan', longitude: 135.46, latitude: 34.75, population: 11_294_000, capital: false }
+  const kobe: ListedCity = { name: 'Kobe', country: 'Japan', longitude: 135.17, latitude: 34.68, population: 1_528_000, capital: false }
+  /** A city's properties in the city name source, labelled for a game or not. */
+  const properties = (city: ListedCity, game: boolean) =>
+    cityNameFeatures(game ? { gameCities: [city], otherBigCities: [] } : { gameCities: [], otherBigCities: [city] }).features[0].properties
+  /** The layers that name this city, labelled for a game or not. */
+  const namedBy = (city: ListedCity, game: boolean) =>
+    style()
+      .layers.filter((l) => 'source' in l && l.source === cityNameSource)
+      .filter((l) =>
+        featureFilter((l as { filter: FilterSpecification }).filter, 'f').filter({ zoom: 5 }, {
+          type: 1,
+          properties: properties(city, game),
+        } as never),
       )
-    expect(named('label_city_game', { class: 'city', capital: 0, rank: 9 })).toBe(true) // Tuscaloosa
-    expect(named('label_town_game', { class: 'town', rank: 12 })).toBe(true) // State College
-    expect(named('label_city', { class: 'city', capital: 0, rank: 9 })).toBe(false)
-    expect(layer('label_town_game')).toMatchObject({ layout: { 'text-variable-anchor': ['top'] } })
+      .map((l) => l.id)
+
+  it("names each city from the city list in one layer, by whether it's a game's and a capital", () => {
+    expect(style().sources[cityNameSource]).toMatchObject({ type: 'geojson' })
+    expect(namedBy(osaka, false)).toEqual(['city_names'])
+    expect(namedBy(tokyo, false)).toEqual(['capital_names'])
+    expect(namedBy(kobe, true)).toEqual(['city_names_game'])
+    expect(namedBy(tokyo, true)).toEqual(['capital_names_game'])
   })
 
-  it("finds a game's place among the tiles' cities, towns and villages", () => {
-    const { filter } = featureFilter(gameCityPlaces, 'f')
-    const found = (placeClass: string) => filter({ zoom: 10 }, { type: 1, properties: { class: placeClass } } as never)
-    expect(['city', 'town', 'village'].map(found)).toEqual([true, true, true])
-    expect(['state', 'country', 'suburb'].map(found)).toEqual([false, false, false])
+  it('names cities from zoom 3', () => {
+    for (const id of ['city_names', 'capital_names', 'city_names_game', 'capital_names_game']) {
+      expect(layer(id)?.minzoom, id).toBe(3)
+      expect(layout(id)['text-field'], id).toEqual(['get', 'name'])
+    }
+  })
+
+  it('places the more populous of two Big cities first, so a nearby smaller one gives way', () => {
+    for (const id of ['city_names', 'capital_names']) {
+      const parsed = createExpression(layout(id)['symbol-sort-key'] as ExpressionSpecification, id)
+      if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
+      const key = (city: ListedCity) => parsed.value.evaluate({ zoom: 5 }, { type: 'Point', properties: properties(city, false) } as never)
+      expect(key(osaka), id).toBeLessThan(key(kobe) as number)
+    }
+  })
+
+  it('puts Big city names below their dot by preference, moving to another side when a card is there', () => {
+    for (const id of ['city_names', 'capital_names']) {
+      expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
+      expect(layout(id)['text-allow-overlap'], id).toBeUndefined()
+    }
+  })
+
+  it("always writes a game's city below its dot, whatever else is there", () => {
+    for (const id of ['city_names_game', 'capital_names_game']) {
+      expect(layout(id)['text-variable-anchor'], id).toEqual(['top'])
+      expect(layout(id)['text-allow-overlap'], id).toBe(true)
+    }
   })
 
   it('finds the first place-name layer, for pins to go beneath', () => {
     const globe = style()
     const first = firstPlaceNameLayer(globe)
-    expect(first).toBe('label_city')
+    expect(first).toBe('city_names')
     const lines = globe.layers.slice(0, globe.layers.findIndex((l) => l.id === first))
     expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
@@ -224,12 +203,10 @@ describe('globeStyle', () => {
   it("writes each kind of place name in the theme's colour, outline (its colour, width and blur) and font, from the map's font server", () => {
     expect(style().glyphs).toBe(glyphsUrl)
     const kinds = {
-      label_city: 'city',
-      label_city_game: 'city',
-      label_town_game: 'city',
-      label_village_game: 'city',
-      label_city_capital: 'capital',
-      label_city_capital_game: 'capital',
+      city_names: 'city',
+      city_names_game: 'city',
+      capital_names: 'capital',
+      capital_names_game: 'capital',
       label_state: 'state',
       label_country_1: 'country',
     } as const
@@ -245,12 +222,12 @@ describe('globeStyle', () => {
 
   it('writes state and country names in capitals, city names as they are', () => {
     for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
-    for (const id of ['label_city', 'label_city_capital']) expect(layout(id)['text-transform'], id).toBe('none')
+    for (const id of ['city_names', 'capital_names_game']) expect(layout(id)['text-transform'], id).toBe('none')
   })
 
   it("spaces each kind of place's name out as far as the theme says", () => {
-    expect(layout('label_city')['text-letter-spacing']).toBe(0.03)
-    expect(layout('label_city_capital')['text-letter-spacing']).toBe(0)
+    expect(layout('city_names')['text-letter-spacing']).toBe(0.03)
+    expect(layout('capital_names')['text-letter-spacing']).toBe(0)
     expect(layout('label_state')['text-letter-spacing']).toBe(0.3)
     expect(layout('label_country_1')['text-letter-spacing']).toBe(0.2)
   })

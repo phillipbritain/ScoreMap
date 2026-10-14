@@ -1,0 +1,5 @@
+{
+  "bigCityPopulation": 4000000,
+  "gameCityKm": 50,
+  "bigList": [{ "name": "Seattle", "country": "United States of America" }]
+}

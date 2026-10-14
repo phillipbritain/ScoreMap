@@ -12,8 +12,8 @@ export interface LayerChange {
 /**
  * The paint and layout properties that differ between layers as made in one theme and as made in
  * another, by layer id: what to set on the map to restyle it in place. Only layers in both count.
- * Compared as made, not as the map has them now, so what the globe sets as it runs (state names'
- * opacity, say) is left alone unless the theme changes it.
+ * Compared as made, not as the map has them now, so what the globe sets as it runs (the selected
+ * pin's filter, say) is left alone unless the theme changes it.
  */
 export function layerChanges(before: readonly LayerSpecification[], after: readonly LayerSpecification[]): LayerChange[] {
   const was = new Map(before.map((layer) => [layer.id, layer]))

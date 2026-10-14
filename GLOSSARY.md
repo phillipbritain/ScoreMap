@@ -52,6 +52,18 @@ _Avoid_: Crunch time, close game
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city
 
+**City label**:
+A city's name on the globe, by its dot, from the city list included with the app. A game's city label is always drawn; a Big city's label with no game near is drawn where there's room. See `docs/city-labels.md`.
+_Avoid_: Place name (which also covers states and countries), city name tag
+
+**Big city**:
+A city in the city list with a metro population of at least 4 million, or one on the Big list. It always gets a city label where there's room.
+_Avoid_: Major city, large city
+
+**Small city**:
+Any other city in the city list. It gets a city label only when a game near it needs one.
+_Avoid_: Minor city, town
+
 ### Loading
 
 **Loading screen**:

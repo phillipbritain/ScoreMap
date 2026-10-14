@@ -80,6 +80,19 @@ describe('applyTheme', () => {
     expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
   })
 
+  it('writes the score card’s and the trail’s see-through switch as 1 or 0, with its opacity', () => {
+    const properties = propertiesOf(
+      themeWith((json) => {
+        json.components.ScoreCard.seeThrough = { on: true, opacity: 0.6 }
+        json.components.Trail.seeThrough = { on: false, opacity: 0.5 }
+      }),
+    )
+    expect(properties.get('--score-card-see-through-on')).toBe('1')
+    expect(properties.get('--score-card-see-through-opacity')).toBe('0.6')
+    expect(properties.get('--trail-see-through-on')).toBe('0')
+    expect(properties.get('--trail-see-through-opacity')).toBe('0.5')
+  })
+
   it('writes the typography as its font family and each type style’s weight, size in pixels and letter spacing in ems', () => {
     const properties = propertiesOf(
       themeWith((json) => {
@@ -139,14 +152,14 @@ describe('applyTheme', () => {
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
       // font (of four) and size, and its opacity for each of four statuses.
       cluster: 9 + 5 + 4,
-      // A trail's width and opacity, its glow's three and its venue's three.
-      trail: 8,
+      // A trail's width and opacity, its see-through switch and opacity, its glow's three and its venue's three.
+      trail: 10,
       selection: 2,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, header's two, corner and five sizes; for each of four statuses
-      // its fade and glow of two, and a Disrupted card's fill and text.
-      scoreCard: 3 + 2 + 1 + 5 + 4 * 3 + 2,
+      // A score card's fill, text, shadow, see-through switch and opacity, header's two, corner and five
+      // sizes; for each of four statuses its fade and glow of two, and a Disrupted card's fill and text.
+      scoreCard: 3 + 2 + 2 + 1 + 5 + 4 * 3 + 2,
       // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two and nine sizes.
       gamePanel: 11 + 3 + 1 + 2 + 9,
       // A menu's corner and a menu item's.

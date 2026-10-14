@@ -36,7 +36,7 @@ function sizedTheme(): Theme {
   json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
   json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
   json.components.Cluster.outlineWidth = 2
-  json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
+  json.components.Trail = { width: 1.5, opacity: 0.8, seeThrough: { on: false, opacity: 0.5 }, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
   const result = resolveTheme(json)
   if (!result.ok) throw new Error(result.problems.join('\n'))
   return result.theme
@@ -103,6 +103,14 @@ describe('trails', () => {
     expect(paint('trail-glows')).toMatchObject({ 'line-width': 5, 'line-blur': 2, 'line-opacity': 0.3 })
     expect(paint('trail-venues')).toMatchObject({ 'circle-radius': 3 })
     expect(paint('trail-venue-rings')).toMatchObject({ 'circle-radius': 6, 'circle-stroke-width': 1.5 })
+  })
+
+  it('let the map show through when see-through: their line and glow that much more see-through', () => {
+    const theme = sizedTheme()
+    const seeThrough = { ...theme, components: { ...theme.components, Trail: { ...theme.components.Trail, seeThrough: { on: true, opacity: 0.5 } } } }
+    const paint = (id: string) => paintOf(cardLayoutLayers(seeThrough), id)
+    expect(paint('trails')).toMatchObject({ 'line-opacity': 0.4 })
+    expect(paint('trail-glows')).toMatchObject({ 'line-opacity': 0.15 })
   })
 })
 

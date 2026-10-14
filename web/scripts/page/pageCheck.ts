@@ -6,12 +6,15 @@ export type PageCheck =
   | { check: 'ready' }
   /** Waits for the globe to be still, as after a turn of the camera. */
   | { check: 'settled' }
+  /** Once the globe is ready, turns the camera to look at `center` from `zoom`, and waits for it to be still. */
+  | { check: 'camera'; center: [longitude: number, latitude: number]; zoom: number }
   /** Reads a property (`textContent` unless given; `rect` for the bounding box) of the first element the selector picks. */
   | { check: 'read'; selector: string; property?: string }
 
 export type PageCheckAnswer =
   | { ready: true }
   | { settled: true }
+  | { camera: true }
   | { value: unknown }
   /** No element matches the selector. */
   | { missing: string }
@@ -44,7 +47,18 @@ export async function pageCheck(check: PageCheck, waitMs = 20_000): Promise<Page
 
   const noGlobe = await until(() => !!window.scoremap?.stage, 'the globe (window.scoremap): is this a dev run?')
   if (noGlobe) return { waiting: noGlobe }
-  const { stage, settled } = window.scoremap! as Required<NonNullable<Window['scoremap']>>
+  const { map, stage, settled } = window.scoremap! as Required<NonNullable<Window['scoremap']>>
+  if (check.check === 'camera') {
+    const notReady = await until(() => stage() === 'ready', 'the globe to be ready (window.scoremap.stage())')
+    if (notReady) return { waiting: notReady }
+    // Settled reads true until the map has drawn the turn.
+    let drawn = false
+    map.once('render', () => (drawn = true))
+    map.jumpTo({ center: check.center, zoom: check.zoom })
+    const waiting =
+      (await until(() => drawn, 'the map to draw the turn')) ?? (await until(settled, 'the globe to settle (window.scoremap.settled())'))
+    return waiting ? { waiting } : { camera: true }
+  }
   if (check.check === 'ready') {
     await document.fonts.ready
     const waiting = await until(() => stage() === 'ready', 'the globe to be ready (window.scoremap.stage())')

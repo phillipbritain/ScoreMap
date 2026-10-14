@@ -1,10 +1,11 @@
 // Drives the dev run's page open in agent-browser, for what would otherwise take an `eval`: resets
-// it to the start view, waits for it to be ready or settled, reads a value from it, screenshots it,
+// it to the start view, waits for it to be ready or settled, turns its camera, reads a value from it, screenshots it,
 // pans it for a card trace. See the run-scoremap skill and docs/agents/card-layout-replay.md.
 //
 //   npm run page -- reset <web URL>                 (in web/)
 //   npm run page -- ready
 //   npm run page -- settled
+//   npm run page -- camera <lng>,<lat> <zoom>      turns the camera there and waits for the globe to be still
 //   npm run page -- read <selector> [property]     textContent unless given; rect for the bounding box
 //   npm run page -- screenshot <file>              once ready and settled
 //   npm run page -- pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...
@@ -21,7 +22,7 @@ import { panArgs } from './panArgs.ts'
 import { pageCheck, type PageCheck } from './pageCheck.ts'
 import { panGlobe } from './panGlobe.ts'
 
-const usage = 'Usage: npm run page -- reset <web URL> | ready | settled | read <selector> [property] | screenshot <file> | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
+const usage = 'Usage: npm run page -- reset <web URL> | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
 
 const page = agentBrowser({ cwd: process.cwd(), scratch })
@@ -45,6 +46,10 @@ function main([command, ...args]: string[]): void {
   } else if (command === 'settled' && args.length === 0) {
     inPage({ check: 'settled' })
     console.log('Settled')
+  } else if (command === 'camera' && args.length === 2 && cameraArgs(args)) {
+    const camera = cameraArgs(args)!
+    inPage({ check: 'camera', ...camera })
+    console.log(`Camera at ${camera.center.join(',')}, zoom ${camera.zoom}`)
   } else if (command === 'read' && (args.length === 1 || args.length === 2)) {
     const answer = inPage({ check: 'read', selector: args[0], property: args[1] })
     if ('missing' in answer) throw new Failed(`Nothing matches ${answer.missing}`)
@@ -68,6 +73,13 @@ function main([command, ...args]: string[]): void {
     console.error(usage)
     process.exitCode = 2
   }
+}
+
+/** `<lng>,<lat> <zoom>` as a camera, or null if they aren't numbers. */
+function cameraArgs([at, zoom]: string[]): { center: [number, number]; zoom: number } | null {
+  const [longitude, latitude, ...rest] = at.split(',').map(Number)
+  const numbers = [longitude, latitude, Number(zoom)]
+  return rest.length === 0 && numbers.every(Number.isFinite) ? { center: [longitude, latitude], zoom: Number(zoom) } : null
 }
 
 try {

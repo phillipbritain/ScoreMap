@@ -81,7 +81,8 @@ describe('cardLayoutFeatures', () => {
     expect(features('cardCluster')).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'cardCluster', status: 'Final', count: 2, firstGameId: 'c' },
+        // c's and d's colours differ (see clusterColour).
+        properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c' },
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
     ])

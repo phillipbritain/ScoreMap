@@ -163,7 +163,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
           accent={theme.palette.live.main}
         />
         {BehaviourTuner && ThemeTuner && tuning && (
-          <div className="dev-tools">
+          // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
+          <div className="dev-tools" hidden={!scenarios.devToolsShown}>
             <Suspense>
               <BehaviourTuner
                 builtIn={builtInBehaviour}

@@ -134,7 +134,8 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  * up. Added beneath the place names, so every name draws over them.
  *
  * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
- * to a point ringed in it. A venue cluster and a card cluster are each a disc outlined and lit in the
+ * to a point ringed in it; a see-through trail's line and glow let the map show through more. A venue
+ * cluster and a card cluster are each a disc outlined and lit in the
  * colour of its most prominent game, with the count in it, as a pin cluster is (see the theme's
  * cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one of some.
  */
@@ -153,6 +154,8 @@ export function cardLayoutLayers(
   SymbolLayerSpecification,
 ] {
   const { Cluster: cluster, Trail: trail } = theme.components
+  // How much of a trail's own opacity shows: all of it, unless the trail is see-through.
+  const seen = trail.seeThrough.on ? trail.seeThrough.opacity : 1
   // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
   // its status colour (see groupStatus).
   const gameColor: ExpressionSpecification = ['get', 'color']
@@ -167,7 +170,7 @@ export function cardLayoutLayers(
         'line-color': gameColor,
         'line-width': trail.glow.width,
         'line-blur': trail.glow.blur,
-        'line-opacity': trail.glow.opacity,
+        'line-opacity': trail.glow.opacity * seen,
       },
     },
     {
@@ -175,7 +178,7 @@ export function cardLayoutLayers(
       type: 'line',
       source: cardLayoutSource,
       filter: kindIs('trail'),
-      paint: { 'line-color': gameColor, 'line-width': trail.width, 'line-opacity': trail.opacity },
+      paint: { 'line-color': gameColor, 'line-width': trail.width, 'line-opacity': trail.opacity * seen },
     },
     {
       id: 'trail-venue-rings',

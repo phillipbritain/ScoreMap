@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
+import { venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
@@ -31,7 +32,7 @@ interface PanelLink {
  */
 export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
-  const place = [venue.city, venue.country].filter(Boolean).join(', ')
+  const place = venuePlace(venue)
   const venueName = venue.name ?? 'Unknown venue'
   const progress = progressLine(game, 'full')
   // A Final game shows when it ended; any other, when it starts.

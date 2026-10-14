@@ -135,12 +135,21 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
+/* A logo sits on its plate, so a logo near the panel's colour can still be seen. With no logo, the
+   space it would take is left empty, plate and all. */
 .game-panel__team img,
 .game-panel__logo {
+  box-sizing: content-box;
   width: var(--game-panel-size-logo);
   height: var(--game-panel-size-logo);
+  padding: var(--game-panel-logo-plate-padding);
+  border-radius: var(--game-panel-logo-plate-corner);
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.game-panel__team img {
+  background: var(--game-panel-logo-plate-fill);
 }
 
 .game-panel__team-name {
@@ -363,13 +372,18 @@ body {
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores.
 
-   Solid, so the map never shows through the scores. A card fades (Final, say) by colour instead:
-   its status colour (--status-color, for its outline, header, light, pointer and glow) and its text
-   are mixed into its fill by its status's fade, and its logos fade into the fill likewise. */
+   A card fades (Final, say) by colour: its status colour (--status-color, for its outline, header,
+   light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
+   fade into the fill likewise. A see-through card's fill (and drop shadow) is the theme's see-through
+   opacity, so the map shows through behind its text, logos, scores and light, which stay as they are. */
 .score-card {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
+  /* How opaque the fill is: solid, or the see-through opacity when see-through is on. */
+  --card-fill-opacity: calc(
+    100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * 100%
+  );
   --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
   display: grid;
   gap: calc(0.5 * var(--spacing));
@@ -377,7 +391,7 @@ body {
   padding: 0 0 var(--spacing);
   border: var(--shape-border-width-thin) solid var(--status-color);
   border-radius: var(--score-card-corner);
-  background: var(--card-surface);
+  background: color-mix(in srgb, var(--card-surface) var(--card-fill-opacity), transparent);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
   font-family: var(--typography-font-family);
   font-size: var(--typography-subtitle2-font-size);
@@ -450,16 +464,21 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: calc(var(--score-card-size-logo) + 0.5 * var(--spacing)) 1fr auto;
+  grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) 1fr auto;
   align-items: center;
   gap: var(--spacing);
   padding: 0 calc(1.5 * var(--spacing));
 }
 
-/* Faded into the card's fill with the rest of the card: the card behind it is solid. */
+/* On its plate, so a logo near the card's fill can still be seen. Faded with the rest of the card,
+   plate and all, by its status's fade. */
 .score-card__logo {
+  box-sizing: content-box;
   width: var(--score-card-size-logo);
   height: var(--score-card-size-logo);
+  padding: var(--score-card-logo-plate-padding);
+  border-radius: var(--score-card-logo-plate-corner);
+  background: var(--score-card-logo-plate-fill);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
 }
@@ -535,7 +554,7 @@ body {
     transform: scale(1);
     box-shadow:
       0 0 0 14px transparent,
-      0 1px 6px var(--score-card-shadow);
+      0 1px 6px color-mix(in srgb, var(--score-card-shadow) var(--card-fill-opacity), transparent);
   }
 }
 
@@ -756,8 +775,8 @@ body {
   font-size: var(--typography-button-font-size);
 }
 
-/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
+/* âœ“ when all are on, â€“ when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the âœ“ comes from a taller fallback font. */
 .settings-master__mark {
   width: var(--settings-menu-size-mark);
   height: var(--settings-menu-size-mark);
@@ -898,6 +917,8 @@ body {
    the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
+  /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
+  --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
   align-self: flex-start;
   display: flex;
   flex-wrap: wrap-reverse;
@@ -917,8 +938,18 @@ body {
   box-shadow: var(--controls-shadow);
 }
 
+/* Over the globe while the scenario list is open, to take the press that closes it (see ScenarioPill). */
+.scenario-pill__cover {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .scenario-pill summary {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   cursor: pointer;
   font-family: var(--typography-font-family);
   font-weight: var(--typography-button-font-weight);
@@ -976,11 +1007,13 @@ body {
 }
 
 .scenario-pill button[aria-current='true']::before {
-  content: '✓ ';
+  content: 'âœ“ ';
 }
 
 /* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
   display: flex;
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
@@ -1147,7 +1180,10 @@ body {
 }
 
 .scenario-clock {
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
   border-radius: var(--controls-corner);
   background: var(--controls-surface);
   color: var(--palette-text-primary);

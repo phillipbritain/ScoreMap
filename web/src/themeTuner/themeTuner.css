@@ -15,6 +15,11 @@
   pointer-events: none;
 }
 
+/* Hidden by Shift+S, with the scenario controls. */
+.dev-tools[hidden] {
+  display: none;
+}
+
 .theme-tuner {
   display: flex;
   flex-direction: column;

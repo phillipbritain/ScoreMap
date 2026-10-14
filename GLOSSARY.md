@@ -21,15 +21,19 @@ The marker for one game on the globe, placed at the game's venue.
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-While zoomed in, the panel a pin near the centre of the view shows as, above the game's venue, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside with a trail back to their venue. Farther out, pins stay small, so cards don't crowd the globe's rim.
+While zoomed in, the panel a pin near the centre of the view shows as, a little above the game's venue with a trail down to it, with the teams, the score and a line on the game's progress. When cards would overlap, some are moved aside, their trails following them. Farther out, pins stay small, so cards don't crowd the globe's rim.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
+
+**Trail**:
+The line from a score card to its game's venue, ending at a ringed venue dot.
+_Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
 Games shown as one marker with a count because there's no room to show them apart: a pin cluster, a card cluster or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the centre of a zoomed-in view turns the globe to it instead, and its games get score cards.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Pin cluster**:
-A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap: while zoomed out, or zoomed in, far from the centre of the view. Pin clusters that would overlap combine into a larger one.
+A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap: while zoomed out, or zoomed in, far from the centre of the view. Pin clusters that would overlap combine into a larger one. MapLibre clusters them (ADR-0016).
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
@@ -37,7 +41,7 @@ While zoomed in, a cluster of games whose score cards have no room on screen eve
 _Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Venue cluster**:
-While zoomed in, a cluster where the trails of moved score cards meet, in place of their venues' dots, which would overlap. Its games' cards are already on screen, so selecting it does nothing.
+While zoomed in, a cluster where score cards' trails meet, in place of their venue dots, which would overlap. Its games' cards are already on screen, so selecting it does nothing.
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Game panel**:

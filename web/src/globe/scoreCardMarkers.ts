@@ -1,7 +1,7 @@
 import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
-import type { Theme } from '../theme/theme'
+import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
 import { cardLayoutFeatures, cardLayoutSource, hoveredState, type CardOnGlobe } from './cardLayoutLayers'
@@ -12,7 +12,7 @@ import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
-import { selectedStacking, stacking, statusKey } from './statusLook'
+import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
 
 // About a second of frames: longer than any layout takes to settle.

@@ -22,3 +22,18 @@ export function kmApart(a: GlobePoint, b: GlobePoint): number {
   return degreesApart(a, b) * radians * earthRadiusKm
 }
 const earthRadiusKm = 6371
+
+/** The ring of points this many kilometres from `centre` along the ground, closed, `steps` points round. */
+export function ringAround(centre: GlobePoint, km: number, steps = 64): GlobePoint[] {
+  const angle = km / earthRadiusKm
+  const lat = centre.latitude * radians
+  const ring: GlobePoint[] = []
+  for (let i = 0; i <= steps; i++) {
+    const bearing = ((i % steps) / steps) * 2 * Math.PI
+    const toLat = Math.asin(Math.sin(lat) * Math.cos(angle) + Math.cos(lat) * Math.sin(angle) * Math.cos(bearing))
+    const dLon = Math.atan2(Math.sin(bearing) * Math.sin(angle) * Math.cos(lat), Math.cos(angle) - Math.sin(lat) * Math.sin(toLat))
+    // Not wrapped to ±180°, so a ring across the antimeridian stays one piece.
+    ring.push({ longitude: centre.longitude + dLon / radians, latitude: toLat / radians })
+  }
+  return ring
+}

@@ -14,6 +14,7 @@ import type { Game } from '../games/game'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
+import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
@@ -42,6 +43,7 @@ import {
   smallPinLayer,
 } from './pinLayers'
 import { pulse } from './pinPulse'
+import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
@@ -64,6 +66,8 @@ export interface GlobeMapOptions {
    * place names, pins and score cards. It changes with setTheme.
    */
   theme: Theme
+  /** What decides which cities are labelled, to start with: the app's own unless given. It changes with setCityLabelSettings. */
+  cityLabels?: CityLabelSettings
   /** Where the globe opens. */
   startCamera: Camera
   /** Called with a game's id when the viewer selects its pin or score card. */
@@ -101,6 +105,11 @@ export class GlobeMap {
   private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
   private readonly names: PlaceNames
+  private readonly reachRings: ReachRings
+  /** What the city labels are chosen by (see setCityLabelSettings). */
+  private cityLabels: CityLabelSettings
+  /** Whether each game's city label reach is ringed on the globe (see showGameCityReach). */
+  private reachShown = false
   private readonly glow: GlobeGlow
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
@@ -123,10 +132,11 @@ export class GlobeMap {
   /** The stage last told to onStage. */
   private toldStage: LoadingStage = 'waitingForGames'
 
-  constructor(container: HTMLElement, { style, theme, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
+  constructor(container: HTMLElement, { style, theme, cityLabels = cityLabelSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions) {
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     this.onStage = onStage
+    this.cityLabels = cityLabels
     const map = new MapLibreMap({
       container,
       center: [startCamera.longitude, startCamera.latitude],
@@ -155,7 +165,9 @@ export class GlobeMap {
     else map.setStyle(style)
     const currentTheme = () => this.theme
     this.glow = addGlobeGlow(map, currentTheme)
-    this.names = addPlaceNames(map, currentTheme)
+    // Before the pins' layers are added on style load, so they're drawn under the pins.
+    this.reachRings = addReachRings(map)
+    this.names = addPlaceNames(map, currentTheme, cityLabels)
     this.cards = new ScoreCardMarkers(map, currentTheme, this.names, (gameId) => this.onSelect(gameId))
     this.clustering = this.pinLayoutNow()
 
@@ -215,6 +227,7 @@ export class GlobeMap {
     this.showOuterPins()
     // Names first: cards are laid out around them.
     this.names.showGames(games)
+    if (this.reachShown) this.showReachRings()
     this.cards.setGames(games)
     for (const game of games) {
       const last = before.get(game.id)
@@ -274,6 +287,28 @@ export class GlobeMap {
     this.cards.restyle()
   }
 
+  /** Labels cities by these settings from now on (on a local run, from the behaviour tuner). */
+  setCityLabelSettings(settings: CityLabelSettings): void {
+    if (settings === this.cityLabels) return
+    this.cityLabels = settings
+    this.unsettle()
+    this.names.setSettings(settings)
+    this.showReachRings()
+  }
+
+  /** Rings each game at the reach its city label may be within, or stops (on a local run, from the behaviour tuner). */
+  showGameCityReach(shown: boolean): void {
+    if (shown === this.reachShown) return
+    this.reachShown = shown
+    this.unsettle()
+    this.showReachRings()
+  }
+
+  private showReachRings(): void {
+    const venues = this.reachShown ? [...this.shown.values()].map((game) => game.venue) : []
+    this.reachRings.show(venues, this.cityLabels.gameCityKm)
+  }
+
   /**
    * Whether everything the globe was last given is on screen and still: the pin source has loaded
    * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
@@ -318,6 +353,7 @@ export class GlobeMap {
     this.cards.clear()
     this.glow.remove()
     this.names.remove()
+    this.reachRings.remove()
     this.map.remove()
   }
 

@@ -11,8 +11,9 @@ import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
-import { cityLabels, cityLabelSettings, cityList, type CityLabels, type ListedCity } from './cityLabels'
+import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
 import { cityNameBox, type ScreenBox } from './cityNameBox'
+import type { GlobePoint } from './geo'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
 
@@ -212,6 +213,8 @@ function atZoom(stops: readonly number[], zoom: number): number {
 export interface PlaceNames {
   /** Names the cities for these games, the games shown (see cityLabels). */
   showGames(games: readonly Game[]): void
+  /** Names the cities for the games shown by these settings from now on. */
+  setSettings(settings: CityLabelSettings): void
   /**
    * Where the names of the games' cities are written on screen, for cards to keep clear of: those on
    * the side of the globe facing the viewer, as MapLibre writes no others.
@@ -222,11 +225,12 @@ export interface PlaceNames {
 
 /**
  * Keeps the city names on a map up to date with the games shown: the Big cities, and the cities
- * labelled for the games (see cityLabels). The names' boxes are worked out in the theme `theme`
- * gives at the time.
+ * labelled for the games (see cityLabels) by `settings` until they're changed. The names' boxes are
+ * worked out in the theme `theme` gives at the time.
  */
-export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames {
-  let labels: CityLabels = cityLabels([], cityList, cityLabelSettings)
+export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings): PlaceNames {
+  let venues: GlobePoint[] = []
+  let labels: CityLabels = cityLabels(venues, cityList, settings)
   // The venues the labels were chosen for, so games changing only their scores change nothing.
   let venuesKey = ''
 
@@ -236,11 +240,17 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme): PlaceNames 
 
   return {
     showGames(games) {
-      const venues = games.map((game) => game.venue)
-      const key = venues.map((venue) => `${venue.longitude},${venue.latitude}`).sort().join(';')
+      const key = games.map(({ venue }) => `${venue.longitude},${venue.latitude}`).sort().join(';')
       if (key === venuesKey) return
       venuesKey = key
-      labels = cityLabels(venues, cityList, cityLabelSettings)
+      venues = games.map((game) => game.venue)
+      labels = cityLabels(venues, cityList, settings)
+      showLabels()
+    },
+    setSettings(changed) {
+      if (changed === settings) return
+      settings = changed
+      labels = cityLabels(venues, cityList, settings)
       showLabels()
     },
     nameBoxes() {

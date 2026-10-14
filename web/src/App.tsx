@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { SettingsMenu } from './settings/SettingsMenu'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
@@ -19,9 +20,12 @@ import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import type { ThemeJson } from './themeTuner/themeDraft'
 
-// The theme tuner, on local runs only: left out of a build.
+// The theme and behaviour tuners, on local runs only: left out of a build.
 const ThemeTuner = import.meta.env.DEV
   ? lazy(() => import('./themeTuner/ThemeTuner').then(({ ThemeTuner }) => ({ default: ThemeTuner })))
+  : null
+const BehaviourTuner = import.meta.env.DEV
+  ? lazy(() => import('./behaviourTuner/BehaviourTuner').then(({ BehaviourTuner }) => ({ default: BehaviourTuner })))
   : null
 
 const store = settingsStore(() => window.localStorage)
@@ -47,6 +51,10 @@ interface AppProps {
  */
 export default function App({ theme: startTheme, tuning }: AppProps) {
   const [theme, setTheme] = useTheme(startTheme)
+  // The app's own behaviour, or on a local run the behaviour tuner's draft saved in this browser.
+  const [behaviour, setBehaviour] = useState(() => (import.meta.env.DEV ? loadBehaviour(window.localStorage) : builtInBehaviour))
+  // What the behaviour tuner draws on the globe to show its settings at work (local runs only).
+  const [overlays, setOverlays] = useState(noOverlays)
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
@@ -90,6 +98,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
       <div className="globe-area">
         <Globe
           theme={theme}
+          cityLabels={behaviour.cityLabels}
+          showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
           selectedGameId={selectedGame?.id ?? null}
@@ -133,16 +143,25 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             settings menu, so an open settings menu lies over it on a phone. */}
         {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
         <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
-        {ThemeTuner && tuning && (
-          <Suspense>
-            <ThemeTuner
-              builtIn={tuning.builtIn}
-              initial={tuning.initial}
-              onTheme={setTheme}
-              loadingPreview={loadingPreview}
-              onLoadingPreview={setLoadingPreview}
-            />
-          </Suspense>
+        {BehaviourTuner && ThemeTuner && tuning && (
+          <div className="dev-tools">
+            <Suspense>
+              <BehaviourTuner
+                builtIn={builtInBehaviour}
+                behaviour={behaviour}
+                onChange={setBehaviour}
+                overlays={overlays}
+                onOverlays={setOverlays}
+              />
+              <ThemeTuner
+                builtIn={tuning.builtIn}
+                initial={tuning.initial}
+                onTheme={setTheme}
+                loadingPreview={loadingPreview}
+                onLoadingPreview={setLoadingPreview}
+              />
+            </Suspense>
+          </div>
         )}
       </div>
     </div>

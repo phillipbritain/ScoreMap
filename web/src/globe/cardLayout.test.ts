@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
 import { layOutCards, type CardLayout, type CardScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
-import type { ScreenBox } from './gameCities'
+import type { ScreenBox } from './cityNameBox'
 
 const pointer = 6
 const scene: CardScene = { width: 1000, height: 800, pointer }

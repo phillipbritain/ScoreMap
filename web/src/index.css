@@ -375,7 +375,10 @@ body {
    A card fades (Final, say) by colour: its status colour (--status-color, for its outline, header,
    light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
    fade into the fill likewise. A see-through card's fill (and drop shadow) is the theme's see-through
-   opacity, so the map shows through behind its text, logos, scores and light, which stay as they are. */
+   opacity, so the map shows through behind its text, logos, scores and light, which stay as they are.
+
+   With the pointer on it, its border is bolder (a ring around it, so the card keeps its size and
+   doesn't move) and, if the theme says so, a see-through card turns solid (see components.Hover). */
 .score-card {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
@@ -385,6 +388,8 @@ body {
     100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * 100%
   );
   --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
+  /* How far a hovered card's border reaches beyond its own: none until hovered. */
+  --card-hover-ring: 0px;
   display: grid;
   gap: calc(0.5 * var(--spacing));
   min-width: var(--score-card-size-min-width);
@@ -398,15 +403,30 @@ body {
   font-weight: var(--typography-subtitle2-font-weight);
   line-height: 1.2;
   text-transform: uppercase;
-  /* The status's glow around the card, and a fainter one inside it. */
+  /* A hovered card's bolder border, then the status's glow around the card, and a fainter one inside it. */
   box-shadow:
+    0 0 0 var(--card-hover-ring) var(--status-color),
     0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
     inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
       color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
+  transition:
+    box-shadow 120ms ease-out,
+    background-color 120ms ease-out;
   /* Animations grow the card from its bottom middle, nearest its venue as it usually sits. */
   transform-origin: 50% 100%;
+}
+
+/* Only where there's a pointer to hover with: on a touch screen, a tap selects as it always has. */
+@media (hover: hover) {
+  .score-card:hover {
+    --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
+    --card-fill-opacity: calc(
+      100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * (1 - var(--hover-card-solid)) *
+        100%
+    );
+  }
 }
 
 /* No room for this card: its game is counted in a card cluster instead, which the map draws. */
@@ -630,8 +650,13 @@ body {
 }
 
 /* Changes still show, without the bouncing, and nothing moves or blinks: a Live score card's status
-   light stays lit (Live is told by its glow and brightness alone) and every pin's ring fades in place. */
+   light stays lit (Live is told by its glow and brightness alone), every pin's ring fades in place and
+   a hovered card changes at once. */
 @media (prefers-reduced-motion: reduce) {
+  .score-card {
+    transition: none;
+  }
+
   .score-card--animate-score,
   .score-card--animate-start {
     animation: score-card-finish 2.4s ease-in-out;
@@ -885,6 +910,18 @@ body {
   font-size: var(--typography-button-font-size);
   line-height: 1;
   cursor: pointer;
+}
+
+/* A league's chip, then the swatch of its games' colour. */
+.settings-league {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+/* A league with no colour of its own: hollow and dashed in its sport's colour, as taken from it. */
+.settings-league .settings-colour__swatch:not(.settings-colour__swatch--picked) {
+  border-style: dashed;
 }
 
 /* "Reset colours", under the sports. */

@@ -24,12 +24,18 @@ const countLayout = (layers: readonly LayerSpecification[], id: string) =>
 
 /**
  * What a style expression gives for a feature with these properties, as MapLibre works it out, with
- * what a cluster property has gathered so far when it's gathering one.
+ * this feature state (what the globe sets as it runs: a game hovered, say), and with what a cluster
+ * property has gathered so far when it's gathering one.
  */
-function evaluate(value: unknown, properties: Record<string, unknown>, accumulated: unknown = null): unknown {
+function evaluate(
+  value: unknown,
+  properties: Record<string, unknown>,
+  state: Record<string, unknown> = {},
+  accumulated: unknown = null,
+): unknown {
   const parsed = createExpression(value as ExpressionSpecification, 'test')
   if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
-  return parsed.value.evaluate({ zoom: 0, accumulated } as never, { type: 'Point', properties } as never)
+  return parsed.value.evaluate({ zoom: 0, accumulated } as never, { type: 'Point', properties } as never, state as never)
 }
 
 const paintOf = (layers: readonly LayerSpecification[], id: string) =>
@@ -102,20 +108,40 @@ describe('clusters', () => {
 })
 
 describe('trails', () => {
+  /** What a trail layer's paint property is for a Live game's trail or venue, hovered or not. */
+  const drawn = (theme: Theme, id: string, property: string, hovered = false) =>
+    evaluate(paintOf(cardLayoutLayers(theme), id)[property], { status: 'Live', gameId: 'a' }, { hovered })
+
   it("are drawn at the theme's widths and opacities, in a glow, to a venue ringed at the theme's sizes", () => {
-    const paint = (id: string) => paintOf(cardLayoutLayers(sizedTheme()), id)
-    expect(paint('trails')).toMatchObject({ 'line-width': 1.5, 'line-opacity': 0.8 })
+    const theme = sizedTheme()
+    const paint = (id: string) => paintOf(cardLayoutLayers(theme), id)
+    expect([drawn(theme, 'trails', 'line-width'), drawn(theme, 'trails', 'line-opacity')]).toEqual([1.5, 0.8])
     expect(paint('trail-glows')).toMatchObject({ 'line-width': 5, 'line-blur': 2, 'line-opacity': 0.3 })
-    expect(paint('trail-venues')).toMatchObject({ 'circle-radius': 3 })
-    expect(paint('trail-venue-rings')).toMatchObject({ 'circle-radius': 6, 'circle-stroke-width': 1.5 })
+    expect(drawn(theme, 'trail-venues', 'circle-radius')).toBe(3)
+    expect(paint('trail-venue-rings')).toMatchObject({ 'circle-radius': 6 })
+    expect(drawn(theme, 'trail-venue-rings', 'circle-stroke-width')).toBe(1.5)
+    expect(drawn(theme, 'trail-venue-glows', 'circle-opacity')).toBe(0)
   })
 
   it('let the map show through when see-through: their line and glow that much more see-through', () => {
     const theme = sizedTheme()
     const seeThrough = { ...theme, components: { ...theme.components, Trail: { ...theme.components.Trail, seeThrough: { on: true, opacity: 0.5 } } } }
-    const paint = (id: string) => paintOf(cardLayoutLayers(seeThrough), id)
-    expect(paint('trails')).toMatchObject({ 'line-opacity': 0.4 })
-    expect(paint('trail-glows')).toMatchObject({ 'line-opacity': 0.15 })
+    expect(drawn(seeThrough, 'trails', 'line-opacity')).toBe(0.4)
+    expect(paintOf(cardLayoutLayers(seeThrough), 'trail-glows')).toMatchObject({ 'line-opacity': 0.15 })
+  })
+
+  it("draw a hovered card's trail and venue dot from the hover settings, see-through or not", () => {
+    const json = structuredClone(builtIn) as Record<string, any>
+    json.components.Trail.seeThrough = { on: true, opacity: 0.5 }
+    json.components.Hover.trail = { width: 3, opacity: 0.95 }
+    json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
+    const result = resolveTheme(json)
+    if (!result.ok) throw new Error(result.problems.join('\n'))
+    const hovered = (id: string, property: string) => drawn(result.theme, id, property, true)
+    expect([hovered('trails', 'line-width'), hovered('trails', 'line-opacity')]).toEqual([3, 0.95])
+    expect(hovered('trail-venues', 'circle-radius')).toBe(4)
+    expect(hovered('trail-venue-rings', 'circle-stroke-width')).toBe(3)
+    expect([hovered('trail-venue-glows', 'circle-radius'), hovered('trail-venue-glows', 'circle-opacity')]).toEqual([14, 0.7])
   })
 })
 
@@ -165,7 +191,7 @@ describe("a cluster's colour", () => {
       Object.entries(clusterProperties as Record<string, [unknown, unknown]>).map(([key, [operator, perPin]]) => {
         const reduce = typeof operator === 'string' ? [operator, ['accumulated'], ['get', key]] : operator
         const mapped = games.map((game) => evaluate(perPin, { ...game }))
-        return [key, mapped.reduce((gathered, next) => evaluate(reduce, { [key]: next }, gathered))]
+        return [key, mapped.reduce((gathered, next) => evaluate(reduce, { [key]: next }, {}, gathered))]
       }),
     )
   }

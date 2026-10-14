@@ -386,7 +386,7 @@ const settings = {
       disputedBorders: { ...globeLine, dash: dashes },
       halo: { inner: haloGlow, outer: haloGlow },
     },
-    PlaceNames: { city: placeName, capital: placeName, state: placeName, country: placeName },
+    PlaceNames: { city: placeName, state: placeName, country: placeName },
     /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
     Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
     /**

@@ -32,6 +32,25 @@ describe('pageCheck', () => {
     expect(settled).toBe(true)
   })
 
+  it('turns the camera once the globe is ready, and waits for it to settle after drawing the turn', async () => {
+    let settled = true
+    let draw = () => {}
+    const turns: unknown[] = []
+    const map = {
+      once: (_event: string, listener: () => void) => (draw = listener),
+      jumpTo: (camera: unknown) => {
+        turns.push(camera)
+        settled = false
+        setTimeout(draw, 100)
+        setTimeout(() => (settled = true), 300)
+      },
+    }
+    window.scoremap = { map: map as unknown as MapLibreMap, stage: () => 'ready', settled: () => settled }
+    expect(await pageCheck({ check: 'camera', center: [-74, 40.7], zoom: 6 })).toEqual({ camera: true })
+    expect(turns).toEqual([{ center: [-74, 40.7], zoom: 6 }])
+    expect(settled).toBe(true)
+  })
+
   it('says what it’s still waiting for once its time is up, to be run again', async () => {
     globe({ stage: () => 'drawing', settled: () => false })
     expect(await pageCheck({ check: 'ready' }, 200)).toEqual({ waiting: 'the globe to be ready (window.scoremap.stage())' })

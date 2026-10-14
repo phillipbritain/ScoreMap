@@ -25,16 +25,20 @@ While zoomed in, the panel a pin near the centre of the view shows as, above the
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Cluster**:
-Games shown as one marker with a count because there's no room to show them apart: a pin cluster or a card cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the centre of a zoomed-in view turns the globe to it instead, and its games get score cards.
+Games shown as one marker with a count because there's no room to show them apart: a pin cluster, a card cluster or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the centre of a zoomed-in view turns the globe to it instead, and its games get score cards.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Pin cluster**:
-A cluster of small pins close enough to overlap: while zoomed out, or zoomed in, far from the centre of the view.
+A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap: while zoomed out, or zoomed in, far from the centre of the view. Pin clusters that would overlap combine into a larger one.
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
 While zoomed in, a cluster of games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are.
 _Avoid_: Crowd, cluster (when it matters that it's cards)
+
+**Venue cluster**:
+While zoomed in, a cluster where the trails of moved score cards meet, in place of their venues' dots, which would overlap. Its games' cards are already on screen, so selecting it does nothing.
+_Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Game panel**:
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.
@@ -53,7 +57,7 @@ The stadium or arena where a game is physically played, with its city and countr
 _Avoid_: Stadium, arena, location, home city
 
 **City label**:
-A city's name on the globe, by its dot, from the city list included with the app. A game's city label is always drawn; a Big city's label with no game near is drawn where there's room. See `docs/city-labels.md`.
+A city's name on the globe, by where the city is (with no dot), from the city list included with the app. A game's city label is always drawn; a Big city's label with no game near is drawn where there's room. See `docs/city-labels.md`.
 _Avoid_: Place name (which also covers states and countries), city name tag
 
 **Big city**:

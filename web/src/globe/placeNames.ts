@@ -105,9 +105,9 @@ const cityNameLayerIds = {
 } as const
 
 /**
- * The layers naming the cities in the city name source (see addPlaceNames), from zoom 3, each with
- * the base style's city dot and in the theme's city or capital look. The games' cities are always
- * written below their dots, whatever else is there, and cards are laid out around them. Big cities
+ * The layers naming the cities in the city name source (see addPlaceNames), from zoom 3, each in the
+ * theme's city or capital look, with no dot: just the name, around where the city is. The games'
+ * cities are always written below where they are, whatever else is there, and cards are laid out around them. Big cities
  * with no game near are written where they have room, most populous first, giving way to cards and
  * other names.
  */
@@ -122,11 +122,6 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
       layout: {
         'text-field': ['get', 'name'],
         'text-max-width': cityNameMaxWidth,
-        // The base style's city dot, a little bigger for a capital, until zoom 9.
-        'icon-image': ['step', ['zoom'], 'circle_11_black', 9, ''],
-        'icon-size': kind === 'capital' ? 0.5 : 0.4,
-        'icon-allow-overlap': true,
-        'icon-optional': false,
         ...(game ? {} : { 'symbol-sort-key': ['-', ['get', 'population']] }),
       },
     }
@@ -149,14 +144,14 @@ function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
       // another card covers that spot, the name moves to another side (see cardLayoutLayers' cardFootprint).
       'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
       // Far enough from the dot (in ems) to clear a game's pin on it: a round small pin zoomed out,
-      // a score card's pointer zoomed in.
+      // a score card's trail zoomed in.
       'text-radial-offset': ['step', ['zoom'], cityNameOffset.small, cardZoom, cityNameOffset.card],
     },
   }
 }
 
 // How far a city's name sits from its dot, in ems: clear of a round small pin zoomed out, a score
-// card's pointer zoomed in.
+// card's trail zoomed in.
 const cityNameOffset = { small: 1.2, card: 1 }
 
 /** Where and how big a city's name is written below its dot, so cards can keep clear of it. */

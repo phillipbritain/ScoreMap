@@ -61,15 +61,15 @@ export function pinSize(zoom: number): PinSize {
 const zoomStep = 0.25
 
 /**
- * Small pins or score cards, and how close small pins must be to cluster: only when they would
- * overlap, closer on screen than the widest small pin.
+ * Small pins or score cards, and how close small pins must be to cluster: closer on screen than the
+ * spacing, which keeps small pins and pin clusters from overlapping (see pinClusterSpacing).
  * MapLibre clusters pins at whole zoom levels only, and shows zoom 3's clusters all the way to 3.99,
  * where pins are nearly twice as far apart on screen. So the radius is shrunk by how far past the
  * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins
  * clustering only as close as they'd be on screen now.
  */
-export function pinLayout(zoom: number, smallPinWidth: number): PinLayout {
+export function pinLayout(zoom: number, spacing: number): PinLayout {
   const size = pinSize(zoom)
   const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
-  return { size, clusterRadius: Math.round(smallPinWidth / 2 ** pastWholeLevel) }
+  return { size, clusterRadius: Math.round(spacing / 2 ** pastWholeLevel) }
 }

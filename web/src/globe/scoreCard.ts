@@ -46,5 +46,5 @@ export function headerText(colour: string, status: GameStatus, theme: Theme): st
 }
 
 function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardTeam {
-  return { abbreviation, logoUrl, score: score === null ? '' : String(score) }
+  return { abbreviation, logoUrl, score: score ?? '' }
 }

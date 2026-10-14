@@ -72,6 +72,51 @@ public class ClockLineTests
     public async Task Soccer(ProviderStatus status, string clock, int period, ProviderPeriodPhase phase, string expected) =>
         Assert.Equal(expected, await ClockLineAsync("soccer/eng.1", status, clock, period, phase));
 
+    [Theory]
+    // The away side batting first, the home side yet to bat.
+    [InlineData(InProgress, 1, Playing, "54/1 (6.3/20 ov)", null, "6.3/20 ov")]
+    [InlineData(InProgress, 1, Break, "186/6 (20 ov)", null, "Innings break")]
+    [InlineData(InProgress, 2, Playing, "186/6", "100/6 (13/20 ov, target 187)", "13/20 ov · need 87")]
+    // The home side batting first, as real games sometimes have it.
+    [InlineData(InProgress, 1, Playing, null, "25/2 (3.4/20 ov)", "3.4/20 ov")]
+    // Delayed, with no side batting yet.
+    [InlineData(Delayed, 1, Playing, null, null, "1st inns")]
+    [InlineData(Final, 2, Playing, "127", "128/2 (12.1/20 ov, target 128)", "Final")]
+    public async Task Cricket(ProviderStatus status, int innings, ProviderPeriodPhase phase, string? away, string? home, string expected)
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("cricket/8048", CricketGame(server, status, innings, phase, home, away));
+
+        await using var client = await server.ConnectClientAsync();
+        Assert.Equal(expected, Assert.Single(await client.NextSnapshotAsync()).Clock);
+    }
+
+    /// <summary>
+    /// A cricket game with each side's score written as ESPN writes it ("100/6 (13/20 ov, target 187)"),
+    /// or null for a side yet to bat.
+    /// </summary>
+    internal static ProviderGame CricketGame(ScoreMapServer server, ProviderStatus status, int innings, ProviderPeriodPhase phase, string? home, string? away) => new(
+        Id: "1",
+        LeagueKey: "cricket/8048",
+        StartTime: server.Clock.GetUtcNow().AddHours(-2),
+        Home: CricketTeam("HOM", home),
+        Away: CricketTeam("AWY", away),
+        Status: status,
+        DisplayClock: "0'",
+        Period: innings,
+        Venue: new ProviderVenue("Wankhede Stadium", "Mumbai", null, "India"),
+        Broadcasters: [],
+        Phase: phase);
+
+    private static ProviderTeam CricketTeam(string abbreviation, string? score)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(score ?? "",
+            @"^(\d+)(?:/(\d+))?(?: \((\d+(?:\.\d)?)(?:/(\d+))? ov(?:, target (\d+))?\))?$");
+        int? Number(int group) => match.Groups[group].Success ? int.Parse(match.Groups[group].Value) : null;
+        return new ProviderTeam(abbreviation, abbreviation, null, Number(1),
+            Innings: match.Success ? new ProviderInnings(Number(2), match.Groups[3].Success ? match.Groups[3].Value : null, Number(4), Number(5)) : null);
+    }
+
     [Fact]
     public async Task Game_that_has_not_started_has_no_clock_line() =>
         Assert.Null(await ClockLineAsync(Nfl, Scheduled, null, null, Playing));

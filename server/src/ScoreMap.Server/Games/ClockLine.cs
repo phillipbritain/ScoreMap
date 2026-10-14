@@ -4,7 +4,7 @@ namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// The short line saying where a game stands, written the way its sport reads it:
-/// "Q3 4:12", "Halftime", "Final/OT" and so on.
+/// "Q3 4:12", "Halftime", "Final/OT", "13.2/20 ov · need 87" and so on.
 /// </summary>
 public static class ClockLine
 {
@@ -20,6 +20,7 @@ public static class ClockLine
             Sport.Hockey => Timed(game, period, league.Regulation, "P"),
             Sport.Baseball => Innings(game, period, league.Regulation),
             Sport.Soccer => Halves(game, period, league.Regulation),
+            Sport.Cricket => Innings(game, period),
             _ => throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport"),
         };
     }
@@ -53,6 +54,30 @@ public static class ClockLine
             _ => "",
         };
         return half + Ordinal(inning);
+    }
+
+    /// <summary>
+    /// Cricket has no clock: the overs bowled to the side batting, and in a chase the runs it still needs:
+    /// "13.2/20 ov", "13/20 ov · need 87", "Innings break", "Final". With no side batting yet, the innings:
+    /// "1st inns".
+    /// </summary>
+    private static string Innings(ProviderGame game, int innings)
+    {
+        if (game.Status == ProviderStatus.Final)
+            return "Final";
+        if (game.Phase == ProviderPeriodPhase.Break)
+            return "Innings break";
+
+        var batting = new[] { game.Home, game.Away }
+            .OrderByDescending(team => team.Innings?.Target is not null)
+            .FirstOrDefault(team => team.Innings?.Overs is not null);
+        if (batting?.Innings is not { Overs: { } overs } state)
+            return $"{Ordinal(innings)} inns";
+
+        var line = state.OverLimit is { } limit ? $"{overs}/{limit} ov" : $"{overs} ov";
+        return state.Target is { } target && batting.Score is { } runs && target > runs
+            ? $"{line} · need {target - runs}"
+            : line;
     }
 
     private static string Ordinal(int n) => (n % 100, n % 10) switch

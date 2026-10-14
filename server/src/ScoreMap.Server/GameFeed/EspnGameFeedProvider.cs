@@ -104,8 +104,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             e.Id,
             leagueKey,
             e.Date ?? competition!.Date ?? DateTimeOffset.MinValue,
-            ToTeam(home, started),
-            ToTeam(away, started),
+            ToTeam(home, started, leagueKey),
+            ToTeam(away, started, leagueKey),
             ToStatus(status?.Type),
             started ? status?.DisplayClock : null,
             started ? status?.Period : null,
@@ -114,11 +114,39 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             status?.Type?.State == "in" ? ToPhase(status.Type) : ProviderPeriodPhase.Playing);
     }
 
-    private static ProviderTeam ToTeam(Competitor competitor, bool started) =>
-        new(competitor.Team!.Abbreviation ?? "",
+    private static ProviderTeam ToTeam(Competitor competitor, bool started, string leagueKey)
+    {
+        var team = new ProviderTeam(competitor.Team!.Abbreviation ?? "",
             competitor.Team.DisplayName ?? competitor.Team.Abbreviation ?? "",
             competitor.Team.Logo,
             started && int.TryParse(competitor.Score, out var score) ? score : null);
+        return started && leagueKey.StartsWith("cricket/", StringComparison.Ordinal) ? WithInnings(team, competitor.Score) : team;
+    }
+
+    /// <summary>
+    /// Cricket's score is text: runs, wickets unless all out, and for the side batting (or last to bat)
+    /// the overs, the most it may face and the target it chases: "186/6", "127",
+    /// "100/6 (13/20 ov, target 187)", or "204/8 (20 ov, target 211)" once its overs are done. A team
+    /// yet to bat has no score.
+    /// </summary>
+    private static ProviderTeam WithInnings(ProviderTeam team, string? score)
+    {
+        if (CricketScore().Match(score ?? "") is not { Success: true } match)
+            return team with { Score = null };
+        int? Number(string group) => match.Groups[group].Success ? int.Parse(match.Groups[group].Value) : null;
+        return team with
+        {
+            Score = Number("runs"),
+            Innings = new ProviderInnings(
+                Number("wickets"),
+                match.Groups["overs"].Success ? match.Groups["overs"].Value : null,
+                Number("limit"),
+                Number("target")),
+        };
+    }
+
+    [GeneratedRegex(@"^(?<runs>\d+)(/(?<wickets>\d+))?( \((?<overs>\d+(\.\d)?)(/(?<limit>\d+))? ov(, target (?<target>\d+))?\))?$")]
+    private static partial Regex CricketScore();
 
     private static ProviderStatus ToStatus(StatusType? type)
     {
@@ -137,10 +165,14 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 
     /// <summary>
     /// Baseball's half-inning is only given as text ("Top 7th", "Mid 7th", "Bot 7th", "End 7th"),
-    /// so it is read first; other breaks come from the status name.
+    /// so it is read first, as is cricket's innings break, which has no status name; other breaks come
+    /// from the status name.
     /// </summary>
     private static ProviderPeriodPhase ToPhase(StatusType type)
     {
+        if ($"{type.Description} {type.ShortDetail}".Contains("innings break", StringComparison.OrdinalIgnoreCase))
+            return ProviderPeriodPhase.Break;
+
         if (InningDetail().Match(type.ShortDetail ?? "") is { Success: true } inning)
         {
             return inning.Groups[1].Value switch
@@ -187,7 +219,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record TeamDetail(string? Location, Franchise? Franchise);
     private sealed record Franchise(Venue? Venue);
     private sealed record Status(string? DisplayClock, int? Period, StatusType? Type);
-    private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail);
+    private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail, string? Description);
     private sealed record Venue(string? Id, string? FullName, Address? Address);
     private sealed record Address(string? City, string? State, string? Country);
     private sealed record Broadcast(string? Market, List<string>? Names);

@@ -2724,5 +2724,57 @@
       "abbreviation": "UZB",
       "logoUrl": "https://a.espncdn.com/i/teamlogos/countries/500/uzb.png"
     }
+  ],
+  "IPL": [
+    {
+      "name": "Chennai Super Kings",
+      "abbreviation": "CSK",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335974.png"
+    },
+    {
+      "name": "Delhi Capitals",
+      "abbreviation": "DC",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335975.png"
+    },
+    {
+      "name": "Gujarat Titans",
+      "abbreviation": "GT",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/1298769.png"
+    },
+    {
+      "name": "Kolkata Knight Riders",
+      "abbreviation": "KKR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335971.png"
+    },
+    {
+      "name": "Lucknow Super Giants",
+      "abbreviation": "LSG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/1298768.png"
+    },
+    {
+      "name": "Mumbai Indians",
+      "abbreviation": "MI",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335978.png"
+    },
+    {
+      "name": "Punjab Kings",
+      "abbreviation": "PBKS",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335973.png"
+    },
+    {
+      "name": "Rajasthan Royals",
+      "abbreviation": "RR",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335977.png"
+    },
+    {
+      "name": "Royal Challengers Bengaluru",
+      "abbreviation": "RCB",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/335970.png"
+    },
+    {
+      "name": "Sunrisers Hyderabad",
+      "abbreviation": "SRH",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/628333.png"
+    }
   ]
 }

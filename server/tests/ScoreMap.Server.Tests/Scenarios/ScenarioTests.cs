@@ -41,8 +41,8 @@ public class ScenarioTests
         Assert.Equal("chiefs-bills", game.Id);
         Assert.Equal("NFL", game.League);
         Assert.Equal(GameStatus.Live, game.Status);
-        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", 14), game.Home);
-        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, 10), game.Away);
+        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "14"), game.Home);
+        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, "10"), game.Away);
         Assert.Equal("Arrowhead Stadium", game.Venue.Name);
         Assert.Equal("Kansas City", game.Venue.City);
         Assert.Equal(2, game.Period);
@@ -113,7 +113,7 @@ public class ScenarioTests
             }
             """);
         await using var client = await server.ConnectClientAsync();
-        Assert.Equal(14, Assert.Single(await client.NextSnapshotAsync()).Home.Score);
+        Assert.Equal("14", Assert.Single(await client.NextSnapshotAsync()).Home.Score);
 
         server.Clock.Advance(TimeSpan.FromSeconds(9));
         await Task.Delay(100);
@@ -121,7 +121,7 @@ public class ScenarioTests
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         var scored = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.ScoreChanged, scored.Kind);
-        Assert.Equal(21, scored.Game.Home.Score);
+        Assert.Equal("21", scored.Game.Home.Score);
 
         server.Clock.Advance(TimeSpan.FromSeconds(10));
         var finished = await client.NextChangeAsync();
@@ -135,7 +135,7 @@ public class ScenarioTests
         var added = Assert.Single(restarted, c => c.Kind == GameChangeKind.Added);
         Assert.NotEqual("chiefs-bills", added.Game.Id);
         Assert.Equal(GameStatus.Live, added.Game.Status);
-        Assert.Equal(14, added.Game.Home.Score);
+        Assert.Equal("14", added.Game.Home.Score);
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public class ScenarioTests
         do change = await client.NextChangeAsync();
         while (change.Kind != GameChangeKind.ScoreChanged);
         var before = snapshot.Single(g => g.Id == change.Game.Id);
-        Assert.True(change.Game.Home.Score + change.Game.Away.Score > before.Home.Score + before.Away.Score);
+        Assert.NotEqual((before.Home.Score, before.Away.Score), (change.Game.Home.Score, change.Game.Away.Score));
     }
 
     // The shipped team list, by league name.

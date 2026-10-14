@@ -58,12 +58,12 @@ interface GameAt {
   longitude?: number
   latitude?: number
   status?: GameStatus
-  home?: number | null
-  away?: number | null
+  home?: string | null
+  away?: string | null
   clock?: string | null
 }
 
-function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home = 0, away = 0, clock = null }: GameAt = {}): Game {
+function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home = '0', away = '0', clock = null }: GameAt = {}): Game {
   return {
     id,
     league: 'NFL',
@@ -601,7 +601,7 @@ describe('loading stage', () => {
     await vi.waitFor(() => expect(onStage).toHaveBeenLastCalledWith('ready'), { timeout: 10_000 })
 
     map.easeTo({ center: [10, 5], duration: 300 })
-    globe.show([game('A', { home: 7 })])
+    globe.show([game('A', { home: '7' })])
     globe.show(null)
     globe.show([game('A')])
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
@@ -711,7 +711,7 @@ describe('loading stage', () => {
     expect(globe.stage()).toBe('ready')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
 
-    globe.show([game('A', { home: 7 }), game('B', { longitude: 0.3 }), game('C', { longitude: 10, latitude: 5 })])
+    globe.show([game('A', { home: '7' }), game('B', { longitude: 0.3 }), game('C', { longitude: 10, latitude: 5 })])
     expect(globe.settled()).toBe(false)
     expect(globe.stage()).toBe('ready')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
@@ -863,9 +863,9 @@ describe('place names', () => {
 
 describe('animations', () => {
   it.each([
-    ['score', game('A', { home: 0 }), game('A', { home: 7 })],
-    ['start', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: 0 })],
-    ['finish', game('A', { home: 21 }), game('A', { status: 'Final', home: 21 })],
+    ['score', game('A', { home: '0' }), game('A', { home: '7' })],
+    ['start', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: '0' })],
+    ['finish', game('A', { home: '21' }), game('A', { status: 'Final', home: '21' })],
   ] as const)('plays %s on a game’s score card', async (animation, before, after) => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show([before])
@@ -878,20 +878,20 @@ describe('animations', () => {
 
   it('plays over a game’s small pin, zoomed out', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    globe.show([game('A', { home: 0 })])
+    globe.show([game('A', { home: '0' })])
     await pinsDrawn(map, smallPinLayer, game('A'))
 
-    globe.show([game('A', { home: 7 })])
+    globe.show([game('A', { home: '7' })])
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--pin.pin-pulse--score')).not.toBeNull())
   })
 
   it('plays over the pin cluster a game is in', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    globe.show([game('A', { home: 0 }), game('B')])
+    globe.show([game('A', { home: '0' }), game('B')])
     await pinsDrawn(map, pinClusterLayer, game('A'))
 
-    globe.show([game('A', { home: 7 }), game('B')])
+    globe.show([game('A', { home: '7' }), game('B')])
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--cluster.pin-pulse--score')).not.toBeNull())
   })
@@ -900,14 +900,14 @@ describe('animations', () => {
   // loaded tiles, so it would be found to animate.
   it('does not play over a small pin on the far side of the globe', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    const near = game('NEAR', { home: 0 })
-    globe.show([near, game('FAR', { longitude: 90, home: 0 })])
+    const near = game('NEAR', { home: '0' })
+    globe.show([near, game('FAR', { longitude: 90, home: '0' })])
     await pinsDrawn(map, smallPinLayer, near)
     const pulses: Element[] = []
     const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
     watching.observe(container, { childList: true, subtree: true })
 
-    globe.show([near, game('FAR', { longitude: 90, home: 7 })])
+    globe.show([near, game('FAR', { longitude: 90, home: '7' })])
     await pause(500)
     watching.disconnect()
 
@@ -917,7 +917,7 @@ describe('animations', () => {
   it('does not animate a change the globe did not show, while the game was hidden', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const other = game('B', { longitude: 40 })
-    globe.show([game('A', { home: 0 }), other])
+    globe.show([game('A', { home: '0' }), other])
     await pinsDrawn(map, smallPinLayer, game('A'), other)
     // Every pulse that starts, kept even after it has played and removed itself.
     const pulses: Element[] = []
@@ -927,7 +927,7 @@ describe('animations', () => {
     // Hidden by the viewer's settings, then shown again with a new score. Straight after, so the map
     // still has its pin and could animate it: only what the globe last showed rules it out.
     globe.show([other])
-    globe.show([game('A', { home: 7 }), other])
+    globe.show([game('A', { home: '7' }), other])
     await pinsDrawn(map, smallPinLayer, game('A'))
     await pause(500)
     watching.disconnect()

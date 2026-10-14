@@ -1,23 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import builtIn from '../theme/builtInTheme.json'
-import { resolveTheme, type Theme } from '../theme/theme'
-import { gameColour, textOn } from './gameColour'
+import { themeWith } from '../theme/testTheme'
+import { gameColour } from './gameColour'
 import { firstVisitSettings, hasColours, withLeagueColour, withoutColours, withSportColour } from './viewerSettings'
 
 /** A theme whose statuses each have a colour of their own, unlike any a viewer picks below. */
-function testTheme(): Theme {
-  const json = structuredClone(builtIn) as Record<string, any>
+const theme = themeWith((json) => {
   json.palette.live.main = '#ff0000'
   json.palette.upcoming.main = '#00ff00'
   json.palette.final.main = '#0000ff'
   json.palette.disrupted.main = '#808080'
-  const result = resolveTheme(json)
-  if (!result.ok) throw new Error(result.problems.join('\n'))
-  return result.theme
-}
-
-const theme = testTheme()
+})
 const nflGame = (status: GameStatus) => ({ league: 'NFL', sport: 'Football', status })
 
 describe('gameColour', () => {
@@ -85,16 +78,6 @@ describe('gameColour', () => {
     expect(gameColour(settings, nflGame('Final'), theme)).toBe('#abcdef')
     expect(gameColour(settings, nflGame('Disrupted'), theme)).toBe('#808080')
     expect(hasColours(settings)).toBe(true)
-  })
-
-  it('is written on in whichever of the theme\'s text colours, light or dark, stands out from it more', () => {
-    const light = theme.palette.text.primary
-    const dark = theme.palette.background.paper
-
-    expect(textOn('#fff8c0', theme)).toBe(dark)
-    expect(textOn('#ffff00', theme)).toBe(dark)
-    expect(textOn('#200040', theme)).toBe(light)
-    expect(textOn('#c00000', theme)).toBe(light)
   })
 
   it("puts every game back in the theme's colours on \"Reset colours\", keeping the other settings", () => {

@@ -66,14 +66,27 @@ public class VenuePhotoSearchTests
             Options.Create(new NominatimOptions())));
 
     [Fact]
-    public async Task Uses_espns_main_photo_not_its_interior_one_resized_for_the_panel_without_asking_anyone_else()
+    public async Task Uses_espns_interior_photo_over_its_main_one_resized_for_the_panel_without_asking_anyone_else()
     {
         var handler = Serving((EspnBankOfAmerica, BankOfAmericaImages));
 
         var photo = await Search(handler).SearchAsync("football/nfl", BankOfAmerica, CancellationToken.None);
 
-        Assert.Equal(new VenuePhoto("https://a.espncdn.com/combiner/i?img=/i/venues/nfl/day/3628.jpg&w=720", null), photo);
+        Assert.Equal(new VenuePhoto("https://a.espncdn.com/combiner/i?img=/i/venues/nfl/day/interior/3628.jpg&w=720", null), photo);
         Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Uses_espns_main_photo_when_it_has_no_interior_one()
+    {
+        // Arenas and ballparks have only a day image, of the bowl.
+        var handler = Serving((EspnBankOfAmerica, """
+            {"id":"3628","images":[{"href":"https://a.espncdn.com/i/venues/nfl/day/3628.jpg","rel":["full","day"]}]}
+            """));
+
+        var photo = await Search(handler).SearchAsync("football/nfl", BankOfAmerica, CancellationToken.None);
+
+        Assert.Equal(new VenuePhoto("https://a.espncdn.com/combiner/i?img=/i/venues/nfl/day/3628.jpg&w=720", null), photo);
     }
 
     [Fact]

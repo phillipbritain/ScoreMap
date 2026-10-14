@@ -81,6 +81,39 @@ public class VenuePhotoTests
     }
 
     [Fact]
+    public async Task Photos_saved_before_inside_photos_were_preferred_are_searched_for_again_once()
+    {
+        // A file as saved before inside photos were preferred: the venue's outside photo, by "Name, City".
+        var savedPhotos = Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(savedPhotos, """
+            {"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead-outside.jpg","credit":null}}
+            """);
+        try
+        {
+            await using (var firstRun = new ScoreMapServer(savedVenuePhotosPath: savedPhotos))
+            {
+                firstRun.Photos.Add(Arrowhead, ArrowheadPhoto);
+                firstRun.Feed.SetScoreboard(Nfl, LiveGame(firstRun.Clock, "401"));
+                Assert.Null(Assert.Single(await firstRun.SnapshotOnceAsync()).Venue.Photo);
+                await firstRun.PhotoSearchesFinishedAsync();
+                Assert.Equal([Arrowhead], firstRun.Photos.Searches);
+            }
+
+            await using var secondRun = new ScoreMapServer(savedVenuePhotosPath: savedPhotos);
+            secondRun.Feed.SetScoreboard(Nfl, LiveGame(secondRun.Clock, "401"));
+
+            var game = Assert.Single(await secondRun.SnapshotOnceAsync());
+
+            Assert.Equal(ArrowheadPhoto, game.Venue.Photo);
+            Assert.Empty(secondRun.Photos.Searches);
+        }
+        finally
+        {
+            File.Delete(savedPhotos);
+        }
+    }
+
+    [Fact]
     public async Task A_venue_without_a_photo_is_remembered_too()
     {
         // Both runs share a file the test owns, as a server deletes a saved-photos file it made itself.

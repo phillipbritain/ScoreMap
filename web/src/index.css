@@ -887,6 +887,18 @@ body {
   cursor: pointer;
 }
 
+/* A league's chip, then the swatch of its games' colour. */
+.settings-league {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+/* A league with no colour of its own: hollow and dashed in its sport's colour, as taken from it. */
+.settings-league .settings-colour__swatch:not(.settings-colour__swatch--picked) {
+  border-style: dashed;
+}
+
 /* "Reset colours", under the sports. */
 .settings-reset {
   margin-top: calc(3 * var(--spacing));

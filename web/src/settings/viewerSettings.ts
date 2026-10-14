@@ -14,6 +14,11 @@ export interface ViewerSettings {
    * in it (see gameColour). A sport with none takes the theme's colours.
    */
   sportColours: Readonly<Record<string, string>>
+  /**
+   * The colour the viewer picked for each league, by name, as #rrggbb. It wins over its sport's, so
+   * a viewer can colour a sport and set one of its leagues apart. A league with none takes its sport's.
+   */
+  leagueColours: Readonly<Record<string, string>>
 }
 
 /** Every league on, "Live only" off, Disrupted games shown and no colours picked. */
@@ -22,6 +27,7 @@ export const firstVisitSettings: ViewerSettings = {
   liveOnly: false,
   showDisrupted: true,
   sportColours: {},
+  leagueColours: {},
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {
@@ -64,14 +70,20 @@ export function withSportColour(settings: ViewerSettings, sport: string, colour:
   return { ...settings, sportColours: colour === null ? others : { ...others, [sport]: colour } }
 }
 
-/** "Reset colours": the settings with every colour cleared. */
+/** The settings with a league's colour picked, or cleared (null) so its games take its sport's colour again. */
+export function withLeagueColour(settings: ViewerSettings, league: string, colour: string | null): ViewerSettings {
+  const { [league]: _cleared, ...others } = settings.leagueColours
+  return { ...settings, leagueColours: colour === null ? others : { ...others, [league]: colour } }
+}
+
+/** "Reset colours": the settings with every sport's and league's colour cleared. */
 export function withoutColours(settings: ViewerSettings): ViewerSettings {
-  return { ...settings, sportColours: {} }
+  return { ...settings, sportColours: {}, leagueColours: {} }
 }
 
 /** Whether the viewer has picked any colour, so there's something for "Reset colours" to clear. */
 export function hasColours(settings: ViewerSettings): boolean {
-  return Object.keys(settings.sportColours).length > 0
+  return Object.keys(settings.sportColours).length > 0 || Object.keys(settings.leagueColours).length > 0
 }
 
 function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: boolean): ViewerSettings {

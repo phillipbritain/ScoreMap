@@ -44,6 +44,8 @@ Run locally, the app shows a scenario rather than real games. The `run-scoremap`
 
 Leagues, polling, venue lookups and corrections, scenario venues and teams, and watch and stream links: see [docs/configuration.md](docs/configuration.md).
 
+Which cities the globe names, and the settings for it: see [docs/city-labels.md](docs/city-labels.md).
+
 ## Test
 
 ```sh

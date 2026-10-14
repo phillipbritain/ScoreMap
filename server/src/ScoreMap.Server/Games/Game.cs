@@ -23,7 +23,12 @@ public sealed record Game(
     IReadOnlyList<GameBroadcaster> Broadcasters,
     IReadOnlyList<StreamLink> StreamLinks);
 
-public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score);
+/// <summary>
+/// A team in a game. <see cref="Score"/> is text, as its sport writes it: points, goals or runs ("24"),
+/// or in cricket runs and wickets ("186/6"), runs alone when the side is all out; null before it scores
+/// anything (before the game starts, or in cricket before the team bats).
+/// </summary>
+public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, string? Score);
 
 /// <summary>
 /// Where a game is played. <see cref="Region"/> is its state, province or the like, spelled out in full

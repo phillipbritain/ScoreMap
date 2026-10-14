@@ -167,5 +167,13 @@ public sealed class GameBoard(
     }
 
     private static GameTeam ToTeam(ProviderTeam team) =>
-        new(team.Abbreviation, team.FullName, team.LogoUrl, team.Score);
+        new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team));
+
+    /// <summary>The team's score as its sport writes it: "24", or in cricket "186/6", or "127" all out.</summary>
+    private static string? ScoreText(ProviderTeam team) => (team.Score, team.Innings?.Wickets) switch
+    {
+        (null, _) => null,
+        ({ } runs, { } wickets) => $"{runs}/{wickets}",
+        ({ } score, _) => score.ToString(System.Globalization.CultureInfo.InvariantCulture),
+    };
 }

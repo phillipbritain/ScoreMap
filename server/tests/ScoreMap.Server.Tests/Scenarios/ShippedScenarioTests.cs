@@ -112,7 +112,7 @@ public class ShippedScenarioTests
 
         var close = Assert.Single(snapshot, g => g.Id == "worldwide-raptors-celtics");
         Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
-        Assert.InRange(Math.Abs((close.Home.Score - close.Away.Score) ?? 99), 0, 5);
+        Assert.InRange(Math.Abs(int.Parse(close.Home.Score!) - int.Parse(close.Away.Score!)), 0, 5);
 
         await AdvanceUntilAsync(server, client, $"{close.Id} in clutch time", c => c.Game.Id == close.Id && c.Game.ClutchTime,
             within: TimeSpan.FromMinutes(10));
@@ -183,8 +183,11 @@ public class ShippedScenarioTests
         Assert.Contains(snapshot, g => g.Status == GameStatus.Live && g.Home.Score == g.Away.Score);
         Assert.Contains(snapshot, g => g.Home.FullName.Length >= 30 && g.Away.FullName.Length >= 30);
         Assert.Contains(snapshot, g => g.Home.LogoUrl is null && g.Away.LogoUrl is null);
-        Assert.Contains(snapshot, g => g.Home.Score >= 100 && g.Away.Score >= 100);
+        Assert.Contains(snapshot, g => Points(g.Home.Score) >= 100 && Points(g.Away.Score) >= 100);
     }
+
+    /// <summary>A score in points, goals or runs; null for none, or for a cricket score with wickets.</summary>
+    private static int? Points(string? score) => int.TryParse(score, out var points) ? points : null;
 
     /// <summary>Switches the running scenario to <paramref name="name"/>, then connects a browser.</summary>
     private static async Task<TestClient> StartAsync(ScoreMapServer server, string name)

@@ -5,7 +5,8 @@ export interface GameTeam {
   abbreviation: string
   fullName: string
   logoUrl: string | null
-  score: number | null
+  /** As its sport writes it: "24", or in cricket "186/6" (runs alone when all out); null before it scores anything. */
+  score: string | null
 }
 
 export interface GameVenue {

@@ -19,10 +19,20 @@ public sealed record ProviderGame(
 
 /// <summary>
 /// A team in a game. <see cref="HomeCity"/> is the city the team plays its home games in, when the
-/// provider knows it; the venue locator falls back to it for a home team's game with no venue.
+/// provider knows it; the venue locator falls back to it for a home team's game with no venue. In
+/// cricket, <see cref="Score"/> is the team's runs and <see cref="Innings"/> the rest of its innings;
+/// it's null in every other sport, and in cricket before the team bats.
 /// </summary>
 public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score,
-    ProviderCity? HomeCity = null);
+    ProviderCity? HomeCity = null, ProviderInnings? Innings = null);
+
+/// <summary>
+/// A cricket team's innings beyond its runs. <see cref="Wickets"/> is null when the side is all out, as
+/// the provider writes its score then ("127", not "127/10"). The side batting, or last to bat, also has
+/// the <see cref="Overs"/> bowled to it as cricket writes them ("13.2": 13 overs and 2 balls), the most
+/// it may face, and in the second innings the <see cref="Target"/> it is chasing.
+/// </summary>
+public sealed record ProviderInnings(int? Wickets, string? Overs = null, int? OverLimit = null, int? Target = null);
 
 /// <summary>A city as the provider names it, e.g. ("Charlotte", "NC", "USA").</summary>
 public sealed record ProviderCity(string Name, string? Region, string? Country);
@@ -48,13 +58,13 @@ public enum ProviderStatus
     Canceled,
 }
 
-/// <summary>Where play stands within the current period (quarter, half, period or inning).</summary>
+/// <summary>Where play stands within the current period (quarter, half, period, inning or innings).</summary>
 public enum ProviderPeriodPhase
 {
     /// <summary>The period is being played (or the game hasn't started or has finished).</summary>
     Playing,
 
-    /// <summary>A break after the period: end of a quarter, halftime or an intermission.</summary>
+    /// <summary>A break after the period: end of a quarter, halftime, an intermission or cricket's innings break.</summary>
     Break,
 
     /// <summary>A shootout (hockey) or penalty shootout (soccer).</summary>

@@ -65,6 +65,15 @@ export function textOn(colour: string, light: string, dark: string): string {
   return contrastRatio(colour, dark) > contrastRatio(colour, light) ? dark : light
 }
 
+/**
+ * Two #rrggbb colours mixed, `amount` of the second (0 to 1) into the first, as CSS's
+ * `color-mix(in srgb, …)` mixes them.
+ */
+export function mixColours(first: string, second: string, amount: number): string {
+  const [a, b] = [hexToRgb(first), hexToRgb(second)]
+  return rgbToHex(a.map((v, i) => v + (b[i] - v) * amount) as Rgb)
+}
+
 /** WCAG's relative luminance of a #rrggbb colour. */
 function luminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex).map(toLinear)

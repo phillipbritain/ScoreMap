@@ -60,7 +60,7 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   status colour (--status-color, set on the panel, with --status-contrast-text for text on it). One
+   colour (--game-color, set on the panel, with --text-on-game-color for text on it). One
    size whatever the game, so it never jumps from one game to the next: the score block, the details
    and the photo each have a fixed width, and every line of text is clipped to its slot. */
 .game-panel {
@@ -74,7 +74,7 @@ body {
   height: var(--game-panel-size-height);
   /* The score block and photo are clipped to the panel's corners. */
   overflow: hidden;
-  border-top: var(--shape-border-width-thick) solid var(--status-color);
+  border-top: var(--shape-border-width-thick) solid var(--game-color);
   border-radius: var(--game-panel-corner);
   background: linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
   color: var(--palette-text-primary);
@@ -82,7 +82,7 @@ body {
   transform: translateX(-50%);
   box-shadow:
     var(--game-panel-shadow),
-    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--status-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
+    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
   --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
@@ -181,8 +181,8 @@ body {
   margin-top: var(--spacing);
   padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
   overflow: hidden;
-  background: var(--status-color);
-  color: var(--status-contrast-text);
+  background: var(--game-color);
+  color: var(--text-on-game-color);
   font-family: var(--typography-font-family);
   font-size: var(--typography-overline-font-size);
   font-weight: var(--typography-overline-font-weight);
@@ -340,30 +340,31 @@ body {
 /* How each status looks comes from the theme: its colour from the palette (--palette-live-main and so
    on), and how far its score cards fade and how they glow from the score card's own
    (--score-card-live-fade). Score cards pick theirs by their status class, but for their colour, which
-   each card is given as its game's (--status-card-color, see gameColour). */
+   each card is given as its game's (--game-color, see gameColour), and the text on its header, picked
+   to read on the header's tint of that colour (--header-text, see headerText). */
 .score-card--live {
-  --status-card-color: var(--palette-live-main);
+  --game-color: var(--palette-live-main);
   --status-card-fade: var(--score-card-live-fade);
   --status-card-glow-radius: var(--score-card-live-glow-radius);
   --status-card-glow-opacity: var(--score-card-live-glow-opacity);
 }
 
 .score-card--upcoming {
-  --status-card-color: var(--palette-upcoming-main);
+  --game-color: var(--palette-upcoming-main);
   --status-card-fade: var(--score-card-upcoming-fade);
   --status-card-glow-radius: var(--score-card-upcoming-glow-radius);
   --status-card-glow-opacity: var(--score-card-upcoming-glow-opacity);
 }
 
 .score-card--final {
-  --status-card-color: var(--palette-final-main);
+  --game-color: var(--palette-final-main);
   --status-card-fade: var(--score-card-final-fade);
   --status-card-glow-radius: var(--score-card-final-glow-radius);
   --status-card-glow-opacity: var(--score-card-final-glow-opacity);
 }
 
 .score-card--disrupted {
-  --status-card-color: var(--palette-disrupted-main);
+  --game-color: var(--palette-disrupted-main);
   --status-card-fade: var(--score-card-disrupted-fade);
   --status-card-glow-radius: var(--score-card-disrupted-glow-radius);
   --status-card-glow-opacity: var(--score-card-disrupted-glow-opacity);
@@ -372,7 +373,7 @@ body {
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores.
 
-   A card fades (Final, say) by colour: its status colour (--status-color, for its outline, header,
+   A card fades (Final, say) by colour: its game's colour (--card-color, for its outline, header,
    light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
    fade into the fill likewise. A see-through card's fill (and drop shadow) is the theme's see-through
    opacity, so the map shows through behind its text, logos, scores and light, which stay as they are.
@@ -387,14 +388,14 @@ body {
   --card-fill-opacity: calc(
     100% - var(--score-card-see-through-on) * (1 - var(--score-card-see-through-opacity)) * 100%
   );
-  --status-color: color-mix(in srgb, var(--status-card-color), var(--card-surface) var(--fade));
+  --card-color: color-mix(in srgb, var(--game-color), var(--card-surface) var(--fade));
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;
   display: grid;
   gap: calc(0.5 * var(--spacing));
   min-width: var(--score-card-size-min-width);
   padding: 0 0 var(--spacing);
-  border: var(--shape-border-width-thin) solid var(--status-color);
+  border: var(--shape-border-width-thin) solid var(--card-color);
   border-radius: var(--score-card-corner);
   background: color-mix(in srgb, var(--card-surface) var(--card-fill-opacity), transparent);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
@@ -405,10 +406,10 @@ body {
   text-transform: uppercase;
   /* A hovered card's bolder border, then the status's glow around the card, and a fainter one inside it. */
   box-shadow:
-    0 0 0 var(--card-hover-ring) var(--status-color),
-    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
+    0 0 0 var(--card-hover-ring) var(--card-color),
+    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
     inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
-      color-mix(in srgb, var(--status-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
+      color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
   cursor: pointer;
   position: relative;
   transition:
@@ -457,8 +458,9 @@ body {
   gap: var(--spacing);
   margin-bottom: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
-  border-bottom: var(--shape-border-width-thin) solid var(--status-color);
-  background: color-mix(in srgb, var(--status-color) calc(var(--score-card-header-tint) * 100%), transparent);
+  border-bottom: var(--shape-border-width-thin) solid var(--card-color);
+  background: color-mix(in srgb, var(--card-color) calc(var(--score-card-header-tint) * 100%), transparent);
+  color: color-mix(in srgb, var(--header-text, var(--card-ink)), var(--card-surface) var(--fade));
   font-size: var(--typography-footnote-font-size);
   letter-spacing: var(--score-card-header-letter-spacing);
 }
@@ -467,9 +469,9 @@ body {
   width: var(--score-card-size-light);
   height: var(--score-card-size-light);
   border-radius: 50%;
-  background: var(--status-color);
+  background: var(--card-color);
   /* Lit as its card glows. */
-  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--status-color);
+  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--card-color);
 }
 
 .score-card--live .score-card__light {
@@ -541,8 +543,8 @@ body {
   15% {
     transform: scale(1.3);
     box-shadow:
-      0 0 0 4px var(--status-color),
-      0 0 18px 6px var(--status-color);
+      0 0 0 4px var(--card-color),
+      0 0 18px 6px var(--card-color);
   }
   30% {
     transform: scale(0.95);
@@ -558,14 +560,14 @@ body {
 @keyframes score-card-score-flash {
   0%,
   50% {
-    color: var(--status-color);
+    color: var(--card-color);
   }
 }
 
 @keyframes score-card-start {
   0% {
     transform: scale(0.85);
-    box-shadow: 0 0 0 0 var(--status-color);
+    box-shadow: 0 0 0 0 var(--card-color);
   }
   35% {
     transform: scale(1.15);

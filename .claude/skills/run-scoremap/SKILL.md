@@ -15,7 +15,9 @@ aspire ps                 # every run on the machine: its AppHost path (so its c
 aspire stop --all         # stops every run on the machine
 ```
 
-`start` is plain when `aspire ps` lists no run, and `--isolated` when it lists any, since a plain run wants fixed ports another may hold. One clone or worktree has one run: starting it again (even `--isolated`) stops the one going and starts afresh. For a second run of your own, make a git worktree and start it there.
+Check `aspire ps` first. When it lists this clone's AppHost, **use that run**: skip `start`, and give `wait` and `describe` `--apphost server/src/ScoreMap.AppHost/ScoreMap.AppHost.csproj`, as they may not find it from the directory alone. It may be the user's own `aspire run`, which restarts its AppHost itself when stopped, so a `start` over it only fights it for locked build files.
+
+Otherwise, `start` is plain when `aspire ps` lists no run, and `--isolated` when it lists any, since a plain run wants fixed ports another may hold. One clone or worktree has one run: starting it again (even `--isolated`) stops the one going and starts afresh. For a second run of your own, make a git worktree and start it there.
 
 **Its URLs.** The browser app is the `web` resource's URL and the server the `server`'s; in an isolated run both are random. Read them from `aspire describe --format json` (`.resources[]`, by `displayName`, `.urls[].url`):
 

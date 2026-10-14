@@ -1,7 +1,7 @@
 import type { LayerSpecification, LineLayerSpecification, StyleSpecification } from 'maplibre-gl'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
-import { placeNameLayers, placeNameState } from './placeNames'
+import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
@@ -33,7 +33,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme): StyleSpecifi
     glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
-    state: { ...base.state, ...placeNameState },
+    sources: { ...base.sources, [cityNameSource]: cityNameSourceSpec },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
       // Coastlines: the edges of the sea, which is the same colour as the land. Lakes and rivers

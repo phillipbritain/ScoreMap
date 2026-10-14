@@ -13,7 +13,6 @@ const base: StyleSpecification = {
   layers: [
     { id: 'label_city', ...place, filter: ['==', ['get', 'class'], 'city'] },
     { id: 'label_state', ...place },
-    { id: 'label_city_capital', ...place, filter: ['==', ['get', 'capital'], 2] },
   ],
 }
 
@@ -32,8 +31,8 @@ const zooms = [2, 3, 4, 4.5, 5.5, 7, 8.25, 11, 12.9]
 describe('cityNameLook', () => {
   it('predicts the size the map writes a city name at, at every zoom', () => {
     for (const [id, capital] of [
-      ['label_city', false],
-      ['label_city_capital', true],
+      ['city_names', false],
+      ['capital_names_game', true],
     ] as const) {
       for (const zoom of zooms) {
         expect(cityNameLook(zoom, capital, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
@@ -44,7 +43,7 @@ describe('cityNameLook', () => {
   it("predicts how far below its dot the map writes a city's name, at every zoom", () => {
     for (const zoom of zooms) {
       const look = cityNameLook(zoom, false, builtInTheme)
-      const ems = atZoom(layout('label_city')['text-radial-offset'], zoom)
+      const ems = atZoom(layout('city_names')['text-radial-offset'], zoom)
       expect(look.offset, `at ${zoom}`).toBeCloseTo(ems * look.size, 6)
     }
   })
@@ -66,12 +65,12 @@ describe('cityNameLook', () => {
       },
     }
     const size = (id: string, zoom: number) => atZoom(layout(id, theme)['text-size'], zoom)
-    expect(size('label_city', 1)).toBeCloseTo(10, 6)
-    expect(size('label_city', 2)).toBeCloseTo(10, 6)
-    expect(size('label_city', 4)).toBeGreaterThan(10)
-    expect(size('label_city', 4)).toBeLessThan(20)
-    expect(size('label_city', 6)).toBeCloseTo(20, 6)
-    expect(size('label_city', 9)).toBeCloseTo(20, 6)
+    expect(size('city_names', 1)).toBeCloseTo(10, 6)
+    expect(size('city_names', 2)).toBeCloseTo(10, 6)
+    expect(size('city_names', 4)).toBeGreaterThan(10)
+    expect(size('city_names', 4)).toBeLessThan(20)
+    expect(size('city_names', 6)).toBeCloseTo(20, 6)
+    expect(size('city_names', 9)).toBeCloseTo(20, 6)
     expect(cityNameLook(9, false, theme).size).toBeCloseTo(20, 6)
     expect(size('label_state', 3)).toBe(14)
     expect(size('label_state', 7)).toBe(14)
@@ -90,9 +89,9 @@ describe('cityNameLook', () => {
         },
       },
     }
-    expect(layout('label_city', theme)['text-font']).toEqual(['Metropolis Light'])
+    expect(layout('city_names', theme)['text-font']).toEqual(['Metropolis Light'])
     expect(cityNameLook(5, false, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
-    expect(layout('label_city_capital', theme)['text-font']).toEqual(['Open Sans Bold Italic'])
+    expect(layout('capital_names', theme)['text-font']).toEqual(['Open Sans Bold Italic'])
     expect(cityNameLook(5, true, theme).font).toMatch(/^italic 700 [\d.]+px "Open Sans", sans-serif$/)
   })
 })

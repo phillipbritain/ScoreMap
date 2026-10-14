@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { SettingsMenu } from './settings/SettingsMenu'
+import { gameColour, textOn, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
@@ -86,12 +87,16 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   useEffect(() => store.save(viewerSettings), [viewerSettings])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
+  // Changing only when a colour does, so other settings don't recolour the globe.
+  const { sportColours } = viewerSettings
+  const colours = useMemo((): PickedColours => ({ sportColours }), [sportColours])
   // Not under the loading screen: only once it has gone.
   const message = loadingScreenGone ? noPinsMessage(games, visible) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const selectedGame = visible.find((game) => game.id === selectedGameId) ?? null
+  const selectedColour = selectedGame && gameColour(colours, selectedGame, theme)
 
   return (
     <div className="app">
@@ -99,6 +104,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         <Globe
           theme={theme}
           cityLabels={behaviour.cityLabels}
+          colours={colours}
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
@@ -141,10 +147,24 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         </div>
         {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
             settings menu, so an open settings menu lies over it on a phone. */}
-        {selectedGame && <GamePanel ref={panel} game={selectedGame} onClose={() => setSelectedGameId(null)} />}
-        <SettingsMenu leagues={leagues} settings={viewerSettings} onChange={setViewerSettings} />
+        {selectedGame && selectedColour && (
+          <GamePanel
+            ref={panel}
+            game={selectedGame}
+            colour={selectedColour}
+            textOnColour={textOn(selectedColour, theme)}
+            onClose={() => setSelectedGameId(null)}
+          />
+        )}
+        <SettingsMenu
+          leagues={leagues}
+          settings={viewerSettings}
+          onChange={setViewerSettings}
+          accent={theme.palette.live.main}
+        />
         {BehaviourTuner && ThemeTuner && tuning && (
-          <div className="dev-tools">
+          // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
+          <div className="dev-tools" hidden={!scenarios.devToolsShown}>
             <Suspense>
               <BehaviourTuner
                 builtIn={builtInBehaviour}

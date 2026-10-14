@@ -14,7 +14,7 @@ While at least one browser is connected, the server polls each league about ever
 
 ## Venues
 
-The server looks each venue up once through OpenStreetMap Nominatim, saving the results to `data/venue-locations.json` (git-ignored; delete it to look venues up again). It also finds each venue's photo once, for the game panel: ESPN's own, or else the venue's Wikidata image from Wikimedia Commons with its author and licence. These are saved to `data/venue-photos.json` (also git-ignored; delete it to search again). Each clone or worktree has its own `data/`.
+The server looks each venue up once through OpenStreetMap Nominatim, saving the results to `data/venue-locations.json` (git-ignored; delete it to look venues up again). It also finds each venue's photo once, for the game panel: ESPN's own (from inside the venue where ESPN has one), or else the venue's Wikidata image from Wikimedia Commons with its author and licence. These are saved to `data/venue-photos.json` (also git-ignored; delete it to search again). Each clone or worktree has its own `data/`.
 
 Venue lookups can be wrong (e.g. a stadium placed in a same-named town). To fix a pin, add the venue's name and the right position to `venue-corrections.json`, for example `"Lincoln Financial Field": { "latitude": 39.9008, "longitude": -75.1675 }`. Corrections override any lookup and take effect from the next poll, without a restart. When a venue can't be found, its pin goes to the centre of its city; when a game has no venue, to the home team's city.
 

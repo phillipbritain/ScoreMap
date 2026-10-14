@@ -90,7 +90,7 @@ export const pinClusterStatus: ExpressionSpecification = [
 export function byStatus(
   theme: Theme,
   status: 'own' | 'pinCluster',
-  value: (look: StatusLook) => number | string,
+  value: (look: StatusLook) => number | string | ExpressionSpecification,
 ): ExpressionSpecification {
   // A match needs a fallback; every status has its own arm, so it's never used.
   return [

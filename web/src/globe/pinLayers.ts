@@ -119,11 +119,16 @@ export function pinClusterLayers(
   ]
 }
 
+/** A small pin's game's colour (see gameColour). */
+const gameColor: ExpressionSpecification = ['get', 'color']
+
 /**
  * Small pins for single games, each a bright core in a soft glow (see StatusLook): every game's
  * while zoomed out, and zoomed in, those far from the centre of the view, as score cards take over
  * near it (see scoreCardMarkers). The glows are a layer beneath the cores, so a core is never dimmed
- * by a neighbour's glow.
+ * by a neighbour's glow. Glow, ring and core are in the game's colour, but for a core the theme gives
+ * a status of its own, apart from the status's colour (Live's paler core, say): colour stands for the
+ * game's league, and status shows by glow and brightness (ADR-0017).
  */
 export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecification, CircleLayerSpecification] {
   return [
@@ -133,7 +138,7 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
-        'circle-color': ['get', 'color'],
+        'circle-color': gameColor,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity),
       },
@@ -145,10 +150,10 @@ export function smallPinLayers(theme: Theme, set: PinSet): [CircleLayerSpecifica
       layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
-        'circle-color': ['get', 'coreColor'],
+        'circle-color': byStatus(theme, 'own', (look) => (look.core.color === look.color ? gameColor : look.core.color)),
         'circle-opacity': byStatus(theme, 'own', (look) => look.core.opacity),
         'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
-        'circle-stroke-color': ['get', 'color'],
+        'circle-stroke-color': gameColor,
       },
     },
   ]

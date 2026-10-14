@@ -11,7 +11,7 @@ import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
-import { scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
+import { headerText, scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
 import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
 
@@ -165,8 +165,9 @@ export class ScoreCardMarkers {
       keep.add(gameId)
       const card = scoreCard(game)
       const color = this.colourOf(game)
+      const header = headerText(color, card.status, this.theme())
       const selected = gameId === this.selectedGameId
-      const drawn = JSON.stringify({ card, color, selected })
+      const drawn = JSON.stringify({ card, color, header, selected })
       let placed = this.placed.get(gameId)
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.
@@ -204,7 +205,7 @@ export class ScoreCardMarkers {
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
-        drawScoreCard(cardElement, card, color, selected, this.animating.get(gameId))
+        drawScoreCard(cardElement, card, { color, header }, selected, this.animating.get(gameId))
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -420,10 +421,17 @@ export class ScoreCardMarkers {
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
-function drawScoreCard(element: HTMLElement, card: ScoreCard, color: string, selected: boolean, animation?: PinAnimation): void {
+/** A score card's colours: its game's (see gameColour), and its header's text, readable on its tint (see headerText). */
+interface CardColours {
+  color: string
+  header: string
+}
+
+function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColours, selected: boolean, animation?: PinAnimation): void {
   element.className = `score-card score-card--${statusKey(card.status)}`
   // In its game's colour, in place of its status's from the page's CSS.
-  element.style.setProperty('--status-card-color', color)
+  element.style.setProperty('--game-color', color)
+  element.style.setProperty('--header-text', headerColor)
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId

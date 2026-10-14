@@ -47,10 +47,10 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's colour, as its score card is.
-  const statusStyle = { '--status-color': colour, '--status-contrast-text': textOnColour } as CSSProperties
+  const colourStyle = { '--game-color': colour, '--text-on-game-color': textOnColour } as CSSProperties
 
   return (
-    <aside ref={ref} className="game-panel" style={statusStyle} aria-label="Game panel">
+    <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__score">
         <div className="game-panel__league">{game.league}</div>
         <TeamRow team={game.away} />

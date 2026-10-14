@@ -43,28 +43,28 @@ const features = (kind: string, cards: CardOnGlobe[] = [a, b, { ...c, status: 'F
   cardLayoutFeatures(cards, layout, unproject, venueSizes).features.filter((feature) => feature.properties?.kind === kind)
 
 describe('cardLayoutFeatures', () => {
-  it("draws a card's trail from the card's edge, turned back into a place, to its venue, moved or not", () => {
+  it("draws a card's trail, named for its game, from the card's edge, turned back into a place, to its venue, moved or not", () => {
     expect(features('trail', [a])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'trail', status: 'Live' },
+        properties: { kind: 'trail', status: 'Live', gameId: 'a' },
         geometry: { type: 'LineString', coordinates: [[10, -19.4], [10, -20.5]] },
       } satisfies Feature<LineString>,
     ])
     expect(features('trail', [b])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'trail', status: 'Live' },
+        properties: { kind: 'trail', status: 'Live', gameId: 'b' },
         geometry: { type: 'LineString', coordinates: [[17, -20], [10, -20.5]] },
       } satisfies Feature<LineString>,
     ])
   })
 
-  it("marks a card's venue, where its trail ends, but not a venue whose cards are in a card cluster", () => {
+  it("marks a card's venue, named for its game, where its trail ends, but not a venue whose cards are in a card cluster", () => {
     expect(features('venue', [a, { ...c, status: 'Final' }, d])).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'venue', status: 'Live' },
+        properties: { kind: 'venue', status: 'Live', gameId: 'a' },
         geometry: { type: 'Point', coordinates: [10, -20.5] },
       } satisfies Feature<Point>,
     ])

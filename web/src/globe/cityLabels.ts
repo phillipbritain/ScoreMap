@@ -42,7 +42,7 @@ export interface CityLabels {
   /** Cities labelled for games: Big cities with a game near, and the Small cities games need. Always drawn. */
   gameCities: ListedCity[]
   /** Big cities with no game near, drawn where they have room. */
-  bigCities: ListedCity[]
+  otherBigCities: ListedCity[]
 }
 
 /**
@@ -58,8 +58,8 @@ export function cityLabels(venues: readonly GlobePoint[], cities: readonly Liste
   for (const city of cities) if (city.population >= settings.bigCityPopulation) big.add(city)
 
   const gameCities: ListedCity[] = []
-  const bigCities: ListedCity[] = []
-  for (const city of big) (venues.some((venue) => near(venue, city)) ? gameCities : bigCities).push(city)
+  const otherBigCities: ListedCity[] = []
+  for (const city of big) (venues.some((venue) => near(venue, city)) ? gameCities : otherBigCities).push(city)
   let unlabelled = venues.filter((venue) => !gameCities.some((city) => near(venue, city)))
   for (const city of [...cities].sort(byPopulation)) {
     if (unlabelled.length === 0) break
@@ -67,7 +67,7 @@ export function cityLabels(venues: readonly GlobePoint[], cities: readonly Liste
     gameCities.push(city)
     unlabelled = unlabelled.filter((venue) => !near(venue, city))
   }
-  return { gameCities, bigCities }
+  return { gameCities, otherBigCities }
 }
 
 // Kilometres per degree of latitude, roughly: a quick check that rules out most cities before

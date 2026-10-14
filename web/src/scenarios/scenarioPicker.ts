@@ -114,7 +114,7 @@ export function clockReading(listing: ScenarioListing, now: number): Date {
  * whole ms of real time rounded up, so a timer set for it lands on or after the change. Null while
  * the clock stands still, when there is nothing to wait for.
  */
-export function nextTick(listing: ScenarioListing, now: number): number | null {
+export function untilNextSecond(listing: ScenarioListing, now: number): number | null {
   const times = speedTimes(listing)
   if (times === 0) return null
   const reading = clockReading(listing, now).getTime()

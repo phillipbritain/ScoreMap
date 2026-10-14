@@ -20,6 +20,13 @@ export function gameColour(colours: PickedColours, game: ColouredGame, theme: Th
 }
 
 /**
+ * The theme's accent: Live's colour. A cluster of games of different colours shows in it, and the
+ * settings menu shows it for a sport with no colour picked, whose games take the theme's colour for
+ * their status.
+ */
+export const accentColour = (theme: Theme): string => theme.palette.live.main
+
+/**
  * The colour the viewer picked for a game: its league's, else its sport's, so a league they've never
  * seen takes its sport's colour. Null when they picked neither, and for a
  * Disrupted game, which keeps the theme's look.

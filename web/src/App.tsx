@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { SettingsMenu } from './settings/SettingsMenu'
-import { gameColour, type PickedColours } from './settings/gameColour'
+import { accentColour, gameColour, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
@@ -161,7 +161,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
           leagues={leagues}
           settings={viewerSettings}
           onChange={setViewerSettings}
-          accent={theme.palette.live.main}
+          accent={accentColour(theme)}
         />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.

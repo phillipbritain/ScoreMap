@@ -7,7 +7,8 @@
 //     dotnet run scripts/update-scenario-teams.cs
 //
 // The NCAA leagues have hundreds of teams, so they keep only the schools in ncaaSchools; NCAA Baseball
-// also leaves out those with no varsity baseball. The file is written only once every league is
+// also leaves out those with no varsity baseball. ESPN has no teams endpoint for cricket, so a cricket
+// league's teams are those in its games this year, or last year's before this year's season starts. The file is written only once every league is
 // fetched, so a failed run leaves it as it was. Exits with 1 if a school isn't found or ESPN fails.
 #:property PublishAot=false
 
@@ -45,21 +46,42 @@ var problems = new List<string>();
 foreach (var (name, key) in leagues)
 {
     // The key's query (such as "?groups=50") picks a scoreboard's games, not a league's teams.
-    var url = $"https://site.api.espn.com/apis/site/v2/sports/{key.Split('?')[0]}/teams?limit=1000";
-    JsonNode response;
-    try
+    var path = $"https://site.api.espn.com/apis/site/v2/sports/{key.Split('?')[0]}";
+    var cricket = key.StartsWith("cricket/", StringComparison.Ordinal);
+    string[] urls = cricket
+        ? [.. new[] { DateTime.UtcNow.Year, DateTime.UtcNow.Year - 1 }.Select(year => $"{path}/scoreboard?dates={year}&limit=500")]
+        : [$"{path}/teams?limit=1000"];
+    List<JsonNode> teams = [];
+    foreach (var url in urls)
     {
-        response = JsonNode.Parse(await http.GetStringAsync(url))!;
+        JsonNode response;
+        try
+        {
+            response = JsonNode.Parse(await http.GetStringAsync(url))!;
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            Console.WriteLine($"FAILED: {name} ({url}): {e.GetType().Name}: {e.Message}");
+            return 1;
+        }
+        teams = cricket
+            ? [.. response["events"]!.AsArray()
+                .SelectMany(e => e!["competitions"]![0]!["competitors"]!.AsArray())
+                .Select(competitor => competitor!["team"]!)
+                .DistinctBy(team => (string?)team["id"])
+                // Shaped as the teams endpoint gives a team.
+                .Select(team => (JsonNode)new JsonObject
+                {
+                    ["displayName"] = (string?)team["displayName"],
+                    ["abbreviation"] = (string?)team["abbreviation"],
+                    ["logos"] = new JsonArray(new JsonObject { ["href"] = (string?)team["logo"] }),
+                })]
+            : [.. response["sports"]![0]!["leagues"]![0]!["teams"]!.AsArray()
+                .Select(entry => entry!["team"]!)
+                .Where(team => team["isActive"]?.GetValue<bool>() != false)];
+        if (teams.Count > 0)
+            break;
     }
-    catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
-    {
-        Console.WriteLine($"FAILED: {name} ({url}): {e.GetType().Name}: {e.Message}");
-        return 1;
-    }
-    var teams = response["sports"]![0]!["leagues"]![0]!["teams"]!.AsArray()
-        .Select(entry => entry!["team"]!)
-        .Where(team => team["isActive"]?.GetValue<bool>() != false)
-        .ToList();
 
     if (name.StartsWith("NCAA", StringComparison.Ordinal))
     {

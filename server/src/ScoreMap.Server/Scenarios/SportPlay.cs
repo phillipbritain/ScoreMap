@@ -8,6 +8,8 @@ namespace ScoreMap.Server.Scenarios;
 /// stretches of play and the breaks it goes through from start to finish, with their periods and clock,
 /// and how often and by how much a team scores, so a whole game ends at roughly the sport's usual margins.
 /// How far through a game is runs from 0 (just started) to 1 (finished), across its planned length.
+/// Cricket is played a ball at a time, to one side at once: the away team bats first, and the home team
+/// chases its runs. A side all out ends its innings early, and a chase won (or all out) ends the game.
 /// </summary>
 internal sealed class SportPlay
 {
@@ -51,12 +53,23 @@ internal sealed class SportPlay
 
     private static readonly (int, double)[] BasketballPoints = [(1, 0.15), (2, 0.6), (3, 0.25)];
 
+    /// <summary>The most overs a side faces in a cricket innings: the IPL's 20.</summary>
+    private const int CricketOvers = 20;
+
+    private const int BallsPerOver = 6;
+
+    /// <summary>The chance a ball takes a wicket, so a side loses about 6 in its 20 overs.</summary>
+    private const double WicketChance = 0.05;
+
+    /// <summary>The runs off a ball that takes no wicket, with their chances: about 170 a side in 20 overs.</summary>
+    private static readonly (int Points, double Chance)[] RunsOffABall = [(0, 0.35), (1, 0.38), (2, 0.08), (4, 0.12), (6, 0.07)];
+
     /// <summary>The periods in a game before overtime.</summary>
     public int Regulation { get; }
 
     /// <summary>
-    /// How long a period lasts on the game clock (a half in soccer); not used in baseball, which has no
-    /// clock.
+    /// How long a period lasts on the game clock (a half in soccer); not used in baseball or cricket, which
+    /// have no clock.
     /// </summary>
     private int PeriodMinutes { get; }
 
@@ -72,22 +85,94 @@ internal sealed class SportPlay
     /// <summary>Whether a game <paramref name="through"/> of the way through is being played (not on a break).</summary>
     public bool IsPlaying(double through) => SegmentAt(through).Segment.Playing;
 
+    /// <summary>The teams as a game starts: level at 0, or in cricket the away team in to bat, the home team yet to.</summary>
+    public (ProviderTeam Home, ProviderTeam Away) Start(ProviderTeam home, ProviderTeam away) =>
+        _sport == Sport.Cricket
+            ? (home with { Score = null, Innings = null }, InToBat(away, target: null))
+            : (home with { Score = 0 }, away with { Score = 0 });
+
     /// <summary>
-    /// A team's score after a step of play that takes the game <paramref name="step"/> further through:
-    /// it may score, but never past the most a team gets in a game.
+    /// The teams after a step of play that takes a game from <paramref name="through"/> a further
+    /// <paramref name="step"/>: each may score, but never past the most a team gets in a game; in cricket,
+    /// the balls due in the step are bowled.
     /// </summary>
-    public int ScoreStep(int score, double step, Random random)
+    public (ProviderTeam Home, ProviderTeam Away) Step(ProviderTeam home, ProviderTeam away, double through, double step, Random random)
+    {
+        if (_sport == Sport.Cricket)
+            return Bowl(home, away, through + step, random, mayFinish: true);
+        if (!IsPlaying(through))
+            return (home, away);
+        return (home with { Score = ScoreStep(home.Score ?? 0, step, random) },
+            away with { Score = ScoreStep(away.Score ?? 0, step, random) });
+    }
+
+    /// <summary>
+    /// How far through a game is after a step of play took it to <paramref name="through"/>: there, except
+    /// in cricket when an innings is over early, which takes the first innings on to the innings break,
+    /// and the second to the end of the game.
+    /// </summary>
+    public double After(ProviderTeam home, ProviderTeam away, double through)
+    {
+        var (segment, _) = SegmentAt(through);
+        if (_sport != Sport.Cricket || !segment.Playing)
+            return through;
+        var batting = segment.Period == 2 ? home : away;
+        if (batting.Innings is not { } innings || !InningsOver(batting.Score ?? 0, innings.Wickets ?? 10, innings.Target))
+            return through;
+        return segment.Period == 2 ? 1 : Math.Max(through, Through(1, null, ProviderPeriodPhase.Break) ?? through);
+    }
+
+    /// <summary>
+    /// The teams <paramref name="through"/> of the way through a game, played a minute of planned length
+    /// at a time as random play plays it, and how far through it really is: in cricket, further if an
+    /// innings ended early. With <paramref name="mayFinish"/> false, a cricket chase stays short of
+    /// deciding the game, for a game made up as still under way.
+    /// </summary>
+    public (ProviderTeam Home, ProviderTeam Away, double Through) PlayTo(
+        ProviderTeam home, ProviderTeam away, double through, Random random, bool mayFinish)
+    {
+        if (_sport != Sport.Cricket)
+            return (home with { Score = ScoreAt(through, random) }, away with { Score = ScoreAt(through, random) }, through);
+
+        (home, away) = Start(home, away);
+        var step = 1 / _plannedMinutes;
+        var at = 0.0;
+        while (at < through)
+        {
+            var next = Math.Min(through, at + step);
+            (home, away) = Bowl(home, away, next, random, mayFinish);
+            at = After(home, away, next);
+        }
+        return (home, away, at);
+    }
+
+    /// <summary>
+    /// The final score of a game that ends with these teams: in a sport without draws, a level game is
+    /// settled by one more score, to either team.
+    /// </summary>
+    public (ProviderTeam Home, ProviderTeam Away) Settled(ProviderTeam home, ProviderTeam away, Random random)
+    {
+        var (homeScore, awayScore) = (home.Score ?? 0, away.Score ?? 0);
+        if (_scoring.Settling is not { } settle || homeScore != awayScore)
+            return (home with { Score = homeScore }, away with { Score = awayScore });
+        return random.Next(2) == 0
+            ? (home with { Score = homeScore + settle }, away with { Score = awayScore })
+            : (home with { Score = homeScore }, away with { Score = awayScore + settle });
+    }
+
+    /// <summary>A team's score after a step of play: it may score, but never past the most a team gets in a game.</summary>
+    private int ScoreStep(int score, double step, Random random)
     {
         if (random.NextDouble() >= _scoring.PerGame * step / _playingShare || score >= _scoring.Most)
             return score;
-        return Math.Min(_scoring.Most, score + Points(random));
+        return Math.Min(_scoring.Most, score + Pick(_scoring.Points, random));
     }
 
     /// <summary>
     /// A team's score <paramref name="through"/> of the way through a game: its play so far, scored a
     /// minute of planned length at a time as random play scores it.
     /// </summary>
-    public int ScoreAt(double through, Random random)
+    private int ScoreAt(double through, Random random)
     {
         var score = 0;
         var step = 1 / _plannedMinutes;
@@ -100,27 +185,78 @@ internal sealed class SportPlay
     }
 
     /// <summary>
-    /// The final score of a game that ends <paramref name="home"/>-<paramref name="away"/>: in a sport
-    /// without draws, a level game is settled by one more score, to either team.
+    /// Cricket: the balls due by <paramref name="to"/> of the way through the game, bowled to the side
+    /// batting then, the away team in the first innings and the home team in the second, which comes in
+    /// chasing one more than the away team's runs. Each ball takes a wicket or scores some runs, until the
+    /// side is all out or has reached its target. With <paramref name="mayFinish"/> false, a ball that
+    /// would decide the game goes for nothing.
     /// </summary>
-    public (int Home, int Away) Settled(int home, int away, Random random)
+    private (ProviderTeam Home, ProviderTeam Away) Bowl(ProviderTeam home, ProviderTeam away, double to, Random random, bool mayFinish)
     {
-        if (_scoring.Settling is not { } settle || home != away)
+        var (segment, done) = SegmentAt(to);
+        if (!segment.Playing)
             return (home, away);
-        return random.Next(2) == 0 ? (home + settle, away) : (home, away + settle);
+        var chasing = segment.Period == 2;
+        var batting = chasing ? home : away;
+        if (batting.Innings is null)
+        {
+            batting = InToBat(batting, target: (away.Score ?? 0) + 1);
+            // The side that batted first keeps its runs and wickets, not its overs.
+            away = away with { Innings = (away.Innings ?? new(0)) with { Overs = null, OverLimit = null } };
+        }
+
+        var innings = batting.Innings!;
+        var (runs, wickets, balls) = (batting.Score ?? 0, innings.Wickets ?? 10, Balls(innings.Overs));
+        var due = Math.Min(CricketOvers * BallsPerOver, (int)(done * CricketOvers * BallsPerOver));
+        for (; balls < due && !InningsOver(runs, wickets, innings.Target); balls++)
+        {
+            var (afterRuns, afterWickets) = random.NextDouble() < WicketChance
+                ? (runs, wickets + 1)
+                : (runs + Pick(RunsOffABall, random), wickets);
+            if (!mayFinish && chasing && InningsOver(afterRuns, afterWickets, innings.Target))
+                continue;
+            (runs, wickets) = (afterRuns, afterWickets);
+        }
+
+        batting = batting with
+        {
+            Score = runs,
+            Innings = innings with { Wickets = wickets < 10 ? wickets : null, Overs = Overs(balls) },
+        };
+        return chasing ? (batting, away) : (home, batting);
     }
 
-    /// <summary>The points a score is worth.</summary>
-    private int Points(Random random)
+    /// <summary>A cricket side coming in to bat, chasing <paramref name="target"/> in the second innings.</summary>
+    private static ProviderTeam InToBat(ProviderTeam team, int? target) =>
+        team with { Score = 0, Innings = new ProviderInnings(0, Overs(0), CricketOvers, target) };
+
+    /// <summary>Whether a cricket innings is over before its overs are: the side all out, or at its target.</summary>
+    private static bool InningsOver(int runs, int wickets, int? target) => wickets >= 10 || runs >= target;
+
+    /// <summary>Overs as cricket writes them: "13.2" is 13 overs and 2 balls.</summary>
+    private static string Overs(int balls) =>
+        balls % BallsPerOver == 0 ? $"{balls / BallsPerOver}" : $"{balls / BallsPerOver}.{balls % BallsPerOver}";
+
+    /// <summary>The balls in overs written as cricket writes them, such as "13.2"; none if they can't be read.</summary>
+    private static int Balls(string? overs)
+    {
+        var parts = (overs ?? "").Split('.');
+        return int.TryParse(parts[0], out var whole)
+            ? whole * BallsPerOver + (parts.Length > 1 && int.TryParse(parts[1], out var part) ? part : 0)
+            : 0;
+    }
+
+    /// <summary>One of <paramref name="choices"/>, by its chance.</summary>
+    private static int Pick((int Points, double Chance)[] choices, Random random)
     {
         var roll = random.NextDouble();
-        foreach (var (points, chance) in _scoring.Points)
+        foreach (var (points, chance) in choices)
         {
             if (roll < chance)
                 return points;
             roll -= chance;
         }
-        return _scoring.Points[^1].Points;
+        return choices[^1].Points;
     }
 
     /// <summary>Where a game <paramref name="through"/> of the way through stands: its period, clock and phase.</summary>
@@ -130,6 +266,8 @@ internal sealed class SportPlay
         string? clock = _sport switch
         {
             Sport.Baseball => null,
+            // The overs bowled in the innings, which Through reads back; the clock line doesn't show it.
+            Sport.Cricket => segment.Playing ? Overs((int)(done * CricketOvers * BallsPerOver)) : null,
             Sport.Soccer => SoccerClock(segment.Playing
                 ? (segment.Period - 1) * PeriodMinutes + Math.Min(PeriodMinutes, (int)(done * PeriodMinutes) + 1)
                 : segment.Period * PeriodMinutes),
@@ -162,6 +300,8 @@ internal sealed class SportPlay
         {
             case Sport.Baseball:
                 return 0;
+            case Sport.Cricket:
+                return Math.Clamp(Balls(clock) / (double)(CricketOvers * BallsPerOver), 0, 1);
             case Sport.Soccer:
                 // The minute of the game, such as 67' (or 90'+3, in added time): halfway through it, as
                 // its very start could round down to the minute before.
@@ -205,6 +345,12 @@ internal sealed class SportPlay
                     if (inning < regulation)
                         segments.Add(new(inning, ProviderPeriodPhase.InningEnd, 0.1, false));
                 }
+                break;
+            case Sport.Cricket:
+                // Two innings, around an innings break of about a tenth of an innings.
+                segments.Add(new(1, ProviderPeriodPhase.Playing, 1, true));
+                segments.Add(new(1, ProviderPeriodPhase.Break, 0.1, false));
+                segments.Add(new(2, ProviderPeriodPhase.Playing, 1, true));
                 break;
             case Sport.Soccer:
                 // Two 45-minute halves around a 15-minute halftime.

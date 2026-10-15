@@ -5,6 +5,7 @@ import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { Colours } from './Colours'
 import { Leagues } from './Leagues'
+import { DisruptedIcon, HomeIcon, LeaguesIcon, LiveIcon, PaletteIcon, RailIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
 import { canZoom, nextPopover, railToggles, toggled, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -62,13 +63,13 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
       {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
       <div className="rail__group" data-keeps-popovers>
         <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn}>
-          <path d="M12 5v14M5 12h14" />
+          <ZoomInIcon />
         </RailButton>
         <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut}>
-          <path d="M5 12h14" />
+          <ZoomOutIcon />
         </RailButton>
         <RailButton label="Home" disabled={!camera} onClick={onHome}>
-          <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+          <HomeIcon />
         </RailButton>
       </div>
       <div className="rail__group">
@@ -96,7 +97,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
       </div>
       <div className="rail__group">
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })}>
-          <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          <LeaguesIcon />
         </RailButton>
         <RailButton label="Colours" popover="colours" open={open} onClick={() => popoverEvent({ press: 'colours' })}>
           <PaletteIcon />
@@ -156,46 +157,7 @@ function RailButton({
       data-popover-button={popover}
       onClick={onClick}
     >
-      <svg
-        className="rail__icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        {children}
-      </svg>
+      <RailIcon className="rail__icon">{children}</RailIcon>
     </button>
-  )
-}
-
-/** Live games only: a broadcast's waves (Feather's "radio"). */
-function LiveIcon() {
-  return (
-    <>
-      <circle cx="12" cy="12" r="2" />
-      <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14" />
-    </>
-  )
-}
-
-/** Show Disrupted games: a warning triangle (Feather's "alert-triangle"). */
-function DisruptedIcon() {
-  return <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />
-}
-
-/** Colours: a painter's palette. */
-function PaletteIcon() {
-  return (
-    <>
-      <circle cx="13.5" cy="6.5" r="1" />
-      <circle cx="17.5" cy="10.5" r="1" />
-      <circle cx="8.5" cy="7.5" r="1" />
-      <circle cx="6.5" cy="12.5" r="1" />
-      <path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6h1.9A5.6 5.6 0 0 0 22 11c0-5-4.5-9-10-9z" />
-    </>
   )
 }

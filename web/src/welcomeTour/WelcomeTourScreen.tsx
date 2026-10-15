@@ -1,4 +1,14 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode, type Ref } from 'react'
+import {
+  DisruptedIcon,
+  HomeIcon,
+  LeaguesIcon,
+  LiveIcon,
+  PaletteIcon,
+  RailIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
+} from '../rail/railIcons'
 import {
   isLeagueOn,
   leaguesBySport,
@@ -8,6 +18,7 @@ import {
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
+import { TourPointer } from './TourPointer'
 import { canShowPicks, settingsForChoice, type TourChoice, type TourEvent, type TourProgress } from './welcomeTour'
 
 interface WelcomeTourScreenProps {
@@ -158,14 +169,37 @@ function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'o
   )
 }
 
-/** Your controls: the rail and what it's for. */
+/** The rail's buttons, top to bottom: each with the rail's own icon and a few words on it. */
+const railButtons = [
+  { name: 'Zoom in', icon: <ZoomInIcon />, words: 'Zoom in' },
+  { name: 'Zoom out', icon: <ZoomOutIcon />, words: 'Zoom out' },
+  { name: 'Home', icon: <HomeIcon />, words: 'Home: back to your part of the world' },
+  { name: 'Live games only', icon: <LiveIcon />, words: 'Live games only' },
+  { name: 'Show Disrupted games', icon: <DisruptedIcon />, words: 'Show games that were called off' },
+  { name: 'Leagues', icon: <LeaguesIcon />, words: 'Leagues: Top Events or your own picks' },
+  { name: 'Colours', icon: <PaletteIcon />, words: 'Colours for each sport and league' },
+]
+
+/** The rail's groups of buttons, which Your controls lights and points at. */
+const railGroups = () => document.querySelectorAll('.rail__group')
+
+/** Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at. */
 function ControlsStep({ onNext }: { onNext: () => void }) {
+  const panel = useRef<HTMLElement>(null)
   return (
-    <TourPanel heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
-      <p className="welcome-tour__text">
-        The buttons on the right zoom the globe, take you home, choose which games show and pick their colours.
-      </p>
-    </TourPanel>
+    <>
+      <TourPointer panel={panel} target={railGroups} />
+      <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
+        <ul className="welcome-tour__controls">
+          {railButtons.map(({ name, icon, words }) => (
+            <li key={name} className="welcome-tour__control">
+              <RailIcon className="welcome-tour__control-icon">{icon}</RailIcon>
+              {words}
+            </li>
+          ))}
+        </ul>
+      </TourPanel>
+    </>
   )
 }
 
@@ -186,13 +220,15 @@ interface TourPanelProps {
   children: ReactNode
   /** The step's own button, at the panel's foot. */
   action?: ReactNode
+  /** The panel itself, for a step's arrow to start from. */
+  ref?: Ref<HTMLElement>
 }
 
 /** A step's panel: glass, centred, labelled by its heading. */
-function TourPanel({ heading, headingLevel: Heading = 'h3', children, action }: TourPanelProps) {
+function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
   return (
-    <section className="welcome-tour__panel" role="dialog" aria-labelledby={headingId}>
+    <section ref={ref} className="welcome-tour__panel" role="dialog" aria-labelledby={headingId}>
       <Heading id={headingId} className="welcome-tour__heading">
         {heading}
       </Heading>

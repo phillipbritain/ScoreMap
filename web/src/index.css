@@ -926,7 +926,7 @@ body {
   height: var(--rail-size-icon);
 }
 
-/* What a toggle just changed ("Live only: on"), beside the toggles, fading away by itself. */
+/* What a toggle just changed ("Live games only: on"), beside the toggles, fading away by itself. */
 .rail__toast {
   position: absolute;
   top: 50%;

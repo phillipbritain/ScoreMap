@@ -1932,3 +1932,91 @@ body {
   font-weight: var(--typography-button-font-weight);
   cursor: pointer;
 }
+
+/* Your controls' list of the rail's buttons, each with the rail's own icon. */
+.welcome-tour__controls {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2.5 * var(--spacing));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-tour__control {
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--spacing));
+}
+
+.welcome-tour__control-icon {
+  flex: none;
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+/* A step's spotlight and arrow (see welcomeTour/TourPointer.tsx), filling the tour's layer under the
+   panel. Neither catches a press: the dim under them still does. */
+.welcome-tour__pointer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* While a step lights something, its spotlight does the dimming, all around it. */
+.welcome-tour:has(.welcome-tour__spotlight) > .welcome-tour__dim {
+  background: transparent;
+}
+
+.welcome-tour__spotlight {
+  position: absolute;
+  border-radius: calc(2 * var(--menu-corner));
+  box-shadow: 0 0 0 200vmax color-mix(in srgb, var(--palette-background-default) 30%, transparent);
+}
+
+.welcome-tour__arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.welcome-tour__arrow path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.welcome-tour__arrow-glow {
+  stroke: var(--palette-live-main);
+  stroke-width: 8;
+  opacity: 0.18;
+  filter: blur(3px);
+}
+
+/* Dashes flowing along the arrow towards what it points at. */
+.welcome-tour__arrow-flow {
+  stroke: var(--palette-live-main);
+  stroke-width: 2.5;
+  stroke-dasharray: 10 8;
+  animation: welcome-tour-flow 0.9s linear infinite;
+}
+
+.welcome-tour__arrow marker path {
+  fill: var(--palette-live-main);
+  stroke: none;
+}
+
+@keyframes welcome-tour-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+/* With reduce motion on, the arrow is drawn still. */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-tour__arrow-flow {
+    animation: none;
+  }
+}

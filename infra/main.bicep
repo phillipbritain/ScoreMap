@@ -21,6 +21,10 @@ param githubIdentityName string = 'scoremap-github'
 @description('Subject of the GitHub token Azure trusts, naming the repo and branch. See docs/deploy.md.')
 param githubSubject string
 
+@secure()
+@description('Fine-grained GitHub token that can only write this repo's issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged.')
+param feedbackGitHubToken string = ''
+
 resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: planName
   location: location
@@ -62,6 +66,16 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
           // Keeps container logs (see logs below) for 3 days.
           name: 'WEBSITE_HTTPLOGGING_RETENTION_DAYS'
           value: '3'
+        }
+        {
+          // Each visitor's own address from App Service's X-Forwarded-For, for feedback's per-visitor limit.
+          name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
+          value: 'true'
+        }
+        {
+          // Files feedback as issues in the repo (docs/configuration.md); passed in on each run.
+          name: 'Feedback__GitHubToken'
+          value: feedbackGitHubToken
         }
       ]
     }

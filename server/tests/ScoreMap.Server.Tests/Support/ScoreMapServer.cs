@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
+using ScoreMap.Server.Feedback;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
@@ -130,6 +131,18 @@ public sealed class ScoreMapServer(
     public Task StreamSearchesFinishedAsync() =>
         Services.GetRequiredService<StreamFinder>().SearchesFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
 
+    /// <summary>The made-up GitHub the feedback sink files issues with, once it has a token.</summary>
+    public FakeGitHub GitHub { get; } = new();
+
+    /// <summary>
+    /// The owner's GitHub token for filing feedback, when a test sets it. Unset, the server only logs
+    /// the issues it would have filed.
+    /// </summary>
+    public string? FeedbackToken { get; init; }
+
+    /// <summary>How long GitHub gets to answer, when a test sets it.</summary>
+    public TimeSpan? FeedbackTimeout { get; init; }
+
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     private readonly List<(string Key, string Name, string Sport, TimeSpan? PlannedLength)> _extraLeagues = [];
@@ -198,6 +211,12 @@ public sealed class ScoreMapServer(
         }
         if (StreamSiteTimeout is { } timeout)
             builder.UseSetting("StreamFinder:TimeoutSeconds", timeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (FeedbackToken is not null)
+            builder.UseSetting("Feedback:GitHubToken", FeedbackToken);
+        if (FeedbackTimeout is { } feedbackTimeout)
+            builder.UseSetting("Feedback:TimeoutSeconds", feedbackTimeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        // As on App Service (infra/main.bicep): each visitor's address from the proxy's X-Forwarded-For.
+        builder.UseSetting("FORWARDEDHEADERS_ENABLED", "true");
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
@@ -234,6 +253,7 @@ public sealed class ScoreMapServer(
             services.RemoveAll<IVenuePhotoSearch>();
             services.AddSingleton<IVenuePhotoSearch>(Photos);
             services.AddHttpClient(StreamFinder.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => StreamSites);
+            services.AddHttpClient(GitHubFeedbackSink.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => GitHub);
             if (StreamLinkSource is not null)
             {
                 services.RemoveAll<IStreamLinkSource>();

@@ -26,6 +26,7 @@ const arrowhead: Game = {
   situation: null,
   lastScore: null,
   keyEvents: [],
+  topEvent: false,
 }
 
 describe('scoreCard', () => {

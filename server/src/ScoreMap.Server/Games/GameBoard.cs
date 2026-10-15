@@ -11,7 +11,8 @@ namespace ScoreMap.Server.Games;
 /// ScoreMap's games: it maps provider statuses to ScoreMap's and keeps only games inside
 /// their pin windows. Each update of a league compares the result with the last one and
 /// reports what changed, so games entering and leaving their windows come out as added
-/// and removed. Not thread-safe: the poller serializes every call.
+/// and removed. It also keeps which games are top events (see <see cref="UpdateTopEventsAsync"/>).
+/// Not thread-safe: the poller serializes every call.
 /// </summary>
 public sealed class GameBoard(
     IGameFeedProvider feed,
@@ -29,6 +30,9 @@ public sealed class GameBoard(
     public static readonly TimeSpan FinalWindow = TimeSpan.FromHours(2);
 
     private readonly Dictionary<string, IReadOnlyList<Game>> _games = new();
+
+    // The ids of the games the feed last listed as its top events.
+    private IReadOnlySet<string> _topEvents = new HashSet<string>();
 
     // Providers report no end or suspension time, so a game ends (or is suspended) when the board sees
     // it turn Final (or suspended). Keyed by game: the status it was last seen with, and for a stopped
@@ -64,6 +68,13 @@ public sealed class GameBoard(
         _games[league.Key] = games;
         return GameChanges.Between(before, games);
     }
+
+    /// <summary>
+    /// Fetches the feed's top events. Each league's next update marks its games that are among them, and
+    /// unmarks those no longer, so the change reaches browsers with the league's other changes.
+    /// </summary>
+    public async Task UpdateTopEventsAsync(CancellationToken cancellationToken) =>
+        _topEvents = await feed.FetchTopEventsAsync(cancellationToken);
 
     public bool HasLiveGames(League league) =>
         _games.TryGetValue(league.Key, out var games) && games.Any(g => g.Status == GameStatus.Live);
@@ -164,6 +175,7 @@ public sealed class GameBoard(
                 : null,
             LastScore = game.LastScore is { } play ? new ScoringPlay(play.Team, play.Text, ClockLine.When(play, league)) : null,
             KeyEvents = game.KeyEvents.Select(k => new KeyEvent(k.Kind, k.Team, k.Player, k.Clock)).ToList(),
+            TopEvent = _topEvents.Contains(game.Id),
         };
     }
 

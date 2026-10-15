@@ -20,6 +20,7 @@ describe('settingsStore', () => {
     const storage = memoryStorage()
     const chosen = {
       hiddenLeagues: ['NBA', 'MLS'],
+      topEventsOnly: true,
       liveOnly: true,
       showDisrupted: false,
       sportColours: { Football: '#123456', Soccer: '#abcdef' },
@@ -63,6 +64,13 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual(firstVisitSettings)
   })
 
+  it('has Top Events off for a viewer whose settings were saved before that setting existed', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+
+    expect(settingsStore(() => storage).load().topEventsOnly).toBe(false)
+  })
+
   it('shows Disrupted games to a viewer whose settings were saved before that setting existed', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
@@ -76,6 +84,7 @@ describe('settingsStore', () => {
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
+      topEventsOnly: false,
       liveOnly: false,
       showDisrupted: true,
       sportColours: {},
@@ -89,6 +98,7 @@ describe('settingsStore', () => {
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
+      topEventsOnly: false,
       liveOnly: true,
       showDisrupted: false,
       sportColours: {},
@@ -141,6 +151,7 @@ describe('settingsStore', () => {
 
       expect(settingsStore(() => storage).load()).toEqual({
         hiddenLeagues: ['NBA', 'MLS'],
+        topEventsOnly: false,
         liveOnly: true,
         showDisrupted: false,
         sportColours: {},

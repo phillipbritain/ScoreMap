@@ -12,4 +12,10 @@ public interface IGameFeedProvider
     /// Final or Disrupted, and games soon after the next midnight, so pins don't drop or reset at a day boundary.
     /// </summary>
     Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Fetches the games the source picks as its most important right now, across every sport (ESPN's
+    /// Top Events), by game id. It may list games in leagues ScoreMap doesn't show.
+    /// </summary>
+    Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken);
 }

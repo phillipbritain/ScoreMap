@@ -1,6 +1,5 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
-import { titleWhenClipped } from './clippedTitle'
 import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
@@ -42,6 +41,7 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   // A Final game shows when it ended; any other, when it starts.
   const endTime = game.status === 'Final' ? game.endTime : null
   const time = dualTime(endTime ?? game.startTime, venue.timeZone)
+  const localTime = time.venue ? `${time.venue} local` : ''
   const links: PanelLink[] = [
     ...watchLinks(game.broadcasters, viewerCountry(navigator.languages)).map((link) => ({ ...link, unofficial: false })),
     // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
@@ -57,30 +57,36 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" {...titleWhenClipped(league)}>
+          <div className="game-panel__league" title={league} data-tooltip-when-clipped>
             {league}
           </div>
           <TeamRow team={game.away} />
           <TeamRow team={game.home} />
-          {progress && <div className="game-panel__progress">{progress}</div>}
+          {progress && (
+            <div className="game-panel__progress" title={progress} data-tooltip-when-clipped>
+              {progress}
+            </div>
+          )}
         </div>
 
         <div className="game-panel__details">
           <div>
             <div className="game-panel__label">Venue</div>
-            <div className="game-panel__value" {...titleWhenClipped(venueName)}>
+            <div className="game-panel__value" title={venueName} data-tooltip-when-clipped>
               {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
             </div>
-            <div className="game-panel__muted" {...titleWhenClipped(place)}>
+            <div className="game-panel__muted" title={place} data-tooltip-when-clipped>
               {place && <MapsLink query={place}>{place}</MapsLink>}
             </div>
           </div>
           <div>
             <div className="game-panel__label">{endTime ? 'Ended' : 'Start'}</div>
-            <div className="game-panel__value" {...titleWhenClipped(time.viewer)}>
+            <div className="game-panel__value" title={time.viewer} data-tooltip-when-clipped>
               {time.viewer}
             </div>
-            <div className="game-panel__muted">{time.venue && `${time.venue} local`}</div>
+            <div className="game-panel__muted" title={localTime} data-tooltip-when-clipped>
+              {localTime}
+            </div>
           </div>
           <div>
             <div className="game-panel__label">Watch</div>
@@ -123,7 +129,7 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
  */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (
-    <figcaption className="game-panel__credit" {...titleWhenClipped(`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`)}>
+    <figcaption className="game-panel__credit" title={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`} data-tooltip-when-clipped>
       <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
         {credit.author}
       </a>
@@ -144,12 +150,16 @@ function Credit({ credit }: { credit: PhotoCredit }) {
  * names otherwise. The first few are listed; the rest are named on hover over "+N more".
  */
 function WatchLinks({ links }: { links: PanelLink[] }) {
-  if (links.length === 0) return <div className="game-panel__muted">No channels listed</div>
+  if (links.length === 0) return (
+      <div className="game-panel__muted" title="No channels listed" data-tooltip-when-clipped>
+        No channels listed
+      </div>
+    )
   const { listed, folded } = listedWatchLinks(links)
   return (
     <ul className="game-panel__watch">
       {listed.map((link) => (
-        <li key={`${link.name} ${link.url}`} {...titleWhenClipped(link.unofficial ? `${link.name} (unofficial stream)` : link.name)}>
+        <li key={`${link.name} ${link.url}`} title={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
           {link.url ? (
             <a
               href={link.url}
@@ -179,7 +189,7 @@ function TeamRow({ team }: { team: GameTeam }) {
   return (
     <div className="game-panel__team">
       {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" {...titleWhenClipped(team.record ? `${name} (${team.record})` : name)}>
+      <span className="game-panel__team-name" title={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
         {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}
         {team.fullName}
       </span>
@@ -201,7 +211,7 @@ function GameBand({ game }: { game: Game }) {
     <div className="game-panel__band">
       {lastScore && (
         <BandCell label="Last score" wide>
-          <div className="game-panel__clamp" {...titleWhenClipped(`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim())}>
+          <div className="game-panel__clamp" title={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
             <span className="game-panel__strong">
               {lastScore.when && `${lastScore.when} · `}
               {lastScore.team}
@@ -212,15 +222,21 @@ function GameBand({ game }: { game: Game }) {
       )}
       {odds && (
         <BandCell label="Odds">
-          <div className="game-panel__one-line" {...titleWhenClipped(odds)}>
+          <div className="game-panel__one-line" title={odds} data-tooltip-when-clipped>
             {odds}
           </div>
-          {game.odds?.bookmaker && <div className="game-panel__muted game-panel__one-line">{game.odds.bookmaker}</div>}
+          {game.odds?.bookmaker && (
+            <div className="game-panel__muted game-panel__one-line" title={game.odds.bookmaker} data-tooltip-when-clipped>
+              {game.odds.bookmaker}
+            </div>
+          )}
         </BandCell>
       )}
       {game.attendance !== null && (
         <BandCell label="Attendance">
-          <div className="game-panel__one-line">{game.attendance.toLocaleString()}</div>
+          <div className="game-panel__one-line" title={game.attendance.toLocaleString()} data-tooltip-when-clipped>
+            {game.attendance.toLocaleString()}
+          </div>
         </BandCell>
       )}
       {empty && <div className="game-panel__muted game-panel__band-empty">No game details yet</div>}

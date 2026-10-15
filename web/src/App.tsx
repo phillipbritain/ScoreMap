@@ -18,6 +18,7 @@ import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { Rail } from './rail/Rail'
+import { OnboardingPrototype, prototypeVariant } from './onboardingPrototype/OnboardingPrototype'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
@@ -227,6 +228,15 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           onZoomOut={() => globeCamera.current?.zoomOut()}
           onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
         />
+        {/* PROTOTYPE, throwaway: first-visit onboarding variants, with ?onboarding=A|B|C|D. */}
+        {import.meta.env.DEV && prototypeVariant() && loadingScreenGone && (
+          <OnboardingPrototype
+            leagues={leagues}
+            settings={viewerSettings}
+            onChange={setViewerSettings}
+            gameOpen={selectedGame !== null}
+          />
+        )}
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
           <div className="dev-tools" data-keeps-popovers hidden={!scenarios.devToolsShown}>

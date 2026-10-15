@@ -796,15 +796,11 @@ body {
   box-shadow: var(--rail-shadow);
 }
 
-/* On a phone: a sheet across the whole width, from the rail's top down, over the rail. */
+/* On a phone: a sheet across all the width left of the rail, from the rail's top down, so the rail's
+   buttons stay in reach. */
 @media (max-width: 640px) {
   .rail__popover {
-    position: fixed;
-    top: calc(3 * var(--spacing));
-    right: calc(3 * var(--spacing));
-    left: calc(3 * var(--spacing));
-    width: auto;
-    max-width: none;
+    width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
   }
 }
 

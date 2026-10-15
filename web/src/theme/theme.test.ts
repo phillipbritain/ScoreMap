@@ -395,10 +395,11 @@ describe('resolveTheme', () => {
       ],
     })
   })
-  it('rejects a theme without the score card’s fill opacity', () => {
+  it('rejects a theme without a glass’s frost, or with one past opaque', () => {
     const json = themeJson()
-    delete json.components.ScoreCard.fillOpacity
-    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.ScoreCard.fillOpacity is missing'] })
+    delete json.components.ScoreCard.frost
+    json.components.Rail.frost = 1.5
+    expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.ScoreCard.frost is missing', 'components.Rail.frost is 1.5, not a frost from 0 (clear glass) to 1 (opaque frosted glass)'] })
   })
   it('rejects a theme without its hover settings', () => {
     const json = themeJson()

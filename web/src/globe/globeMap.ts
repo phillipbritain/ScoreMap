@@ -374,6 +374,24 @@ export class GlobeMap {
     return this.cards.steady()
   }
 
+  /** Zooms in one step, as MapLibre's own zoom button does (the rail's zoom in). */
+  zoomIn(): void {
+    this.map.zoomIn()
+  }
+
+  /** Zooms out one step, as MapLibre's own zoom button does (the rail's zoom out). */
+  zoomOut(): void {
+    this.map.zoomOut()
+  }
+
+  /**
+   * Flies the camera there (the rail's Home). Only the camera moves: the selected game stays
+   * selected.
+   */
+  flyTo(camera: Camera): void {
+    this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
+  }
+
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     this.destroyed = true

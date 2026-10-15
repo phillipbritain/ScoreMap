@@ -16,6 +16,10 @@ _Avoid_: Competition, tournament, conference, governing body (e.g. "NCAA" or "FI
 A single contest between two teams in a league, played at one venue at a scheduled time.
 _Avoid_: Match, fixture, event
 
+**Top event**:
+A game ESPN lists in its Top Events, the games it picks as the most important right now across every sport, as its front page shows them. "Top Events" in Leagues on the rail shows only these, whichever leagues are switched off.
+_Avoid_: Featured game, highlight, hot game
+
 **Pin**:
 The marker for one game on the globe, placed at the game's venue.
 _Avoid_: Marker, dot, icon

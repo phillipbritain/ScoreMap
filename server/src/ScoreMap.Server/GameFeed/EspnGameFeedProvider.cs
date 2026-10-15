@@ -89,6 +89,28 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         }
     }
 
+    /// <summary>
+    /// ESPN's Top Events, as its front page shows them: its scoreboard header, asked with no sport. It's
+    /// on another host from the scoreboards, so the address is whole.
+    /// </summary>
+    private const string TopEventsUrl =
+        "https://site.web.api.espn.com/apis/personalized/v2/scoreboard/header?region=us&lang=en&contentorigin=espn&configuration=SITE_DEFAULT&platform=web";
+
+    /// <summary>
+    /// The ids of ESPN's Top Events. An event's id is its game's, but for tennis, whose event is a whole
+    /// tournament, the match's id is its competition id, so both are listed.
+    /// </summary>
+    public async Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
+    {
+        var header = await http.GetFromJsonAsync<Header>(TopEventsUrl, cancellationToken);
+        return (header?.Sports ?? [])
+            .SelectMany(sport => sport.Leagues ?? [])
+            .SelectMany(league => league.Events ?? [])
+            .SelectMany(e => new[] { e.Id, e.CompetitionId })
+            .OfType<string>()
+            .ToHashSet();
+    }
+
     private void ForgetLastScoresNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> games)
     {
         var reported = games.Select(game => $"{leagueKey}/{game.Id}").ToHashSet();
@@ -379,6 +401,10 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 
     // ESPN response shape (only the fields ScoreMap reads).
     private sealed record Scoreboard(List<Event>? Events);
+    private sealed record Header(List<HeaderSport>? Sports);
+    private sealed record HeaderSport(List<HeaderLeague>? Leagues);
+    private sealed record HeaderLeague(List<HeaderEvent>? Events);
+    private sealed record HeaderEvent(string? Id, string? CompetitionId);
     private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status);
     private sealed record Competition(DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,

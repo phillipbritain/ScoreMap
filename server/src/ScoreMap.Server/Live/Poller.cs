@@ -10,7 +10,8 @@ namespace ScoreMap.Server.Live;
 /// the board's change events to every browser. Each league is fetched about every
 /// <see cref="PollingOptions.LiveInterval"/> while it has Live games and every
 /// <see cref="PollingOptions.QuietInterval"/> otherwise. With no browser connected nothing is fetched; the first browser to connect
-/// again gets a snapshot fetched fresh for any league whose data has gone stale.
+/// again gets a snapshot fetched fresh for any league whose data has gone stale. The feed's top events
+/// are fetched before the leagues, every <see cref="PollingOptions.QuietInterval"/>.
 /// </summary>
 public sealed class Poller(
     GameBoard board,
@@ -30,6 +31,9 @@ public sealed class Poller(
 
     // Completed to cut the wait for the next fetch short.
     private TaskCompletionSource _wake = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // The top events' place in _nextFetch, beside the leagues' keys.
+    private const string TopEventsKey = "#top-events";
 
     /// <summary>
     /// Makes <paramref name="change"/> to the game feed provider's source (a scenario switch or a change
@@ -128,6 +132,7 @@ public sealed class Poller(
 
     private async Task UpdateDueLeaguesAsync(IClientProxy recipients, CancellationToken cancellationToken)
     {
+        await UpdateTopEventsIfDueAsync(cancellationToken);
         foreach (var league in board.Leagues)
         {
             var startedAt = clock.GetUtcNow();
@@ -151,5 +156,24 @@ public sealed class Poller(
             // meanwhile) never pushes the next fetch back.
             _nextFetch[league.Key] = startedAt + (board.HasLiveGames(league) ? _liveInterval : _quietInterval);
         }
+    }
+
+    private async Task UpdateTopEventsIfDueAsync(CancellationToken cancellationToken)
+    {
+        var startedAt = clock.GetUtcNow();
+        if (_nextFetch.TryGetValue(TopEventsKey, out var due) && due > startedAt)
+            return;
+
+        try
+        {
+            await board.UpdateTopEventsAsync(cancellationToken);
+        }
+        // As for a league (see above).
+        catch (Exception e) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(e, "Could not update the top events; keeping them as they were");
+        }
+
+        _nextFetch[TopEventsKey] = startedAt + _quietInterval;
     }
 }

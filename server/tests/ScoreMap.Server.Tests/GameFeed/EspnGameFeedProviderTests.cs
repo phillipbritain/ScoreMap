@@ -701,4 +701,19 @@ public class EspnGameFeedProviderTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.FetchScoreboardAsync("basketball/nba", cancel.Token));
     }
+
+    [Fact]
+    public async Task Top_events_are_listed_by_game_id_and_tennis_matches_by_their_competition_id()
+    {
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "top-events.json"));
+        var handler = StubHttpHandler.Returning(body);
+        var provider = ProviderOver(handler);
+
+        var top = await provider.FetchTopEventsAsync(CancellationToken.None);
+
+        // The tournament's id ("315-2026") comes too, though no game has it.
+        Assert.Equal(new HashSet<string> { "401892504", "401892505", "315-2026", "184958", "184955" }, top.ToHashSet());
+        Assert.StartsWith("https://site.web.api.espn.com/apis/personalized/v2/scoreboard/header?",
+            Assert.Single(handler.Requests).RequestUri!.AbsoluteUri);
+    }
 }

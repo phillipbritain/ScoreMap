@@ -36,10 +36,15 @@ public static class FeedbackEndpoints
                 return Refused(StatusCodes.Status400BadRequest, $"Please write at least {FeedbackIssue.MinLength} characters");
             if (text.Length > FeedbackIssue.MaxLength)
                 return Refused(StatusCodes.Status400BadRequest, $"Please keep it to {FeedbackIssue.MaxLength:N0} characters");
-            if (!guard.TrySend(http.Connection.RemoteIpAddress))
-                return Refused(StatusCodes.Status429TooManyRequests, "That's a lot of feedback at once, try again in a few minutes");
+            // The day first, so once it's closed every submission is told so, and counts against no visitor.
+            var visitor = http.Connection.RemoteIpAddress;
             if (!guard.TryTakeToday())
                 return Refused(StatusCodes.Status429TooManyRequests, ClosedForToday);
+            if (!guard.TrySend(visitor))
+            {
+                guard.GiveBackToday();
+                return Refused(StatusCodes.Status429TooManyRequests, "That's a lot of feedback at once, try again in a few minutes");
+            }
 
             var issue = FeedbackIssue.Write(text, submission.Context ?? new FeedbackContext(),
                 http.Request.Headers.UserAgent.ToString(), board.Leagues, board.Games);
@@ -56,9 +61,12 @@ public static class FeedbackEndpoints
             }
             finally
             {
-                // Only filed issues count towards the day.
+                // Only filed issues count, towards the day and the visitor's limit, so a viewer can try again.
                 if (!filed)
+                {
                     guard.GiveBackToday();
+                    guard.GiveBackSend(visitor);
+                }
             }
         });
         return app;

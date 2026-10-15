@@ -36,6 +36,16 @@ describe('the tour arrow', () => {
     expect(to.y).toBeLessThan(from.y)
   })
 
+  it('runs up from the top of a bottom sheet on a phone to the left of the rail above it', () => {
+    const sheet = { left: 12, top: 300, right: 363, bottom: 655 }
+    const rail = { left: 327, top: 12, right: 363, bottom: 280 }
+    const { from, to } = tourArrow(sheet, rail)
+    expect(from.x).toBe(187.5)
+    expect(from.y).toBeLessThan(sheet.top)
+    expect(to.x).toBeLessThan(rail.left)
+    expect(to.y).toBe(146)
+  })
+
   it("ends at the side of a card above the panel, not under it where the card's trail runs", () => {
     const teams = { left: 700, top: 120, right: 800, bottom: 170 }
     const { from, to } = tourArrow(panel, teams, 'side')

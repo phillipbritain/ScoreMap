@@ -1914,6 +1914,32 @@ body {
   }
 }
 
+/* My leagues' picker: each sport as a chip, its leagues as smaller chips under it. */
+.welcome-tour__note--above {
+  margin: 0 0 calc(3 * var(--spacing));
+}
+
+.welcome-tour__picker {
+  display: flex;
+  flex-direction: column;
+  gap: calc(3 * var(--spacing));
+}
+
+/* Dashed while only some of the sport's leagues are on, as "All leagues" is on the rail. */
+.welcome-tour__sport-chip--mixed {
+  border-style: dashed;
+  border-color: var(--rail-on-fill);
+}
+
+.welcome-tour__league-chips {
+  margin: calc(1.5 * var(--spacing)) 0 0 calc(3.5 * var(--spacing));
+}
+
+.welcome-tour__league-chip {
+  padding: calc(0.5 * var(--spacing)) calc(2.5 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
+}
+
 .welcome-tour__actions {
   display: flex;
   justify-content: flex-end;
@@ -1931,4 +1957,10 @@ body {
   font-size: var(--typography-button-font-size);
   font-weight: var(--typography-button-font-weight);
   cursor: pointer;
+}
+
+/* "Show these" with nothing picked yet. */
+.welcome-tour__button:disabled {
+  opacity: var(--controls-off-opacity);
+  cursor: default;
 }

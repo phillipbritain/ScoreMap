@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Camera } from './camera'
 import { homeCamera, startCamera } from './startCamera'
-import { furthestOutZoom } from './zoomLevels'
+import { furthestOutZoom, zoomSettings } from './zoomLevels'
 
 /** Checks the camera is centred inside a box drawn around a region on a map. */
 function expectCentredIn(camera: Camera, box: { west: number; east: number; south: number; north: number }) {
@@ -24,9 +24,9 @@ describe('startCamera', () => {
     expectCentredIn(startCamera(null, { timeZone: 'America/New_York', locale: 'en-US' }), easternUs)
   })
 
-  it('opens a first visit as far out as the globe goes', () => {
+  it('opens a first visit at the start zoom', () => {
     const tokyo = startCamera(null, { timeZone: 'Asia/Tokyo', locale: 'ja-JP' })
-    expect(tokyo.zoom).toBe(furthestOutZoom(tokyo.latitude))
+    expect(tokyo.zoom).toBe(furthestOutZoom(tokyo.latitude, zoomSettings.startZoom))
   })
 
   it('finds the region for time zones on other continents', () => {
@@ -72,7 +72,7 @@ describe('startCamera', () => {
     expect(startCamera(null, { timeZone: 'UTC', locale: 'en' })).toEqual({
       longitude: -40,
       latitude: 30,
-      zoom: furthestOutZoom(30),
+      zoom: furthestOutZoom(30, zoomSettings.startZoom),
     })
     expect(startCamera(null, { timeZone: 'Etc/GMT+3', locale: 'not a locale!' }).longitude).toBe(-40)
   })
@@ -84,9 +84,19 @@ describe('homeCamera', () => {
     expect(homeCamera(place)).toEqual(startCamera(null, place))
   })
 
-  it("is the viewer's region, all the way out", () => {
+  it('opens at the start zoom, made up for the latitude as the furthest out is', () => {
+    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 2, startZoom: 4, maxZoom: 13 })
+    expect(home.zoom).toBe(furthestOutZoom(home.latitude, 4))
+  })
+
+  it('never starts further out than the furthest out', () => {
+    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 3, startZoom: 1, maxZoom: 13 })
+    expect(home.zoom).toBe(furthestOutZoom(home.latitude, 3))
+  })
+
+  it("is the viewer's region, at the start zoom", () => {
     const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' })
     expectCentredIn(home, easternUs)
-    expect(home.zoom).toBe(furthestOutZoom(home.latitude))
+    expect(home.zoom).toBe(furthestOutZoom(home.latitude, zoomSettings.startZoom))
   })
 })

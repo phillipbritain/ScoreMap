@@ -1,12 +1,14 @@
 import { cityLabelSettings, type CityLabelSettings } from '../globe/cityLabels'
+import { zoomSettings, type ZoomSettings } from '../globe/zoomLevels'
 
 /** How the app behaves, apart from its look: what the behaviour tuner changes on a local run. */
 export interface Behaviour {
   cityLabels: CityLabelSettings
+  zoom: ZoomSettings
 }
 
 /** The app's own behaviour, from the settings files it's made from. */
-export const builtInBehaviour: Behaviour = { cityLabels: cityLabelSettings }
+export const builtInBehaviour: Behaviour = { cityLabels: cityLabelSettings, zoom: zoomSettings }
 
 /** What the behaviour tuner can draw on the globe to show a setting at work: each off until ticked, and not saved. */
 export interface Overlays {

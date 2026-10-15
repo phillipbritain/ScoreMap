@@ -53,7 +53,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, all the way out), the "Live only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues).
 _Avoid_: Settings menu, quick settings, toolbar
 **Last score**:
 The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball.

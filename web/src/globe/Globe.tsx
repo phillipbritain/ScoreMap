@@ -5,6 +5,7 @@ import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
 import { GlobeMap, type LoadingStage } from './globeMap'
+import type { ZoomSettings } from './zoomLevels'
 import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
@@ -12,6 +13,8 @@ interface GlobeProps {
   theme: Theme
   /** What decides which cities are labelled. A change relabels them in place (see GlobeMap.setCityLabelSettings). */
   cityLabels: CityLabelSettings
+  /** How far out and in the globe zooms. A change applies at once (see GlobeMap.setZoomLimits). */
+  zoomSettings: ZoomSettings
   /** The colours the viewer picked for games. A change recolours them in place (see GlobeMap.setColours). */
   colours: PickedColours
   /** Whether each game is ringed at the reach its city label may be within (a local-run tool). */
@@ -36,22 +39,23 @@ interface GlobeProps {
   ref?: Ref<GlobeCamera>
 }
 
-/** The rail's hold on the globe's camera: its zoom buttons and Home (see GlobeMap). */
+/** The app's hold on the globe's camera: the rail's zoom buttons and Home, and the behaviour tuner (see GlobeMap). */
 export interface GlobeCamera {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
+  jumpTo: (camera: Camera) => void
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours])
 
   useEffect(() => {
     if (!container.current) return
@@ -59,6 +63,7 @@ export function Globe({ theme, cityLabels, colours, showGameCityReach, games, se
       style: { url: baseStyleUrl },
       theme: latest.current.theme,
       cityLabels: latest.current.cityLabels,
+      zoomSettings: latest.current.zoomSettings,
       colours: latest.current.colours,
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
@@ -78,12 +83,14 @@ export function Globe({ theme, cityLabels, colours, showGameCityReach, games, se
       zoomIn: () => globe.current?.zoomIn(),
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
+      jumpTo: (camera) => globe.current?.jumpTo(camera),
     }),
     [],
   )
 
   useEffect(() => globe.current?.setTheme(theme), [theme])
   useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])
+  useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColours(colours), [colours])
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of

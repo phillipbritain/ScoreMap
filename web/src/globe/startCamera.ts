@@ -1,5 +1,5 @@
 import type { Camera } from './camera'
-import { furthestOutZoom } from './zoomLevels'
+import { furthestOutZoom, zoomSettings, type ZoomSettings } from './zoomLevels'
 
 /** What the browser says about where the viewer is, without asking for their location. */
 export interface ViewerPlace {
@@ -10,11 +10,11 @@ export interface ViewerPlace {
 }
 
 /**
- * Where the globe opens: where the viewer left it, otherwise centred on their region, as far out as
- * the globe goes. (The map keeps either within its zoom limits.)
+ * Where the globe opens: where the viewer left it, otherwise Home. (The map keeps either within its
+ * zoom limits.)
  */
-export function startCamera(saved: Camera | null, place: ViewerPlace): Camera {
-  return saved ?? homeCamera(place)
+export function startCamera(saved: Camera | null, place: ViewerPlace, zoom: ZoomSettings = zoomSettings): Camera {
+  return saved ?? homeCamera(place, zoom)
 }
 
 /** [longitude, latitude] roughly at the middle of the region each common time zone covers. */
@@ -98,14 +98,15 @@ const countryCentres: Record<string, [number, number]> = {
 const worldCentre: [number, number] = [-40, 30]
 
 /**
- * Home: the viewer's region from their time zone, then their locale, as far out as the globe goes. A
- * first visit opens on it, and the rail's Home button flies back to it.
+ * Home: the viewer's region from their time zone, then their locale, at the start zoom (made up for
+ * the latitude, as the furthest out is: see furthestOutZoom). A first visit opens on it, and the
+ * rail's Home button flies back to it.
  */
-export function homeCamera({ timeZone, locale }: ViewerPlace): Camera {
+export function homeCamera({ timeZone, locale }: ViewerPlace, zoom: ZoomSettings = zoomSettings): Camera {
   const centre =
     zoneCentres[timeZone] ?? areaCentres[timeZone.split('/')[0]] ?? countryCentres[countryOf(locale) ?? '']
   const [longitude, latitude] = centre ?? worldCentre
-  return { longitude, latitude, zoom: furthestOutZoom(latitude) }
+  return { longitude, latitude, zoom: furthestOutZoom(latitude, Math.max(zoom.startZoom, zoom.minZoom)) }
 }
 
 /** The country (region subtag) in a language tag such as "en-GB", if it has one. */

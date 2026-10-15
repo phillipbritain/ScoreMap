@@ -111,7 +111,7 @@ export function isTypeStyleSize(path: SettingPath): boolean {
   return (path[1] === 'PlaceNames' && path[3] === 'size') || (path[1] === 'Cluster' && path[2] === 'count' && path[3] === 'size')
 }
 
-const fractions = new Set(['opacity', 'fade', 'tint', 'clusterOpacity', 'glowOpacity', 'share'])
+const fractions = new Set(['opacity', 'frost', 'fade', 'tint', 'clusterOpacity', 'glowOpacity', 'share'])
 const emSizes = new Set(['scoreWidth', 'countWidth', 'mark'])
 
 /** The range a number setting's slider covers, from what it is in the built-in theme. */

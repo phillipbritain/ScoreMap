@@ -275,7 +275,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, the Feedback panel and its text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
-| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast, the Feedback button and the Feedback panel's buttons | `pill` |
+| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast, the Feedback panel's buttons | `pill` |
 
 The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
 
@@ -339,8 +339,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
-| `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
-| `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail), the "All leagues" chip's height | 320, 32 |
+| `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
+| `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
 | `components.LoadingScreen.spinner.size` | The loading screen's spinner, across | 32 |

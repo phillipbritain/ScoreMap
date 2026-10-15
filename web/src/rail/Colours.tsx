@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
+import { pickableColours } from '../settings/gameColour'
 import {
   hasColours,
   leaguesBySport,
@@ -22,12 +23,45 @@ interface ColoursProps {
 
 /**
  * The rail's Colours popover: each sport, then its leagues, by name, with a swatch of its games'
- * colour, which opens the browser's colour picker, and a control to clear it; a league with no colour
- * of its own shows its sport's, marked as taken from the sport. "Reset colours" clears every colour.
+ * colour, which opens a grid of the colours there are to pick (see pickableColours) under its row, and
+ * a control to clear it; a league with no colour of its own shows its sport's, marked as taken from
+ * the sport. One grid is open at a time. "Reset colours" clears every colour.
  */
 export function Colours({ leagues, settings, onChange, accent }: ColoursProps) {
+  // Whose grid is open: a sport's or league's, as "sport:Football" or "league:NFL".
+  const [picking, setPicking] = useState<string | null>(null)
   // What a sport or league with no colour picked shows: the accent, hollow, its games in the theme's colours.
   const fromTheme = { colour: accent, takes: "the theme's colours, by status" }
+  // A sport's or league's row, and its grid under it while open.
+  const row = (
+    kind: 'sport' | 'league',
+    name: string,
+    colour: string | null,
+    taken: Taken,
+    set: (colour: string | null) => ViewerSettings,
+  ) => {
+    const id = `${kind}:${name}`
+    const change = (next: string | null) => {
+      onChange(set(next))
+      setPicking(null)
+    }
+    return (
+      <div key={id}>
+        <div className={`colours-row colours-row--${kind}`}>
+          <span className="colours-row__name">{name}</span>
+          <ColourSwatch
+            name={name}
+            colour={colour}
+            taken={taken}
+            picking={picking === id}
+            onPicking={(on) => setPicking(on ? id : null)}
+            onClear={() => change(null)}
+          />
+        </div>
+        {picking === id && <ColourGrid name={name} colour={colour} onPick={change} />}
+      </div>
+    )
+  }
   return (
     <>
       {leaguesBySport(leagues).map((group) => {
@@ -36,26 +70,12 @@ export function Colours({ leagues, settings, onChange, accent }: ColoursProps) {
         const fromSport = sportColour ? { colour: sportColour, takes: `${group.sport}'s colour` } : fromTheme
         return (
           <div key={group.sport} className="rail-sport">
-            <div className="colours-row colours-row--sport">
-              <span className="colours-row__name">{group.sport}</span>
-              <ColourSwatch
-                name={group.sport}
-                colour={sportColour}
-                taken={fromTheme}
-                onChange={(colour) => onChange(withSportColour(settings, group.sport, colour))}
-              />
-            </div>
-            {group.leagues.map((league) => (
-              <div key={league.name} className="colours-row colours-row--league">
-                <span className="colours-row__name">{league.name}</span>
-                <ColourSwatch
-                  name={league.name}
-                  colour={settings.leagueColours[league.name] ?? null}
-                  taken={fromSport}
-                  onChange={(colour) => onChange(withLeagueColour(settings, league.name, colour))}
-                />
-              </div>
-            ))}
+            {row('sport', group.sport, sportColour, fromTheme, (colour) => withSportColour(settings, group.sport, colour))}
+            {group.leagues.map((league) =>
+              row('league', league.name, settings.leagueColours[league.name] ?? null, fromSport, (colour) =>
+                withLeagueColour(settings, league.name, colour),
+              ),
+            )}
           </div>
         )
       })}
@@ -72,56 +92,80 @@ export function Colours({ leagues, settings, onChange, accent }: ColoursProps) {
 }
 
 /**
- * A sport's or league's colour as a swatch, which opens the browser's colour picker: its games show in
- * the colour picked at once, as it's picked. With none picked, it shows hollow in the colour its games
- * take instead (a league's sport's, or the theme's accent, its games then taking the theme's colour for
- * their status), and says what they take; with one, a control beside it clears it.
+ * The colour a swatch shows hollow with none picked, and what its games take then ("Football's
+ * colour", "the theme's colours, by status").
+ */
+interface Taken {
+  colour: string
+  takes: string
+}
+
+/**
+ * A sport's or league's colour as a swatch, which opens or closes its grid of colours to pick from.
+ * With none picked, it shows hollow in the colour its games take instead (a league's sport's, or the
+ * theme's accent, its games then taking the theme's colour for their status), and says what they
+ * take; with one, a control beside it clears it.
  */
 function ColourSwatch({
   name,
   colour,
   taken,
-  onChange,
+  picking,
+  onPicking,
+  onClear,
 }: {
   name: string
   colour: string | null
-  /**
-   * The colour it shows hollow with none picked, and what its games take then ("Football's colour",
-   * "the theme's colours, by status").
-   */
-  taken: { colour: string; takes: string }
-  onChange: (colour: string | null) => void
+  taken: Taken
+  picking: boolean
+  onPicking: (picking: boolean) => void
+  onClear: () => void
 }) {
   return (
     <span className="colour">
-      <label
+      <button
+        type="button"
         className={colour ? 'colour__swatch colour__swatch--picked' : 'colour__swatch'}
         style={{ '--swatch-color': colour ?? taken.colour } as CSSProperties}
+        aria-label={`${name} colour`}
+        aria-expanded={picking}
         title={
           colour
             ? `${name}'s colour: click to change`
             : `${name} takes ${taken.takes}: click to pick its own`
         }
-      >
-        <input
-          type="color"
-          className="colour__input"
-          aria-label={`${name} colour`}
-          value={colour ?? taken.colour}
-          onChange={(event) => onChange(event.target.value)}
-        />
-      </label>
+        onClick={() => onPicking(!picking)}
+      />
       {colour && (
         <button
           type="button"
           className="colour__clear"
           aria-label={`Clear ${name} colour`}
           title={`Clear ${name}'s colour`}
-          onClick={() => onChange(null)}
+          onClick={onClear}
         >
           ×
         </button>
       )}
     </span>
+  )
+}
+
+/** The colours there are to pick for a sport or league, the one picked marked. */
+function ColourGrid({ name, colour, onPick }: { name: string; colour: string | null; onPick: (colour: string) => void }) {
+  return (
+    <div className="colour-grid" role="group" aria-label={`Colours for ${name}`}>
+      {pickableColours.map((option) => (
+        <button
+          key={option}
+          type="button"
+          className="colour-grid__option"
+          style={{ '--swatch-color': option } as CSSProperties}
+          aria-label={option}
+          aria-pressed={option === colour}
+          onClick={() => onPick(option)}
+        />
+      ))}
+    </div>
   )
 }

@@ -155,11 +155,10 @@ body {
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
-/* Clear of the scenario pills and clock (local runs only): above their row, as tall as a speed key
-   in the keys' padding, by the gap the bottom stack leaves between its rows. */
+/* Clear of the scenario controls' column at the bottom left (local runs only), on either side so it
+   stays centred. */
 .bottom-stack--scenario ~ .game-panel {
-  --controls-row: calc(var(--controls-size-key) + var(--spacing));
-  bottom: calc(3 * var(--spacing) + var(--controls-row) + 2 * var(--spacing));
+  width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--scenario-column) + 6 * var(--spacing))));
 }
 
 /* The strip: the score block, the details and the photo, side by side. */
@@ -454,71 +453,6 @@ body {
   text-overflow: ellipsis;
 }
 
-.game-panel__situation {
-  display: flex;
-  align-items: center;
-  gap: calc(1.5 * var(--spacing));
-}
-
-/* Baseball's bases, a diamond of three: empty ones outlined, ones with a runner filled. */
-.game-panel__bases {
-  flex-shrink: 0;
-  height: 1lh;
-}
-
-.game-panel__bases rect {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.2;
-}
-
-.game-panel__bases rect.game-panel__base--on {
-  fill: var(--game-color);
-  stroke: var(--game-color);
-}
-
-/* Soccer's goals and cards, the latest first, as many as fit in two lines. */
-.game-panel__events {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 calc(3 * var(--spacing));
-  max-height: 2lh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  list-style: none;
-}
-
-.game-panel__events li {
-  white-space: nowrap;
-}
-
-/* A goal's ball, or a card in its colour, before its minute. Tried in code; settled, they move to the theme. */
-.game-panel__event-mark {
-  display: inline-block;
-  margin-right: var(--spacing);
-  vertical-align: -0.05em;
-}
-
-.game-panel__event-mark--goal {
-  width: 0.7em;
-  height: 0.7em;
-  border-radius: 50%;
-  background: var(--palette-text-primary);
-}
-
-.game-panel__event-mark--yellow,
-.game-panel__event-mark--red {
-  width: 0.55em;
-  height: 0.8em;
-  border-radius: 1px;
-  background: #f5c518;
-}
-
-.game-panel__event-mark--red {
-  background: var(--palette-error-main);
-}
-
 /* On a phone: the score block above the details, and no photo; the band's cells two to a row. */
 @media (max-width: 640px) {
   .game-panel {
@@ -539,11 +473,6 @@ body {
 
   .game-panel__cell {
     flex-basis: calc(50% - 2 * var(--spacing));
-  }
-
-  /* The pills and the clock wrap to two rows on a phone. */
-  .bottom-stack--scenario ~ .game-panel {
-    bottom: calc(3 * var(--spacing) + 2 * (var(--controls-row) + 2 * var(--spacing)));
   }
 
   .game-panel__score {
@@ -899,6 +828,8 @@ body {
 
 /* The globe with the rail and the no-pins message laid over it. */
 .globe-area {
+  /* How wide the scenario controls' column is (local runs only), which the game panel keeps clear of. */
+  --scenario-column: calc(52 * var(--spacing));
   position: relative;
   display: flex;
   flex: 1;
@@ -1173,14 +1104,16 @@ body {
   min-width: calc(8 * var(--spacing));
 }
 
-/* The browser's own colour input, hidden inside the swatch that opens it. Hollow, a ring of the
-   theme's colour, while no colour is picked; filled with the colour once one is. */
+/* The swatch, which opens its grid of colours. Hollow, a ring of the theme's colour, while no colour
+   is picked; filled with the colour once one is. */
 .colour__swatch {
-  position: relative;
+  box-sizing: border-box;
   width: calc(4 * var(--spacing));
   height: calc(4 * var(--spacing));
+  padding: 0;
   border: var(--shape-border-width-medium) solid var(--swatch-color);
   border-radius: 50%;
+  background: none;
   cursor: pointer;
 }
 
@@ -1193,18 +1126,33 @@ body {
   border-style: dashed;
 }
 
-.colour__swatch:has(:focus-visible) {
+.colour__swatch:focus-visible,
+.colour__swatch[aria-expanded='true'],
+.colour-grid__option:focus-visible,
+.colour-grid__option[aria-pressed='true'] {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--shape-border-width-medium);
 }
 
-.colour__input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
+/* The colours there are to pick, under a sport's or league's row: a row of each tone. */
+.colour-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) 0 calc(2 * var(--spacing));
+}
+
+.colour-grid__option {
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--swatch-color);
   cursor: pointer;
+}
+
+.colour-grid__option:hover {
+  transform: scale(1.15);
 }
 
 .colour__clear {
@@ -1237,18 +1185,17 @@ body {
   cursor: default;
 }
 
-/* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
-   the theme and behaviour tuners at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
-   the pills rather than squeezing them. */
+/* The scenario pill, the media keys and the clock (local runs only), stacked in a column at the
+   bottom left, clear of the theme and behaviour tuners at the top left and beside the game panel. The
+   pill's list opens upwards. */
 .scenario-pills {
   /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
   --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
   align-self: flex-start;
   display: flex;
-  flex-wrap: wrap-reverse;
-  align-items: flex-end;
+  flex-direction: column;
   gap: calc(2 * var(--spacing));
-  max-width: 100%;
+  width: var(--scenario-column);
   pointer-events: auto;
 }
 
@@ -1264,25 +1211,42 @@ body {
   box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
-/* Over the globe while the scenario list is open, to take the press that closes it (see ScenarioPill). */
-.scenario-pill__cover {
-  position: fixed;
-  inset: 0;
-  pointer-events: auto;
-}
-
+/* As a drop-down box: the running scenario, clipped where it's long, then the arrow at the far right,
+   set off by a line. */
 .scenario-pill summary {
   box-sizing: border-box;
+  display: flex;
   height: var(--controls-bar-height);
-  padding: 0 calc(3 * var(--spacing));
   line-height: var(--controls-bar-height);
   cursor: pointer;
   font-family: var(--typography-font-family);
   font-weight: var(--typography-button-font-weight);
   list-style: none;
   white-space: nowrap;
+}
+
+.scenario-pill__label {
+  flex: 1;
+  min-width: 0;
+  padding: 0 calc(3 * var(--spacing));
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.scenario-pill__arrow {
+  flex-shrink: 0;
+  width: var(--controls-bar-height);
+  border-left: var(--shape-border-width-thin) solid var(--palette-divider);
+  text-align: center;
+}
+
+/* Only the arrow turns while the list is open, not its square, which would carry the line across. */
+.scenario-pill__arrow-glyph {
+  display: inline-block;
+}
+
+.scenario-pill[open] .scenario-pill__arrow-glyph {
+  transform: rotate(180deg);
 }
 
 .scenario-pill summary::-webkit-details-marker {
@@ -1295,10 +1259,10 @@ body {
   bottom: calc(100% + 1.5 * var(--spacing));
   min-width: 100%;
   /* Clear of the tuners' buttons above (a local-run tool, with sizes of its own), by a wide gap, and
-     of the pills below. */
+     of the pill, the media keys and the clock stacked below. */
   max-height: calc(
     100vh - (12px + 28px + 6 * var(--spacing)) -
-      (3 * var(--spacing) + var(--controls-size-key) + var(--spacing) + 1.5 * var(--spacing))
+      (3 * var(--spacing) + 3 * var(--controls-bar-height) + 4 * var(--spacing) + 1.5 * var(--spacing))
   );
   overflow-y: auto;
   box-sizing: border-box;
@@ -1336,11 +1300,12 @@ body {
   content: '✓ ';
 }
 
-/* The media keys: Pause, Play and Fast-forward on the scenario pill's surface. The lit key, on, is the speed. */
+/* The media keys: Reset, then Pause, Play, Fast-forward and Faster on the scenario pill's surface. The lit key, on, is the speed. */
 .speed-keys {
   box-sizing: border-box;
   height: var(--controls-bar-height);
   display: flex;
+  justify-content: center;
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
   border-radius: var(--controls-corner);
@@ -1361,7 +1326,6 @@ body {
   color: inherit;
   opacity: var(--controls-off-opacity);
   cursor: pointer;
-  transition: width 0.15s ease;
 }
 
 .speed-keys button:hover:not(:disabled) {
@@ -1382,8 +1346,8 @@ body {
   fill: currentColor;
 }
 
-/* At Faster, Fast-forward widens for its third triangle. */
-.speed-keys .speed-keys__fast-forward--faster {
+/* Faster is wider, for its third triangle. */
+.speed-keys .speed-keys__faster {
   width: calc(var(--controls-size-key) + 2 * var(--spacing));
 }
 
@@ -1477,8 +1441,8 @@ body {
   }
 }
 
-/* Along the bottom of the globe: the no-pins message centred, and below it the scenario pills and
-   clock at the left (local runs only). */
+/* Along the bottom of the globe: the no-pins message centred, and below it the scenario controls'
+   column at the left (local runs only). */
 .bottom-stack {
   /* Glass (see above), for the scenario controls and the no-pins message. */
   --frost: var(--controls-frost);
@@ -1518,6 +1482,7 @@ body {
   font-size: var(--typography-body2-font-size);
   font-weight: var(--typography-body2-font-weight);
   font-variant-numeric: tabular-nums;
+  text-align: center;
   white-space: nowrap;
   box-shadow: var(--controls-shadow), var(--glass-rim);
 }

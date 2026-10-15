@@ -198,21 +198,23 @@ public class ShippedScenarioTests
     }
 
     /// <summary>
-    /// Moves the real clock on a second at a time, so the poller fetches once a step (it fetches at
-    /// least every second), until the browser gets a change that is <paramref name="wanted"/>, and returns
+    /// Moves the real clock on 250 ms at a time, so the poller fetches once a step at Fast and Faster
+    /// (it fetches every second divided by the speed, but no more often than every 250 ms), and so
+    /// a game Final for a minute of scenario time is seen finishing before it drops out, until the browser gets a change that is <paramref name="wanted"/>, and returns
     /// the changes it got until then. Fails if there is none <paramref name="within"/> the given
     /// scenario time, saying what it was waiting for (<paramref name="waitingFor"/>, such as "a game
-    /// finishing") and the kinds of change it saw instead. Each step covers a second of scenario time
+    /// finishing") and the kinds of change it saw instead. Each step covers 250 ms of scenario time
     /// times the speed, so a test waiting long runs its scenario at Faster.
     /// </summary>
     private static async Task<List<GameChange>> AdvanceUntilAsync(
         ScoreMapServer server, TestClient client, string waitingFor, Func<GameChange, bool> wanted, TimeSpan within)
     {
-        var step = TimeSpan.FromSeconds(1) * server.Services.GetRequiredService<ScenarioSwitcher>().Speed.Times;
+        var realStep = TimeSpan.FromMilliseconds(250);
+        var step = realStep * server.Services.GetRequiredService<ScenarioSwitcher>().Speed.Times;
         var changes = new List<GameChange>();
         for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += step)
         {
-            server.Clock.Advance(TimeSpan.FromSeconds(1));
+            server.Clock.Advance(realStep);
             await Task.Delay(10);
             changes.AddRange(client.PendingChanges());
             if (changes.Any(wanted))

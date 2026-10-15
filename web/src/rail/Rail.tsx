@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Camera } from '../globe/camera'
+import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { Colours } from './Colours'
 import { Leagues } from './Leagues'
@@ -27,7 +28,7 @@ interface RailProps {
  * out and Home, which move the camera. The "Live only" and "Show Disrupted games" toggles, each
  * showing a short toast beside the rail saying what changed, since a phone has no hover for their
  * tooltips. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
- * closed by its button, Escape or a click anywhere outside it.
+ * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
 export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, onZoomOut, onHome }: RailProps) {
   const zoom = camera ? canZoom(camera) : { in: false, out: false }
@@ -41,26 +42,20 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen((current) => nextPopover(current, 'escape'))
     }
-    // In the capture phase, so the globe can't keep a click on it from closing the popover. A
-    // popover's button isn't outside: its own press opens or closes it, and nor are the local-run
-    // tools ([data-keeps-popovers]), so a popover stays open to be looked at while they change it.
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target
-      if (!(target instanceof Element)) return
-      if (popover.current?.contains(target) || target.closest('[data-popover-button], [data-keeps-popovers]')) return
-      setOpen((current) => nextPopover(current, 'outside'))
-    }
     window.addEventListener('keydown', onKey)
-    window.addEventListener('pointerdown', onPointer, true)
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      window.removeEventListener('pointerdown', onPointer, true)
-    }
+    return () => window.removeEventListener('keydown', onKey)
   }, [open])
+  // A popover's button isn't away from it: its own press opens or closes it.
+  useClickAway(
+    open !== null,
+    (target) => !!popover.current?.contains(target) || !!target.closest('[data-popover-button]'),
+    () => setOpen((current) => nextPopover(current, 'outside')),
+  )
 
   return (
     <div className="rail">
-      <div className="rail__group">
+      {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
+      <div className="rail__group" data-keeps-popovers>
         <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn}>
           <path d="M12 5v14M5 12h14" />
         </RailButton>

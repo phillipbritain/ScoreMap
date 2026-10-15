@@ -30,10 +30,13 @@ export interface TourArrow {
  * the middle of the panel's edge facing the target, a little out from it, to the middle of the
  * target's edge facing the panel, clear of its spotlight, curving out of the one and into the
  * other square to their edges. Both boxes are in the same pixels the arrow is drawn in.
+ *
+ * Ending at the target's `side`, it comes in at whichever of its left and right faces the panel's
+ * middle, wherever the target is: a score card's teams, as its bottom is where its trail runs.
  */
-export function tourArrow(panel: ScreenBox, target: ScreenBox): TourArrow {
+export function tourArrow(panel: ScreenBox, target: ScreenBox, endAt: 'facing' | 'side' = 'facing'): TourArrow {
   const start = edgeFacing(panel, middleOf(target))
-  const end = edgeFacing(target, middleOf(panel))
+  const end = endAt === 'side' ? sideFacing(target, middleOf(panel)) : edgeFacing(target, middleOf(panel))
   const from = { x: start.point.x + start.out.x * startGap, y: start.point.y + start.out.y * startGap }
   const to = { x: end.point.x + end.out.x * endGap, y: end.point.y + end.out.y * endGap }
   const pull = bend * Math.hypot(to.x - from.x, to.y - from.y)
@@ -67,12 +70,16 @@ function edgeFacing(box: ScreenBox, toward: ScreenPoint): { point: ScreenPoint; 
   const dy = toward.y - middle.y
   const width = Math.max(box.right - box.left, 1)
   const height = Math.max(box.bottom - box.top, 1)
-  if (Math.abs(dx) / width > Math.abs(dy) / height) {
-    return dx > 0
-      ? { point: { x: box.right, y: middle.y }, out: { x: 1, y: 0 } }
-      : { point: { x: box.left, y: middle.y }, out: { x: -1, y: 0 } }
-  }
+  if (Math.abs(dx) / width > Math.abs(dy) / height) return sideFacing(box, toward)
   return dy > 0
     ? { point: { x: middle.x, y: box.bottom }, out: { x: 0, y: 1 } }
     : { point: { x: middle.x, y: box.top }, out: { x: 0, y: -1 } }
+}
+
+/** The middle of a box's left or right edge, whichever faces a point, and the way out of it. */
+function sideFacing(box: ScreenBox, toward: ScreenPoint): { point: ScreenPoint; out: ScreenPoint } {
+  const middle = middleOf(box)
+  return toward.x > middle.x
+    ? { point: { x: box.right, y: middle.y }, out: { x: 1, y: 0 } }
+    : { point: { x: box.left, y: middle.y }, out: { x: -1, y: 0 } }
 }

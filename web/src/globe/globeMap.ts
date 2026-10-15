@@ -49,7 +49,7 @@ import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
-import { cardZoom, clusterMaxZoom, hasCard, maxZoom, minZoom, pinLayout, pinSize, type PinLayout } from './zoomLevels'
+import { cardZoom, clusterMaxZoom, hasCard, pinLayout, pinSize, zoomSettings as builtInZoomSettings, type PinLayout, type ZoomSettings } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
@@ -71,6 +71,8 @@ export interface GlobeMapOptions {
   cityLabels?: CityLabelSettings
   /** The colours the viewer picked for games, to start with: none unless given. They change with setColours. */
   colours?: PickedColours
+  /** How far out and in the globe zooms, to start with: the app's own unless given. They change with setZoomLimits. */
+  zoomSettings?: ZoomSettings
   /** Where the globe opens. */
   startCamera: Camera
   /** Called with a game's id when the viewer selects its pin or score card. */
@@ -139,7 +141,7 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colours = noColours, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colours = noColours, zoomSettings = builtInZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colours = colours
     this.onSelect = onSelect
@@ -150,8 +152,8 @@ export class GlobeMap {
       container,
       center: [startCamera.longitude, startCamera.latitude],
       zoom: startCamera.zoom,
-      minZoom,
-      maxZoom,
+      minZoom: zoomSettings.minZoom,
+      maxZoom: zoomSettings.maxZoom,
       attributionControl: false,
       // Place names are placed afresh every frame, not once each fade has played: between placements
       // they turn with the globe, so names gone over the horizon were still written at its edge.
@@ -328,6 +330,12 @@ export class GlobeMap {
     this.showReachRings()
   }
 
+  /** Zooms no further out or in than these from now on (on a local run, from the behaviour tuner). */
+  setZoomLimits({ minZoom, maxZoom }: ZoomSettings): void {
+    this.map.setMinZoom(minZoom)
+    this.map.setMaxZoom(maxZoom)
+  }
+
   /** Rings each game at the reach its city label may be within, or stops (on a local run, from the behaviour tuner). */
   showGameCityReach(shown: boolean): void {
     if (shown === this.reachShown) return
@@ -394,6 +402,11 @@ export class GlobeMap {
    */
   flyTo(camera: Camera): void {
     this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
+  }
+
+  /** Puts the camera there at once, with no flight (the behaviour tuner showing the start zoom). */
+  jumpTo(camera: Camera): void {
+    this.map.jumpTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
 
   /** Removes the globe from the page, with everything it listens to. */
@@ -568,6 +581,7 @@ export class GlobeMap {
     }
     if (bounds.isEmpty()) return
     const fitted = this.map.cameraForBounds(bounds, { padding: cardClusterZoomPadding })?.zoom ?? 0
+    const maxZoom = this.map.getMaxZoom()
     const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
     const center = bounds.getCenter()
     this.map.easeTo({ center, zoom })

@@ -3,7 +3,7 @@ import type { Game, GameStatus } from '../games/game'
 import { firstVisitSettings } from './viewerSettings'
 import { noPinsMessage, visibleGames } from './visibleGames'
 
-function game(id: string, league: string, sport: string, status: GameStatus = 'Live'): Game {
+function game(id: string, league: string, sport: string, status: GameStatus = 'Live', topEvent = false): Game {
   return {
     id,
     league,
@@ -27,6 +27,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     situation: null,
     lastScore: null,
     keyEvents: [],
+    topEvent,
   }
 }
 
@@ -67,6 +68,22 @@ describe('visibleGames', () => {
     expect(visibleGames([nfl, postponed, upcoming], settings)).toEqual([nfl, upcoming])
   })
 
+  it('shows only top events, in every league, when Top Events is on', () => {
+    const topNfl = game('top-nfl', 'NFL', 'Football', 'Live', true)
+    const topNba = game('top-nba', 'NBA', 'Basketball', 'Live', true)
+    const settings = { ...firstVisitSettings, topEventsOnly: true, hiddenLeagues: ['NBA'] }
+
+    expect(visibleGames([nfl, topNfl, nba, topNba, epl], settings)).toEqual([topNfl, topNba])
+  })
+
+  it('applies "Live only" to top events too', () => {
+    const topLive = game('top-live', 'NFL', 'Football', 'Live', true)
+    const topFinal = game('top-final', 'NFL', 'Football', 'Final', true)
+    const settings = { ...firstVisitSettings, topEventsOnly: true, liveOnly: true }
+
+    expect(visibleGames([topLive, topFinal], settings)).toEqual([topLive])
+  })
+
   it('applies "Live only" and league switches together', () => {
     const liveNba = nba
     const upcomingNfl = game('upcoming', 'NFL', 'Football', 'Upcoming')
@@ -78,18 +95,30 @@ describe('visibleGames', () => {
 
 describe('noPinsMessage', () => {
   it('says nothing while some games are visible', () => {
-    expect(noPinsMessage([nfl, nba], [nfl])).toBeNull()
+    expect(noPinsMessage([nfl, nba], [nfl], firstVisitSettings)).toBeNull()
   })
 
   it('says nothing before the first games arrive from the server', () => {
-    expect(noPinsMessage(null, [])).toBeNull()
+    expect(noPinsMessage(null, [], firstVisitSettings)).toBeNull()
   })
 
   it('says so when games exist but none match the settings', () => {
-    expect(noPinsMessage([nfl, nba], [])).toBe('No games match your settings.')
+    expect(noPinsMessage([nfl, nba], [], firstVisitSettings)).toBe('No games match your settings.')
+  })
+
+  it('says there are no top events when Top Events is on and ESPN lists none of the games', () => {
+    expect(noPinsMessage([nfl, nba], [], { ...firstVisitSettings, topEventsOnly: true })).toBe('No top events right now.')
+  })
+
+  it('says no games match when top events exist but the settings hide them', () => {
+    const topFinal = game('top-final', 'NFL', 'Football', 'Final', true)
+
+    expect(noPinsMessage([topFinal], [], { ...firstVisitSettings, topEventsOnly: true, liveOnly: true })).toBe(
+      'No games match your settings.',
+    )
   })
 
   it('says so when there are no games at all', () => {
-    expect(noPinsMessage([], [])).toBe('No games right now.')
+    expect(noPinsMessage([], [], firstVisitSettings)).toBe('No games right now.')
   })
 })

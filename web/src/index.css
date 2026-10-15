@@ -1015,6 +1015,52 @@ body {
   cursor: pointer;
 }
 
+/* Leagues: "Top Events | My leagues" at the top, as one control split in two, the choice filled in. */
+.leagues-scope {
+  display: flex;
+  margin-bottom: calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  overflow: hidden;
+}
+
+.leagues-scope__option {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(3 * var(--spacing));
+  border: none;
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.leagues-scope__option[aria-checked='true'] {
+  background: var(--rail-on-fill);
+  color: var(--rail-on-text);
+}
+
+.leagues-scope__star {
+  width: 1em;
+  height: 1em;
+}
+
+.leagues-scope__note {
+  margin: 0 0 calc(3 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
+/* The leagues, greyed out and out of reach while Top Events decides instead. */
+.leagues-list--off {
+  opacity: var(--controls-off-opacity);
+}
+
 /* Leagues: "All leagues", above the sports, as a bigger chip, dashed while only some leagues are on. */
 .leagues-master {
   display: flex;

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ScoreMap.Server.Feedback;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
@@ -101,6 +102,58 @@ public class FeedbackTests
             // In the configured order, and only the configured leagues.
             "- **Leagues showing:** NFL, NBA\n", body);
     }
+
+    [Fact]
+    public async Task Feedback_from_a_demo_says_so_and_names_its_open_game_as_the_demos()
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        server.WriteScenario(DemoBoard.Scenario, ScenarioGame("demo-game"));
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
+        await server.SnapshotOnceAsync();
+        await using var demo = await server.ConnectClientAsync(demo: true);
+        await demo.NextSnapshotAsync();
+
+        await SendAsync(server, "Is this game real?", new { screenWidth = 1440, screenHeight = 900, gameId = "demo-game", demo = true });
+        await SendAsync(server, "Is this one real?", new { screenWidth = 1440, screenHeight = 900, gameId = "real-game", demo = true });
+
+        var issues = server.GitHub.Issues;
+        Assert.Contains("- **Demo:** made-up games from the worldwide scenario\n", issues[0].Body);
+        Assert.Contains("- **Open game:** NFL, scenario game demo-game\n", issues[0].Body);
+        // Only the demo's games are open in a demo.
+        Assert.Contains("- **Demo:** made-up games from the worldwide scenario\n", issues[1].Body);
+        Assert.DoesNotContain("Open game", issues[1].Body);
+    }
+
+    [Fact]
+    public async Task Feedback_from_the_real_games_names_no_demo_and_no_demo_game()
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        server.WriteScenario(DemoBoard.Scenario, ScenarioGame("demo-game"));
+        await using var demo = await server.ConnectClientAsync(demo: true);
+        await demo.NextSnapshotAsync();
+
+        await SendAsync(server, "Is this game real?", new { screenWidth = 1440, screenHeight = 900, gameId = "demo-game" });
+
+        var body = Assert.Single(server.GitHub.Issues).Body;
+        Assert.DoesNotContain("Demo", body);
+        Assert.DoesNotContain("Open game", body);
+    }
+
+    private static string ScenarioGame(string id) => $$"""
+        {
+          "games": [
+            {
+              "id": "{{id}}",
+              "league": "NFL",
+              "home": { "name": "Kansas City Chiefs", "abbreviation": "KC", "score": 14 },
+              "away": { "name": "Buffalo Bills", "abbreviation": "BUF", "score": 10 },
+              "venue": { "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" },
+              "startsIn": "-40m",
+              "status": "live"
+            }
+          ]
+        }
+        """;
 
     [Theory]
     [InlineData(true, null, "Top Events only")]

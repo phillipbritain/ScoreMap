@@ -96,6 +96,10 @@ builder.Services.Configure<PollingOptions>(builder.Configuration.GetSection("Pol
 builder.Services.AddSingleton(new BrowserConnections(GamesHub.RealGamesGroup));
 builder.Services.AddSingleton<Poller>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
+// Demos (ADR-0019): the worldwide scenario on a game board of its own, for whoever opens one.
+builder.Services.Configure<ScenarioOptions>(builder.Configuration.GetSection("Scenarios"));
+builder.Services.AddSingleton<ScenarioLibrary>();
+builder.Services.AddSingleton<DemoBoard>();
 builder.Services.AddSignalR();
 
 // Feedback from the Feedback button, filed as issues in the repo with the owner's token (only logged without one).

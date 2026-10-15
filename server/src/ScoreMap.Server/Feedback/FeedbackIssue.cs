@@ -8,6 +8,7 @@ namespace ScoreMap.Server.Feedback;
 /// <summary>
 /// What the viewer's browser says about what they were looking at, sent with their feedback. Only
 /// what the server can check reaches the issue: the screen's size, a game on the board, configured leagues.
+/// <see cref="Demo"/> says it came from a demo (ADR-0019), whose open game is one of the demo board's.
 /// </summary>
 public sealed record FeedbackContext(
     int ScreenWidth = 0,
@@ -15,7 +16,8 @@ public sealed record FeedbackContext(
     bool PhoneLayout = false,
     string? GameId = null,
     IReadOnlyList<string>? Leagues = null,
-    bool TopEventsOnly = false);
+    bool TopEventsOnly = false,
+    bool Demo = false);
 
 /// <summary>
 /// Feedback as the issue it's filed as: titled with the start of the viewer's text, the text fenced
@@ -33,7 +35,8 @@ public sealed partial record FeedbackIssue(string Title, string Body)
 
     /// <summary>
     /// The issue for the viewer's feedback: <paramref name="text"/>, trimmed, between
-    /// <see cref="MinLength"/> and <see cref="MaxLength"/> characters.
+    /// <see cref="MinLength"/> and <see cref="MaxLength"/> characters. <paramref name="games"/> are those
+    /// the viewer was watching: the demo board's, in a demo.
     /// </summary>
     public static FeedbackIssue Write(string text, FeedbackContext context, string? userAgent,
         IReadOnlyList<League> leagues, IReadOnlyList<Game> games)
@@ -46,8 +49,10 @@ public sealed partial record FeedbackIssue(string Title, string Body)
         if (context.ScreenWidth > 0 && context.ScreenHeight > 0)
             body.Append($"- **Screen:** {context.ScreenWidth} × {context.ScreenHeight}, {(context.PhoneLayout ? "phone" : "wide")} layout\n");
         body.Append($"- **Browser:** {BrowserOf(userAgent)}\n");
+        if (context.Demo)
+            body.Append("- **Demo:** made-up games from the worldwide scenario\n");
         if (games.FirstOrDefault(g => g.Id == context.GameId) is { } game)
-            body.Append($"- **Open game:** {game.League}, ESPN game {game.Id}\n");
+            body.Append($"- **Open game:** {game.League}, {(context.Demo ? "scenario" : "ESPN")} game {game.Id}\n");
         if (LeaguesShowing(context, leagues) is { } showing)
             body.Append($"- **Leagues showing:** {showing}\n");
         return new FeedbackIssue(TitleOf(text), body.ToString());

@@ -160,8 +160,12 @@ _Avoid_: Finished, completed, over, ended
 ### Local runs
 
 **Scenario**:
-A named set of made-up games between real teams of their league at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally.
-_Avoid_: Dummy data, fake data, demo, simulation
+A named set of made-up games between real teams of their league at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally, or in a demo.
+_Avoid_: Dummy data, fake data, simulation, demo (a demo shows one scenario; it isn't one)
+
+**Demo**:
+ScoreMap showing the worldwide scenario in place of real games, for anyone who opens it with `?demo` in its link, on the live site or locally. Everyone in a demo watches the same games, playing at Normal speed, from the scenario's start for whoever opens the first one. There are no scenario controls, a label (which Shift+S hides) says the games are made up, the viewer's saved settings are left alone, and feedback sent from it says it came from a demo.
+_Avoid_: Demo mode, showcase, preview
 
 **Scenario clock**:
 The time a scenario's games are on. It reads noon Eastern on 4 August 2026 when the scenario starts (or is reset), then runs at the scenario's speed, so an event in a scenario comes at the same reading every time it plays. Real games are on the real time.

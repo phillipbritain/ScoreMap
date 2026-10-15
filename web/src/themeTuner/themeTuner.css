@@ -1,10 +1,13 @@
 /* The theme tuner (local runs only). A tool for trying the theme rather than part of it, so it has a
    plain look of its own and reads none of the theme's custom properties: tuning text sizes or
    surfaces can't make it unreadable. */
-/* The local-run tools (this and the behaviour tuner, which shares its look), side by side at the top
-   left, clear of the rail at the top right. The tools' panels hang below their buttons; the space
-   between them lets the globe through. */
+/* The local-run tools (this and the behaviour tuner, which shares its look), their buttons side by
+   side at the top left, clear of the rail at the top right. The tools' panels hang below the buttons,
+   placed apart from them so opening one never moves the other's button: the theme's at the left, the
+   behaviour's there too, or beside the theme's when both are open. The space between them lets the
+   globe through. */
 .dev-tools {
+  --tuner-button: 28px;
   position: absolute;
   top: 12px;
   left: 12px;
@@ -52,10 +55,12 @@
 }
 
 .theme-tuner__toggle {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  height: var(--tuner-button);
+  padding: 0 10px;
   background: #1c1c1c !important;
 }
 
@@ -68,6 +73,11 @@
 }
 
 .theme-tuner__panel {
+  position: absolute;
+  top: calc(var(--tuner-button) + 8px);
+  left: 0;
+  box-sizing: border-box;
+  max-height: calc(100% - var(--tuner-button) - 8px);
   display: flex;
   flex-direction: column;
   width: 380px;
@@ -76,6 +86,10 @@
   border: 1px solid #444;
   border-radius: 6px;
   background: #1c1c1c;
+}
+
+.dev-tools:has(.theme-tuner--theme > .theme-tuner__panel) .theme-tuner--behaviour > .theme-tuner__panel {
+  left: calc(380px + 8px);
 }
 
 .theme-tuner__tabs {

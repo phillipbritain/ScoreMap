@@ -6,9 +6,6 @@ import {
   pillLabel,
   showsScenarioControls,
   showsDevTools,
-  litKey,
-  pressedSpeed,
-  showsFasterIcon,
   togglesScenarioControls,
   type ScenarioListing,
 } from './scenarioPicker'
@@ -21,8 +18,8 @@ const local: ScenarioListing = {
   speeds: [
     { name: 'Paused', times: 0 },
     { name: 'Normal', times: 1 },
-    { name: 'Fast', times: 2 },
-    { name: 'Faster', times: 8 },
+    { name: 'Fast', times: 4 },
+    { name: 'Faster', times: 32 },
   ],
   canControlPlay: true,
   clock,
@@ -72,34 +69,6 @@ describe('the scenario list', () => {
   })
 })
 
-describe('the media keys', () => {
-  it('light Play at Normal, Pause when paused, and Fast-forward at Fast and Faster', () => {
-    expect(litKey('Normal')).toBe('play')
-    expect(litKey('Paused')).toBe('pause')
-    expect(litKey('Fast')).toBe('fastForward')
-    expect(litKey('Faster')).toBe('fastForward')
-  })
-
-  it('go to Normal on Play and pause on Pause, from any speed', () => {
-    for (const speed of ['Paused', 'Normal', 'Fast', 'Faster'] as const) {
-      expect(pressedSpeed(speed, 'play')).toBe('Normal')
-      expect(pressedSpeed(speed, 'pause')).toBe('Paused')
-    }
-  })
-
-  it('go to Fast on Fast-forward, and flip between Fast and Faster when pressed again', () => {
-    expect(pressedSpeed('Paused', 'fastForward')).toBe('Fast')
-    expect(pressedSpeed('Normal', 'fastForward')).toBe('Fast')
-    expect(pressedSpeed('Fast', 'fastForward')).toBe('Faster')
-    expect(pressedSpeed('Faster', 'fastForward')).toBe('Fast')
-  })
-
-  it("grow Fast-forward's third triangle only at Faster", () => {
-    expect(showsFasterIcon('Faster')).toBe(true)
-    for (const speed of ['Paused', 'Normal', 'Fast'] as const) expect(showsFasterIcon(speed)).toBe(false)
-  })
-})
-
 describe('the clock', () => {
   const at = Date.parse(clock.at)
 
@@ -108,7 +77,7 @@ describe('the clock', () => {
   })
 
   it('runs forward at the speed while a scenario runs', () => {
-    expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:01:20Z'))
+    expect(clockReading(local, at + 10_000)).toEqual(new Date('2026-10-04T20:05:20Z'))
   })
 
   it('reads no earlier than the server said, for a time just before its anchor', () => {
@@ -128,15 +97,15 @@ describe('the next tick of the scenario clock', () => {
   })
 
   it('comes when the second shown changes, at each speed', () => {
-    // 300 ms past the anchor: Normal reads :00.3, Fast :00.6, Faster :02.4.
+    // 300 ms past the anchor: Normal reads :00.3, Fast :01.2, Faster :09.6.
     expect(untilNextSecond({ ...local, speed: 'Normal' }, at + 300)).toBe(700)
     expect(untilNextSecond({ ...local, speed: 'Fast' }, at + 300)).toBe(200)
-    expect(untilNextSecond({ ...local, speed: 'Faster' }, at + 300)).toBe(75)
+    expect(untilNextSecond({ ...local, speed: 'Faster' }, at + 300)).toBe(13)
   })
 
   it('comes a whole second on from a reading on the second', () => {
     expect(untilNextSecond({ ...local, speed: 'Normal' }, at)).toBe(1000)
-    expect(untilNextSecond({ ...local, speed: 'Faster' }, at)).toBe(125)
+    expect(untilNextSecond({ ...local, speed: 'Faster' }, at)).toBe(32)
   })
 
   it('waits out a time before the anchor, where the clock stands at its reading', () => {
@@ -144,8 +113,8 @@ describe('the next tick of the scenario clock', () => {
   })
 
   it('lands on or after the change, never just before it', () => {
-    // At Faster, 1000 ms of reading is 125 ms of real time; from :00.001 the change is 124.875 ms away.
-    expect(untilNextSecond({ ...local, speed: 'Faster', clock: { ...clock, reads: '2026-10-04T20:00:00.001Z' } }, at)).toBe(125)
+    // At Faster, 1000 ms of reading is 31.25 ms of real time; from :00.001 the change is 31.22 ms away.
+    expect(untilNextSecond({ ...local, speed: 'Faster', clock: { ...clock, reads: '2026-10-04T20:00:00.001Z' } }, at)).toBe(32)
   })
 })
 

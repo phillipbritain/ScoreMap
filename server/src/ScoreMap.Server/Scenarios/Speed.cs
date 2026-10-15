@@ -8,8 +8,8 @@ public sealed record Speed(string Name, int Times)
 {
     public static readonly Speed Paused = new("Paused", 0);
     public static readonly Speed Normal = new("Normal", 1);
-    public static readonly Speed Fast = new("Fast", 2);
-    public static readonly Speed Faster = new("Faster", 8);
+    public static readonly Speed Fast = new("Fast", 4);
+    public static readonly Speed Faster = new("Faster", 32);
 
     /// <summary>The speeds to choose from, slowest first.</summary>
     public static readonly IReadOnlyList<Speed> All = [Paused, Normal, Fast, Faster];

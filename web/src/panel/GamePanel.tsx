@@ -57,13 +57,13 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" title={league} data-tooltip-when-clipped>
+          <div className="game-panel__league" data-tooltip={league} data-tooltip-when-clipped>
             {league}
           </div>
           <TeamRow team={game.away} />
           <TeamRow team={game.home} />
           {progress && (
-            <div className="game-panel__progress" title={progress} data-tooltip-when-clipped>
+            <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
               {progress}
             </div>
           )}
@@ -72,19 +72,19 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
         <div className="game-panel__details">
           <div>
             <div className="game-panel__label">Venue</div>
-            <div className="game-panel__value" title={venueName} data-tooltip-when-clipped>
+            <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
               {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
             </div>
-            <div className="game-panel__muted" title={place} data-tooltip-when-clipped>
+            <div className="game-panel__muted" data-tooltip={place} data-tooltip-when-clipped>
               {place && <MapsLink query={place}>{place}</MapsLink>}
             </div>
           </div>
           <div>
             <div className="game-panel__label">{endTime ? 'Ended' : 'Start'}</div>
-            <div className="game-panel__value" title={time.viewer} data-tooltip-when-clipped>
+            <div className="game-panel__value" data-tooltip={time.viewer} data-tooltip-when-clipped>
               {time.viewer}
             </div>
-            <div className="game-panel__muted" title={localTime} data-tooltip-when-clipped>
+            <div className="game-panel__muted" data-tooltip={localTime} data-tooltip-when-clipped>
               {localTime}
             </div>
           </div>
@@ -129,7 +129,7 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
  */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (
-    <figcaption className="game-panel__credit" title={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`} data-tooltip-when-clipped>
+    <figcaption className="game-panel__credit" data-tooltip={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`} data-tooltip-when-clipped>
       <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
         {credit.author}
       </a>
@@ -151,7 +151,7 @@ function Credit({ credit }: { credit: PhotoCredit }) {
  */
 function WatchLinks({ links }: { links: PanelLink[] }) {
   if (links.length === 0) return (
-      <div className="game-panel__muted" title="No channels listed" data-tooltip-when-clipped>
+      <div className="game-panel__muted" data-tooltip="No channels listed" data-tooltip-when-clipped>
         No channels listed
       </div>
     )
@@ -159,7 +159,7 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
   return (
     <ul className="game-panel__watch">
       {listed.map((link) => (
-        <li key={`${link.name} ${link.url}`} title={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
+        <li key={`${link.name} ${link.url}`} data-tooltip={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
           {link.url ? (
             <a
               href={link.url}
@@ -175,7 +175,7 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
         </li>
       ))}
       {folded.length > 0 && (
-        <li className="game-panel__muted" title={folded.map((link) => link.name).join(', ')}>
+        <li className="game-panel__muted" data-tooltip={folded.map((link) => link.name).join(', ')}>
           +{folded.length} more
         </li>
       )}
@@ -189,7 +189,7 @@ function TeamRow({ team }: { team: GameTeam }) {
   return (
     <div className="game-panel__team">
       {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" title={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
+      <span className="game-panel__team-name" data-tooltip={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
         {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}
         {team.fullName}
       </span>
@@ -211,7 +211,7 @@ function GameBand({ game }: { game: Game }) {
     <div className="game-panel__band">
       {lastScore && (
         <BandCell label="Last score" wide>
-          <div className="game-panel__clamp" title={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
+          <div className="game-panel__clamp" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
             <span className="game-panel__strong">
               {lastScore.when && `${lastScore.when} · `}
               {lastScore.team}
@@ -222,11 +222,11 @@ function GameBand({ game }: { game: Game }) {
       )}
       {odds && (
         <BandCell label="Odds">
-          <div className="game-panel__one-line" title={odds} data-tooltip-when-clipped>
+          <div className="game-panel__one-line" data-tooltip={odds} data-tooltip-when-clipped>
             {odds}
           </div>
           {game.odds?.bookmaker && (
-            <div className="game-panel__muted game-panel__one-line" title={game.odds.bookmaker} data-tooltip-when-clipped>
+            <div className="game-panel__muted game-panel__one-line" data-tooltip={game.odds.bookmaker} data-tooltip-when-clipped>
               {game.odds.bookmaker}
             </div>
           )}
@@ -234,7 +234,7 @@ function GameBand({ game }: { game: Game }) {
       )}
       {game.attendance !== null && (
         <BandCell label="Attendance">
-          <div className="game-panel__one-line" title={game.attendance.toLocaleString()} data-tooltip-when-clipped>
+          <div className="game-panel__one-line" data-tooltip={game.attendance.toLocaleString()} data-tooltip-when-clipped>
             {game.attendance.toLocaleString()}
           </div>
         </BandCell>

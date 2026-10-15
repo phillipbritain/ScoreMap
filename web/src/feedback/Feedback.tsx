@@ -134,7 +134,7 @@ export function Feedback({ hidden, context }: FeedbackProps) {
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
         aria-label="Feedback"
-        title="Feedback"
+        data-tooltip="Feedback"
       >
         {/* A speech bubble (Feather's "message-square"). */}
         <svg

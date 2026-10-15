@@ -42,6 +42,10 @@ jobs:
       # Builds the browser app into the published wwwroot too.
       - run: dotnet publish server/src/ScoreMap.Server -c Release -o ${{ runner.temp }}/app
 
+      # A demo shows the worldwide scenario on the live site (ADR-0019), so its file must ship.
+      - name: Check the demo's scenario file is published
+        run: test -f "${{ runner.temp }}/app/Scenarios/Files/worldwide.json" || { echo "::error::worldwide.json is missing from the publish; demos would fail on the live site"; exit 1; }
+
       - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

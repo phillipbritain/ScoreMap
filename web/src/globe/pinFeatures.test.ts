@@ -14,8 +14,8 @@ const arrowhead: Game = {
   delayed: false,
   disruption: null,
   endTime: null,
-  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: '21' },
-  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: '17' },
+  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: '21', rank: null, record: null },
+  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: '17', rank: null, record: null },
   clock: '4:12',
   period: 3,
   clutchTime: false,
@@ -31,6 +31,12 @@ const arrowhead: Game = {
   },
   broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
   streamLinks: [],
+  note: null,
+  attendance: null,
+  odds: null,
+  situation: null,
+  lastScore: null,
+  keyEvents: [],
 }
 
 describe('pinFeatures', () => {

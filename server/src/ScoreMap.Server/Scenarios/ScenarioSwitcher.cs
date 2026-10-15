@@ -169,7 +169,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues, _teams);
         _clock.Restart(speed);
         return new Source(
-            name, new ScenarioGameFeedProvider(scenario, _clock), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
+            name, new ScenarioGameFeedProvider(scenario, _clock, _leagues), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
     }
 
     private static bool IsRealGames(string name) => name.Equals(RealGames, StringComparison.OrdinalIgnoreCase);

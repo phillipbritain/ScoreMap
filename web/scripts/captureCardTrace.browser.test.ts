@@ -63,6 +63,7 @@ function game({ id, longitude, latitude, status }: (typeof venues)[number]): Gam
     situation: null,
     lastScore: null,
     keyEvents: [],
+    topEvent: false,
   }
 }
 

@@ -73,11 +73,12 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, liveOnly, showDisrupted, sportColours, leagueColours } = fields
+  const { hiddenLeagues, topEventsOnly, liveOnly, showDisrupted, sportColours, leagueColours } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
+    topEventsOnly: typeof topEventsOnly === 'boolean' ? topEventsOnly : firstVisitSettings.topEventsOnly,
     liveOnly: typeof liveOnly === 'boolean' ? liveOnly : firstVisitSettings.liveOnly,
     showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
     sportColours: coloursFromSaved(sportColours),

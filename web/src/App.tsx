@@ -100,7 +100,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   const { sportColours, leagueColours } = viewerSettings
   const colours = useMemo((): PickedColours => ({ sportColours, leagueColours }), [sportColours, leagueColours])
   // Not under the loading screen: only once it has gone.
-  const message = loadingScreenGone ? noPinsMessage(games, visible) : null
+  const message = loadingScreenGone ? noPinsMessage(games, visible, viewerSettings) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.

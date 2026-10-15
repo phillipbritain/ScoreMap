@@ -82,6 +82,7 @@ body {
 .demo-label,
 .feedback__button,
 .feedback__panel,
+.welcome-tour__panel,
 .tooltip {
   /* How brightly the glass catches the light: most when clear. */
   --glass-shine: calc(1 - var(--frost));
@@ -1797,4 +1798,137 @@ body {
 
 .demo-label[hidden] {
   display: none;
+}
+
+/* The welcome tour (see welcomeTour/WelcomeTour.tsx): over the globe and the rail, which it keeps from
+   being used, under the dev tools. The scenario controls and the Feedback button are lifted above it
+   while it shows, so they stay usable. */
+.welcome-tour {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.globe-area--touring > .bottom-stack,
+.globe-area--touring > .feedback {
+  z-index: 3;
+}
+
+/* A light dim, so the live pins still show behind the panel, which catches every press. */
+.welcome-tour__dim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--palette-background-default) 30%, transparent);
+}
+
+/* A step's panel, in the middle of the screen, on the rail's glass as its popovers are. */
+.welcome-tour__panel {
+  --frost: var(--rail-frost);
+  --glass-tint: var(--rail-surface);
+  --glass-lens: url(#glass-lens);
+  position: relative;
+  box-sizing: border-box;
+  width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
+  max-height: calc(100% - 12 * var(--spacing));
+  overflow-y: auto;
+  padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
+  border-radius: var(--menu-corner);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  font-weight: var(--typography-body2-font-weight);
+  box-shadow: var(--rail-shadow), var(--glass-rim);
+}
+
+.welcome-tour__heading {
+  margin: 0 0 calc(2 * var(--spacing));
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+}
+
+.welcome-tour__question {
+  margin: calc(5 * var(--spacing)) 0 calc(3 * var(--spacing));
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.welcome-tour__text {
+  margin: 0;
+  color: var(--palette-text-secondary);
+}
+
+.welcome-tour__note {
+  margin-top: calc(3 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
+}
+
+.welcome-tour__choices {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+/* A choice on Welcome: its name, and a line under it on what it shows. */
+.welcome-tour__choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: calc(2.5 * var(--spacing));
+  align-items: center;
+  padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.welcome-tour__choice strong {
+  grid-column: 2;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.welcome-tour__choice span {
+  grid-column: 2;
+  color: var(--palette-text-secondary);
+}
+
+.welcome-tour__star {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  width: 1.3em;
+  height: 1.3em;
+  color: var(--rail-toggle-on);
+}
+
+@media (hover: hover) {
+  .welcome-tour__choice:hover {
+    border-color: var(--rail-on-fill);
+    background: var(--palette-action-hover);
+  }
+}
+
+.welcome-tour__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(4 * var(--spacing));
+}
+
+/* A step's own button (Next, Done), filled as a chip that's on. */
+.welcome-tour__button {
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  border: none;
+  border-radius: var(--controls-corner);
+  background: var(--rail-on-fill);
+  color: var(--rail-on-text);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
 }

@@ -49,7 +49,7 @@ export function ScenarioPill({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close()
     }
-    // A press on anything above the cover (the settings menu, the game panel, the tuners) closes it too.
+    // A press on anything above the cover (the rail, the game panel, the tuners) closes it too.
     const onPointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Node && details.current?.contains(event.target))) close()
     }

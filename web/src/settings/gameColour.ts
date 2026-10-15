@@ -21,7 +21,7 @@ export function gameColour(colours: PickedColours, game: ColouredGame, theme: Th
 
 /**
  * The theme's accent: Live's colour. A cluster of games of different colours shows in it, and the
- * settings menu shows it for a sport with no colour picked, whose games take the theme's colour for
+ * rail's Colours shows it for a sport with no colour picked, whose games take the theme's colour for
  * their status.
  */
 export const accentColour = (theme: Theme): string => theme.palette.live.main

@@ -357,9 +357,9 @@ const palette = {
   /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
   background: { default: color, paper: color },
   /**
-   * Text on the game panel, the settings menu and the scenario controls: main text; secondary text
-   * (the game panel's league and labels and the lines under a venue or time, the settings gear,
-   * league chips that are off and the count on the "All leagues" chip); and links.
+   * Text on the game panel, the rail and the scenario controls: main text; secondary text (the game
+   * panel's league and labels and the lines under a venue or time, league chips that are off and the
+   * count on the "All leagues" chip); and links.
    */
   text: { primary: color, secondary: color, link: color },
   /** The lines between a menu's parts. */
@@ -525,27 +525,26 @@ const settings = {
         scoreWidth: ems,
       },
     },
-    /** A menu's corners (the settings menu, the list of scenarios). */
+    /** A menu's corners (the rail and its popovers, the list of scenarios). */
     Menu: { corner },
     /** An item's corners in a menu. */
     MenuItem: { corner },
     /**
-     * The settings menu: its surface and drop shadow, an outline around the gear (a shadow), a tab
-     * that's off, the count of a sport's leagues that are on, the hint beside "All leagues", a league
-     * chip's outline and the badge counting leagues, and a tab or chip that's on. Its size: its width,
-     * the gear, the "All leagues" chip's height, and on that chip, the narrowest its count is and the
-     * box its mark (✓ or –) sits in, in ems.
+     * The rail, its popovers (Leagues and Colours) and its toast: their surface and drop shadow; a toggle
+     * button's icon that's on and one that's off; the count of a sport's leagues that are on, the hint
+     * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
+     * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
+     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems.
      */
-    SettingsMenu: {
+    Rail: {
       surface: color,
       shadow,
-      gearOutline: shadow,
-      tab: color,
+      toggle: { on: color, off: color },
       count: color,
       hint: color,
       chip: { outline: color, badge: color },
       on: { fill: color, text: color },
-      size: { width: pixels, gear: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
+      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
     },
     /**
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their

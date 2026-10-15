@@ -41,8 +41,9 @@ public class ScenarioTests
         Assert.Equal("chiefs-bills", game.Id);
         Assert.Equal("NFL", game.League);
         Assert.Equal(GameStatus.Live, game.Status);
-        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "14"), game.Home);
-        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, "10"), game.Away);
+        // Records are made up for scenario games (see ScenarioDetailsTests).
+        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "14"), game.Home with { Record = null });
+        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, "10"), game.Away with { Record = null });
         Assert.Equal("Arrowhead Stadium", game.Venue.Name);
         Assert.Equal("Kansas City", game.Venue.City);
         Assert.Equal(2, game.Period);

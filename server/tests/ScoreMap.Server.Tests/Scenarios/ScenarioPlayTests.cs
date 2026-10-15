@@ -12,7 +12,7 @@ namespace ScoreMap.Server.Tests.Scenarios;
 /// </summary>
 public sealed class ScenarioPlayTests : IDisposable
 {
-    private static readonly League[] Leagues =
+    internal static readonly League[] Leagues =
     [
         new() { Key = "football/nfl", Name = "NFL", Sport = Sport.Football, PlannedLength = TimeSpan.FromMinutes(195) },
         new() { Key = "football/college-football", Name = "NCAA Football", Sport = Sport.Football, PlannedLength = TimeSpan.FromMinutes(210) },
@@ -28,13 +28,13 @@ public sealed class ScenarioPlayTests : IDisposable
     ];
 
     // 120 venues around the world, the first 10 of them also in "london".
-    private static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 120)
+    internal static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 120)
         .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
 
     // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 110 games at a time,
     // so with 60 games showing, play has to steer clear of the teams already playing.
-    private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
+    internal static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
         l => l.Name,
         l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, 20).Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", null)).ToList()));
 

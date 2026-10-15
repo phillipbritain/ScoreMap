@@ -21,6 +21,8 @@ export interface FeedbackContext {
   /** The leagues switched on, by name; left out until the league list has loaded. */
   leagues?: string[]
   topEventsOnly?: boolean
+  /** Sent from a demo (ADR-0019), whose games are made up: left out otherwise. */
+  demo?: true
 }
 
 export interface FeedbackSubmission {
@@ -58,10 +60,12 @@ export interface FeedbackView {
   /** The configured leagues; empty until they load. */
   leagues: readonly League[]
   settings: ViewerSettings
+  /** Whether the viewer is in a demo. */
+  demo?: boolean
 }
 
 /** The context sent with feedback, from what the viewer has open and on. */
-export function feedbackContext({ screen, phoneLayout, gameId, leagues, settings }: FeedbackView): FeedbackContext {
+export function feedbackContext({ screen, phoneLayout, gameId, leagues, settings, demo }: FeedbackView): FeedbackContext {
   return {
     screenWidth: screen.width,
     screenHeight: screen.height,
@@ -69,6 +73,7 @@ export function feedbackContext({ screen, phoneLayout, gameId, leagues, settings
     gameId,
     leagues: leagues.length > 0 ? leagues.filter((league) => isLeagueOn(settings, league.name)).map((league) => league.name) : undefined,
     topEventsOnly: settings.topEventsOnly,
+    ...(demo && { demo: true }),
   }
 }
 

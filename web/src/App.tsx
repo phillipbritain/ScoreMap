@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { accentColour, gameColour, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
-import { settingsStore } from './settings/settingsStore'
+import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
@@ -10,6 +10,7 @@ import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
+import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
 import { connectToGames } from './live/liveConnection'
@@ -38,7 +39,8 @@ const BehaviourTuner = import.meta.env.DEV
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
 
-const store = settingsStore(() => window.localStorage)
+const savedStore = settingsStore(() => window.localStorage)
+const demoStore = unsavedSettingsStore()
 
 /** What the browser says about where the viewer is (see ViewerPlace). */
 function viewerPlace() {
@@ -46,7 +48,7 @@ function viewerPlace() {
 }
 
 /** Where the globe opens. Read once: the globe owns its camera after that. */
-function openingCamera() {
+function openingCamera(store: SettingsStore) {
   return startCamera(store.loadCamera(), viewerPlace())
 }
 
@@ -55,16 +57,25 @@ interface AppProps {
   theme: Theme
   /** On a local run, where the theme tuner starts: the built-in theme's JSON, and the draft to start from. */
   tuning?: { builtIn: ThemeJson; initial: ThemeJson }
+  /**
+   * Whether this is a demo (ADR-0019): the demo's made-up games, under a label saying so, with no
+   * scenario controls or dev tools, in the built-in look, and nothing saved in the browser.
+   */
+  demo?: boolean
 }
 
 /**
  * The app, in a theme: the page's CSS reads it from the page's root (see applyTheme), the globe from
  * here. The theme can change as the app runs (see useTheme): on a local run, from the theme tuner.
  */
-export default function App({ theme: startTheme, tuning }: AppProps) {
+export default function App({ theme: startTheme, tuning, demo = false }: AppProps) {
   const [theme, setTheme] = useTheme(startTheme)
-  // The app's own behaviour, or on a local run the behaviour tuner's draft saved in this browser.
-  const [behaviour, setBehaviour] = useState(() => (import.meta.env.DEV ? loadBehaviour(window.localStorage) : builtInBehaviour))
+  // The app's own behaviour, or on a local run (but not in a demo) the behaviour tuner's draft saved in this browser.
+  const [behaviour, setBehaviour] = useState(() =>
+    import.meta.env.DEV && !demo ? loadBehaviour(window.localStorage) : builtInBehaviour,
+  )
+  // A demo opens on first-visit settings and saves none.
+  const store = demo ? demoStore : savedStore
   // What the behaviour tuner draws on the globe to show its settings at work (local runs only).
   const [overlays, setOverlays] = useState(noOverlays)
   // Null until the server's first snapshot arrives.
@@ -79,26 +90,29 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   // The rail's hold on the globe's camera, and where the camera last settled, for the zoom buttons' limits.
   const globeCamera = useRef<GlobeCamera>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
-  const [camera] = useState(openingCamera)
+  const [camera] = useState(() => openingCamera(store))
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagues = useLeagues()
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
-  const scenarios = useScenarioControls()
+  const scenarios = useScenarioControls(demo)
   const { setListing: setScenarioListing } = scenarios
 
   useEffect(
     () =>
-      connectToGames({
-        onSnapshot: setGames,
-        // The snapshot always comes first; a change before it has nothing to apply to.
-        // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
-        onChange: (change) => setGames((current) => current && applyChange(current, change)),
-        // A switch or a change of speed made in any browser: every pill and clock follows.
-        onScenarioChanged: setScenarioListing,
-      }),
-    [setScenarioListing],
+      connectToGames(
+        {
+          onSnapshot: setGames,
+          // The snapshot always comes first; a change before it has nothing to apply to.
+          // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
+          onChange: (change) => setGames((current) => current && applyChange(current, change)),
+          // A switch or a change of speed made in any browser: every pill and clock follows.
+          onScenarioChanged: setScenarioListing,
+        },
+        demo,
+      ),
+    [setScenarioListing, demo],
   )
-  useEffect(() => store.save(viewerSettings), [viewerSettings])
+  useEffect(() => store.save(viewerSettings), [store, viewerSettings])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   // Changing only when a colour does, so other settings don't recolour the globe.
@@ -165,6 +179,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             </div>
           )}
         </div>
+        {demo && <DemoLabel hidden={!scenarios.feedbackShown} />}
         {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
             hides while a game panel is open instead). */}
         <Feedback
@@ -176,6 +191,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
               gameId: selectedGame?.id ?? null,
               leagues,
               settings: viewerSettings,
+              demo,
             })
           }
         />

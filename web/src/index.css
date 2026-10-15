@@ -60,7 +60,7 @@ body {
 }
 
 /* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers and toast,
-   the scenario controls, the no-pins message and tooltips) is a pane of glass the globe shows through (ADR-0018).
+   the scenario controls, the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
    Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
    slight bend and lifted in colour, its edges catching the light; at 1 opaque frosted glass. The glass
    is tinted with the component's own surface colour (--glass-tint, or --glass-fill for a fill of its
@@ -79,6 +79,7 @@ body {
 .speed-keys,
 .scenario-clock,
 .no-pins,
+.demo-label,
 .feedback__button,
 .feedback__panel,
 .tooltip {
@@ -1767,4 +1768,35 @@ body {
   .feedback:has(~ .game-panel) {
     display: none;
   }
+}
+
+/* The label over the globe in a demo (ADR-0019), saying its games are made up: a small pane of the
+   controls' glass at the top, centred, which clicks pass through to the globe. */
+.demo-label {
+  --frost: var(--controls-frost);
+  --glass-tint: var(--controls-surface);
+  --glass-lens: url(#glass-lens);
+  position: absolute;
+  top: calc(3 * var(--spacing));
+  left: 50%;
+  z-index: 1;
+  box-sizing: border-box;
+  height: var(--controls-bar-height);
+  margin: 0;
+  padding: 0 calc(3 * var(--spacing));
+  line-height: var(--controls-bar-height);
+  border-radius: var(--controls-corner);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  font-weight: var(--typography-body2-font-weight);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: var(--controls-shadow), var(--glass-rim);
+  pointer-events: none;
+  user-select: none;
+}
+
+.demo-label[hidden] {
+  display: none;
 }

@@ -208,6 +208,59 @@ describe('settingsStore camera', () => {
   })
 })
 
+describe('settingsStore welcome tour progress', () => {
+  it('starts a first-time visitor at Welcome', () => {
+    expect(settingsStore(() => memoryStorage()).loadTourProgress()).toBe('welcome')
+  })
+
+  it('counts a viewer with settings saved before the tour existed as finished', () => {
+    const storage = memoryStorage()
+    settingsStore(() => storage).save({ ...firstVisitSettings, liveOnly: true })
+
+    expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
+  })
+
+  it.each(['welcome', 'controls', 'scoreCard', 'finished'] as const)(
+    'carries on at %s after a page reload, though settings are saved too',
+    (progress) => {
+      const storage = memoryStorage()
+      const store = settingsStore(() => storage)
+      store.save({ ...firstVisitSettings, topEventsOnly: true })
+      store.saveTourProgress(progress)
+
+      expect(settingsStore(() => storage).loadTourProgress()).toBe(progress)
+    },
+  )
+
+  it('keeps the progress apart from the other settings', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, liveOnly: true })
+    store.saveTourProgress('controls')
+
+    expect(store.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+  })
+
+  it.each(['{not json', JSON.stringify('halfway'), JSON.stringify(3)])(
+    'counts an unreadable saved progress (%s) as finished, as something was saved before',
+    (saved) => {
+      const storage = memoryStorage()
+      storage.setItem('scoremap.welcomeTour', saved)
+
+      expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
+    },
+  )
+
+  it('still works when the browser blocks storage, showing the tour from Welcome', () => {
+    const store = settingsStore(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    })
+
+    expect(() => store.saveTourProgress('controls')).not.toThrow()
+    expect(store.loadTourProgress()).toBe('welcome')
+  })
+})
+
 describe('unsavedSettingsStore', () => {
   it("opens on first-visit settings and the viewer's region, and saves neither the settings nor the camera", () => {
     const storage = memoryStorage()
@@ -223,5 +276,18 @@ describe('unsavedSettingsStore', () => {
     expect(store.loadCamera()).toBeNull()
     expect(saved.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
     expect(saved.loadCamera()).toEqual({ longitude: 10, latitude: 20, zoom: 3 })
+  })
+
+  it('starts the welcome tour at Welcome every time and saves none of its progress', () => {
+    const storage = memoryStorage()
+    const saved = settingsStore(() => storage)
+    saved.saveTourProgress('finished')
+    const store = unsavedSettingsStore()
+
+    store.saveTourProgress('scoreCard')
+
+    expect(store.loadTourProgress()).toBe('welcome')
+    expect(unsavedSettingsStore().loadTourProgress()).toBe('welcome')
+    expect(saved.loadTourProgress()).toBe('finished')
   })
 })

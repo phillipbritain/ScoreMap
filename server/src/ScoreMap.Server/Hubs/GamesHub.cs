@@ -14,6 +14,9 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections, ISer
 {
     public const string Path = "/hubs/games";
 
+    /// <summary>The group of browsers watching the real game board (or, locally, the pill's scenario).</summary>
+    public const string RealGamesGroup = "real-games";
+
     /// <summary>Client method that receives the full list of current games.</summary>
     public const string SnapshotMessage = "Snapshot";
 
@@ -29,6 +32,7 @@ public sealed class GamesHub(Poller poller, BrowserConnections connections, ISer
 
     public override async Task OnConnectedAsync()
     {
+        await Groups.AddToGroupAsync(Context.ConnectionId, connections.Group);
         try
         {
             if (services.GetService<ScenarioSwitcher>()?.SlowStart is { } slowStart && slowStart > TimeSpan.Zero)

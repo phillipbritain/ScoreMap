@@ -97,7 +97,7 @@ public static class ScenarioEndpoints
         ScenarioSwitcher switcher, IHubContext<GamesHub> hub, CancellationToken cancellationToken)
     {
         var listing = Listing(switcher);
-        await hub.Clients.All.SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
+        await hub.Clients.Group(GamesHub.RealGamesGroup).SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
         return listing;
     }
 

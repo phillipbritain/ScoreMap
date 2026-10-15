@@ -1,0 +1,125 @@
+/* PROTOTYPE, throwaway: the quick settings rail's variants (see QuickSettingsPrototype). */
+
+.qs-rail {
+  position: absolute;
+  top: calc(3 * var(--spacing));
+  right: calc(3 * var(--spacing));
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+.qs-group {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--menu-corner);
+  background: var(--settings-menu-surface);
+  box-shadow: var(--settings-menu-shadow);
+}
+
+.qs-group > * + * {
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.qs-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--menu-corner);
+  background: none;
+  color: var(--palette-text-primary);
+  cursor: pointer;
+  list-style: none;
+}
+
+.qs-button::-webkit-details-marker {
+  display: none;
+}
+
+.qs-button:hover {
+  background: var(--palette-divider);
+}
+
+.qs-button[aria-pressed='true'],
+.qs-popover[open] > .qs-button {
+  color: var(--settings-menu-on-fill);
+}
+
+.qs-button[aria-pressed='false'] {
+  color: var(--palette-text-secondary);
+}
+
+.qs-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* A popover opens to the left of the rail, level with its top. */
+.qs-popover > .settings-menu__panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 2 * var(--spacing));
+  max-height: calc(100vh - 12 * var(--spacing));
+}
+
+/* A: Leagues shows the switches without the colours... */
+.qs-popover--switches .settings-colour,
+.qs-popover--switches .settings-reset {
+  display: none;
+}
+
+/* ...and Colours the colours, the league and sport names as labels, not switches. */
+.qs-popover--colours .settings-master {
+  display: none;
+}
+
+.qs-popover--colours .settings-chip,
+.qs-popover--colours .settings-sport__name {
+  pointer-events: none;
+}
+
+.qs-popover--colours .settings-chip {
+  border-color: transparent;
+  background: none;
+  color: var(--palette-text-primary);
+}
+
+.qs-popover--colours .settings-sport__count {
+  display: none;
+}
+
+/* The variant switcher: plainly not part of the design. */
+.qs-switcher {
+  position: absolute;
+  top: calc(3 * var(--spacing));
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ff00aa;
+  color: white;
+  font: 600 13px system-ui, sans-serif;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 50%);
+}
+
+.qs-switcher button {
+  border: none;
+  background: none;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* One tab alone: no tab bar. */
+.qs-popover .settings-tabs[hidden] {
+  display: none;
+}

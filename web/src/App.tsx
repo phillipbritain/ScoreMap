@@ -1,13 +1,13 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
-import { SettingsMenu } from './settings/SettingsMenu'
+import { QuickSettingsPrototype } from './settings/QuickSettingsPrototype'
 import { accentColour, gameColour, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
 import { settingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
 import { applyChange } from './games/gameStore'
-import { Globe } from './globe/Globe'
+import { Globe, type GlobeSteer } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { startCamera } from './globe/startCamera'
 import { connectToGames } from './live/liveConnection'
@@ -34,10 +34,14 @@ const store = settingsStore(() => window.localStorage)
 
 /** Where the globe opens. Read once: the globe owns its camera after that. */
 function openingCamera() {
-  return startCamera(store.loadCamera(), {
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    locale: navigator.language,
-  })
+  return startCamera(store.loadCamera(), viewerPlace())
+}
+
+/** PROTOTYPE (quick settings rail): Home, the viewer's region all the way out, as a first visit opens. */
+const homeCamera = () => startCamera(null, viewerPlace())
+
+function viewerPlace() {
+  return { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: navigator.language }
 }
 
 interface AppProps {
@@ -66,6 +70,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   // A loading screen the theme tuner holds up to be looked at, apart from the real one (local runs only).
   const [loadingPreview, setLoadingPreview] = useState<LoadingPreview>('off')
   const panel = useRef<HTMLElement>(null)
+  // PROTOTYPE (quick settings rail): steers the globe.
+  const steer = useRef<GlobeSteer | null>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [camera] = useState(openingCamera)
   const leagues = useLeagues()
@@ -115,6 +121,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
           startCamera={camera}
           onCameraMove={store.saveCamera}
           onStage={setStage}
+          onSteer={(globe) => (steer.current = globe)}
         />
         {/* Over the globe until it's ready, under the bottom stack and the settings menu, which come
             after it so they stay usable while loading. */}
@@ -157,29 +164,31 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             onClose={() => setSelectedGameId(null)}
           />
         )}
-        <SettingsMenu
+        <QuickSettingsPrototype
           leagues={leagues}
           settings={viewerSettings}
           onChange={setViewerSettings}
           accent={accentColour(theme)}
+          zoom={(step) => steer.current?.zoomBy(step)}
+          home={() => steer.current?.flyTo(homeCamera())}
         />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
           <div className="dev-tools" hidden={!scenarios.devToolsShown}>
             <Suspense>
-              <BehaviourTuner
-                builtIn={builtInBehaviour}
-                behaviour={behaviour}
-                onChange={setBehaviour}
-                overlays={overlays}
-                onOverlays={setOverlays}
-              />
               <ThemeTuner
                 builtIn={tuning.builtIn}
                 initial={tuning.initial}
                 onTheme={setTheme}
                 loadingPreview={loadingPreview}
                 onLoadingPreview={setLoadingPreview}
+              />
+              <BehaviourTuner
+                builtIn={builtInBehaviour}
+                behaviour={behaviour}
+                onChange={setBehaviour}
+                overlays={overlays}
+                onOverlays={setOverlays}
               />
             </Suspense>
           </div>

@@ -23,9 +23,15 @@ interface SettingsMenuProps {
    * shows hollow: its games take the theme's colour for their status.
    */
   accent: string
+  /** PROTOTYPE (quick settings rail): shows one tab alone, without the tab bar. */
+  only?: Tab
+  /** PROTOTYPE: what to open it from, in place of the gear. */
+  summary?: ReactNode
+  /** PROTOTYPE: a class for the <details>, to place it and trim it (qs-*). */
+  className?: string
 }
 
-type Tab = 'leagues' | 'display'
+export type Tab = 'leagues' | 'display'
 
 const tabs: readonly { key: Tab; name: string }[] = [
   { key: 'leagues', name: 'Leagues' },
@@ -45,19 +51,22 @@ const displaySwitches = [
  * shows its sport's, marked as taken from the sport. "Reset colours" clears every colour. Display:
  * "Live only" and "Show Disrupted games" as chips.
  */
-export function SettingsMenu({ leagues, settings, onChange, accent }: SettingsMenuProps) {
-  const [tab, setTab] = useState<Tab>('leagues')
+export function SettingsMenu({ leagues, settings, onChange, accent, only, summary, className }: SettingsMenuProps) {
+  const [chosenTab, setTab] = useState<Tab>('leagues')
+  const tab = only ?? chosenTab
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
   const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
   // What a sport or league with no colour picked shows: the accent, hollow, its games in the theme's colours.
   const fromTheme = { colour: accent, takes: "the theme's colours, by status" }
   return (
-    <details className="settings-menu">
-      <summary aria-label="Settings" title="Settings">
-        <GearIcon />
-      </summary>
+    <details className={className ?? 'settings-menu'}>
+      {summary ?? (
+        <summary aria-label="Settings" title="Settings">
+          <GearIcon />
+        </summary>
+      )}
       <div className="settings-menu__panel">
-        <div className="settings-tabs" role="tablist">
+        <div className="settings-tabs" role="tablist" hidden={only !== undefined}>
           {tabs.map(({ key, name }) => (
             <button
               key={key}

@@ -32,17 +32,25 @@ interface GlobeProps {
   onCameraMove: (camera: Camera) => void
   /** Called each time the globe's initial load moves on a stage (see GlobeMap.stage). */
   onStage: (stage: LoadingStage) => void
+  /** PROTOTYPE (quick settings rail): handed how to steer the globe, once it's made. */
+  onSteer?: (steer: GlobeSteer | null) => void
+}
+
+/** PROTOTYPE (quick settings rail): the rail's buttons' hold on the globe's camera. */
+export interface GlobeSteer {
+  zoomBy: (step: 1 | -1) => void
+  flyTo: (camera: Camera) => void
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage }: GlobeProps) {
+export function Globe({ theme, cityLabels, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, onSteer }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, onSteer, startCamera, theme, cityLabels, colours })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours])
+    latest.current = { onSelectGame, onCameraMove, onStage, onSteer, startCamera, theme, cityLabels, colours }
+  }, [onSelectGame, onCameraMove, onStage, onSteer, startCamera, theme, cityLabels, colours])
 
   useEffect(() => {
     if (!container.current) return
@@ -57,7 +65,9 @@ export function Globe({ theme, cityLabels, colours, showGameCityReach, games, se
       onStage: (stage) => latest.current.onStage(stage),
     })
     globe.current = instance
+    latest.current.onSteer?.({ zoomBy: (step) => instance.zoomBy(step), flyTo: (camera) => instance.flyTo(camera) })
     return () => {
+      latest.current.onSteer?.(null)
       instance.destroy()
       globe.current = null
     }

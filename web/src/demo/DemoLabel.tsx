@@ -10,7 +10,7 @@ interface DemoLabelProps {
 export function DemoLabel({ hidden }: DemoLabelProps) {
   return (
     <p className="demo-label" hidden={hidden}>
-      Demo: made-up games
+      Demo Mode
     </p>
   )
 }

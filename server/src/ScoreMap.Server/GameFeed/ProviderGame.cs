@@ -3,6 +3,9 @@ namespace ScoreMap.Server.GameFeed;
 /// <summary>
 /// A game as a game feed provider reports it, in provider-neutral terms.
 /// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
+/// The rest is extra detail for the game panel, each part null (or empty) when the provider gives none:
+/// a note on the game, the crowd, the betting line, where play stands right now, the last score and,
+/// in soccer, the goals and cards.
 /// </summary>
 public sealed record ProviderGame(
     string Id,
@@ -15,16 +18,39 @@ public sealed record ProviderGame(
     int? Period,
     ProviderVenue? Venue,
     IReadOnlyList<ProviderBroadcaster> Broadcasters,
-    ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing);
+    ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing)
+{
+    /// <summary>
+    /// What's special about the game, as the provider puts it: a playoff round ("NLDS - Game 2"), a game
+    /// abroad ("NFL London Games"), a two-legged tie's outcome, a makeup date.
+    /// </summary>
+    public string? Note { get; init; }
+
+    /// <summary>How many came to watch, once the provider reports it.</summary>
+    public int? Attendance { get; init; }
+
+    public ProviderOdds? Odds { get; init; }
+
+    /// <summary>Where play stands right now; the provider only gives it while the game is under way.</summary>
+    public ProviderSituation? Situation { get; init; }
+
+    /// <summary>The last score: who scored and how, and when in the game.</summary>
+    public ProviderScoringPlay? LastScore { get; init; }
+
+    /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
+    public IReadOnlyList<ProviderKeyEvent> KeyEvents { get; init; } = [];
+}
 
 /// <summary>
 /// A team in a game. <see cref="HomeCity"/> is the city the team plays its home games in, when the
 /// provider knows it; the venue locator falls back to it for a home team's game with no venue. In
 /// cricket, <see cref="Score"/> is the team's runs and <see cref="Innings"/> the rest of its innings;
-/// it's null in every other sport, and in cricket before the team bats.
+/// it's null in every other sport, and in cricket before the team bats. <see cref="Rank"/> is its place
+/// in its league's poll (college sports), and <see cref="Record"/> its season so far as its sport writes
+/// it: wins and losses ("5-2"), in soccer wins, draws and losses ("2-2-3").
 /// </summary>
 public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score,
-    ProviderCity? HomeCity = null, ProviderInnings? Innings = null);
+    ProviderCity? HomeCity = null, ProviderInnings? Innings = null, int? Rank = null, string? Record = null);
 
 /// <summary>
 /// A cricket team's innings beyond its runs. <see cref="Wickets"/> is null when the side is all out, as
@@ -46,6 +72,39 @@ public sealed record ProviderVenue(string? Name, string? City, string? Region, s
 public sealed record Coordinates(double Latitude, double Longitude);
 
 public sealed record ProviderBroadcaster(string Name, string? Country);
+
+/// <summary>
+/// The betting line: <see cref="Line"/> as the bookmaker writes it (the favourite and its spread,
+/// "SEA -2.5", or "EVEN"), the total points it expects (<see cref="OverUnder"/>), and the bookmaker.
+/// </summary>
+public sealed record ProviderOdds(string? Line, double? OverUnder, string? Bookmaker);
+
+/// <summary>
+/// Where play stands right now, in the terms of the game's sport, each part null when it doesn't apply:
+/// the last play described; in football the down and distance ("3rd & 7 at DEN 34") and the team with
+/// the ball (its abbreviation); in baseball the count, the outs and which bases have runners on.
+/// </summary>
+public sealed record ProviderSituation(
+    string? LastPlay,
+    string? DownAndDistance = null,
+    string? Possession = null,
+    int? Balls = null,
+    int? Strikes = null,
+    int? Outs = null,
+    bool OnFirst = false,
+    bool OnSecond = false,
+    bool OnThird = false);
+
+/// <summary>
+/// A score: the team that scored (its abbreviation), what happened, as the provider describes it
+/// ("Rashee Rice 2 Yd pass from Patrick Mahomes"), and when: the period, the clock as the sport
+/// shows it (null in baseball, which has none), and in baseball which half of the inning.
+/// </summary>
+public sealed record ProviderScoringPlay(
+    string Team, string Text, int? Period, string? Clock, ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing);
+
+/// <summary>A goal or card in soccer: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
+public sealed record ProviderKeyEvent(KeyEventKind Kind, string Team, string? Player, string? Clock);
 
 public enum ProviderStatus
 {

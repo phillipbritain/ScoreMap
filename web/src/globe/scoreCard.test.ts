@@ -12,14 +12,20 @@ const arrowhead: Game = {
   delayed: false,
   disruption: null,
   endTime: null,
-  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
-  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
+  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21', rank: null, record: null },
+  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17', rank: null, record: null },
   clock: '4:12',
   period: 3,
   clutchTime: false,
   venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
   broadcasters: [],
   streamLinks: [],
+  note: null,
+  attendance: null,
+  odds: null,
+  situation: null,
+  lastScore: null,
+  keyEvents: [],
 }
 
 describe('scoreCard', () => {

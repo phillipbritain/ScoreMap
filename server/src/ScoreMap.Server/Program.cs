@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using ScoreMap.Server.Feedback;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
@@ -97,6 +98,9 @@ builder.Services.AddSingleton<Poller>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
 builder.Services.AddSignalR();
 
+// Feedback from the Feedback button, filed as issues in the repo with the owner's token (only logged without one).
+builder.Services.AddFeedback(builder.Configuration);
+
 // Scenarios (ADR-0009): made-up games in place of real ones, in Development only.
 builder.AddScenarios();
 
@@ -114,6 +118,8 @@ app.MapFallbackToFile("index.html");
 // The configured leagues in order, so the browser's Leagues and Colours can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
     leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
+
+app.MapFeedback();
 
 // The scenario picker's list and switch (ADR-0009); in Development only.
 app.MapScenarios();

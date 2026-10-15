@@ -79,6 +79,10 @@ _Avoid_: Crunch time, close game
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.
 _Avoid_: Stadium, arena, location, home city
 
+**Feedback**:
+A note a viewer writes and sends from ScoreMap, from the Feedback button at the bottom right, posted publicly to the project's issues for the owner to sort through, with what the viewer was looking at (such as the open game). Shift+S hides the button, as it does the scenario controls.
+_Avoid_: Bug report (it may be anything), comment, support request
+
 **City label**:
 A city's name on the globe, by where the city is (with no dot), from the city list included with the app. A game's city label is always drawn; a Big city's label with no game near is drawn where there's room. See `docs/city-labels.md`.
 _Avoid_: Place name (which also covers states and countries), city name tag

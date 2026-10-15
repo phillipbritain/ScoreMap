@@ -10,6 +10,8 @@ import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
+import { Feedback } from './feedback/Feedback'
+import { feedbackContext } from './feedback/feedbackForm'
 import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
@@ -32,6 +34,9 @@ const ThemeTuner = import.meta.env.DEV
 const BehaviourTuner = import.meta.env.DEV
   ? lazy(() => import('./behaviourTuner/BehaviourTuner').then(({ BehaviourTuner }) => ({ default: BehaviourTuner })))
   : null
+
+// The width below which the page takes its phone layout, as index.css has it.
+const phoneLayout = '(max-width: 640px)'
 
 const store = settingsStore(() => window.localStorage)
 
@@ -160,6 +165,20 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             </div>
           )}
         </div>
+        {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
+            hides while a game panel is open instead). */}
+        <Feedback
+          hidden={!scenarios.feedbackShown}
+          context={() =>
+            feedbackContext({
+              screen: { width: window.innerWidth, height: window.innerHeight },
+              phoneLayout: window.matchMedia(phoneLayout).matches,
+              gameId: selectedGame?.id ?? null,
+              leagues,
+              settings: viewerSettings,
+            })
+          }
+        />
         {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
             rail, so an open popover lies over it on a phone. */}
         {selectedGame && selectedColour && (

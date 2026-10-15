@@ -16,8 +16,10 @@
     <!-- Saved venue lookups from local runs are runtime data, not part of the app. -->
     <Content Remove="data\**" />
     <None Remove="data\**" />
-    <!-- Scenario files are read from the content root, in Development only (ADR-0009); never shipped. -->
+    <!-- Scenario files are read from the content root, for the pill in Development only (ADR-0009), so
+         only the one a demo shows ships, with the venue list, team list and venue lookups (ADR-0019). -->
     <Content Update="Scenarios\Files\**" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <Content Update="Scenarios\Files\worldwide.json" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

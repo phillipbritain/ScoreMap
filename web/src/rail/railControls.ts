@@ -1,5 +1,5 @@
 import type { Camera } from '../globe/camera'
-import { furthestOutZoom, maxZoom } from '../globe/zoomLevels'
+import { furthestOutZoom, zoomSettings, type ZoomSettings } from '../globe/zoomLevels'
 import type { ViewerSettings } from '../settings/viewerSettings'
 
 /**
@@ -12,8 +12,8 @@ const atLimit = 0.01
  * Whether the rail's zoom buttons can step in and out from here: not at the furthest in the globe
  * goes, nor at the furthest out, which depends on the view's latitude (see furthestOutZoom).
  */
-export function canZoom({ latitude, zoom }: Camera): { in: boolean; out: boolean } {
-  return { in: zoom < maxZoom - atLimit, out: zoom > furthestOutZoom(latitude) + atLimit }
+export function canZoom({ latitude, zoom }: Camera, limits: ZoomSettings = zoomSettings): { in: boolean; out: boolean } {
+  return { in: zoom < limits.maxZoom - atLimit, out: zoom > furthestOutZoom(latitude, limits.minZoom) + atLimit }
 }
 
 /** The rail's two toggles, in order, by the setting each switches and its name. */

@@ -1,6 +1,6 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
-import type { TourProgress } from '../welcomeTour/welcomeTour'
+import { isTourProgress, type TourProgress } from '../welcomeTour/welcomeTour'
 import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -100,8 +100,6 @@ export function unsavedSettingsStore(): SettingsStore {
   }
 }
 
-const tourSteps: readonly string[] = ['welcome', 'controls', 'scoreCard', 'finished'] satisfies TourProgress[]
-
 /**
  * Saved tour progress. What was saved but can't be read counts as finished: the viewer has been here
  * before, and a tour shown again is worse than one missed.
@@ -109,7 +107,7 @@ const tourSteps: readonly string[] = ['welcome', 'controls', 'scoreCard', 'finis
 function tourProgressFromSaved(saved: string): TourProgress {
   try {
     const progress: unknown = JSON.parse(saved)
-    return typeof progress === 'string' && tourSteps.includes(progress) ? (progress as TourProgress) : 'finished'
+    return isTourProgress(progress) ? progress : 'finished'
   } catch {
     return 'finished'
   }

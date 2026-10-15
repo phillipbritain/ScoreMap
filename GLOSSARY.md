@@ -123,6 +123,14 @@ _Avoid_: Status colour (for a game's colour), team colour
 One of a theme's kinds of text, named as MUI's typography variants are (`body2`, `button`, `caption`…): a weight, a size and a letter spacing, in the theme's one font family. Each kind of text on the page is one, and text on the globe takes one's size.
 _Avoid_: Variant, text size, font role
 
+**Glass**:
+What every surface over the globe is made of (score cards, the game panel, the rail, the scenario controls, tooltips): a pane the globe shows through, tinted with the surface's colour, its edges catching the light (ADR-0018).
+_Avoid_: Background, see-through fill
+
+**Frost**:
+How frosted a component's glass is, from 0, clear glass the globe shows sharply through, to 1, opaque frosted glass the globe can't be seen through. A theme setting of each component that's glass.
+_Avoid_: Transparency, opacity (for glass), blur
+
 ### Game status
 
 **Upcoming**:

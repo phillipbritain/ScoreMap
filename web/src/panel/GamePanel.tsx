@@ -1,8 +1,9 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import type { Game, GameTeam, PhotoCredit } from '../games/game'
+import { titleWhenClipped } from './clippedTitle'
 import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
-import { venuePlace } from './venuePlace'
+import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
@@ -29,7 +30,7 @@ interface PanelLink {
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
  * (see .game-panel in index.css), with a band under it: the last score, the betting line and the crowd. It keeps one size
  * whatever the game, so selecting one game after another doesn't make it jump: long text is clipped,
- * with the full text on hover. Re-renders with each new snapshot, so it stays current while open.
+ * with the full text on hover where it's cut off. Re-renders with each new snapshot, so it stays current while open.
  */
 export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
@@ -56,7 +57,7 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" title={league}>
+          <div className="game-panel__league" {...titleWhenClipped(league)}>
             {league}
           </div>
           <TeamRow team={game.away} />
@@ -67,16 +68,16 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
         <div className="game-panel__details">
           <div>
             <div className="game-panel__label">Venue</div>
-            <div className="game-panel__value" title={venueName}>
-              {venueName}
+            <div className="game-panel__value" {...titleWhenClipped(venueName)}>
+              {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
             </div>
-            <div className="game-panel__muted" title={place}>
-              {place}
+            <div className="game-panel__muted" {...titleWhenClipped(place)}>
+              {place && <MapsLink query={place}>{place}</MapsLink>}
             </div>
           </div>
           <div>
             <div className="game-panel__label">{endTime ? 'Ended' : 'Start'}</div>
-            <div className="game-panel__value" title={time.viewer}>
+            <div className="game-panel__value" {...titleWhenClipped(time.viewer)}>
               {time.viewer}
             </div>
             <div className="game-panel__muted">{time.venue && `${time.venue} local`}</div>
@@ -107,13 +108,22 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   )
 }
 
+/** A link to a place (the venue, or its city) in Google Maps, in a new tab. */
+function MapsLink({ query, children }: { query: string; children: ReactNode }) {
+  return (
+    <a className="game-panel__maps-link" href={mapsSearchUrl(query)} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  )
+}
+
 /**
  * The credit a Wikimedia Commons photo's licence asks for: its author, linking to the photo's page,
  * and its licence. Shown over the photo on hover.
  */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (
-    <figcaption className="game-panel__credit" title={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`}>
+    <figcaption className="game-panel__credit" {...titleWhenClipped(`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`)}>
       <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
         {credit.author}
       </a>
@@ -139,7 +149,7 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
   return (
     <ul className="game-panel__watch">
       {listed.map((link) => (
-        <li key={`${link.name} ${link.url}`} title={link.unofficial ? `${link.name} (unofficial stream)` : link.name}>
+        <li key={`${link.name} ${link.url}`} {...titleWhenClipped(link.unofficial ? `${link.name} (unofficial stream)` : link.name)}>
           {link.url ? (
             <a
               href={link.url}
@@ -169,7 +179,7 @@ function TeamRow({ team }: { team: GameTeam }) {
   return (
     <div className="game-panel__team">
       {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" title={team.record ? `${name} (${team.record})` : name}>
+      <span className="game-panel__team-name" {...titleWhenClipped(team.record ? `${name} (${team.record})` : name)}>
         {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}
         {team.fullName}
       </span>
@@ -191,7 +201,7 @@ function GameBand({ game }: { game: Game }) {
     <div className="game-panel__band">
       {lastScore && (
         <BandCell label="Last score" wide>
-          <div className="game-panel__clamp" title={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()}>
+          <div className="game-panel__clamp" {...titleWhenClipped(`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim())}>
             <span className="game-panel__strong">
               {lastScore.when && `${lastScore.when} · `}
               {lastScore.team}
@@ -202,7 +212,7 @@ function GameBand({ game }: { game: Game }) {
       )}
       {odds && (
         <BandCell label="Odds">
-          <div className="game-panel__one-line" title={odds}>
+          <div className="game-panel__one-line" {...titleWhenClipped(odds)}>
             {odds}
           </div>
           {game.odds?.bookmaker && <div className="game-panel__muted game-panel__one-line">{game.odds.bookmaker}</div>}

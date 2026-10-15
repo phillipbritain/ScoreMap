@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { isClipped } from './isClipped'
 import { tooltipPlace } from './tooltipPlace'
 
 /** How long the pointer rests on something before its tooltip shows, as the browser's own waits. */
@@ -17,7 +18,8 @@ interface Shown {
  * usual. While its tooltip is up an element's title is taken off, so the browser doesn't show its own
  * too, and put back after; a title that changes meanwhile shows at once. Places marked
  * [data-native-tooltips] (the local-run tools) keep the browser's. An element marked
- * data-tooltip-side="left" has its tooltip on its left (see tooltipPlace).
+ * data-tooltip-side="left" has its tooltip on its left (see tooltipPlace); one marked
+ * data-tooltip-when-clipped shows its title only while its text is cut off (see isClipped).
  */
 export function Tooltips() {
   const [shown, setShown] = useState<Shown | null>(null)
@@ -51,7 +53,8 @@ export function Tooltips() {
       element.removeAttribute('title')
       observer.observe(element, { attributeFilter: ['title'] })
       const prefer = element.dataset.tooltipSide === 'left' ? 'left' : 'above'
-      if (text) timer = window.setTimeout(() => setShown({ text, anchor: element.getBoundingClientRect(), prefer }), delay)
+      const fits = element.hasAttribute('data-tooltip-when-clipped') && !isClipped(element)
+      if (text && !fits) timer = window.setTimeout(() => setShown({ text, anchor: element.getBoundingClientRect(), prefer }), delay)
     }
 
     const titled = (node: EventTarget | null) => {

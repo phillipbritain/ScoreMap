@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isClipped } from './clippedTitle'
+import { isClipped } from './isClipped'
 
 describe('isClipped', () => {
   const box = { scrollWidth: 100, clientWidth: 100, scrollHeight: 20, clientHeight: 20 }

@@ -57,9 +57,9 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: 
       const next =
         origin && panelBox && targetBox
           ? {
-              panel: within(panelBox, origin),
-              target: within(targetBox, origin),
-              aim: aimBox ? within(aimBox, origin) : null,
+              panel: relativeTo(panelBox, origin),
+              target: relativeTo(targetBox, origin),
+              aim: aimBox ? relativeTo(aimBox, origin) : null,
             }
           : null
       setBoxes((current) => (sameBoxes(current, next) ? current : next))
@@ -89,7 +89,6 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: 
                   <path d="M0 0 10 5 0 10z" />
                 </marker>
               </defs>
-              <path className="welcome-tour__arrow-glow" d={arrow.path} />
               <path className="welcome-tour__arrow-flow" d={arrow.path} markerEnd={`url(#${head})`} />
             </svg>
           </>
@@ -114,7 +113,7 @@ function boxOf(elements: Iterable<Element>): ScreenBox | null {
 }
 
 /** A box on the page, in the pixels of a layer whose own box on the page is `origin`. */
-function within(box: ScreenBox, origin: ScreenBox): ScreenBox {
+function relativeTo(box: ScreenBox, origin: ScreenBox): ScreenBox {
   return {
     left: box.left - origin.left,
     top: box.top - origin.top,

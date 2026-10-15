@@ -46,6 +46,8 @@ Leagues, polling, venue lookups and corrections, scenario venues and teams, and 
 
 Which cities the globe names, and the settings for it: see [docs/city-labels.md](docs/city-labels.md).
 
+What ESPN gives for a game, what ScoreMap reads and what's there to add later: see [docs/espn-data.md](docs/espn-data.md).
+
 ## Test
 
 ```sh

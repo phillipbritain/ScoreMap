@@ -1,9 +1,12 @@
+using ScoreMap.Server.GameFeed;
+
 namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// A game as ScoreMap sends it to browsers. Serialized camelCase over SignalR;
 /// mirrored by <c>web/src/games/game.ts</c>. <see cref="ClutchTime"/> says whether a basketball game is in
-/// clutch time (see <see cref="Games.ClutchTime"/>); it's false in every other sport.
+/// clutch time (see <see cref="Games.ClutchTime"/>); it's false in every other sport. The rest is
+/// extra detail for the game panel, each part null (or empty) when the feed gives none.
 /// </summary>
 public sealed record Game(
     string Id,
@@ -21,14 +24,38 @@ public sealed record Game(
     bool ClutchTime,
     GameVenue Venue,
     IReadOnlyList<GameBroadcaster> Broadcasters,
-    IReadOnlyList<StreamLink> StreamLinks);
+    IReadOnlyList<StreamLink> StreamLinks)
+{
+    /// <summary>
+    /// What's special about the game, as the feed puts it: a playoff round ("NLDS - Game 2"), a game abroad
+    /// ("NFL London Games"), a two-legged tie's outcome.
+    /// </summary>
+    public string? Note { get; init; }
+
+    /// <summary>How many came to watch, once the feed reports it.</summary>
+    public int? Attendance { get; init; }
+
+    public GameOdds? Odds { get; init; }
+
+    /// <summary>Where play stands right now; only while the game is Live.</summary>
+    public GameSituation? Situation { get; init; }
+
+    /// <summary>The last score: who scored and how, and when in the game.</summary>
+    public ScoringPlay? LastScore { get; init; }
+
+    /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
+    public IReadOnlyList<KeyEvent> KeyEvents { get; init; } = [];
+}
 
 /// <summary>
 /// A team in a game. <see cref="Score"/> is text, as its sport writes it: points, goals or runs ("24"),
 /// or in cricket runs and wickets ("186/6"), runs alone when the side is all out; null before it scores
-/// anything (before the game starts, or in cricket before the team bats).
+/// anything (before the game starts, or in cricket before the team bats). <see cref="Rank"/> is its place
+/// in its league's poll (college sports), and <see cref="Record"/> its season so far ("5-2"; in soccer
+/// wins, draws and losses, "2-2-3"); each null where the feed gives none.
 /// </summary>
-public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, string? Score);
+public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, string? Score,
+    int? Rank = null, string? Record = null);
 
 /// <summary>
 /// Where a game is played. <see cref="Region"/> is its state, province or the like, spelled out in full
@@ -58,6 +85,37 @@ public sealed record PhotoCredit(string Author, string Licence, string? LicenceU
 /// and its official watch link when the owner has listed one.
 /// </summary>
 public sealed record GameBroadcaster(string Name, string? Country, string? WatchUrl);
+
+/// <summary>
+/// The betting line: <see cref="Line"/> as the bookmaker writes it ("SEA -2.5", "EVEN"), the total
+/// points it expects (<see cref="OverUnder"/>), and the bookmaker.
+/// </summary>
+public sealed record GameOdds(string? Line, double? OverUnder, string? Bookmaker);
+
+/// <summary>
+/// Where play stands in a Live game, each part null (or false) where it doesn't apply: the last play
+/// described; in football the down and distance ("3rd & 7 at DEN 34") and the team with the ball; in
+/// baseball the count, the outs and which bases have runners on.
+/// </summary>
+public sealed record GameSituation(
+    string? LastPlay,
+    string? DownAndDistance,
+    string? Possession,
+    int? Balls,
+    int? Strikes,
+    int? Outs,
+    bool OnFirst,
+    bool OnSecond,
+    bool OnThird);
+
+/// <summary>
+/// A score: the team that scored (its abbreviation), what happened ("Rashee Rice 2 Yd pass from Patrick
+/// Mahomes"), and when, in the style of the clock line ("Q1 5:58", "Top 7th", "23'").
+/// </summary>
+public sealed record ScoringPlay(string Team, string Text, string? When);
+
+/// <summary>A goal or card in soccer: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
+public sealed record KeyEvent(KeyEventKind Kind, string Team, string? Player, string? Clock);
 
 /// <summary>
 /// An unofficial stream for a game, found by the stream finder on one of the owner's

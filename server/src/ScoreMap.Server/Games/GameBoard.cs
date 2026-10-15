@@ -154,7 +154,17 @@ public sealed class GameBoard(
             ClutchTime.For(game, league),
             ToVenue(game.Venue, location) with { Photo = photos.PhotoFor(league.Key, game.Venue) },
             game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList(),
-            StreamLinks: []);
+            StreamLinks: [])
+        {
+            Note = game.Note,
+            Attendance = game.Attendance,
+            Odds = game.Odds is { } odds ? new GameOdds(odds.Line, odds.OverUnder, odds.Bookmaker) : null,
+            Situation = status == GameStatus.Live && game.Situation is { } s
+                ? new GameSituation(s.LastPlay, s.DownAndDistance, s.Possession, s.Balls, s.Strikes, s.Outs, s.OnFirst, s.OnSecond, s.OnThird)
+                : null,
+            LastScore = game.LastScore is { } play ? new ScoringPlay(play.Team, play.Text, ClockLine.When(play, league)) : null,
+            KeyEvents = game.KeyEvents.Select(k => new KeyEvent(k.Kind, k.Team, k.Player, k.Clock)).ToList(),
+        };
     }
 
     private static GameVenue ToVenue(ProviderVenue? venue, VenueLocation location)
@@ -167,7 +177,7 @@ public sealed class GameBoard(
     }
 
     private static GameTeam ToTeam(ProviderTeam team) =>
-        new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team));
+        new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record);
 
     /// <summary>The team's score as its sport writes it: "24", or in cricket "186/6", or "127" all out.</summary>
     private static string? ScoreText(ProviderTeam team) => (team.Score, team.Innings?.Wickets) switch

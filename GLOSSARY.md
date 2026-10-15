@@ -45,12 +45,23 @@ While zoomed in, a cluster where score cards' trails meet, in place of their ven
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe.
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for how the game is going: its last score (in soccer, its key events), its situation, its betting line and its attendance.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
 The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, all the way out), the "Live only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues).
 _Avoid_: Settings menu, quick settings, toolbar
+**Last score**:
+The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball.
+_Avoid_: Last play (that's any play, scoring or not), scoring summary
+
+**Situation**:
+Where play stands in a Live game right now: in football the down and distance and who has the ball, in baseball the count, outs and runners, and in every sport the feed covers the last play.
+_Avoid_: Game state, status (a game's status is Upcoming, Live, Final or Disrupted)
+
+**Key events**:
+Soccer's goals and cards, in the order they came, each with its team, player and minute.
+_Avoid_: Incidents, timeline
 
 **Pulse**:
 The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.

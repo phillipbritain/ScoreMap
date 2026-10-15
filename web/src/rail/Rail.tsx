@@ -4,6 +4,7 @@ import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { Colours } from './Colours'
 import { Leagues } from './Leagues'
+import { starPath, TopEventsTabs, type TopEvents } from '../prototypeTopEvents/topEventsPrototype'
 import { canZoom, nextPopover, railToggles, toggled, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -21,6 +22,8 @@ interface RailProps {
   onZoomOut: () => void
   /** Flies the camera back to the viewer's region, all the way out (see homeCamera). */
   onHome: () => void
+  /** PROTOTYPE: the Top Events switch (variants A and B live in the rail). */
+  topEvents: TopEvents
 }
 
 /**
@@ -30,7 +33,7 @@ interface RailProps {
  * tooltips. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
  * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
-export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, onZoomOut, onHome }: RailProps) {
+export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, onZoomOut, onHome, topEvents }: RailProps) {
   const zoom = camera ? canZoom(camera) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
@@ -82,6 +85,19 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
             {key === 'liveOnly' ? <LiveIcon /> : <DisruptedIcon />}
           </RailButton>
         ))}
+        {topEvents.variant === 'B' && (
+          <RailButton
+            label="Top Events"
+            title={`Top Events: ${topEvents.on ? 'on' : 'off'}`}
+            pressed={topEvents.on}
+            onClick={() => {
+              topEvents.setOn(!topEvents.on)
+              setToast({ text: `Top Events: ${topEvents.on ? 'off' : 'on'}`, id: (toast?.id ?? 0) + 1 })
+            }}
+          >
+            <path d={starPath} />
+          </RailButton>
+        )}
         {toast && (
           // Keyed, so a second press while it shows plays its fade afresh. Gone once it has faded.
           <p key={toast.id} className="rail__toast" role="status" onAnimationEnd={() => setToast(null)}>
@@ -100,7 +116,14 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
       {open && (
         <div ref={popover} id="rail-popover" className="rail__popover" role="dialog" aria-label={popoverNames[open]}>
           {open === 'leagues' ? (
-            <Leagues leagues={leagues} settings={settings} onChange={onChange} />
+            topEvents.variant === 'A' ? (
+              <TopEventsTabs
+                top={topEvents}
+                leaguesBody={<Leagues leagues={leagues} settings={settings} onChange={onChange} />}
+              />
+            ) : (
+              <Leagues leagues={leagues} settings={settings} onChange={onChange} />
+            )
           ) : (
             <Colours leagues={leagues} settings={settings} onChange={onChange} accent={accent} />
           )}

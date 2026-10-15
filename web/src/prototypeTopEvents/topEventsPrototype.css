@@ -1,0 +1,113 @@
+/* PROTOTYPE, throwaway (branch prototype-top-events). */
+
+/* The switcher: deliberately not the app's look, so it's plainly not part of the design. */
+.proto-switcher {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #ff2d87;
+  color: #fff;
+  font: 13px/1.2 system-ui, sans-serif;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 50%);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.proto-switcher button {
+  border: none;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 25%);
+  color: #fff;
+  font-size: 14px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.proto-switcher__state {
+  padding-left: 10px;
+  border-left: 1px solid rgb(255 255 255 / 50%);
+  opacity: 0.9;
+}
+
+/* Variant A: the switch at the top of the Leagues popover. */
+.proto-tabs {
+  display: flex;
+  margin-bottom: calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  overflow: hidden;
+}
+
+.proto-tabs button,
+.proto-pill button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(3 * var(--spacing));
+  border: none;
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.proto-tabs button[aria-checked='true'],
+.proto-pill button[aria-checked='true'] {
+  background: var(--rail-on-fill);
+  color: var(--rail-on-text);
+}
+
+.proto-note {
+  margin: 0 0 calc(3 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
+.proto-dimmed {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Variant C: the pill at the top centre of the globe, on the rail's glass. */
+.proto-pill {
+  --frost: var(--rail-frost);
+  --glass-tint: var(--rail-surface);
+  position: absolute;
+  top: calc(3 * var(--spacing));
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  padding: var(--spacing);
+  gap: var(--spacing);
+  border-radius: var(--controls-corner);
+  transform: translateX(-50%);
+  /* Glass, as index.css gives the app's other surfaces. */
+  --glass-shine: calc(1 - var(--frost));
+  --glass-fill: color-mix(in srgb, var(--glass-tint) calc(var(--frost) * 100%), transparent);
+  background: var(--glass-fill);
+  backdrop-filter: blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
+  box-shadow:
+    var(--rail-shadow),
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 30%, transparent);
+}
+
+.proto-pill button {
+  border-radius: var(--controls-corner);
+}
+
+.proto-pill__count {
+  padding: 0 calc(1.5 * var(--spacing));
+  border-radius: var(--controls-corner);
+  background: var(--rail-chip-badge);
+  font-size: var(--typography-caption-font-size);
+}

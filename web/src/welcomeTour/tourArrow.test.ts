@@ -36,6 +36,23 @@ describe('the tour arrow', () => {
     expect(to.y).toBeLessThan(from.y)
   })
 
+  it("ends at the side of a card above the panel, not under it where the card's trail runs", () => {
+    const teams = { left: 700, top: 120, right: 800, bottom: 170 }
+    const { from, to } = tourArrow(panel, teams, 'side')
+    expect(from.y).toBeLessThan(panel.top)
+    expect(to.x).toBeGreaterThan(teams.right)
+    expect(to.y).toBe(145)
+  })
+
+  it("ends at the side of a card above a bottom sheet, the side facing the sheet's middle", () => {
+    const sheet = { left: 12, top: 500, right: 363, bottom: 800 }
+    const teams = { left: 220, top: 200, right: 320, bottom: 250 }
+    const { from, to } = tourArrow(sheet, teams, 'side')
+    expect(from.y).toBeLessThan(sheet.top)
+    expect(to.x).toBeLessThan(teams.left)
+    expect(to.y).toBe(225)
+  })
+
   it('draws a path from its start to its end', () => {
     const rail = { left: 1550, top: 12, right: 1586, bottom: 340 }
     const { from, to, path } = tourArrow(panel, rail)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { firstVisitSettings, isLeagueOn, withLeague, type ViewerSettings } from '../settings/viewerSettings'
-import { canShowPicks, settingsForChoice, tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
+import { canShowPicks, scoreCardToTry, settingsForChoice, tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
 
 describe('welcome tour progress', () => {
   it.each<[TourProgress, TourEvent, TourProgress]>([
@@ -101,5 +101,44 @@ describe('"Show these" on the My leagues picker', () => {
 
   it("can't be pressed before the leagues have loaded", () => {
     expect(canShowPicks(firstVisitSettings, [])).toBe(false)
+  })
+})
+
+describe("Click a score card's pick", () => {
+  // A 1600 x 900 screen, its panel in the middle.
+  const screen = { left: 0, top: 0, right: 1600, bottom: 900 }
+  const panel = { left: 580, top: 300, right: 1020, bottom: 600 }
+  const card = (gameId: string, left: number, top: number) => ({
+    gameId,
+    box: { left, top, right: left + 120, bottom: top + 70 },
+  })
+
+  it('picks the card nearest the middle of the screen of those the panel leaves clear', () => {
+    const cards = [card('far', 100, 100), card('near', 400, 420), card('middling', 1200, 150)]
+    expect(scoreCardToTry(cards, panel, screen)).toBe('near')
+  })
+
+  it('passes over a card under the panel for the next nearest', () => {
+    const cards = [card('under', 740, 410), card('beside', 1100, 420)]
+    expect(scoreCardToTry(cards, panel, screen)).toBe('beside')
+  })
+
+  it('passes over a card within the margin of the panel for the next nearest', () => {
+    // Its right edge 5px short of the panel's left.
+    const cards = [card('hugging', 455, 420), card('clear', 1150, 420)]
+    expect(scoreCardToTry(cards, panel, screen)).toBe('clear')
+  })
+
+  it('passes over a card partly off the screen', () => {
+    const cards = [card('cut off', 1500, 420), card('whole', 0, 0)]
+    expect(scoreCardToTry(cards, panel, screen)).toBe('whole')
+  })
+
+  it('picks none when no card is clear of the panel', () => {
+    expect(scoreCardToTry([card('under', 740, 410), card('hugging', 455, 420)], panel, screen)).toBeNull()
+  })
+
+  it('picks none with no cards', () => {
+    expect(scoreCardToTry([], panel, screen)).toBeNull()
   })
 })

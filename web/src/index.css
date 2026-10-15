@@ -62,16 +62,17 @@ body {
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
    colour (--game-color, set on the panel, with --text-on-game-color for text on it). One
    size whatever the game, so it never jumps from one game to the next: the score block, the details
-   and the photo each have a fixed width, and every line of text is clipped to its slot. */
+   and the photo each have a fixed width, the band under them a fixed height, and every line of text
+   is clipped to its slot. */
 .game-panel {
   position: absolute;
   left: 50%;
   bottom: calc(3 * var(--spacing));
   z-index: 1;
   display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  height: var(--game-panel-size-height);
   /* The score block and photo are clipped to the panel's corners. */
   overflow: hidden;
   border-top: var(--shape-border-width-thick) solid var(--game-color);
@@ -93,6 +94,13 @@ body {
 .bottom-stack--scenario ~ .game-panel {
   --controls-row: calc(var(--controls-size-key) + var(--spacing));
   bottom: calc(3 * var(--spacing) + var(--controls-row) + 2 * var(--spacing));
+}
+
+/* The strip: the score block, the details and the photo, side by side. */
+.game-panel__main {
+  display: flex;
+  flex-shrink: 0;
+  height: var(--game-panel-size-height);
 }
 
 /* The score block at the left, slanted on its right edge. One column that can't grow past the
@@ -119,6 +127,12 @@ body {
   font-weight: var(--typography-overline-font-weight);
   letter-spacing: var(--typography-overline-letter-spacing);
   text-transform: uppercase;
+}
+
+.game-panel__league {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .game-panel__label {
@@ -158,6 +172,19 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* A team's poll ranking before its name, and its record after it, quieter than the name. */
+.game-panel__rank,
+.game-panel__record {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.game-panel__record {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Wide enough for three digits, so a score of 100 doesn't move anything. */
@@ -309,12 +336,137 @@ body {
   cursor: pointer;
 }
 
-/* On a phone: the score block above the details, and no photo. */
+/* The band under the strip: the last score (or soccer's goals and cards), where play stands, the
+   betting line and the crowd, each a cell of a label and two lines under it, ruled off from the strip.
+   Its height is fixed, three lines and its padding, so it keeps its size whatever the game shows. The
+   last score and where play stands get twice the room of the others. */
+.game-panel__band {
+  display: flex;
+  gap: calc(4 * var(--spacing));
+  box-sizing: border-box;
+  height: calc(4 * var(--spacing) + 3lh);
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  overflow: hidden;
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+  line-height: 1.3;
+}
+
+.game-panel__cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.game-panel__cell--wide {
+  flex-grow: 2;
+}
+
+.game-panel__band-empty {
+  align-self: center;
+}
+
+.game-panel__strong {
+  font-weight: var(--typography-button-font-weight);
+}
+
+/* Two lines at most, such as a last score's description. */
+.game-panel__clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.game-panel__one-line {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.game-panel__situation {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+}
+
+/* Baseball's bases, a diamond of three: empty ones outlined, ones with a runner filled. */
+.game-panel__bases {
+  flex-shrink: 0;
+  height: 1lh;
+}
+
+.game-panel__bases rect {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+
+.game-panel__bases rect.game-panel__base--on {
+  fill: var(--game-color);
+  stroke: var(--game-color);
+}
+
+/* Soccer's goals and cards, the latest first, as many as fit in two lines. */
+.game-panel__events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(3 * var(--spacing));
+  max-height: 2lh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.game-panel__events li {
+  white-space: nowrap;
+}
+
+/* A goal's ball, or a card in its colour, before its minute. Tried in code; settled, they move to the theme. */
+.game-panel__event-mark {
+  display: inline-block;
+  margin-right: var(--spacing);
+  vertical-align: -0.05em;
+}
+
+.game-panel__event-mark--goal {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  background: var(--palette-text-primary);
+}
+
+.game-panel__event-mark--yellow,
+.game-panel__event-mark--red {
+  width: 0.55em;
+  height: 0.8em;
+  border-radius: 1px;
+  background: #f5c518;
+}
+
+.game-panel__event-mark--red {
+  background: var(--palette-error-main);
+}
+
+/* On a phone: the score block above the details, and no photo; the band's cells two to a row. */
 @media (max-width: 640px) {
   .game-panel {
+    clip-path: none;
+  }
+
+  .game-panel__main {
     flex-direction: column;
     height: var(--game-panel-size-phone-height);
-    clip-path: none;
+  }
+
+  .game-panel__band {
+    flex-wrap: wrap;
+    gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+    height: calc(4 * var(--spacing) + 6lh);
+    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  }
+
+  .game-panel__cell {
+    flex-basis: calc(50% - 2 * var(--spacing));
   }
 
   /* The pills and the clock wrap to two rows on a phone. */

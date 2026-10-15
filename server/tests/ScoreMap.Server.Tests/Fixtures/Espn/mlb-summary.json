@@ -1,0 +1,290 @@
+{
+ "header": {
+  "id": "401907972",
+  "competitions": [
+   {
+    "id": "401907972",
+    "competitors": [
+     {
+      "id": "15",
+      "homeAway": "home",
+      "score": "3",
+      "team": {
+       "id": "15",
+       "abbreviation": "ATL",
+       "displayName": "Atlanta Braves"
+      }
+     },
+     {
+      "id": "22",
+      "homeAway": "away",
+      "score": "4",
+      "team": {
+       "id": "22",
+       "abbreviation": "PHI",
+       "displayName": "Philadelphia Phillies"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "plays": [
+  {
+   "id": "4019079721803040028",
+   "sequenceNumber": "4",
+   "type": {
+    "id": "28",
+    "text": "Home Run",
+    "abbreviation": "HR",
+    "alternativeText": "Home Run",
+    "type": "home-run"
+   },
+   "text": "Pitch 3 : Ball In Play",
+   "awayScore": 4,
+   "homeScore": 3,
+   "period": {
+    "type": "Top",
+    "number": 10,
+    "displayValue": "10th Inning"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "team": {
+    "id": "15"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "id": "5291189"
+     },
+     "type": "pitcher"
+    },
+    {
+     "athlete": {
+      "id": "41169"
+     },
+     "type": "batter"
+    }
+   ],
+   "wallclock": "2026-09-30T21:02:40Z",
+   "atBatId": "4019079721803",
+   "batOrder": 4,
+   "bats": {
+    "type": "RIGHT",
+    "abbreviation": "R",
+    "displayValue": "Right"
+   },
+   "atBatPitchNumber": 3,
+   "pitchCoordinate": {
+    "x": 131,
+    "y": 153
+   },
+   "pitchType": {
+    "id": "17",
+    "text": "Four-seam FB",
+    "abbreviation": "FF"
+   },
+   "pitchVelocity": 99,
+   "hitCoordinate": {
+    "x": 213,
+    "y": 83
+   },
+   "summaryType": "P",
+   "pitchCount": {
+    "balls": 1,
+    "strikes": 1
+   },
+   "resultCount": {
+    "balls": 1,
+    "strikes": 1
+   },
+   "trajectory": "F",
+   "outs": 2
+  },
+  {
+   "id": "4019079721803990057",
+   "sequenceNumber": "5",
+   "type": {
+    "id": "57",
+    "text": "Play Result",
+    "type": "play-result"
+   },
+   "alternativeType": {
+    "id": "28",
+    "text": "Home Run",
+    "abbreviation": "HR",
+    "alternativeText": "Home Run",
+    "type": "home-run"
+   },
+   "alternativePlay": "4019079721803040028",
+   "text": "Bohm homered to right (357 feet).",
+   "awayScore": 4,
+   "homeScore": 3,
+   "period": {
+    "type": "Top",
+    "number": 10,
+    "displayValue": "10th Inning"
+   },
+   "scoringPlay": true,
+   "scoreValue": 1,
+   "team": {
+    "id": "22"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "id": "5291189"
+     },
+     "type": "pitcher"
+    },
+    {
+     "athlete": {
+      "id": "41169"
+     },
+     "type": "batter"
+    }
+   ],
+   "wallclock": "2026-09-30T21:02:40Z",
+   "atBatId": "4019079721803",
+   "batOrder": 4,
+   "bats": {
+    "type": "RIGHT",
+    "abbreviation": "R",
+    "displayValue": "Right"
+   },
+   "atBatPitchNumber": 3,
+   "pitchCoordinate": {
+    "x": 131,
+    "y": 153
+   },
+   "hitCoordinate": {
+    "x": 213,
+    "y": 83
+   },
+   "summaryType": "S",
+   "pitchCount": {
+    "balls": 1,
+    "strikes": 1
+   },
+   "resultCount": {
+    "balls": 1,
+    "strikes": 1
+   },
+   "trajectory": "F",
+   "outs": 2
+  },
+  {
+   "id": "4019079721905990099",
+   "sequenceNumber": "7",
+   "type": {
+    "id": "99",
+    "text": "End Batter/Pitcher",
+    "type": "end-batterpitcher"
+   },
+   "awayScore": 4,
+   "homeScore": 3,
+   "period": {
+    "type": "Bottom",
+    "number": 10,
+    "displayValue": "10th Inning"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "team": {
+    "id": "15"
+   },
+   "participants": [
+    {
+     "athlete": {
+      "id": "4872683"
+     },
+     "type": "pitcher"
+    },
+    {
+     "athlete": {
+      "id": "33218"
+     },
+     "type": "batter"
+    },
+    {
+     "athlete": {
+      "id": "42470"
+     },
+     "type": "onFirst"
+    },
+    {
+     "athlete": {
+      "id": "35304"
+     },
+     "type": "onSecond"
+    }
+   ],
+   "wallclock": "2026-09-30T21:19:22Z",
+   "atBatId": "4019079721905",
+   "batOrder": 8,
+   "bats": {
+    "type": "LEFT",
+    "abbreviation": "L",
+    "displayValue": "Left"
+   },
+   "atBatPitchNumber": 3,
+   "pitchCoordinate": {
+    "x": 88,
+    "y": 172
+   },
+   "pitchCount": {
+    "balls": 0,
+    "strikes": 3
+   },
+   "resultCount": {
+    "balls": 0,
+    "strikes": 3
+   },
+   "outs": 3,
+   "onFirst": {
+    "athlete": {
+     "id": "42470"
+    }
+   },
+   "onSecond": {
+    "athlete": {
+     "id": "35304"
+    }
+   }
+  },
+  {
+   "id": "4019079721999990058",
+   "sequenceNumber": "2",
+   "type": {
+    "id": "58",
+    "text": "End Inning",
+    "type": "end-inning"
+   },
+   "text": "End of the 10th inning",
+   "awayScore": 4,
+   "homeScore": 3,
+   "period": {
+    "type": "End",
+    "number": 10,
+    "displayValue": "10th Inning"
+   },
+   "scoringPlay": false,
+   "scoreValue": 0,
+   "team": {
+    "id": "15"
+   },
+   "wallclock": "2026-09-30T21:19:22Z",
+   "atBatId": "4019079721905",
+   "pitchCount": {
+    "balls": 0,
+    "strikes": 0
+   },
+   "resultCount": {
+    "balls": 0,
+    "strikes": 0
+   },
+   "outs": 0
+  }
+ ]
+}

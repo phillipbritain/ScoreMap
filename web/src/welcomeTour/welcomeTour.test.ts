@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { firstVisitSettings, isLeagueOn, withLeague, type ViewerSettings } from '../settings/viewerSettings'
-import { canShowPicks, scoreCardToTry, settingsForChoice, tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
+import {
+  canShowPicks,
+  isTourProgress,
+  scoreCardToTry,
+  settingsForChoice,
+  tourProgressAfter,
+  type TourEvent,
+  type TourProgress,
+} from './welcomeTour'
 
 describe('welcome tour progress', () => {
   it.each<[TourProgress, TourEvent, TourProgress]>([
@@ -34,6 +42,16 @@ describe('welcome tour progress', () => {
     { kind: 'gameOpened' },
   ])('stays finished on %j', (event) => {
     expect(tourProgressAfter('finished', event)).toBe('finished')
+  })
+})
+
+describe('isTourProgress', () => {
+  it.each(['welcome', 'controls', 'scoreCard', 'finished'])('takes %s as a step', (progress) => {
+    expect(isTourProgress(progress)).toBe(true)
+  })
+
+  it.each<unknown>(['halfway', 'Welcome', '', 3, null, undefined, ['welcome']])('takes %j as no step', (progress) => {
+    expect(isTourProgress(progress)).toBe(false)
   })
 })
 

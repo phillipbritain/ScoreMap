@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Camera } from '../globe/camera'
 import type { ZoomSettings } from '../globe/zoomLevels'
 import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { Colours } from './Colours'
 import { Leagues } from './Leagues'
-import { DisruptedIcon, HomeIcon, LeaguesIcon, LiveIcon, PaletteIcon, RailIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
+import { railIcon, type RailButtonName } from './railButtons'
+import { RailIcon } from './railIcons'
 import { canZoom, nextPopover, railToggles, toggled, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -62,15 +63,9 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
     <div className="rail" inert={inert}>
       {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
       <div className="rail__group" data-keeps-popovers>
-        <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn}>
-          <ZoomInIcon />
-        </RailButton>
-        <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut}>
-          <ZoomOutIcon />
-        </RailButton>
-        <RailButton label="Home" disabled={!camera} onClick={onHome}>
-          <HomeIcon />
-        </RailButton>
+        <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
+        <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
+        <RailButton label="Home" disabled={!camera} onClick={onHome} />
       </div>
       <div className="rail__group">
         {railToggles.map(({ key, name }) => (
@@ -84,9 +79,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
               // With hover, the tooltip names the toggle and its colour says the rest.
               if (!window.matchMedia(hoverScreen).matches) setToast({ text: next.toast, id: (toast?.id ?? 0) + 1 })
             }}
-          >
-            {key === 'liveOnly' ? <LiveIcon /> : <DisruptedIcon />}
-          </RailButton>
+          />
         ))}
         {toast && (
           // Keyed, so a second press while it shows plays its fade afresh. Gone once it has faded.
@@ -96,12 +89,8 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         )}
       </div>
       <div className="rail__group">
-        <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })}>
-          <LeaguesIcon />
-        </RailButton>
-        <RailButton label="Colours" popover="colours" open={open} onClick={() => popoverEvent({ press: 'colours' })}>
-          <PaletteIcon />
-        </RailButton>
+        <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
+        <RailButton label="Colours" popover="colours" open={open} onClick={() => popoverEvent({ press: 'colours' })} />
       </div>
       {open && (
         <div ref={popover} id="rail-popover" className="rail__popover" role="dialog" aria-label={popoverNames[open]}>
@@ -121,8 +110,8 @@ const hoverScreen = '(hover: hover)'
 const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', colours: 'Colours' }
 
 /**
- * One of the rail's icon buttons, with its name as a tooltip. A toggle is pressed or not; a popover's
- * button says whether its popover is open.
+ * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A toggle is
+ * pressed or not; a popover's button says whether its popover is open.
  */
 function RailButton({
   label,
@@ -131,15 +120,13 @@ function RailButton({
   popover,
   open,
   onClick,
-  children,
 }: {
-  label: string
+  label: RailButtonName
   disabled?: boolean
   pressed?: boolean
   popover?: RailPopover
   open?: RailPopover | null
   onClick: () => void
-  children: ReactNode
 }) {
   return (
     <button
@@ -157,7 +144,7 @@ function RailButton({
       data-popover-button={popover}
       onClick={onClick}
     >
-      <RailIcon className="rail__icon">{children}</RailIcon>
+      <RailIcon className="rail__icon">{railIcon(label)}</RailIcon>
     </button>
   )
 }

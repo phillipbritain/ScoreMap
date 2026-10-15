@@ -1,14 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
-import {
-  DisruptedIcon,
-  HomeIcon,
-  LeaguesIcon,
-  LiveIcon,
-  PaletteIcon,
-  RailIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
-} from '../rail/railIcons'
+import { railButtons, type RailButtonName } from '../rail/railButtons'
+import { RailIcon } from '../rail/railIcons'
 import {
   isLeagueOn,
   leaguesBySport,
@@ -41,9 +33,9 @@ interface WelcomeTourScreenProps {
 
 /**
  * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen (on a
- * phone, a bottom sheet where the game panel sits), over a light dim that keeps the globe and rail from being used beneath it. There is no Ã—, Skip or dots, and
- * Escape does nothing: each step moves on only with its own choice or button. What each step does is
- * welcomeTour's; this only draws it.
+ * phone, a bottom sheet where the game panel sits), over a light dim that keeps the globe and rail
+ * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
+ * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChange, onOpenGame }: WelcomeTourScreenProps) {
   const choose = (choice: TourChoice) => {
@@ -184,16 +176,16 @@ function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'o
   )
 }
 
-/** The rail's buttons, top to bottom: each with the rail's own icon and a few words on it. */
-const railButtons = [
-  { name: 'Zoom in', icon: <ZoomInIcon />, words: 'Zoom in' },
-  { name: 'Zoom out', icon: <ZoomOutIcon />, words: 'Zoom out' },
-  { name: 'Home', icon: <HomeIcon />, words: 'Home: back to your part of the world' },
-  { name: 'Live games only', icon: <LiveIcon />, words: 'Live games only' },
-  { name: 'Show Disrupted games', icon: <DisruptedIcon />, words: 'Show games that were called off' },
-  { name: 'Leagues', icon: <LeaguesIcon />, words: 'Leagues: Top Events or your own picks' },
-  { name: 'Colours', icon: <PaletteIcon />, words: 'Colours for each sport and league' },
-]
+/** A few words on each of the rail's buttons, which Your controls lists beside its icon. */
+const railButtonWords: Record<RailButtonName, string> = {
+  'Zoom in': 'Zoom in',
+  'Zoom out': 'Zoom out',
+  Home: 'Home: back to your part of the world',
+  'Live games only': 'Live games only',
+  'Show Disrupted games': 'Show Disrupted games: postponed, suspended or canceled',
+  Leagues: 'Leagues: Top Events or your own picks',
+  Colours: 'Colours for each sport and league',
+}
 
 /** The rail's groups of buttons, which Your controls lights and points at. */
 const railGroups = () => document.querySelectorAll('.rail__group')
@@ -206,10 +198,10 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
       <TourPointer panel={panel} target={railGroups} />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
         <ul className="welcome-tour__controls">
-          {railButtons.map(({ name, icon, words }) => (
+          {railButtons.map(({ name, icon }) => (
             <li key={name} className="welcome-tour__control">
               <RailIcon className="welcome-tour__control-icon">{icon}</RailIcon>
-              {words}
+              {railButtonWords[name]}
             </li>
           ))}
         </ul>
@@ -244,7 +236,8 @@ function ScoreCardStep({ onDone, onOpenGame }: ScoreCardStepProps) {
         />
       )}
       <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
-        {gameId === null ? (
+        {/* Neither wording until the panel has been measured and a card picked (or none). */}
+        {gameId === null && (
           <>
             <p className="welcome-tour__text">
               Each game shows as a score card like this one. Click one to open a panel with details for the event,
@@ -252,7 +245,8 @@ function ScoreCardStep({ onDone, onOpenGame }: ScoreCardStepProps) {
             </p>
             <ExampleScoreCard />
           </>
-        ) : (
+        )}
+        {gameId && (
           <p className="welcome-tour__text">
             Try this one: it opens a panel with details for the event, venue, last score, where to watch, and more
           </p>

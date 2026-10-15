@@ -88,7 +88,7 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
 | `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
 | `palette.text.link` | Links (the game panel's stream links) | `offWhite.500` |
-| `palette.divider` | The lines between a menu's parts (under the settings tabs, under "All leagues") | `navy.600` |
+| `palette.divider` | The lines between a menu's parts (between the rail's buttons, under "All leagues") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
 
 The statuses' colours and `text.link` are ScoreMap's own, beside MUI's. MUI works out a colour's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives them all (a status's colour has no `contrastText`), so each is a step that can be seen and changed.
@@ -162,7 +162,7 @@ Beside the palette's background, text, divider and hover:
 | `components.LoadingScreen.spinner.track` | The rest of the spinner's ring, that the arc turns around | `navy.600` |
 | `components.LoadingScreen.message` | The message under the loading screen's spinner when loading is slow | `text.primary` |
 
-"On" is off-white everywhere (a settings tab, a league chip, a lit speed key, the selection), so chosen looks the same across the app.
+"On" is off-white everywhere (a league chip, a lit speed key, the selection), but for the rail's toggles, which are gold when on and grey when off, so chosen looks the same across the app.
 
 ## How a game's status shows
 
@@ -240,7 +240,7 @@ Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-
 
 - **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a few units and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 2, 4, 6, 8, 12, 16, 24 and 32 pixels (half a unit to 8).
 - **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters, the status light) stay circles whatever it is.
-- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, the settings tab's underline `medium`, the game panel's top edge and the loading screen's spinner ring `thick`. The dark theme's are 1, 2 and 3.
+- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, a colour swatch's ring `medium`, the game panel's top edge and the loading screen's spinner ring `thick`. The dark theme's are 1, 2 and 3.
 
 ### Corners and the cut corner
 
@@ -250,10 +250,10 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the rail's groups and popovers, the list of scenarios | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
-| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips | `pill` |
+| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast | `pill` |
 
 The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
 

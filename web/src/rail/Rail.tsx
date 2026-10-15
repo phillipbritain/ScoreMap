@@ -22,9 +22,6 @@ interface RailProps {
   onHome: () => void
 }
 
-/** How long a toggle's toast shows, in milliseconds. */
-const toastTime = 1800
-
 /**
  * The rail: a column of icon buttons at the top right of the globe, in three groups. Zoom in, zoom
  * out and Home, which move the camera. The "Live only" and "Show Disrupted games" toggles, each
@@ -37,7 +34,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
   const [open, setOpen] = useState<RailPopover | null>(null)
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
   const popover = useRef<HTMLDivElement>(null)
-  const change = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
+  const popoverEvent = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
 
   useEffect(() => {
     if (!open) return
@@ -59,12 +56,6 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
       window.removeEventListener('pointerdown', onPointer, true)
     }
   }, [open])
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), toastTime)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   return (
     <div className="rail">
@@ -96,17 +87,17 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
           </RailButton>
         ))}
         {toast && (
-          // Keyed, so a second press while it shows plays its fade afresh.
-          <p key={toast.id} className="rail__toast" role="status">
+          // Keyed, so a second press while it shows plays its fade afresh. Gone once it has faded.
+          <p key={toast.id} className="rail__toast" role="status" onAnimationEnd={() => setToast(null)}>
             {toast.text}
           </p>
         )}
       </div>
       <div className="rail__group">
-        <RailButton label="Leagues" popover="leagues" open={open} onClick={() => change({ press: 'leagues' })}>
+        <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })}>
           <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
         </RailButton>
-        <RailButton label="Colours" popover="colours" open={open} onClick={() => change({ press: 'colours' })}>
+        <RailButton label="Colours" popover="colours" open={open} onClick={() => popoverEvent({ press: 'colours' })}>
           <PaletteIcon />
         </RailButton>
       </div>

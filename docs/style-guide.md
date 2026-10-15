@@ -398,7 +398,7 @@ To try changes first, use the **theme tuner**, the "Theme" button at the top rig
 
 ### Adding a setting
 
-A new setting goes in the settings in `web/src/theme/theme.ts` and in every theme's JSON, since a theme without it is rejected; its custom property then appears on the page by itself. A part's own look goes in its component, under `components`; what's shared goes where MUI keeps it, in the palette, the typography, `spacing` or `shape`. The page's CSS reads it through that custom property. Likewise a setting taken out must leave every theme's JSON, since a theme with a setting it doesn't know is rejected.
+A new setting goes in the settings in `web/src/theme/theme.ts` and in every theme's JSON, since a theme without it is rejected; its custom property then appears on the page by itself. A part's own look goes in its component, under `components`; what's shared goes where MUI keeps it, in the palette, the typography, `spacing` or `shape`. The page's CSS reads it through that custom property. Likewise a setting taken out must leave every theme's JSON, since a theme with a setting it doesn't know is rejected. Either way, change its count in the "writes every setting" test (`web/src/theme/applyTheme.test.ts`), which counts every setting written to the page by hand.
 
 ### What stays in code
 

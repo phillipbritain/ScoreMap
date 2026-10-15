@@ -2,11 +2,12 @@
    plain look of its own and reads none of the theme's custom properties: tuning text sizes or
    surfaces can't make it unreadable. */
 /* The local-run tools (this and the behaviour tuner, which shares its look), side by side at the top
-   right. The tools' panels hang below their buttons; the space between them lets the globe through. */
+   left, clear of the rail at the top right. The tools' panels hang below their buttons; the space
+   between them lets the globe through. */
 .dev-tools {
   position: absolute;
   top: 12px;
-  right: 12px;
+  left: 12px;
   bottom: 12px;
   z-index: 3;
   display: flex;
@@ -23,7 +24,7 @@
 .theme-tuner {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 8px;
   max-height: 100%;
   pointer-events: auto;
@@ -274,7 +275,7 @@
 .theme-tuner__grid {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0;
+  left: 0;
   z-index: 1;
   display: flex;
   flex-direction: column;

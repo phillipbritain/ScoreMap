@@ -204,6 +204,14 @@
   font-weight: 600;
 }
 
+/* The globe's zoom now, beside the Zoom heading, for comparing with the zoom settings. */
+.behaviour-tuner__now {
+  margin-left: 8px;
+  font-weight: normal;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
 .theme-tuner__group--top > .theme-tuner__heading {
   color: #e6e6e6;
 }

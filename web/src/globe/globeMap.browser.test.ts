@@ -14,7 +14,7 @@ import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { isBehindGlobe } from './horizon'
 import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
-import { cardZoom, maxZoom } from './zoomLevels'
+import { cardZoom, maxZoom, zoomSettings } from './zoomLevels'
 
 /**
  * When set, every layout of the score cards nudges each card (and its trail) that many pixels the
@@ -100,6 +100,10 @@ afterEach(() => {
   container?.remove()
 })
 
+// The app's zoom limits, but zooming out to 2, the whole globe: the tests look at small pins and
+// pin clusters well out from cardZoom, wherever the app's furthest out is set.
+const testZoom = { ...zoomSettings, minZoom: Math.min(zoomSettings.minZoom, 2) }
+
 /** Opens a globe on the page, 800 × 600 unless given a size, looking at the given place. */
 function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   container = document.createElement('div')
@@ -108,7 +112,7 @@ function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
   const onStage = vi.fn<(stage: LoadingStage) => void>()
-  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera, onSelect, onCameraMove, onStage })
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, zoomSettings: testZoom, startCamera, onSelect, onCameraMove, onStage })
   opened.push(globe)
   // MapLibre's own map, to see what it draws; the tests drive the globe only through GlobeMap.
   const map = (globe as unknown as { map: MapLibreMap }).map

@@ -118,13 +118,13 @@ describe('applyTheme', () => {
         json.components.ScoreCard.header.letterSpacing = 0.2
         json.components.PlaceNames.country.letterSpacing = 0.1
         json.components.GamePanel.size.scoreWidth = 3
-        json.components.SettingsMenu.size.mark = 1.1
+        json.components.Rail.size.mark = 1.1
       }),
     )
     expect(properties.get('--score-card-header-letter-spacing')).toBe('0.2em')
     expect(properties.get('--place-names-country-letter-spacing')).toBe('0.1em')
     expect(properties.get('--game-panel-size-score-width')).toBe('3em')
-    expect(properties.get('--settings-menu-size-mark')).toBe('1.1em')
+    expect(properties.get('--rail-size-mark')).toBe('1.1em')
   })
 
   it('writes a shadow as a CSS shadow, its colour resolved', () => {
@@ -174,8 +174,8 @@ describe('applyTheme', () => {
       gamePanel: 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The settings menu's eleven colours and shadows and five sizes.
-      settingsMenu: 11 + 5,
+      // The rail's eleven colours and shadows and six sizes.
+      rail: 11 + 6,
       // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 2 + 1 + 2 + 2,
       // The loading screen's dim (a colour and an opacity), spinner (two colours and a size) and message.

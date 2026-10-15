@@ -670,7 +670,7 @@ body {
   }
 }
 
-/* The globe with the settings menu and the no-pins message laid over it. */
+/* The globe with the rail and the no-pins message laid over it. */
 .globe-area {
   position: relative;
   display: flex;
@@ -679,88 +679,139 @@ body {
   min-height: 0;
 }
 
-/* Above the scenario pills, the clock and the no-pins message along the bottom, which an open menu can reach
-   down to. */
-.settings-menu {
+/* The rail at the top right: its groups of buttons stacked down, its popovers and toast to its left.
+   Above the scenario pills, the clock and the no-pins message along the bottom, which an open popover
+   can reach down to. */
+.rail {
   position: absolute;
   top: calc(3 * var(--spacing));
-  left: calc(3 * var(--spacing));
+  right: calc(3 * var(--spacing));
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: calc(2 * var(--spacing));
-  max-height: calc(100% - 6 * var(--spacing));
 }
 
-/* Just the gear, standing on the globe without a panel: in secondary text, with the theme's outline
-   around it (the dark theme has none: controls cast no shadow), and without the disclosure triangle. */
-.settings-menu summary {
+/* A group of buttons on the rail's surface, a divider between each. */
+.rail__group {
+  position: relative;
   display: flex;
-  color: var(--palette-text-secondary);
-  cursor: pointer;
-  list-style: none;
-  filter: drop-shadow(var(--settings-menu-gear-outline));
-}
-
-.settings-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.settings-menu__icon {
-  width: var(--settings-menu-size-gear);
-  height: var(--settings-menu-size-gear);
-}
-
-/* The panel below the gear, on the settings menu's surface: the built-in theme's is the scenario
-   pills' colour but solid, so score cards behind it don't show through. */
-.settings-menu__panel {
-  width: var(--settings-menu-size-width);
-  max-width: calc(100vw - 6 * var(--spacing));
-  overflow-y: auto;
+  flex-direction: column;
   border-radius: var(--menu-corner);
-  background: var(--settings-menu-surface);
+  background: var(--rail-surface);
+  box-shadow: var(--rail-shadow);
+}
+
+.rail__group > .rail__button + .rail__button {
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.rail__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rail-size-button);
+  height: var(--rail-size-button);
+  padding: 0;
+  border: none;
+  border-radius: var(--menu-corner);
+  background: none;
+  color: var(--palette-text-primary);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .rail__button:hover:enabled {
+    background: var(--palette-action-hover);
+  }
+}
+
+.rail__button:disabled {
+  opacity: var(--controls-off-opacity);
+  cursor: default;
+}
+
+/* A toggle: in the theme's on colour (gold) when on, and its off colour (grey) when off. A popover's
+   button, while its popover is open, takes the on colour too. */
+.rail__button[aria-pressed='true'],
+.rail__button[aria-expanded='true'] {
+  color: var(--rail-toggle-on);
+}
+
+.rail__button[aria-pressed='false'] {
+  color: var(--rail-toggle-off);
+}
+
+.rail__icon {
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+/* What a toggle just changed ("Live only: on"), beside the toggles, fading away by itself. */
+.rail__toast {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 2 * var(--spacing));
+  margin: 0;
+  padding: var(--spacing) calc(3 * var(--spacing));
+  border-radius: var(--controls-corner);
+  background: var(--rail-surface);
+  box-shadow: var(--rail-shadow);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
-  box-shadow: var(--settings-menu-shadow);
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+  animation: rail-toast 1.8s ease-in forwards;
 }
 
-.settings-tabs {
-  display: flex;
-  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+@keyframes rail-toast {
+  0%,
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
-.settings-tab {
-  flex: 1;
-  padding: calc(2 * var(--spacing));
-  border: none;
-  border-bottom: var(--shape-border-width-medium) solid transparent;
-  background: none;
-  color: var(--settings-menu-tab);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
-  cursor: pointer;
-}
-
-.settings-tab[aria-selected='true'] {
-  border-bottom-color: var(--settings-menu-on-fill);
-  color: var(--settings-menu-on-fill);
-}
-
-.settings-tab-body {
+/* A popover, Leagues or Colours, to the left of the rail and level with its top, on the rail's
+   surface: the built-in theme's is the scenario pills' colour but solid, so score cards behind it
+   don't show through. */
+.rail__popover {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 2 * var(--spacing));
+  box-sizing: border-box;
+  width: var(--rail-size-width);
+  max-width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
+  max-height: calc(100vh - 6 * var(--spacing));
+  overflow-y: auto;
   padding: calc(3 * var(--spacing));
+  border-radius: var(--menu-corner);
+  background: var(--rail-surface);
+  color: var(--palette-text-primary);
+  font-size: var(--typography-body2-font-size);
+  box-shadow: var(--rail-shadow);
 }
 
-.settings-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(1.5 * var(--spacing));
+/* On a phone: a sheet across the whole width, from the rail's top down, over the rail. */
+@media (max-width: 640px) {
+  .rail__popover {
+    position: fixed;
+    top: calc(3 * var(--spacing));
+    right: calc(3 * var(--spacing));
+    left: calc(3 * var(--spacing));
+    width: auto;
+    max-width: none;
+  }
 }
 
-.settings-chip {
+/* A league as a pill, filled in while on. */
+.rail-chip {
   padding: var(--spacing) calc(3 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--settings-menu-chip-outline);
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
   border-radius: var(--controls-corner);
   background: transparent;
   color: var(--palette-text-secondary);
@@ -772,72 +823,18 @@ body {
 }
 
 /* Filled in, not bolder: bold text would widen the chip and shift the chips after it. */
-.settings-chip[aria-pressed='true'] {
-  border-color: var(--settings-menu-on-fill);
-  background: var(--settings-menu-on-fill);
-  color: var(--settings-menu-on-text);
+.rail-chip[aria-pressed='true'] {
+  border-color: var(--rail-on-fill);
+  background: var(--rail-on-fill);
+  color: var(--rail-on-text);
 }
 
-/* "All leagues", above the sports: a bigger chip, dashed while only some leagues are on. */
-.settings-master {
-  display: flex;
-  align-items: center;
-  gap: calc(2 * var(--spacing));
-  margin-bottom: calc(3 * var(--spacing));
-  padding-bottom: calc(2 * var(--spacing));
-  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
-}
-
-.settings-master__chip {
-  display: flex;
-  align-items: center;
-  gap: calc(2 * var(--spacing));
-  height: var(--settings-menu-size-all-leagues);
-  padding: 0 calc(2 * var(--spacing));
-  font-size: var(--typography-button-font-size);
-}
-
-/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
-.settings-master__mark {
-  width: var(--settings-menu-size-mark);
-  height: var(--settings-menu-size-mark);
-  line-height: 1;
-  margin-right: calc(-1 * var(--spacing));
-  text-align: center;
-}
-
-.settings-master__chip--mixed {
-  border-style: dashed;
-  border-color: var(--settings-menu-on-fill);
-}
-
-/* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
-.settings-master__count {
-  min-width: var(--settings-menu-size-count-width);
-  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
-  border-radius: var(--controls-corner);
-  background: var(--settings-menu-chip-badge);
-  text-align: center;
-  color: var(--palette-text-secondary);
-  font-size: var(--typography-caption-font-size);
-}
-
-.settings-master__chip--on .settings-master__count {
-  background: var(--settings-menu-on-text);
-}
-
-.settings-master__hint {
-  flex: 1;
-  color: var(--settings-menu-hint);
-  font-size: var(--typography-caption-font-size);
-}
-
-.settings-sport + .settings-sport {
+/* A sport in a popover: its name, then its leagues. */
+.rail-sport + .rail-sport {
   margin-top: calc(3 * var(--spacing));
 }
 
-.settings-sport__name {
+.rail-sport__name {
   display: flex;
   gap: calc(1.5 * var(--spacing));
   margin-bottom: calc(1.5 * var(--spacing));
@@ -851,27 +848,108 @@ body {
   cursor: pointer;
 }
 
-/* A sport's name, then the swatch of its games' colour. */
-.settings-sport__head {
+/* Leagues: "All leagues", above the sports, as a bigger chip, dashed while only some leagues are on. */
+.leagues-master {
   display: flex;
   align-items: center;
   gap: calc(2 * var(--spacing));
-  margin-bottom: calc(1.5 * var(--spacing));
-
-  .settings-sport__name {
-    margin-bottom: 0;
-  }
+  margin-bottom: calc(3 * var(--spacing));
+  padding-bottom: calc(2 * var(--spacing));
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
-.settings-colour {
+.leagues-master__chip {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  height: var(--rail-size-all-leagues);
+  padding: 0 calc(2 * var(--spacing));
+  font-size: var(--typography-button-font-size);
+}
+
+/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
+   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
+.leagues-master__mark {
+  width: var(--rail-size-mark);
+  height: var(--rail-size-mark);
+  line-height: 1;
+  margin-right: calc(-1 * var(--spacing));
+  text-align: center;
+}
+
+.leagues-master__chip--mixed {
+  border-style: dashed;
+  border-color: var(--rail-on-fill);
+}
+
+/* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
+.leagues-master__count {
+  min-width: var(--rail-size-count-width);
+  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
+  border-radius: var(--controls-corner);
+  background: var(--rail-chip-badge);
+  text-align: center;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+.leagues-master__chip--on .leagues-master__count {
+  background: var(--rail-on-text);
+}
+
+.leagues-master__hint {
+  flex: 1;
+  color: var(--rail-hint);
+  font-size: var(--typography-caption-font-size);
+}
+
+.leagues-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.5 * var(--spacing));
+}
+
+/* How many of the sport's leagues are on, such as 2/2. */
+.leagues-sport__count {
+  color: var(--rail-count);
+  font-family: var(--typography-font-family);
+  font-weight: var(--typography-button-font-weight);
+}
+
+/* Colours: a sport's or league's name, then the swatch of its games' colour and its clear control. */
+.colours-row {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  min-height: calc(7 * var(--spacing));
+}
+
+.colours-row__name {
+  flex: 1;
+}
+
+.colours-row--sport .colours-row__name {
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+/* A league, set in under its sport. */
+.colours-row--league {
+  padding-left: calc(3 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
+/* The swatch, then the clear control or room for it, so swatches line up whether picked or not. */
+.colour {
   display: flex;
   align-items: center;
   gap: var(--spacing);
+  min-width: calc(8 * var(--spacing));
 }
 
 /* The browser's own colour input, hidden inside the swatch that opens it. Hollow, a ring of the
    theme's colour, while no colour is picked; filled with the colour once one is. */
-.settings-colour__swatch {
+.colour__swatch {
   position: relative;
   width: calc(4 * var(--spacing));
   height: calc(4 * var(--spacing));
@@ -880,16 +958,21 @@ body {
   cursor: pointer;
 }
 
-.settings-colour__swatch--picked {
+.colour__swatch--picked {
   background: var(--swatch-color);
 }
 
-.settings-colour__swatch:has(:focus-visible) {
+/* A league with no colour of its own: hollow and dashed in its sport's colour, as taken from it. */
+.colours-row--league .colour__swatch:not(.colour__swatch--picked) {
+  border-style: dashed;
+}
+
+.colour__swatch:has(:focus-visible) {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--shape-border-width-medium);
 }
 
-.settings-colour__input {
+.colour__input {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -898,7 +981,7 @@ body {
   cursor: pointer;
 }
 
-.settings-colour__clear {
+.colour__clear {
   padding: 0 var(--spacing);
   border: none;
   background: none;
@@ -909,23 +992,11 @@ body {
   cursor: pointer;
 }
 
-/* A league's chip, then the swatch of its games' colour. */
-.settings-league {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-}
-
-/* A league with no colour of its own: hollow and dashed in its sport's colour, as taken from it. */
-.settings-league .settings-colour__swatch:not(.settings-colour__swatch--picked) {
-  border-style: dashed;
-}
-
 /* "Reset colours", under the sports. */
-.settings-reset {
+.colours-reset {
   margin-top: calc(3 * var(--spacing));
   padding: var(--spacing) calc(3 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--settings-menu-chip-outline);
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
   border-radius: var(--controls-corner);
   background: transparent;
   color: var(--palette-text-secondary);
@@ -935,20 +1006,13 @@ body {
   cursor: pointer;
 }
 
-.settings-reset:disabled {
+.colours-reset:disabled {
   opacity: var(--controls-off-opacity);
   cursor: default;
 }
 
-/* How many of the sport's leagues are on, such as 2/2. */
-.settings-sport__count {
-  color: var(--settings-menu-count);
-  font-family: var(--typography-font-family);
-  font-weight: var(--typography-button-font-weight);
-}
-
 /* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of
-   the settings menu at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
+   the theme and behaviour tuners at the top left and of the game panel, which sits above them. The pills' lists open upwards. Where the row doesn't fit, the clock goes above
    the pills rather than squeezing them. */
 .scenario-pills {
   /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
@@ -1002,9 +1066,10 @@ body {
   left: 0;
   bottom: calc(100% + 1.5 * var(--spacing));
   min-width: 100%;
-  /* Clear of the settings gear above, by a wide gap, and of the pills below. */
+  /* Clear of the tuners' buttons above (a local-run tool, with sizes of its own), by a wide gap, and
+     of the pills below. */
   max-height: calc(
-    100vh - (3 * var(--spacing) + var(--settings-menu-size-gear) + 6 * var(--spacing)) -
+    100vh - (12px + 28px + 6 * var(--spacing)) -
       (3 * var(--spacing) + var(--controls-size-key) + var(--spacing) + 1.5 * var(--spacing))
   );
   overflow-y: auto;
@@ -1106,8 +1171,8 @@ body {
 
 /* The loading screen, over the globe until ScoreMap is ready (see loading/LoadingScreen.tsx): the
    globe dimmed in the theme's dim, which still lets it show through, and a ring spinner in the middle.
-   It takes the globe's pointer and touch input, so the camera can't move while loading; the settings
-   menu and the bottom stack come after it on the page, so they lie over it and stay usable. */
+   It takes the globe's pointer and touch input, so the camera can't move while loading; the rail
+   and the bottom stack come after it on the page, so they lie over it and stay usable. */
 .loading-screen {
   position: absolute;
   inset: 0;

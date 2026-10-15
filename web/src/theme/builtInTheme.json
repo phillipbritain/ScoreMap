@@ -160,16 +160,15 @@
     },
     "Menu": { "corner": 2 },
     "MenuItem": { "corner": 1.5 },
-    "SettingsMenu": {
+    "Rail": {
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "gearOutline": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "tab": "text.secondary",
+      "toggle": { "on": "secondary.main", "off": "text.secondary" },
       "count": "text.secondary",
       "hint": "text.secondary",
       "chip": { "outline": "primary.main", "badge": "primary.dark" },
       "on": { "fill": "offWhite.500", "text": "navy.800" },
-      "size": { "width": 320, "gear": 28, "allLeagues": 32, "countWidth": 3.2, "mark": 1 }
+      "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mark": 1 }
     },
     "Controls": {
       "surface": "background.paper",

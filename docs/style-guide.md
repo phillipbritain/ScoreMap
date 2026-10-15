@@ -33,7 +33,7 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 
 The code reads only the resolved theme, never the JSON:
 
-- **The page** (the game panel, score cards, the settings menu, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colours, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
+- **The page** (the game panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colours, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
 - **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is. On a local run the theme tuner changes the theme this way (see [Making or changing a theme](#making-or-changing-a-theme)).
 
@@ -82,11 +82,11 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
 | `palette.secondary` | The accent: gold, as every game is today. No part names it, as the statuses' colours name gold's steps themselves | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
-| `palette.error`, `palette.warning` | Kept for errors and warnings: no part uses them yet (league colours are the viewer's, in the settings menu) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
+| `palette.error`, `palette.warning` | Kept for errors and warnings: no part uses them yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
-| `palette.text.primary` | Main text on the game panel, the settings menu and the scenario controls | `offWhite.500` |
-| `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; the settings gear; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
+| `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
+| `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
 | `palette.text.link` | Links (the game panel's stream links) | `offWhite.500` |
 | `palette.divider` | The lines between a menu's parts (under the settings tabs, under "All leagues") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
@@ -149,15 +149,14 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.credit.fill`, `.text` | The photo's credit, shown on hover | `background.default`, `text.secondary` |
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.SettingsMenu.surface` | The settings menu | `background.paper` |
-| `components.SettingsMenu.shadow.color` | Its drop shadow | `transparent` |
-| `components.SettingsMenu.gearOutline.color` | An outline around the settings gear, cast as a shadow, for a theme whose gear needs one to read over the globe | `transparent` (none) |
-| `components.SettingsMenu.tab` | A settings tab that's off | `text.secondary` |
-| `components.SettingsMenu.count` | The count of a sport's leagues that are on | `text.secondary` |
-| `components.SettingsMenu.hint` | The hint beside "All leagues" | `text.secondary` |
-| `components.SettingsMenu.chip.outline` | A league chip's outline | `primary.main` |
-| `components.SettingsMenu.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
-| `components.SettingsMenu.on.fill`, `.text` | A settings tab or league chip that's on | `offWhite.500`, `navy.800` |
+| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues and Colours) and its toast | `background.paper` |
+| `components.Rail.shadow.color` | Their drop shadow | `transparent` |
+| `components.Rail.toggle.on`, `.off` | A toggle's icon on the rail ("Live only", "Show Disrupted games") when on, and when off; a popover's button takes the on colour while its popover is open | `secondary.main` (gold), `text.secondary` (grey) |
+| `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
+| `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
+| `components.Rail.chip.outline` | A league chip's outline, and "Reset colours"' | `primary.main` |
+| `components.Rail.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
+| `components.Rail.on.fill`, `.text` | A league chip that's on | `offWhite.500`, `navy.800` |
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.spinner.color` | The loading screen's ring spinner: the arc that turns | `text.primary` |
 | `components.LoadingScreen.spinner.track` | The rest of the spinner's ring, that the arc turns around | `navy.600` |
@@ -167,7 +166,7 @@ Beside the palette's background, text, divider and hover:
 
 ## How a game's status shows
 
-A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a colour the viewer picks in the settings menu (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
+A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a colour the viewer picks in Colours on the rail (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
 
 - **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
 - **Upcoming** glows less and is a little dimmer.
@@ -206,7 +205,7 @@ How status reaches the rest of the globe:
 - **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's colour (outline, glow and count) is the game colour its games share, or the accent (`palette.live.main`) when their colours differ; Disrupted games don't count, so a cluster is Disrupted's grey only when all its games are.
 - **Pulses** play in the game's colour, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its colour.
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
-- **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows, the settings gear's outline among them, are `transparent` and the game panel's glow has opacity 0.
+- **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows are `transparent` and the game panel's glow has opacity 0.
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
 ### See-through cards and trails
@@ -227,9 +226,9 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `subtitle1` | Team names on the game panel; a score card's team abbreviations take its weight | 700, 16 |
 | `subtitle2` | A score card's clock line, and the rest of its text | 600, 12 |
 | `body1` | Body text; the game panel's close button takes its size | 400, 16 |
-| `body2` | The game panel, the settings menu, the scenario clock and the loading screen's message | 400, 14 |
-| `button` | Buttons: the settings menu's tabs and sport names, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
-| `caption` | Secondary lines: the game panel's notes and stream links, the settings menu's counts and hint | 400, 12 |
+| `body2` | The game panel, the rail's popovers and toast, the scenario clock and the loading screen's message | 400, 14 |
+| `button` | Buttons: sport names in Leagues and Colours, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
+| `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
 | `footnote` | The smallest: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
@@ -251,7 +250,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the settings menu, the list of scenarios | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups and popovers, the list of scenarios | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips | `pill` |
@@ -301,14 +300,13 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.GamePanel.shadow`, `components.SettingsMenu.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
-| `components.SettingsMenu.gearOutline` | The outline around the settings gear, as a shadow | none (`transparent`, blur 0) |
+| `components.GamePanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
 | `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's colour along the game panel's top | 0, 0, 0 (none) |
 | `components.ScoreCard.fillOpacity` | How opaque score cards' fill and drop shadow are, 0 to 1, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 0.75 |
 | `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether its fill turns solid (see [Hover](#hover)) | 2.5, on |
 | `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's colour, 0 to 1. The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
-| `components.Controls.off.opacity` | How opaque a speed key that's off is, 0 to 1 (one that's on, or under the pointer, is opaque) | 0.6 |
+| `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colours" with no colours to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.size.width` | The game panel's width at most | 940 |
@@ -320,8 +318,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
-| `components.SettingsMenu.size.width`, `.gear`, `.allLeagues` | The settings menu's width, the gear, the "All leagues" chip's height | 320, 28, 32 |
-| `components.SettingsMenu.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
+| `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
+| `components.Rail.size.width`, `.allLeagues` | A popover's width (a phone's is the screen's), the "All leagues" chip's height | 320, 32 |
+| `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
 | `components.LoadingScreen.spinner.size` | The loading screen's spinner, across | 32 |
 
@@ -374,7 +373,7 @@ To try changes first, use the **theme tuner**, the "Theme" button at the top rig
 3. **Point every colour job at one of the palette's colours or a step**, using the tables above. Keep a colour given directly for a true one-off.
 4. **Set the typography, spacing, shape, and each component's sizes, fonts and looks by status.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through the statuses' colours and the pins', clusters' and score cards' opacities and cores.
 5. **Run the tests** (`npm test` in `web/`). Checking reports what's wrong with the theme (see [What checking rejects](#what-checking-rejects)). No test holds the theme's choices, so a different look changes no test.
-6. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios (the `run-scoremap` skill), on the globe zoomed out and in, with the game panel and settings menu open, and on a phone-sized window.
+6. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios (the `run-scoremap` skill), on the globe zoomed out and in, with the game panel and the rail's popovers open, and on a phone-sized window.
 
 ### Adding a setting
 

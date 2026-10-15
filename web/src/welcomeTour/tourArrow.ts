@@ -56,7 +56,8 @@ export function boxAround(boxes: readonly ScreenBox[]): ScreenBox | null {
   }
 }
 
-function middleOf(box: ScreenBox): ScreenPoint {
+/** The middle of a box. */
+export function middleOf(box: ScreenBox): ScreenPoint {
   return { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
 }
 

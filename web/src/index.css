@@ -1800,10 +1800,14 @@ body {
   display: none;
 }
 
-/* The welcome tour (see welcomeTour/WelcomeTour.tsx): over the globe and the rail, which it keeps from
-   being used, under the dev tools. The scenario controls and the Feedback button are lifted above it
-   while it shows, so they stay usable. */
+/* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
+   from being used, under the dev tools. The scenario controls and the Feedback button are lifted above
+   it while it shows, so they stay usable. */
 .welcome-tour {
+  /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
+  --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
+  /* The corners of a step's spotlight, and of the lit target's button in it. */
+  --spotlight-corner: calc(2 * var(--menu-corner));
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -1821,7 +1825,7 @@ body {
 .welcome-tour__dim {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--palette-background-default) 30%, transparent);
+  background: var(--dim);
 }
 
 /* A step's panel, in the middle of the screen, on the rail's glass as its popovers are. */
@@ -2003,8 +2007,8 @@ body {
 
 .welcome-tour__spotlight {
   position: absolute;
-  border-radius: calc(2 * var(--menu-corner));
-  box-shadow: 0 0 0 200vmax color-mix(in srgb, var(--palette-background-default) 30%, transparent);
+  border-radius: var(--spotlight-corner);
+  box-shadow: 0 0 0 200vmax var(--dim);
 }
 
 /* Over a lit score card, so a press on it opens its game: the card itself is under the dim. */
@@ -2012,7 +2016,7 @@ body {
   position: absolute;
   padding: 0;
   border: none;
-  border-radius: calc(2 * var(--menu-corner));
+  border-radius: var(--spotlight-corner);
   background: transparent;
   cursor: pointer;
 }
@@ -2064,17 +2068,10 @@ body {
   stroke-linecap: round;
 }
 
-.welcome-tour__arrow-glow {
-  stroke: var(--palette-live-main);
-  stroke-width: 8;
-  opacity: 0.18;
-  filter: blur(3px);
-}
-
 /* Dashes flowing along the arrow towards what it points at. */
 .welcome-tour__arrow-flow {
   stroke: var(--palette-live-main);
-  stroke-width: 2.5;
+  stroke-width: var(--welcome-tour-arrow-width);
   stroke-dasharray: 10 8;
   animation: welcome-tour-flow 0.9s linear infinite;
 }
@@ -2100,9 +2097,9 @@ body {
 /* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
    rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
-   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). The Feedback button
-   hides while it shows, as it does for the game panel there, and so does the no-pins message, which
-   would lie over the sheet while My leagues starts from nothing. */
+   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
+   Feedback button too, which stays usable and never covers the step's own button. The no-pins message
+   hides while it shows, as it would lie over the sheet while My leagues starts from nothing. */
 @media (max-width: 640px) {
   .welcome-tour {
     align-items: flex-end;
@@ -2110,12 +2107,11 @@ body {
 
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 14 * var(--spacing) - 7 * var(--rail-size-button));
-    margin-bottom: calc(3 * var(--spacing));
+    max-height: calc(100% - 16 * var(--spacing) - 7 * var(--rail-size-button) - var(--feedback-column));
+    margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }
 
-  .globe-area--touring > .feedback,
   .globe-area--touring .no-pins {
     display: none;
   }

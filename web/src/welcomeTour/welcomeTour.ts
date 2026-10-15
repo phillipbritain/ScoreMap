@@ -1,5 +1,6 @@
 import type { ScreenBox } from '../globe/panelClearance'
 import { isLeagueOn, withAllLeagues, type League, type ViewerSettings } from '../settings/viewerSettings'
+import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
@@ -16,8 +17,9 @@ export type TourEvent =
   | { kind: 'chose'; choice: TourChoice }
   /** Your controls → Click a score card. */
   | { kind: 'next' }
-  /** Click a score card → finished, by its Done or by opening the lit card's game. */
+  /** Click a score card → finished, by its Done button. */
   | { kind: 'done' }
+  /** Click a score card → finished, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
 
 /** Each step, with the events that move it on and where they lead. */
@@ -26,6 +28,11 @@ const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress
   controls: { next: 'scoreCard' },
   scoreCard: { done: 'finished', gameOpened: 'finished' },
   finished: {},
+}
+
+/** Whether something (saved progress, read back) is one of the tour's steps. */
+export function isTourProgress(value: unknown): value is TourProgress {
+  return typeof value === 'string' && Object.hasOwn(moves, value)
 }
 
 /** The progress after an event: an event that isn't the current step's changes nothing. */
@@ -68,10 +75,6 @@ export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox,
     if (!nearest || distance < nearest.distance) nearest = { gameId, distance }
   }
   return nearest?.gameId ?? null
-}
-
-function middleOf(box: ScreenBox): { x: number; y: number } {
-  return { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
 }
 
 function within(box: ScreenBox, outer: ScreenBox): boolean {

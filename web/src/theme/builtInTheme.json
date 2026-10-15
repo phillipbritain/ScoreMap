@@ -187,6 +187,7 @@
       "dim": { "color": "background.default", "opacity": 0.6 },
       "spinner": { "color": "text.primary", "track": "navy.600", "size": 32 },
       "message": "text.primary"
-    }
+    },
+    "WelcomeTour": { "dim": { "opacity": 0.3 }, "arrow": { "width": 2.5 } }
   }
 }

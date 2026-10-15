@@ -25,9 +25,9 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in three groups. Zoom in, zoom
- * out and Home, which move the camera. The "Live only" and "Show Disrupted games" toggles, each
- * showing a short toast beside the rail saying what changed, since a phone has no hover for their
- * tooltips. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
+ * out and Home, which move the camera. The "Live games only" and "Show Disrupted games" toggles, whose
+ * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
+ * shows a short toast beside the rail saying what changed. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
  * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
 export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, onZoomOut, onHome }: RailProps) {
@@ -71,12 +71,12 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
           <RailButton
             key={key}
             label={name}
-            title={`${name}: ${settings[key] ? 'on' : 'off'}`}
             pressed={settings[key]}
             onClick={() => {
               const next = toggled(settings, key)
               onChange(next.settings)
-              setToast({ text: next.toast, id: (toast?.id ?? 0) + 1 })
+              // With hover, the tooltip names the toggle and its colour says the rest.
+              if (!window.matchMedia(hoverScreen).matches) setToast({ text: next.toast, id: (toast?.id ?? 0) + 1 })
             }}
           >
             {key === 'liveOnly' ? <LiveIcon /> : <DisruptedIcon />}
@@ -110,6 +110,8 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
   )
 }
 
+const hoverScreen = '(hover: hover)'
+
 const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', colours: 'Colours' }
 
 /**
@@ -118,7 +120,6 @@ const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', colours:
  */
 function RailButton({
   label,
-  title = label,
   disabled,
   pressed,
   popover,
@@ -127,7 +128,6 @@ function RailButton({
   children,
 }: {
   label: string
-  title?: string
   disabled?: boolean
   pressed?: boolean
   popover?: RailPopover
@@ -140,7 +140,7 @@ function RailButton({
       type="button"
       className="rail__button"
       aria-label={label}
-      title={title}
+      data-tooltip={label}
       // On the left, so it covers none of the rail's other buttons.
       data-tooltip-side="left"
       disabled={disabled}
@@ -167,7 +167,7 @@ function RailButton({
   )
 }
 
-/** Live only: a broadcast's waves (Feather's "radio"). */
+/** Live games only: a broadcast's waves (Feather's "radio"). */
 function LiveIcon() {
   return (
     <>

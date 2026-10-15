@@ -13,9 +13,13 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 {
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
 
-    // Each started game's last score, by league and game, with the score it was looked up at: the
-    // scoreboard doesn't carry it, so it's asked for again only when the score has changed.
-    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Score, ProviderScoringPlay? Play)> _lastScores = new();
+    // Each started game's last score, by league and game, with the score it was looked up at and how many
+    // more times it may be asked for at that score: the scoreboard doesn't carry it, so it's asked for again
+    // only when the score has changed.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Score, int TriesLeft, ProviderScoringPlay? Play)> _lastScores = new();
+
+    /// <summary>How many times a game's summary is asked for at one score before waiting for the score to change.</summary>
+    private const int SummaryTries = 3;
 
     public async Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
@@ -49,8 +53,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// The game with its last score. Soccer's comes with the scoreboard, from its goals, and cricket has
     /// none (runs come off almost every ball). Every other sport's is only in the game's summary, which is
     /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
-    /// hasn't caught up with the score yet, it's asked for again next time. A failed request leaves the
-    /// last score as it was, to be tried again next time.
+    /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
+    /// next time, up to <see cref="SummaryTries"/> times at one score; the last score stays as it was meanwhile.
     /// </summary>
     private async Task<ProviderGame> WithLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
     {
@@ -62,8 +66,10 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         var key = $"{game.LeagueKey}/{game.Id}";
         var score = $"{home}-{away}";
         var known = _lastScores.GetValueOrDefault(key);
-        if (known.Score == score)
+        var triesLeft = known.Score == score ? known.TriesLeft : SummaryTries;
+        if (triesLeft == 0)
             return game with { LastScore = known.Play };
+        _lastScores[key] = (score, triesLeft - 1, known.Play);
         try
         {
             var summary = await http.GetFromJsonAsync<Summary>($"{league}/summary?event={game.Id}", cancellationToken);
@@ -73,7 +79,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 return game with { LastScore = known.Play };
             var play = ToScoringPlay(last, summary!.Header?.Competitions?.FirstOrDefault()?.Competitors ?? []) ?? known.Play;
             var caughtUp = last.HomeScore == home && last.AwayScore == away;
-            _lastScores[key] = (caughtUp ? score : known.Score ?? "", play);
+            _lastScores[key] = (score, caughtUp ? 0 : triesLeft - 1, play);
             return game with { LastScore = play };
         }
         catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException

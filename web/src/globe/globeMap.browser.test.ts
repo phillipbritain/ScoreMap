@@ -87,6 +87,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     situation: null,
     lastScore: null,
     keyEvents: [],
+    topEvent: false,
   }
 }
 

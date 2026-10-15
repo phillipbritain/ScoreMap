@@ -35,6 +35,7 @@ function game(id: string, homeScore: string | null = null): Game {
     situation: null,
     lastScore: null,
     keyEvents: [],
+    topEvent: false,
   }
 }
 

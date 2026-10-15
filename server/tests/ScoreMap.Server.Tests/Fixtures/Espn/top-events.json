@@ -1,0 +1,343 @@
+{
+ "sports": [
+  {
+   "id": "70",
+   "uid": "s:70",
+   "name": "Ice Hockey",
+   "slug": "hockey",
+   "leagues": [
+    {
+     "id": "90",
+     "uid": "s:70~l:90",
+     "name": "National Hockey League",
+     "abbreviation": "NHL",
+     "slug": "nhl",
+     "events": [
+      {
+       "id": "401892504",
+       "uid": "s:70~l:90~e:401892504~c:401892504",
+       "guid": "8808f2ce-56ce-3c59-8185-a317b1dd3c62",
+       "date": "2026-10-14T23:30:00Z",
+       "timeValid": true,
+       "recent": true,
+       "name": "Montreal Canadiens at Washington Capitals",
+       "shortName": "MTL @ WSH",
+       "gamecastAvailable": true,
+       "playByPlayAvailable": true,
+       "commentaryAvailable": false,
+       "wallclockAvailable": true,
+       "fauxcastAvailable": true,
+       "onWatch": true,
+       "competitionId": "401892504",
+       "location": "Capital One Arena",
+       "season": 2027,
+       "seasonStartDate": "2026-09-15T07:00:00Z",
+       "seasonEndDate": "2027-04-11T06:59:00Z",
+       "seasonType": "2",
+       "playoff": false,
+       "seasonTypeHasGroups": false,
+       "group": {
+        "groupId": "2",
+        "name": "Regular Season",
+        "abbreviation": "reg",
+        "shortName": "reg"
+       },
+       "link": "https://www.espn.com/nhl/game/_/gameId/401892504/canadiens-capitals",
+       "status": "post",
+       "summary": "Final",
+       "period": 3,
+       "clock": "0:00",
+       "priority": 1,
+       "broadcast": "ESPN+",
+       "fullStatus": {
+        "clock": 0.0,
+        "displayClock": "0:00",
+        "period": 3,
+        "displayPeriod": "3rd",
+        "type": {
+         "id": "3",
+         "name": "STATUS_FINAL",
+         "state": "post",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final",
+         "shortDetail": "Final"
+        }
+       },
+       "competitors": [
+        {
+         "id": "10",
+         "type": "team",
+         "homeAway": "away",
+         "displayName": "Montreal Canadiens",
+         "abbreviation": "MTL",
+         "score": "3"
+        },
+        {
+         "id": "23",
+         "type": "team",
+         "homeAway": "home",
+         "displayName": "Washington Capitals",
+         "abbreviation": "WSH",
+         "score": "5"
+        }
+       ],
+       "neutralSite": false,
+       "pccEventId": "401892504",
+       "onDisneyNetwork": true
+      },
+      {
+       "id": "401892505",
+       "uid": "s:70~l:90~e:401892505~c:401892505",
+       "guid": "259e51ee-6155-3c3d-af49-196702733069",
+       "date": "2026-10-15T00:30:00Z",
+       "timeValid": true,
+       "recent": true,
+       "name": "Dallas Stars at Colorado Avalanche",
+       "shortName": "DAL @ COL",
+       "gamecastAvailable": true,
+       "playByPlayAvailable": true,
+       "commentaryAvailable": false,
+       "wallclockAvailable": true,
+       "fauxcastAvailable": true,
+       "onWatch": false,
+       "competitionId": "401892505",
+       "location": "Ball Arena",
+       "season": 2027,
+       "seasonStartDate": "2026-09-15T07:00:00Z",
+       "seasonEndDate": "2027-04-11T06:59:00Z",
+       "seasonType": "2",
+       "playoff": false,
+       "seasonTypeHasGroups": false,
+       "group": {
+        "groupId": "2",
+        "name": "Regular Season",
+        "abbreviation": "reg",
+        "shortName": "reg"
+       },
+       "link": "https://www.espn.com/nhl/game/_/gameId/401892505",
+       "status": "in",
+       "summary": "9:46 - 3rd",
+       "period": 3,
+       "clock": "9:46",
+       "priority": 2,
+       "broadcast": "TNT/truTV",
+       "fullStatus": {
+        "clock": 586.0,
+        "displayClock": "9:46",
+        "period": 3,
+        "displayPeriod": "3rd",
+        "type": {
+         "id": "2",
+         "name": "STATUS_IN_PROGRESS",
+         "state": "in",
+         "completed": false,
+         "description": "In Progress",
+         "detail": "9:46 - 3rd Period",
+         "shortDetail": "9:46 - 3rd"
+        }
+       },
+       "competitors": [
+        {
+         "id": "9",
+         "type": "team",
+         "homeAway": "away",
+         "displayName": "Dallas Stars",
+         "abbreviation": "DAL",
+         "score": "2"
+        },
+        {
+         "id": "17",
+         "type": "team",
+         "homeAway": "home",
+         "displayName": "Colorado Avalanche",
+         "abbreviation": "COL",
+         "score": "2"
+        }
+       ],
+       "neutralSite": false,
+       "pccEventId": "401892505",
+       "onDisneyNetwork": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "850",
+   "uid": "s:850",
+   "name": "Tennis",
+   "slug": "tennis",
+   "leagues": [
+    {
+     "id": "851",
+     "uid": "s:850~l:851",
+     "name": "ATP",
+     "abbreviation": "ATP",
+     "slug": "atp",
+     "events": [
+      {
+       "id": "315-2026",
+       "uid": "s:850~l:851~e:315-2026~c:184958",
+       "guid": "fb46e272-0e58-3be7-b5b6-e1d26f6198e6",
+       "date": "2026-10-14T11:55:00Z",
+       "timeValid": true,
+       "recent": false,
+       "name": "Rolex Shanghai Masters",
+       "shortName": "Rolex Shanghai Masters",
+       "competitionType": {
+        "id": "1",
+        "slug": "mens-singles",
+        "text": "Men's Singles"
+       },
+       "notes": [
+        {
+         "text": "(15) Tommy Paul (USA) bt Zizou Bergs (BEL) 7-6 (7-5) 6-4",
+         "type": "Round 4 - Stadium Court"
+        }
+       ],
+       "gamecastAvailable": false,
+       "playByPlayAvailable": false,
+       "commentaryAvailable": false,
+       "wallclockAvailable": false,
+       "fauxcastAvailable": false,
+       "onWatch": false,
+       "competitionId": "184958",
+       "location": "Shanghai, China PR",
+       "season": 2026,
+       "purse": 0.0,
+       "round": 4,
+       "seasonStartDate": "2026-01-01T08:00:00Z",
+       "seasonEndDate": "2027-01-01T07:59:00Z",
+       "seasonType": "2",
+       "seasonTypeHasGroups": false,
+       "major": false,
+       "group": {
+        "groupId": "2",
+        "name": "Regular Season",
+        "abbreviation": "reg",
+        "shortName": "reg"
+       },
+       "link": "https://www.espn.com/tennis/scoreboard/tournament/_/eventId/315-2026/competitionType/1",
+       "status": "post",
+       "summary": "Final",
+       "period": 2,
+       "priority": 22,
+       "fullStatus": {
+        "period": 2,
+        "displayPeriod": "2nd",
+        "type": {
+         "id": "3",
+         "name": "STATUS_FINAL",
+         "state": "post",
+         "completed": true,
+         "description": "Final",
+         "detail": "Final",
+         "shortDetail": "Final"
+        }
+       },
+       "competitors": [
+        {
+         "id": "2964",
+         "type": "athlete",
+         "homeAway": "home",
+         "displayName": "Tommy Paul",
+         "abbreviation": "T. Paul",
+         "score": "7-6(7-5) 6-4"
+        },
+        {
+         "id": "3356",
+         "type": "athlete",
+         "homeAway": "away",
+         "displayName": "Zizou Bergs",
+         "abbreviation": "Z. Bergs",
+         "score": "6-7(5-7) 4-6"
+        }
+       ],
+       "pccEventId": "100219521",
+       "onDisneyNetwork": false
+      },
+      {
+       "id": "315-2026",
+       "uid": "s:850~l:851~e:315-2026~c:184955",
+       "guid": "9d339d7b-48b3-3203-8a52-dee62fbf1de3",
+       "date": "2026-10-15T06:30:00Z",
+       "timeValid": true,
+       "recent": false,
+       "name": "Rolex Shanghai Masters",
+       "shortName": "Rolex Shanghai Masters",
+       "competitionType": {
+        "id": "1",
+        "slug": "mens-singles",
+        "text": "Men's Singles"
+       },
+       "notes": [
+        {
+         "type": "Quarterfinal - Stadium Court"
+        }
+       ],
+       "gamecastAvailable": false,
+       "playByPlayAvailable": false,
+       "commentaryAvailable": false,
+       "wallclockAvailable": false,
+       "fauxcastAvailable": false,
+       "onWatch": false,
+       "competitionId": "184955",
+       "location": "Shanghai, China PR",
+       "season": 2026,
+       "purse": 0.0,
+       "round": 5,
+       "seasonStartDate": "2026-01-01T08:00:00Z",
+       "seasonEndDate": "2027-01-01T07:59:00Z",
+       "seasonType": "2",
+       "seasonTypeHasGroups": false,
+       "major": false,
+       "group": {
+        "groupId": "2",
+        "name": "Regular Season",
+        "abbreviation": "reg",
+        "shortName": "reg"
+       },
+       "link": "https://www.espn.com/tennis/scoreboard/tournament/_/eventId/315-2026/competitionType/1",
+       "status": "pre",
+       "summary": "10/15 - 2:30 AM EDT",
+       "period": 1,
+       "priority": 23,
+       "fullStatus": {
+        "period": 1,
+        "displayPeriod": "1st",
+        "type": {
+         "id": "1",
+         "name": "STATUS_SCHEDULED",
+         "state": "pre",
+         "completed": false,
+         "description": "Scheduled",
+         "detail": "Thu, October 14th at 2:30 AM EDT",
+         "shortDetail": "10/15 - 2:30 AM EDT"
+        }
+       },
+       "competitors": [
+        {
+         "id": "10427",
+         "type": "athlete",
+         "homeAway": "home",
+         "displayName": "Arthur Gea",
+         "abbreviation": "A. Gea"
+        },
+        {
+         "id": "3212",
+         "type": "athlete",
+         "homeAway": "away",
+         "displayName": "Alejandro Davidovich Fokina",
+         "abbreviation": "A. Davidovich Fokina"
+        }
+       ],
+       "pccEventId": "100219533",
+       "onDisneyNetwork": false
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,3 +1,4 @@
+import type { ScreenBox } from '../globe/panelClearance'
 import { isLeagueOn, withAllLeagues, type League, type ViewerSettings } from '../settings/viewerSettings'
 
 /**
@@ -41,6 +42,48 @@ export function tourProgressAfter(progress: TourProgress, event: TourEvent): Tou
 export function settingsForChoice(settings: ViewerSettings, choice: TourChoice, leagues: readonly League[]): ViewerSettings {
   if (choice === 'topEvents') return { ...settings, topEventsOnly: true }
   return { ...withAllLeagues(settings, leagues, choice === 'everything'), topEventsOnly: false }
+}
+
+/** A score card on screen, for Click a score card to pick from. */
+export interface CardOnScreen {
+  gameId: string
+  box: ScreenBox
+}
+
+/** Room a card picked by Click a score card keeps from the panel, so its spotlight and arrow fit. */
+export const cardPickMargin = 16
+
+/**
+ * The score card Click a score card points at: of the cards wholly on the screen that the panel
+ * leaves clear by a margin, the one nearest the middle of the screen; or none, for the example card.
+ * The panel is its box on screen (a centred panel, or a phone's bottom sheet).
+ */
+export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox, screen: ScreenBox): string | null {
+  const middle = middleOf(screen)
+  let nearest: { gameId: string; distance: number } | null = null
+  for (const { gameId, box } of cards) {
+    if (!within(box, screen) || overlaps(box, grown(panel, cardPickMargin))) continue
+    const { x, y } = middleOf(box)
+    const distance = Math.hypot(x - middle.x, y - middle.y)
+    if (!nearest || distance < nearest.distance) nearest = { gameId, distance }
+  }
+  return nearest?.gameId ?? null
+}
+
+function middleOf(box: ScreenBox): { x: number; y: number } {
+  return { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 }
+}
+
+function within(box: ScreenBox, outer: ScreenBox): boolean {
+  return box.left >= outer.left && box.top >= outer.top && box.right <= outer.right && box.bottom <= outer.bottom
+}
+
+function overlaps(a: ScreenBox, b: ScreenBox): boolean {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+}
+
+function grown(box: ScreenBox, by: number): ScreenBox {
+  return { left: box.left - by, top: box.top - by, right: box.right + by, bottom: box.bottom + by }
 }
 
 /** Whether My leagues' "Show these" can be pressed: only once a league is on, so the globe isn't left empty. */

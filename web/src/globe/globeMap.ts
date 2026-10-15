@@ -159,7 +159,11 @@ export class GlobeMap {
       fadeDuration: 0,
       // A double click while turning the globe is more often a slip than a wish to zoom in.
       doubleClickZoom: false,
+      // The globe is only turned and zoomed, never rotated or tilted: north stays up.
+      dragRotate: false,
+      touchPitch: false,
     })
+    map.touchZoomRotate.disableRotation()
     // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
     map.keyboard.disable()
     this.map = map

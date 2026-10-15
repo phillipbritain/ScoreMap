@@ -48,7 +48,7 @@ public class ScenarioSpeedTests
         Assert.Equal("Normal", listing.Speed);
         // The browser's media keys know these names too (speedNames in web/src/scenarios/scenarioPicker.ts):
         // renaming one here means renaming it there.
-        Assert.Equal([new("Paused", 0), new("Normal", 1), new("Fast", 2), new("Faster", 8)], listing.Speeds);
+        Assert.Equal([new("Paused", 0), new("Normal", 1), new("Fast", 4), new("Faster", 32)], listing.Speeds);
         Assert.Equal(server.Clock.GetUtcNow(), listing.Clock.At);
         // Noon Eastern on 4 August 2026, whenever it starts.
         Assert.Equal(new DateTimeOffset(2026, 8, 4, 16, 0, 0, TimeSpan.Zero), listing.Clock.Reads);
@@ -62,11 +62,11 @@ public class ScenarioSpeedTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        // 1m at 8× is 7.5 s.
-        server.Clock.Advance(TimeSpan.FromSeconds(7));
+        // 1m at 32× is 1.875 s, so the fetch at 2 s (they come every 250 ms) is the first to see it.
+        server.Clock.Advance(TimeSpan.FromSeconds(1.75));
         await Task.Delay(100);
         Assert.Empty(client.PendingChanges());
-        server.Clock.Advance(TimeSpan.FromMilliseconds(500));
+        server.Clock.Advance(TimeSpan.FromMilliseconds(250));
         var scored = await client.NextChangeAsync();
 
         Assert.Equal((GameChangeKind.ScoreChanged, "21"), (scored.Kind, scored.Game.Home.Score));
@@ -96,8 +96,8 @@ public class ScenarioSpeedTests
             Assert.Equal(listing, await browser.NextScenarioChangeAsync(), ListingComparer.Instance);
         Assert.Equal("Faster", (await ListingAsync(http)).Speed);
 
-        // The other 40 s to the score take 5 s at 8×, and the game carries on rather than starting again.
-        server.Clock.Advance(TimeSpan.FromSeconds(4.75));
+        // The other 40 s to the score take 1.25 s at 32×, and the game carries on rather than starting again.
+        server.Clock.Advance(TimeSpan.FromSeconds(1));
         await Task.Delay(100);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(0.25));
@@ -203,7 +203,7 @@ public class ScenarioSpeedTests
     public async Task Game_starts_and_pin_windows_are_on_the_scenario_clock()
     {
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
-        // Upcoming games get their pin 3 h before their start: this one 8 s in, 1 s of real time at 8×.
+        // Upcoming games get their pin 3 h before their start: this one 32 s in, 1 s of real time at 32×.
         server.WriteScenario("test", """
             {
               "games": [
@@ -213,7 +213,7 @@ public class ScenarioSpeedTests
                   "home": { "name": "Arsenal", "abbreviation": "ARS" },
                   "away": { "name": "Chelsea", "abbreviation": "CHE" },
                   "venue": { "name": "Emirates Stadium", "city": "London", "country": "England" },
-                  "startsIn": "3h8s",
+                  "startsIn": "3h32s",
                   "status": "upcoming"
                 }
               ]
@@ -230,7 +230,7 @@ public class ScenarioSpeedTests
         var added = await client.NextChangeAsync();
 
         Assert.Equal((GameChangeKind.Added, "later"), (added.Kind, added.Game.Id));
-        Assert.Equal(startedAt + new TimeSpan(3, 0, 8), added.Game.StartTime);
+        Assert.Equal(startedAt + new TimeSpan(3, 0, 32), added.Game.StartTime);
     }
 
     [Fact]
@@ -242,10 +242,10 @@ public class ScenarioSpeedTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        // 2m at 2× is 60 s: a fetch just before (which sees the score at 1m), then one on the dot.
-        server.Clock.Advance(TimeSpan.FromSeconds(59.5));
+        // 2m at 4× is 30 s: a fetch just before (which sees the score at 1m), then one on the dot.
+        server.Clock.Advance(TimeSpan.FromSeconds(29.75));
         await client.NextChangeAsync();
-        server.Clock.Advance(TimeSpan.FromSeconds(0.5));
+        server.Clock.Advance(TimeSpan.FromSeconds(0.25));
         var finished = await client.NextChangeAsync();
 
         Assert.Equal(GameChangeKind.Finished, finished.Kind);
@@ -254,7 +254,7 @@ public class ScenarioSpeedTests
 
     [Theory]
     [InlineData("Normal", 1000)]
-    [InlineData("Fast", 500)]
+    [InlineData("Fast", 250)]
     [InlineData("Faster", 250)]
     public async Task A_scenario_is_fetched_every_second_divided_by_the_speed_but_no_more_often_than_every_250_ms(string speed, int everyMs)
     {

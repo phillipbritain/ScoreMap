@@ -20,6 +20,16 @@ export function gameColour(colours: PickedColours, game: ColouredGame, theme: Th
 }
 
 /**
+ * The colours a viewer can pick for a sport or league, in the rail's Colours: ten hues round the
+ * wheel, each light and deeper, worked out in OKLCH at the dark theme's lightness and chroma so they
+ * sit with its gold (whose 300 and 500 steps are the amber pair) and stand out on its navy globe.
+ */
+export const pickableColours = [
+  ['#febab4', '#ffbd99', '#f3ca81', '#cbd591', '#a4dfaf', '#85e1d5', '#87dcf7', '#aed1fe', '#d1c4fe', '#f3b8e5'],
+  ['#eb827b', '#e58b55', '#d4ac63', '#a2ae44', '#62bb78', '#08beaf', '#09b7dc', '#6aa7f4', '#ab93ed', '#d684c5'],
+].flat()
+
+/**
  * The theme's accent: Live's colour. A cluster of games of different colours shows in it, and the
  * rail's Colours shows it for a sport with no colour picked, whose games take the theme's colour for
  * their status.

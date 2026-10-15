@@ -75,38 +75,6 @@ export function pickerEntries(listing: ScenarioListing): PickerEntry[] {
   }))
 }
 
-/** The media keys: Pause, Play and Fast-forward. */
-export type MediaKey = 'play' | 'pause' | 'fastForward'
-
-/**
- * How the media keys show and change each speed: the key lit, where Fast-forward goes (Fast, and
- * pressed again, flipping between Fast and Faster), and whether its icon grows a third triangle.
- * A new speed doesn't typecheck until it has a row.
- */
-const mediaKeys: Record<SpeedName, { lit: MediaKey; fastForwardTo: SpeedName; fasterIcon: boolean }> = {
-  Paused: { lit: 'pause', fastForwardTo: speedNames.fast, fasterIcon: false },
-  Normal: { lit: 'play', fastForwardTo: speedNames.fast, fasterIcon: false },
-  Fast: { lit: 'fastForward', fastForwardTo: speedNames.faster, fasterIcon: false },
-  Faster: { lit: 'fastForward', fastForwardTo: speedNames.fast, fasterIcon: true },
-}
-
-/** The media key lit for the speed: Play at Normal, Pause when paused, Fast-forward at Fast and Faster. */
-export function litKey(speed: SpeedName): MediaKey {
-  return mediaKeys[speed].lit
-}
-
-/** The speed a media key goes to: Normal on Play, paused on Pause, and on Fast-forward as `mediaKeys` says. */
-export function pressedSpeed(speed: SpeedName, key: MediaKey): SpeedName {
-  if (key === 'play') return speedNames.normal
-  if (key === 'pause') return speedNames.paused
-  return mediaKeys[speed].fastForwardTo
-}
-
-/** Whether Fast-forward shows its Faster icon, with a third triangle: only at Faster. */
-export function showsFasterIcon(speed: SpeedName): boolean {
-  return mediaKeys[speed].fasterIcon
-}
-
 /**
  * What the clock reads at the real time `now` (ms since the epoch): run forward from the server's
  * anchor at the speed. Never before the anchor's reading, as `now` can be a little older than the

@@ -1,7 +1,7 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import type { Game, GameSituation, GameTeam, KeyEvent, PhotoCredit } from '../games/game'
+import type { Game, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
-import { hasBases, isGoal, keyEventName, keyEventsSummary, oddsLine, situationLine } from './gameDetails'
+import { oddsLine } from './gameDetails'
 import { venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { streamLinks } from './streamLinks'
@@ -27,8 +27,7 @@ interface PanelLink {
 
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css), with a band under it for how the game is going: the last score (in
- * soccer the goals and cards), where play stands, the betting line and the crowd. It keeps one size
+ * (see .game-panel in index.css), with a band under it: the last score, the betting line and the crowd. It keeps one size
  * whatever the game, so selecting one game after another doesn't make it jump: long text is clipped,
  * with the full text on hover. Re-renders with each new snapshot, so it stays current while open.
  */
@@ -181,35 +180,24 @@ function TeamRow({ team }: { team: GameTeam }) {
 }
 
 /**
- * The band under the strip: what there is of the last score (in soccer, the goals and cards), where play
- * stands while the game is Live, the betting line and the crowd, each with its label.
+ * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
+ * minute), the betting line and the crowd, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
-  const { lastScore, situation } = game
+  const { lastScore } = game
   const odds = game.odds && oddsLine(game.odds)
-  const empty = game.keyEvents.length === 0 && !lastScore && !situation && !odds && game.attendance === null
+  const empty = !lastScore && !odds && game.attendance === null
   return (
     <div className="game-panel__band">
-      {game.keyEvents.length > 0 ? (
-        <BandCell label="Goals & cards" wide>
-          <KeyEvents events={game.keyEvents} />
-        </BandCell>
-      ) : (
-        lastScore && (
-          <BandCell label="Last score" wide>
-            <div className="game-panel__clamp" title={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()}>
-              <span className="game-panel__strong">
-                {lastScore.when && `${lastScore.when} · `}
-                {lastScore.team}
-              </span>{' '}
-              {lastScore.text}
-            </div>
-          </BandCell>
-        )
-      )}
-      {situation && (
-        <BandCell label="Now" wide>
-          <Situation situation={situation} />
+      {lastScore && (
+        <BandCell label="Last score" wide>
+          <div className="game-panel__clamp" title={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()}>
+            <span className="game-panel__strong">
+              {lastScore.when && `${lastScore.when} · `}
+              {lastScore.team}
+            </span>{' '}
+            {lastScore.text}
+          </div>
         </BandCell>
       )}
       {odds && (
@@ -236,71 +224,5 @@ function BandCell({ label, wide = false, children }: { label: string; wide?: boo
       <div className="game-panel__label">{label}</div>
       {children}
     </div>
-  )
-}
-
-/** Where play stands: the line for it (with the bases, in baseball), then the last play. */
-function Situation({ situation }: { situation: GameSituation }) {
-  const line = situationLine(situation)
-  return (
-    <>
-      {line && (
-        <div className="game-panel__one-line game-panel__situation" title={line}>
-          {hasBases(situation) && <Bases situation={situation} />}
-          {line}
-        </div>
-      )}
-      {situation.lastPlay && (
-        <div className={line ? 'game-panel__muted game-panel__one-line' : 'game-panel__clamp'} title={situation.lastPlay}>
-          {situation.lastPlay}
-        </div>
-      )}
-    </>
-  )
-}
-
-/** Baseball's bases as a diamond of three, each filled when a runner is on it. */
-function Bases({ situation }: { situation: GameSituation }) {
-  const base = (on: boolean, x: number, y: number) => (
-    <rect
-      x={x - 3}
-      y={y - 3}
-      width={6}
-      height={6}
-      transform={`rotate(45 ${x} ${y})`}
-      className={on ? 'game-panel__base--on' : undefined}
-    />
-  )
-  const runners = [situation.onFirst && '1st', situation.onSecond && '2nd', situation.onThird && '3rd'].filter(Boolean)
-  return (
-    <svg
-      className="game-panel__bases"
-      viewBox="0 0 24 16"
-      role="img"
-      aria-label={runners.length > 0 ? `Runners on ${runners.join(', ')}` : 'Bases empty'}
-    >
-      {base(situation.onThird, 6, 10)}
-      {base(situation.onSecond, 12, 5)}
-      {base(situation.onFirst, 18, 10)}
-    </svg>
-  )
-}
-
-/** Soccer's goals and cards, the latest first, as many as fit; every one is listed on hover. */
-function KeyEvents({ events }: { events: KeyEvent[] }) {
-  const mark = (event: KeyEvent) => (isGoal(event) ? 'goal' : event.kind === 'RedCard' ? 'red' : 'yellow')
-  return (
-    <ul className="game-panel__events" title={keyEventsSummary(events)}>
-      {events
-        .map((event, i) => ({ event, key: i }))
-        .reverse()
-        .map(({ event, key }) => (
-          <li key={key}>
-            <span className={`game-panel__event-mark game-panel__event-mark--${mark(event)}`} />
-            <span className="game-panel__strong">{event.clock}</span> {keyEventName(event)}{' '}
-            <span className="game-panel__muted">{event.team}</span>
-          </li>
-        ))}
-    </ul>
   )
 }

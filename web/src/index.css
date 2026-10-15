@@ -338,6 +338,16 @@ body {
   text-overflow: ellipsis;
 }
 
+/* The venue and its city link to Google Maps, kept in their own colours. */
+.game-panel__maps-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.game-panel__maps-link:hover {
+  text-decoration: underline;
+}
+
 .game-panel__watch a {
   color: var(--palette-text-link);
 }

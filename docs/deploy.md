@@ -44,6 +44,7 @@ App settings reach the server as environment variables, and `__` separates confi
 | `Venues__SavedPhotosPath` | `data/venue-photos.json`, resolved under `HOME` on App Service (`/home/data/venue-photos.json`) | Where the venue photos found are saved, for the same reason. |
 | `Nominatim__BaseUrl`         | `https://nominatim.openstreetmap.org/`                                                                | Place search used to locate venues.                                                                              |
 | `Espn__BaseUrl`              | ESPN's scoreboard API                                                                                 | Game feed.                                                                                                       |
+| `Feedback__GitHubToken`      | None: feedback is only logged                                                                         | The token feedback is filed as issues with. Passed to the template as `feedbackGitHubToken`, see [configuration.md](configuration.md#feedback). |
 
 The venue corrections file (`venue-corrections.json`) ships with the app. To change a correction, edit the file in the repo and redeploy.
 

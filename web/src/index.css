@@ -79,6 +79,8 @@ body {
 .speed-keys,
 .scenario-clock,
 .no-pins,
+.feedback__button,
+.feedback__panel,
 .tooltip {
   /* How brightly the glass catches the light: most when clear. */
   --glass-shine: calc(1 - var(--frost));
@@ -840,6 +842,8 @@ body {
 .globe-area {
   /* How wide the scenario controls' column is (local runs only), which the game panel keeps clear of. */
   --scenario-column: calc(52 * var(--spacing));
+  /* How wide the Feedback button is at the bottom right, which the game panel keeps clear of too. */
+  --feedback-column: var(--rail-size-button);
   position: relative;
   display: flex;
   flex: 1;
@@ -1586,5 +1590,181 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .tooltip {
     animation: none;
+  }
+}
+
+/* The Feedback button at the bottom right, and its panel opening above it, on the controls' glass.
+   Above the game panel, which narrows to keep clear of the button (see below). */
+.feedback {
+  --frost: var(--controls-frost);
+  --glass-tint: var(--controls-surface);
+  --glass-lens: url(#glass-lens);
+  position: absolute;
+  right: calc(3 * var(--spacing));
+  bottom: calc(3 * var(--spacing));
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(2 * var(--spacing));
+  color: var(--palette-text-primary);
+}
+
+.feedback[hidden] {
+  display: none;
+}
+
+/* A round icon button, the size of the rail's. */
+.feedback__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--feedback-column);
+  height: var(--feedback-column);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--controls-shadow), var(--glass-rim);
+  color: var(--palette-text-primary);
+  cursor: pointer;
+}
+
+.feedback__button[hidden] {
+  display: none;
+}
+
+.feedback__icon {
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+.feedback__panel {
+  box-sizing: border-box;
+  width: var(--rail-size-width);
+  max-width: calc(100vw - 6 * var(--spacing));
+  padding: calc(3 * var(--spacing));
+  border-radius: var(--menu-corner);
+  box-shadow: var(--controls-shadow), var(--glass-rim);
+  font-size: var(--typography-body2-font-size);
+}
+
+.feedback__title {
+  display: block;
+  margin-bottom: calc(2 * var(--spacing));
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.feedback__text {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: calc(2 * var(--spacing));
+  resize: vertical;
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-corner);
+  background: color-mix(in srgb, var(--palette-background-default) 40%, transparent);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+}
+
+.feedback__counter {
+  margin: var(--spacing) 0 0;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  text-align: right;
+}
+
+.feedback__counter--over,
+.feedback__error {
+  color: var(--palette-error-light);
+}
+
+.feedback__note {
+  margin: calc(2 * var(--spacing)) 0 0;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+.feedback__error {
+  margin: calc(2 * var(--spacing)) 0 0;
+}
+
+.feedback__thanks {
+  margin: 0;
+}
+
+.feedback__thanks a {
+  color: var(--palette-text-link);
+}
+
+/* A field only a bot fills in: off the page, out of the tab order and hidden from screen readers. */
+.feedback__honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.feedback__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: calc(2 * var(--spacing));
+  margin-top: calc(3 * var(--spacing));
+}
+
+.feedback__action {
+  padding: calc(1.5 * var(--spacing)) calc(4 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.feedback__action--submit {
+  border-color: transparent;
+  background: var(--controls-on-fill);
+  color: var(--controls-on-text);
+}
+
+.feedback__action:disabled {
+  opacity: var(--controls-off-opacity);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .feedback__button:hover,
+  .feedback__action:not(.feedback__action--submit):hover {
+    background: var(--palette-action-hover);
+  }
+}
+
+/* On wide screens the game panel narrows, on both sides so it stays centred, to leave the corner to
+   the Feedback button; and to the scenario controls' wider column, where they show. */
+@media (min-width: 641px) {
+  .feedback:not([hidden]) ~ .game-panel {
+    width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
+  }
+
+  .bottom-stack--scenario ~ .feedback:not([hidden]) ~ .game-panel {
+    width: min(
+      var(--game-panel-size-width),
+      calc(100% - 2 * (max(var(--scenario-column), var(--feedback-column)) + 6 * var(--spacing)))
+    );
+  }
+}
+
+/* On a phone the Feedback button hides while a game panel is open (for now: to revisit when trying
+   phone sizes). */
+@media (max-width: 640px) {
+  .feedback:has(~ .game-panel) {
+    display: none;
   }
 }

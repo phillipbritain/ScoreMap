@@ -82,7 +82,7 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
 | `palette.secondary` | The accent: gold, as every game is today. No part names it, as the statuses' colours name gold's steps themselves | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
-| `palette.error`, `palette.warning` | Kept for errors and warnings: no part uses them yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
+| `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
@@ -138,9 +138,9 @@ Beside the palette's background, text, divider and hover:
 
 | Setting | What it colours | Dark theme |
 | --- | --- | --- |
-| `components.Controls.surface` | The scenario pill and its list, the speed keys, the scenario clock and the "No games right now." message | `background.paper` |
+| `components.Controls.surface` | The scenario pill and its list, the speed keys, the scenario clock, the "No games right now." message, and the Feedback button and panel | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
-| `components.Controls.on.fill`, `.text` | A speed key that's on | `offWhite.500`, `navy.800` |
+| `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
 | `components.GamePanel.surface.top`, `.bottom` | The game panel, shading from top to bottom | `background.paper`, `background.paper` (solid) |
 | `components.GamePanel.scoreBlock.top`, `.bottom` | The game panel's score block, shading from top to bottom | `primary.dark`, `primary.dark` (solid) |
 | `components.GamePanel.score.fill`, `.text` | A team's score box on the game panel | `navy.600`, `text.primary` |
@@ -211,7 +211,7 @@ How status reaches the rest of the globe:
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast, and the scenario controls with the no-pins message, and tooltips. Each component has a **frost**, from 0 to 1:
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast, the scenario controls with the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its colour lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface colour, solid.
@@ -225,7 +225,7 @@ On a score card the frost clears more than the fill: its header's tint, its stat
 | `components.ScoreCard.frost` | Score cards' | 0.6 |
 | `components.GamePanel.frost` | The game panel's | 0.6 |
 | `components.Rail.frost` | The rail's groups, popovers and toast | 0.6 |
-| `components.Controls.frost` | The scenario pill and its list, the speed keys, the scenario clock and the no-pins message | 0.6 |
+| `components.Controls.frost` | The scenario pill and its list, the speed keys, the scenario clock, the no-pins message, and the Feedback button and panel | 0.6 |
 | `components.Tooltip.frost` | Tooltips' | 0.6 |
 
 Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: each frost is on its component's tab.
@@ -272,10 +272,10 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, a tooltip | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, the Feedback panel and its text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
-| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast | `pill` |
+| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast, the Feedback panel's buttons | `pill` |
 
 The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
 
@@ -339,8 +339,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
-| `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
-| `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail), the "All leagues" chip's height | 320, 32 |
+| `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
+| `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
 | `components.LoadingScreen.spinner.size` | The loading screen's spinner, across | 32 |

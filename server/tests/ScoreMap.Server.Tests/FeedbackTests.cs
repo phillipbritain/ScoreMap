@@ -225,6 +225,34 @@ public class FeedbackTests
     }
 
     [Fact]
+    public async Task Once_feedback_is_closed_for_today_every_try_from_a_visitor_is_told_so()
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        for (var i = 0; i < 20; i++)
+            await SendAsync(server, $"Feedback number {i}", visitor: $"203.0.113.{i}");
+
+        for (var i = 0; i < 4; i++)
+        {
+            var closed = await SendAsync(server, "Still trying today", visitor: "198.51.100.23");
+            Assert.Equal("Feedback is closed for today, try tomorrow", (await ReplyAsync(closed)).Error);
+        }
+    }
+
+    [Fact]
+    public async Task Feedback_GitHub_failed_to_file_does_not_count_towards_the_visitors_limit()
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        server.GitHub.Fail(HttpStatusCode.InternalServerError);
+        for (var i = 0; i < 3; i++)
+            await SendAsync(server, "Trying while GitHub is down");
+        server.GitHub.Answer();
+
+        var response = await SendAsync(server, "GitHub is back");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Feedback_with_the_honeypot_filled_in_gets_thanks_but_no_issue()
     {
         await using var server = new ScoreMapServer { FeedbackToken = "token" };

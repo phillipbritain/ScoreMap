@@ -24,7 +24,7 @@ public sealed class FeedbackGuard(TimeProvider clock)
     public bool TrySend(IPAddress? visitor)
     {
         var now = clock.GetUtcNow();
-        var key = Convert.ToHexString(HMACSHA256.HashData(_key, (visitor ?? IPAddress.None).GetAddressBytes()));
+        var key = KeyOf(visitor);
         lock (_sends)
         {
             foreach (var (other, times) in _sends.ToList())
@@ -42,6 +42,24 @@ public sealed class FeedbackGuard(TimeProvider clock)
             return true;
         }
     }
+
+    /// <summary>Gives back the visitor's last submission, which wasn't filed after all.</summary>
+    public void GiveBackSend(IPAddress? visitor)
+    {
+        lock (_sends)
+        {
+            if (!_sends.TryGetValue(KeyOf(visitor), out var sends) || sends.Count == 0)
+                return;
+            // Their latest, which is the queue's last.
+            var kept = sends.Take(sends.Count - 1).ToList();
+            sends.Clear();
+            foreach (var sent in kept)
+                sends.Enqueue(sent);
+        }
+    }
+
+    private string KeyOf(IPAddress? visitor) =>
+        Convert.ToHexString(HMACSHA256.HashData(_key, (visitor ?? IPAddress.None).GetAddressBytes()));
 
     /// <summary>Takes one of today's issues (in UTC days), unless they've all been filed.</summary>
     public bool TryTakeToday()

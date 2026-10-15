@@ -28,6 +28,8 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import type { ThemeJson } from './themeTuner/themeDraft'
+import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
+import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
 // The theme and behaviour tuners, on local runs only: left out of a build.
 const ThemeTuner = import.meta.env.DEV
@@ -91,6 +93,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // The rail's hold on the globe's camera, and where the camera last settled, for the zoom buttons' limits.
   const globeCamera = useRef<GlobeCamera>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
+  // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
+  const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   const [camera] = useState(() => openingCamera(store, behaviour.zoom))
   // A new start zoom from the behaviour tuner puts the globe at Home at once, to show it.
   const shownStartZoom = useRef(behaviour.zoom.startZoom)
@@ -121,6 +125,11 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     [setScenarioListing, demo],
   )
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
+  useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
+  // The welcome tour, once the loading screen has gone, until it's finished. While it shows, the globe
+  // and rail can't be used.
+  const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
+  const touring = tourStep !== null
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   // Changing only when a colour does, so other settings don't recolour the globe.
@@ -138,7 +147,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     <div className="app">
       <GlassLens />
       <Tooltips />
-      <div className="globe-area">
+      <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           ref={globeCamera}
           theme={theme}
@@ -157,6 +166,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             setCameraNow(moved)
           }}
           onStage={setStage}
+          inert={touring}
         />
         {/* Over the globe until it's ready, under the bottom stack and the rail, which come after it
             so they stay usable while loading. */}
@@ -226,7 +236,19 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           onZoomIn={() => globeCamera.current?.zoomIn()}
           onZoomOut={() => globeCamera.current?.zoomOut()}
           onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
+          inert={touring}
         />
+        {/* Over the globe and the rail, which come before it; the scenario controls and the Feedback
+            button are lifted above it (see .globe-area--touring), and the dev tools come after it. */}
+        {tourStep && (
+          <WelcomeTourScreen
+            progress={tourStep}
+            onEvent={(event) => setTourProgress((current) => tourProgressAfter(current, event))}
+            leagues={leagues}
+            settings={viewerSettings}
+            onChange={setViewerSettings}
+          />
+        )}
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
           <div className="dev-tools" data-keeps-popovers hidden={!scenarios.devToolsShown}>

@@ -24,6 +24,8 @@ interface RailProps {
   onZoomOut: () => void
   /** Flies the camera back to the viewer's region, at the start zoom (see homeCamera). */
   onHome: () => void
+  /** Whether the rail can't be used at all, while the welcome tour shows. */
+  inert?: boolean
 }
 
 /**
@@ -33,7 +35,7 @@ interface RailProps {
  * shows a short toast beside the rail saying what changed. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
  * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
-export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome }: RailProps) {
+export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false }: RailProps) {
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
@@ -56,7 +58,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
   )
 
   return (
-    <div className="rail">
+    <div className="rail" inert={inert}>
       {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
       <div className="rail__group" data-keeps-popovers>
         <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn}>

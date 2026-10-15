@@ -5,6 +5,11 @@ export interface ViewerSettings {
    * league added to the server's configuration later shows up switched on.
    */
   hiddenLeagues: readonly string[]
+  /**
+   * "Top Events" in Leagues: shows only the games ESPN lists in its Top Events, in every league,
+   * whichever leagues are switched off. Off, the league switches decide ("My leagues").
+   */
+  topEventsOnly: boolean
   /** Hides Upcoming and Final pins. */
   liveOnly: boolean
   /** "Show Disrupted games": shows postponed, suspended and canceled games. */
@@ -21,9 +26,10 @@ export interface ViewerSettings {
   leagueColours: Readonly<Record<string, string>>
 }
 
-/** Every league on, "Live only" off, Disrupted games shown and no colours picked. */
+/** Every league on, Top Events off, "Live only" off, Disrupted games shown and no colours picked. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
+  topEventsOnly: false,
   liveOnly: false,
   showDisrupted: true,
   sportColours: {},

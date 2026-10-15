@@ -158,6 +158,9 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
         _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
 
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
+        _running.Feed.FetchTopEventsAsync(cancellationToken);
+
     private Source Start(string name, Speed? speed)
     {
         if (IsRealGames(name))

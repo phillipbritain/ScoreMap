@@ -35,4 +35,15 @@ public sealed class ScenarioGameFeedProvider : IGameFeedProvider
         var games = _details.Fill(leagueKey, all.Where(game => game.LeagueKey == leagueKey).ToList());
         return Task.FromResult(games);
     }
+
+    /// <summary>About one game in five, picked by its id, so a game stays a top event for as long as it runs.</summary>
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
+    {
+        var now = _clock.GetUtcNow();
+        var all = _play is not null ? _play.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
+        IReadOnlySet<string> top = all.Select(game => game.Id).Where(IsTopEvent).ToHashSet();
+        return Task.FromResult(top);
+    }
+
+    private static bool IsTopEvent(string gameId) => (uint)Scenario.StableSeed(gameId) % 5 == 0;
 }

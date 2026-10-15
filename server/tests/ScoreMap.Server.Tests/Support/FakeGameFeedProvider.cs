@@ -15,6 +15,45 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private readonly Dictionary<string, TaskCompletionSource> _gates = new();
     private readonly TaskCompletionSource _heldFetchCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    private IReadOnlySet<string> _topEvents = new HashSet<string>();
+    private bool _topEventsFailing;
+    private int _topEventsFetches;
+
+    /// <summary>Sets the games, by id, the feed lists as its top events.</summary>
+    public void SetTopEvents(params string[] gameIds)
+    {
+        lock (_scoreboards)
+            _topEvents = gameIds.ToHashSet();
+    }
+
+    /// <summary>Makes every fetch of the top events throw, as if their source were down.</summary>
+    public void FailTopEvents()
+    {
+        lock (_scoreboards)
+            _topEventsFailing = true;
+    }
+
+    /// <summary>How many times the top events have been fetched.</summary>
+    public int TopEventsFetches
+    {
+        get
+        {
+            lock (_scoreboards)
+                return _topEventsFetches;
+        }
+    }
+
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
+    {
+        lock (_scoreboards)
+        {
+            _topEventsFetches++;
+            return _topEventsFailing
+                ? Task.FromException<IReadOnlySet<string>>(new HttpRequestException("top events are down"))
+                : Task.FromResult(_topEvents);
+        }
+    }
+
     public void SetScoreboard(string leagueKey, params ProviderGame[] games)
     {
         lock (_scoreboards)

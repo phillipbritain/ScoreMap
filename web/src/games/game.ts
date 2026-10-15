@@ -144,4 +144,6 @@ export interface Game {
   lastScore: ScoringPlay | null
   /** Soccer: the goals and cards so far, in the order they happened; empty in other sports. */
   keyEvents: KeyEvent[]
+  /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */
+  topEvent: boolean
 }

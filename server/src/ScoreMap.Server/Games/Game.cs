@@ -45,6 +45,9 @@ public sealed record Game(
 
     /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
     public IReadOnlyList<KeyEvent> KeyEvents { get; init; } = [];
+
+    /// <summary>Whether ESPN lists the game in its Top Events: the games it picks as the most important right now.</summary>
+    public bool TopEvent { get; init; }
 }
 
 /// <summary>

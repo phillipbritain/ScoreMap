@@ -59,6 +59,64 @@ body {
   pointer-events: none;
 }
 
+/* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers and toast,
+   the scenario controls, the no-pins message and tooltips) is a pane of glass the globe shows through (ADR-0018).
+   Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
+   slight bend and lifted in colour, its edges catching the light; at 1 opaque frosted glass. The glass
+   is tinted with the component's own surface colour (--glass-tint, or --glass-fill for a fill of its
+   own), as solid as the frost.
+
+   A surface holding another glass surface (a rail group holds its popover, the scenario pill its list)
+   has its glass on a layer behind its content (::before), since glass on the surface itself would keep
+   the glass inside from seeing past it. */
+.score-card,
+.game-panel,
+.rail__group::before,
+.rail__popover,
+.rail__toast,
+.scenario-pill::before,
+.scenario-pill ul,
+.speed-keys,
+.scenario-clock,
+.no-pins,
+.tooltip {
+  /* How brightly the glass catches the light: most when clear. */
+  --glass-shine: calc(1 - var(--frost));
+  --glass-fill: color-mix(in srgb, var(--glass-tint) calc(var(--frost) * 100%), transparent);
+  /* Its edges, lit from the top left, and the shadow it casts on the globe. */
+  --glass-rim:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent),
+    inset -1px -1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(6% + 22% * var(--glass-shine)), transparent),
+    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+  /* A sheen across it from the top left, and fainter from the bottom right, over its tint. */
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
+    linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
+    var(--glass-fill);
+  /* Behind it, the globe blurred and lifted in colour as the frost says, and on the larger panes bent
+     by the lens (--glass-lens, see theme/GlassLens.tsx): score cards are too small for it to read as
+     more than a smear. */
+  -webkit-backdrop-filter: blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
+  backdrop-filter: var(--glass-lens, ) blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
+  box-shadow: var(--glass-rim);
+}
+
+/* A surface whose glass is a layer behind its content. */
+.rail__group,
+.scenario-pill {
+  isolation: isolate;
+}
+
+.rail__group::before,
+.scenario-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
    colour (--game-color, set on the panel, with --text-on-game-color for text on it). One
    size whatever the game, so it never jumps from one game to the next: the score block, the details
@@ -77,13 +135,21 @@ body {
   overflow: hidden;
   border-top: var(--shape-border-width-thick) solid var(--game-color);
   border-radius: var(--game-panel-corner);
-  background: linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+  /* Glass (see above), shading from top to bottom. */
+  --frost: var(--game-panel-frost);
+  --glass-lens: url(#glass-lens);
+  --glass-fill: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--game-panel-surface-top) calc(var(--frost) * 100%), transparent),
+    color-mix(in srgb, var(--game-panel-surface-bottom) calc(var(--frost) * 100%), transparent)
+  );
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
   box-shadow:
     var(--game-panel-shadow),
-    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
+    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent),
+    var(--glass-rim);
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
   --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
@@ -114,7 +180,13 @@ body {
   width: var(--game-panel-size-score-block);
   flex-shrink: 0;
   padding: calc(2 * var(--spacing)) calc(6 * var(--spacing)) calc(2 * var(--spacing)) calc(4 * var(--spacing));
-  background: linear-gradient(180deg, var(--game-panel-score-block-top), var(--game-panel-score-block-bottom));
+  /* Clearing with the panel's glass, but never all the way, so the score block stands out from it. */
+  --score-block-opacity: calc((0.15 + 0.85 * var(--frost)) * 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--game-panel-score-block-top) var(--score-block-opacity), transparent),
+    color-mix(in srgb, var(--game-panel-score-block-bottom) var(--score-block-opacity), transparent)
+  );
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
@@ -163,7 +235,7 @@ body {
 }
 
 .game-panel__team img {
-  background: var(--game-panel-logo-plate-fill);
+  background: color-mix(in srgb, var(--game-panel-logo-plate-fill) calc(var(--frost) * 100%), transparent);
 }
 
 .game-panel__team-name {
@@ -192,7 +264,7 @@ body {
   box-sizing: border-box;
   width: var(--game-panel-size-score-width);
   flex-shrink: 0;
-  background: var(--game-panel-score-fill);
+  background: color-mix(in srgb, var(--game-panel-score-fill) calc(var(--frost) * 100%), transparent);
   color: var(--game-panel-score-text);
   font-family: var(--typography-font-family);
   font-size: var(--typography-h6-font-size);
@@ -536,8 +608,9 @@ body {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
-  /* How opaque the fill is, from the theme. */
-  --card-fill-opacity: calc(var(--score-card-fill-opacity) * 100%);
+  /* Glass (see above), tinted with its fill. */
+  --frost: var(--score-card-frost);
+  --glass-tint: var(--card-surface);
   --card-color: color-mix(in srgb, var(--game-color), var(--card-surface) var(--fade));
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;
@@ -547,19 +620,20 @@ body {
   padding: 0 0 var(--spacing);
   border: var(--shape-border-width-thin) solid var(--card-color);
   border-radius: var(--score-card-corner);
-  background: color-mix(in srgb, var(--card-surface) var(--card-fill-opacity), transparent);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
   font-family: var(--typography-font-family);
   font-size: var(--typography-subtitle2-font-size);
   font-weight: var(--typography-subtitle2-font-weight);
   line-height: 1.2;
   text-transform: uppercase;
-  /* A hovered card's bolder border, then the status's glow around the card, and a fainter one inside it. */
+  /* A hovered card's bolder border, then the status's glow around the card, and a fainter one inside it
+     that clears with the glass, then the glass's rim. */
   box-shadow:
     0 0 0 var(--card-hover-ring) var(--card-color),
     0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
     inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
-      color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * 100% / 3), transparent);
+      color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * var(--frost) * 100% / 3), transparent),
+    var(--glass-rim);
   cursor: pointer;
   position: relative;
   transition:
@@ -573,7 +647,7 @@ body {
 @media (hover: hover) {
   .score-card:hover {
     --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
-    --card-fill-opacity: calc(100% - (1 - var(--score-card-fill-opacity)) * (1 - var(--hover-card-solid)) * 100%);
+    --frost: max(var(--score-card-frost), var(--hover-card-solid));
   }
 }
 
@@ -606,7 +680,7 @@ body {
   margin-bottom: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
   border-bottom: var(--shape-border-width-thin) solid var(--card-color);
-  background: color-mix(in srgb, var(--card-color) calc(var(--score-card-header-tint) * 100%), transparent);
+  background: color-mix(in srgb, var(--card-color) calc(var(--score-card-header-tint) * var(--frost) * 100%), transparent);
   color: color-mix(in srgb, var(--header-text, var(--card-ink)), var(--card-surface) var(--fade));
   font-size: var(--typography-footnote-font-size);
   letter-spacing: var(--score-card-header-letter-spacing);
@@ -647,7 +721,7 @@ body {
   height: var(--score-card-size-logo);
   padding: var(--score-card-logo-plate-padding);
   border-radius: var(--score-card-logo-plate-corner);
-  background: var(--score-card-logo-plate-fill);
+  background: color-mix(in srgb, var(--score-card-logo-plate-fill) calc(var(--frost) * 100%), transparent);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
 }
@@ -723,7 +797,8 @@ body {
     transform: scale(1);
     box-shadow:
       0 0 0 14px transparent,
-      0 1px 6px color-mix(in srgb, var(--score-card-shadow) var(--card-fill-opacity), transparent);
+      0 1px 6px color-mix(in srgb, var(--score-card-shadow) calc(var(--frost) * 100%), transparent),
+      var(--glass-rim);
   }
 }
 
@@ -835,6 +910,10 @@ body {
    Above the scenario pills, the clock and the no-pins message along the bottom, which an open popover
    can reach down to. */
 .rail {
+  /* Glass (see above), for the rail's groups, popovers and toast. */
+  --frost: var(--rail-frost);
+  --glass-tint: var(--rail-surface);
+  --glass-lens: url(#glass-lens);
   position: absolute;
   top: calc(3 * var(--spacing));
   right: calc(3 * var(--spacing));
@@ -850,8 +929,10 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--menu-corner);
-  background: var(--rail-surface);
-  box-shadow: var(--rail-shadow);
+}
+
+.rail__group::before {
+  box-shadow: var(--rail-shadow), var(--glass-rim);
 }
 
 .rail__group > .rail__button + .rail__button {
@@ -907,8 +988,7 @@ body {
   margin: 0;
   padding: var(--spacing) calc(3 * var(--spacing));
   border-radius: var(--controls-corner);
-  background: var(--rail-surface);
-  box-shadow: var(--rail-shadow);
+  box-shadow: var(--rail-shadow), var(--glass-rim);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   white-space: nowrap;
@@ -929,8 +1009,7 @@ body {
 }
 
 /* A popover, Leagues or Colours, to the left of the rail and level with its top, on the rail's
-   surface: the built-in theme's is the scenario pills' colour but solid, so score cards behind it
-   don't show through. */
+   glass. */
 .rail__popover {
   position: absolute;
   top: 0;
@@ -942,10 +1021,9 @@ body {
   overflow-y: auto;
   padding: calc(3 * var(--spacing));
   border-radius: var(--menu-corner);
-  background: var(--rail-surface);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
-  box-shadow: var(--rail-shadow);
+  box-shadow: var(--rail-shadow), var(--glass-rim);
 }
 
 /* On a phone: a sheet across all the width left of the rail, from the rail's top down, so the rail's
@@ -1178,10 +1256,12 @@ body {
   position: relative;
   min-width: 0;
   border-radius: var(--controls-corner);
-  background: var(--controls-surface);
   color: var(--palette-text-primary);
   font-size: var(--typography-button-font-size);
-  box-shadow: var(--controls-shadow);
+}
+
+.scenario-pill::before {
+  box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
 /* Over the globe while the scenario list is open, to take the press that closes it (see ScenarioPill). */
@@ -1225,8 +1305,7 @@ body {
   margin: 0;
   padding: calc(1.5 * var(--spacing));
   border-radius: var(--menu-corner);
-  background: var(--controls-surface);
-  box-shadow: var(--controls-shadow);
+  box-shadow: var(--controls-shadow), var(--glass-rim);
   list-style: none;
   white-space: nowrap;
 }
@@ -1265,9 +1344,8 @@ body {
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
   border-radius: var(--controls-corner);
-  background: var(--controls-surface);
   color: var(--palette-text-primary);
-  box-shadow: var(--controls-shadow);
+  box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
 .speed-keys button {
@@ -1402,6 +1480,10 @@ body {
 /* Along the bottom of the globe: the no-pins message centred, and below it the scenario pills and
    clock at the left (local runs only). */
 .bottom-stack {
+  /* Glass (see above), for the scenario controls and the no-pins message. */
+  --frost: var(--controls-frost);
+  --glass-tint: var(--controls-surface);
+  --glass-lens: url(#glass-lens);
   position: absolute;
   right: calc(3 * var(--spacing));
   bottom: calc(8 * var(--spacing));
@@ -1422,7 +1504,6 @@ body {
   margin: 0;
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
   border-radius: var(--controls-message-corner);
-  background: var(--controls-surface);
   color: var(--palette-text-primary);
 }
 
@@ -1432,12 +1513,57 @@ body {
   padding: 0 calc(3 * var(--spacing));
   line-height: var(--controls-bar-height);
   border-radius: var(--controls-corner);
-  background: var(--controls-surface);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-body2-font-size);
   font-weight: var(--typography-body2-font-weight);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  box-shadow: var(--controls-shadow);
+  box-shadow: var(--controls-shadow), var(--glass-rim);
+}
+
+/* A tooltip (see tooltip/Tooltips.tsx): a small pane of glass above what it's for, or below where
+   there's no room, or on its left for the rail's buttons, easing in from it. Over everything but the local-run tools' own. */
+.tooltip {
+  --frost: var(--tooltip-frost);
+  --glass-tint: var(--tooltip-surface);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  box-sizing: border-box;
+  max-width: 280px;
+  padding: var(--spacing) calc(2.5 * var(--spacing));
+  border-radius: var(--menu-corner);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+  letter-spacing: var(--typography-caption-letter-spacing);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: tooltip-in 140ms ease-out;
+}
+
+.tooltip[data-side='below'] {
+  transform-origin: 50% 0;
+}
+
+.tooltip[data-side='left'] {
+  transform-origin: 100% 50%;
+}
+
+@keyframes tooltip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    animation: none;
+  }
 }

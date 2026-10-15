@@ -101,6 +101,8 @@ const inPixels = (value: number) => `${value}px`
 /** A size in pixels, written to CSS as one. */
 const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: inPixels }
 const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
+/** How frosted a pane of glass is, from clear (0) to opaque frosted glass (1) (ADR-0018). */
+const frost = numberFrom(0, 1, 'a frost from 0 (clear glass) to 1 (opaque frosted glass)')
 /** How far something is moved, in pixels, either way; written to CSS in pixels. */
 const offset: Setting<number> = { ...numberFrom(-Infinity, Infinity, 'a number of pixels'), css: inPixels }
 
@@ -471,14 +473,15 @@ const settings = {
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
-     * fades and glows (see cardStatus), and a Disrupted game's fill and text. How opaque its fill and
-     * drop shadow are (below 1, the map shows through), while its text, logos, scores and status light stay solid.
+     * fades and glows (see cardStatus), and a Disrupted game's fill and text. Its glass's frost: its fill,
+     * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
+     * outline and status light stay solid.
      */
     ScoreCard: {
       fill: color,
       text: color,
       shadow: color,
-      fillOpacity: opacity,
+      frost,
       header: { tint: opacity, letterSpacing: tracking },
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
@@ -498,9 +501,11 @@ const settings = {
      * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
      * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
      * logoPlate). It sits clear of the scenario
-     * controls by their keys' size.
+     * controls by their keys' size. Its glass's frost: its surface, score block, score boxes and logo
+     * plates clear with it.
      */
     GamePanel: {
+      frost,
       surface: { top: color, bottom: color },
       scoreBlock: { top: color, bottom: color },
       score: { fill: color, text: color },
@@ -534,9 +539,11 @@ const settings = {
      * button's icon that's on and one that's off; the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
-     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems.
+     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The frost
+     * of their glass.
      */
     Rail: {
+      frost,
       surface: color,
       shadow,
       toggle: { on: color, off: color },
@@ -550,9 +557,10 @@ const settings = {
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
      * surface and drop shadow, a speed key that's on, and how opaque one that's off is. A control's
      * corners (the scenario pill and clock, the speed keys, league chips) and the message's. Its size: a
-     * speed key and its icon.
+     * speed key and its icon. The frost of their glass.
      */
     Controls: {
+      frost,
       surface: color,
       shadow,
       on: { fill: color, text: color },
@@ -561,6 +569,8 @@ const settings = {
       message: { corner },
       size: { key: pixels, icon: pixels },
     },
+    /** A tooltip: its surface, tinting its glass, and the frost of its glass. */
+    Tooltip: { frost, surface: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
      * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,

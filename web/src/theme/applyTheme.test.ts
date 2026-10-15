@@ -71,9 +71,10 @@ describe('applyTheme', () => {
     expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
   })
 
-  it('writes the score card’s fill opacity', () => {
-    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.fillOpacity = 0.6)))
-    expect(properties.get('--score-card-fill-opacity')).toBe('0.6')
+  it('writes each glass’s frost', () => {
+    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.frost = 0.3)))
+    expect(properties.get('--score-card-frost')).toBe('0.3')
+    expect(properties.get('--rail-frost')).toBe('0.6')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
@@ -165,19 +166,21 @@ describe('applyTheme', () => {
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, fill opacity, header's two, corner, five sizes
+      // A score card's fill, text, shadow, frost, header's two, corner, five sizes
       // and logo plate of three; for each of four statuses its fade and glow of two, and a Disrupted card's
       // fill and text.
       scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 4 * 3 + 2,
-      // The game panel's eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
+      // The game panel's frost, eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
-      gamePanel: 11 + 3 + 1 + 2 + 9 + 3,
+      gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's eleven colours and shadows and six sizes.
-      rail: 11 + 6,
-      // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
-      controls: 1 + 1 + 2 + 1 + 2 + 2,
+      // The rail's frost, eleven colours and shadows and six sizes.
+      rail: 1 + 11 + 6,
+      // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
+      controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
+      // A tooltip's frost and surface.
+      tooltip: 2,
       // The loading screen's dim (a colour and an opacity), spinner (two colours and a size) and message.
       loadingScreen: 2 + 3 + 1,
     }

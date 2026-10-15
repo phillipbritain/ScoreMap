@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colours.md) (viewers pick the colours games show in) and [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colours worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-colour-for-league-status-by-glow.md) (colour will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colours.md) (viewers pick the colours games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org) and [ADR-0018](adr/0018-surfaces-are-glass.md) (surfaces over the globe are glass). The words **theme**, **theme colours**, **palette**, **colour job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## What a theme is
 
@@ -127,7 +127,7 @@ The dark theme names one of the palette's colours where a job is what that palet
 | `components.Pin.<status>.core.color` | A small pin's bright core. One that's its status's colour is drawn in the game's colour; any other (Live's paler core) stays, so status shows by brightness | Live `gold.100`; the others their status's colour (`upcoming.main` and so on) |
 | `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
-| `components.ScoreCard.fill` | A score card's fill, as opaque as its fill opacity (see [See-through cards and trails](#see-through-cards-and-trails)) | `primary.dark` |
+| `components.ScoreCard.fill` | A score card's fill, tinting its glass (see [Glass](#glass)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
 | `components.ScoreCard.disrupted.fill`, `.text` | A Disrupted game's score card fill and text | `primary.dark`, `offWhite.700` |
 | `components.ScoreCard.shadow` | The drop shadow a starting game's score card settles with | `background.default` |
@@ -150,6 +150,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues and Colours) and its toast | `background.paper` |
+| `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.toggle.on`, `.off` | A toggle's icon on the rail ("Live only", "Show Disrupted games") when on, and when off; a popover's button takes the on colour while its popover is open | `secondary.main` (gold), `text.secondary` (grey) |
 | `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
@@ -173,7 +174,7 @@ A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour 
 - **Final** has no glow and fades.
 - **Disrupted** has no glow and greys out.
 
-A score card fades by colour, not by being see-through: its game's colour, text and logos are mixed into its fill. A card the map shows through (see [See-through cards and trails](#see-through-cards-and-trails)) fades the same way, keeping its status look.
+A score card fades by colour, not by being see-through: its game's colour, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
 
 Each status still has its own colour in the palette, though three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A colour the viewer picks takes the place of its status's, and text written on it (the game panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
 
@@ -205,16 +206,37 @@ How status reaches the rest of the globe:
 - **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's colour (outline, glow and count) is the game colour its games share, or the accent (`palette.live.main`) when their colours differ; Disrupted games don't count, so a cluster is Disrupted's grey only when all its games are.
 - **Pulses** play in the game's colour, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its colour.
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
-- **Glow means a game.** Panels and controls have no glow and no drop shadow: in the dark theme their shadows are `transparent` and the game panel's glow has opacity 0.
+- **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
-### See-through cards and trails
+### Glass
 
-Score cards and trails can let the map show through, so coastlines, borders and place names under them can still be seen where games crowd. Each has one opacity to tune, where 1 is solid: the score card's `fillOpacity`, and the trail's own `opacity` (its glow keeps its own, for how strong the glow is). A score card's fill and drop shadow are that opaque, while its text, logos, scores, outline, status light and glow are not, so the score stays readable and the card keeps its status look (Live's glow, Final's fade). Tune them in the theme tuner on a local run.
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast, and the scenario controls with the no-pins message, and tooltips. Each component has a **frost**, from 0 to 1:
+
+- at **0**, clear glass: the globe behind is sharp, its colour lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
+- at **1**, opaque frosted glass: the globe is blurred away behind the component's surface colour, solid.
+
+In between, the surface colour is as solid as the frost and the blur grows with it, while the edges and sheen dim. The glass is tinted with the component's own surface colour (`components.ScoreCard.fill`, `components.GamePanel.surface`, `components.Rail.surface`, `components.Controls.surface`, `components.Tooltip.surface`), so the palette still colours it, and every pane casts a soft shadow onto the globe in the background's colour.
+
+On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Likewise on the game panel its score block (never all the way, so it stands out), its score boxes and its logo plates. Logos drawn for a light background are harder to see the clearer the glass.
+
+| Setting | Which glass | Dark theme |
+| --- | --- | --- |
+| `components.ScoreCard.frost` | Score cards' | 0.6 |
+| `components.GamePanel.frost` | The game panel's | 0.6 |
+| `components.Rail.frost` | The rail's groups, popovers and toast | 0.6 |
+| `components.Controls.frost` | The scenario pill and its list, the speed keys, the scenario clock and the no-pins message | 0.6 |
+| `components.Tooltip.frost` | Tooltips' | 0.6 |
+
+Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: each frost is on its component's tab.
+
+### Tooltips
+
+Tooltips are glass too, not the browser's own, which can't be styled: anything on the page with a `title` shows it in a small pane of glass (`web/src/tooltip/Tooltips.tsx`), centred above it, or below where there's no room (beside a rail button, level with it on its left, so it covers none of the others), after the pointer rests on it half a second, or at once on keyboard focus. It eases in from what it's for, or shows at once with reduce motion on, and goes on the pointer leaving, a press, Escape or a scroll. The local-run tools keep the browser's tooltips.
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card's fill turns solid, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
 
 ## Typography
 
@@ -228,7 +250,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `body1` | Body text; the game panel's close button takes its size | 400, 16 |
 | `body2` | The game panel, the rail's popovers and toast, the scenario clock and the loading screen's message | 400, 14 |
 | `button` | Buttons: sport names in Leagues and Colours, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
-| `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues | 400, 12 |
+| `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
 | `footnote` | The smallest: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
@@ -250,7 +272,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast | `pill` |
@@ -259,7 +281,7 @@ The **cut corner** cuts off the game panel's bottom left corner, like a broadcas
 
 ### Logo plates
 
-Every team logo, on a score card and in the game panel, sits on a **plate**: a block of a colour that contrasts with the card's fill and the panel, so that a logo near their colour (a navy logo on a navy card) can still be seen. A missing logo leaves its space empty, with no plate. A score card's plate fades into its fill with the logo as the card fades, and goes grey with it on a Disrupted card.
+Every team logo, on a score card and in the game panel, sits on a **plate**: a block of a colour that contrasts with the card's fill and the panel, so that a logo near their colour (a navy logo on a navy card) can still be seen. A missing logo leaves its space empty, with no plate. A score card's plate fades into its fill with the logo as the card fades, and goes grey with it on a Disrupted card. A plate is as solid as the glass it's on is frosted, so on clear glass there's none (see [Glass](#glass)).
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
@@ -285,7 +307,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
-| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 1.25, 0.63 |
+| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot | 5, 1 |
@@ -302,9 +324,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | --- | --- | --- |
 | `components.GamePanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its colour | none (`transparent`, blur 0) |
 | `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's colour along the game panel's top | 0, 0, 0 (none) |
-| `components.ScoreCard.fillOpacity` | How opaque score cards' fill and drop shadow are, 0 to 1, below 1 letting the map show through (see [See-through cards and trails](#see-through-cards-and-trails)) | 0.75 |
-| `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether its fill turns solid (see [Hover](#hover)) | 2.5, on |
-| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's colour, 0 to 1. The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
+| `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether it frosts over fully (see [Hover](#hover)) | 2.5, on |
+| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's colour, 0 to 1, at a frost of 1: the tint clears with the card's glass (see [Glass](#glass)). The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colours" with no colours to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
@@ -384,6 +405,7 @@ A new setting goes in the settings in `web/src/theme/theme.ts` and in every them
 Some of the look is in code on purpose, as behaviour or layout rather than a theme's choices:
 
 - motion: durations, easings and the shapes of the animations, including the status light's pulse and the sizes and opacities inside their keyframes;
+- how glass works out from its frost (see [Glass](#glass)): how far the globe blurs, how much its colour is lifted, how bright the edges and sheen are, the shadow it casts, and the lens's warp (`web/src/theme/GlassLens.tsx`);
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);

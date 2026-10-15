@@ -42,11 +42,12 @@ export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, on
       if (event.key === 'Escape') setOpen((current) => nextPopover(current, 'escape'))
     }
     // In the capture phase, so the globe can't keep a click on it from closing the popover. A
-    // popover's button isn't outside: its own press opens or closes it.
+    // popover's button isn't outside: its own press opens or closes it, and nor are the local-run
+    // tools ([data-keeps-popovers]), so a popover stays open to be looked at while they change it.
     const onPointer = (event: PointerEvent) => {
       const target = event.target
       if (!(target instanceof Element)) return
-      if (popover.current?.contains(target) || target.closest('[data-popover-button]')) return
+      if (popover.current?.contains(target) || target.closest('[data-popover-button], [data-keeps-popovers]')) return
       setOpen((current) => nextPopover(current, 'outside'))
     }
     window.addEventListener('keydown', onKey)
@@ -145,6 +146,8 @@ function RailButton({
       className="rail__button"
       aria-label={label}
       title={title}
+      // On the left, so it covers none of the rail's other buttons.
+      data-tooltip-side="left"
       disabled={disabled}
       aria-pressed={pressed}
       aria-haspopup={popover && 'dialog'}

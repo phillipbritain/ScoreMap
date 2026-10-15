@@ -97,7 +97,7 @@ export function Feedback({ hidden, context }: FeedbackProps) {
                 </p>
               )}
               <div className="feedback__actions">
-                <button type="button" className="feedback__action" onClick={close}>
+                <button type="button" className="feedback__action" onClick={() => setOpen(false)}>
                   Cancel
                 </button>
                 <button type="submit" className="feedback__action feedback__action--submit" disabled={!canSubmit(text) || sending}>
@@ -113,7 +113,7 @@ export function Feedback({ hidden, context }: FeedbackProps) {
         className="feedback__button"
         aria-expanded={open}
         aria-controls={open ? 'feedback-panel' : undefined}
-        // Closing keeps a draft, but not a thank-you.
+        // Closing keeps a draft, as Cancel does, but not a thank-you.
         onClick={() => (open && issueUrl ? close() : setOpen(!open))}
       >
         Feedback

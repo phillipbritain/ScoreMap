@@ -232,7 +232,7 @@ Trails let the map show through by their own `opacity` (see [On the globe](#on-t
 
 ### Tooltips
 
-Tooltips are glass too, not the browser's own, which can't be styled: anything on the page with a `title` shows it in a small pane of glass (`web/src/tooltip/Tooltips.tsx`), centred above it, or below where there's no room (beside a rail button, level with it on its left, so it covers none of the others), after the pointer rests on it half a second, or at once on keyboard focus. It eases in from what it's for, or shows at once with reduce motion on, and goes on the pointer leaving, a press, Escape or a scroll. The local-run tools keep the browser's tooltips.
+Tooltips are glass too, not the browser's own, which can't be styled: anything on the page with a `data-tooltip` shows it in a small pane of glass (`web/src/tooltip/Tooltips.tsx`), centred above it, or below where there's no room (beside a rail button, level with it on its left, so it covers none of the others), after the pointer rests on it half a second, or at once on keyboard focus. It eases in from what it's for, or shows at once with reduce motion on, and goes on the pointer leaving, a press, Escape or a scroll. The app sets no `title`, so the browser never shows a tooltip of its own; only the local-run tools keep the browser's.
 
 ### Hover
 

@@ -18,13 +18,13 @@ export function canZoom({ latitude, zoom }: Camera): { in: boolean; out: boolean
 
 /** The rail's two toggles, in order, by the setting each switches and its name. */
 export const railToggles = [
-  { key: 'liveOnly', name: 'Live only' },
+  { key: 'liveOnly', name: 'Live games only' },
   { key: 'showDisrupted', name: 'Show Disrupted games' },
 ] as const
 
 export type RailToggle = (typeof railToggles)[number]['key']
 
-/** The settings with one of the rail's toggles switched, and the toast saying what changed ("Live only: on"). */
+/** The settings with one of the rail's toggles switched, and the toast saying what changed ("Live games only: on"). */
 export function toggled(settings: ViewerSettings, key: RailToggle): { settings: ViewerSettings; toast: string } {
   const on = !settings[key]
   const name = railToggles.find((toggle) => toggle.key === key)!.name

@@ -45,7 +45,7 @@ export function SpeedKeys({
         className={className}
         aria-label={name}
         aria-pressed={listing.speed === speed}
-        title={title}
+        data-tooltip={title}
         disabled={changing}
         onClick={() => press(speed)}
       >
@@ -56,7 +56,7 @@ export function SpeedKeys({
 
   return (
     <div className="speed-keys" role="group" aria-label="Scenario play">
-      <button type="button" aria-label="Reset" title="Reset" disabled={changing} onClick={reset}>
+      <button type="button" aria-label="Reset" data-tooltip="Reset" disabled={changing} onClick={reset}>
         <ResetIcon />
       </button>
       {speedKey(speedNames.paused, 'Pause', <PauseIcon />)}

@@ -26,10 +26,10 @@ describe('canZoom', () => {
 })
 
 describe('toggled', () => {
-  it('switches Live only, and says so', () => {
+  it('switches Live games only, and says so', () => {
     const { settings, toast } = toggled(firstVisitSettings, 'liveOnly')
     expect(settings).toEqual({ ...firstVisitSettings, liveOnly: true })
-    expect(toast).toBe('Live only: on')
+    expect(toast).toBe('Live games only: on')
   })
 
   it('switches Show Disrupted games, and says so', () => {

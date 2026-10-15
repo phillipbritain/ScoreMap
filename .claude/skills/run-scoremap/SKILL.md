@@ -25,6 +25,8 @@ Usually the user already has a run going. Run these with the PowerShell tool:
 
 **Logs** are in the run's dashboard (`aspire ps` gives its URL, with its login token), or `aspire logs server` and `aspire logs web` (`-f` to follow).
 
+**A white page** after renaming or deleting a file under `web/src`: Vite may hold a stale import, unseen by `console` and `errors`. Restart it with `aspire resource web restart --apphost $apphost`.
+
 ## Drive it in a browser
 
 With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads or moves the page. Use it rather than `agent-browser eval`: Claude Code's auto mode refuses Bash commands containing `eval` in a worktree, and `npm run page` runs its script in the page for you. It uses the same session, from `AGENT_BROWSER_SESSION`, and runs from PowerShell or Git Bash.

@@ -1,4 +1,4 @@
-import { withAllLeagues, type League, type ViewerSettings } from '../settings/viewerSettings'
+import { isLeagueOn, withAllLeagues, type League, type ViewerSettings } from '../settings/viewerSettings'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
@@ -41,4 +41,9 @@ export function tourProgressAfter(progress: TourProgress, event: TourEvent): Tou
 export function settingsForChoice(settings: ViewerSettings, choice: TourChoice, leagues: readonly League[]): ViewerSettings {
   if (choice === 'topEvents') return { ...settings, topEventsOnly: true }
   return { ...withAllLeagues(settings, leagues, choice === 'everything'), topEventsOnly: false }
+}
+
+/** Whether My leagues' "Show these" can be pressed: only once a league is on, so the globe isn't left empty. */
+export function canShowPicks(settings: ViewerSettings, leagues: readonly League[]): boolean {
+  return leagues.some((league) => isLeagueOn(settings, league.name))
 }

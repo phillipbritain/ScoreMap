@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { firstVisitSettings, isLeagueOn, type ViewerSettings } from '../settings/viewerSettings'
-import { settingsForChoice, tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
+import { firstVisitSettings, isLeagueOn, withLeague, type ViewerSettings } from '../settings/viewerSettings'
+import { canShowPicks, settingsForChoice, tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
 
 describe('welcome tour progress', () => {
   it.each<[TourProgress, TourEvent, TourProgress]>([
@@ -85,5 +85,21 @@ describe('what each Welcome choice does to the viewer settings', () => {
 
   it("Top Events leaves the league switches as they were, as the rail's does", () => {
     expect(settingsForChoice(before, 'topEvents', leagues).hiddenLeagues).toEqual(['NBA'])
+  })
+})
+
+describe('"Show these" on the My leagues picker', () => {
+  const nothingOn = settingsForChoice(before, 'myLeagues', leagues)
+
+  it("can't be pressed with nothing picked", () => {
+    expect(canShowPicks(nothingOn, leagues)).toBe(false)
+  })
+
+  it('can be pressed once a league is picked', () => {
+    expect(canShowPicks(withLeague(nothingOn, 'NBA', true), leagues)).toBe(true)
+  })
+
+  it("can't be pressed before the leagues have loaded", () => {
+    expect(canShowPicks(firstVisitSettings, [])).toBe(false)
   })
 })

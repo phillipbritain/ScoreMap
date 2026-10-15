@@ -247,6 +247,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             leagues={leagues}
             settings={viewerSettings}
             onChange={setViewerSettings}
+            onOpenGame={setSelectedGameId}
           />
         )}
         {BehaviourTuner && ThemeTuner && tuning && (

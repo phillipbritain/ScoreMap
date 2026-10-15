@@ -1,0 +1,214 @@
+/* PROTOTYPE (throwaway): "Liquid Glass" surfaces. Three glass materials, A, B and C, on the real app,
+   picked by ?variant= (see GlassPrototype.tsx); ?variant=off is today's solid look. Only applies while
+   the page's root has data-glass, which the prototype sets on local runs.
+
+   Each surface reads its own frost, 0 to 1, from the Glass tab of the Theme tuner: 0 is clear glass
+   (see-through, little blur, bright edges), 1 opaque frosted glass. Its tint is the theme's own colour
+   for that surface, so the theme's colours still drive it. */
+
+/* Which slider each surface follows, and the theme colour it's tinted with. */
+:root[data-glass] .score-card {
+  --f: var(--glass-cards);
+  --tint: var(--card-surface);
+}
+
+@media (hover: hover) {
+  /* Hovered, a card frosts over as far as the theme turns hovered cards solid. */
+  :root[data-glass] .score-card:hover {
+    --f: min(1, calc(var(--glass-cards) + 0.4 * var(--hover-card-solid)));
+  }
+}
+
+:root[data-glass] .game-panel {
+  --f: var(--glass-panel);
+  --tint: var(--game-panel-surface-top);
+}
+
+:root[data-glass] :is(.rail__group, .rail__popover, .rail__toast) {
+  --f: var(--glass-rail);
+  --tint: var(--rail-surface);
+}
+
+:root[data-glass] :is(.scenario-pill, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins) {
+  --f: var(--glass-controls);
+  --tint: var(--controls-surface);
+}
+
+/* Each material, worked out from the frost: how much of the tint, how much blur and colour boost behind,
+   how bright the edges, and the rim and shadow (--g-rim) drawn with them. */
+
+/* A, Liquid: Apple's clear glass. Nearly clear, the globe bent a little through it, a bright specular
+   edge top left and a sheen across it; frosts to a milky slab. */
+:root[data-glass='A'] {
+  --g-lens: url(#glass-prototype-lens);
+}
+
+:root[data-glass='A'] :is(.score-card, .game-panel, .rail__group, .rail__popover, .rail__toast, .scenario-pill, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins) {
+  --g-alpha: calc(0.9 * var(--f) * 100%);
+  --g-blur: calc(22px * var(--f));
+  --g-sat: calc(1.9 - 0.7 * var(--f));
+  --g-shine: calc(1 - var(--f));
+  --g-paint:
+    linear-gradient(135deg, rgb(255 255 255 / calc(0.1 * var(--g-shine))) 0%, transparent 35%),
+    linear-gradient(315deg, rgb(255 255 255 / calc(0.08 * var(--g-shine))) 0%, transparent 30%),
+    color-mix(in srgb, var(--tint) var(--g-alpha), transparent);
+  --g-rim:
+    inset 1px 1px 0 0 rgb(255 255 255 / calc(0.18 + 0.5 * var(--g-shine))),
+    inset -1px -1px 0 0 rgb(255 255 255 / calc(0.06 + 0.22 * var(--g-shine))),
+    0 6px 22px 0 rgb(0 2 9 / 0.35);
+}
+
+/* B, Frosted acrylic: always frosted, as Windows' acrylic is. A heavy blur with a fine grain over it and
+   a hairline edge, no shine; the slider goes from light frost to near solid. */
+:root[data-glass='B'] :is(.score-card, .game-panel, .rail__group, .rail__popover, .rail__toast, .scenario-pill, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins) {
+  --g-alpha: calc((0.28 + 0.66 * var(--f)) * 100%);
+  --g-blur: calc(10px + 30px * var(--f));
+  --g-sat: calc(1.45 - 0.3 * var(--f));
+  --g-paint:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(color-mix(in srgb, var(--palette-text-primary) 5%, transparent), color-mix(in srgb, var(--palette-text-primary) 5%, transparent)),
+    color-mix(in srgb, var(--tint) var(--g-alpha), transparent);
+  --g-rim:
+    inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) calc(14% - 6% * var(--f)), transparent),
+    0 4px 16px 0 rgb(0 2 9 / 0.45);
+}
+
+/* C, Smoked glass: dark glass that darkens the globe behind it, lit along its top edge in the accent
+   gold, as if catching light from above; frosts to deep navy. */
+:root[data-glass='C'] :is(.score-card, .game-panel, .rail__group, .rail__popover, .rail__toast, .scenario-pill, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins) {
+  --g-alpha: calc((0.18 + 0.74 * var(--f)) * 100%);
+  --g-blur: calc(3px + 20px * var(--f));
+  --g-sat: 1.15;
+  --g-dim: brightness(calc(0.82 - 0.2 * var(--f)));
+  --g-paint:
+    linear-gradient(180deg, color-mix(in srgb, var(--palette-secondary-main) calc(10% - 6% * var(--f)), transparent), transparent 38%),
+    color-mix(in srgb, color-mix(in srgb, var(--tint), var(--palette-background-default) 60%) var(--g-alpha), transparent);
+  --g-rim:
+    inset 0 1px 0 0 color-mix(in srgb, var(--palette-secondary-main) calc(55% - 25% * var(--f)), transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--palette-secondary-main) 12%, transparent),
+    inset 0 -14px 20px -14px color-mix(in srgb, var(--palette-secondary-light) 14%, transparent),
+    0 10px 30px 0 rgb(0 2 9 / 0.5);
+}
+
+/* The glass itself. A surface holding another glass surface (the rail's group holds its popover, the
+   scenario pill its list) draws its glass on a layer behind its content, since a blur on the surface
+   would keep the one inside from seeing past it. */
+:root[data-glass]:not([data-glass='off'])
+  :is(.score-card, .game-panel, .rail__popover, .rail__toast, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins, .rail__group::before, .scenario-pill::before) {
+  background: var(--g-paint);
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat)) var(--g-dim, );
+  backdrop-filter: var(--g-lens, ) blur(var(--g-blur)) saturate(var(--g-sat)) var(--g-dim, );
+}
+
+:root[data-glass]:not([data-glass='off']) :is(.rail__popover, .rail__toast, .scenario-pill ul, .speed-keys, .scenario-clock, .no-pins, .rail__group::before, .scenario-pill::before) {
+  box-shadow: var(--g-rim);
+}
+
+:root[data-glass]:not([data-glass='off']) :is(.rail__group, .scenario-pill) {
+  isolation: isolate;
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-glass]:not([data-glass='off']) :is(.rail__group, .scenario-pill)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+:root[data-glass]:not([data-glass='off']) :is(.speed-keys, .scenario-clock, .no-pins) {
+  position: relative;
+}
+
+/* A score card keeps its hover ring and status glow outside, the rim under them. Its glow inside and
+   its header's tint fill the card in the game's colour, so they clear with the glass: at 0 the card is
+   only its edge, text, logos and light. Too small for the lens, which only smears the map behind it. */
+:root[data-glass]:not([data-glass='off']) .score-card {
+  --g-lens: blur(0px);
+  box-shadow:
+    0 0 0 var(--card-hover-ring) var(--card-color),
+    0 0 var(--status-card-glow-radius) color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * 100%), transparent),
+    inset 0 0 calc(var(--status-card-glow-radius) * 1.25)
+      color-mix(in srgb, var(--card-color) calc(var(--status-card-glow-opacity) * var(--f) * 100% / 3), transparent),
+    var(--g-rim);
+}
+
+/* The logo plates clear with the card or panel they're on. */
+:root[data-glass]:not([data-glass='off']) .score-card__logo {
+  background: color-mix(in srgb, var(--score-card-logo-plate-fill) calc(var(--f) * 100%), transparent);
+}
+
+:root[data-glass]:not([data-glass='off']) .game-panel__team-score {
+  background: color-mix(in srgb, var(--game-panel-score-fill) calc(var(--f) * 100%), transparent);
+}
+
+:root[data-glass]:not([data-glass='off']) .game-panel__team img {
+  background: color-mix(in srgb, var(--game-panel-logo-plate-fill) calc(var(--f) * 100%), transparent);
+}
+
+:root[data-glass]:not([data-glass='off']) .score-card__header {
+  background: color-mix(in srgb, var(--card-color) calc(var(--score-card-header-tint) * var(--f) * 100%), transparent);
+}
+
+/* The game panel keeps its glow; its score block turns to glass with it. */
+:root[data-glass]:not([data-glass='off']) .game-panel {
+  box-shadow:
+    var(--game-panel-shadow),
+    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent),
+    var(--g-rim);
+}
+
+:root[data-glass]:not([data-glass='off']) .game-panel__score {
+  background: color-mix(in srgb, var(--game-panel-score-block-top) calc(var(--g-alpha) * 0.7 + 15%), transparent);
+}
+
+/* The prototype's own controls: plainly not part of the design. */
+.glass-switcher {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #ff2bd6;
+  color: #000;
+  font: 600 12px/1 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
+  transform: translateX(-50%);
+}
+
+.glass-switcher button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #000;
+  color: #ff2bd6;
+  font: inherit;
+  cursor: pointer;
+}
+
+.glass-switcher__label {
+  min-width: 170px;
+  text-align: center;
+}
+
+.glass-sliders__ends {
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+.glass-sliders__state {
+  margin: 8px 0 0;
+  opacity: 0.7;
+  font: 11px/1.4 ui-monospace, monospace;
+  white-space: pre;
+}

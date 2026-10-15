@@ -10,6 +10,7 @@ import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
+import { useGlassPrototype } from './glassPrototype/GlassPrototype'
 import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
@@ -78,6 +79,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls()
   const { setListing: setScenarioListing } = scenarios
+  // PROTOTYPE (throwaway): liquid glass surfaces, local runs only.
+  const glass = useGlassPrototype()
 
   useEffect(
     () =>
@@ -180,7 +183,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
-          <div className="dev-tools" hidden={!scenarios.devToolsShown}>
+          <div className="dev-tools" data-keeps-popovers hidden={!scenarios.devToolsShown}>
             <Suspense>
               <ThemeTuner
                 builtIn={tuning.builtIn}
@@ -188,6 +191,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
                 onTheme={setTheme}
                 loadingPreview={loadingPreview}
                 onLoadingPreview={setLoadingPreview}
+                prototypeTab={{ name: 'Glass', content: glass.sliders }}
               />
               <BehaviourTuner
                 builtIn={builtInBehaviour}
@@ -199,6 +203,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
             </Suspense>
           </div>
         )}
+        {import.meta.env.DEV && glass.bar}
       </div>
     </div>
   )

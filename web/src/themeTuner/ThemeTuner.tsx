@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { LoadingPreview } from '../loading/LoadingScreen'
 import { globeFonts } from '../theme/globeFonts'
 import { resolveTheme, type Theme } from '../theme/theme'
@@ -35,6 +35,8 @@ interface ThemeTunerProps {
   /** The loading screen held up over the globe to be looked at, and the way to change it. */
   loadingPreview: LoadingPreview
   onLoadingPreview: (preview: LoadingPreview) => void
+  /** PROTOTYPE (throwaway): a tab of the prototype's own, after the components'. */
+  prototypeTab?: { name: string; content: ReactNode }
 }
 
 /**
@@ -45,7 +47,7 @@ interface ThemeTunerProps {
  * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
  * the theme's JSON. The loading screen, seen only once a page, can be held up over the globe to tune.
  */
-export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadingPreview }: ThemeTunerProps) {
+export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadingPreview, prototypeTab }: ThemeTunerProps) {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState(initial)
   const [tabIndex, setTabIndex] = useState(0)
@@ -73,7 +75,8 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
     colours,
     set: (path, value) => setDraft((current) => withSetting(current, path, value)),
   }
-  const tab = tabs[tabIndex]
+  // The prototype's tab is index -1.
+  const tab = tabs[tabIndex] as (typeof tabs)[number] | undefined
 
   return (
     <div className="theme-tuner">
@@ -108,6 +111,16 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
                 </div>
               </div>
             ))}
+            {prototypeTab && (
+              <div className="theme-tuner__tab-group theme-tuner__tab-group--component">
+                <span className="theme-tuner__tab-group-name">Prototype</span>
+                <div role="tablist" aria-label="Prototype">
+                  <button type="button" role="tab" aria-selected={tabIndex === -1} onClick={() => setTabIndex(-1)}>
+                    {prototypeTab.name}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {!result.ok && (
             <ul className="theme-tuner__problems">
@@ -118,14 +131,18 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
           )}
           {/* On the loading screen's tab, and on every tab while it's held up (its ring and message take
               settings from Shape and Type), so it can always be put away. */}
-          {(tab.paths.some((path) => path[1] === 'LoadingScreen') || loadingPreview !== 'off') && (
+          {(tab?.paths.some((path) => path[1] === 'LoadingScreen') || loadingPreview !== 'off') && (
             <LoadingPreviewControl preview={loadingPreview} onChange={onLoadingPreview} />
           )}
-          <div className="theme-tuner__body">
-            {tab.paths.map((path) => (
-              <Group key={path.join('.')} path={path} value={settingAt(draft, path)} context={context} title />
-            ))}
-          </div>
+          {tab ? (
+            <div className="theme-tuner__body">
+              {tab.paths.map((path) => (
+                <Group key={path.join('.')} path={path} value={settingAt(draft, path)} context={context} title />
+              ))}
+            </div>
+          ) : (
+            prototypeTab?.content
+          )}
           <div className="theme-tuner__footer">
             <span>{changed.length === 0 ? 'No changes' : `${changed.length} changed`}</span>
             <button type="button" disabled={changed.length === 0} onClick={() => copy('changes', describeChanges(changed))}>

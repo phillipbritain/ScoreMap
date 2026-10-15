@@ -33,10 +33,15 @@ export interface FeedbackSubmission {
 /** A filed issue's link, or a short error to show under the box. */
 export type FeedbackResult = { issueUrl: string } | { error: string }
 
-/** Whether the text can be sent: 10 to 2,000 characters, as the server takes, not counting space around it. */
-export function canSubmit(text: string): boolean {
+/**
+ * What's wrong with the text's length, as the server says it, or null when it can be sent: 10 to 2,000
+ * characters, as the server takes, not counting space around it.
+ */
+export function lengthProblem(text: string): string | null {
   const length = text.trim().length
-  return length >= minLength && length <= maxLength
+  if (length < minLength) return `Please write at least ${minLength} characters`
+  if (length > maxLength) return `Please keep it to ${maxLength.toLocaleString('en')} characters`
+  return null
 }
 
 /** The counter under the box once the text nears the limit ("1,850 / 2,000"), and whether it's over. */

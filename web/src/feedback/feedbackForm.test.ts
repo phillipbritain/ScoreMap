@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { firstVisitSettings } from '../settings/viewerSettings'
-import { canSubmit, feedbackContext, lengthCounter, sendFeedback } from './feedbackForm'
+import { feedbackContext, lengthCounter, lengthProblem, sendFeedback } from './feedbackForm'
 
 const leagues = [
   { name: 'NFL', sport: 'Football' },
@@ -8,13 +8,19 @@ const leagues = [
   { name: 'MLS', sport: 'Soccer' },
 ]
 
-describe('canSubmit', () => {
-  it('takes 10 to 2,000 characters, not counting space around them', () => {
-    expect(canSubmit('a'.repeat(9))).toBe(false)
-    expect(canSubmit(`   ${'a'.repeat(9)}   `)).toBe(false)
-    expect(canSubmit('a'.repeat(10))).toBe(true)
-    expect(canSubmit('a'.repeat(2000))).toBe(true)
-    expect(canSubmit('a'.repeat(2001))).toBe(false)
+describe('lengthProblem', () => {
+  it('asks for more under 10 characters, not counting space around them', () => {
+    expect(lengthProblem(`   ${'a'.repeat(9)}   `)).toBe('Please write at least 10 characters')
+    expect(lengthProblem('')).toBe('Please write at least 10 characters')
+  })
+
+  it('asks for less over 2,000 characters', () => {
+    expect(lengthProblem('a'.repeat(2001))).toBe('Please keep it to 2,000 characters')
+  })
+
+  it('has nothing to say from 10 to 2,000', () => {
+    expect(lengthProblem('a'.repeat(10))).toBeNull()
+    expect(lengthProblem('a'.repeat(2000))).toBeNull()
   })
 })
 

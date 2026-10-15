@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { canSubmit, lengthCounter, sendFeedback, type FeedbackContext } from './feedbackForm'
+import { lengthCounter, lengthProblem, sendFeedback, type FeedbackContext } from './feedbackForm'
 
 interface FeedbackProps {
   /** Hidden by Shift+S: hidden, not unmounted, so a half-written draft survives. */
@@ -9,10 +9,10 @@ interface FeedbackProps {
 }
 
 /**
- * The Feedback button at the bottom right of the globe, and the panel it opens above it: a box for
+ * The Feedback button at the bottom right of the globe (a round icon button, named by its tooltip, hidden while its panel is open), and the panel it opens above it: a box for
  * the viewer's note, Submit and Cancel, and a reminder that it's posted publicly. Sent, the panel
- * thanks the viewer with a link to the issue and stays open until closed; if sending fails, the text
- * stays and a short error shows.
+ * thanks the viewer with a link to the issue and stays open until closed. Submitting too little or too
+ * much text says so; if sending fails, the text stays and a short error shows.
  */
 export function Feedback({ hidden, context }: FeedbackProps) {
   const [open, setOpen] = useState(false)
@@ -24,6 +24,7 @@ export function Feedback({ hidden, context }: FeedbackProps) {
   const [issueUrl, setIssueUrl] = useState<string | null>(null)
   const counter = lengthCounter(text)
 
+  // After a thank-you: the panel starts afresh next time.
   const close = () => {
     setOpen(false)
     setText('')
@@ -31,9 +32,20 @@ export function Feedback({ hidden, context }: FeedbackProps) {
     setIssueUrl(null)
   }
 
+  // Keeps the draft for next time, but not an error about it.
+  const cancel = () => {
+    setOpen(false)
+    setError(null)
+  }
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!canSubmit(text) || sending) return
+    if (sending) return
+    const problem = lengthProblem(text)
+    if (problem) {
+      setError(problem)
+      return
+    }
     setSending(true)
     setError(null)
     const result = await sendFeedback({ text, website, context: context() })
@@ -71,7 +83,13 @@ export function Feedback({ hidden, context }: FeedbackProps) {
                 id="feedback-text"
                 className="feedback__text"
                 value={text}
-                onChange={(event) => setText(event.target.value)}
+                onChange={(event) => {
+                  setText(event.target.value)
+                  // A length error goes once the text is a length that can be sent.
+                  if (lengthProblem(event.target.value) === null) setError(null)
+                }}
+                aria-invalid={error !== null && lengthProblem(text) !== null}
+                aria-describedby={error ? 'feedback-error' : undefined}
                 rows={6}
                 autoFocus
                 placeholder="What’s working, what isn’t, what you’d like…"
@@ -92,15 +110,15 @@ export function Feedback({ hidden, context }: FeedbackProps) {
                 onChange={(event) => setWebsite(event.target.value)}
               />
               {error && (
-                <p className="feedback__error" role="alert">
+                <p id="feedback-error" className="feedback__error" role="alert">
                   {error}
                 </p>
               )}
               <div className="feedback__actions">
-                <button type="button" className="feedback__action" onClick={() => setOpen(false)}>
+                <button type="button" className="feedback__action" onClick={cancel}>
                   Cancel
                 </button>
-                <button type="submit" className="feedback__action feedback__action--submit" disabled={!canSubmit(text) || sending}>
+                <button type="submit" className="feedback__action feedback__action--submit" disabled={sending}>
                   {sending ? 'Sending…' : 'Submit'}
                 </button>
               </div>
@@ -108,15 +126,29 @@ export function Feedback({ hidden, context }: FeedbackProps) {
           )}
         </div>
       )}
+      {/* Hidden while the panel is open, which takes its corner; the panel's Cancel or Close shuts it. */}
       <button
         type="button"
         className="feedback__button"
-        aria-expanded={open}
-        aria-controls={open ? 'feedback-panel' : undefined}
-        // Closing keeps a draft, as Cancel does, but not a thank-you.
-        onClick={() => (open && issueUrl ? close() : setOpen(!open))}
+        hidden={open}
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+        aria-label="Feedback"
+        title="Feedback"
       >
-        Feedback
+        {/* A speech bubble (Feather's "message-square"). */}
+        <svg
+          className="feedback__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
       </button>
     </div>
   )

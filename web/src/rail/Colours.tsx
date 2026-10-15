@@ -129,7 +129,7 @@ function ColourSwatch({
         style={{ '--swatch-color': colour ?? taken.colour } as CSSProperties}
         aria-label={`${name} colour`}
         aria-expanded={picking}
-        title={
+        data-tooltip={
           colour
             ? `${name}'s colour: click to change`
             : `${name} takes ${taken.takes}: click to pick its own`
@@ -141,7 +141,7 @@ function ColourSwatch({
           type="button"
           className="colour__clear"
           aria-label={`Clear ${name} colour`}
-          title={`Clear ${name}'s colour`}
+          data-tooltip={`Clear ${name}'s colour`}
           onClick={onClear}
         >
           ×

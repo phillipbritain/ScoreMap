@@ -374,6 +374,17 @@ export class GlobeMap {
     return this.cards.steady()
   }
 
+  /** PROTOTYPE (quick settings rail): zooms one step in or out, as MapLibre's own buttons do. */
+  zoomBy(step: 1 | -1): void {
+    if (step === 1) this.map.zoomIn()
+    else this.map.zoomOut()
+  }
+
+  /** PROTOTYPE (quick settings rail): flies the camera there, for Home. */
+  flyTo(camera: Camera): void {
+    this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
+  }
+
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     this.destroyed = true

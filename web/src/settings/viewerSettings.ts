@@ -102,7 +102,7 @@ export interface SportGroup {
   leagues: League[]
 }
 
-/** Groups leagues under their sport for the settings menu, keeping the configured order. */
+/** Groups leagues under their sport for the rail's Leagues and Colours, keeping the configured order. */
 export function leaguesBySport(leagues: readonly League[]): SportGroup[] {
   const groups = new Map<string, League[]>()
   for (const league of leagues) {

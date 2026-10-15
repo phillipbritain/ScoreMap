@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Camera } from './camera'
-import { startCamera } from './startCamera'
+import { homeCamera, startCamera } from './startCamera'
 import { furthestOutZoom } from './zoomLevels'
 
 /** Checks the camera is centred inside a box drawn around a region on a map. */
@@ -75,5 +75,18 @@ describe('startCamera', () => {
       zoom: furthestOutZoom(30),
     })
     expect(startCamera(null, { timeZone: 'Etc/GMT+3', locale: 'not a locale!' }).longitude).toBe(-40)
+  })
+})
+
+describe('homeCamera', () => {
+  it('is the view a first visit opens on, wherever the globe was left', () => {
+    const place = { timeZone: 'Europe/London', locale: 'en-GB' }
+    expect(homeCamera(place)).toEqual(startCamera(null, place))
+  })
+
+  it("is the viewer's region, all the way out", () => {
+    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' })
+    expectCentredIn(home, easternUs)
+    expect(home.zoom).toBe(furthestOutZoom(home.latitude))
   })
 })

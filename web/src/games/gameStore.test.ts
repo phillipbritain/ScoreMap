@@ -12,8 +12,8 @@ function game(id: string, homeScore: string | null = null): Game {
     delayed: false,
     disruption: null,
     endTime: null,
-    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: homeScore },
-    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: homeScore },
+    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: homeScore, rank: null, record: null },
+    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: homeScore, rank: null, record: null },
     clock: null,
     period: null,
     clutchTime: false,
@@ -29,6 +29,12 @@ function game(id: string, homeScore: string | null = null): Game {
     },
     broadcasters: [],
     streamLinks: [],
+    note: null,
+    attendance: null,
+    odds: null,
+    situation: null,
+    lastScore: null,
+    keyEvents: [],
   }
 }
 

@@ -458,6 +458,42 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task Live_basketball_game_carries_its_last_play()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("nba-live.json", "basketball/nba"));
+
+        Assert.Equal(new ProviderSituation("Mitchell Robinson defensive rebound"), game.Situation);
+    }
+
+    [Fact]
+    public async Task Live_hockey_game_carries_its_last_play()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("nhl-live.json", "hockey/nhl"));
+
+        Assert.Equal(new ProviderSituation("Start of 1st Period"), game.Situation);
+    }
+
+    [Fact]
+    public async Task Live_baseball_game_carries_its_count_outs_and_last_play()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("mlb-live.json", "baseball/mlb"));
+
+        Assert.Equal(new ProviderSituation("Blake Snell pitches to Jackson Chourio", Balls: 0, Strikes: 0, Outs: 0), game.Situation);
+    }
+
+    [Fact]
+    public async Task Live_baseball_game_says_which_bases_have_runners_on()
+    {
+        // The live game had nobody on base, so a runner is put on second.
+        var body = Fixture("mlb-live.json").Replace("\"onSecond\": false", "\"onSecond\": true");
+        var provider = ProviderOver(StubHttpHandler.Returning(body));
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("baseball/mlb", CancellationToken.None));
+
+        Assert.Equal((false, true, false), (game.Situation?.OnFirst, game.Situation?.OnSecond, game.Situation?.OnThird));
+    }
+
+    [Fact]
     public async Task Scheduled_game_carries_its_betting_line()
     {
         var game = Assert.Single(await FetchFixtureAsync("nfl-scheduled-odds.json", Nfl));

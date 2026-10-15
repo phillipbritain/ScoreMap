@@ -1,0 +1,557 @@
+{
+ "events": [
+  {
+   "id": "401892504",
+   "uid": "s:70~l:90~e:401892504",
+   "date": "2026-10-14T23:30Z",
+   "name": "Montreal Canadiens at Washington Capitals",
+   "shortName": "MTL @ WSH",
+   "season": {
+    "year": 2027,
+    "type": 2,
+    "slug": "regular-season"
+   },
+   "competitions": [
+    {
+     "id": "401892504",
+     "uid": "s:70~l:90~e:401892504~c:401892504",
+     "date": "2026-10-14T23:30Z",
+     "attendance": 0,
+     "type": {
+      "id": "1",
+      "abbreviation": "STD"
+     },
+     "timeValid": true,
+     "neutralSite": false,
+     "playByPlayAvailable": true,
+     "recent": true,
+     "venue": {
+      "id": "1823",
+      "fullName": "Capital One Arena",
+      "address": {
+       "city": "Washington",
+       "state": "DC",
+       "country": "USA"
+      },
+      "indoor": true
+     },
+     "competitors": [
+      {
+       "id": "23",
+       "uid": "s:70~l:90~t:23",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "team": {
+        "id": "23",
+        "uid": "s:70~l:90~t:23",
+        "location": "Washington",
+        "name": "Capitals",
+        "abbreviation": "WSH",
+        "displayName": "Washington Capitals",
+        "shortDisplayName": "Capitals",
+        "color": "d71830",
+        "alternateColor": "0b1f41",
+        "isActive": true,
+        "venue": {
+         "id": "1823"
+        },
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/_/name/wsh/washington-capitals",
+          "text": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "clubhouse",
+           "mobile",
+           "team"
+          ],
+          "href": "https://m.espn.com/nhl/clubhouse?teamId=23",
+          "text": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "roster",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/roster/_/name/wsh/washington-capitals",
+          "text": "Roster",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "roster",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:23&section=roster",
+          "text": "Roster",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "stats",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/stats/_/name/wsh/washington-capitals",
+          "text": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "stats",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:23&section=stats",
+          "text": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "schedule",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/schedule/_/name/wsh",
+          "text": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "schedule",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:23&section=scores",
+          "text": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+         }
+        ],
+        "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/scoreboard/wsh.png",
+        "logoDark": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/scoreboard/wsh.png"
+       },
+       "score": "0",
+       "linescores": [
+        {
+         "value": 0.0,
+         "displayValue": "0",
+         "period": 1
+        }
+       ],
+       "probables": [
+        {
+         "name": "probableStartingGoalie",
+         "displayName": "Probable Starting Goalie",
+         "shortDisplayName": "Starter",
+         "abbreviation": "SG",
+         "playerId": 3095975,
+         "athlete": {
+          "id": "3095975",
+          "fullName": "Charlie Lindgren",
+          "displayName": "Charlie Lindgren",
+          "shortName": "C. Lindgren",
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/nhl/player/_/id/3095975"
+           }
+          ],
+          "headshot": "https://a.espncdn.com/i/headshots/nhl/players/full/3095975.png",
+          "jersey": "79",
+          "position": "G",
+          "team": {
+           "id": "23"
+          }
+         },
+         "status": {
+          "id": "102",
+          "name": "Confirmed",
+          "type": "confirmed",
+          "abbreviation": "Confirmed"
+         },
+         "statistics": [],
+         "record": ""
+        }
+       ],
+       "curatedRank": {
+        "current": 99
+       },
+       "statistics": [],
+       "records": [
+        {
+         "name": "overall",
+         "abbreviation": "TOTAL",
+         "type": "total",
+         "summary": "3-3-0"
+        },
+        {
+         "name": "Home",
+         "abbreviation": "HOME",
+         "type": "home",
+         "summary": "2-1-0"
+        },
+        {
+         "name": "Road",
+         "abbreviation": "AWAY",
+         "type": "road",
+         "summary": "1-2-0"
+        }
+       ]
+      },
+      {
+       "id": "10",
+       "uid": "s:70~l:90~t:10",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "team": {
+        "id": "10",
+        "uid": "s:70~l:90~t:10",
+        "location": "Montreal",
+        "name": "Canadiens",
+        "abbreviation": "MTL",
+        "displayName": "Montreal Canadiens",
+        "shortDisplayName": "Canadiens",
+        "color": "c41230",
+        "isActive": true,
+        "venue": {
+         "id": "1831"
+        },
+        "links": [
+         {
+          "rel": [
+           "clubhouse",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/_/name/mtl/montreal-canadiens",
+          "text": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "clubhouse",
+           "mobile",
+           "team"
+          ],
+          "href": "https://m.espn.com/nhl/clubhouse?teamId=10",
+          "text": "Clubhouse",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "roster",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/roster/_/name/mtl/montreal-canadiens",
+          "text": "Roster",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "roster",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:10&section=roster",
+          "text": "Roster",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "stats",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/stats/_/name/mtl/montreal-canadiens",
+          "text": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "stats",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:10&section=stats",
+          "text": "Statistics",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "schedule",
+           "desktop",
+           "team"
+          ],
+          "href": "https://www.espn.com/nhl/team/schedule/_/name/mtl",
+          "text": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+         },
+         {
+          "rel": [
+           "schedule",
+           "sportscenter",
+           "app",
+           "team"
+          ],
+          "href": "sportscenter://x-callback-url/showClubhouse?uid=s:70~l:90~t:10&section=scores",
+          "text": "Schedule",
+          "isExternal": false,
+          "isPremium": false
+         }
+        ],
+        "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/scoreboard/mtl.png",
+        "logoDark": "https://a.espncdn.com/i/teamlogos/nhl/500-dark/scoreboard/mtl.png"
+       },
+       "score": "0",
+       "linescores": [
+        {
+         "value": 0.0,
+         "displayValue": "0",
+         "period": 1
+        }
+       ],
+       "probables": [
+        {
+         "name": "probableStartingGoalie",
+         "displayName": "Probable Starting Goalie",
+         "shortDisplayName": "Starter",
+         "abbreviation": "SG",
+         "playerId": 4697686,
+         "athlete": {
+          "id": "4697686",
+          "fullName": "Jakub Dobes",
+          "displayName": "Jakub Dobes",
+          "shortName": "J. Dobes",
+          "links": [
+           {
+            "rel": [
+             "playercard",
+             "desktop",
+             "athlete"
+            ],
+            "href": "https://www.espn.com/nhl/player/_/id/4697686"
+           }
+          ],
+          "headshot": "https://a.espncdn.com/i/headshots/nhl/players/full/4697686.png",
+          "jersey": "75",
+          "position": "G",
+          "team": {
+           "id": "10"
+          }
+         },
+         "status": {
+          "id": "102",
+          "name": "Confirmed",
+          "type": "confirmed",
+          "abbreviation": "Confirmed"
+         },
+         "statistics": [],
+         "record": ""
+        }
+       ],
+       "curatedRank": {
+        "current": 99
+       },
+       "statistics": [],
+       "records": [
+        {
+         "name": "overall",
+         "abbreviation": "TOTAL",
+         "type": "total",
+         "summary": "3-2-1"
+        },
+        {
+         "name": "Home",
+         "abbreviation": "HOME",
+         "type": "home",
+         "summary": "2-2-0"
+        },
+        {
+         "name": "Road",
+         "abbreviation": "AWAY",
+         "type": "road",
+         "summary": "1-0-1"
+        }
+       ]
+      }
+     ],
+     "notes": [],
+     "situation": {
+      "lastPlay": {
+       "id": "401892504000000540",
+       "type": {
+        "id": "518",
+        "text": "Period Start",
+        "abbreviation": "period-start"
+       },
+       "text": "Start of 1st Period",
+       "scoreValue": 0
+      }
+     },
+     "status": {
+      "clock": 1200.0,
+      "displayClock": "20:00",
+      "period": 1,
+      "type": {
+       "id": "2",
+       "name": "STATUS_IN_PROGRESS",
+       "state": "in",
+       "completed": false,
+       "description": "In Progress",
+       "detail": "20:00 - 1st Period",
+       "shortDetail": "20:00 - 1st"
+      }
+     },
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "ESPN+"
+       ]
+      },
+      {
+       "market": "home",
+       "names": [
+        "MNMT"
+       ]
+      }
+     ],
+     "format": {
+      "regulation": {
+       "periods": 3
+      }
+     },
+     "startDate": "2026-10-14T23:30Z",
+     "broadcast": "ESPN+",
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "4",
+        "shortName": "Streaming"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "ESPN+",
+        "logo": "https://a.espncdn.com/guid/322a7e47-3cdb-3b5c-ab1b-678e1f2c27e5/logos/default.png",
+        "darkLogo": "https://a.espncdn.com/guid/322a7e47-3cdb-3b5c-ab1b-678e1f2c27e5/logos/default-dark.png"
+       },
+       "lang": "en",
+       "region": "us"
+      },
+      {
+       "type": {
+        "id": "1",
+        "shortName": "TV"
+       },
+       "market": {
+        "id": "2",
+        "type": "Home"
+       },
+       "media": {
+        "shortName": "MNMT"
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ],
+     "highlights": []
+    }
+   ],
+   "links": [
+    {
+     "language": "en-US",
+     "rel": [
+      "live",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nhl/game/_/gameId/401892504",
+     "text": "Gamecast",
+     "shortText": "Gamecast",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en-US",
+     "rel": [
+      "boxscore",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nhl/boxscore/_/gameId/401892504",
+     "text": "Box Score",
+     "shortText": "Box Score",
+     "isExternal": false,
+     "isPremium": false
+    },
+    {
+     "language": "en-US",
+     "rel": [
+      "pbp",
+      "desktop",
+      "event"
+     ],
+     "href": "https://www.espn.com/nhl/playbyplay/_/gameId/401892504",
+     "text": "Play-by-Play",
+     "shortText": "Play-by-Play",
+     "isExternal": false,
+     "isPremium": false
+    }
+   ],
+   "status": {
+    "clock": 1200.0,
+    "displayClock": "20:00",
+    "period": 1,
+    "type": {
+     "id": "2",
+     "name": "STATUS_IN_PROGRESS",
+     "state": "in",
+     "completed": false,
+     "description": "In Progress",
+     "detail": "20:00 - 1st Period",
+     "shortDetail": "20:00 - 1st"
+    }
+   }
+  }
+ ]
+}

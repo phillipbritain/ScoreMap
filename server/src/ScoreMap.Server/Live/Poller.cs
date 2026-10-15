@@ -6,8 +6,8 @@ using ScoreMap.Server.Hubs;
 namespace ScoreMap.Server.Live;
 
 /// <summary>
-/// Keeps the game board current while at least one browser is connected, and pushes
-/// the board's change events to every browser. Each league is fetched about every
+/// Keeps the game board current while at least one of its browsers is connected, and pushes
+/// the board's change events to every one of them (the <see cref="BrowserConnections.Group"/>). Each league is fetched about every
 /// <see cref="PollingOptions.LiveInterval"/> while it has Live games and every
 /// <see cref="PollingOptions.QuietInterval"/> otherwise. With no browser connected nothing is fetched; the first browser to connect
 /// again gets a snapshot fetched fresh for any league whose data has gone stale. The feed's top events
@@ -62,7 +62,7 @@ public sealed class Poller(
 
     /// <summary>
     /// Brings stale leagues up to date, then hands the current games to <paramref name="send"/>.
-    /// Changes found on the way go to every browser except <paramref name="connectionId"/>,
+    /// Changes found on the way go to the board's other browsers, not <paramref name="connectionId"/>,
     /// which gets them in the snapshot.
     /// </summary>
     public async Task SendSnapshotAsync(string connectionId, Func<IReadOnlyList<Game>, Task> send, CancellationToken cancellationToken)
@@ -70,7 +70,7 @@ public sealed class Poller(
         await _lock.WaitAsync(cancellationToken);
         try
         {
-            await UpdateDueLeaguesAsync(hub.Clients.AllExcept(connectionId), cancellationToken);
+            await UpdateDueLeaguesAsync(hub.Clients.GroupExcept(connections.Group, connectionId), cancellationToken);
             await send(board.Games);
         }
         finally
@@ -90,7 +90,7 @@ public sealed class Poller(
             await _lock.WaitAsync(stoppingToken);
             try
             {
-                await UpdateDueLeaguesAsync(hub.Clients.All, stoppingToken);
+                await UpdateDueLeaguesAsync(hub.Clients.Group(connections.Group), stoppingToken);
                 next = _nextFetch.Count == 0 ? clock.GetUtcNow() + _quietInterval : _nextFetch.Values.Min();
                 wake = _wake.Task;
             }

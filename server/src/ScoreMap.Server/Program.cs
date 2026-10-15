@@ -93,7 +93,7 @@ builder.Services.AddSingleton<GameBoard>();
 
 // Live updates: the poller fetches while browsers are connected and pushes change events.
 builder.Services.Configure<PollingOptions>(builder.Configuration.GetSection("Polling"));
-builder.Services.AddSingleton<BrowserConnections>();
+builder.Services.AddSingleton(new BrowserConnections(GamesHub.RealGamesGroup));
 builder.Services.AddSingleton<Poller>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
 builder.Services.AddSignalR();

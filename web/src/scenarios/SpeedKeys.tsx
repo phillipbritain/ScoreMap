@@ -35,19 +35,24 @@ export function SpeedKeys({
       .finally(() => setChanging(false))
   }
 
-  const speedKey = (speed: SpeedName, title: string, icon: ReactNode, className?: string) => (
-    <button
-      type="button"
-      className={className}
-      aria-label={title}
-      aria-pressed={listing.speed === speed}
-      title={title}
-      disabled={changing}
-      onClick={() => press(speed)}
-    >
-      {icon}
-    </button>
-  )
+  // A key faster than real time has its speed, as the server gives it, as its tooltip ("4x").
+  const speedKey = (speed: SpeedName, name: string, icon: ReactNode, className?: string) => {
+    const times = listing.speeds.find((listed) => listed.name === speed)?.times ?? 0
+    const title = times > 1 ? `${times}x` : name
+    return (
+      <button
+        type="button"
+        className={className}
+        aria-label={name}
+        aria-pressed={listing.speed === speed}
+        title={title}
+        disabled={changing}
+        onClick={() => press(speed)}
+      >
+        {icon}
+      </button>
+    )
+  }
 
   return (
     <div className="speed-keys" role="group" aria-label="Scenario play">

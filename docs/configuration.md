@@ -24,6 +24,8 @@ Scenarios (ADR-0009) put their games at the real venues listed in `scenario-venu
 
 A game written out in a scenario file must be at a venue in this list (by name and city), or else be marked `"notInVenueList": true` as made up on purpose; anything else stops startup. Their positions are checked in as `scenario-venue-locations.json` beside it, which the server uses before its saved lookups, so scenario venues never wait on Nominatim. After changing the venue list, run `dotnet run scripts/lookup-scenario-venues.cs` to look up the new venues (it lists any it can't find), and check both files in.
 
+The venue list, team list and venue lookups ship to production with the `worldwide` scenario file (and no other), since a demo shows it on the live site (ADR-0019).
+
 ## Watch links
 
 The game panel links each channel or streaming service to its official watch page when it is listed in `watch-links.json`, for example `{ "names": ["Peacock"], "url": "https://www.peacocktv.com/" }` (names match ESPN's spelling, ignoring case). Unlisted services show as plain names. Edits take effect without a restart. When the feed lists broadcasts for the viewer's country (taken from the browser's language settings), broadcasts it marks for other countries are hidden; otherwise every channel is listed.

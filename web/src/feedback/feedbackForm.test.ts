@@ -57,6 +57,11 @@ describe('feedbackContext', () => {
   it('leaves the leagues out until they have loaded', () => {
     expect(feedbackContext({ ...view, leagues: [] }).leagues).toBeUndefined()
   })
+
+  it('says when it comes from a demo', () => {
+    expect(feedbackContext({ ...view, demo: true }).demo).toBe(true)
+    expect(feedbackContext(view).demo).toBeUndefined()
+  })
 })
 
 describe('sendFeedback', () => {

@@ -278,11 +278,12 @@ public sealed class ScoreMapServer(
             Directory.Delete(ScenariosFolder, recursive: true);
     }
 
-    /// <summary>Connects a browser stand-in to the games hub.</summary>
-    public async Task<TestClient> ConnectClientAsync()
+    /// <summary>Connects a browser stand-in to the games hub: to the real games, or to a demo's (ADR-0019).</summary>
+    public async Task<TestClient> ConnectClientAsync(bool demo = false)
     {
-        var client = new TestClient(new HubConnectionBuilder()
-            .WithUrl(new Uri(Server.BaseAddress, GamesHub.Path), options =>
+        var path = demo ? $"{GamesHub.Path}?{GamesHub.DemoQuery}" : GamesHub.Path;
+        var client = new TestClient(demo, new HubConnectionBuilder()
+            .WithUrl(new Uri(Server.BaseAddress, path), options =>
             {
                 options.Transports = HttpTransportType.LongPolling;
                 options.HttpMessageHandlerFactory = _ => Server.CreateHandler();
@@ -296,9 +297,9 @@ public sealed class ScoreMapServer(
     /// Connects, takes the snapshot and disconnects, waiting until the server has seen the
     /// browser go so that no polling happens while the test then moves the clock.
     /// </summary>
-    public async Task<IReadOnlyList<Game>> SnapshotOnceAsync()
+    public async Task<IReadOnlyList<Game>> SnapshotOnceAsync(bool demo = false)
     {
-        var client = await ConnectClientAsync();
+        var client = await ConnectClientAsync(demo);
         var snapshot = await client.NextSnapshotAsync();
         await DisconnectAsync(client);
         return snapshot;
@@ -311,11 +312,13 @@ public sealed class ScoreMapServer(
     public async Task DisconnectAsync(TestClient client)
     {
         var connections = Services.GetRequiredService<BrowserConnections>();
+        var demo = Services.GetRequiredService<DemoBoard>();
         var id = client.ConnectionId;
+        Func<bool> connected = client.Demo ? () => demo.IsWatching(id) : () => connections.IsConnected(id);
         // The hub counts a browser only once it has sent its snapshot, which the client can have first.
-        await WaitUntilAsync(() => connections.IsConnected(id), "The server did not see the client connect");
+        await WaitUntilAsync(connected, "The server did not see the client connect");
         await client.DisposeAsync();
-        await WaitUntilAsync(() => !connections.IsConnected(id), "The server did not see the client disconnect");
+        await WaitUntilAsync(() => !connected(), "The server did not see the client disconnect");
     }
 
     private static async Task WaitUntilAsync(Func<bool> condition, string timeoutMessage)
@@ -331,8 +334,11 @@ public sealed class ScoreMapServer(
 }
 
 /// <summary>A browser stand-in that records what the server sends it.</summary>
-public sealed class TestClient(HubConnection connection) : IAsyncDisposable
+public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisposable
 {
+    /// <summary>Whether the client watches a demo (ADR-0019) rather than the real games.</summary>
+    public bool Demo { get; } = demo;
+
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
 
     private readonly TaskCompletionSource<IReadOnlyList<Game>> _snapshot =

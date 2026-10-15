@@ -1,4 +1,5 @@
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Scenarios;
 
 namespace ScoreMap.Server.Feedback;
 
@@ -22,7 +23,7 @@ public static class FeedbackEndpoints
     public static WebApplication MapFeedback(this WebApplication app)
     {
         app.MapPost("/api/feedback", async (
-            FeedbackSubmission submission, HttpContext http, FeedbackGuard guard, IFeedbackSink sink, GameBoard board,
+            FeedbackSubmission submission, HttpContext http, FeedbackGuard guard, IFeedbackSink sink, GameBoard board, DemoBoard demo,
             ILoggerFactory loggers, CancellationToken cancellationToken) =>
         {
             // A bot: thanked as a person would be, so it has no reason to try another way.
@@ -46,8 +47,9 @@ public static class FeedbackEndpoints
                 return Refused(StatusCodes.Status429TooManyRequests, "That's a lot of feedback at once, try again in a few minutes");
             }
 
-            var issue = FeedbackIssue.Write(text, submission.Context ?? new FeedbackContext(),
-                http.Request.Headers.UserAgent.ToString(), board.Leagues, board.Games);
+            var context = submission.Context ?? new FeedbackContext();
+            var issue = FeedbackIssue.Write(text, context, http.Request.Headers.UserAgent.ToString(), board.Leagues,
+                context.Demo ? demo.Games : board.Games);
             var filed = false;
             try
             {

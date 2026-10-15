@@ -35,6 +35,42 @@ const settings: readonly NumberSetting[] = [
     get: (behaviour) => behaviour.cityLabels.gameCityKm,
     set: (behaviour, gameCityKm) => ({ ...behaviour, cityLabels: { ...behaviour.cityLabels, gameCityKm } }),
   },
+  {
+    group: 'Zoom',
+    name: 'Furthest out',
+    description:
+      'The lowest zoom the globe goes to, measured at the equator: away from it the globe zooms a little further ' +
+      'out and stays the same size on screen. Lower: a smaller globe with more space around it. Keep it below 3, ' +
+      'where pins become score cards, for small pins and their clusters to show.',
+    file: 'web/src/globe/zoomSettings.json',
+    key: 'minZoom',
+    range: { min: 0, max: 5, step: 0.1 },
+    get: (behaviour) => behaviour.zoom.minZoom,
+    set: (behaviour, minZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, minZoom } }),
+  },
+  {
+    group: 'Zoom',
+    name: 'Start',
+    description:
+      'The zoom a first visit opens at, centred on the viewer\'s region, and Home flies back to. ' +
+      'The globe goes there as it changes. Measured at the equator, as Furthest out is, and never further out than it. A returning viewer opens ' +
+      'where they left the globe.',
+    file: 'web/src/globe/zoomSettings.json',
+    key: 'startZoom',
+    range: { min: 0, max: 8, step: 0.1 },
+    get: (behaviour) => behaviour.zoom.startZoom,
+    set: (behaviour, startZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, startZoom } }),
+  },
+  {
+    group: 'Zoom',
+    name: 'Furthest in',
+    description: 'The highest zoom the globe goes to. At 11 the view is a city some ten kilometres across; each step in halves that.',
+    file: 'web/src/globe/zoomSettings.json',
+    key: 'maxZoom',
+    range: { min: 5, max: 22, step: 0.5 },
+    get: (behaviour) => behaviour.zoom.maxZoom,
+    set: (behaviour, maxZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, maxZoom } }),
+  },
 ]
 
 interface BehaviourTunerProps {
@@ -47,6 +83,8 @@ interface BehaviourTunerProps {
   /** What's drawn on the globe to show settings at work, and the way to change it. */
   overlays: Overlays
   onOverlays: (overlays: Overlays) => void
+  /** The globe's zoom where its camera last settled, shown with the zoom settings. */
+  zoomNow: number
 }
 
 /**
@@ -80,7 +118,10 @@ export function BehaviourTuner(props: BehaviourTunerProps) {
           <div className="theme-tuner__body">
             {[...new Set(settings.map((setting) => setting.group))].map((group) => (
               <div key={group} className="theme-tuner__group theme-tuner__group--top">
-                <div className="theme-tuner__heading">{group}</div>
+                <div className="theme-tuner__heading">
+                  {group}
+                  {group === 'Zoom' && <span className="behaviour-tuner__now">now {props.zoomNow.toFixed(2)}</span>}
+                </div>
                 {settings
                   .filter((setting) => setting.group === group)
                   .map((setting) => (

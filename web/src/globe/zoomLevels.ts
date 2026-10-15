@@ -1,4 +1,5 @@
 import { degreesApart, type GlobePoint } from './geo'
+import limits from './zoomSettings.json'
 
 /**
  * Small pins when zoomed out; score cards once a country fills the screen, for games near the centre
@@ -30,20 +31,32 @@ export function hasCard(centre: GlobePoint, venue: GlobePoint): boolean {
   return degreesApart(centre, venue) <= cardRadius
 }
 
-/**
- * The furthest out the globe zooms: the whole globe on a laptop screen, with small pins and their
- * clusters. MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the
- * globe stays the same size on screen (see furthestOutZoom).
- */
-export const minZoom = 2
-
-/** The zoom MapLibre allows furthest out with the view centred at this latitude. */
-export function furthestOutZoom(latitude: number): number {
-  return minZoom + Math.log2(Math.cos((latitude * Math.PI) / 180))
+/** How far out and in the globe zooms, and where it starts (on a local run, the behaviour tuner can change them). */
+export interface ZoomSettings {
+  /**
+   * The furthest out: just short of cardZoom, so small pins and their clusters still show.
+   * MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the globe
+   * stays the same size on screen (see furthestOutZoom).
+   */
+  minZoom: number
+  /**
+   * The zoom a first visit opens at, and Home flies back to, measured at the equator as minZoom is.
+   * Never further out than minZoom.
+   */
+  startZoom: number
+  /** The furthest in: a city, some ten kilometres across. */
+  maxZoom: number
 }
 
-/** The furthest in the globe zooms: a neighbourhood, a few kilometres across. */
-export const maxZoom = 13
+/** The app's zoom settings, from zoomSettings.json. */
+export const zoomSettings: ZoomSettings = limits
+
+export const { minZoom, maxZoom } = zoomSettings
+
+/** The zoom MapLibre allows furthest out with the view centred at this latitude, given the furthest out at the equator. */
+export function furthestOutZoom(latitude: number, furthestOut = minZoom): number {
+  return furthestOut + Math.log2(Math.cos((latitude * Math.PI) / 180))
+}
 
 /**
  * Highest zoom at which the pin source clusters. Small pins stop showing well before it, at cardZoom,

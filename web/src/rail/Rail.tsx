@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Camera } from '../globe/camera'
+import type { ZoomSettings } from '../globe/zoomLevels'
 import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { Colours } from './Colours'
@@ -17,9 +18,11 @@ interface RailProps {
   accent: string
   /** Where the globe's camera last settled, or null while the globe can't be moved yet (loading). */
   camera: Camera | null
+  /** How far out and in the globe zooms, which the zoom buttons stop at. */
+  zoomSettings: ZoomSettings
   onZoomIn: () => void
   onZoomOut: () => void
-  /** Flies the camera back to the viewer's region, all the way out (see homeCamera). */
+  /** Flies the camera back to the viewer's region, at the start zoom (see homeCamera). */
   onHome: () => void
 }
 
@@ -30,8 +33,8 @@ interface RailProps {
  * shows a short toast beside the rail saying what changed. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
  * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
-export function Rail({ leagues, settings, onChange, accent, camera, onZoomIn, onZoomOut, onHome }: RailProps) {
-  const zoom = camera ? canZoom(camera) : { in: false, out: false }
+export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome }: RailProps) {
+  const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
   const popover = useRef<HTMLDivElement>(null)

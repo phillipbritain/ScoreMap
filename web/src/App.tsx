@@ -10,6 +10,7 @@ import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
+import type { ZoomSettings } from './globe/zoomLevels'
 import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
@@ -48,8 +49,8 @@ function viewerPlace() {
 }
 
 /** Where the globe opens. Read once: the globe owns its camera after that. */
-function openingCamera(store: SettingsStore) {
-  return startCamera(store.loadCamera(), viewerPlace())
+function openingCamera(store: SettingsStore, zoom: ZoomSettings) {
+  return startCamera(store.loadCamera(), viewerPlace(), zoom)
 }
 
 interface AppProps {
@@ -90,7 +91,14 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // The rail's hold on the globe's camera, and where the camera last settled, for the zoom buttons' limits.
   const globeCamera = useRef<GlobeCamera>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
-  const [camera] = useState(() => openingCamera(store))
+  const [camera] = useState(() => openingCamera(store, behaviour.zoom))
+  // A new start zoom from the behaviour tuner puts the globe at Home at once, to show it.
+  const shownStartZoom = useRef(behaviour.zoom.startZoom)
+  useEffect(() => {
+    if (behaviour.zoom.startZoom === shownStartZoom.current) return
+    shownStartZoom.current = behaviour.zoom.startZoom
+    globeCamera.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
+  }, [behaviour.zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagues = useLeagues()
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
@@ -135,6 +143,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           ref={globeCamera}
           theme={theme}
           cityLabels={behaviour.cityLabels}
+          zoomSettings={behaviour.zoom}
           colours={colours}
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
@@ -213,9 +222,10 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           accent={accentColour(theme)}
           // The camera can't move until the globe is ready, as on the globe itself.
           camera={loadingScreenGone ? cameraNow : null}
+          zoomSettings={behaviour.zoom}
           onZoomIn={() => globeCamera.current?.zoomIn()}
           onZoomOut={() => globeCamera.current?.zoomOut()}
-          onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace()))}
+          onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
         />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
@@ -234,6 +244,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
                 onChange={setBehaviour}
                 overlays={overlays}
                 onOverlays={setOverlays}
+                zoomNow={cameraNow.zoom}
               />
             </Suspense>
           </div>

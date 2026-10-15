@@ -843,7 +843,7 @@ body {
   /* How wide the scenario controls' column is (local runs only), which the game panel keeps clear of. */
   --scenario-column: calc(52 * var(--spacing));
   /* How wide the Feedback button is at the bottom right, which the game panel keeps clear of too. */
-  --feedback-column: calc(28 * var(--spacing));
+  --feedback-column: var(--rail-size-button);
   position: relative;
   display: flex;
   flex: 1;
@@ -1614,19 +1614,29 @@ body {
   display: none;
 }
 
+/* A round icon button, the size of the rail's. */
 .feedback__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
   width: var(--feedback-column);
-  height: calc(var(--controls-size-key) + var(--spacing));
-  padding: 0 calc(3 * var(--spacing));
+  height: var(--feedback-column);
+  padding: 0;
   border: none;
-  border-radius: var(--controls-corner);
+  border-radius: 50%;
   box-shadow: var(--controls-shadow), var(--glass-rim);
   color: var(--palette-text-primary);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
   cursor: pointer;
+}
+
+.feedback__button[hidden] {
+  display: none;
+}
+
+.feedback__icon {
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
 }
 
 .feedback__panel {

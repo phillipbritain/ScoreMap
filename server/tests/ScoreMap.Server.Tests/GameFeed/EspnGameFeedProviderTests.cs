@@ -617,17 +617,36 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
-    public async Task Summary_behind_the_scoreboard_is_asked_for_again_next_time()
+    public async Task Summary_behind_the_scoreboard_is_asked_for_again_a_few_times_then_left_until_the_score_changes()
     {
         // The scoreboard has a basket the summary doesn't have yet: its last scoring play left it 99-98.
-        var handler = BasketballServing(() => BasketballScoreboard(101, 98), () => Fixture("nba-summary.json"));
+        var home = 101;
+        var handler = BasketballServing(() => BasketballScoreboard(home, 98), () => Fixture("nba-summary.json"));
         var provider = ProviderOver(handler);
+        int Summaries() => handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary"));
 
         var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        for (var i = 0; i < 4; i++)
+            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
 
         Assert.Equal("ATL", game.LastScore?.Team);
-        Assert.Equal(2, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
+        Assert.Equal(3, Summaries());
+
+        home = 103;
+        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        Assert.Equal(4, Summaries());
+    }
+
+    [Fact]
+    public async Task Summary_without_scoring_plays_is_asked_for_only_a_few_times_at_one_score()
+    {
+        var handler = BasketballServing(() => BasketballScoreboard(99, 98), () => """{"plays":[]}""");
+        var provider = ProviderOver(handler);
+
+        for (var i = 0; i < 5; i++)
+            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+
+        Assert.Equal(3, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
     }
 
     [Fact]
@@ -647,7 +666,7 @@ public class EspnGameFeedProviderTests
 
     [Theory]
     [MemberData(nameof(SummaryFailures))]
-    public async Task A_failed_summary_keeps_the_last_score_it_had_and_is_tried_again(string failure)
+    public async Task A_failed_summary_keeps_the_last_score_it_had_and_is_tried_again_a_few_times(string failure)
     {
         var (home, failing) = (99, false);
         var handler = BasketballServing(() => BasketballScoreboard(home, 98), () => !failing ? Fixture("nba-summary.json") : failure switch
@@ -662,10 +681,11 @@ public class EspnGameFeedProviderTests
 
         (home, failing) = (101, true);
         var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        for (var i = 0; i < 4; i++)
+            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
 
         Assert.Equal((101, "ATL"), (game.Home.Score, game.LastScore?.Team));
-        Assert.Equal(3, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
+        Assert.Equal(4, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
     }
 
     [Fact]

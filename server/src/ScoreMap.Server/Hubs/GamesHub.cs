@@ -20,6 +20,9 @@ public sealed class GamesHub(
     /// <summary>The query parameter (any value) a demo's browser adds to <see cref="Path"/>.</summary>
     public const string DemoQuery = "demo";
 
+    // Marks a demo's connection, for when it leaves.
+    private const string WatchesDemo = "watches-demo";
+
     /// <summary>The group of browsers watching the real game board (or, locally, the pill's scenario).</summary>
     public const string RealGamesGroup = "real-games";
 
@@ -40,7 +43,7 @@ public sealed class GamesHub(
     {
         if (Context.GetHttpContext()?.Request.Query.ContainsKey(DemoQuery) == true)
         {
-            Context.Items[DemoQuery] = true;
+            Context.Items[WatchesDemo] = true;
             var run = demo.Join(Context.ConnectionId);
             try
             {
@@ -84,7 +87,7 @@ public sealed class GamesHub(
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        if (Context.Items.ContainsKey(DemoQuery))
+        if (Context.Items.ContainsKey(WatchesDemo))
             demo.Leave(Context.ConnectionId);
         else
             connections.Disconnected(Context.ConnectionId);

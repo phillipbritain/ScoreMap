@@ -21,6 +21,8 @@ public sealed class DemoBoard(
     public static readonly TimeSpan StopsAfter = TimeSpan.FromMinutes(1);
 
     private readonly Lock _lock = new();
+    // Every demo browser from when it joins, before its snapshot, which the running board's
+    // connections count only from after it: so a browser still connecting keeps the board running.
     private readonly HashSet<string> _viewers = [];
     private Run? _running;
     // While nobody watches: when the running board stops, and the wait for then.
@@ -59,19 +61,24 @@ public sealed class DemoBoard(
     public Run Join(string connectionId)
     {
         Run? stopped = null;
-        Run running;
-        lock (_lock)
+        try
         {
-            if (_running is not null && _stopsAt <= realTime.GetUtcNow())
-                (stopped, _running) = (_running, null);
-            CancelStop();
-            _running ??= Start();
-            _viewers.Add(connectionId);
-            running = _running;
+            lock (_lock)
+            {
+                if (_running is not null && _stopsAt <= realTime.GetUtcNow())
+                    (stopped, _running) = (_running, null);
+                CancelStop();
+                _running ??= Start();
+                _viewers.Add(connectionId);
+                return _running;
+            }
         }
-        if (stopped is not null)
-            _ = StopAsync(stopped);
-        return running;
+        finally
+        {
+            // Even when starting afresh failed (say, a bad scenario file), so the old board's poller stops.
+            if (stopped is not null)
+                _ = StopAsync(stopped);
+        }
     }
 
     /// <summary>

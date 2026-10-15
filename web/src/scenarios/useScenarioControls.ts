@@ -48,9 +48,10 @@ export interface ScenarioControls {
  * The scenario controls' state (ADR-0009): the listing, fetched on start and again on coming back to
  * the tab (for anything missed while disconnected from the games hub), and whether Shift+S has hidden
  * the controls (and the dev tools and the Feedback button with them). The app passes on the listings the server sends over the games hub to `setListing`, so
- * every tab follows a switch or a change of speed made in any of them.
+ * every tab follows a switch or a change of speed made in any of them. A demo (ADR-0019) has no
+ * scenario controls, so it never fetches the listing, but Shift+S still hides what it hides.
  */
-export function useScenarioControls(): ScenarioControls {
+export function useScenarioControls(demo: boolean): ScenarioControls {
   const [listing, setListing] = useState<ScenarioListing | null>(null)
   const [hidden, setHidden] = useState(false)
 
@@ -64,6 +65,7 @@ export function useScenarioControls(): ScenarioControls {
   }, [])
 
   useEffect(() => {
+    if (demo) return
     const abort = new AbortController()
     load(abort.signal)
     const onFocus = () => load(abort.signal)
@@ -72,7 +74,7 @@ export function useScenarioControls(): ScenarioControls {
       abort.abort()
       window.removeEventListener('focus', onFocus)
     }
-  }, [load])
+  }, [load, demo])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

@@ -57,6 +57,19 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
   }
 }
 
+/**
+ * A store for a demo (ADR-0019), which opens on first-visit settings and the viewer's region, as every
+ * demo does, and saves nothing, so the viewer's own saved settings are as they were after it.
+ */
+export function unsavedSettingsStore(): SettingsStore {
+  return {
+    load: () => firstVisitSettings,
+    save() {},
+    loadCamera: () => null,
+    saveCamera() {},
+  }
+}
+
 /** A saved camera, or null when what was saved isn't one. */
 function cameraFromSaved(saved: unknown): Camera | null {
   if (typeof saved !== 'object' || saved === null) return null

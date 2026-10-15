@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { settingsStore, type SettingsStorage } from './settingsStore'
+import { settingsStore, unsavedSettingsStore, type SettingsStorage } from './settingsStore'
 import { firstVisitSettings } from './viewerSettings'
 
 /** Stands in for the browser's localStorage, which survives a page reload. */
@@ -205,5 +205,23 @@ describe('settingsStore camera', () => {
 
     expect(() => store.saveCamera({ longitude: 0, latitude: 0, zoom: 2 })).not.toThrow()
     expect(store.loadCamera()).toBeNull()
+  })
+})
+
+describe('unsavedSettingsStore', () => {
+  it("opens on first-visit settings and the viewer's region, and saves neither the settings nor the camera", () => {
+    const storage = memoryStorage()
+    const saved = settingsStore(() => storage)
+    saved.save({ ...firstVisitSettings, liveOnly: true })
+    saved.saveCamera({ longitude: 10, latitude: 20, zoom: 3 })
+    const store = unsavedSettingsStore()
+
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
+    store.saveCamera({ longitude: -70, latitude: 40, zoom: 2 })
+
+    expect(store.load()).toEqual(firstVisitSettings)
+    expect(store.loadCamera()).toBeNull()
+    expect(saved.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+    expect(saved.loadCamera()).toEqual({ longitude: 10, latitude: 20, zoom: 3 })
   })
 })

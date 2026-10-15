@@ -71,7 +71,7 @@ export function BehaviourTuner(props: BehaviourTunerProps) {
   }
 
   return (
-    <div className="theme-tuner">
+    <div className="theme-tuner theme-tuner--behaviour">
       <button type="button" className="theme-tuner__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
         Behaviour{changed.length > 0 && <span className="theme-tuner__badge">{changed.length}</span>}
       </button>

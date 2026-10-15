@@ -76,7 +76,7 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
   const tab = tabs[tabIndex]
 
   return (
-    <div className="theme-tuner">
+    <div className="theme-tuner theme-tuner--theme">
       <button type="button" className="theme-tuner__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
         Theme{changed.length > 0 && <span className="theme-tuner__badge">{changed.length}</span>}
       </button>

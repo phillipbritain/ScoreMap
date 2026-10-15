@@ -1,13 +1,13 @@
 import { useState, type ReactNode } from 'react'
-import { litKey, pressedSpeed, showsFasterIcon, type MediaKey, type ScenarioListing } from './scenarioPicker'
+import { speedNames, type ScenarioListing, type SpeedName } from './scenarioPicker'
 import { putScenarios, switchScenario } from './useScenarioControls'
 
 /**
- * The media keys (ADR-0009): Reset, then Pause, Play and Fast-forward for the scenario clock's speed,
- * with no label: the lit key is the speed, and Fast-forward grows a third triangle at Faster. Pressing
- * one changes the server's speed, and so every browser's, carrying on from where the scenario is.
- * Reset starts the running scenario afresh, at the same speed, as picking it again in the pill does.
- * Shown only where play can be controlled.
+ * The media keys (ADR-0009): Reset, then a key for each of the scenario clock's speeds, Pause, Play,
+ * Fast-forward (Fast) and Faster, with no label: the lit key is the speed. Pressing one changes the
+ * server's speed, and so every browser's, carrying on from where the scenario is. Reset starts the
+ * running scenario afresh, at the same speed, as picking it again in the pill does. Shown only where
+ * play can be controlled.
  */
 export function SpeedKeys({
   listing,
@@ -17,11 +17,9 @@ export function SpeedKeys({
   setListing: (listing: ScenarioListing) => void
 }) {
   const [changing, setChanging] = useState(false)
-  const lit = litKey(listing.speed)
 
-  const press = (key: MediaKey) => {
-    const speed = pressedSpeed(listing.speed, key)
-    // A lit Play or Pause is already the speed.
+  const press = (speed: SpeedName) => {
+    // The lit key is already the speed.
     if (speed === listing.speed) return
     setChanging(true)
     putScenarios('speed', { speed })
@@ -37,34 +35,29 @@ export function SpeedKeys({
       .finally(() => setChanging(false))
   }
 
-  const keyButton = (name: MediaKey, title: string, icon: ReactNode, className?: string) => (
+  const speedKey = (speed: SpeedName, title: string, icon: ReactNode, className?: string) => (
     <button
       type="button"
       className={className}
       aria-label={title}
-      aria-pressed={lit === name}
+      aria-pressed={listing.speed === speed}
       title={title}
       disabled={changing}
-      onClick={() => press(name)}
+      onClick={() => press(speed)}
     >
       {icon}
     </button>
   )
 
-  const faster = showsFasterIcon(listing.speed)
   return (
     <div className="speed-keys" role="group" aria-label="Scenario play">
       <button type="button" aria-label="Reset" title="Reset" disabled={changing} onClick={reset}>
         <ResetIcon />
       </button>
-      {keyButton('pause', 'Pause', <PauseIcon />)}
-      {keyButton('play', 'Play', <PlayIcon />)}
-      {keyButton(
-        'fastForward',
-        `Fast-forward to ${pressedSpeed(listing.speed, 'fastForward')}`,
-        faster ? <FasterIcon /> : <FastForwardIcon />,
-        faster ? 'speed-keys__fast-forward speed-keys__fast-forward--faster' : 'speed-keys__fast-forward',
-      )}
+      {speedKey(speedNames.paused, 'Pause', <PauseIcon />)}
+      {speedKey(speedNames.normal, 'Play', <PlayIcon />)}
+      {speedKey(speedNames.fast, 'Fast-forward', <FastForwardIcon />)}
+      {speedKey(speedNames.faster, 'Faster', <FasterIcon />, 'speed-keys__faster')}
     </div>
   )
 }

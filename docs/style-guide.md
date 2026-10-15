@@ -319,7 +319,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
-| `components.Rail.size.width`, `.allLeagues` | A popover's width (a phone's is the screen's), the "All leagues" chip's height | 320, 32 |
+| `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail), the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
 | `components.LoadingScreen.spinner.size` | The loading screen's spinner, across | 32 |

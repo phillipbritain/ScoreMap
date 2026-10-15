@@ -18,6 +18,8 @@ import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
+import { GlassLens } from './theme/GlassLens'
+import { Tooltips } from './tooltip/Tooltips'
 import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
@@ -107,6 +109,8 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
 
   return (
     <div className="app">
+      <GlassLens />
+      <Tooltips />
       <div className="globe-area">
         <Globe
           ref={globeCamera}
@@ -180,7 +184,7 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
         />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
-          <div className="dev-tools" hidden={!scenarios.devToolsShown}>
+          <div className="dev-tools" data-keeps-popovers data-native-tooltips hidden={!scenarios.devToolsShown}>
             <Suspense>
               <ThemeTuner
                 builtIn={tuning.builtIn}

@@ -49,9 +49,12 @@ export function ScenarioPill({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close()
     }
-    // A press on anything above the cover (the rail, the game panel, the tuners) closes it too.
+    // A press on anything above the cover (the rail, the game panel) closes it too, but for the
+    // local-run tools ([data-keeps-popovers]), so the list stays open to be looked at while they change it.
     const onPointerDown = (event: PointerEvent) => {
-      if (!(event.target instanceof Node && details.current?.contains(event.target))) close()
+      const target = event.target
+      if (target instanceof Element && target.closest('[data-keeps-popovers]')) return
+      if (!(target instanceof Node && details.current?.contains(target))) close()
     }
     document.addEventListener('keydown', onKeyDown)
     document.addEventListener('pointerdown', onPointerDown, true)

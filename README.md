@@ -5,7 +5,7 @@ A globe showing live sports games as pins at their venues, with scores that upda
 ## Layout
 
 - `server/` — C# ASP.NET Core server (`ScoreMap.slnx`)
-  - `src/ScoreMap.Server/` — the server: game feed provider (`GameFeed/`), game board (`Games/`), poller (`Live/`), SignalR hub (`Hubs/`), venue locator and photos (`Venues/`), watch and stream links (`WatchLinks/`), scenarios for local runs (`Scenarios/`)
+  - `src/ScoreMap.Server/` — the server: game feed provider (`GameFeed/`), game board (`Games/`), poller (`Live/`), SignalR hub (`Hubs/`), venue locator and photos (`Venues/`), watch and stream links (`WatchLinks/`), scenarios for local runs and demos (`Scenarios/`)
   - `src/ScoreMap.AppHost/` and `src/ScoreMap.ServiceDefaults/` — Aspire, for running locally (ADR-0013)
   - `tests/ScoreMap.Server.Tests/` — server seam tests: the real server with fake provider and clock
 - `web/` — React + TypeScript browser app built with Vite, MapLibre globe, Vitest unit tests

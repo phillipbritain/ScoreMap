@@ -27,7 +27,6 @@ public static class ScenarioRegistration
             $"The ScenarioSpeed setting is \"{speedName}\", which isn't a speed; it must be one of {Speed.List}");
 
         var services = builder.Services;
-        services.Configure<ScenarioOptions>(builder.Configuration.GetSection("Scenarios"));
         // The real games' provider moves behind the switcher.
         var realGames = services.Last(d => d.ServiceType == typeof(IGameFeedProvider) && !d.IsKeyedService);
         services.Add(Keyed(realGames, ScenarioSwitcher.RealGamesKey));

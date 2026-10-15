@@ -26,10 +26,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
 
     private readonly IGameFeedProvider _realGames;
     private readonly PollingOptions _realPolling;
-    private readonly string _folder;
-    private readonly IReadOnlyList<League> _leagues;
-    private readonly IReadOnlyList<ScenarioVenue>? _venues;
-    private readonly ScenarioTeamList? _teams;
+    private readonly ScenarioLibrary _library;
     private readonly TimeProvider _realTime;
     private readonly ScenarioClock _clock;
     private volatile Source _running;
@@ -39,23 +36,14 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public ScenarioSwitcher(
         [FromKeyedServices(RealGamesKey)] IGameFeedProvider realGames,
         IOptions<PollingOptions> realPolling,
-        IHostEnvironment environment,
-        IOptions<ScenarioOptions> options,
-        IOptions<List<League>> leagues,
+        ScenarioLibrary library,
         TimeProvider realTime,
         string startWith,
         Speed speed)
     {
         _realGames = realGames;
         _realPolling = realPolling.Value;
-        _folder = Path.Combine(environment.ContentRootPath, options.Value.Folder);
-        _leagues = leagues.Value;
-        // The venue list fills come from; without it, a scenario with a fill says so when picked.
-        var venueList = Path.Combine(environment.ContentRootPath, options.Value.VenueListPath);
-        _venues = File.Exists(venueList) ? ScenarioVenue.ReadList(venueList) : null;
-        // Likewise the team list fills make their games between.
-        var teamList = Path.Combine(environment.ContentRootPath, options.Value.TeamListPath);
-        _teams = File.Exists(teamList) ? ScenarioTeamList.Read(teamList) : null;
+        _library = library;
         _realTime = realTime;
         _clock = new ScenarioClock(realTime, speed);
         BoardClock = new BoardTime(this);
@@ -66,23 +54,21 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// <summary>The running scenario's name, or <see cref="RealGames"/>.</summary>
     public string Running => _running.Name;
 
+    /// <summary>How often the poller should fetch for the running source: see <see cref="ScenarioPolling"/>.</summary>
+    public PollingOptions Polling => IsRealGames(_running.Name) ? _realPolling : ScenarioPolling(_clock.Speed);
+
     /// <summary>
-    /// How often the poller should fetch for the running source: for a scenario, every league every
+    /// How often a poller should fetch a scenario running at <paramref name="speed"/>: every league every
     /// second of real time divided by the speed, so scripted changes show up straight away and don't
     /// arrive bunched together at high speeds, but no more often than <see cref="FastestPolling"/>.
     /// Paused, it fetches as at Normal.
     /// </summary>
-    public PollingOptions Polling
+    public static PollingOptions ScenarioPolling(Speed speed)
     {
-        get
-        {
-            if (IsRealGames(_running.Name))
-                return _realPolling;
-            var interval = TimeSpan.FromSeconds(1) / Math.Max(_clock.Speed.Times, Speed.Normal.Times);
-            if (interval < FastestPolling)
-                interval = FastestPolling;
-            return new PollingOptions { LiveInterval = interval, QuietInterval = interval };
-        }
+        var interval = TimeSpan.FromSeconds(1) / Math.Max(speed.Times, Speed.Normal.Times);
+        if (interval < FastestPolling)
+            interval = FastestPolling;
+        return new PollingOptions { LiveInterval = interval, QuietInterval = interval };
     }
 
     /// <summary>
@@ -116,11 +102,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public TimeProvider BoardClock { get; }
 
     /// <summary>The names of the scenario files, in order.</summary>
-    public IReadOnlyList<string> Scenarios =>
-        Directory.Exists(_folder)
-            ? Directory.GetFiles(_folder, "*.json").Select(Path.GetFileNameWithoutExtension).OfType<string>()
-                .Order(StringComparer.OrdinalIgnoreCase).ToList()
-            : [];
+    public IReadOnlyList<string> Scenarios => _library.Names;
 
     /// <summary>
     /// Whether <paramref name="name"/> is something to switch to: a scenario file, or <see cref="RealGames"/>.
@@ -169,10 +151,9 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
                 _clock.Restart(speed);
             return new Source(RealGames, _realGames, CanControlPlay: false);
         }
-        var scenario = ScenarioReader.Read(_folder, name, _leagues, _venues, _teams);
+        var scenario = _library.Read(name);
         _clock.Restart(speed);
-        return new Source(
-            name, new ScenarioGameFeedProvider(scenario, _clock, _leagues), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
+        return new Source(name, _library.Start(scenario, _clock), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
     }
 
     private static bool IsRealGames(string name) => name.Equals(RealGames, StringComparison.OrdinalIgnoreCase);

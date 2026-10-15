@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useImperativeHandle, useRef, type Ref, type RefObject } from 'react'
 import type { Game } from '../games/game'
 import type { PickedColours } from '../settings/gameColour'
 import type { Theme } from '../theme/theme'
@@ -32,10 +32,19 @@ interface GlobeProps {
   onCameraMove: (camera: Camera) => void
   /** Called each time the globe's initial load moves on a stage (see GlobeMap.stage). */
   onStage: (stage: LoadingStage) => void
+  /** Takes how the rail steers the globe's camera. */
+  ref?: Ref<GlobeCamera>
+}
+
+/** The rail's hold on the globe's camera: its zoom buttons and Home (see GlobeMap). */
+export interface GlobeCamera {
+  zoomIn: () => void
+  zoomOut: () => void
+  flyTo: (camera: Camera) => void
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage }: GlobeProps) {
+export function Globe({ theme, cityLabels, colours, showGameCityReach, games, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, colours })
@@ -62,6 +71,16 @@ export function Globe({ theme, cityLabels, colours, showGameCityReach, games, se
       globe.current = null
     }
   }, [])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      zoomIn: () => globe.current?.zoomIn(),
+      zoomOut: () => globe.current?.zoomOut(),
+      flyTo: (camera) => globe.current?.flyTo(camera),
+    }),
+    [],
+  )
 
   useEffect(() => globe.current?.setTheme(theme), [theme])
   useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])

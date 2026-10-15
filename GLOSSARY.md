@@ -5,11 +5,11 @@ A globe showing sports games happening around the world, with live scores, so fa
 ## Language
 
 **Sport**:
-A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in the settings menu. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
+A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in Leagues and Colours on the rail. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
 _Avoid_: American football, football (for soccer)
 
 **League**:
-A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users show or hide in the settings menu.
+A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users show or hide in Leagues on the rail.
 _Avoid_: Competition, tournament, conference, governing body (e.g. "NCAA" or "FIFA" alone)
 
 **Game**:
@@ -48,6 +48,9 @@ _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for how the game is going: its last score (in soccer, its key events), its situation, its betting line and its attendance.
 _Avoid_: Popup, detail page, modal
 
+**Rail**:
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, all the way out), the "Live only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues).
+_Avoid_: Settings menu, quick settings, toolbar
 **Last score**:
 The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball.
 _Avoid_: Last play (that's any play, scoring or not), scoring summary
@@ -87,7 +90,7 @@ _Avoid_: Minor city, town
 ### Loading
 
 **Loading screen**:
-What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a spinner, and a message if it's slow. The settings menu and scenario pills can still be used, but the globe can't be moved yet.
+What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a spinner, and a message if it's slow. The rail and scenario pills can still be used, but the globe can't be moved yet.
 _Avoid_: Spinner (it's one part), splash, overlay, veil
 
 **Ready**:
@@ -113,7 +116,7 @@ What a colour in a theme is for, such as the globe's surface, Live's colour or m
 _Avoid_: Token, semantic colour
 
 **Game colour**:
-The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in the settings menu, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
+The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Colours on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
 _Avoid_: Status colour (for a game's colour), team colour
 
 **Type style**:

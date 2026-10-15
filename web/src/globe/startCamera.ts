@@ -14,7 +14,7 @@ export interface ViewerPlace {
  * the globe goes. (The map keeps either within its zoom limits.)
  */
 export function startCamera(saved: Camera | null, place: ViewerPlace): Camera {
-  return saved ?? regionCamera(place)
+  return saved ?? homeCamera(place)
 }
 
 /** [longitude, latitude] roughly at the middle of the region each common time zone covers. */
@@ -97,7 +97,11 @@ const countryCentres: Record<string, [number, number]> = {
 /** Where to look when nothing hints at the viewer's region: the Atlantic, between the Americas and Europe. */
 const worldCentre: [number, number] = [-40, 30]
 
-function regionCamera({ timeZone, locale }: ViewerPlace): Camera {
+/**
+ * Home: the viewer's region from their time zone, then their locale, as far out as the globe goes. A
+ * first visit opens on it, and the rail's Home button flies back to it.
+ */
+export function homeCamera({ timeZone, locale }: ViewerPlace): Camera {
   const centre =
     zoneCentres[timeZone] ?? areaCentres[timeZone.split('/')[0]] ?? countryCentres[countryOf(locale) ?? '']
   const [longitude, latitude] = centre ?? worldCentre

@@ -14,6 +14,8 @@ import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { Rail } from './rail/Rail'
+import { PrototypeSwitcher, TopEventsPill, useTopEvents } from './prototypeTopEvents/topEventsPrototype'
+import './prototypeTopEvents/topEventsPrototype.css'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
@@ -95,7 +97,15 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
   )
   useEffect(() => store.save(viewerSettings), [viewerSettings])
 
-  const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
+  // PROTOTYPE: Top Events. In variant A it's a choice of its own, ignoring the league picks; in B and
+  // C it narrows the leagues already on. "Live only" and Disrupted apply either way.
+  const top = useTopEvents(games)
+  const visible = useMemo(() => {
+    if (!top.on) return visibleGames(games ?? [], viewerSettings)
+    const settings = top.variant === 'A' ? { ...viewerSettings, hiddenLeagues: [] } : viewerSettings
+    return visibleGames(games ?? [], settings).filter((game) => top.ids.has(game.id))
+  }, [games, viewerSettings, top.on, top.variant, top.ids])
+  const allVisible = useMemo(() => visibleGames(games ?? [], viewerSettings).length, [games, viewerSettings])
   // Changing only when a colour does, so other settings don't recolour the globe.
   const { sportColours, leagueColours } = viewerSettings
   const colours = useMemo((): PickedColours => ({ sportColours, leagueColours }), [sportColours, leagueColours])
@@ -181,7 +191,10 @@ export default function App({ theme: startTheme, tuning }: AppProps) {
           onZoomIn={() => globeCamera.current?.zoomIn()}
           onZoomOut={() => globeCamera.current?.zoomOut()}
           onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace()))}
+          topEvents={top}
         />
+        {top.variant === 'C' && <TopEventsPill top={top} all={allVisible} />}
+        <PrototypeSwitcher top={top} shown={visible.length} />
         {BehaviourTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
           <div className="dev-tools" data-keeps-popovers data-native-tooltips hidden={!scenarios.devToolsShown}>

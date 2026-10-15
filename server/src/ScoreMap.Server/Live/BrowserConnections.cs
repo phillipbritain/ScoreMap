@@ -1,12 +1,16 @@
 namespace ScoreMap.Server.Live;
 
 /// <summary>
-/// Which browsers are connected to the games hub, so the poller runs only while
-/// at least one is. Tracks connection ids rather than a count so a connection that
-/// fails part-way through connecting can't push the count below zero.
+/// Which browsers are connected to the games hub for one game board, so its poller runs only while
+/// at least one is, and sends only to them: they are in the hub's group <see cref="Group"/>. Tracks
+/// connection ids rather than a count so a connection that fails part-way through connecting can't
+/// push the count below zero.
 /// </summary>
-public sealed class BrowserConnections
+public sealed class BrowserConnections(string group)
 {
+    /// <summary>The games hub's group these browsers are in, which their poller sends to.</summary>
+    public string Group { get; } = group;
+
     private readonly HashSet<string> _ids = [];
     private TaskCompletionSource _anyConnected = NewSignal();
 

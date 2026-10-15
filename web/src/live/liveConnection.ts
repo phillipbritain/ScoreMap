@@ -2,6 +2,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import type { Game } from '../games/game'
 import type { GameChange } from '../games/gameChange'
 import type { ScenarioListing } from '../scenarios/scenarioPicker'
+import { demoQuery } from '../demo/demo'
 
 // Must match GamesHub.Path, GamesHub.SnapshotMessage, GamesHub.ChangeMessage and
 // GamesHub.ScenarioChangedMessage on the server.
@@ -23,11 +24,15 @@ export interface LiveConnectionHandlers {
 /**
  * Connects to the server's games hub and stays connected: it retries with backoff
  * forever, and the server sends a fresh snapshot on every (re)connect so the
- * browser catches up on anything it missed. Returns a function that disconnects.
+ * browser catches up on anything it missed. In a demo, it watches the demo's games (ADR-0019).
+ * Returns a function that disconnects.
  */
-export function connectToGames({ onSnapshot, onChange, onScenarioChanged }: LiveConnectionHandlers): () => void {
+export function connectToGames(
+  { onSnapshot, onChange, onScenarioChanged }: LiveConnectionHandlers,
+  demo = false,
+): () => void {
   const connection = new HubConnectionBuilder()
-    .withUrl(hubPath)
+    .withUrl(demo ? `${hubPath}?${demoQuery}` : hubPath)
     .withAutomaticReconnect({
       nextRetryDelayInMilliseconds: ({ previousRetryCount }) =>
         Math.min(maxRetryDelayMs, 1000 * 2 ** previousRetryCount),

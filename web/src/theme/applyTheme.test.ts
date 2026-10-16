@@ -181,7 +181,7 @@ describe('applyTheme', () => {
       controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's frost and surface.
       tooltip: 2,
-      // The loading screen's dim (a colour and an opacity), spinner (two colours and a size) and message.
+      // The loading screen's dim (a colour and an opacity), rocket (two colours and a size) and message.
       loadingScreen: 2 + 3 + 1,
     }
     expect(properties.size).toBe(Object.values(written).reduce((sum, n) => sum + n))

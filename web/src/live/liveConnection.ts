@@ -19,6 +19,8 @@ export interface LiveConnectionHandlers {
   onChange: (change: GameChange) => void
   /** The scenario listing, after a switch or a change of speed made in any browser (local runs only). */
   onScenarioChanged: (listing: ScenarioListing) => void
+  /** The connection to the server has been lost, after it was made; the next snapshot says it's back. */
+  onCutOff: () => void
 }
 
 /**
@@ -28,7 +30,7 @@ export interface LiveConnectionHandlers {
  * Returns a function that disconnects.
  */
 export function connectToGames(
-  { onSnapshot, onChange, onScenarioChanged }: LiveConnectionHandlers,
+  { onSnapshot, onChange, onScenarioChanged, onCutOff }: LiveConnectionHandlers,
   demo = false,
 ): () => void {
   const connection = new HubConnectionBuilder()
@@ -43,6 +45,7 @@ export function connectToGames(
   connection.on(snapshotMessage, onSnapshot)
   connection.on(changeMessage, onChange)
   connection.on(scenarioChangedMessage, onScenarioChanged)
+  connection.onreconnecting(() => onCutOff())
 
   let stopped = false
   let retry: ReturnType<typeof setTimeout> | undefined
@@ -60,7 +63,9 @@ export function connectToGames(
 
   // Automatic reconnect never gives up, so a close is either our stop or a start failure.
   connection.onclose(() => {
-    if (!stopped) retry = setTimeout(() => void start(), 1000)
+    if (stopped) return
+    onCutOff()
+    retry = setTimeout(() => void start(), 1000)
   })
 
   const started = start()

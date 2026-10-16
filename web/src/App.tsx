@@ -15,6 +15,7 @@ import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
+import { watchForSleep } from './live/asleep'
 import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
@@ -82,8 +83,14 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const [overlays, setOverlays] = useState(noOverlays)
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
+  // Whether the games are as a snapshot brought them, which the globe shows without pulses, or a change has come since.
+  const [fromSnapshot, setFromSnapshot] = useState(true)
   // When the connection to the server was lost (performance.now()), until the next snapshot; null while connected.
   const [cutOffSince, setCutOffSince] = useState<number | null>(null)
+  // Asleep (see GLOSSARY.md): disconnected once the page has been hidden for the idle timeout. Waking:
+  // from when it's shown again until the next snapshot.
+  const [asleep, setAsleep] = useState(false)
+  const [waking, setWaking] = useState(false)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
@@ -108,25 +115,43 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const scenarios = useScenarioControls(demo)
   const { setListing: setScenarioListing } = scenarios
 
+  const idleTimeoutMs = behaviour.asleep.idleTimeoutMinutes * 60_000
   useEffect(
     () =>
-      connectToGames(
-        {
-          onSnapshot: (snapshot) => {
-            setGames(snapshot)
-            setCutOffSince(null)
-          },
-          // The snapshot always comes first; a change before it has nothing to apply to.
-          // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
-          onChange: (change) => setGames((current) => current && applyChange(current, change)),
-          // A switch or a change of speed made in any browser: every pill and clock follows.
-          onScenarioChanged: setScenarioListing,
-          onCutOff: () => setCutOffSince((since) => since ?? performance.now()),
+      watchForSleep(document, idleTimeoutMs, {
+        onSleep: () => setAsleep(true),
+        onWake: () => {
+          setAsleep(false)
+          setWaking(true)
+          setCutOffSince(performance.now())
         },
-        demo,
-      ),
-    [setScenarioListing, demo],
+      }),
+    [idleTimeoutMs],
   )
+  // Connected while awake: falling asleep disconnects, and waking connects afresh, for a fresh snapshot.
+  useEffect(() => {
+    if (asleep) return
+    return connectToGames(
+      {
+        onSnapshot: (snapshot) => {
+          setGames(snapshot)
+          setFromSnapshot(true)
+          setCutOffSince(null)
+          setWaking(false)
+        },
+        // The snapshot always comes first; a change before it has nothing to apply to.
+        // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
+        onChange: (change) => {
+          setGames((current) => current && applyChange(current, change))
+          setFromSnapshot(false)
+        },
+        // A switch or a change of speed made in any browser: every pill and clock follows.
+        onScenarioChanged: setScenarioListing,
+        onCutOff: () => setCutOffSince((since) => since ?? performance.now()),
+      },
+      demo,
+    )
+  }, [setScenarioListing, demo, asleep])
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
@@ -155,6 +180,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
+          fromSnapshot={fromSnapshot}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
           onSelectGame={setSelectedGameId}
@@ -170,7 +196,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
         {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
         {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
             the rail, which stay usable. */}
-        {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} />}
+        {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}
         {loadingPreview !== 'off' && (
           <LoadingScreen
             stage={loadingPreview === 'leaving' ? 'ready' : 'waitingForGames'}

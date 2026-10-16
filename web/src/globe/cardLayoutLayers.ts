@@ -1,44 +1,26 @@
-import type {
-  CircleLayerSpecification,
-  DataDrivenPropertyValueSpecification,
-  ExpressionSpecification,
-  GeoJSONSourceSpecification,
-  LineLayerSpecification,
-  SymbolLayerSpecification,
-} from 'maplibre-gl'
+import type { CircleLayerSpecification, GeoJSONSourceSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
 import { byCount } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
+import type { TrailOnGlobe } from './trailLayer'
 
 /**
- * What the score cards' layout adds to the map (see cardLayout): moved cards' trails and the venues
- * and venue clusters they end at, card clusters, and the cards' footprints. They're drawn by the map
- * rather than the page, so the place names can draw over them (ADR-0010): the trails, venues and
- * clusters are layers beneath the names. The score cards themselves are page elements above the map.
+ * What the score cards' layout adds to the map (see cardLayout): the venue clusters moved cards'
+ * trails end at, card clusters, and the cards' footprints; the trails themselves and their venue dots
+ * are the trail layer's (see trailLayer). They're drawn by the map rather than the page, so the place
+ * names can draw over them (ADR-0010): the trails and clusters are layers beneath the names. The
+ * score cards themselves are page elements above the map.
  */
 export const cardLayoutSource = 'card-layout'
 export const cardClusterLayer = 'card-clusters'
 
-/**
- * A trail and the venue dot it ends at are known by their game's id, so the globe can mark them
- * hovered while the pointer is on the game's card (see hovered).
- */
-export const cardLayoutSourceSpec: GeoJSONSourceSpecification = {
-  type: 'geojson',
-  data: { type: 'FeatureCollection', features: [] },
-  promoteId: 'gameId',
-}
+/** The first of the card layout's layers, which the trail layer goes beneath (see GlobeMap). */
+export const overTrails = 'venue-cluster-glows'
 
-/** The feature state the globe sets on a game's trail and venue dot while the pointer is on its card. */
-export const hoveredState = 'hovered'
-
-/** A paint value that's `hover` for a trail or venue dot whose card the pointer is on, and `otherwise` for the rest. */
-function hovered<T extends number>(hover: T, otherwise: T): DataDrivenPropertyValueSpecification<number> {
-  return ['case', ['boolean', ['feature-state', hoveredState], false], hover, otherwise]
-}
+export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
 /** A score card as it's laid out on screen, with its venue on the globe and its game's colour (see gameColour). */
 export interface CardOnGlobe extends ScreenCard {
@@ -52,19 +34,27 @@ export interface VenueSizes {
   cluster: (count: number) => number
 }
 
+/** What the map draws of a card layout: its features for the card layout source, and the moved cards' trails. */
+export interface CardLayoutDrawing {
+  source: FeatureCollection
+  trails: TrailOnGlobe[]
+}
+
 /**
- * The trails, venues, venue clusters, card clusters and footprints of a card layout, as features for
- * the map. The layout is worked out on screen, so its positions are turned back into places on the
- * globe with `unproject`; venues are given as they are. Moved cards whose venue dots would overlap on
- * screen share a venue cluster instead, their trails meeting at it (see venueMarks).
+ * The venue clusters, card clusters and footprints of a card layout, as features for the map, and the
+ * moved cards' trails (see trailLayer). The layout is worked out on screen, so its positions are
+ * turned back into places on the globe with `unproject`; venues are given as they are, and footprints
+ * at them, offset on screen. Moved cards whose venue dots would overlap on screen share a venue
+ * cluster instead, their trails meeting at it (see venueMarks).
  */
-export function cardLayoutFeatures(
+export function cardLayoutDrawing(
   cards: readonly CardOnGlobe[],
   layout: CardLayout,
   unproject: (x: number, y: number) => [number, number],
   venueSizes: VenueSizes,
-): FeatureCollection {
+): CardLayoutDrawing {
   const features: Feature[] = []
+  const trails: TrailOnGlobe[] = []
   const byGame = new Map(cards.map((card) => [card.gameId, card]))
   const moved: CardOnGlobe[] = []
   for (const card of cards) {
@@ -72,30 +62,30 @@ export function cardLayoutFeatures(
     if (!placement || placement.inCardCluster) continue
     const { offset, trail } = placement
     if (trail) moved.push(card)
-    // Centred on the card, wherever it is.
-    const foot = unproject(card.venueX + offset.dx, card.venueY + offset.dy - card.height / 2 + cardFootprint.height / 2)
-    features.push(feature({ kind: 'footprint' }, { type: 'Point', coordinates: foot }))
+    // Centred on the card, wherever it is: at its venue, and as far from it on screen as the card, so
+    // it stays on the card as the globe turns.
+    const foot = [offset.dx, offset.dy - card.height / 2 + cardFootprint.height / 2]
+    features.push(feature({ kind: 'footprint', offset: foot }, { type: 'Point', coordinates: card.lngLat }))
   }
   for (const mark of venueMarks(moved, venueSizes)) {
     const lngLat = mark.cards.length === 1 ? mark.cards[0].lngLat : unproject(mark.x, mark.y)
+    const dot = mark.cards.length === 1
     for (const card of mark.cards) {
       const { trail } = layout.cards.get(card.gameId)!
-      features.push(
-        feature({ kind: 'trail', color: card.color, gameId: card.gameId }, { type: 'LineString', coordinates: [unproject(trail!.x1, trail!.y1), lngLat] }),
-      )
+      const start = { dx: trail!.x1 - card.venueX, dy: trail!.y1 - card.venueY }
+      trails.push({ gameId: card.gameId, color: card.color, venue: card.lngLat, start, end: lngLat, dot })
     }
+    if (dot) continue
     features.push(
-      mark.cards.length === 1
-        ? feature({ kind: 'venue', color: mark.cards[0].color, gameId: mark.cards[0].gameId }, { type: 'Point', coordinates: lngLat })
-        : feature(
-            {
-              kind: 'venueCluster',
-              status: groupStatus(mark.cards.map((card) => card.status)),
-              [sharedColorProperty]: sharedColourKey(mark.cards),
-              count: mark.cards.length,
-            },
-            { type: 'Point', coordinates: lngLat },
-          ),
+      feature(
+        {
+          kind: 'venueCluster',
+          status: groupStatus(mark.cards.map((card) => card.status)),
+          [sharedColorProperty]: sharedColourKey(mark.cards),
+          count: mark.cards.length,
+        },
+        { type: 'Point', coordinates: lngLat },
+      ),
     )
   }
   for (const { gameIds, status } of layout.cardClusters) {
@@ -109,7 +99,7 @@ export function cardLayoutFeatures(
       ),
     )
   }
-  return { type: 'FeatureCollection', features }
+  return { source: { type: 'FeatureCollection', features }, trails }
 }
 
 /** Where moved cards' trails end on screen: a venue dot for one card, or a venue cluster for more. */
@@ -151,25 +141,16 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
 const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
 
 /**
- * Moved cards' trails, the venues and venue clusters they end at, and card clusters, from the bottom
- * up. Added beneath the place names, so every name draws over them.
+ * The venue clusters moved cards' trails end at, and card clusters, from the bottom up. Added beneath
+ * the place names, so every name draws over them, and over the trails beneath them (see trailLayer).
  *
- * A trail is a thin line lit in its game's colour, like a score card's outline, in a soft glow,
- * to a point ringed in it; below a solid opacity, the map shows through it. While
- * the pointer is on a card, its trail and venue dot are drawn bolder, as the theme's hover says, the
- * dot lit in a glow of its own. A venue cluster and a card cluster are each a disc outlined and lit
- * in its games' colour (see clusterColour), with the count in it, as a pin cluster is (see the
- * theme's cluster): a venue cluster as wide as a pin cluster of as many games, a card cluster as one
- * of some.
+ * A venue cluster and a card cluster are each a disc outlined and lit in its games' colour (see
+ * clusterColour), with the count in it, as a pin cluster is (see the theme's cluster): a venue
+ * cluster as wide as a pin cluster of as many games, a card cluster as one of some.
  */
 export function cardLayoutLayers(
   theme: Theme,
 ): [
-  LineLayerSpecification,
-  LineLayerSpecification,
-  CircleLayerSpecification,
-  CircleLayerSpecification,
-  CircleLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
   SymbolLayerSpecification,
@@ -177,66 +158,10 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
-  const { Cluster: cluster, Trail: trail, Hover: hover } = theme.components
-  // Each trail and the venue it ends at in its game's colour (see gameColour), and each cluster in
-  // its games' (see clusterColour).
-  const gameColor: ExpressionSpecification = ['get', 'color']
+  const { Cluster: cluster } = theme.components
+  // Each cluster in its games' colour (see clusterColour).
   const clusterPaint = clusterColour(theme)
   return [
-    {
-      id: 'trail-glows',
-      type: 'line',
-      source: cardLayoutSource,
-      filter: kindIs('trail'),
-      paint: {
-        'line-color': gameColor,
-        'line-width': trail.glow.width,
-        'line-blur': trail.glow.blur,
-        'line-opacity': trail.glow.opacity,
-      },
-    },
-    {
-      id: 'trails',
-      type: 'line',
-      source: cardLayoutSource,
-      filter: kindIs('trail'),
-      paint: {
-        'line-color': gameColor,
-        'line-width': hovered(hover.trail.width, trail.width),
-        'line-opacity': hovered(hover.trail.opacity, trail.opacity),
-      },
-    },
-    {
-      id: 'trail-venue-glows',
-      type: 'circle',
-      source: cardLayoutSource,
-      filter: kindIs('venue'),
-      paint: {
-        'circle-radius': hovered(hover.venue.glow.radius, 0),
-        'circle-color': gameColor,
-        'circle-blur': 1,
-        'circle-opacity': hovered(hover.venue.glow.opacity, 0),
-      },
-    },
-    {
-      id: 'trail-venue-rings',
-      type: 'circle',
-      source: cardLayoutSource,
-      filter: kindIs('venue'),
-      paint: {
-        'circle-radius': trail.venue.ring.radius,
-        'circle-color': 'transparent',
-        'circle-stroke-width': hovered(hover.trail.width, trail.venue.ring.width),
-        'circle-stroke-color': gameColor,
-      },
-    },
-    {
-      id: 'trail-venues',
-      type: 'circle',
-      source: cardLayoutSource,
-      filter: kindIs('venue'),
-      paint: { 'circle-radius': hovered(hover.venue.radius, trail.venue.radius), 'circle-color': gameColor },
-    },
     {
       id: 'venue-cluster-glows',
       type: 'circle',
@@ -336,6 +261,8 @@ export const cardFootprintLayerSpec: SymbolLayerSpecification = {
   layout: {
     'icon-image': cardFootprint.image,
     'icon-anchor': 'bottom',
+    // Its offset from its card's venue, in pixels, whichever way the globe turns.
+    'icon-offset': ['get', 'offset'],
     // Always placed, whatever else is there, and still keeps names out.
     'icon-allow-overlap': true,
   },

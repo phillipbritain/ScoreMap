@@ -23,6 +23,11 @@ export interface CardScene {
   venueGap: number
   /** Where the names of games' cities are written, which cards keep clear of. */
   names?: readonly ScreenBox[]
+  /**
+   * Whether the camera has moved since the cards were last laid out. While it moves, the cards in
+   * card clusters take turns to look for room, one a layout, as looking takes a while (see arrange).
+   */
+  moving?: boolean
 }
 
 /** A distance on screen, in pixels. */
@@ -49,6 +54,8 @@ export interface CardPlacement {
   moved: boolean
   /** From the edge of the card to its venue; null for a card in a card cluster. */
   trail: Segment | null
+  /** For a card in a card cluster, how many layouts ago it last looked for room (see CardScene.moving). */
+  lookedAgo?: number
 }
 
 /** Games with no room for a card, shown as one count at the first one's venue. */
@@ -104,16 +111,23 @@ export function layOutCards(
         venueY: card.venueY,
         rank: rank(card),
         previous: shiftOf(previous.get(card.gameId), scene.venueGap),
+        lookedAgo: lookedAgoOf(previous.get(card.gameId)),
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
-  const { shifts, cardClusters } = arrange(pushOnScreen(boxes, scene), names, scene)
+  const { shifts, cardClusters, lookedAgo } = arrange(pushOnScreen(boxes, scene), names, scene)
 
   const placements = new Map(cards.map((card) => [card.gameId, sitting(card)]))
   for (const box of boxes) {
     const shift = shifts.get(box.gameId)
     if (!shift) {
-      placements.set(box.gameId, { offset: { dx: 0, dy: -scene.venueGap }, inCardCluster: true, moved: false, trail: null })
+      placements.set(box.gameId, {
+        offset: { dx: 0, dy: -scene.venueGap },
+        inCardCluster: true,
+        moved: false,
+        trail: null,
+        lookedAgo: lookedAgo.get(box.gameId),
+      })
       continue
     }
     placements.set(box.gameId, {
@@ -143,6 +157,11 @@ function shiftOf(placement: CardPlacement | undefined, venueGap: number): Screen
   return { dx: placement.offset.dx, dy: placement.offset.dy + venueGap }
 }
 
+/** How many layouts ago a card in a card cluster last looked for room; undefined for a card that had room. */
+function lookedAgoOf(placement: CardPlacement | undefined): number | undefined {
+  return placement?.inCardCluster ? (placement.lookedAgo ?? 0) : undefined
+}
+
 /** A card's trail: from where a line from the card's centre to its venue leaves the card. */
 function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
   const centreX = box.x + dx
@@ -168,6 +187,8 @@ interface CardBox {
   rank: number
   /** How far the card was moved last time it was laid out, if it had room. */
   previous?: ScreenOffset
+  /** If it was in a card cluster last time, how many layouts ago it last looked for room. */
+  lookedAgo?: number
 }
 
 interface Arrangement {
@@ -175,6 +196,8 @@ interface Arrangement {
   shifts: Map<string, ScreenOffset>
   /** The rest, grouped with others nearby. */
   cardClusters: Omit<CardCluster, 'status'>[]
+  /** For each card in a card cluster, how many layouts ago it last looked for room. */
+  lookedAgo: Map<string, number>
 }
 
 // Space left between cards that had to be moved apart.
@@ -249,9 +272,21 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * instead. So cards don't jump about as the globe turns, a card keeps where it was last time while it
  * fits, give or take the drift, moving only back over its venue once that's clear; and a card looking
  * for room leaves the cards still to be placed where they were.
+ *
+ * A card with no room looks at every spot within reach, which takes a while. So while the camera moves,
+ * the cards in card clusters last time take turns to look, one a layout, the one that looked longest
+ * ago; the rest stay in their card clusters unless there's room where they'd sit. Once it stops, they
+ * all look.
  */
 function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: CardScene): Arrangement {
   const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+  const looking = screen.moving
+    ? boxes.reduce<CardBox | undefined>(
+        (longest, box) => (box.lookedAgo !== undefined && (!longest || box.lookedAgo > longest.lookedAgo!) ? box : longest),
+        undefined,
+      )
+    : undefined
+  const lookedAgo = new Map<string, number>()
   const placed: CardBox[] = []
   // From each card's centre to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
@@ -343,7 +378,9 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // the nearest spot clear of trails, while it's little further than the nearest spot at all.
     let nearest: Spot | undefined = fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
     let clear: Spot | undefined = nearest && trailsClear(unmovedSpot) ? unmovedSpot : undefined
-    if (!clear && !previous) {
+    // A card in a card cluster last time looks for room only when its turn comes (see above).
+    const looks = card.lookedAgo === undefined || !screen.moving || card === looking
+    if (!clear && !previous && looks) {
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break
         if (!fits(spot)) continue
@@ -364,11 +401,12 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
       continue
     }
+    lookedAgo.set(card.gameId, looks ? 0 : card.lookedAgo! + 1)
     const cardCluster = cardClusters.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= cardClusterRadius)
     if (cardCluster) cardCluster.gameIds.push(card.gameId)
     else cardClusters.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
   }
-  return { shifts, cardClusters }
+  return { shifts, cardClusters, lookedAgo }
 }
 
 /** One way across the screen: where a card is along it, how far it was moved, and how big it is. */

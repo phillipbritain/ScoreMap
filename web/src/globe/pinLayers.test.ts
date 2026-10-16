@@ -5,7 +5,7 @@ import { themeWith } from '../theme/testTheme'
 import type { Theme } from '../theme/theme'
 import type { GameStatus } from '../games/game'
 import type { CardLayout } from './cardLayout'
-import { cardLayoutFeatures, cardLayoutLayers } from './cardLayoutLayers'
+import { cardLayoutDrawing, cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
 import { pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
 
@@ -39,13 +39,12 @@ function evaluate(
 const paintOf = (layers: readonly LayerSpecification[], id: string) =>
   layers.find((l) => l.id === id)?.paint as Record<string, unknown>
 
-/** The built-in theme, with clusters and trails in sizes of their own. */
+/** The built-in theme, with clusters in sizes of their own. */
 function sizedTheme(): Theme {
   return themeWith((json) => {
     json.components.Cluster.radius = { few: 10, some: 14, many: 20 }
     json.components.Cluster.glowRadius = { few: 21, some: 27, many: 35 }
     json.components.Cluster.outlineWidth = 2
-    json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
   })
 }
 
@@ -101,36 +100,6 @@ describe('clusters', () => {
   })
 })
 
-describe('trails', () => {
-  /** What a trail layer's paint property is for a Live game's trail or venue, hovered or not. */
-  const drawn = (theme: Theme, id: string, property: string, hovered = false) =>
-    evaluate(paintOf(cardLayoutLayers(theme), id)[property], { status: 'Live', gameId: 'a' }, { hovered })
-
-  it("are drawn at the theme's widths and opacities, in a glow, to a venue ringed at the theme's sizes", () => {
-    const theme = sizedTheme()
-    const paint = (id: string) => paintOf(cardLayoutLayers(theme), id)
-    expect([drawn(theme, 'trails', 'line-width'), drawn(theme, 'trails', 'line-opacity')]).toEqual([1.5, 0.8])
-    expect(paint('trail-glows')).toMatchObject({ 'line-width': 5, 'line-blur': 2, 'line-opacity': 0.3 })
-    expect(drawn(theme, 'trail-venues', 'circle-radius')).toBe(3)
-    expect(paint('trail-venue-rings')).toMatchObject({ 'circle-radius': 6 })
-    expect(drawn(theme, 'trail-venue-rings', 'circle-stroke-width')).toBe(1.5)
-    expect(drawn(theme, 'trail-venue-glows', 'circle-opacity')).toBe(0)
-  })
-
-  it("draw a hovered card's trail and venue dot from the hover settings, whatever the trail's own opacity", () => {
-    const theme = themeWith((json) => {
-      json.components.Trail.opacity = 0.5
-      json.components.Hover.trail = { width: 3, opacity: 0.95 }
-      json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
-    })
-    const hovered = (id: string, property: string) => drawn(theme, id, property, true)
-    expect([hovered('trails', 'line-width'), hovered('trails', 'line-opacity')]).toEqual([3, 0.95])
-    expect(hovered('trail-venues', 'circle-radius')).toBe(4)
-    expect(hovered('trail-venue-rings', 'circle-stroke-width')).toBe(3)
-    expect([hovered('trail-venue-glows', 'circle-radius'), hovered('trail-venue-glows', 'circle-opacity')]).toEqual([14, 0.7])
-  })
-})
-
 describe("a game's colour", () => {
   const game = { status: 'Live', color: '#123456' }
 
@@ -149,18 +118,6 @@ describe("a game's colour", () => {
     const core = paintOf(smallPinLayers(theme, zoomedOutPins), 'pins')['circle-color']
     expect(evaluate(core, game)).toBe('#ffcccc')
     expect(evaluate(core, { ...game, status: 'Upcoming' })).toBe('#123456')
-  })
-
-  it("lights a moved card's trail, its glow and the venue it ends at", () => {
-    const paint = (id: string) => paintOf(cardLayoutLayers(sizedTheme()), id)
-    for (const [id, property] of [
-      ['trails', 'line-color'],
-      ['trail-glows', 'line-color'],
-      ['trail-venues', 'circle-color'],
-      ['trail-venue-rings', 'circle-stroke-color'],
-    ]) {
-      expect(evaluate(paint(id)[property], game), id).toBe('#123456')
-    }
   })
 })
 
@@ -206,7 +163,7 @@ describe("a cluster's colour", () => {
       cards: new Map(cards.map(({ gameId }) => [gameId, { offset: { dx: 0, dy: -6 }, inCardCluster: true, moved: false, trail: null }])),
       cardClusters: [{ gameIds: cards.map(({ gameId }) => gameId), status: 'Live', x: 0, y: 0 }],
     }
-    const { features } = cardLayoutFeatures(cards, layout, (x, y) => [x, y], { dot: 6, cluster: () => 12 })
+    const { features } = cardLayoutDrawing(cards, layout, (x, y) => [x, y], { dot: 6, cluster: () => 12 }).source
     return features.find((feature) => feature.properties?.kind === 'cardCluster')!.properties!
   }
 

@@ -14,6 +14,7 @@ export interface GameLayers {
   onTop: LayerSpecification[]
 }
 
+/** The trails are drawn by the trail layer (see trailLayer), which GlobeMap adds among these. */
 export function gameLayers(theme: Theme, selectedGameId: string | null): GameLayers {
   return {
     belowNames: [

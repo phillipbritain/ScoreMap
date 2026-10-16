@@ -218,7 +218,7 @@ Every surface over the globe is a pane of glass the globe shows through, so coas
 
 In between, the surface colour is as solid as the frost and the blur grows with it, while the edges and sheen dim. The glass is tinted with the component's own surface colour (`components.ScoreCard.fill`, `components.GamePanel.surface`, `components.Rail.surface`, `components.Controls.surface`, `components.Tooltip.surface`), so the palette still colours it, and every pane casts a soft shadow onto the globe in the background's colour.
 
-On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Likewise on the game panel its score block (never all the way, so it stands out), its score boxes and its logo plates. Logos drawn for a light background are harder to see the clearer the glass.
+On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Likewise on the game panel its score block (never all the way, so it stands out), its score boxes and its logo plates. Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, though, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
 
 | Setting | Which glass | Dark theme |
 | --- | --- | --- |

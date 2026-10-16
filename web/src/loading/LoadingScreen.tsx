@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type Ref } from 'react'
 import type { LoadingStage } from '../globe/globeMap'
 import { loadingScreenView } from './loadingScreenView'
 
@@ -7,9 +7,9 @@ const tickMs = 250
 
 /**
  * The loading screen as the theme tuner holds it up to be looked at (local runs only): off, the dim and
- * spinner, those with the slow message, or leaving, its fade playing once before it goes.
+ * rocket, those with the slow message, or leaving, its fade playing once before it goes.
  */
-export type LoadingPreview = 'off' | 'spinner' | 'slow' | 'leaving'
+export type LoadingPreview = 'off' | 'rocket' | 'slow' | 'leaving'
 
 interface LoadingScreenProps {
   /** How far the globe's initial load has got (see GlobeMap.stage). */
@@ -21,8 +21,8 @@ interface LoadingScreenProps {
 }
 
 /**
- * The loading screen (see GLOSSARY.md): the globe dimmed, with a ring spinner, until it's ready, and a
- * message under the spinner if a stage takes too long. Then
+ * The loading screen (see GLOSSARY.md): the globe dimmed, with a flying rocket, until it's ready, and a
+ * message under the rocket if a stage takes too long. Then
  * the dim fades away (at once with reduce motion: the CSS has no fade then) and the loading screen is
  * gone for good. What it shows comes from loadingScreenView; this only draws it.
  */
@@ -64,16 +64,57 @@ export function LoadingScreen({ stage, slow = false, onGone }: LoadingScreenProp
   }, [leaving, gone])
 
   if (gone) return null
+  return <Dimmed ref={element} message={view.message} leaving={leaving} label="Loading ScoreMap" />
+}
+
+interface DimmedProps {
+  ref?: Ref<HTMLDivElement>
+  /** Under the rocket, if anything. */
+  message: string | null
+  /** Its fade playing as it goes. */
+  leaving?: boolean
+  /** Lets the globe under it be moved, which the loading screen doesn't. */
+  movable?: boolean
+  /** What a screen reader says it is while it's there. */
+  label: string
+}
+
+/**
+ * The loading screen's look: the globe dimmed, with a flying rocket in the middle and a message under
+ * it. The loading screen draws it, and so does the cut-off note (see live/CutOffNote.tsx).
+ */
+export function Dimmed({ ref, message, leaving = false, movable = false, label }: DimmedProps) {
+  const className = ['loading-screen', leaving && 'loading-screen--leaving', movable && 'loading-screen--movable']
+    .filter(Boolean)
+    .join(' ')
   return (
-    <div
-      ref={element}
-      className={leaving ? 'loading-screen loading-screen--leaving' : 'loading-screen'}
-      role="status"
-      aria-label={leaving ? undefined : 'Loading ScoreMap'}
-      aria-busy={!leaving}
-    >
-      <div className="loading-screen__spinner" />
-      {view.message && <p className="loading-screen__message">{view.message}</p>}
+    <div ref={ref} className={className} role="status" aria-label={leaving ? undefined : label} aria-busy={!leaving}>
+      <Rocket />
+      {message && <p className="loading-screen__message">{message}</p>}
     </div>
+  )
+}
+
+/**
+ * A little rocket flying up and to the right, bobbing as it goes, its flame flickering and speed lines
+ * streaming past, in the theme's colours, with the dim showing through its window.
+ */
+function Rocket() {
+  return (
+    <svg className="loading-screen__rocket" viewBox="0 0 64 64" aria-hidden="true">
+      <g transform="rotate(45 32 32)">
+        <g className="loading-screen__rocket-lines">
+          <line x1="20" y1="44" x2="20" y2="56" />
+          <line x1="32" y1="50" x2="32" y2="62" />
+          <line x1="44" y1="44" x2="44" y2="56" />
+        </g>
+        <g className="loading-screen__rocket-ship">
+          <path className="loading-screen__rocket-flame" d="M27 41 Q32 56 37 41 Z" />
+          <path d="M24 29 L16 42 L25 39 Z M40 29 L48 42 L39 39 Z" />
+          <path d="M32 4 C41 12 43 26 40 41 H24 C21 26 23 12 32 4 Z" />
+          <circle className="loading-screen__rocket-window" cx="32" cy="21" r="4.5" />
+        </g>
+      </g>
+    </svg>
   )
 }

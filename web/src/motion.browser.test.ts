@@ -39,7 +39,7 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 const liveLight = () => element('score-card score-card--live', 'score-card__light')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start', 'finish'] as const
-const spinner = () => element('loading-screen', 'loading-screen__spinner')
+const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
 
 describe('with reduce motion off', () => {
@@ -53,13 +53,13 @@ describe('with reduce motion off', () => {
     expect(transforms.filter((transform) => transform !== undefined).length).toBeGreaterThan(1)
   })
 
-  it('turns the loading screen’s spinner', () => {
-    const ring = spinner()
-    const keyframes = keyframesOf(ring)
+  it('flies the loading screen’s rocket', () => {
+    const ship = rocket()
+    const keyframes = keyframesOf(ship)
     const transforms = keyframes.map((keyframe) => keyframe.transform).filter((transform) => transform !== undefined)
 
     expect(new Set(transforms).size).toBeGreaterThan(1)
-    expect(ring.getAnimations()[0].effect?.getComputedTiming().iterations).toBe(Infinity)
+    expect(ship.getAnimations()[0].effect?.getComputedTiming().iterations).toBe(Infinity)
   })
 
   it('fades the loading screen out as it leaves', () => {
@@ -94,8 +94,8 @@ describe('with reduce motion on', () => {
     expect(opacities.at(-1)).toBe(0)
   })
 
-  it('fades the loading screen’s spinner in and out in place, without turning', () => {
-    const keyframes = keyframesOf(spinner())
+  it('fades the loading screen’s rocket in and out in place, without moving', () => {
+    const keyframes = keyframesOf(rocket())
 
     expect(keyframes.filter((keyframe) => 'transform' in keyframe)).toEqual([])
     const opacities = keyframes.map((keyframe) => Number(keyframe.opacity))

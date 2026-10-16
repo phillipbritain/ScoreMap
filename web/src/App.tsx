@@ -14,6 +14,7 @@ import type { ZoomSettings } from './globe/zoomLevels'
 import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
+import { CutOffNote } from './live/CutOffNote'
 import { connectToGames } from './live/liveConnection'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
@@ -81,6 +82,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const [overlays, setOverlays] = useState(noOverlays)
   // Null until the server's first snapshot arrives.
   const [games, setGames] = useState<Game[] | null>(null)
+  // When the connection to the server was lost (performance.now()), until the next snapshot; null while connected.
+  const [cutOffSince, setCutOffSince] = useState<number | null>(null)
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
@@ -109,12 +112,16 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     () =>
       connectToGames(
         {
-          onSnapshot: setGames,
+          onSnapshot: (snapshot) => {
+            setGames(snapshot)
+            setCutOffSince(null)
+          },
           // The snapshot always comes first; a change before it has nothing to apply to.
           // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
           onChange: (change) => setGames((current) => current && applyChange(current, change)),
           // A switch or a change of speed made in any browser: every pill and clock follows.
           onScenarioChanged: setScenarioListing,
+          onCutOff: () => setCutOffSince((since) => since ?? performance.now()),
         },
         demo,
       ),
@@ -161,6 +168,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
         {/* Over the globe until it's ready, under the bottom stack and the rail, which come after it
             so they stay usable while loading. */}
         {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
+        {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
+            the rail, which stay usable. */}
+        {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} />}
         {loadingPreview !== 'off' && (
           <LoadingScreen
             stage={loadingPreview === 'leaving' ? 'ready' : 'waitingForGames'}

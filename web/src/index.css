@@ -1421,7 +1421,7 @@ body {
 }
 
 /* The loading screen, over the globe until ScoreMap is ready (see loading/LoadingScreen.tsx): the
-   globe dimmed in the theme's dim, which still lets it show through, and a ring spinner in the middle.
+   globe dimmed in the theme's dim, which still lets it show through, and a flying rocket in the middle.
    It takes the globe's pointer and touch input, so the camera can't move while loading; the rail
    and the bottom stack come after it on the page, so they lie over it and stay usable. */
 .loading-screen {
@@ -1439,27 +1439,64 @@ body {
   touch-action: none;
 }
 
+/* As the cut-off note uses it: the globe takes its pointer and touch input through it, so it can still be moved. */
+.loading-screen--movable {
+  pointer-events: none;
+  touch-action: auto;
+}
+
 /* Ready: the dim fades away, letting the globe have its input at once. */
 .loading-screen--leaving {
   pointer-events: none;
   animation: loading-screen-leave 0.4s ease-out forwards;
 }
 
-.loading-screen__spinner {
-  box-sizing: border-box;
-  width: var(--loading-screen-spinner-size);
-  height: var(--loading-screen-spinner-size);
-  border: var(--shape-border-width-thick) solid var(--loading-screen-spinner-track);
-  border-top-color: var(--loading-screen-spinner-color);
-  border-radius: 50%;
-  animation: loading-screen-spin 0.9s linear infinite;
+.loading-screen__rocket {
+  width: var(--loading-screen-rocket-size);
+  height: var(--loading-screen-rocket-size);
+  overflow: visible;
+  color: var(--loading-screen-rocket-color);
 }
 
-/* Under the spinner when a stage is slow, saying what's holding loading up. Placed from the middle, so
-   the spinner stays where it is when the message comes and goes. */
+.loading-screen__rocket-ship {
+  fill: currentColor;
+  animation: loading-screen-rocket-bob 0.8s ease-in-out infinite alternate;
+}
+
+/* The dim, showing through the rocket's window. */
+.loading-screen__rocket-window {
+  fill: var(--loading-screen-dim-color);
+}
+
+.loading-screen__rocket-flame {
+  fill: var(--loading-screen-rocket-flame);
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: loading-screen-rocket-flame 0.15s ease-in-out infinite alternate;
+}
+
+/* Speed lines streaming past the rocket, one after another. */
+.loading-screen__rocket-lines line {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: loading-screen-rocket-line 0.9s linear infinite;
+}
+
+.loading-screen__rocket-lines line:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.loading-screen__rocket-lines line:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+/* Under the rocket when a stage is slow, saying what's holding loading up. Placed from the middle, so
+   the rocket stays where it is when the message comes and goes. */
 .loading-screen__message {
   position: absolute;
-  top: calc(50% + var(--loading-screen-spinner-size) / 2 + 3 * var(--spacing));
+  top: calc(50% + var(--loading-screen-rocket-size) / 2 + var(--spacing));
   right: calc(3 * var(--spacing));
   left: calc(3 * var(--spacing));
   margin: 0;
@@ -1477,23 +1514,55 @@ body {
   }
 }
 
-@keyframes loading-screen-spin {
+@keyframes loading-screen-rocket-bob {
+  from {
+    transform: translateY(1.5px);
+  }
   to {
-    transform: rotate(1turn);
+    transform: translateY(-1.5px);
   }
 }
 
-/* The spinner without the turning: it fades in and out in place, for reduce motion. */
-@keyframes loading-screen-spinner-still {
+@keyframes loading-screen-rocket-flame {
+  from {
+    transform: scaleY(0.7);
+  }
+  to {
+    transform: scaleY(1.15);
+  }
+}
+
+@keyframes loading-screen-rocket-line {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* The rocket standing still: it fades in and out in place, for reduce motion. */
+@keyframes loading-screen-rocket-still {
   50% {
     opacity: 0.3;
   }
 }
 
-/* With reduce motion the spinner fades in place instead of turning, and the dim goes at once. */
+/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, and the dim
+   goes at once. */
 @media (prefers-reduced-motion: reduce) {
-  .loading-screen__spinner {
-    animation: loading-screen-spinner-still 1.6s ease-in-out infinite;
+  .loading-screen__rocket-ship {
+    animation: loading-screen-rocket-still 1.6s ease-in-out infinite;
+  }
+
+  .loading-screen__rocket-flame,
+  .loading-screen__rocket-lines line {
+    animation: none;
   }
 
   .loading-screen--leaving {

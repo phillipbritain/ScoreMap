@@ -125,7 +125,9 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
               <span>Every league ScoreMap shows</span>
             </button>
           </div>
-          <p className="welcome-tour__text welcome-tour__note">You can change this any time in Leagues on the rail.</p>
+          <p className="welcome-tour__text welcome-tour__note">
+            You can change this any time in the Leagues settings on the right.
+          </p>
         </>
       )}
     </TourPanel>

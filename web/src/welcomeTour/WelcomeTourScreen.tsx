@@ -5,6 +5,7 @@ import {
   isLeagueOn,
   leaguesBySport,
   sportSwitch,
+  withAllLeagues,
   withLeague,
   withSport,
   type League,
@@ -94,13 +95,13 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
       }
     >
       <p className="welcome-tour__text">
-        Live sporting events around the globe. See what&apos;s happening in real time and where!
+        Live sporting events around the globe. See what&apos;s happening and where, in real time!
       </p>
       {picking ? (
         <>
           <h3 className="welcome-tour__question">Pick what you follow</h3>
           <p className="welcome-tour__text welcome-tour__note welcome-tour__note--above">
-            You can change this any time in Leagues on the rail.
+            You can change this any time in the Leagues settings on the right.
           </p>
           <LeaguePicker leagues={leagues} settings={settings} onChange={onChange} />
         </>
@@ -132,47 +133,81 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
 }
 
 /**
- * My leagues' picker: a chip for each sport, switching all its leagues as the sport's name does in
- * Leagues on the rail (dashed while only some are on), and its leagues as smaller chips under it. A
- * sport with one league has no league chips: its own chip is that league.
+ * My leagues' picker: "Select all", switching every league as "All leagues" does in Leagues on the
+ * rail, then a card for each sport, its switch switching all its leagues as the sport's name does
+ * there, and its leagues as chips in it. A sport with one league has no chips: its switch is that
+ * league. Each switch shows half-way while only some of its leagues are on.
  */
 function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'onChoose'>) {
+  const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
+  const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
   return (
     <div className="welcome-tour__picker">
-      {leaguesBySport(leagues).map((group) => {
-        const state = sportSwitch(settings, group)
-        return (
-          <div key={group.sport} className="welcome-tour__sport">
-            <button
-              type="button"
-              aria-pressed={state === 'on'}
-              className={`rail-chip welcome-tour__sport-chip welcome-tour__sport-chip--${state}`}
-              onClick={() => onChange(withSport(settings, group, state !== 'on'))}
-            >
-              {group.sport}
-            </button>
-            {group.leagues.length > 1 && (
-              <div className="leagues-chips welcome-tour__league-chips">
-                {group.leagues.map((league) => {
-                  const on = isLeagueOn(settings, league.name)
-                  return (
-                    <button
-                      key={league.name}
-                      type="button"
-                      aria-pressed={on}
-                      className="rail-chip welcome-tour__league-chip"
-                      onClick={() => onChange(withLeague(settings, league.name, !on))}
-                    >
-                      {league.name}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )
-      })}
+      <SwitchButton
+        state={allState}
+        className="welcome-tour__select-all"
+        onClick={() => onChange(withAllLeagues(settings, leagues, allState !== 'on'))}
+      >
+        Select all
+      </SwitchButton>
+      <div className="welcome-tour__sports">
+        {leaguesBySport(leagues).map((group) => {
+          const state = sportSwitch(settings, group)
+          return (
+            <div key={group.sport} className={`welcome-tour__sport welcome-tour__sport--${state}`}>
+              <SwitchButton
+                state={state}
+                className="welcome-tour__sport-switch"
+                onClick={() => onChange(withSport(settings, group, state !== 'on'))}
+              >
+                {group.sport}
+              </SwitchButton>
+              {group.leagues.length > 1 && (
+                <div className="leagues-chips welcome-tour__league-chips">
+                  {group.leagues.map((league) => {
+                    const on = isLeagueOn(settings, league.name)
+                    return (
+                      <button
+                        key={league.name}
+                        type="button"
+                        aria-pressed={on}
+                        className="rail-chip welcome-tour__league-chip"
+                        onClick={() => onChange(withLeague(settings, league.name, !on))}
+                      >
+                        {league.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
+  )
+}
+
+interface SwitchButtonProps {
+  /** On, off, or mixed while only some of the leagues it switches are on. */
+  state: 'on' | 'off' | 'mixed'
+  className: string
+  onClick: () => void
+  children: ReactNode
+}
+
+/** A label with a switch at its right, switching some leagues: all on, or all off when they're all on already. */
+function SwitchButton({ state, className, onClick, children }: SwitchButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={state === 'mixed' ? 'mixed' : state === 'on'}
+      className={`welcome-tour__switch-button ${className}`}
+      onClick={onClick}
+    >
+      {children}
+      <span className={`welcome-tour__switch welcome-tour__switch--${state}`} aria-hidden="true" />
+    </button>
   )
 }
 

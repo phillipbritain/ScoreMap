@@ -573,11 +573,11 @@ const settings = {
     Tooltip: { frost, surface: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
-     * and how opaque it is, so the globe still shows through) and the ring spinner (the arc that turns,
-     * and the rest of the ring it turns around, and how big it is across), and the text of the message
-     * under the spinner when loading is slow.
+     * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed
+     * lines, its flame, and how big its box is across), and the text of the message under the rocket
+     * when loading is slow.
      */
-    LoadingScreen: { dim: { color, opacity }, spinner: { color, track: color, size: pixels }, message: color },
+    LoadingScreen: { dim: { color, opacity }, rocket: { color, flame: color, size: pixels }, message: color },
     /**
      * The welcome tour: how opaque its dim over the globe is (under a step's panel, and around its
      * spotlight), and how wide the arrow from a step's panel is.

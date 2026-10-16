@@ -152,12 +152,12 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
 
 const previews: [LoadingPreview, string][] = [
   ['off', 'Off'],
-  ['spinner', 'Spinner'],
+  ['rocket', 'Rocket'],
   ['slow', 'Slow message'],
 ]
 
 /**
- * Holds the loading screen up over the globe, to tune its look: the dim and spinner, or those with the
+ * Holds the loading screen up over the globe, to tune its look: the dim and rocket, or those with the
  * slow message, until put away; or plays its exit, the fade it goes with once ScoreMap is ready.
  */
 function LoadingPreviewControl({ preview, onChange }: { preview: LoadingPreview; onChange: (preview: LoadingPreview) => void }) {

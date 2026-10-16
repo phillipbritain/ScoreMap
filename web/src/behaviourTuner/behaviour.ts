@@ -1,14 +1,16 @@
 import { cityLabelSettings, type CityLabelSettings } from '../globe/cityLabels'
 import { zoomSettings, type ZoomSettings } from '../globe/zoomLevels'
+import { asleepSettings, type AsleepSettings } from '../live/asleep'
 
 /** How the app behaves, apart from its look: what the behaviour tuner changes on a local run. */
 export interface Behaviour {
   cityLabels: CityLabelSettings
   zoom: ZoomSettings
+  asleep: AsleepSettings
 }
 
 /** The app's own behaviour, from the settings files it's made from. */
-export const builtInBehaviour: Behaviour = { cityLabels: cityLabelSettings, zoom: zoomSettings }
+export const builtInBehaviour: Behaviour = { cityLabels: cityLabelSettings, zoom: zoomSettings, asleep: asleepSettings }
 
 /** What the behaviour tuner can draw on the globe to show a setting at work: each off until ticked, and not saved. */
 export interface Overlays {

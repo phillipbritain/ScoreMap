@@ -13,8 +13,16 @@ A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Pr
 _Avoid_: Competition, tournament, conference, governing body (e.g. "NCAA" or "FIFA" alone)
 
 **Game**:
-A single contest between two teams in a league, played at one venue at a scheduled time.
+A single contest between two sides in a league, played at one venue at a scheduled time. In tennis, a game is one match, not the tournament it's part of.
 _Avoid_: Match, fixture, event
+
+**Tournament**:
+In tennis, the week or two of matches a league plays at one place, such as the Rolex Shanghai Masters in the ATP. Each match is a game; the tournament is neither a game nor a league.
+_Avoid_: Event, competition
+
+**Side**:
+One of the two competing in a game: a team, or in tennis a player or a doubles pair.
+_Avoid_: Competitor, participant, opponent
 
 **Top event**:
 A game ESPN lists in its Top Events, the games it picks as the most important right now across every sport, as its front page shows them. "Top Events" in Leagues on the rail shows only these, whichever leagues are switched off.

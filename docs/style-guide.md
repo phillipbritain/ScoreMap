@@ -80,7 +80,7 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. No part names it, as the statuses' colours name gold's steps themselves | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colours name gold's steps themselves; only the welcome tour's switches in My leagues name it (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -329,6 +329,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colours" with no colours to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
+| `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's colour, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |
 | `components.GamePanel.size.height`, `.phoneHeight` | The strip's height, and its height on a phone, where the details go below the score block. The band under it, for the last score and the rest, adds three lines of its own (six on a phone) | 127, 236 |

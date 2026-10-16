@@ -218,13 +218,13 @@ export class GlobeMap {
    * Shows these games, and animates the ones that changed since they were last shown (see
    * pinAnimation): the app hands over whole lists of games, so the globe finds what changed itself.
    * Only a game shown both times can animate. A game coming into view (a new game, or one the
-   * viewer's settings showed again) appears without one, and so does a game shown after a
-   * reconnection if nothing about it worth noticing changed while the app was away.
+   * viewer's settings showed again) appears without one. Given quietly (games from a snapshot, after
+   * ScoreMap was asleep or cut off), nothing animates: what changed while it was away didn't just happen.
    *
    * Given null (no games yet: the server's first snapshot hasn't arrived), it shows nothing and keeps
    * waiting for games (see stage). An empty list is a snapshot with no games in it.
    */
-  show(games: readonly Game[] | null): void {
+  show(games: readonly Game[] | null, quietly = false): void {
     if (!games) return
     this.hasGames = true
     this.tellStage()
@@ -236,6 +236,7 @@ export class GlobeMap {
     this.names.showGames(games)
     if (this.reachShown) this.showReachRings()
     this.cards.setGames(games)
+    if (quietly) return
     for (const game of games) {
       const last = before.get(game.id)
       const animation = last && pinAnimation(last, game)

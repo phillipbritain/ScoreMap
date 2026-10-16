@@ -71,6 +71,20 @@ const settings: readonly NumberSetting[] = [
     get: (behaviour) => behaviour.zoom.maxZoom,
     set: (behaviour, maxZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, maxZoom } }),
   },
+  {
+    group: 'Asleep',
+    name: 'Idle timeout (min)',
+    description:
+      'How long the page can be hidden (its window minimised, another tab in front, the screen locked) before ' +
+      'ScoreMap falls asleep: it stops getting games, so with nobody else watching the server stops fetching, ' +
+      'and it wakes when the page is shown again. Lower: the server rests sooner, but a quick look elsewhere ' +
+      'for longer than this comes back to "Waking up…". To try it, set 1 and minimise the window for a minute.',
+    file: 'web/src/live/asleepSettings.json',
+    key: 'idleTimeoutMinutes',
+    range: { min: 1, max: 60, step: 1 },
+    get: (behaviour) => behaviour.asleep.idleTimeoutMinutes,
+    set: (behaviour, idleTimeoutMinutes) => ({ ...behaviour, asleep: { ...behaviour.asleep, idleTimeoutMinutes } }),
+  },
 ]
 
 interface BehaviourTunerProps {

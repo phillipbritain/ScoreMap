@@ -1802,7 +1802,7 @@ body {
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
    from being used, under the dev tools. The scenario controls and the Feedback button are lifted above
-   it while it shows, so they stay usable. */
+   it while it shows, so they stay usable (on a phone, the Feedback button only: see below). */
 .welcome-tour {
   /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
   --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
@@ -2023,9 +2023,12 @@ body {
   margin-top: calc(2 * var(--spacing));
 }
 
+/* A long name wraps rather than running out of its card, as it can in a narrow column on a phone. */
 .welcome-tour__league-chip {
   padding: calc(0.5 * var(--spacing)) calc(2.5 * var(--spacing));
   font-size: var(--typography-caption-font-size);
+  white-space: normal;
+  text-align: left;
 }
 
 .welcome-tour__actions {
@@ -2182,11 +2185,15 @@ body {
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
    rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
    its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
-   Feedback button too, which stays usable and never covers the step's own button. The no-pins message
-   hides while it shows, as it would lie over the sheet while My leagues starts from nothing. */
+   Feedback button too, which stays usable and never covers the step's own button. The scenario
+   controls (local runs only) stay under the tour here, as lifted they'd lie over the sheet. */
 @media (max-width: 640px) {
   .welcome-tour {
     align-items: flex-end;
+  }
+
+  .globe-area--touring > .bottom-stack {
+    z-index: 1;
   }
 
   .welcome-tour__panel {

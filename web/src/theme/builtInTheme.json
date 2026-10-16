@@ -187,6 +187,7 @@
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },
       "message": "text.primary"
-    }
+    },
+    "WelcomeTour": { "dim": { "opacity": 0.3 }, "arrow": { "width": 2.5 } }
   }
 }

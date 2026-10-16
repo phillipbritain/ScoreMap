@@ -37,6 +37,11 @@ interface GlobeProps {
   onCameraMove: (camera: Camera) => void
   /** Called each time the globe's initial load moves on a stage (see GlobeMap.stage). */
   onStage: (stage: LoadingStage) => void
+  /**
+   * Whether the globe can't be dragged, zoomed or have anything on it selected, by pointer or
+   * keyboard, while the welcome tour shows.
+   */
+  inert?: boolean
   /** Takes how the rail steers the globe's camera. */
   ref?: Ref<GlobeCamera>
 }
@@ -50,7 +55,7 @@ export interface GlobeCamera {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityReach, games, fromSnapshot, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityReach, games, fromSnapshot, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours })
@@ -103,5 +108,5 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityRe
     [selectedGameId, panel],
   )
 
-  return <div ref={container} className="globe" />
+  return <div ref={container} className="globe" inert={inert} />
 }

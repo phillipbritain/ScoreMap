@@ -1,7 +1,7 @@
-import type { Feature, LineString, Point } from 'geojson'
+import type { Feature, Point } from 'geojson'
 import { describe, expect, it } from 'vitest'
 import type { CardLayout, CardPlacement } from './cardLayout'
-import { cardLayoutFeatures, type CardOnGlobe, type VenueSizes } from './cardLayoutLayers'
+import { cardLayoutDrawing, type CardOnGlobe, type VenueSizes } from './cardLayoutLayers'
 
 // A stand-in for the map's: screen pixels to longitude and latitude, simply scaled.
 const unproject = (x: number, y: number): [number, number] => [x / 10, -y / 10]
@@ -40,40 +40,30 @@ const layout: CardLayout = {
 // A venue dot reaches 6 pixels from its venue, ring and all; a venue cluster of a few games 12, of more 15.
 const venueSizes: VenueSizes = { dot: 6, cluster: (count) => (count < 5 ? 12 : 15) }
 
+const allFour = [a, b, { ...c, status: 'Final' as const }, d]
+
 /** The features of this kind for these cards, laid out as `layout` has them: all four unless given. */
-const features = (kind: string, cards: CardOnGlobe[] = [a, b, { ...c, status: 'Final' }, d]) =>
-  cardLayoutFeatures(cards, layout, unproject, venueSizes).features.filter((feature) => feature.properties?.kind === kind)
+const features = (kind: string, cards: CardOnGlobe[] = allFour) =>
+  cardLayoutDrawing(cards, layout, unproject, venueSizes).source.features.filter((feature) => feature.properties?.kind === kind)
 
-describe('cardLayoutFeatures', () => {
-  it("draws a card's trail from the card's edge, turned back into a place, to its venue, moved or not, in its game's colour, named for its game", () => {
-    expect(features('trail', [a])).toEqual([
-      {
-        type: 'Feature',
-        properties: { kind: 'trail', color: '#aaaaaa', gameId: 'a' },
-        geometry: { type: 'LineString', coordinates: [[10, -19.4], [10, -20.5]] },
-      } satisfies Feature<LineString>,
-    ])
-    expect(features('trail', [b])).toEqual([
-      {
-        type: 'Feature',
-        properties: { kind: 'trail', color: '#bbbbbb', gameId: 'b' },
-        geometry: { type: 'LineString', coordinates: [[17, -20], [10, -20.5]] },
-      } satisfies Feature<LineString>,
-    ])
+/** The moved cards' trails for these cards, laid out as `layout` has them: all four unless given. */
+const trails = (cards: CardOnGlobe[] = allFour) => cardLayoutDrawing(cards, layout, unproject, venueSizes).trails
+
+describe('cardLayoutDrawing', () => {
+  it("draws a card's trail from the card's edge, as far from its venue on screen as the card, to its venue, moved or not, in its game's colour, named for its game", () => {
+    expect(trails([a])).toEqual([{ gameId: 'a', color: '#aaaaaa', venue: [10, -20.5], start: { dx: 0, dy: -6 }, end: [10, -20.5], dot: true }])
+    expect(trails([b])).toEqual([{ gameId: 'b', color: '#bbbbbb', venue: [10, -20.5], start: { dx: 70, dy: 0 }, end: [10, -20.5], dot: true }])
   })
 
-  it("marks a card's venue, where its trail ends, in its game's colour, named for its game, but not a venue whose cards are in a card cluster", () => {
-    expect(features('venue', [a, { ...c, status: 'Final' }, d])).toEqual([
-      {
-        type: 'Feature',
-        properties: { kind: 'venue', color: '#aaaaaa', gameId: 'a' },
-        geometry: { type: 'Point', coordinates: [10, -20.5] },
-      } satisfies Feature<Point>,
-    ])
+  it("ends a card's trail at a dot on its venue, but draws none for a game in a card cluster", () => {
+    expect(trails([a, { ...c, status: 'Final' }, d]).map(({ gameId, dot }) => [gameId, dot])).toEqual([['a', true]])
   })
 
-  it('has the trails of cards at one venue meet at a venue cluster', () => {
-    expect(features('venue')).toEqual([])
+  it('has the trails of cards at one venue meet at a venue cluster, with no dots of their own', () => {
+    expect(trails().map(({ gameId, dot }) => [gameId, dot])).toEqual([
+      ['a', false],
+      ['b', false],
+    ])
     expect(features('venueCluster').map(({ properties }) => properties?.count)).toEqual([2])
   })
 
@@ -88,12 +78,12 @@ describe('cardLayoutFeatures', () => {
     ])
   })
 
-  it('gives every card with room a footprint where it is, moved or not', () => {
-    expect(features('footprint').map((feature) => (feature.geometry as Point).coordinates)).toEqual([
-      // Each centred on its card, at (100, 164) above its venue and (220, 164) moved, so its foot is
-      // half a footprint (68) below that.
-      [10, -19.8],
-      [22, -19.8],
+  it('gives every card with room a footprint where it is, moved or not, at its venue and offset to it on screen', () => {
+    expect(features('footprint').map(({ geometry, properties }) => [(geometry as Point).coordinates, properties?.offset])).toEqual([
+      // Each centred on its card, 36 px above its venue and 120 px to the side when moved, so its foot
+      // is half a footprint (68) below that.
+      [[10, -20.5], [0, -2]],
+      [[10, -20.5], [120, -2]],
     ])
   })
 
@@ -108,22 +98,21 @@ describe('cardLayoutFeatures', () => {
       cardClusters: [],
     })
     const drawn = (kind: string, ...cards: CardOnGlobe[]) =>
-      cardLayoutFeatures(cards, movedAway(...cards), unproject, venueSizes).features.filter(
+      cardLayoutDrawing(cards, movedAway(...cards), unproject, venueSizes).source.features.filter(
         (feature) => feature.properties?.kind === kind,
       )
+    const trailsOf = (...cards: CardOnGlobe[]) => cardLayoutDrawing(cards, movedAway(...cards), unproject, venueSizes).trails
     const marks = (kind: string, ...cards: CardOnGlobe[]) =>
       drawn(kind, ...cards).map(({ properties, geometry }) => [properties?.status, properties?.count, (geometry as Point).coordinates])
 
     it('show as a venue cluster in the middle of their venues, with the count and the status the most prominent shows as', () => {
       // e and f 10 pixels apart, g well clear of them.
       expect(marks('venueCluster', e, f, g)).toEqual([['Live', 2, [50.5, -50]]])
-      expect(drawn('venue', e, f, g).map(({ properties, geometry }) => [properties?.color, (geometry as Point).coordinates])).toEqual([
-        ['#999999', [60, -50]],
-      ])
+      expect(trailsOf(e, f, g).filter(({ dot }) => dot).map(({ color, end }) => [color, end])).toEqual([['#999999', [60, -50]]])
     })
 
     it("have their trails meet at the venue cluster, each in its own game's colour", () => {
-      expect(drawn('trail', e, f).map(({ properties, geometry }) => [properties?.color, (geometry as LineString).coordinates[1]])).toEqual([
+      expect(trailsOf(e, f).map(({ color, end }) => [color, end])).toEqual([
         ['#eeeeee', [50.5, -50]],
         ['#ffffff', [50.5, -50]],
       ])
@@ -133,7 +122,7 @@ describe('cardLayoutFeatures', () => {
       // h is 12 pixels from f, just clear of its dot, but 17 from the middle of e and f, where the
       // venue cluster reaches 12.
       expect(marks('venueCluster', e, f, h).map(([, count]) => count)).toEqual([3])
-      expect(marks('venue', e, f, h)).toEqual([])
+      expect(trailsOf(e, f, h).filter(({ dot }) => dot)).toEqual([])
     })
   })
 })

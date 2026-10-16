@@ -29,6 +29,7 @@ import {
   cardFootprint,
   cardLayoutSource,
   cardLayoutSourceSpec,
+  overTrails,
 } from './cardLayoutLayers'
 import {
   outerPinClusterLayer,
@@ -49,6 +50,7 @@ import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers } from './scoreCardMarkers'
+import { trailLayer, type TrailLayer } from './trailLayer'
 import { cardZoom, clusterMaxZoom, hasCard, pinLayout, pinSize, zoomSettings as builtInZoomSettings, type PinLayout, type ZoomSettings } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
@@ -111,6 +113,8 @@ export class GlobeMap {
   /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
   private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
+  /** The moved cards' trails, drawn on the map (see trailLayer). */
+  private readonly trails: TrailLayer
   private readonly names: PlaceNames
   private readonly reachRings: ReachRings
   /** What the city labels are chosen by (see setCityLabelSettings). */
@@ -183,7 +187,8 @@ export class GlobeMap {
     // Before the pins' layers are added on style load, so they're drawn under the pins.
     this.reachRings = addReachRings(map)
     this.names = addPlaceNames(map, currentTheme, cityLabels)
-    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.names, (gameId) => this.onSelect(gameId))
+    this.trails = trailLayer(currentTheme)
+    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.names, this.trails, (gameId) => this.onSelect(gameId))
     this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
@@ -439,6 +444,8 @@ export class GlobeMap {
     const layers = gameLayers(this.theme, this.selectedGameId)
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of layers.belowNames) map.addLayer(layer, belowNames)
+    // Beneath the venue clusters and card clusters, as their trails end at them.
+    map.addLayer(this.trails, overTrails)
     for (const layer of layers.onTop) map.addLayer(layer)
   }
 

@@ -17,9 +17,14 @@ describe('layerChanges', () => {
   })
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
-    const wider = themeWith((json) => (json.components.Trail.glow.width = 6))
+    const wider = themeWith((json) => (json.components.Cluster.outlineWidth = 3))
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
-      { layer: 'trail-glows', kind: 'paint', property: 'line-width', value: 6 },
+      { layer: 'pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
+      { layer: 'outer-pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
+      { layer: 'venue-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
+      // A card cluster's outline is inside its size.
+      { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 10 },
+      { layer: 'card-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
     ])
   })
 

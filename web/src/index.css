@@ -1918,7 +1918,8 @@ body {
   }
 }
 
-/* My leagues' picker: each sport as a chip, its leagues as smaller chips under it. */
+/* My leagues' picker: "Select all", then a card for each sport, with its switch and its leagues as
+   chips, the cards in two columns where there's room for them. */
 .welcome-tour__note--above {
   margin: 0 0 calc(3 * var(--spacing));
 }
@@ -1926,17 +1927,100 @@ body {
 .welcome-tour__picker {
   display: flex;
   flex-direction: column;
-  gap: calc(3 * var(--spacing));
+  gap: calc(2 * var(--spacing));
 }
 
-/* Dashed while only some of the sport's leagues are on, as "All leagues" is on the rail. */
-.welcome-tour__sport-chip--mixed {
-  border-style: dashed;
+.welcome-tour__sports {
+  columns: 2 calc(36 * var(--spacing));
+  column-gap: calc(2 * var(--spacing));
+}
+
+.welcome-tour__sport {
+  break-inside: avoid;
+  margin-bottom: calc(2 * var(--spacing));
+  padding: calc(2.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-corner);
+  background: var(--palette-action-hover);
+}
+
+.welcome-tour__sport--on,
+.welcome-tour__sport--mixed {
   border-color: var(--rail-on-fill);
 }
 
+/* A label with its switch at the right: "Select all", and each sport's name. */
+.welcome-tour__switch-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.welcome-tour__select-all {
+  align-self: flex-end;
+}
+
+.welcome-tour__sport-switch {
+  width: 100%;
+}
+
+.welcome-tour__switch {
+  position: relative;
+  flex: none;
+  width: calc(7.5 * var(--spacing));
+  height: calc(4.25 * var(--spacing));
+  border-radius: calc(2.125 * var(--spacing));
+  background: var(--rail-chip-outline);
+}
+
+.welcome-tour__switch::after {
+  content: '';
+  position: absolute;
+  top: calc(0.5 * var(--spacing));
+  left: calc(0.5 * var(--spacing));
+  width: calc(3.25 * var(--spacing));
+  height: calc(3.25 * var(--spacing));
+  border-radius: 50%;
+  background: var(--palette-text-primary);
+  transition: left 0.15s;
+}
+
+.welcome-tour__switch--on {
+  background: var(--palette-secondary-main);
+}
+
+.welcome-tour__switch--on::after {
+  left: calc(3.75 * var(--spacing));
+  background: var(--palette-secondary-contrast-text);
+}
+
+/* Half-way, while only some of its leagues are on. */
+.welcome-tour__switch--mixed {
+  background: color-mix(in srgb, var(--palette-secondary-main) 50%, var(--rail-chip-outline));
+}
+
+.welcome-tour__switch--mixed::after {
+  left: calc(2.125 * var(--spacing));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-tour__switch::after {
+    transition: none;
+  }
+}
+
 .welcome-tour__league-chips {
-  margin: calc(1.5 * var(--spacing)) 0 0 calc(3.5 * var(--spacing));
+  gap: var(--spacing);
+  margin-top: calc(2 * var(--spacing));
 }
 
 .welcome-tour__league-chip {
@@ -2110,9 +2194,5 @@ body {
     max-height: calc(100% - 16 * var(--spacing) - 7 * var(--rail-size-button) - var(--feedback-column));
     margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
-  }
-
-  .globe-area--touring .no-pins {
-    display: none;
   }
 }

@@ -4,6 +4,7 @@ Score cards' trails, the trails' venue dots and card clusters are drawn by MapLi
 
 ## Consequences
 
-- Trails and card clusters are given to the map as screen positions turned back into places on the globe, each time the cards are laid out, and only when they've changed.
+- Card clusters, venue clusters and the cards' footprints are given to the map as places on the globe, each time the cards are laid out, and only when they've changed (or have drifted off where the layout puts them on screen).
+- Trails and their venue dots are drawn by a custom WebGL layer of the map's (`web/src/globe/trailLayer.ts`), in screen pixels each frame, where the cards are then. A trail's end at its card is a fixed way from its venue on screen, which no place on the globe stays as it turns (its perspective carries it off), so given to the map as places they had to be given again nearly every frame of a pan, which the map's worker couldn't keep up with. The layer draws them as MapLibre's line and circle layers did, in the theme's trail and hover looks.
 - Card clusters' glow, pulse and click are made in the map rather than with CSS and page events.
 - Browser tests (ADR-0008) have no glyphs, so card clusters' counts aren't drawn there, as with pin clusters.

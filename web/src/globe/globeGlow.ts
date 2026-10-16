@@ -22,9 +22,20 @@ export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
   // Before the canvas, so the globe draws over it and only the halo shows.
   container.insertBefore(glow, container.firstChild)
 
+  // The globe's size on screen changes only with the zoom, the latitude the view is centred on, the
+  // map's size and its projection (see idle, below), so it's worked out again only when one of them
+  // changes: not as a pan along a parallel goes.
+  let measured = { key: '', radius: 0 }
+  const radiusNow = () => {
+    const canvas = map.getCanvas()
+    const key = `${map.getZoom()} ${map.getCenter().lat} ${canvas.width} ${canvas.height} ${map.getProjection()?.type}`
+    if (key !== measured.key) measured = { key, radius: onScreenRadius(map) }
+    return measured.radius
+  }
+
   const place = () => {
     const globe = theme().components.Globe
-    const radius = onScreenRadius(map)
+    const radius = radiusNow()
     const centre = map.project(map.getCenter())
     // Each glow grows with the globe on screen, up to the theme's most.
     const size = ({ share, max }: { share: number; max: number }) => Math.min(radius * share, max)
@@ -55,6 +66,9 @@ export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
   }
 }
 
+// How many degrees apart the points first tried along each bearing are (see onScreenRadius).
+const coarseStep = 6
+
 /**
  * The globe's radius on screen, in pixels. MapLibre doesn't expose it, so this projects points along
  * great circles out from the centre: the farthest any of them lands from the centre is the globe's edge.
@@ -64,17 +78,29 @@ function onScreenRadius(map: MapLibreMap): number {
   const origin = map.project(centre)
   const lat1 = centre.lat * radians
   const lng1 = centre.lng * radians
+  // How far from the centre on screen the point this many degrees out along a bearing lands.
+  const along = (b: number, degrees: number) => {
+    const d = degrees * radians
+    // Kept within ±1: on a pole, rounding can land it just past, where asin gives NaN.
+    const sinLat2 = Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b)
+    const lat2 = Math.asin(Math.min(1, Math.max(-1, sinLat2)))
+    const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2))
+    const point = map.project([lng2 / radians, lat2 / radians])
+    return Math.hypot(point.x - origin.x, point.y - origin.y)
+  }
   let radius = 0
   for (const bearing of [0, 90, 180, 270]) {
     const b = bearing * radians
-    for (let degrees = 30; degrees <= 120; degrees += 1) {
-      const d = degrees * radians
-      // Kept within ±1: on a pole, rounding can land it just past, where asin gives NaN.
-      const sinLat2 = Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(b)
-      const lat2 = Math.asin(Math.min(1, Math.max(-1, sinLat2)))
-      const lng2 = lng1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2))
-      const point = map.project([lng2 / radians, lat2 / radians])
-      radius = Math.max(radius, Math.hypot(point.x - origin.x, point.y - origin.y))
+    // Every few degrees, then every degree around the farthest of those: it lands farther out up to
+    // the edge, then back in.
+    let farthest = { degrees: 30, distance: 0 }
+    for (let degrees = 30; degrees <= 120; degrees += coarseStep) {
+      const distance = along(b, degrees)
+      if (distance > farthest.distance) farthest = { degrees, distance }
+    }
+    radius = Math.max(radius, farthest.distance)
+    for (let degrees = Math.max(30, farthest.degrees - coarseStep + 1); degrees <= Math.min(120, farthest.degrees + coarseStep - 1); degrees += 1) {
+      radius = Math.max(radius, along(b, degrees))
     }
   }
   return radius

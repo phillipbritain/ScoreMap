@@ -1,5 +1,5 @@
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl'
-import type { Feature, FeatureCollection, LineString, Point } from 'geojson'
+import type { Feature, FeatureCollection, Point } from 'geojson'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
@@ -12,6 +12,7 @@ import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
+import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom, zoomSettings } from './zoomLevels'
@@ -161,15 +162,18 @@ async function cameraSettles(
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/**
- * What the map has been given to draw of the score cards' layout (see cardLayoutLayers): its trails,
- * their venues, card clusters or footprints.
- */
-async function laidOut(map: MapLibreMap, kind: 'trail' | 'venue' | 'cardCluster' | 'footprint') {
+/** What the map has been given to draw of the score cards' layout (see cardLayoutLayers): card clusters or footprints. */
+async function laidOut(map: MapLibreMap, kind: 'cardCluster' | 'footprint') {
   const source = map.getSource<GeoJSONSource>(cardLayoutSource)
   if (!source) return []
   const { features } = (await source.getData()) as FeatureCollection
   return features.filter((feature) => feature.properties?.kind === kind)
+}
+
+/** The moved cards' trails the map draws, where they are on screen now (see trailLayer). */
+function trailsDrawn(map: MapLibreMap): TrailOnScreen[] {
+  const layer = map.getLayer(trailLayerId) as unknown as { implementation: TrailLayer } | undefined
+  return layer?.implementation.drawn() ?? []
 }
 
 /** Where on the map a card cluster is drawn, once there is one. */
@@ -460,7 +464,7 @@ describe('score cards', () => {
     expect(nearCard.parentElement!.hasAttribute('data-moved')).toBe(false)
     expect(await laidOut(map, 'cardCluster')).toEqual([])
     // Only the near card's own trail, down to its venue.
-    expect(await laidOut(map, 'trail')).toHaveLength(1)
+    expect(trailsDrawn(map)).toHaveLength(1)
   })
 
   it('has the map draw a trail from a card to its venue, and a ringed point on the venue', async () => {
@@ -468,10 +472,11 @@ describe('score cards', () => {
     const a = game('A')
     globe.show([a])
 
-    await vi.waitFor(() => expect(drawnAt(map, 'trail-venues', a)).not.toEqual([]), { timeout: 10_000 })
-    const [trail] = (await laidOut(map, 'trail')) as Feature<LineString>[]
-    const [, venue] = trail.geometry.coordinates
-    expect(venue).toEqual([0, 0])
+    await vi.waitFor(() => expect(trailsDrawn(map)).not.toEqual([]), { timeout: 10_000 })
+    const [trail] = trailsDrawn(map)
+    const venue = map.project([0, 0])
+    expect(Math.hypot(trail.to.x - venue.x, trail.to.y - venue.y)).toBeLessThan(0.5)
+    expect(trail.dot).toBe(true)
   })
 
   it('has the trails of cards at one venue meet at a venue cluster there', async () => {
@@ -480,7 +485,7 @@ describe('score cards', () => {
     globe.show([a, b])
 
     await vi.waitFor(() => expect(drawnAt(map, 'venue-clusters', a)).not.toEqual([]), { timeout: 10_000 })
-    expect(drawnAt(map, 'trail-venues', a)).toEqual([])
+    expect(trailsDrawn(map).map(({ dot }) => dot)).toEqual([false, false])
   })
 })
 
@@ -665,10 +670,9 @@ describe('loading stage', () => {
       const cards = [...container.querySelectorAll<HTMLElement>(':not([data-in-card-cluster]) > .score-card')].map((element) =>
         element.getBoundingClientRect(),
       )
-      const trails = (await laidOut(map, 'trail')) as Feature<LineString>[]
+      const trails = trailsDrawn(map)
       expect(trails).not.toEqual([])
-      return trails.map(({ geometry }) => {
-        const { x, y } = map.project(geometry.coordinates[0] as [number, number])
+      return trails.map(({ from: { x, y } }) => {
         const [px, py] = [page.x + x, page.y + y]
         return Math.min(
           ...cards.map(({ left, right, top, bottom }) => {
@@ -1003,9 +1007,9 @@ describe('changing theme', () => {
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
-    globe.setTheme(themeWith((json) => ((json.components.Trail.glow.width = 6), (json.components.Pin.live.core.color = '#ff0000'))))
+    globe.setTheme(themeWith((json) => ((json.components.Cluster.outlineWidth = 6), (json.components.Pin.live.core.color = '#ff0000'))))
 
-    expect(map.getPaintProperty('trail-glows', 'line-width')).toBe(6)
+    expect(map.getPaintProperty('venue-clusters', 'circle-stroke-width')).toBe(6)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     expect(drawnAt(map, smallPinLayer, a)).not.toEqual([])

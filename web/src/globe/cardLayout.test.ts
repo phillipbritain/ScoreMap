@@ -287,6 +287,28 @@ describe('layOutCards', () => {
       expect(layIn(mixed).cardClusters.map((c) => c.status)).toEqual(['Live'])
       expect(layIn(games('d', 20, 200, 150, 'Disrupted')).cardClusters.map((c) => c.status)).toEqual(['Disrupted'])
     })
+
+    describe('laid out again with room for them all', () => {
+      // Twenty games at nearly one spot, laid out on the small screen, then on a big one.
+      const many = games('g', 20, 200, 150, 'Live')
+      const first = layIn(many)
+      const clustered = (layout: CardLayout) => [...layout.cards].filter(([, { inCardCluster }]) => inCardCluster).map(([gameId]) => gameId)
+
+      it('gives every card in a card cluster room at once, with the camera still', () => {
+        expect(clustered(first).length).toBeGreaterThan(2)
+        expect(clustered(layOutCards(many, scene, first.cards))).toEqual([])
+      })
+
+      it('gives the cards in a card cluster room one a layout, taking turns, while the camera moves', () => {
+        const moving = { ...scene, moving: true }
+        const second = layOutCards(many, moving, first.cards)
+        const third = layOutCards(many, moving, second.cards)
+        expect(clustered(second)).toHaveLength(clustered(first).length - 1)
+        expect(clustered(third)).toHaveLength(clustered(first).length - 2)
+        // And once it stops, the rest at once.
+        expect(clustered(layOutCards(many, scene, third.cards))).toEqual([])
+      })
+    })
   })
 
   describe('laid out again, as the globe turns', () => {

@@ -10,6 +10,8 @@ import {
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
+import type { Game } from '../games/game'
+import { LeaguePickerPrototype, PickerSwitcher, prototypeLeagues } from './LeaguePickerPrototype'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
@@ -29,6 +31,8 @@ interface WelcomeTourScreenProps {
   onChange: (settings: ViewerSettings) => void
   /** Opens a game's panel, as clicking its score card on the globe would: Click a score card's lit card. */
   onOpenGame: (gameId: string) => void
+  /** PROTOTYPE: every game now, for the picker options' counts. */
+  games?: readonly Game[]
 }
 
 /**
@@ -37,7 +41,8 @@ interface WelcomeTourScreenProps {
  * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
  * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChange, onOpenGame }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagues: serverLeagues, settings, onChange, onOpenGame, games = [] }: WelcomeTourScreenProps) {
+  const leagues = prototypeLeagues(serverLeagues)
   const choose = (choice: TourChoice) => {
     // My leagues' settings were set as its picker opened, and the viewer has picked since.
     if (choice !== 'myLeagues') onChange(settingsForChoice(settings, choice, leagues))
@@ -48,7 +53,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChan
       {/* Catches every press, so nothing under the tour can be used. */}
       <div className="welcome-tour__dim" />
       {progress === 'welcome' && (
-        <WelcomeStep onChoose={choose} leagues={leagues} settings={settings} onChange={onChange} />
+        <WelcomeStep onChoose={choose} leagues={leagues} settings={settings} onChange={onChange} games={games} />
       )}
       {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
       {progress === 'scoreCard' && (
@@ -69,13 +74,14 @@ interface WelcomeStepProps {
   leagues: readonly League[]
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
+  games: readonly Game[]
 }
 
 /**
  * Welcome: what ScoreMap is, and what to see first. My leagues switches every league off and opens its
  * picker in the panel; "Show these" then makes the choice.
  */
-function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps) {
+function WelcomeStep({ onChoose, leagues, settings, onChange, games }: WelcomeStepProps) {
   const [picking, setPicking] = useState(false)
   const pickMyLeagues = () => {
     onChange(settingsForChoice(settings, 'myLeagues', leagues))
@@ -93,16 +99,23 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
         )
       }
     >
+      <PickerSwitcher picking={picking} />
       <p className="welcome-tour__text">
-        Live sporting events around the globe. See what&apos;s happening in real time and where!
+        Live sporting events around the globe. See what&apos;s happening and where, in real time!
       </p>
       {picking ? (
         <>
           <h3 className="welcome-tour__question">Pick what you follow</h3>
           <p className="welcome-tour__text welcome-tour__note welcome-tour__note--above">
-            You can change this any time in Leagues on the rail.
+            You can change this any time in the Leagues settings on the right.
           </p>
-          <LeaguePicker leagues={leagues} settings={settings} onChange={onChange} />
+          <LeaguePickerPrototype
+            leagues={leagues}
+            settings={settings}
+            onChange={onChange}
+            games={games}
+            current={<LeaguePicker leagues={leagues} settings={settings} onChange={onChange} />}
+          />
         </>
       ) : (
         <>
@@ -136,7 +149,7 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
  * Leagues on the rail (dashed while only some are on), and its leagues as smaller chips under it. A
  * sport with one league has no league chips: its own chip is that league.
  */
-function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'onChoose'>) {
+function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'onChoose' | 'games'>) {
   return (
     <div className="welcome-tour__picker">
       {leaguesBySport(leagues).map((group) => {

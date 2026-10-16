@@ -1,4 +1,4 @@
-// PROTOTYPE, throw away: options for the welcome tour's My leagues picker, switched by ?picker=A…E
+// PROTOTYPE, throw away: options for the welcome tour's My leagues picker, switched by ?picker=A…F
 // with a floating bar (← → keys too). ?leagues=more adds made-up sports and leagues to see how each
 // option copes with more of them. Not for main: see the prototype skill.
 import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
@@ -18,10 +18,11 @@ import './LeaguePickerPrototype.css'
 
 const variants = [
   { key: 'A', name: 'Current: sport chips, league chips under' },
-  { key: 'B', name: 'Sport tiles, open one for its leagues' },
-  { key: 'C', name: 'Two columns: sports, then leagues' },
-  { key: 'D', name: 'Search, suggestions and one chip cloud' },
-  { key: 'E', name: 'Sport tabs, with a tray of your picks' },
+  { key: 'B', name: 'A as a checklist: tick boxes, outlined chips' },
+  { key: 'C', name: 'A in cards, two columns, with switches' },
+  { key: 'D', name: 'A in rows: sport at the left, leagues beside it' },
+  { key: 'E', name: 'Accordion: one line per sport, open for leagues' },
+  { key: 'F', name: 'Sport icons first, then narrow down by league' },
 ] as const
 
 type VariantKey = (typeof variants)[number]['key']
@@ -106,10 +107,11 @@ export function LeaguePickerPrototype(props: PickerProps & { current: ReactNode 
   return (
     <>
       {variant === 'A' && props.current}
-      {variant === 'B' && <SportTiles {...props} />}
-      {variant === 'C' && <TwoColumns {...props} />}
-      {variant === 'D' && <SearchCloud {...props} />}
-      {variant === 'E' && <SportTabs {...props} />}
+      {variant === 'B' && <Checklist {...props} />}
+      {variant === 'C' && <SportCards {...props} />}
+      {variant === 'D' && <SportRows {...props} />}
+      {variant === 'E' && <Accordion {...props} />}
+      {variant === 'F' && <SportIcons {...props} />}
     </>
   )
 }
@@ -152,67 +154,20 @@ export function PickerSwitcher({ picking }: { picking: boolean }) {
   )
 }
 
-/** B: a grid of sport tiles, each a whole-sport switch with how many of its leagues are on; ▾ opens its leagues below the grid. */
-function SportTiles({ leagues, settings, onChange, games }: PickerProps) {
-  const counts = useCounts(games)
-  const [open, setOpen] = useState<string | null>(null)
-  const groups = leaguesBySport(leagues)
-  const openGroup = groups.find((g) => g.sport === open)
+/** A league's chip, pressed while it's on. */
+function LeagueChip({
+  league,
+  settings,
+  onChange,
+  className = 'rail-chip',
+  children,
+}: { league: League; className?: string; children?: ReactNode } & Omit<PickerProps, 'leagues' | 'games'>) {
+  const on = isLeagueOn(settings, league.name)
   return (
-    <div className="proto-tiles">
-      <div className="proto-tiles__grid">
-        {groups.map((group) => {
-          const state = sportSwitch(settings, group)
-          const live = group.leagues.reduce((n, l) => n + counts.live(l.name), 0)
-          return (
-            <div key={group.sport} className={`proto-tile proto-tile--${state} ${open === group.sport ? 'proto-tile--open' : ''}`}>
-              <button
-                type="button"
-                aria-pressed={state === 'on'}
-                className="proto-tile__main"
-                onClick={() => onChange(withSport(settings, group, state !== 'on'))}
-              >
-                <span className="proto-tile__name">{group.sport}</span>
-                <span className="proto-tile__meta">
-                  {live > 0 ? <span className="proto-live">● {live} live</span> : <span>No live games</span>}
-                </span>
-              </button>
-              {group.leagues.length > 1 && (
-                <button
-                  type="button"
-                  className="proto-tile__more"
-                  aria-expanded={open === group.sport}
-                  onClick={() => setOpen(open === group.sport ? null : group.sport)}
-                >
-                  {onCount(settings, group)}/{group.leagues.length} ▾
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-      {openGroup && (
-        <div className="proto-tiles__leagues">
-          <span className="proto-label">{openGroup.sport} leagues</span>
-          <div className="leagues-chips">
-            {openGroup.leagues.map((league) => {
-              const on = isLeagueOn(settings, league.name)
-              return (
-                <button
-                  key={league.name}
-                  type="button"
-                  aria-pressed={on}
-                  className="rail-chip"
-                  onClick={() => onChange(withLeague(settings, league.name, !on))}
-                >
-                  {league.name}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+    <button type="button" aria-pressed={on} className={className} onClick={() => onChange(withLeague(settings, league.name, !on))}>
+      {children}
+      {league.name}
+    </button>
   )
 }
 
@@ -221,152 +176,220 @@ function Box({ state }: { state: 'on' | 'off' | 'mixed' }) {
   return <span className={`proto-box proto-box--${state}`}>{state === 'on' ? '✓' : state === 'mixed' ? '–' : ''}</span>
 }
 
-/** C: sports down the left, each a tri-state switch; the focused sport's leagues on the right, with games now. */
-function TwoColumns({ leagues, settings, onChange, games }: PickerProps) {
-  const counts = useCounts(games)
-  const groups = leaguesBySport(leagues)
-  const [focus, setFocus] = useState(groups[0]?.sport)
-  const group = groups.find((g) => g.sport === focus) ?? groups[0]
-  if (!group) return null
+/** B: A's layout as a checklist: each sport a tick box with how many are on, its leagues as outlined chips that tick. */
+function Checklist({ leagues, settings, onChange }: PickerProps) {
   return (
-    <div className="proto-columns">
-      <ul className="proto-columns__sports">
-        {groups.map((g) => {
-          const state = sportSwitch(settings, g)
-          return (
-            <li key={g.sport} className={g.sport === group.sport ? 'proto-columns__sport--focus' : ''}>
-              <button type="button" className="proto-columns__check" aria-label={`All ${g.sport}`} onClick={() => onChange(withSport(settings, g, state !== 'on'))}>
+    <div className="proto-check">
+      {leaguesBySport(leagues).map((group) => {
+        const state = sportSwitch(settings, group)
+        return (
+          <div key={group.sport} className="proto-check__sport">
+            <button type="button" className="proto-check__head" onClick={() => onChange(withSport(settings, group, state !== 'on'))}>
+              <Box state={state} />
+              <span className="proto-check__name">{group.sport}</span>
+              {group.leagues.length > 1 && (
+                <span className="proto-hint">
+                  {onCount(settings, group)} of {group.leagues.length}
+                </span>
+              )}
+            </button>
+            {group.leagues.length > 1 && (
+              <div className="proto-check__leagues">
+                {group.leagues.map((league) => (
+                  <LeagueChip key={league.name} league={league} settings={settings} onChange={onChange} className="proto-check__chip">
+                    <span className="proto-check__tick" aria-hidden="true">
+                      ✓
+                    </span>
+                  </LeagueChip>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** An on/off switch, half-way while mixed. */
+function Switch({ state }: { state: 'on' | 'off' | 'mixed' }) {
+  return <span className={`proto-switch proto-switch--${state}`} aria-hidden="true" />
+}
+
+/** C: A's layout in cards: each sport a card with a switch, its league chips inside, the cards in two columns. */
+function SportCards({ leagues, settings, onChange }: PickerProps) {
+  return (
+    <div className="proto-cards">
+      {leaguesBySport(leagues).map((group) => {
+        const state = sportSwitch(settings, group)
+        return (
+          <div key={group.sport} className={`proto-card proto-card--${state}`}>
+            <button
+              type="button"
+              className="proto-card__head"
+              aria-pressed={state === 'on'}
+              onClick={() => onChange(withSport(settings, group, state !== 'on'))}
+            >
+              <span className="proto-card__name">{group.sport}</span>
+              <Switch state={state} />
+            </button>
+            {group.leagues.length > 1 && (
+              <div className="proto-card__leagues">
+                {group.leagues.map((league) => (
+                  <LeagueChip key={league.name} league={league} settings={settings} onChange={onChange} className="rail-chip proto-small-chip" />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** D: A's chips in rows: the sport's chip in a column at the left, its leagues flowing beside it, a line between sports. */
+function SportRows({ leagues, settings, onChange }: PickerProps) {
+  return (
+    <div className="proto-rows">
+      {leaguesBySport(leagues).map((group) => {
+        const state = sportSwitch(settings, group)
+        return (
+          <div key={group.sport} className="proto-rows__row">
+            <button
+              type="button"
+              aria-pressed={state === 'on'}
+              className={`rail-chip proto-rows__sport welcome-tour__sport-chip--${state}`}
+              onClick={() => onChange(withSport(settings, group, state !== 'on'))}
+            >
+              {group.sport}
+            </button>
+            <div className="proto-rows__leagues">
+              {group.leagues.length > 1 ? (
+                group.leagues.map((league) => (
+                  <LeagueChip key={league.name} league={league} settings={settings} onChange={onChange} className="rail-chip proto-small-chip" />
+                ))
+              ) : (
+                <span className="proto-hint">{group.leagues[0].name}</span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** E: one line per sport, with what's picked in it and its live games; open a sport for A's league chips. */
+function Accordion({ leagues, settings, onChange, games }: PickerProps) {
+  const counts = useCounts(games)
+  const [open, setOpen] = useState<string[]>([])
+  return (
+    <div className="proto-accordion">
+      {leaguesBySport(leagues).map((group) => {
+        const state = sportSwitch(settings, group)
+        const picked = group.leagues.filter((l) => isLeagueOn(settings, l.name)).map((l) => l.name)
+        const live = group.leagues.reduce((n, l) => n + counts.live(l.name), 0)
+        const isOpen = open.includes(group.sport)
+        const many = group.leagues.length > 1
+        const summary = !many
+          ? group.leagues[0].name
+          : state === 'on'
+            ? 'All leagues'
+            : picked.length > 0
+              ? picked.join(', ')
+              : `${group.leagues.length} leagues`
+        return (
+          <div key={group.sport} className={`proto-accordion__sport ${isOpen ? 'proto-accordion__sport--open' : ''}`}>
+            <div className="proto-accordion__line">
+              <button
+                type="button"
+                className="proto-accordion__check"
+                aria-label={`All ${group.sport}`}
+                onClick={() => onChange(withSport(settings, group, state !== 'on'))}
+              >
                 <Box state={state} />
               </button>
-              <button type="button" className="proto-columns__name" onClick={() => setFocus(g.sport)}>
-                {g.sport}
-                <span className="proto-count">{onCount(settings, g) || ''}</span>
-                <span aria-hidden="true">›</span>
+              <button
+                type="button"
+                className="proto-accordion__toggle"
+                disabled={!many}
+                onClick={() => setOpen(isOpen ? open.filter((s) => s !== group.sport) : [...open, group.sport])}
+              >
+                <span className="proto-accordion__name">{group.sport}</span>
+                <span className="proto-accordion__summary">{summary}</span>
+                {live > 0 && <span className="proto-live">● {live}</span>}
+                {many && (
+                  <span className="proto-accordion__chevron" aria-hidden="true">
+                    ›
+                  </span>
+                )}
               </button>
-            </li>
-          )
-        })}
-      </ul>
-      <ul className="proto-columns__leagues">
-        {group.leagues.length > 1 && (
-          <li>
-            <button type="button" className="proto-row proto-row--all" onClick={() => onChange(withSport(settings, group, sportSwitch(settings, group) !== 'on'))}>
-              <Box state={sportSwitch(settings, group)} /> All {group.sport}
-            </button>
-          </li>
-        )}
-        {group.leagues.map((league) => {
-          const on = isLeagueOn(settings, league.name)
-          const live = counts.live(league.name)
-          return (
-            <li key={league.name}>
-              <button type="button" className="proto-row" aria-pressed={on} onClick={() => onChange(withLeague(settings, league.name, !on))}>
-                <Box state={on ? 'on' : 'off'} />
-                <span className="proto-row__name">{league.name}</span>
-                <span className="proto-row__meta">
-                  {live > 0 ? <span className="proto-live">● {live}</span> : counts.all(league.name) > 0 ? `${counts.all(league.name)} today` : ''}
-                </span>
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+            </div>
+            {isOpen && (
+              <div className="leagues-chips proto-accordion__leagues">
+                {group.leagues.map((league) => (
+                  <LeagueChip key={league.name} league={league} settings={settings} onChange={onChange} className="rail-chip proto-small-chip" />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-/** D: a search box, the busiest leagues right now as suggestions, then every league in one cloud, each tagged with its sport. */
-function SearchCloud({ leagues, settings, onChange, games }: PickerProps) {
-  const counts = useCounts(games)
-  const [query, setQuery] = useState('')
-  const q = query.trim().toLowerCase()
-  const suggested = [...leagues].sort((a, b) => counts.all(b.name) - counts.all(a.name)).slice(0, 4)
-  const groups = leaguesBySport(leagues)
-    .map((g) => ({ ...g, leagues: g.leagues.filter((l) => !q || l.name.toLowerCase().includes(q) || g.sport.toLowerCase().includes(q)) }))
-    .filter((g) => g.leagues.length > 0)
-  const chip = (league: League, extra?: ReactNode) => {
-    const on = isLeagueOn(settings, league.name)
-    return (
-      <button key={league.name} type="button" aria-pressed={on} className="rail-chip proto-cloud__chip" onClick={() => onChange(withLeague(settings, league.name, !on))}>
-        {league.name}
-        {extra}
-      </button>
-    )
-  }
-  return (
-    <div className="proto-cloud">
-      <input className="proto-cloud__search" placeholder="Search sports and leagues" value={query} onChange={(e) => setQuery(e.target.value)} />
-      {!q && (
-        <>
-          <span className="proto-label">Busiest right now</span>
-          <div className="leagues-chips">{suggested.map((l) => chip(l, <span className="proto-cloud__n">{counts.all(l.name)}</span>))}</div>
-        </>
-      )}
-      <div className="proto-cloud__all">
-        {groups.map((g) => {
-          const state = sportSwitch(settings, g)
-          return (
-            <span key={g.sport} className="proto-cloud__group">
-              <button type="button" className={`proto-cloud__sport proto-cloud__sport--${state}`} onClick={() => onChange(withSport(settings, g, state !== 'on'))}>
-                {g.sport}
-              </button>
-              {g.leagues.map((l) => chip(l))}
-            </span>
-          )
-        })}
-        {groups.length === 0 && <span className="proto-label">Nothing matches “{query}”</span>}
-      </div>
-    </div>
-  )
+const sportIcons: Record<string, string> = {
+  Football: '🏈',
+  Basketball: '🏀',
+  Baseball: '⚾',
+  Hockey: '🏒',
+  Soccer: '⚽',
+  Cricket: '🏏',
+  Tennis: '🎾',
+  Golf: '⛳',
+  Rugby: '🏉',
+  Motorsport: '🏎️',
+  MMA: '🥊',
 }
 
-/** E: a strip of sport tabs; the tab's leagues as large toggles with games now; a tray of what's picked so far. */
-function SportTabs({ leagues, settings, onChange, games }: PickerProps) {
-  const counts = useCounts(games)
+/** F: pick sports by their icons first; each sport picked then lists its leagues to narrow it down. */
+function SportIcons({ leagues, settings, onChange }: PickerProps) {
   const groups = leaguesBySport(leagues)
-  const [tab, setTab] = useState(groups[0]?.sport)
-  const group = groups.find((g) => g.sport === tab) ?? groups[0]
-  if (!group) return null
-  const picked = leagues.filter((l) => isLeagueOn(settings, l.name))
-  const state = sportSwitch(settings, group)
+  const picked = groups.filter((g) => sportSwitch(settings, g) !== 'off' && g.leagues.length > 1)
   return (
-    <div className="proto-tabs">
-      <div className="proto-tabs__strip" role="tablist">
-        {groups.map((g) => (
-          <button key={g.sport} type="button" role="tab" aria-selected={g.sport === group.sport} className="proto-tabs__tab" onClick={() => setTab(g.sport)}>
-            {g.sport}
-            {onCount(settings, g) > 0 && <span className="proto-tabs__dot" />}
-          </button>
-        ))}
-      </div>
-      <div className="proto-tabs__body">
-        {group.leagues.map((league) => {
-          const on = isLeagueOn(settings, league.name)
-          const live = counts.live(league.name)
+    <div className="proto-icons">
+      <div className="proto-icons__grid">
+        {groups.map((group) => {
+          const state = sportSwitch(settings, group)
           return (
-            <button key={league.name} type="button" aria-pressed={on} className="proto-tabs__league" onClick={() => onChange(withLeague(settings, league.name, !on))}>
-              <span className="proto-tabs__league-name">{league.name}</span>
-              <span className="proto-row__meta">{live > 0 ? <span className="proto-live">● {live} live</span> : `${counts.all(league.name)} games`}</span>
+            <button
+              key={group.sport}
+              type="button"
+              aria-pressed={state !== 'off'}
+              className={`proto-icons__sport proto-icons__sport--${state}`}
+              onClick={() => onChange(withSport(settings, group, state === 'off'))}
+            >
+              <span className="proto-icons__icon">{sportIcons[group.sport] ?? '🏅'}</span>
+              <span className="proto-icons__name">{group.sport}</span>
             </button>
           )
         })}
-        {group.leagues.length > 1 && (
-          <button type="button" className="proto-tabs__all" onClick={() => onChange(withSport(settings, group, state !== 'on'))}>
-            {state === 'on' ? `None of ${group.sport}` : `All of ${group.sport}`}
-          </button>
-        )}
       </div>
-      <div className="proto-tabs__tray">
-        <span className="proto-label">Your picks ({picked.length})</span>
-        <div className="proto-tabs__tokens">
-          {picked.length === 0 && <span className="proto-hint">Nothing yet</span>}
-          {picked.map((l) => (
-            <button key={l.name} type="button" className="proto-token" onClick={() => onChange(withLeague(settings, l.name, false))}>
-              {l.name} ×
-            </button>
+      {picked.length > 0 && (
+        <div className="proto-icons__narrow">
+          <span className="proto-label">Narrow it down</span>
+          {picked.map((group) => (
+            <div key={group.sport} className="proto-icons__sport-leagues">
+              <span className="proto-icons__small-icon">{sportIcons[group.sport] ?? '🏅'}</span>
+              {group.leagues.map((league) => (
+                <LeagueChip key={league.name} league={league} settings={settings} onChange={onChange} className="rail-chip proto-small-chip" />
+              ))}
+            </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   )
 }
+

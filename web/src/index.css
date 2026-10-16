@@ -82,6 +82,7 @@ body {
 .demo-label,
 .feedback__button,
 .feedback__panel,
+.welcome-tour__panel,
 .tooltip {
   /* How brightly the glass catches the light: most when clear. */
   --glass-shine: calc(1 - var(--frost));
@@ -1866,4 +1867,401 @@ body {
 
 .demo-label[hidden] {
   display: none;
+}
+
+/* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
+   from being used, under the dev tools. The scenario controls and the Feedback button are lifted above
+   it while it shows, so they stay usable. */
+.welcome-tour {
+  /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
+  --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
+  /* The corners of a step's spotlight, and of the lit target's button in it. */
+  --spotlight-corner: calc(2 * var(--menu-corner));
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.globe-area--touring > .bottom-stack,
+.globe-area--touring > .feedback {
+  z-index: 3;
+}
+
+/* A light dim, so the live pins still show behind the panel, which catches every press. */
+.welcome-tour__dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+}
+
+/* A step's panel, in the middle of the screen, on the rail's glass as its popovers are. */
+.welcome-tour__panel {
+  --frost: var(--rail-frost);
+  --glass-tint: var(--rail-surface);
+  --glass-lens: url(#glass-lens);
+  position: relative;
+  box-sizing: border-box;
+  width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
+  max-height: calc(100% - 12 * var(--spacing));
+  overflow-y: auto;
+  padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
+  border-radius: var(--menu-corner);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  font-weight: var(--typography-body2-font-weight);
+  box-shadow: var(--rail-shadow), var(--glass-rim);
+}
+
+.welcome-tour__heading {
+  margin: 0 0 calc(2 * var(--spacing));
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+}
+
+.welcome-tour__question {
+  margin: calc(5 * var(--spacing)) 0 calc(3 * var(--spacing));
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.welcome-tour__text {
+  margin: 0;
+  color: var(--palette-text-secondary);
+}
+
+.welcome-tour__note {
+  margin-top: calc(3 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
+}
+
+.welcome-tour__choices {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+/* A choice on Welcome: its name, and a line under it on what it shows. */
+.welcome-tour__choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: calc(2.5 * var(--spacing));
+  align-items: center;
+  padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.welcome-tour__choice strong {
+  grid-column: 2;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.welcome-tour__choice span {
+  grid-column: 2;
+  color: var(--palette-text-secondary);
+}
+
+.welcome-tour__star {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  width: 1.3em;
+  height: 1.3em;
+  color: var(--rail-toggle-on);
+}
+
+@media (hover: hover) {
+  .welcome-tour__choice:hover {
+    border-color: var(--rail-on-fill);
+    background: var(--palette-action-hover);
+  }
+}
+
+/* My leagues' picker: "Select all", then a card for each sport, with its switch and its leagues as
+   chips, the cards in two columns where there's room for them. */
+.welcome-tour__note--above {
+  margin: 0 0 calc(3 * var(--spacing));
+}
+
+.welcome-tour__picker {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+.welcome-tour__sports {
+  columns: 2 calc(36 * var(--spacing));
+  column-gap: calc(2 * var(--spacing));
+}
+
+.welcome-tour__sport {
+  break-inside: avoid;
+  margin-bottom: calc(2 * var(--spacing));
+  padding: calc(2.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-corner);
+  background: var(--palette-action-hover);
+}
+
+.welcome-tour__sport--on,
+.welcome-tour__sport--mixed {
+  border-color: var(--rail-on-fill);
+}
+
+/* A label with its switch at the right: "Select all", and each sport's name. */
+.welcome-tour__switch-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.welcome-tour__select-all {
+  align-self: flex-end;
+}
+
+.welcome-tour__sport-switch {
+  width: 100%;
+}
+
+.welcome-tour__switch {
+  position: relative;
+  flex: none;
+  width: calc(7.5 * var(--spacing));
+  height: calc(4.25 * var(--spacing));
+  border-radius: calc(2.125 * var(--spacing));
+  background: var(--rail-chip-outline);
+}
+
+.welcome-tour__switch::after {
+  content: '';
+  position: absolute;
+  top: calc(0.5 * var(--spacing));
+  left: calc(0.5 * var(--spacing));
+  width: calc(3.25 * var(--spacing));
+  height: calc(3.25 * var(--spacing));
+  border-radius: 50%;
+  background: var(--palette-text-primary);
+  transition: left 0.15s;
+}
+
+.welcome-tour__switch--on {
+  background: var(--palette-secondary-main);
+}
+
+.welcome-tour__switch--on::after {
+  left: calc(3.75 * var(--spacing));
+  background: var(--palette-secondary-contrast-text);
+}
+
+/* Half-way, while only some of its leagues are on. */
+.welcome-tour__switch--mixed {
+  background: color-mix(in srgb, var(--palette-secondary-main) 50%, var(--rail-chip-outline));
+}
+
+.welcome-tour__switch--mixed::after {
+  left: calc(2.125 * var(--spacing));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-tour__switch::after {
+    transition: none;
+  }
+}
+
+.welcome-tour__league-chips {
+  gap: var(--spacing);
+  margin-top: calc(2 * var(--spacing));
+}
+
+.welcome-tour__league-chip {
+  padding: calc(0.5 * var(--spacing)) calc(2.5 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
+}
+
+.welcome-tour__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: calc(4 * var(--spacing));
+}
+
+/* A step's own button (Next, Done), filled as a chip that's on. */
+.welcome-tour__button {
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  border: none;
+  border-radius: var(--controls-corner);
+  background: var(--rail-on-fill);
+  color: var(--rail-on-text);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+/* "Show these" with nothing picked yet. */
+.welcome-tour__button:disabled {
+  opacity: var(--controls-off-opacity);
+  cursor: default;
+}
+
+/* Your controls' list of the rail's buttons, each with the rail's own icon. */
+.welcome-tour__controls {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2.5 * var(--spacing));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-tour__control {
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--spacing));
+}
+
+.welcome-tour__control-icon {
+  flex: none;
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+/* A step's spotlight and arrow (see welcomeTour/TourPointer.tsx), filling the tour's layer under the
+   panel. Neither catches a press: the dim under them still does. */
+.welcome-tour__pointer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* While a step lights something, its spotlight does the dimming, all around it. */
+.welcome-tour:has(.welcome-tour__spotlight) > .welcome-tour__dim {
+  background: transparent;
+}
+
+.welcome-tour__spotlight {
+  position: absolute;
+  border-radius: var(--spotlight-corner);
+  box-shadow: 0 0 0 200vmax var(--dim);
+}
+
+/* Over a lit score card, so a press on it opens its game: the card itself is under the dim. */
+.welcome-tour__target {
+  position: absolute;
+  padding: 0;
+  border: none;
+  border-radius: var(--spotlight-corner);
+  background: transparent;
+  cursor: pointer;
+}
+
+.welcome-tour__target:focus-visible {
+  outline: var(--selection-width) solid var(--selection-color);
+}
+
+/* Click a score card's example card, for when none is clear of the panel: drawn as a Live card is
+   on the globe, with a tag saying it's an example. */
+.welcome-tour__example {
+  position: relative;
+  width: fit-content;
+  margin: calc(4 * var(--spacing)) auto 0;
+}
+
+.welcome-tour__example .score-card {
+  cursor: default;
+}
+
+.welcome-tour__example .score-card__logo {
+  visibility: hidden;
+}
+
+.welcome-tour__example-tag {
+  position: absolute;
+  z-index: 1;
+  top: calc(-2 * var(--spacing));
+  right: calc(1.5 * var(--spacing));
+  padding: 0 calc(1.5 * var(--spacing));
+  border-radius: var(--controls-corner);
+  background: var(--palette-text-secondary);
+  color: var(--palette-background-default);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+  text-transform: uppercase;
+}
+
+.welcome-tour__arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.welcome-tour__arrow path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+/* Dashes flowing along the arrow towards what it points at. */
+.welcome-tour__arrow-flow {
+  stroke: var(--palette-live-main);
+  stroke-width: var(--welcome-tour-arrow-width);
+  stroke-dasharray: 10 8;
+  animation: welcome-tour-flow 0.9s linear infinite;
+}
+
+.welcome-tour__arrow marker path {
+  fill: var(--palette-live-main);
+  stroke: none;
+}
+
+@keyframes welcome-tour-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+/* With reduce motion on, the arrow is drawn still. */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-tour__arrow-flow {
+    animation: none;
+  }
+}
+
+/* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
+   the game panel sits there, its arrows running up from its top edge. It stops a little short of the
+   rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
+   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
+   Feedback button too, which stays usable and never covers the step's own button. The no-pins message
+   hides while it shows, as it would lie over the sheet while My leagues starts from nothing. */
+@media (max-width: 640px) {
+  .welcome-tour {
+    align-items: flex-end;
+  }
+
+  .welcome-tour__panel {
+    width: calc(100% - 6 * var(--spacing));
+    max-height: calc(100% - 16 * var(--spacing) - 7 * var(--rail-size-button) - var(--feedback-column));
+    margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
+    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+  }
 }

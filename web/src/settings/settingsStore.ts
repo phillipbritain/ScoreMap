@@ -1,5 +1,6 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
+import { isTourProgress, type TourProgress } from '../welcomeTour/welcomeTour'
 import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -11,11 +12,19 @@ export interface SettingsStore {
   /** Where the viewer left the globe, or null on a first visit. */
   loadCamera(): Camera | null
   saveCamera(camera: Camera): void
+  /**
+   * How far the viewer has got through the welcome tour: Welcome on a first visit (nothing saved),
+   * finished for a viewer with settings saved before the tour existed.
+   */
+  loadTourProgress(): TourProgress
+  saveTourProgress(progress: TourProgress): void
 }
 
 const key = 'scoremap.settings'
 // Kept apart from the settings because it is saved every time the globe stops moving.
 const cameraKey = 'scoremap.camera'
+// Kept apart from the settings, so settings saved before the tour existed can be told from a first visit.
+const tourKey = 'scoremap.welcomeTour'
 
 /**
  * Saves viewer settings in browser storage. Storage is reached through a function because merely
@@ -54,6 +63,25 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
         // The globe will just open on the viewer's region next time.
       }
     },
+    loadTourProgress() {
+      let saved: string | null
+      try {
+        saved = storage().getItem(tourKey)
+        // No progress saved: a first visit, or a viewer from before the tour existed.
+        if (saved === null) return storage().getItem(key) === null ? 'welcome' : 'finished'
+      } catch {
+        // Nothing can be remembered, so every visit is a first one.
+        return 'welcome'
+      }
+      return tourProgressFromSaved(saved)
+    },
+    saveTourProgress(progress) {
+      try {
+        storage().setItem(tourKey, JSON.stringify(progress))
+      } catch {
+        // The tour will just show again from Welcome next time.
+      }
+    },
   }
 }
 
@@ -67,6 +95,21 @@ export function unsavedSettingsStore(): SettingsStore {
     save() {},
     loadCamera: () => null,
     saveCamera() {},
+    loadTourProgress: () => 'welcome',
+    saveTourProgress() {},
+  }
+}
+
+/**
+ * Saved tour progress. What was saved but can't be read counts as finished: the viewer has been here
+ * before, and a tour shown again is worse than one missed.
+ */
+function tourProgressFromSaved(saved: string): TourProgress {
+  try {
+    const progress: unknown = JSON.parse(saved)
+    return isTourProgress(progress) ? progress : 'finished'
+  } catch {
+    return 'finished'
   }
 }
 

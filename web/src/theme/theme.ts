@@ -578,6 +578,11 @@ const settings = {
      * when loading is slow.
      */
     LoadingScreen: { dim: { color, opacity }, rocket: { color, flame: color, size: pixels }, message: color },
+    /**
+     * The welcome tour: how opaque its dim over the globe is (under a step's panel, and around its
+     * spotlight), and how wide the arrow from a step's panel is.
+     */
+    WelcomeTour: { dim: { opacity }, arrow: { width: pixels } },
   },
 }
 

@@ -1,8 +1,9 @@
 import type { LoadingStage } from '../globe/globeMap'
+import { cutOffMessage } from '../live/cutOffNoteView'
 
 /**
- * What the loading screen shows (see GLOSSARY.md): the dim and spinner over the globe, or nothing; and
- * under the spinner, a message saying what's holding loading up, or none.
+ * What the loading screen shows (see GLOSSARY.md): the dim and rocket over the globe, or nothing; and
+ * under the rocket, a message saying what's holding loading up, or none.
  */
 export interface LoadingScreenView {
   shown: boolean
@@ -13,13 +14,13 @@ export interface LoadingScreenView {
 const slowAfterMs = 10_000
 
 const slowMessages: Record<Exclude<LoadingStage, 'ready'>, string> = {
-  waitingForGames: 'Can’t reach ScoreMap. Still trying…',
+  waitingForGames: cutOffMessage,
   drawing: 'The map is slow to load. Still trying…',
 }
 
 /**
  * What the loading screen shows at this stage of the globe's initial load, given how long it has been
- * in that stage: the dim and spinner until the globe is ready, then nothing; and once a stage has
+ * in that stage: the dim and rocket until the globe is ready, then nothing; and once a stage has
  * lasted 10 seconds, that stage's message. The LoadingScreen component draws it.
  */
 export function loadingScreenView(stage: LoadingStage, msInStage: number): LoadingScreenView {

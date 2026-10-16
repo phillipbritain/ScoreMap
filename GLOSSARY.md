@@ -72,7 +72,7 @@ Soccer's goals and cards, in the order they came, each with its team, player and
 _Avoid_: Incidents, timeline
 
 **Pulse**:
-The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
+The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes, when it starts and when it finishes. It changes nothing about what's shown. Changes that came while ScoreMap was asleep or cut off don't pulse when it catches up. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
 
 **Clutch time**:
@@ -102,12 +102,20 @@ _Avoid_: Minor city, town
 ### Loading
 
 **Loading screen**:
-What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a spinner, and a message if it's slow. The rail and scenario pills can still be used, but the globe can't be moved yet.
-_Avoid_: Spinner (it's one part), splash, overlay, veil
+What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a little rocket flying in the middle, and a message if it's slow. The rail and scenario pills can still be used, but the globe can't be moved yet.
+_Avoid_: Spinner, splash, overlay, veil
 
 **Ready**:
 The moment, once each time ScoreMap is opened, that the first games are on the globe and everything has stopped moving: pins, score cards, trails and place names. The loading screen goes then, and doesn't come back.
 _Avoid_: Loaded, settled, done
+
+**Asleep**:
+ScoreMap once its page has been hidden (its window minimised, another tab in front, or the screen locked) for longer than the idle timeout. It stops getting games, so with nobody else watching nothing is fetched, and a demo starts over. It wakes when the page is shown again: the globe is dimmed with a note until the current games arrive.
+_Avoid_: Paused (that's a speed), idle, standby, timed out
+
+**Idle timeout**:
+How long ScoreMap's page can be hidden before ScoreMap falls asleep.
+_Avoid_: Pause time, session timeout
 
 ### Look
 

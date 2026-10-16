@@ -39,7 +39,7 @@ The code reads only the resolved theme, never the JSON:
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's spinner fades in and out in place instead of turning, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colours
 
@@ -159,9 +159,9 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
 | `components.Rail.on.fill`, `.text` | A league chip that's on | `offWhite.500`, `navy.800` |
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
-| `components.LoadingScreen.spinner.color` | The loading screen's ring spinner: the arc that turns | `text.primary` |
-| `components.LoadingScreen.spinner.track` | The rest of the spinner's ring, that the arc turns around | `navy.600` |
-| `components.LoadingScreen.message` | The message under the loading screen's spinner when loading is slow | `text.primary` |
+| `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's colour) | `text.primary` |
+| `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
+| `components.LoadingScreen.message` | The message under the loading screen's rocket when loading is slow | `text.primary` |
 
 "On" is off-white everywhere (a league chip, a lit speed key, the selection), but for the rail's toggles, which are gold when on and grey when off, so chosen looks the same across the app.
 
@@ -262,7 +262,7 @@ Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-
 
 - **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a few units and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 2, 4, 6, 8, 12, 16, 24 and 32 pixels (half a unit to 8).
 - **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters, the status light) stay circles whatever it is.
-- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, a colour swatch's ring `medium`, the game panel's top edge and the loading screen's spinner ring `thick`. The dark theme's are 1, 2 and 3.
+- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, a colour swatch's ring `medium`, the game panel's top edge `thick`. The dark theme's are 1, 2 and 3.
 
 ### Corners and the cut corner
 
@@ -344,7 +344,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
-| `components.LoadingScreen.spinner.size` | The loading screen's spinner, across | 32 |
+| `components.LoadingScreen.rocket.size` | The loading screen's rocket, its box across | 64 |
 
 ## Text on the globe
 
@@ -388,7 +388,7 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
-To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…), under a heading of their own and ruled off, as each changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The loading screen, seen once a page, can be held up over the globe from its tab (Spinner, or Slow message with the message under it), and stays up on every tab until put away (Off), since its ring and message take settings from Shape and Type; "Play exit" plays the fade it goes with. To see a real slow first load, pins and score cards coming in under it, use the `slow-initial-load` scenario (the `run-scoremap` skill). The Theme button counts the settings changed from the built-in theme, each tab those it shows, and a changed setting is marked, with a button to put it back. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
+To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…), under a heading of their own and ruled off, as each changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The loading screen, seen once a page, can be held up over the globe from its tab (Rocket, or Slow message with the message under it), and stays up on every tab until put away (Off), since its message takes settings from Type; "Play exit" plays the fade it goes with. To see a real slow first load, pins and score cards coming in under it, use the `slow-initial-load` scenario (the `run-scoremap` skill). The Theme button counts the settings changed from the built-in theme, each tab those it shows, and a changed setting is marked, with a button to put it back. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
 
 1. **Colours first.** Choose the base colours and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Then the palette:** which steps are the primary and secondary colours, each status's colour, the background, the text, the divider and hover.

@@ -185,7 +185,7 @@
     "Tooltip": { "frost": 0.6, "surface": "background.paper" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
-      "spinner": { "color": "text.primary", "track": "navy.600", "size": 32 },
+      "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },
       "message": "text.primary"
     },
     "WelcomeTour": { "dim": { "opacity": 0.3 }, "arrow": { "width": 2.5 } }

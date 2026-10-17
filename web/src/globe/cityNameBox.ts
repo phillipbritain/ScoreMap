@@ -18,27 +18,11 @@ export type MeasureText = (text: string, font: string, size: number) => number
  * clear of the name.
  */
 export function cityNameBox(name: string, dot: { x: number; y: number }, look: CityNameLook, measure: MeasureText): ScreenBox {
-  return cityNameBoxOfSize(dot, look, cityNameSize(name, look, measure))
-}
-
-/** How big a game city's name's box is (see cityNameBox), wherever it's written. */
-export interface CityNameSize {
-  width: number
-  height: number
-}
-
-/** How big a game city's name's box is, as cityNameBox works it out. */
-export function cityNameSize(name: string, look: CityNameLook, measure: MeasureText): CityNameSize {
   const { clearance } = look
   const lines = wrap(name, look, measure)
   const width = Math.max(...lines.map((line) => lineWidth(line, look, measure))) + 2 * clearance
   const height = lines.length * lineHeight * look.size + 2 * clearance
-  return { width, height }
-}
-
-/** Where a game city's name of this size is written, below its dot at `dot` (see cityNameBox). */
-export function cityNameBoxOfSize(dot: { x: number; y: number }, look: CityNameLook, { width, height }: CityNameSize): ScreenBox {
-  return { x: dot.x, y: dot.y + look.offset - look.clearance + height / 2, width, height }
+  return { x: dot.x, y: dot.y + look.offset - clearance + height / 2, width, height }
 }
 
 // The map's line height for names, in ems.

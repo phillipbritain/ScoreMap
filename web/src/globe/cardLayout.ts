@@ -213,12 +213,14 @@ const clearTrailAllowance = 40
 // was last time: as the globe turns, what's on screen shifts a little against itself, and cards
 // packed against each other would otherwise jump apart.
 const drift = 4
+// The spacing, in pixels, of the grid every move tried lies on (see moves and takenSpots).
+const spotGrid = 4
 // Moves tried for a card that doesn't fit where it would sit: every 4 pixels out to 160, then every 8
 // out to the reach, which is close enough that far out and keeps laying out quick.
 const moves: ScreenOffset[] = []
 for (const [step, from, to] of [
-  [4, 0, 160],
-  [8, 160, reach],
+  [spotGrid, 0, 160],
+  [2 * spotGrid, 160, reach],
 ]) {
   for (let dx = -to; dx <= to; dx += step) {
     for (let dy = -to; dy <= to; dy += step) {
@@ -255,6 +257,34 @@ function spotsFor({ width, height, x, y, venueX, venueY }: CardBox): Spot[] {
 const spotsBySize = new Map<string, Spot[]>()
 // Where a card would sit, which it keeps when that has room.
 const unmovedSpot: Spot = { dx: 0, dy: 0, trail: 0 }
+
+/**
+ * For the card looking for room, which spots on the grid of moves (out to the reach either way) are
+ * taken, so each spot it tries is looked up rather than checked against everything near: spots off
+ * screen, kept out by what it keeps clear of or too near its own venue; and, apart, spots where a card
+ * still to be placed was last time. Kept for the next card that looks, as making them anew each time
+ * would take a while.
+ */
+const gridHalf = reach / spotGrid
+const gridSize = 2 * gridHalf + 1
+const takenSpots = new Uint8Array(gridSize * gridSize)
+const heldSpots = new Uint8Array(gridSize * gridSize)
+
+/** Where a move is in takenSpots and heldSpots. */
+const gridCell = ({ dx, dy }: ScreenOffset) => (dy / spotGrid + gridHalf) * gridSize + dx / spotGrid + gridHalf
+
+/**
+ * The first and last steps along one way of the grid at which `isIn` holds, which it does for a run of
+ * steps, if any. `from` and `to` are about where the run starts and ends, worked out by division;
+ * `isIn` itself settles the ends, so they agree to the last bit with the sums it makes.
+ */
+function stepsWhere(isIn: (step: number) => boolean, from: number, to: number): [number, number] | null {
+  let first = Math.max(-gridHalf, Math.ceil(from) - 1)
+  let last = Math.min(gridHalf, Math.floor(to) + 1)
+  while (first <= last && !isIn(first)) first++
+  while (last >= first && !isIn(last)) last--
+  return first <= last ? [first, last] : null
+}
 
 /** How long a card's trail is: from its venue to the card's nearest edge. */
 function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gameId' | 'rank'>): number {
@@ -297,45 +327,45 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
-    const cardsNear = placed.filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
-    // A card keeps the venue gap from its own venue rather than the venue's spot (see ownVenue).
-    const venuesNear = boxes.filter((other) => other !== card && near(other.venueX, other.venueY, venueRadius, venueRadius))
-    const namesNear = names.filter((name) => near(name.x, name.y, name.width / 2, name.height / 2))
-    const trailsNear = trails.filter(
-      (trail) =>
-        near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
-    )
-    // What the card keeps clear of (cards, venues and names), each as the box its centre stays out of.
-    const keepOutBox = (x: number, y: number, halfWidth: number, halfHeight: number): ScreenBox => ({
-      x,
-      y,
-      width: card.width + 2 * halfWidth,
-      height: card.height + 2 * halfHeight,
-    })
-    const keepOuts = [
-      ...cardsNear.map((other) => keepOutBox(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)),
-      ...venuesNear.map((other) => keepOutBox(other.venueX, other.venueY, venueRadius, venueRadius)),
-      ...namesNear.map((name) => keepOutBox(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)),
-    ]
-    // Where the card's centre stays out of, to keep the venue gap from its own venue.
-    const ownVenue = keepOutBox(card.venueX, card.venueY, screen.venueGap, screen.venueGap)
-    // Where the cards still to be placed were last time, which this card keeps out of unless it was there.
-    const held = boxes
-      .slice(index + 1)
-      .flatMap((other) => (other.previous ? [{ ...other, x: other.x + other.previous.dx, y: other.y + other.previous.dy }] : []))
-      .filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
-      .map((other) => keepOutBox(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
-    // Whether a card centred here is inside a keep-out box, by more than `slack` pixels.
-    const inside = (box: ScreenBox, x: number, y: number, slack: number) =>
-      Math.abs(x - box.x) < box.width / 2 - slack && Math.abs(y - box.y) < box.height / 2 - slack
-    // Spots near each other are mostly kept out by the same thing, so what kept out the last is tried first.
-    let lastKeptOut: ScreenBox | undefined
-    const isKeptOut = (x: number, y: number, slack: number) => {
-      if (lastKeptOut && inside(lastKeptOut, x, y, slack)) return true
-      const found = keepOuts.find((box) => inside(box, x, y, slack))
-      if (found) lastKeptOut = found
-      return found !== undefined
+    // What the card keeps clear of, each as a box its centre stays out of, `halfWidth` and `halfHeight`
+    // wider either way than the card: cards placed, venues and names near. Each is given to `see` in
+    // turn, until it says to stop. Most cards try a spot or two, so nothing is made for them.
+    type KeepOut = (x: number, y: number, halfWidth: number, halfHeight: number) => boolean
+    const someKeepOut = (see: KeepOut) => {
+      for (const other of placed) {
+        const halfWidth = other.width / 2 + gap
+        const halfHeight = other.height / 2 + gap
+        if (near(other.x, other.y, halfWidth, halfHeight) && see(other.x, other.y, halfWidth, halfHeight)) return true
+      }
+      // A card keeps the venue gap from its own venue rather than the venue's spot (see fits).
+      for (const other of boxes) {
+        if (other !== card && near(other.venueX, other.venueY, venueRadius, venueRadius) && see(other.venueX, other.venueY, venueRadius, venueRadius))
+          return true
+      }
+      for (const name of names) {
+        if (near(name.x, name.y, name.width / 2, name.height / 2) && see(name.x, name.y, name.width / 2 + gap, name.height / 2 + gap)) return true
+      }
+      return false
     }
+    // Where the cards still to be placed were last time, which this card keeps out of unless it was there.
+    const someHeld = (see: KeepOut) => {
+      for (let later = index + 1; later < boxes.length; later++) {
+        const other = boxes[later]
+        if (!other.previous) continue
+        const x = other.x + other.previous.dx
+        const y = other.y + other.previous.dy
+        const halfWidth = other.width / 2 + gap
+        const halfHeight = other.height / 2 + gap
+        if (near(x, y, halfWidth, halfHeight) && see(x, y, halfWidth, halfHeight)) return true
+      }
+      return false
+    }
+    // Whether a card centred at (x, y) is inside a box the card keeps out of, by more than `slack` pixels.
+    const inside = (x: number, y: number, slack: number) => (boxX: number, boxY: number, halfWidth: number, halfHeight: number) =>
+      Math.abs(x - boxX) < (card.width + 2 * halfWidth) / 2 - slack && Math.abs(y - boxY) < (card.height + 2 * halfHeight) / 2 - slack
+    // Whether a card centred at x (or y) is on screen, by `slack` pixels.
+    const onScreenAcross = (x: number, slack: number) => x - card.width / 2 >= -slack && x + card.width / 2 <= screen.width + slack
+    const onScreenDown = (y: number, slack: number) => y - card.height / 2 >= -slack && y + card.height / 2 <= screen.height + slack
 
     // Whether the card fits moved this way: `slack` is how far it may come into what it keeps clear
     // of, or off screen, for keeping where it was last time.
@@ -343,30 +373,90 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       const x = card.x + dx
       const y = card.y + dy
       const moved = dx !== 0 || dy !== 0
-      const onScreen =
-        x - card.width / 2 >= -slack &&
-        x + card.width / 2 <= screen.width + slack &&
-        y - card.height / 2 >= -slack &&
-        y + card.height / 2 <= screen.height + slack
       // A card that isn't moved sits where it would whatever the screen's edges, as its venue may be off it.
-      if (moved && !onScreen) return false
-      if (isKeptOut(x, y, slack)) return false
+      if (moved && !(onScreenAcross(x, slack) && onScreenDown(y, slack))) return false
+      if (someKeepOut(inside(x, y, slack))) return false
       // Sitting above its venue, it's the gap away by its making: measured, a rounding error could put it inside.
-      if (moved && inside(ownVenue, x, y, slack)) return false
+      if (moved && inside(x, y, slack)(card.venueX, card.venueY, screen.venueGap, screen.venueGap)) return false
       const wasHere = card.previous !== undefined && dx === card.previous.dx && dy === card.previous.dy
-      return wasHere || !held.some((box) => inside(box, x, y, 0))
+      return wasHere || !someHeld(inside(x, y, 0))
     }
 
+    // The same as fits, for every move on the grid at once (see takenSpots), for a card looking for room.
+    const markTakenSpots = () => {
+      takenSpots.fill(0)
+      heldSpots.fill(0)
+      // Taken where a card centred there is inside the box, by the same sums as inside.
+      const mark = (spots: Uint8Array) => (boxX: number, boxY: number, halfWidth: number, halfHeight: number) => {
+        const halfAcross = (card.width + 2 * halfWidth) / 2
+        const halfDown = (card.height + 2 * halfHeight) / 2
+        const across = stepsWhere(
+          (step) => Math.abs(card.x + step * spotGrid - boxX) < halfAcross,
+          (boxX - halfAcross - card.x) / spotGrid,
+          (boxX + halfAcross - card.x) / spotGrid,
+        )
+        const down = stepsWhere(
+          (step) => Math.abs(card.y + step * spotGrid - boxY) < halfDown,
+          (boxY - halfDown - card.y) / spotGrid,
+          (boxY + halfDown - card.y) / spotGrid,
+        )
+        if (!across || !down) return false
+        for (let row = down[0]; row <= down[1]; row++) {
+          const start = gridCell({ dx: across[0] * spotGrid, dy: row * spotGrid })
+          spots.fill(1, start, start + across[1] - across[0] + 1)
+        }
+        return false
+      }
+      someKeepOut(mark(takenSpots))
+      mark(takenSpots)(card.venueX, card.venueY, screen.venueGap, screen.venueGap)
+      someHeld(mark(heldSpots))
+      // Off screen.
+      const across = stepsWhere(
+        (step) => onScreenAcross(card.x + step * spotGrid, 0),
+        (card.width / 2 - card.x) / spotGrid,
+        (screen.width - card.width / 2 - card.x) / spotGrid,
+      )
+      const down = stepsWhere(
+        (step) => onScreenDown(card.y + step * spotGrid, 0),
+        (card.height / 2 - card.y) / spotGrid,
+        (screen.height - card.height / 2 - card.y) / spotGrid,
+      )
+      for (let row = -gridHalf; row <= gridHalf; row++) {
+        const start = gridCell({ dx: -gridHalf * spotGrid, dy: row * spotGrid })
+        if (!across || !down || row < down[0] || row > down[1]) {
+          takenSpots.fill(1, start, start + gridSize)
+          continue
+        }
+        takenSpots.fill(1, start, start + across[0] + gridHalf)
+        takenSpots.fill(1, start + across[1] + gridHalf + 1, start + gridSize)
+      }
+    }
+    // Whether a move on the grid fits, once markTakenSpots has marked the spots taken.
+    const spotFits = (spot: ScreenOffset) => {
+      const cell = gridCell(spot)
+      if (takenSpots[cell]) return false
+      const wasHere = card.previous !== undefined && spot.dx === card.previous.dx && spot.dy === card.previous.dy
+      return wasHere || !heldSpots[cell]
+    }
+
+    // The cards and trails near, which the card's trail and the card keep clear of; worked out when first needed.
+    let clearOf: { cards: CardBox[]; trails: Segment[] } | undefined
     // Whether a card moved this way would keep clear of trails: its own crossing no card, and no trail
     // already drawn crossing it.
     const trailsClear = ({ dx, dy }: ScreenOffset) => {
+      clearOf ??= {
+        cards: placed.filter((other) => near(other.x, other.y, other.width / 2 + gap, other.height / 2 + gap)),
+        trails: trails.filter((trail) =>
+          near((trail.x1 + trail.x2) / 2, (trail.y1 + trail.y2) / 2, Math.abs(trail.x1 - trail.x2) / 2, Math.abs(trail.y1 - trail.y2) / 2),
+        ),
+      }
       const x = card.x + dx
       const y = card.y + dy
       const halfWidth = card.width / 2 + gap
       const halfHeight = card.height / 2 + gap
-      if (trailsNear.some((trail) => crosses(trail, x, y, halfWidth, halfHeight))) return false
+      if (clearOf.trails.some((trail) => crosses(trail, x, y, halfWidth, halfHeight))) return false
       const own = { x1: x, y1: y, x2: card.venueX, y2: card.venueY }
-      return cardsNear.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
+      return clearOf.cards.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     }
 
     // Where a moved card was last time will do while it fits, give or take the drift, trails or not,
@@ -381,9 +471,10 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // A card in a card cluster last time looks for room only when its turn comes (see above).
     const looks = card.lookedAgo === undefined || !screen.moving || card === looking
     if (!clear && !previous && looks) {
+      markTakenSpots()
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break
-        if (!fits(spot)) continue
+        if (!spotFits(spot)) continue
         nearest ??= spot
         if (trailsClear(spot)) {
           clear = spot

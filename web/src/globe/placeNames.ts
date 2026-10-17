@@ -12,7 +12,7 @@ import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
-import { cityNameBoxOfSize, cityNameSize, type CityNameSize, type ScreenBox } from './cityNameBox'
+import { cityNameBox, type ScreenBox } from './cityNameBox'
 import type { GlobePoint } from './geo'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
@@ -222,9 +222,6 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   let labels: CityLabels = cityLabels(venues, cityList, settings)
   // The venues the labels were chosen for, so games changing only their scores change nothing.
   let venuesKey = ''
-  // How big each game city's name is in the look it was last written in: while the globe moves at
-  // one zoom, only where the names are written changes.
-  let sized: { look: string; sizes: Map<string, CityNameSize> } = { look: '', sizes: new Map() }
 
   const showLabels = () => map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels))
   // The style starts with no cities (see cityNameSourceSpec).
@@ -249,18 +246,9 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       const zoom = map.getZoom()
       if (zoom < cityNameMinZoom) return []
       const look = cityNameLook(zoom, theme())
-      const lookKey = JSON.stringify(look)
-      if (lookKey !== sized.look) sized = { look: lookKey, sizes: new Map() }
       return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
-        .map((city) => {
-          let size = sized.sizes.get(city.name)
-          if (!size) {
-            size = cityNameSize(city.name, look, measureText)
-            sized.sizes.set(city.name, size)
-          }
-          return cityNameBoxOfSize(map.project([city.longitude, city.latitude]), look, size)
-        })
+        .map((city) => cityNameBox(city.name, map.project([city.longitude, city.latitude]), look, measureText))
     },
     remove() {
       map.off('style.load', showLabels)
@@ -287,23 +275,28 @@ let measuring: CanvasRenderingContext2D | null | undefined
 /**
  * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
  * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
- * wider than Open Sans, which errs on the side of room. Kept once measured, as the same names are
- * measured every frame while the globe moves at one zoom.
+ * wider than Open Sans, which errs on the side of room. A line is as wide as its font is big, so it's
+ * measured at one size and kept, as the same names are measured every frame while the globe moves:
+ * on the globe the zoom, and so the size, shifts a little with every move.
  */
 function measureText(text: string, font: string, size: number): number {
-  const key = `${font}|${text}`
+  // The font at the size measured at (see cssFont).
+  const measuredFont = font.replace(`${size}px`, `${measuredSize}px`)
+  const key = `${measuredFont}|${text}`
   const known = measured.get(key)
-  if (known !== undefined) return known
+  if (known !== undefined) return (known * size) / measuredSize
   measuring ??= document.createElement('canvas').getContext('2d')
   if (!measuring) return text.length * fallbackLetterWidth * size
-  measuring.font = font
-  // Zooming measures each name at many sizes, so the oldest are let go.
+  measuring.font = measuredFont
+  // Many names in many fonts (the theme tuner's, say): the oldest are let go.
   if (measured.size >= measuredKept) measured.clear()
   const width = measuring.measureText(text).width
   measured.set(key, width)
-  return width
+  return (width * size) / measuredSize
 }
 const measured = new Map<string, number>()
 const measuredKept = 2000
+// The size, in pixels, names are measured at.
+const measuredSize = 100
 // A letter's width in ems, roughly, where there's no canvas to measure with.
 const fallbackLetterWidth = 0.6

@@ -12,7 +12,7 @@ import type { Game } from '../games/game'
 import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
-import { cityNameBox, type ScreenBox } from './cityNameBox'
+import { cityNameBoxOfSize, cityNameSize, type CityNameSize, type ScreenBox } from './cityNameBox'
 import type { GlobePoint } from './geo'
 import { isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
@@ -222,6 +222,9 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   let labels: CityLabels = cityLabels(venues, cityList, settings)
   // The venues the labels were chosen for, so games changing only their scores change nothing.
   let venuesKey = ''
+  // How big each game city's name is in the look it was last written in: while the globe moves at
+  // one zoom, only where the names are written changes.
+  let sized: { look: string; sizes: Map<string, CityNameSize> } = { look: '', sizes: new Map() }
 
   const showLabels = () => map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels))
   // The style starts with no cities (see cityNameSourceSpec).
@@ -245,11 +248,19 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     nameBoxes() {
       const zoom = map.getZoom()
       if (zoom < cityNameMinZoom) return []
+      const look = cityNameLook(zoom, theme())
+      const lookKey = JSON.stringify(look)
+      if (lookKey !== sized.look) sized = { look: lookKey, sizes: new Map() }
       return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
-        .map((city) =>
-          cityNameBox(city.name, map.project([city.longitude, city.latitude]), cityNameLook(zoom, theme()), measureText),
-        )
+        .map((city) => {
+          let size = sized.sizes.get(city.name)
+          if (!size) {
+            size = cityNameSize(city.name, look, measureText)
+            sized.sizes.set(city.name, size)
+          }
+          return cityNameBoxOfSize(map.project([city.longitude, city.latitude]), look, size)
+        })
     },
     remove() {
       map.off('style.load', showLabels)

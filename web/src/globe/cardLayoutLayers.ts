@@ -112,25 +112,41 @@ interface VenueMark {
 /**
  * Gathers moved cards' venues so their marks don't overlap: the two marks that overlap most become a
  * venue cluster in the middle of their venues on screen (a venue cluster is wider than a dot, and the
- * more games it holds the wider), and again until none overlap. There are only as many as there are
- * moved cards on screen, so each pair is simply looked at afresh.
+ * more games it holds the wider), and again until none overlap; of two that overlap as much, the
+ * first. How far apart each pair is is worked out once, and again only for the mark just made: a
+ * crowd of cards can make many venue clusters a frame.
  */
 function venueMarks(cards: readonly CardOnGlobe[], sizes: VenueSizes): VenueMark[] {
-  const marks: VenueMark[] = cards.map((card) => ({ cards: [card], x: card.venueX, y: card.venueY }))
+  // In the cards' order; a mark gathered into another leaves an empty place.
+  const marks: (VenueMark | null)[] = cards.map((card) => ({ cards: [card], x: card.venueX, y: card.venueY }))
+  const count = marks.length
   const reach = ({ cards }: VenueMark) => (cards.length === 1 ? sizes.dot : sizes.cluster(cards.length))
+  // How far apart two marks are, edge to edge, the first before the second: they overlap below 0.
+  const gaps = new Float64Array(count * count)
+  const gapBetween = (i: number, j: number) => {
+    const [a, b] = [marks[i]!, marks[j]!]
+    gaps[i * count + j] = Math.hypot(a.x - b.x, a.y - b.y) - reach(a) - reach(b)
+  }
+  for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) gapBetween(i, j)
   for (;;) {
     let most: { i: number; j: number; gap: number } | null = null
-    for (let i = 0; i < marks.length; i++) {
-      for (let j = i + 1; j < marks.length; j++) {
-        const gap = Math.hypot(marks[i].x - marks[j].x, marks[i].y - marks[j].y) - reach(marks[i]) - reach(marks[j])
-        if (gap < 0 && (!most || gap < most.gap)) most = { i, j, gap }
+    for (let i = 0; i < count; i++) {
+      if (!marks[i]) continue
+      for (let j = i + 1; j < count; j++) {
+        const gap = gaps[i * count + j]
+        if (marks[j] && gap < 0 && (!most || gap < most.gap)) most = { i, j, gap }
       }
     }
-    if (!most) return marks
-    const merged = [...marks[most.i].cards, ...marks[most.j].cards]
+    if (!most) return marks.filter((mark) => mark !== null)
+    const merged = [...marks[most.i]!.cards, ...marks[most.j]!.cards]
     const middle = (of: (card: CardOnGlobe) => number) => merged.reduce((sum, card) => sum + of(card), 0) / merged.length
     marks[most.i] = { cards: merged, x: middle((card) => card.venueX), y: middle((card) => card.venueY) }
-    marks.splice(most.j, 1)
+    marks[most.j] = null
+    for (let k = 0; k < count; k++) {
+      if (k === most.i || !marks[k]) continue
+      if (k < most.i) gapBetween(k, most.i)
+      else gapBetween(most.i, k)
+    }
   }
 }
 

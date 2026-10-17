@@ -98,8 +98,7 @@ body {
     linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
     var(--glass-fill);
   /* Behind it, the globe blurred and lifted in colour as the frost says, and on the larger panes bent
-     by the lens (--glass-lens, see theme/GlassLens.tsx): score cards are too small for it to read as
-     more than a smear. */
+     by the lens (--glass-lens, see theme/GlassLens.tsx). Score cards have neither (see .score-card). */
   -webkit-backdrop-filter: blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
   backdrop-filter: var(--glass-lens, ) blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
   box-shadow: var(--glass-rim);
@@ -551,9 +550,13 @@ body {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
-  /* Glass (see above), tinted with its fill. */
+  /* Glass (see above), tinted with its fill, but with the globe behind it left as it is, neither blurred
+     nor lifted in colour: blurring what's behind every card again each frame of a pan, as the globe
+     turns under them, was most of what slowed panning where cards crowd (ADR-0018). */
   --frost: var(--score-card-frost);
   --glass-tint: var(--card-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   --card-color: color-mix(in srgb, var(--game-color), var(--card-surface) var(--fade));
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;

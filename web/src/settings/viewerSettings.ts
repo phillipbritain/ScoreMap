@@ -24,9 +24,11 @@ export interface ViewerSettings {
    * a viewer can colour a sport and set one of its leagues apart. A league with none takes its sport's.
    */
   leagueColours: Readonly<Record<string, string>>
+  /** "Flames on hot games" in Colours: hot games (see GLOSSARY.md) show flames on their score cards, small pins and clusters. */
+  hotGameFlames: boolean
 }
 
-/** Every league on, Top Events off, "Live only" off, Disrupted games shown and no colours picked. */
+/** Every league on, Top Events off, "Live only" off, Disrupted games shown, no colours picked and no flames. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
@@ -34,6 +36,7 @@ export const firstVisitSettings: ViewerSettings = {
   showDisrupted: true,
   sportColours: {},
   leagueColours: {},
+  hotGameFlames: false,
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {

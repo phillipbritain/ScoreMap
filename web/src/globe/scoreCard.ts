@@ -19,15 +19,18 @@ export interface ScoreCard {
   home: ScoreCardTeam
   /** Blank when there is nothing to show, such as before an Upcoming game starts. */
   clockLine: string
+  /** Flames rising from its top edge, when its game shows them (see showsFlames). */
+  flames: boolean
 }
 
-export function scoreCard(game: Game): ScoreCard {
+export function scoreCard(game: Game, flames: boolean): ScoreCard {
   return {
     gameId: game.id,
     status: game.status,
     away: cardTeam(game.away),
     home: cardTeam(game.home),
     clockLine: progressLine(game, 'short') ?? '',
+    flames,
   }
 }
 

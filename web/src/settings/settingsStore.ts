@@ -129,7 +129,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, liveOnly, showDisrupted, sportColours, leagueColours } = fields
+  const { hiddenLeagues, topEventsOnly, liveOnly, showDisrupted, sportColours, leagueColours, hotGameFlames } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
@@ -139,6 +139,7 @@ function fromSaved(saved: unknown): ViewerSettings {
     showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
     sportColours: coloursFromSaved(sportColours),
     leagueColours: coloursFromSaved(leagueColours),
+    hotGameFlames: typeof hotGameFlames === 'boolean' ? hotGameFlames : firstVisitSettings.hotGameFlames,
   }
 }
 

@@ -23,6 +23,7 @@ import { isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
+import { drawFlamesOnDemand, showsFlames } from './flames'
 import { pinFeatures } from './pinFeatures'
 import {
   cardClusterLayer,
@@ -73,6 +74,8 @@ export interface GlobeMapOptions {
   cityLabels?: CityLabelSettings
   /** The colours the viewer picked for games, to start with: none unless given. They change with setColours. */
   colours?: PickedColours
+  /** Whether hot games show flames (see showsFlames), to start with: not unless given. It changes with setFlames. */
+  flames?: boolean
   /** How far out and in the globe zooms, to start with: the app's own unless given. They change with setZoomLimits. */
   zoomSettings?: ZoomSettings
   /** Where the globe opens. */
@@ -110,6 +113,8 @@ export class GlobeMap {
   private theme: Theme
   /** The colours the viewer picked for games (see gameColour). */
   private colours: PickedColours
+  /** Whether hot games show flames (see showsFlames). */
+  private flames: boolean
   /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
   private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
@@ -145,9 +150,10 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colours = noColours, zoomSettings = builtInZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colours = noColours, flames = false, zoomSettings = builtInZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colours = colours
+    this.flames = flames
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     this.onStage = onStage
@@ -188,7 +194,10 @@ export class GlobeMap {
     this.reachRings = addReachRings(map)
     this.names = addPlaceNames(map, currentTheme, cityLabels)
     this.trails = trailLayer(currentTheme)
-    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.names, this.trails, (gameId) => this.onSelect(gameId))
+    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.flamesOf, this.names, this.trails, (gameId) =>
+      this.onSelect(gameId),
+    )
+    drawFlamesOnDemand(map)
     this.clustering = this.pinLayoutNow()
 
     map.on('style.load', this.addPins)
@@ -314,11 +323,23 @@ export class GlobeMap {
   /** A game's colour, in the colours and theme the globe has now. */
   private readonly colourOf = (game: Game): string => gameColour(this.colours, game, this.theme)
 
-  /** Gives the pin sources the games shown, each in its colour, when they've changed. */
+  /** Shows flames on hot games from now on, or no longer (see showsFlames): on their score cards, small pins and clusters. */
+  setFlames(on: boolean): void {
+    if (on === this.flames) return
+    this.flames = on
+    this.unsettle()
+    this.showPins()
+    this.cards.restyle()
+  }
+
+  /** Whether a game shows flames now. */
+  private readonly flamesOf = (game: Game): boolean => showsFlames(this.flames, game)
+
+  /** Gives the pin sources the games shown, each in its colour and with its flames, when they've changed. */
   private showPins(): void {
     // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
     // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
-    const pins = pinFeatures([...this.shown.values()], this.colourOf)
+    const pins = pinFeatures([...this.shown.values()], this.colourOf, this.flamesOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey !== this.pinsKey) {
       this.pinsKey = pinsKey
@@ -430,10 +451,10 @@ export class GlobeMap {
     const map = this.map
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colourOf), this.clustering))
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colourOf, this.flamesOf), this.clustering))
     map.addSource(
       outerPinSource,
-      pinSourceSpec(pinFeatures([], this.colourOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
+      pinSourceSpec(pinFeatures([], this.colourOf, this.flamesOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
     )
     this.outerPinsKey = ''
     this.showOuterPins()
@@ -490,7 +511,7 @@ export class GlobeMap {
             ({ venue }) => !hasCard({ longitude, latitude }, venue) && !isBehindGlobe(map, [venue.longitude, venue.latitude]),
           )
         : []
-    const pins = pinFeatures(outer, this.colourOf)
+    const pins = pinFeatures(outer, this.colourOf, this.flamesOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey === this.outerPinsKey) return
     this.outerPinsKey = pinsKey

@@ -3,7 +3,7 @@ import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
-import { byCount } from './pinLayers'
+import { byCount, clusterFlameLayout, clusterFlameOffset } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 import type { TrailOnGlobe } from './trailLayer'
 
@@ -22,10 +22,14 @@ export const overTrails = 'venue-cluster-glows'
 
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
-/** A score card as it's laid out on screen, with its venue on the globe and its game's colour (see gameColour). */
+/**
+ * A score card as it's laid out on screen, with its venue on the globe, its game's colour (see
+ * gameColour) and whether it shows flames (see showsFlames).
+ */
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]
   color: string
+  hot: boolean
 }
 
 /** How far a trail's venue dot reaches, and a venue cluster of this many games, ring or outline and all. */
@@ -94,7 +98,14 @@ export function cardLayoutDrawing(
     const clustered = gameIds.flatMap((id) => byGame.get(id) ?? [])
     features.push(
       feature(
-        { kind: 'cardCluster', status, [sharedColorProperty]: sharedColourKey(clustered), count: gameIds.length, firstGameId: gameIds[0] },
+        {
+          kind: 'cardCluster',
+          status,
+          [sharedColorProperty]: sharedColourKey(clustered),
+          count: gameIds.length,
+          firstGameId: gameIds[0],
+          hot: clustered.some((card) => card.hot),
+        },
         { type: 'Point', coordinates: first.lngLat },
       ),
     )
@@ -162,7 +173,9 @@ const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get',
  *
  * A venue cluster and a card cluster are each a disc outlined and lit in its games' colour (see
  * clusterColour), with the count in it, as a pin cluster is (see the theme's cluster): a venue
- * cluster as wide as a pin cluster of as many games, a card cluster as one of some.
+ * cluster as wide as a pin cluster of as many games, a card cluster as one of some. A card cluster
+ * holding a game that shows flames has a flame on its top edge, as a pin cluster does; a venue cluster
+ * never does, as its games' cards are on screen, flames and all.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -172,6 +185,7 @@ export function cardLayoutLayers(
   SymbolLayerSpecification,
   CircleLayerSpecification,
   CircleLayerSpecification,
+  SymbolLayerSpecification,
   SymbolLayerSpecification,
 ] {
   const { Cluster: cluster } = theme.components
@@ -256,6 +270,14 @@ export function cardLayoutLayers(
         'text-allow-overlap': true,
       },
       paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+    },
+    {
+      id: 'card-cluster-flames',
+      type: 'symbol',
+      source: cardLayoutSource,
+      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'hot'], true]],
+      layout: clusterFlameLayout(theme, clusterFlameOffset(theme, cluster.radius.some)),
+      paint: { 'icon-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
   ]
 }

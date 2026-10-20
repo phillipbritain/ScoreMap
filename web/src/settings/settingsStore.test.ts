@@ -25,6 +25,7 @@ describe('settingsStore', () => {
       showDisrupted: false,
       sportColours: { Football: '#123456', Soccer: '#abcdef' },
       leagueColours: { NFL: '#fedcba' },
+      hotGameFlames: true,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -78,6 +79,13 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load().showDisrupted).toBe(true)
   })
 
+  it('shows no flames on hot games to a viewer whose settings were saved before that setting existed', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+
+    expect(settingsStore(() => storage).load().hotGameFlames).toBe(false)
+  })
+
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes', showDisrupted: 0 }))
@@ -89,6 +97,7 @@ describe('settingsStore', () => {
       showDisrupted: true,
       sportColours: {},
       leagueColours: {},
+      hotGameFlames: false,
     })
   })
 
@@ -103,6 +112,7 @@ describe('settingsStore', () => {
       showDisrupted: false,
       sportColours: {},
       leagueColours: {},
+      hotGameFlames: false,
     })
   })
 
@@ -155,7 +165,8 @@ describe('settingsStore', () => {
         liveOnly: true,
         showDisrupted: false,
         sportColours: {},
-      leagueColours: {},
+        leagueColours: {},
+        hotGameFlames: false,
       })
     },
   )

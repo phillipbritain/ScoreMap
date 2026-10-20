@@ -26,7 +26,7 @@ public class ShippedScenarioTests
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
-        Assert.Equal(["crowded", "edge-cases", "empty", "slow-initial-load", "worldwide"], listing.Scenarios);
+        Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "worldwide"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
@@ -40,6 +40,7 @@ public class ShippedScenarioTests
     [InlineData("slow-initial-load", true)]
     [InlineData("edge-cases", false)]
     [InlineData("empty", false)]
+    [InlineData("hot-finishes", false)]
     public async Task Play_can_be_controlled_only_in_the_scenarios_that_play(string name, bool canControlPlay)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
@@ -116,6 +117,49 @@ public class ShippedScenarioTests
 
         await AdvanceUntilAsync(server, client, $"{close.Id} in clutch time", c => c.Game.Id == close.Id && c.Game.ClutchTime,
             within: TimeSpan.FromMinutes(10));
+    }
+
+    [Theory]
+    [InlineData("worldwide-raptors-celtics")]
+    [InlineData("worldwide-chiefs-bills")]
+    [InlineData("worldwide-oilers-flames")]
+    [InlineData("worldwide-arsenal-chelsea")]
+    [InlineData("worldwide-yankees-red-sox")]
+    [InlineData("worldwide-mumbai-chennai")]
+    public async Task Worldwide_has_a_game_in_each_sport_that_becomes_hot_and_stops(string id)
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+        Assert.False(Assert.Single(snapshot, g => g.Id == id).Hot);
+
+        await AdvanceUntilAsync(server, client, $"{id} hot", c => c.Game.Id == id && c.Game.Hot, within: TimeSpan.FromMinutes(30));
+        await AdvanceUntilAsync(server, client, $"{id} no longer hot", c => c.Game.Id == id && !c.Game.Hot, within: TimeSpan.FromMinutes(30));
+    }
+
+    [Fact]
+    public async Task Worldwide_writes_out_a_game_in_every_sport_to_become_hot()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        var writtenOut = snapshot.Where(g => g.Id is "worldwide-raptors-celtics" or "worldwide-chiefs-bills" or "worldwide-oilers-flames"
+            or "worldwide-arsenal-chelsea" or "worldwide-yankees-red-sox" or "worldwide-mumbai-chennai");
+        Assert.Equal(Enum.GetValues<Sport>().Select(s => s.DisplayName()).Order(), writtenOut.Select(g => g.Sport).Order());
+    }
+
+    [Fact]
+    public async Task Hot_finishes_shows_hot_games_in_every_sport_at_once()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "hot-finishes");
+        var snapshot = await client.NextSnapshotAsync();
+
+        Assert.All(snapshot, game => Assert.True(game.Hot, $"{game.Id} is hot"));
+        Assert.All(snapshot.GroupBy(g => g.Sport), sport => Assert.True(sport.Count() >= 4, $"{sport.Key}: {sport.Count()} games"));
+        Assert.Equal(Enum.GetValues<Sport>().Select(s => s.DisplayName()).Order(), snapshot.Select(g => g.Sport).Distinct().Order());
     }
 
     [Fact]

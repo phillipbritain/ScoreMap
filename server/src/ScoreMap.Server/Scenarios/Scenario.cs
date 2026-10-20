@@ -56,7 +56,8 @@ public sealed record Scenario(
 
 /// <summary>
 /// One made-up game in a scenario. <see cref="StartsIn"/> is its start relative to when the scenario
-/// started (negative for a game already under way).
+/// started (negative for a game already under way). <see cref="Situation"/> is where play stands, if
+/// the scenario says (in baseball, the runners on base); it stays as written while the game plays.
 /// </summary>
 public sealed record ScenarioGame(
     string Id,
@@ -70,6 +71,8 @@ public sealed record ScenarioGame(
     int? Period,
     ProviderPeriodPhase Phase)
 {
+    public ProviderSituation? Situation { get; init; }
+
     /// <summary>The game as the feed reports it, for a scenario that started at <paramref name="scenarioStart"/>.</summary>
     public ProviderGame ToProviderGame(DateTimeOffset scenarioStart) => new(
         Id: Id,
@@ -82,5 +85,8 @@ public sealed record ScenarioGame(
         Period: Period,
         Venue: Venue,
         Broadcasters: [],
-        Phase: Phase);
+        Phase: Phase)
+    {
+        Situation = Situation,
+    };
 }

@@ -416,7 +416,8 @@ const settings = {
      * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose colour
      * is just its status's palette colour is in the game's colour; any other (Live's paler core, say)
      * stays as given, so status still shows by brightness. Small pins gather into pin clusters by the
-     * widest glow. A hot game's (with flames on) has a flame this tall rising from its core, in its colour.
+     * widest glow. A hot game's (with flames on) has a flame this tall rising from its core, in fire's
+     * colours (the score card fire's, ScoreCard.flames).
      */
     Pin: {
       ...byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
@@ -429,7 +430,7 @@ const settings = {
      * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
      * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
      * at a type style's size. By the status it shows as, how opaque it is: its disc, outline and count alike.
-     * A pin or card cluster holding a hot game (with flames on) has a flame this tall on its top edge.
+     * A pin or card cluster holding a hot game (with flames on) has a flame this tall on its top edge, likewise.
      */
     Cluster: {
       fill: color,

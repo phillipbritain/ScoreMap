@@ -72,12 +72,12 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
 const flameGamesProperty = 'flameGames'
 
 /**
- * A flame on a cluster's top edge, in its colour, as tall as the theme's cluster flame, `offset` from
- * the cluster's middle (see clusterFlameOffset).
+ * A flame on a cluster's top edge, in fire's colours (see flameImage), as tall as the theme's cluster
+ * flame, `offset` from the cluster's middle (see clusterFlameOffset).
  */
 export function clusterFlameLayout(theme: Theme, offset: ExpressionSpecification): SymbolLayerSpecification['layout'] {
   return {
-    'icon-image': flameImage(theme.components.Cluster.flame.size, clusterColour(theme)),
+    'icon-image': flameImage(theme, theme.components.Cluster.flame.size),
     'icon-anchor': 'bottom',
     'icon-offset': offset,
     'icon-allow-overlap': true,
@@ -171,7 +171,7 @@ const gameColor: ExpressionSpecification = ['get', 'color']
  * by a neighbour's glow. Glow, ring and core are in the game's colour, but for a core the theme gives
  * a status of its own, apart from the status's colour (Live's paler core, say): colour stands for the
  * game's league, and status shows by glow and brightness (ADR-0017). A game showing flames has a
- * flame in its colour rising from its core, its base behind the core.
+ * flame in fire's colours (see flameImage) rising from its core, its base behind the core.
  */
 export function smallPinLayers(
   theme: Theme,
@@ -194,7 +194,7 @@ export function smallPinLayers(
       type: 'symbol',
       filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'flames'], true]],
       layout: {
-        'icon-image': flameImage(theme.components.Pin.flame.size, gameColor),
+        'icon-image': flameImage(theme, theme.components.Pin.flame.size),
         // Its base at the middle of the core.
         'icon-anchor': 'bottom',
         'icon-allow-overlap': true,

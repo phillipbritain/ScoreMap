@@ -55,7 +55,7 @@ describe('pinFeatures', () => {
           type: 'Feature',
           id: '401',
           geometry: { type: 'Point', coordinates: [-94.4839, 39.0489] },
-          properties: { gameId: '401', status: 'Live', color: '#ff0000', hot: false },
+          properties: { gameId: '401', status: 'Live', color: '#ff0000', flames: false },
         },
       ],
     })
@@ -81,7 +81,7 @@ describe('pinFeatures', () => {
   it('marks the pins of the games showing flames', () => {
     const flamesOf = (game: Game) => game.id === '402'
 
-    const hot = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, flamesOf).features.map((pin) => pin.properties.hot)
+    const hot = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, flamesOf).features.map((pin) => pin.properties.flames)
 
     expect(hot).toEqual([false, true])
   })

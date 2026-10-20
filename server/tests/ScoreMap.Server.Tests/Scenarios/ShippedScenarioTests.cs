@@ -137,8 +137,11 @@ public class ShippedScenarioTests
         await AdvanceUntilAsync(server, client, $"{id} no longer hot", c => c.Game.Id == id && !c.Game.Hot, within: TimeSpan.FromMinutes(30));
     }
 
+    // The sports with a rule for a hot game (see HotGame); one without (tennis, until #219) has none to show.
+    private static readonly string[] SportsWithAHotRule = ["Baseball", "Basketball", "Cricket", "Football", "Hockey", "Soccer"];
+
     [Fact]
-    public async Task Worldwide_writes_out_a_game_in_every_sport_to_become_hot()
+    public async Task Worldwide_writes_out_a_game_in_every_sport_with_a_rule_to_become_hot()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
         await using var client = await server.ConnectClientAsync();
@@ -146,11 +149,11 @@ public class ShippedScenarioTests
 
         var writtenOut = snapshot.Where(g => g.Id is "worldwide-raptors-celtics" or "worldwide-chiefs-bills" or "worldwide-oilers-flames"
             or "worldwide-arsenal-chelsea" or "worldwide-yankees-red-sox" or "worldwide-mumbai-chennai");
-        Assert.Equal(Enum.GetValues<Sport>().Select(s => s.DisplayName()).Order(), writtenOut.Select(g => g.Sport).Order());
+        Assert.Equal(SportsWithAHotRule, writtenOut.Select(g => g.Sport).Order());
     }
 
     [Fact]
-    public async Task Hot_finishes_shows_hot_games_in_every_sport_at_once()
+    public async Task Hot_finishes_shows_hot_games_in_every_sport_with_a_rule_at_once()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
@@ -159,7 +162,7 @@ public class ShippedScenarioTests
 
         Assert.All(snapshot, game => Assert.True(game.Hot, $"{game.Id} is hot"));
         Assert.All(snapshot.GroupBy(g => g.Sport), sport => Assert.True(sport.Count() >= 4, $"{sport.Key}: {sport.Count()} games"));
-        Assert.Equal(Enum.GetValues<Sport>().Select(s => s.DisplayName()).Order(), snapshot.Select(g => g.Sport).Distinct().Order());
+        Assert.Equal(SportsWithAHotRule, snapshot.Select(g => g.Sport).Distinct().Order());
     }
 
     [Fact]

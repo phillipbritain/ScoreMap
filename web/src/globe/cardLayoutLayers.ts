@@ -29,7 +29,7 @@ export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]
   color: string
-  hot: boolean
+  flames: boolean
 }
 
 /** How far a trail's venue dot reaches, and a venue cluster of this many games, ring or outline and all. */
@@ -104,7 +104,7 @@ export function cardLayoutDrawing(
           [sharedColorProperty]: sharedColourKey(clustered),
           count: gameIds.length,
           firstGameId: gameIds[0],
-          hot: clustered.some((card) => card.hot),
+          flames: clustered.some((card) => card.flames),
         },
         { type: 'Point', coordinates: first.lngLat },
       ),
@@ -275,7 +275,7 @@ export function cardLayoutLayers(
       id: 'card-cluster-flames',
       type: 'symbol',
       source: cardLayoutSource,
-      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'hot'], true]],
+      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'flames'], true]],
       layout: clusterFlameLayout(theme, clusterFlameOffset(theme, cluster.radius.some)),
       paint: { 'icon-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },

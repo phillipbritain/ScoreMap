@@ -131,7 +131,10 @@ public static partial class ScenarioReader
             Status: status,
             Clock: entry.Clock,
             Period: entry.Period,
-            Phase: phase);
+            Phase: phase)
+        {
+            Situation = ReadSituation(entry.Situation),
+        };
     }
 
     /// <summary>
@@ -195,8 +198,17 @@ public static partial class ScenarioReader
             throw new InvalidDataException($"has no {side} team");
         if (string.IsNullOrWhiteSpace(team.Name) || string.IsNullOrWhiteSpace(team.Abbreviation))
             throw new InvalidDataException($"has a {side} team with no name or abbreviation");
-        return new ProviderTeam(team.Abbreviation, team.Name, team.Logo, team.Score);
+        var innings = team.Innings is { } written
+            ? new ProviderInnings(written.Wickets, written.Overs, written.OverLimit, written.Target)
+            : null;
+        return new ProviderTeam(team.Abbreviation, team.Name, team.Logo, team.Score, Innings: innings);
     }
+
+    /// <summary>Where play stands, as written: in baseball the outs and which bases have runners on.</summary>
+    private static ProviderSituation? ReadSituation(SituationEntry? situation) =>
+        situation is null
+            ? null
+            : new ProviderSituation(null, Outs: situation.Outs, OnFirst: situation.OnFirst, OnSecond: situation.OnSecond, OnThird: situation.OnThird);
 
     // The file's own shape, kept apart from the model so the format can grow.
     private sealed record ScenarioFile(
@@ -204,9 +216,14 @@ public static partial class ScenarioReader
 
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,
-        string? StartsIn, string? Status, string? Clock, int? Period, string? Phase);
+        string? StartsIn, string? Status, string? Clock, int? Period, string? Phase, SituationEntry? Situation);
 
-    private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score);
+    /// <summary>A team; in cricket, with its <c>innings</c> beyond its runs (see <see cref="ProviderInnings"/>).</summary>
+    private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score, InningsEntry? Innings);
+
+    private sealed record InningsEntry(int? Wickets, string? Overs, int? OverLimit, int? Target);
+
+    private sealed record SituationEntry(int? Outs, bool OnFirst, bool OnSecond, bool OnThird);
 
     private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country, bool NotInVenueList = false);
 

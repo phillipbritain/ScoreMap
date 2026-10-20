@@ -17,6 +17,7 @@ const arrowhead: Game = {
   clock: '4:12',
   period: 3,
   clutchTime: false,
+  hot: false,
   venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
   broadcasters: [],
   streamLinks: [],
@@ -31,13 +32,18 @@ const arrowhead: Game = {
 
 describe('scoreCard', () => {
   it('shows both teams with logo, abbreviation and score, away first, plus the clock line', () => {
-    expect(scoreCard(arrowhead)).toEqual({
+    expect(scoreCard(arrowhead, false)).toEqual({
       gameId: '401',
       status: 'Live',
       away: { abbreviation: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
       home: { abbreviation: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
       clockLine: '4:12',
+      flames: false,
     })
+  })
+
+  it('shows flames when the game shows them', () => {
+    expect(scoreCard(arrowhead, true).flames).toBe(true)
   })
 
   it('leaves scores blank and shows no clock line before an Upcoming game starts', () => {
@@ -50,7 +56,7 @@ describe('scoreCard', () => {
       away: { ...arrowhead.away, score: null },
     }
 
-    expect(scoreCard(upcoming)).toMatchObject({
+    expect(scoreCard(upcoming, false)).toMatchObject({
       status: 'Upcoming',
       away: { score: '' },
       home: { score: '' },
@@ -59,17 +65,17 @@ describe('scoreCard', () => {
   })
 
   it('shows "Delayed" in place of the clock for a delayed game', () => {
-    expect(scoreCard({ ...arrowhead, delayed: true }).clockLine).toBe('Delayed')
+    expect(scoreCard({ ...arrowhead, delayed: true }, false).clockLine).toBe('Delayed')
   })
 
   it("shows a Final game's final line in its sport's style", () => {
-    expect(scoreCard({ ...arrowhead, status: 'Final', clock: 'Final/OT' }).clockLine).toBe('Final/OT')
+    expect(scoreCard({ ...arrowhead, status: 'Final', clock: 'Final/OT' }, false).clockLine).toBe('Final/OT')
   })
 
   it('shows which kind of disruption in place of the clock for a Disrupted game', () => {
     const suspended: Game = { ...arrowhead, status: 'Disrupted', disruption: 'Suspended', clock: null }
 
-    expect(scoreCard(suspended)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
+    expect(scoreCard(suspended, false)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
   })
 })
 

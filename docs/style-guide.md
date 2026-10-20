@@ -39,7 +39,7 @@ The code reads only the resolved theme, never the JSON:
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colours
 
@@ -80,7 +80,7 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colours name gold's steps themselves; only the welcome tour's switches in My leagues name it (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colours name gold's steps themselves; only the switches name it, the welcome tour's in My leagues and "Flames on hot games" in Colours (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -208,6 +208,23 @@ How status reaches the rest of the globe:
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
+
+### Hot games' flames
+
+With "Flames on hot games" on in Colours on the rail (off on a first visit), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot. Their shape says hot; their colour is still the game's, its status's or the colour the viewer picked for its sport or league, so colour still says league (ADR-0012). In the dark theme's gold they read as fire.
+
+- A **score card** has a row of tongues of flame rising from behind its top edge, each a different height, paler at its base, flickering at its own pace, shrinking by the flicker and back. With reduce motion on they stand still.
+- A **small pin** has a small flame rising from its core, its base behind the core.
+- A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, flames and all.
+
+| Setting | What it is | Dark theme |
+| --- | --- | --- |
+| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; a quarter of it is behind the card | 14 |
+| `components.ScoreCard.flames.flicker` | How far the tongues shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.35 |
+| `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
+| `components.Cluster.flame.size` | How tall a pin cluster's or card cluster's flame is, in pixels | 12 |
+
+A flame's shape and paler core (the same drawing on the globe, `web/src/globe/flames.ts`, and as the score card tongues' mask, in the CSS), how many tongues a card has and their heights, and how fast they flicker stay in code.
 
 ### Glass
 
@@ -411,6 +428,7 @@ Some of the look is in code on purpose, as behaviour or layout rather than a the
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);
 - that a glow on the globe (a small pin's, a pin cluster's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
+- a flame's drawing, and a score card's tongues of flame: how many, their heights and pace (see [Hot games' flames](#hot-games-flames));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;
 - which kinds of place are named in capitals (states and countries);
 - which type style, how many spacing units and which border width each thing on the page uses (the CSS), and which status is most prominent and draws on top (the status look, `web/src/globe/statusLook.ts`).

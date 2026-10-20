@@ -208,7 +208,7 @@ function SwitchButton({ state, className, onClick, children }: SwitchButtonProps
       onClick={onClick}
     >
       {children}
-      <span className={`welcome-tour__switch welcome-tour__switch--${state}`} aria-hidden="true" />
+      <span className={`switch switch--${state}`} aria-hidden="true" />
     </button>
   )
 }

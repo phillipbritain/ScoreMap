@@ -46,7 +46,8 @@ export const selectedStacking = Math.max(...Object.values(stacking)) + 1
  * nothing at its edge, so only about the inner 60% of it shows.
  */
 export function smallPinWidth(theme: Theme): number {
-  return Math.round(2 * 0.6 * Math.max(...Object.values(theme.components.Pin).map((look) => look.glow.radius)))
+  const { live, upcoming, final, disrupted } = theme.components.Pin
+  return Math.round(2 * 0.6 * Math.max(...[live, upcoming, final, disrupted].map((look) => look.glow.radius)))
 }
 
 /** Statuses from most to least prominent: Live, then Upcoming, then Final, and Disrupted last. */

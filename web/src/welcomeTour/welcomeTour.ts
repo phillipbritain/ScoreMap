@@ -44,7 +44,7 @@ export function tourProgressAfter(progress: TourProgress, event: TourEvent): Tou
  * The viewer settings after a choice on Welcome, as Leagues on the rail would set them: Top Events
  * turns "Top Events" on; Everything turns it off with every league on; My leagues turns it off with
  * every league off, for its picker to switch on with the rail's own sport and league switches
- * (withSport, withLeague). Colours, "Live only" and "Show Disrupted games" are left as they were.
+ * (withSport, withLeague). Display Settings, "Live only" and "Show Disrupted games" are left as they were.
  */
 export function settingsForChoice(settings: ViewerSettings, choice: TourChoice, leagues: readonly League[]): ViewerSettings {
   if (choice === 'topEvents') return { ...settings, topEventsOnly: true }

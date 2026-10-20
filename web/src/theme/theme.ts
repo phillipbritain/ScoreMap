@@ -550,7 +550,7 @@ const settings = {
     /** An item's corners in a menu. */
     MenuItem: { corner },
     /**
-     * The rail, its popovers (Leagues and Colours) and its toast: their surface and drop shadow; a toggle
+     * The rail, its popovers (Leagues and Display Settings) and its toast: their surface and drop shadow; a toggle
      * button's icon that's on and one that's off; the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on

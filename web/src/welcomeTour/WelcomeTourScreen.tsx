@@ -221,7 +221,7 @@ const railButtonWords: Record<RailButtonName, string> = {
   'Live games only': 'Live games only',
   'Show Disrupted games': 'Show Disrupted games: postponed, suspended or canceled',
   Leagues: 'Leagues: Top Events or your own picks',
-  Colours: 'Colours for each sport and league',
+  'Display Settings': 'Display Settings: colours for each sport and league, and flames on hot games',
 }
 
 /** The rail's groups of buttons, which Your controls lights and points at. */

@@ -18,9 +18,14 @@ describe('layerChanges', () => {
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
     const wider = themeWith((json) => (json.components.Cluster.outlineWidth = 3))
+    // A third of the way up a flame 12 tall below the top of a pin cluster of a few, some and many, 3 wider.
+    const flameOffsets = ['step', ['get', 'point_count'], ['literal', [0, -10]], 5, ['literal', [0, -12]], 15, ['literal', [0, -15]]]
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
       { layer: 'pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
+      // A hot pin cluster's flame stands on its outline.
+      { layer: 'pin-cluster-flames', kind: 'layout', property: 'icon-offset', value: flameOffsets },
       { layer: 'outer-pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
+      { layer: 'outer-pin-cluster-flames', kind: 'layout', property: 'icon-offset', value: flameOffsets },
       { layer: 'venue-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
       // A card cluster's outline is inside its size.
       { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 10 },

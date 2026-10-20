@@ -15,6 +15,7 @@ const card = (gameId: string, venueX: number, venueY: number, lngLat: [number, n
   width: 100,
   height: 60,
   lngLat,
+  flames: false,
 })
 
 const sitting: CardPlacement = { offset: { dx: 0, dy: -6 }, inCardCluster: false, moved: false, trail: { x1: 100, y1: 194, x2: 100, y2: 200 } }
@@ -72,10 +73,17 @@ describe('cardLayoutDrawing', () => {
       {
         type: 'Feature',
         // c's and d's colours differ (see clusterColour).
-        properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c' },
+        properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c', flames: false },
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
     ])
+  })
+
+  it('shows flames on a card cluster holding a game showing flames, but never on a venue cluster', () => {
+    const flaming = [{ ...a, flames: true }, b, { ...c, status: 'Final' as const }, { ...d, flames: true }]
+
+    expect(features('cardCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([true])
+    expect(features('venueCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([undefined])
   })
 
   it('gives every card with room a footprint where it is, moved or not, at its venue and offset to it on screen', () => {

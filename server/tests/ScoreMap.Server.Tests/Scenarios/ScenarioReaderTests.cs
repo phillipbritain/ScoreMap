@@ -10,6 +10,8 @@ public sealed class ScenarioReaderTests : IDisposable
     [
         new() { Key = "football/nfl", Name = "NFL", Sport = Sport.Football },
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer },
+        new() { Key = "baseball/mlb", Name = "MLB", Sport = Sport.Baseball },
+        new() { Key = "cricket/8048", Name = "IPL", Sport = Sport.Cricket },
     ];
 
     // A slice of the venue list: venues are known by name and city, as the venue locator looks them up.
@@ -94,6 +96,28 @@ public sealed class ScenarioReaderTests : IDisposable
         Assert.Contains("unknown phase \"nap\"", error.Message);
     }
 
+    [Fact]
+    public void A_cricket_teams_innings_can_be_written()
+    {
+        var scenario = Read(Game(league: "IPL", status: "live", extra: """, "period": 2, "clock": "18.2" """,
+            home: """{ "name": "Mumbai Indians", "abbreviation": "MI", "score": 158, "innings": { "wickets": 6, "overs": "18.2", "overLimit": 20, "target": 175 } }""",
+            away: """{ "name": "Chennai Super Kings", "abbreviation": "CSK", "score": 174, "innings": { "wickets": 7 } }"""));
+
+        var game = Assert.Single(scenario.Games).ToProviderGame(DateTimeOffset.UnixEpoch);
+        Assert.Equal(new ProviderInnings(6, "18.2", 20, 175), game.Home.Innings);
+        Assert.Equal(new ProviderInnings(7), game.Away.Innings);
+    }
+
+    [Fact]
+    public void A_baseball_games_outs_and_runners_on_base_can_be_written()
+    {
+        var scenario = Read(Game(league: "MLB", status: "live",
+            extra: """, "period": 9, "phase": "inningBottom", "situation": { "outs": 2, "onFirst": true, "onThird": true } """));
+
+        var game = Assert.Single(scenario.Games).ToProviderGame(DateTimeOffset.UnixEpoch);
+        Assert.Equal(new ProviderSituation(null, Outs: 2, OnFirst: true, OnThird: true), game.Situation);
+    }
+
     [Theory]
     [InlineData("""{ "name": "Arrowhed Stadium", "city": "Kansas City" }""", "unknown venue \"Arrowhed Stadium\" in Kansas City")]
     [InlineData("""{ "name": "Allianz Stadium", "city": "Melbourne" }""", "unknown venue \"Allianz Stadium\" in Melbourne", "Turin, Sydney")]
@@ -174,11 +198,17 @@ public sealed class ScenarioReaderTests : IDisposable
 
     private const string Arrowhead = """{ "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" }""";
 
-    private static string Game(string league = "NFL", string startsIn = "0", string status = "upcoming", string extra = "", string venue = Arrowhead) => $$"""
+    private const string Chiefs = """{ "name": "Kansas City Chiefs", "abbreviation": "KC" }""";
+
+    private const string Bills = """{ "name": "Buffalo Bills", "abbreviation": "BUF" }""";
+
+    private static string Game(
+        string league = "NFL", string startsIn = "0", string status = "upcoming", string extra = "", string venue = Arrowhead,
+        string home = Chiefs, string away = Bills) => $$"""
         {
           "league": "{{league}}",
-          "home": { "name": "Kansas City Chiefs", "abbreviation": "KC" },
-          "away": { "name": "Buffalo Bills", "abbreviation": "BUF" },
+          "home": {{home}},
+          "away": {{away}},
           "venue": {{venue}},
           "startsIn": "{{startsIn}}",
           "status": "{{status}}"{{extra}}

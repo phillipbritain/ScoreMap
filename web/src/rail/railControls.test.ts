@@ -53,17 +53,17 @@ describe('nextPopover', () => {
   })
 
   it('closes a popover from its own button', () => {
-    expect(nextPopover('colours', { press: 'colours' })).toBeNull()
+    expect(nextPopover('display', { press: 'display' })).toBeNull()
   })
 
   it('opens one popover at a time: opening one closes the other', () => {
-    expect(nextPopover('leagues', { press: 'colours' })).toBe('colours')
-    expect(nextPopover('colours', { press: 'leagues' })).toBe('leagues')
+    expect(nextPopover('leagues', { press: 'display' })).toBe('display')
+    expect(nextPopover('display', { press: 'leagues' })).toBe('leagues')
   })
 
   it('closes on Escape or a click outside', () => {
     expect(nextPopover('leagues', 'escape')).toBeNull()
-    expect(nextPopover('colours', 'outside')).toBeNull()
+    expect(nextPopover('display', 'outside')).toBeNull()
     expect(nextPopover(null, 'outside')).toBeNull()
   })
 })

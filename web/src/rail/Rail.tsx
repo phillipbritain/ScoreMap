@@ -3,7 +3,7 @@ import type { Camera } from '../globe/camera'
 import type { ZoomSettings } from '../globe/zoomLevels'
 import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
-import { Colours } from './Colours'
+import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { railIcon, type RailButtonName } from './railButtons'
 import { RailIcon } from './railIcons'
@@ -15,7 +15,7 @@ interface RailProps {
   onChange: (settings: ViewerSettings) => void
   /**
    * The theme's accent (see accentColour), as #rrggbb, which a sport or league with no colour picked
-   * shows hollow in Colours.
+   * shows hollow in Display Settings.
    */
   accent: string
   /** Where the globe's camera last settled, or null while the globe can't be moved yet (loading). */
@@ -34,7 +34,7 @@ interface RailProps {
  * The rail: a column of icon buttons at the top right of the globe, in three groups. Zoom in, zoom
  * out and Home, which move the camera. The "Live games only" and "Show Disrupted games" toggles, whose
  * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
- * shows a short toast beside the rail saying what changed. Leagues and Colours, each opening a popover to the left of the rail: one at a time,
+ * shows a short toast beside the rail saying what changed. Leagues and Display Settings, each opening a popover to the left of the rail: one at a time,
  * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
  */
 export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false }: RailProps) {
@@ -90,14 +90,14 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
       </div>
       <div className="rail__group">
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
-        <RailButton label="Colours" popover="colours" open={open} onClick={() => popoverEvent({ press: 'colours' })} />
+        <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
       </div>
       {open && (
         <div ref={popover} id="rail-popover" className="rail__popover" role="dialog" aria-label={popoverNames[open]}>
           {open === 'leagues' ? (
             <Leagues leagues={leagues} settings={settings} onChange={onChange} />
           ) : (
-            <Colours leagues={leagues} settings={settings} onChange={onChange} accent={accent} />
+            <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />
           )}
         </div>
       )}
@@ -107,7 +107,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 
 const hoverScreen = '(hover: hover)'
 
-const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', colours: 'Colours' }
+const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings' }
 
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A toggle is

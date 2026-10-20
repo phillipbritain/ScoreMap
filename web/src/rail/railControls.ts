@@ -31,8 +31,11 @@ export function toggled(settings: ViewerSettings, key: RailToggle): { settings: 
   return { settings: { ...settings, [key]: on }, toast: `${name}: ${on ? 'on' : 'off'}` }
 }
 
-/** The rail's popovers: Leagues (which leagues show) and Colours (the colours picked for them). */
-export type RailPopover = 'leagues' | 'colours'
+/**
+ * The rail's popovers: Leagues (which leagues show) and Display Settings (the colours picked for them,
+ * and whether hot games show flames).
+ */
+export type RailPopover = 'leagues' | 'display'
 
 /** What opens or closes a popover: its button pressed, Escape, or a click outside the open one. */
 export type PopoverEvent = { press: RailPopover } | 'escape' | 'outside'

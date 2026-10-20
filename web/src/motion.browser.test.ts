@@ -37,6 +37,7 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 }
 
 const liveLight = () => element('score-card score-card--live', 'score-card__light')
+const flame = () => element('score-card score-card--live', 'score-card__flames', 'score-card__flame')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start', 'finish'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
@@ -46,6 +47,11 @@ describe('with reduce motion off', () => {
   it('blinks a Live score card’s status light', () => {
     const opacities = keyframesOf(liveLight()).map((keyframe) => keyframe.opacity)
     expect(opacities).toContain('0.3')
+  })
+
+  it('flickers a hot game’s flames', () => {
+    const transforms = keyframesOf(flame()).map((keyframe) => keyframe.transform)
+    expect(transforms.filter((transform) => transform !== undefined).length).toBeGreaterThan(0)
   })
 
   it.each(pinAnimations)('grows a pin’s %s ring', (animation) => {
@@ -82,6 +88,13 @@ describe('with reduce motion on', () => {
 
     expect(light.getAnimations()).toEqual([])
     expect(getComputedStyle(light).opacity).toBe('1')
+  })
+
+  it('keeps a hot game’s flames, standing still', () => {
+    const still = flame()
+
+    expect(still.getAnimations()).toEqual([])
+    expect(getComputedStyle(still).display).not.toBe('none')
   })
 
   it.each(pinAnimations)('fades a pin’s %s ring in and out in place, without changing its size', (animation) => {

@@ -30,7 +30,7 @@ interface PlacedCard {
   /** The card last drawn into the marker, so unchanged cards aren't redrawn every frame. */
   drawn: string
   /** What the card was last drawn from, so it's worked out afresh only when one of them changes. */
-  drawnFrom: { game: Game; color: string; selected: boolean; theme: Theme } | null
+  drawnFrom: { game: Game; color: string; flames: boolean; selected: boolean; theme: Theme } | null
   /** The card's size on screen, measured when it's drawn. */
   width: number
   height: number
@@ -69,6 +69,7 @@ export class ScoreCardMarkers {
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
   private readonly colourOf: (game: Game) => string
+  private readonly flamesOf: (game: Game) => boolean
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
   private readonly onSelect: (gameId: string) => void
@@ -102,13 +103,15 @@ export class ScoreCardMarkers {
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colourOf` gives a
    * game's colour as it is now (see gameColour), for its card, its trail and its pulses over card
-   * clusters; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
+   * clusters; `flamesOf` whether a game shows flames now (see showsFlames), on its card and a card
+   * cluster it's in; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
    * trails; `onSelect` is called with a game's id when its card is selected.
    */
   constructor(
     map: MapLibreMap,
     theme: () => Theme,
     colourOf: (game: Game) => string,
+    flamesOf: (game: Game) => boolean,
     placeNames: PlaceNames,
     trails: TrailLayer,
     onSelect: (gameId: string) => void,
@@ -116,6 +119,7 @@ export class ScoreCardMarkers {
     this.map = map
     this.theme = theme
     this.colourOf = colourOf
+    this.flamesOf = flamesOf
     this.placeNames = placeNames
     this.trails = trails
     this.onSelect = onSelect
@@ -132,8 +136,8 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it, or of the games' colours: each card
-   * redrawn in its game's colour, measured afresh, as its text, spacing and sizes may have changed,
+   * After a change of theme, with the page's CSS already in it, or of the games' colours or flames:
+   * each card redrawn in its game's colour, measured afresh, as its text, spacing and sizes may have changed,
    * and laid out again.
    */
   restyle(): void {
@@ -189,6 +193,7 @@ export class ScoreCardMarkers {
       if (!game) continue
       keep.add(gameId)
       const color = this.colourOf(game)
+      const flames = this.flamesOf(game)
       const selected = gameId === this.selectedGameId
       const theme = this.theme()
       let placed = this.placed.get(gameId)
@@ -227,9 +232,9 @@ export class ScoreCardMarkers {
         if (at.lng !== lngLat[0] || at.lat !== lngLat[1]) placed.marker.setLngLat(lngLat)
       }
       const from = placed.drawnFrom
-      if (from?.game === game && from.color === color && from.selected === selected && from.theme === theme) continue
-      placed.drawnFrom = { game, color, selected, theme }
-      const card = scoreCard(game)
+      if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme) continue
+      placed.drawnFrom = { game, color, flames, selected, theme }
+      const card = scoreCard(game, flames)
       const header = headerText(color, card.status, theme)
       const drawn = JSON.stringify({ card, color, header, selected })
       if (placed.drawn !== drawn) {
@@ -335,6 +340,7 @@ export class ScoreCardMarkers {
         height,
         lngLat: lngLat.toArray(),
         color: this.colourOf(game),
+        flames: this.flamesOf(game),
       }
     })
     // Where the cards were last frame, so they stay put while they still have room.
@@ -351,7 +357,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
     }
     this.moving = false
-    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, ...card }) => card), scene })
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, flames: _flames, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
     let moved = false
@@ -503,6 +509,18 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   header.className = 'score-card__header'
   header.append(span('score-card__light', ''), span('score-card__clock', card.clockLine || card.status))
   element.replaceChildren(header, team(card.away), team(card.home))
+  if (card.flames) element.append(flames())
+}
+
+/** How many tongues of flame rise from a hot game's card. */
+const flameTongues = 7
+
+/** The flames rising from a score card's top edge: tongues the CSS shapes, sizes and flickers. */
+function flames(): HTMLElement {
+  const row = span('score-card__flames', '')
+  row.setAttribute('aria-hidden', 'true')
+  row.append(...Array.from({ length: flameTongues }, () => span('score-card__flame', '')))
+  return row
 }
 
 function logo({ logoUrl }: ScoreCardTeam): HTMLImageElement {

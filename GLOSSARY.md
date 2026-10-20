@@ -26,7 +26,7 @@ _Avoid_: Competitor, participant, opponent
 
 **Top event**:
 A game ESPN lists in its Top Events, the games it picks as the most important right now across every sport, as its front page shows them. "Top Events" in Leagues on the rail shows only these, whichever leagues are switched off.
-_Avoid_: Featured game, highlight, hot game
+_Avoid_: Featured game, highlight, hot game (ScoreMap's own, by the score and time left)
 
 **Pin**:
 The marker for one game on the globe, placed at the game's venue.
@@ -61,7 +61,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues, and whether hot games show flames).
 _Avoid_: Settings menu, quick settings, toolbar
 **Welcome tour**:
 What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen (on a phone, a bottom sheet): Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one, or an example card when none is in view). It can't be closed, only finished, and it carries on where it was left. Once finished it doesn't come back; a demo shows it every time.
@@ -86,6 +86,10 @@ _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted),
 **Clutch time**:
 In basketball, the last 5 minutes of the last period of regulation, or any time in overtime, while the score is within 5 points. Borrowed from the NBA's clutch-time stat.
 _Avoid_: Crunch time, close game
+
+**Hot game**:
+A Live game coming down to the wire: the trailing side is one score from tying or taking the lead, and little is left to play. In football, the last 4 minutes of the 4th quarter or any time in overtime, within 8 points. In hockey, the last 5 minutes of the 3rd period within 1 goal, or any time in overtime or a shootout. In soccer, from the 85th minute within 1 goal, from the 115th minute of extra time within 1 goal, or any time in a penalty shootout. In baseball, from the 9th inning on, while the tying run is on base or at the plate. In cricket, the last 2 overs of a limited-overs chase, while the chasing side needs no more than 2 runs a ball and has wickets left. In basketball, the exception: a game in clutch time.
+_Avoid_: Close game, thriller, top event (ESPN's pick, not ScoreMap's)
 
 **Venue**:
 The stadium or arena where a game is physically played, with its city and country. Not necessarily the home team's city.

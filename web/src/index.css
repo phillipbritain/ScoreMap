@@ -1105,7 +1105,7 @@ body {
   }
 }
 
-/* A popover, Leagues or Colours, to the left of the rail and level with its top, on the rail's
+/* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
    glass. */
 .rail__popover {
   position: absolute;
@@ -1285,7 +1285,7 @@ body {
   font-weight: var(--typography-button-font-weight);
 }
 
-/* Colours: a sport's or league's name, then the swatch of its games' colour and its clear control. */
+/* Display Settings: a sport's or league's name, then the swatch of its games' colour and its clear control. */
 .colours-row {
   display: flex;
   align-items: center;
@@ -2210,7 +2210,7 @@ body {
   width: 100%;
 }
 
-/* A switch, its knob at the right when on: the welcome tour's, and "Flames on hot games" in Colours. */
+/* A switch, its knob at the right when on: the welcome tour's, and "Flames on hot games" in Display Settings. */
 .switch {
   position: relative;
   flex: none;

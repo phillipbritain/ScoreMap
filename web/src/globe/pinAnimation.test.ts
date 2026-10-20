@@ -7,6 +7,7 @@ function game(status: GameStatus, home: number | null, away: number | null): Gam
     sport: 'Football',
     status,
     clutchTime: false,
+    hot: false,
     home: { score: home },
     away: { score: away },
     clock: null,

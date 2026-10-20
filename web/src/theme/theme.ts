@@ -416,9 +416,13 @@ const settings = {
      * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose colour
      * is just its status's palette colour is in the game's colour; any other (Live's paler core, say)
      * stays as given, so status still shows by brightness. Small pins gather into pin clusters by the
-     * widest glow.
+     * widest glow. A hot game's (with flames on) has a flame this tall rising from its core, in fire's
+     * colours (the score card fire's, ScoreCard.flames).
      */
-    Pin: byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
+    Pin: {
+      ...byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
+      flame: { size: pixels },
+    },
     /**
      * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its games'
      * colour (the theme's accent where they differ), in a glow as strong as this much of its status's small pins' glow, so a cluster of a
@@ -426,6 +430,7 @@ const settings = {
      * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
      * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
      * at a type style's size. By the status it shows as, how opaque it is: its disc, outline and count alike.
+     * A pin or card cluster holding a hot game (with flames on) has a flame this tall on its top edge, likewise.
      */
     Cluster: {
       fill: color,
@@ -434,6 +439,7 @@ const settings = {
       outlineWidth: pixels,
       glowOpacity: opacity,
       count: { font: globeFont, size: textSize },
+      flame: { size: pixels },
       ...byStatus({ opacity }),
     },
     /**
@@ -475,7 +481,10 @@ const settings = {
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
      * fades and glows (see cardStatus), and a Disrupted game's fill and text. Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
-     * outline and status light stay solid.
+     * outline and status light stay solid. A hot game's card (with flames on) has a fire along its top
+     * edge, in fire's colours rather than its game's (its tongues' tips, middle and white-hot core), as
+     * tall as `flames.height` at the most, growing and shrinking by `flames.flicker` of that as it
+     * flickers (0 not at all, 1 all the way).
      */
     ScoreCard: {
       fill: color,
@@ -486,6 +495,13 @@ const settings = {
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
       logo: { plate: logoPlate },
+      flames: {
+        height: pixels,
+        flicker: numberFrom(0, 1, 'a share of the flames’ height from 0 to 1'),
+        tips: color,
+        middle: color,
+        core: color,
+      },
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,
@@ -535,7 +551,7 @@ const settings = {
     /** An item's corners in a menu. */
     MenuItem: { corner },
     /**
-     * The rail, its popovers (Leagues and Colours) and its toast: their surface and drop shadow; a toggle
+     * The rail, its popovers (Leagues and Display Settings) and its toast: their surface and drop shadow; a toggle
      * button's icon that's on and one that's off; the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on

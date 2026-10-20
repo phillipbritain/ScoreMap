@@ -39,7 +39,7 @@ The code reads only the resolved theme, never the JSON:
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colours
 
@@ -80,9 +80,9 @@ The **palette** says what the theme's main colours are for, shaped as MUI's pale
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colours name gold's steps themselves; only the welcome tour's switches in My leagues name it (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colours name gold's steps themselves; only the switches name it, the welcome tour's in My leagues and "Flames on hot games" in Display Settings (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final`, `.disrupted` | A game's colour, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for Live, Upcoming and Final, `offWhite.700`, `.600`, `.800` (grey) for Disrupted |
-| `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colours are the viewer's, in Colours on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
+| `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colours are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
@@ -149,7 +149,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.credit.fill`, `.text` | The photo's credit, shown on hover | `background.default`, `text.secondary` |
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues and Colours) and its toast | `background.paper` |
+| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues and Display Settings) and its toast | `background.paper` |
 | `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.toggle.on`, `.off` | A toggle's icon on the rail ("Live only", "Show Disrupted games") when on, and when off; a popover's button takes the on colour while its popover is open | `secondary.main` (gold), `text.secondary` (grey) |
@@ -167,7 +167,7 @@ Beside the palette's background, text, divider and hover:
 
 ## How a game's status shows
 
-A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a colour the viewer picks in Colours on the rail (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
+A game's status shows by **brightness and glow, not colour** (ADR-0012). Colour is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a colour the viewer picks in Display Settings on the rail (ADR-0017). With none picked, the dark theme gives Live, Upcoming and Final games the one gold and Disrupted games a grey, so a game's colour says only whether it's being played as scheduled. A Disrupted game stays grey whatever the viewer picks.
 
 - **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
 - **Upcoming** glows less and is a little dimmer.
@@ -209,6 +209,24 @@ How status reaches the rest of the globe:
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
+### Hot games' flames
+
+With "Flames on hot games" on in Display Settings on the rail (on unless the viewer switches it off), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot.
+
+- A **score card** has a fire along its top edge, after NBA Jam's "he's on fire": tongues of flame overlapping out of a bed of fire, within the card's width and tallest in the middle, in a glow. Each tongue is in three bands (its tips, its middle and a white-hot core) and flickers frame by frame, as an arcade sprite does, each at its own pace. With reduce motion on it stands still. The flames are in **fire's colours, not the game's**, here and on the globe alike, so a hot game looks the same everywhere: the one place colour doesn't say league (ADR-0012), chosen by eye over the same fire in the game's colour, which read as pale and muddy.
+- A **small pin** has a small flame rising from its core, its base behind the core, in the same three bands.
+- A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, flames and all.
+
+| Setting | What it is | Dark theme |
+| --- | --- | --- |
+| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; under a third of it is behind the card | 24 |
+| `components.ScoreCard.flames.flicker` | How far the tongues grow and shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.18 |
+| `components.ScoreCard.flames.tips`, `.middle`, `.core` | The fire's colours: its tongues' tips, their middle and the white-hot core (with the bed of fire and the glow), and the small pins' and clusters' flames' | `#d42a12`, `#ff8a00`, `#fff3a8`, given directly as none of the theme's colours is fire's |
+| `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
+| `components.Cluster.flame.size` | How tall a pin cluster's or card cluster's flame is, in pixels | 12 |
+
+A flame's shape (a main tip with a smaller lick to one side, the same on the globe, `web/src/globe/flames.ts`, and as the score card tongues' mask, in the CSS), how many tongues a card has, their heights and overlap, and how fast they flicker stay in code.
+
 ### Glass
 
 Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast, the scenario controls with the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
@@ -249,7 +267,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `subtitle2` | A score card's clock line, and the rest of its text | 600, 12 |
 | `body1` | Body text; the game panel's close button takes its size | 400, 16 |
 | `body2` | The game panel, the rail's popovers and toast, the scenario clock and the loading screen's message | 400, 14 |
-| `button` | Buttons: sport names in Leagues and Colours, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
+| `button` | Buttons: sport names in Leagues and Display Settings, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
 | `footnote` | The smallest: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
@@ -411,6 +429,7 @@ Some of the look is in code on purpose, as behaviour or layout rather than a the
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);
 - that a glow on the globe (a small pin's, a pin cluster's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
+- a flame's drawing, and a score card's tongues of flame: how many, their heights and pace (see [Hot games' flames](#hot-games-flames));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;
 - which kinds of place are named in capitals (states and countries);
 - which type style, how many spacing units and which border width each thing on the page uses (the CSS), and which status is most prominent and draws on top (the status look, `web/src/globe/statusLook.ts`).

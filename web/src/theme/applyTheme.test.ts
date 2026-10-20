@@ -147,8 +147,8 @@ describe('applyTheme', () => {
       typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // A small pin's core of four and glow of two, for each of four statuses.
-      pin: 4 * 6,
+      // A small pin's core of four and glow of two, for each of four statuses, and its flame's size.
+      pin: 4 * 6 + 1,
       // A surface, four kinds of line (their colours) and two halo colours.
       globe: 7,
       // Three kinds of place name (city, state and country), each with a colour, an outline (its colour, width and blur), a
@@ -157,8 +157,8 @@ describe('applyTheme', () => {
       // The sky's colour, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
-      // font (of four) and size, and its opacity for each of four statuses.
-      cluster: 9 + 5 + 4,
+      // font (of four) and size, its flame's size, and its opacity for each of four statuses.
+      cluster: 9 + 5 + 1 + 4,
       // A trail's width and opacity, its glow's three and its venue's three.
       trail: 8,
       selection: 2,
@@ -166,10 +166,10 @@ describe('applyTheme', () => {
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, frost, header's two, corner, five sizes
-      // and logo plate of three; for each of four statuses its fade and glow of two, and a Disrupted card's
+      // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
+      // logo plate of three and flames' five (height, flicker and three colours); for each of four statuses its fade and glow of two, and a Disrupted card's
       // fill and text.
-      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 4 * 3 + 2,
+      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 4 * 3 + 2,
       // The game panel's frost, eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,

@@ -186,6 +186,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           cityLabels={behaviour.cityLabels}
           zoomSettings={behaviour.zoom}
           colours={colours}
+          flames={viewerSettings.hotGameFlames}
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}

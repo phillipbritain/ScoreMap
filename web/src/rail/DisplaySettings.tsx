@@ -10,7 +10,7 @@ import {
   type ViewerSettings,
 } from '../settings/viewerSettings'
 
-interface ColoursProps {
+interface DisplaySettingsProps {
   leagues: readonly League[]
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
@@ -22,12 +22,13 @@ interface ColoursProps {
 }
 
 /**
- * The rail's Colours popover: each sport, then its leagues, by name, with a swatch of its games'
+ * The rail's Display Settings popover: "Flames on hot games", switching flames on hot games (see
+ * GLOSSARY.md) on and off, then each sport, then its leagues, by name, with a swatch of its games'
  * colour, which opens a grid of the colours there are to pick (see pickableColours) under its row, and
  * a control to clear it; a league with no colour of its own shows its sport's, marked as taken from
  * the sport. One grid is open at a time. "Reset colours" clears every colour.
  */
-export function Colours({ leagues, settings, onChange, accent }: ColoursProps) {
+export function DisplaySettings({ leagues, settings, onChange, accent }: DisplaySettingsProps) {
   // Whose grid is open: a sport's or league's, as "sport:Football" or "league:NFL".
   const [picking, setPicking] = useState<string | null>(null)
   // What a sport or league with no colour picked shows: the accent, hollow, its games in the theme's colours.
@@ -64,6 +65,17 @@ export function Colours({ leagues, settings, onChange, accent }: ColoursProps) {
   }
   return (
     <>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={settings.hotGameFlames}
+        className="colours-flames"
+        data-tooltip="Flames on games coming down to the wire"
+        onClick={() => onChange({ ...settings, hotGameFlames: !settings.hotGameFlames })}
+      >
+        Flames on hot games
+        <span className={`switch switch--${settings.hotGameFlames ? 'on' : 'off'}`} aria-hidden="true" />
+      </button>
       {leaguesBySport(leagues).map((group) => {
         const sportColour = settings.sportColours[group.sport] ?? null
         // What a league with no colour of its own shows in: its sport's, else the theme's.

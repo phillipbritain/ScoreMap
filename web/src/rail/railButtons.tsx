@@ -12,7 +12,7 @@ export const railButtons = [
   { name: 'Live games only', icon: <LiveIcon /> },
   { name: 'Show Disrupted games', icon: <DisruptedIcon /> },
   { name: 'Leagues', icon: <LeaguesIcon /> },
-  { name: 'Colours', icon: <PaletteIcon /> },
+  { name: 'Display Settings', icon: <PaletteIcon /> },
 ] as const
 
 export type RailButtonName = (typeof railButtons)[number]['name']

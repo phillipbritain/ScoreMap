@@ -17,6 +17,8 @@ interface GlobeProps {
   zoomSettings: ZoomSettings
   /** The colours the viewer picked for games. A change recolours them in place (see GlobeMap.setColours). */
   colours: PickedColours
+  /** Whether hot games show flames. A change shows or clears them in place (see GlobeMap.setFlames). */
+  flames: boolean
   /** Whether each game is ringed at the reach its city label may be within (a local-run tool). */
   showGameCityReach: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
@@ -55,14 +57,14 @@ export interface GlobeCamera {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityReach, games, fromSnapshot, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGameCityReach, games, fromSnapshot, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames])
 
   useEffect(() => {
     if (!container.current) return
@@ -72,6 +74,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityRe
       cityLabels: latest.current.cityLabels,
       zoomSettings: latest.current.zoomSettings,
       colours: latest.current.colours,
+      flames: latest.current.flames,
       startCamera: latest.current.startCamera,
       onSelect: (gameId) => latest.current.onSelectGame(gameId),
       onCameraMove: (camera) => latest.current.onCameraMove(camera),
@@ -99,6 +102,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, showGameCityRe
   useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColours(colours), [colours])
+  useEffect(() => globe.current?.setFlames(flames), [flames])
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.

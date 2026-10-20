@@ -5,7 +5,7 @@ A globe showing sports games happening around the world, with live scores, so fa
 ## Language
 
 **Sport**:
-A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in Leagues and Colours on the rail. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
+A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in Leagues and Display Settings on the rail. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
 _Avoid_: American football, football (for soccer)
 
 **League**:
@@ -61,7 +61,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show) and Colours (the colours picked for sports and leagues, and whether hot games show flames).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show) and Display Settings (the colours picked for sports and leagues, and whether hot games show flames).
 _Avoid_: Settings menu, quick settings, toolbar
 **Welcome tour**:
 What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen (on a phone, a bottom sheet): Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one, or an example card when none is in view). It can't be closed, only finished, and it carries on where it was left. Once finished it doesn't come back; a demo shows it every time.
@@ -148,7 +148,7 @@ What a colour in a theme is for, such as the globe's surface, Live's colour or m
 _Avoid_: Token, semantic colour
 
 **Game colour**:
-The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Colours on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
+The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
 _Avoid_: Status colour (for a game's colour), team colour
 
 **Type style**:

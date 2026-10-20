@@ -129,6 +129,12 @@ export interface Game {
    * last period of regulation, or any time in overtime, within 5 points. False in other sports.
    */
   clutchTime: boolean
+  /**
+   * Whether the game is hot (see GLOSSARY.md): Live, the trailing side one score from tying or taking
+   * the lead, with little left to play, by its sport's rule (the server's HotGame). It shows flames, if
+   * the viewer has them on.
+   */
+  hot: boolean
   venue: GameVenue
   broadcasters: GameBroadcaster[]
   /** Unofficial stream links; empty when the stream finder found none or is switched off. */

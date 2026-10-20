@@ -130,7 +130,7 @@
       "corner": 1.5,
       "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "light": 6, "nameClearance": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 0.5, "corner": 0.5 } },
-      "flames": { "height": 14, "flicker": 0.35 },
+      "flames": { "height": 24, "flicker": 0.3 },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } },

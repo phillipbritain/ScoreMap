@@ -219,8 +219,8 @@ With "Flames on hot games" on in Colours on the rail (off on a first visit), a h
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; a quarter of it is behind the card | 14 |
-| `components.ScoreCard.flames.flicker` | How far the tongues shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.35 |
+| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; a fifth of it is behind the card | 24 |
+| `components.ScoreCard.flames.flicker` | How far the tongues shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.3 |
 | `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
 | `components.Cluster.flame.size` | How tall a pin cluster's or card cluster's flame is, in pixels | 12 |
 

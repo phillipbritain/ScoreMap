@@ -656,22 +656,32 @@ body {
 .score-card__flames {
   position: absolute;
   right: calc(1.5 * var(--spacing));
-  bottom: calc(100% - 0.25 * var(--score-card-flames-height));
+  bottom: calc(100% - 0.2 * var(--score-card-flames-height));
   left: calc(1.5 * var(--spacing));
   z-index: -1;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: space-evenly;
   height: var(--score-card-flames-height);
   pointer-events: none;
 }
 
+/* A glow of the game's colour behind the tongues, brightest at their base. */
+.score-card__flames::before {
+  content: '';
+  position: absolute;
+  inset: 30% -10% 0;
+  background: radial-gradient(ellipse 60% 70% at 50% 100%, color-mix(in srgb, var(--card-color) 55%, transparent), transparent);
+}
+
 .score-card__flame {
-  width: calc(0.55 * var(--score-card-flames-height));
+  position: relative;
+  flex: none;
+  width: calc(0.42 * var(--score-card-flames-height));
   height: 70%;
   background:
-    radial-gradient(ellipse 50% 45% at 50% 85%, color-mix(in srgb, var(--card-color), white 55%), transparent),
-    linear-gradient(to top, var(--card-color) 35%, color-mix(in srgb, var(--card-color) 45%, transparent));
+    radial-gradient(ellipse 40% 45% at 50% 88%, color-mix(in srgb, var(--card-color), white 70%), transparent),
+    linear-gradient(to top, color-mix(in srgb, var(--card-color), white 25%) 25%, var(--card-color) 60%, color-mix(in srgb, var(--card-color) 60%, transparent));
   /* The flame's shape, as the small pins' and clusters' (see globe/flames.ts). */
   -webkit-mask: var(--flame-shape) center / 100% 100% no-repeat;
   mask: var(--flame-shape) center / 100% 100% no-repeat;

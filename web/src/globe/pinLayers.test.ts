@@ -158,7 +158,7 @@ describe("a cluster's colour", () => {
       width: 100,
       height: 60,
       lngLat: [0, 0] as [number, number],
-      hot: false,
+      flames: false,
     }))
     const layout: CardLayout = {
       cards: new Map(cards.map(({ gameId }) => [gameId, { offset: { dx: 0, dy: -6 }, inCardCluster: true, moved: false, trail: null }])),

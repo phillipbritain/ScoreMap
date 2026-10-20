@@ -64,12 +64,12 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
     clusterMaxZoom,
     // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus), the
     // colour its games share, for its colour (see clusterColour), and how many show flames.
-    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColour, [hotGamesProperty]: ['+', ['case', ['get', 'hot'], 1, 0]] },
+    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColour, [flameGamesProperty]: ['+', ['case', ['get', 'flames'], 1, 0]] },
   }
 }
 
 /** How many of a pin cluster's games show flames (see showsFlames), which the pin source counts. */
-const hotGamesProperty = 'hotGames'
+const flameGamesProperty = 'flameGames'
 
 /**
  * A flame on a cluster's top edge, in its colour, as tall as the theme's cluster flame, `offset` from
@@ -146,7 +146,7 @@ export function pinClusterLayers(
     {
       ...inSet(set, 'pin-cluster-flames', { clusters: true }),
       type: 'symbol',
-      filter: ['all', ['has', 'point_count'], ['>', ['get', hotGamesProperty], 0]],
+      filter: ['all', ['has', 'point_count'], ['>', ['get', flameGamesProperty], 0]],
       layout: clusterFlameLayout(theme, [
         'step',
         ['get', 'point_count'],
@@ -192,7 +192,7 @@ export function smallPinLayers(
     {
       ...inSet(set, 'pin-flames'),
       type: 'symbol',
-      filter: ['all', ['!', ['has', 'point_count']], ['get', 'hot']],
+      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'flames'], true]],
       layout: {
         'icon-image': flameImage(theme.components.Pin.flame.size, gameColor),
         // Its base at the middle of the core.

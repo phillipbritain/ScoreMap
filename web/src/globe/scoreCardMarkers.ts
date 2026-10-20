@@ -340,7 +340,7 @@ export class ScoreCardMarkers {
         height,
         lngLat: lngLat.toArray(),
         color: this.colourOf(game),
-        hot: this.flamesOf(game),
+        flames: this.flamesOf(game),
       }
     })
     // Where the cards were last frame, so they stay put while they still have room.
@@ -357,7 +357,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
     }
     this.moving = false
-    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, hot: _hot, ...card }) => card), scene })
+    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, flames: _flames, ...card }) => card), scene })
     const layout = layOutCards(cards, scene, previous)
 
     let moved = false

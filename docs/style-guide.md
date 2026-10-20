@@ -211,20 +211,21 @@ How status reaches the rest of the globe:
 
 ### Hot games' flames
 
-With "Flames on hot games" on in Colours on the rail (off on a first visit), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot. Their shape says hot; their colour is still the game's, its status's or the colour the viewer picked for its sport or league, so colour still says league (ADR-0012). In the dark theme's gold they read as fire.
+With "Flames on hot games" on in Colours on the rail (off on a first visit), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot.
 
-- A **score card** has a row of tongues of flame rising from behind its top edge, each a different height, paler at its base, flickering at its own pace, shrinking by the flicker and back. With reduce motion on they stand still.
-- A **small pin** has a small flame rising from its core, its base behind the core.
-- A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, flames and all.
+- A **score card** has a fire along its top edge, after NBA Jam's "he's on fire": tongues of flame overlapping out of a bed of fire, within the card's width and tallest in the middle, in a glow. Each tongue is in three bands (its tips, its middle and a white-hot core) and flickers frame by frame, as an arcade sprite does, each at its own pace. With reduce motion on it stands still. The fire is in **fire's colours, not the game's**: the one place colour doesn't say league (ADR-0012), chosen by eye over the same fire in the game's colour, which read as pale and muddy.
+- A **small pin** has a small flame rising from its core, its base behind the core, in the game's colour.
+- A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, in its colour and as faded as it is. A **venue cluster** has none, as its games' cards are on screen, flames and all.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; a fifth of it is behind the card | 24 |
-| `components.ScoreCard.flames.flicker` | How far the tongues shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.3 |
+| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; under a third of it is behind the card | 24 |
+| `components.ScoreCard.flames.flicker` | How far the tongues grow and shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.18 |
+| `components.ScoreCard.flames.tips`, `.middle`, `.core` | The fire's colours: its tongues' tips, their middle and the white-hot core (with the bed of fire and the glow) | `#d42a12`, `#ff8a00`, `#fff3a8`, given directly as none of the theme's colours is fire's |
 | `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
 | `components.Cluster.flame.size` | How tall a pin cluster's or card cluster's flame is, in pixels | 12 |
 
-A flame's shape and paler core (the same drawing on the globe, `web/src/globe/flames.ts`, and as the score card tongues' mask, in the CSS), how many tongues a card has and their heights, and how fast they flicker stay in code.
+A flame's shape (a main tip with a smaller lick to one side, the same on the globe, `web/src/globe/flames.ts`, and as the score card tongues' mask, in the CSS), its paler core on the globe, how many tongues a card has, their heights and overlap, and how fast they flicker stay in code. The options tried for the score cards' fire are kept on the `prototype/199-flames` branch.
 
 ### Glass
 

@@ -35,8 +35,8 @@ export function drawFlamesOnDemand(map: MapLibreMap): void {
 }
 
 /**
- * A flame `size` pixels tall, in `colour`, with a paler core so it reads as burning, its tip leaning a
- * little: drawn at the screen's pixel ratio, so it's sharp. Null if the browser can't draw it.
+ * A flame `size` pixels tall, in `colour`, with a paler core so it reads as burning: drawn at the
+ * screen's pixel ratio, so it's sharp. Null if the browser can't draw it.
  */
 function drawFlame(size: number, colour: string, pixelRatio: number): ImageData | null {
   const height = Math.max(1, Math.round(size * pixelRatio))
@@ -46,18 +46,14 @@ function drawFlame(size: number, colour: string, pixelRatio: number): ImageData 
   canvas.height = height
   const context = canvas.getContext('2d')
   if (!context) return null
-  // A tongue in a box 1 across and 1 down: its tip at the top, its base round at the bottom.
-  const tongue = new Path2D()
-  tongue.moveTo(0.55, 0)
-  tongue.bezierCurveTo(0.62, 0.22, 1, 0.38, 0.96, 0.68)
-  tongue.bezierCurveTo(0.93, 0.9, 0.73, 1, 0.5, 1)
-  tongue.bezierCurveTo(0.27, 1, 0.07, 0.9, 0.04, 0.68)
-  tongue.bezierCurveTo(0.01, 0.46, 0.32, 0.36, 0.55, 0)
-  context.scale(width, height)
+  // A flame in a box 100 across and 100 down: a main tip, a smaller lick to its left, a round base. The
+  // score cards' tongues are the same shape (see index.css).
+  const tongue = new Path2D('M54 0C60 22 80 30 87 50C95 72 84 93 62 99C56 100 44 100 38 99C16 93 6 73 13 53C17 43 25 37 29 25C34 37 32 47 38 53C39 33 47 17 54 0Z')
+  context.scale(width / 100, height / 100)
   context.fillStyle = colour
   context.fill(tongue)
-  // The core: a smaller tongue at the base, paler.
-  context.translate(0.24, 0.4)
+  // The core: a smaller flame at the base, paler.
+  context.translate(24, 40)
   context.scale(0.52, 0.6)
   context.fillStyle = 'rgba(255, 255, 255, 0.55)'
   context.fill(tongue)

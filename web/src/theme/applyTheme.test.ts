@@ -167,9 +167,9 @@ describe('applyTheme', () => {
       // Two sizes and two ring widths.
       pulse: 4,
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
-      // logo plate of three and flames' two; for each of four statuses its fade and glow of two, and a Disrupted card's
+      // logo plate of three and flames' five (height, flicker and three colours); for each of four statuses its fade and glow of two, and a Disrupted card's
       // fill and text.
-      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 2 + 4 * 3 + 2,
+      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 4 * 3 + 2,
       // The game panel's frost, eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,

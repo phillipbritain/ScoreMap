@@ -480,9 +480,10 @@ const settings = {
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
      * fades and glows (see cardStatus), and a Disrupted game's fill and text. Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
-     * outline and status light stay solid. A hot game's card (with flames on) has flames rising from its
-     * top edge in its game's colour, as tall as `flames.height` at the most, rising and falling by
-     * `flames.flicker` of that as they flicker (0 not at all, 1 all the way down).
+     * outline and status light stay solid. A hot game's card (with flames on) has a fire along its top
+     * edge, in fire's colours rather than its game's (its tongues' tips, middle and white-hot core), as
+     * tall as `flames.height` at the most, growing and shrinking by `flames.flicker` of that as it
+     * flickers (0 not at all, 1 all the way).
      */
     ScoreCard: {
       fill: color,
@@ -493,7 +494,13 @@ const settings = {
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
       logo: { plate: logoPlate },
-      flames: { height: pixels, flicker: numberFrom(0, 1, 'a share of the flames’ height from 0 to 1') },
+      flames: {
+        height: pixels,
+        flicker: numberFrom(0, 1, 'a share of the flames’ height from 0 to 1'),
+        tips: color,
+        middle: color,
+        core: color,
+      },
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,

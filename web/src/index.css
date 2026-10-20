@@ -651,86 +651,144 @@ body {
   }
 }
 
-/* A hot game's flames: tongues rising from behind the card's top edge in its colour, paler at their
-   base, each a different height and flickering at its own pace. */
+/* A hot game's flames, after NBA Jam's "he's on fire": one fire along the card's top edge, within its
+   width, its tongues overlapping out of a bed of fire, tallest in the middle. Each tongue is in three
+   bands (the theme's tips, middle and white-hot core) and flickers frame by frame, as an arcade
+   sprite does, each at its own pace, in a glow. */
 .score-card__flames {
+  /* The outer tongues' overlap reaches past the row, so the row is set in by as much. */
+  --flames-overlap: calc(0.22 * var(--score-card-flames-height));
   position: absolute;
-  right: calc(1.5 * var(--spacing));
-  bottom: calc(100% - 0.2 * var(--score-card-flames-height));
-  left: calc(1.5 * var(--spacing));
+  right: calc(var(--flames-overlap) + 1px);
+  bottom: calc(100% - 0.3 * var(--score-card-flames-height));
+  left: calc(var(--flames-overlap) + 1px);
   z-index: -1;
   display: flex;
   align-items: flex-end;
-  justify-content: space-evenly;
+  justify-content: space-between;
   height: var(--score-card-flames-height);
   pointer-events: none;
+  /* A flame with a main tip and a smaller lick to one side, as the small pins' and clusters' (see
+     globe/flames.ts), and the same facing the other way. */
+  --flame-lick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M54 0C60 22 80 30 87 50C95 72 84 93 62 99C56 100 44 100 38 99C16 93 6 73 13 53C17 43 25 37 29 25C34 37 32 47 38 53C39 33 47 17 54 0Z'/%3E%3C/svg%3E");
+  --flame-lick-mirrored: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M46 0C40 22 20 30 13 50C5 72 16 93 38 99C44 100 56 100 62 99C84 93 94 73 87 53C83 43 75 37 71 25C66 37 68 47 62 53C61 33 53 17 46 0Z'/%3E%3C/svg%3E");
 }
 
-/* A glow of the game's colour behind the tongues, brightest at their base. */
+/* The glow behind the fire, brightest at its base. */
 .score-card__flames::before {
   content: '';
   position: absolute;
-  inset: 30% -10% 0;
-  background: radial-gradient(ellipse 60% 70% at 50% 100%, color-mix(in srgb, var(--card-color) 55%, transparent), transparent);
+  inset: 15% -12% -10%;
+  background: radial-gradient(
+    ellipse 70% 65% at 50% 100%,
+    color-mix(in srgb, var(--score-card-flames-middle) 75%, transparent),
+    transparent
+  );
+  animation: score-card-flames-glow 0.6s steps(2) infinite;
 }
 
+/* The bed of fire the tongues rise out of, along the card's edge: white-hot at the bottom. */
+.score-card__flames::after {
+  content: '';
+  position: absolute;
+  inset: auto calc(2px - var(--flames-overlap)) 0;
+  z-index: 1;
+  height: 38%;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(
+    to top,
+    var(--score-card-flames-core) 20%,
+    var(--score-card-flames-middle) 60%,
+    transparent
+  );
+  transform-origin: 50% 100%;
+  animation: score-card-flames-bed 0.7s ease-in-out infinite alternate;
+}
+
+/* A tongue: its tips (itself), its middle and its core, one inside another. */
 .score-card__flame {
   position: relative;
-  flex: none;
-  width: calc(0.42 * var(--score-card-flames-height));
-  height: 70%;
-  background:
-    radial-gradient(ellipse 40% 45% at 50% 88%, color-mix(in srgb, var(--card-color), white 70%), transparent),
-    linear-gradient(to top, color-mix(in srgb, var(--card-color), white 25%) 25%, var(--card-color) 60%, color-mix(in srgb, var(--card-color) 60%, transparent));
-  /* The flame's shape, as the small pins' and clusters' (see globe/flames.ts). */
-  -webkit-mask: var(--flame-shape) center / 100% 100% no-repeat;
-  mask: var(--flame-shape) center / 100% 100% no-repeat;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 50%;
+  margin: 0 calc(-1 * var(--flames-overlap));
+  background: linear-gradient(
+    to top,
+    var(--score-card-flames-middle) 30%,
+    var(--score-card-flames-tips) 75%,
+    color-mix(in srgb, var(--score-card-flames-tips) 70%, transparent)
+  );
+  -webkit-mask: var(--flame-lick) center / 100% 100% no-repeat;
+  mask: var(--flame-lick) center / 100% 100% no-repeat;
   transform-origin: 50% 100%;
-  animation: score-card-flame 0.8s ease-in-out infinite alternate;
-  --flame-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M55 0C62 22 100 38 96 68C93 90 73 100 50 100C27 100 7 90 4 68C1 46 32 36 55 0Z'/%3E%3C/svg%3E");
+  animation: score-card-flame 0.75s steps(3) infinite;
 }
 
-.score-card__flame:nth-child(2) {
-  height: 90%;
-  animation-duration: 0.65s;
+.score-card__flame::before,
+.score-card__flame::after {
+  content: '';
+  position: absolute;
+  -webkit-mask: inherit;
+  mask: inherit;
+}
+
+.score-card__flame::before {
+  inset: 25% 14% 0;
+  background: linear-gradient(to top, var(--score-card-flames-core) 15%, var(--score-card-flames-middle) 70%);
+}
+
+.score-card__flame::after {
+  inset: 58% 30% 0;
+  background: color-mix(in srgb, var(--score-card-flames-core), white 60%);
+}
+
+/* Leaning each way in turn, out of step. */
+.score-card__flame:nth-child(even) {
+  -webkit-mask-image: var(--flame-lick-mirrored);
+  mask-image: var(--flame-lick-mirrored);
+  animation-duration: 0.9s;
+  animation-direction: reverse;
+}
+
+.score-card__flame:nth-child(3n) {
+  animation-duration: 0.66s;
   animation-delay: -0.3s;
 }
 
-.score-card__flame:nth-child(3) {
-  height: 60%;
-  animation-duration: 1s;
-  animation-delay: -0.5s;
+.score-card__flame:nth-child(2),
+.score-card__flame:nth-child(6) {
+  height: 78%;
+}
+
+.score-card__flame:nth-child(3),
+.score-card__flame:nth-child(5) {
+  height: 92%;
 }
 
 .score-card__flame:nth-child(4) {
   height: 100%;
-  animation-duration: 0.7s;
-  animation-delay: -0.1s;
 }
 
-.score-card__flame:nth-child(5) {
-  height: 75%;
-  animation-duration: 0.9s;
-  animation-delay: -0.6s;
-}
-
-.score-card__flame:nth-child(6) {
-  height: 85%;
-  animation-duration: 0.6s;
-  animation-delay: -0.2s;
-}
-
-.score-card__flame:nth-child(7) {
-  height: 55%;
-  animation-duration: 1.1s;
-  animation-delay: -0.4s;
-}
-
-/* Down by the theme's flicker, a share of its height, leaning a little wider as it does. */
+/* Taller and narrower, then shorter and wider, by the theme's flicker, a share of its height. */
 @keyframes score-card-flame {
+  33% {
+    transform: translateX(1px) scale(0.88, calc(1 + var(--score-card-flames-flicker)));
+  }
+  66% {
+    transform: translateX(-1px) scale(1.08, calc(1 - var(--score-card-flames-flicker)));
+  }
+}
+
+@keyframes score-card-flames-glow {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes score-card-flames-bed {
   to {
-    transform: scale(1.1, calc(1 - var(--score-card-flames-flicker)));
-    opacity: 0.8;
+    opacity: 0.85;
+    transform: scaleY(0.8);
   }
 }
 
@@ -910,6 +968,8 @@ body {
     transition: none;
   }
 
+  .score-card__flames::before,
+  .score-card__flames::after,
   .score-card__flame {
     animation: none;
   }

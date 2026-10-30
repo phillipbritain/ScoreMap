@@ -508,7 +508,7 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   const header = document.createElement('div')
   header.className = 'score-card__header'
   header.append(span('score-card__light', ''), span('score-card__clock', card.clockLine || card.status))
-  element.replaceChildren(header, team(card.away), team(card.home))
+  element.replaceChildren(header, team(card.top), team(card.bottom))
   if (card.flames) element.append(flames())
 }
 

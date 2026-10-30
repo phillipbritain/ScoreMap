@@ -4,6 +4,7 @@ import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
+import { sidesTopFirst } from '../games/sides'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
@@ -34,9 +35,13 @@ interface PanelLink {
 export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
-  // A tennis match's venue is its tournament, which its note already names, so it shows the court.
-  const venueName = venue.court ?? venue.name ?? 'Unknown venue'
+  // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
+  const tennis = game.sport === 'Tennis'
+  const venueName = (tennis ? [venue.court, place].filter(Boolean).join(' · ') : venue.name) || 'Unknown venue'
+  // The place under the venue's name; in tennis, already on the venue's line.
+  const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
+  const [top, bottom] = sidesTopFirst(game)
   // A note on the game (a playoff round, say) goes beside its league.
   const league = game.note ? `${game.league} · ${game.note}` : game.league
   // A Final game shows when it ended; any other, when it starts.
@@ -61,8 +66,8 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
           <div className="game-panel__league" data-tooltip={league} data-tooltip-when-clipped>
             {league}
           </div>
-          <TeamRow team={game.away} />
-          <TeamRow team={game.home} />
+          <TeamRow team={top} />
+          <TeamRow team={bottom} />
           {progress && (
             <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
               {progress}
@@ -76,8 +81,8 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
             <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
               {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
             </div>
-            <div className="game-panel__muted" data-tooltip={place} data-tooltip-when-clipped>
-              {place && <MapsLink query={place}>{place}</MapsLink>}
+            <div className="game-panel__muted" data-tooltip={placeLine} data-tooltip-when-clipped>
+              {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
             </div>
           </div>
           <div>

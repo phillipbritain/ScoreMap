@@ -110,7 +110,7 @@ public static class ClockLine
     }
 
     /// <summary>
-    /// Tennis has no clock: the current set and its games, the away side's first as it's shown first:
+    /// Tennis has no clock: the current set and its games, the home side's first as it's shown on top:
     /// "2nd set · 4–3", or "2nd set" before its first game. Once over, "Final", or for a match ended early
     /// "Ret." (a retirement) or "W/O" (a walkover).
     /// </summary>
@@ -124,7 +124,7 @@ public static class ClockLine
                 _ => "Final",
             };
         return game.Sets.ElementAtOrDefault(set - 1) is { } games
-            ? $"{Ordinal(set)} set · {games.Away}–{games.Home}"
+            ? $"{Ordinal(set)} set · {games.Home}–{games.Away}"
             : $"{Ordinal(set)} set";
     }
 

@@ -3,7 +3,7 @@ using ScoreMap.Server.GameFeed;
 namespace ScoreMap.Server.Games;
 
 /// <summary>
-/// A tennis match's score set by set, the away side's games first as it's shown first, with the
+/// A tennis match's score set by set, the home side's games first as it's shown on top, with the
 /// loser's tiebreak points after a tiebreak set: "7-6(5) 4-3". A match ended early says so and names
 /// the side that advanced: "7-5 ret. · N. Leme Da Silva advances", "W/O · C. Liu advances".
 /// </summary>
@@ -28,7 +28,7 @@ public static class Scoreline
 
     private static string Set(ProviderSet set)
     {
-        var games = $"{set.Away}-{set.Home}";
+        var games = $"{set.Home}-{set.Away}";
         // A tiebreak set's loser's points; none while its tiebreak is still being played.
         var lost = set.Home > set.Away ? set.AwayTiebreak : set.Away > set.Home ? set.HomeTiebreak : null;
         return lost is { } points ? $"{games}({points})" : games;

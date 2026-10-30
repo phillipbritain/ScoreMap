@@ -42,7 +42,8 @@ public sealed record ProviderGame(
 
     /// <summary>
     /// Tennis: the games each side has won in each set so far, in order, the current set last. The
-    /// sides' scores are their sets won, and <see cref="Period"/> is the current set.
+    /// sides' scores are their sets won, and <see cref="Period"/> is the current set. <see cref="Home"/>
+    /// is the side ESPN lists first (its <c>order</c> 1), shown on top.
     /// </summary>
     public IReadOnlyList<ProviderSet> Sets { get; init; } = [];
 

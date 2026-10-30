@@ -157,7 +157,7 @@ export interface Game {
   /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */
   topEvent: boolean
   /**
-   * Tennis: the score set by set, the away side's games first, with the loser's tiebreak points ("7-6(5) 4-3");
+   * Tennis: the score set by set, the home side's games first (it is shown on top), with the loser's tiebreak points ("7-6(5) 4-3");
    * a match ended early says so and names the side that advanced ("7-5 ret. · N. Leme Da Silva advances").
    * Null in other sports and before play.
    */

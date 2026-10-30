@@ -46,11 +46,11 @@ public class TennisTests
         await using var server = new ScoreMapServer();
 
         var game = await ReceivedAsync(server, Match(server, InProgress, 2,
-            [new ProviderSet(6, 7, HomeTiebreak: 5, AwayTiebreak: 7), new ProviderSet(3, 4)]));
+            [new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 5), new ProviderSet(4, 3)]));
 
         Assert.Equal(("ATP", "Tennis", GameStatus.Live), (game.League, game.Sport, game.Status));
-        // The away side is shown first, so its games come first.
-        Assert.Equal(("1", "0"), (game.Away.Score, game.Home.Score));
+        // The home side is shown on top, so its games come first.
+        Assert.Equal(("1", "0"), (game.Home.Score, game.Away.Score));
         Assert.Equal("2nd set · 4–3", game.Clock);
         Assert.Equal("7-6(5) 4-3", game.Scoreline);
         Assert.False(game.Hot);
@@ -71,7 +71,7 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(6, 4), new ProviderSet(7, 6, 7, 3)]));
+        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(4, 6), new ProviderSet(6, 7, 3, 7)]));
 
         Assert.Equal((GameStatus.Final, "Final"), (game.Status, game.Clock));
         Assert.Equal("4-6 6-7(3)", game.Scoreline);
@@ -82,11 +82,11 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(5, 7), new ProviderSet(1, 0)],
-            new ProviderEarlyEnding(EarlyEndingReason.Retired, "C. Alcaraz")));
+        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(7, 5), new ProviderSet(0, 1)],
+            new ProviderEarlyEnding(EarlyEndingReason.Retired, "J. Sinner")));
 
         Assert.Equal((GameStatus.Final, "Ret."), (game.Status, game.Clock));
-        Assert.Equal("7-5 0-1 ret. · C. Alcaraz advances", game.Scoreline);
+        Assert.Equal("7-5 0-1 ret. · J. Sinner advances", game.Scoreline);
     }
 
     [Fact]

@@ -50,12 +50,16 @@ public sealed record Game(
 
     /// <summary>Whether ESPN lists the game in its Top Events: the games it picks as the most important right now.</summary>
     public bool TopEvent { get; init; }
+
+    /// <summary>Tennis: the score set by set, with tiebreaks (see <see cref="Games.Scoreline"/>); null in other sports and before play.</summary>
+    public string? Scoreline { get; init; }
 }
 
 /// <summary>
-/// A team in a game. <see cref="Score"/> is text, as its sport writes it: points, goals or runs ("24"),
-/// or in cricket runs and wickets ("186/6"), runs alone when the side is all out; null before it scores
-/// anything (before the game starts, or in cricket before the team bats). <see cref="Rank"/> is its place
+/// A team in a game, or in tennis a player: their short name ("J. Sinner") is the abbreviation and their
+/// country's flag the logo. <see cref="Score"/> is text, as its sport writes it: points, goals or runs
+/// ("24"), in cricket runs and wickets ("186/6"), runs alone when the side is all out, and in tennis sets
+/// won; null before it scores anything (before the game starts, or in cricket before the team bats). <see cref="Rank"/> is its place
 /// in its league's poll (college sports), and <see cref="Record"/> its season so far ("5-2"; in soccer
 /// wins, draws and losses, "2-2-3"); each null where the feed gives none.
 /// </summary>
@@ -67,10 +71,15 @@ public sealed record GameTeam(string Abbreviation, string FullName, string? Logo
 /// for a US state or Canadian province ("Arizona", "Ontario"), as the feed gives it otherwise, and null
 /// where the feed gives none. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
 /// or null when the venue could not be placed. <see cref="Photo"/> is null until a photo of the venue
-/// has been found, and stays null for a venue that has none.
+/// has been found, and stays null for a venue that has none. In tennis, <see cref="Name"/> is the
+/// tournament and <see cref="City"/> its city as the feed writes it ("Shanghai, China PR").
 /// </summary>
 public sealed record GameVenue(string? Name, string? City, string? Region, string? Country, double Latitude, double Longitude, string? TimeZone,
-    VenuePhoto? Photo = null);
+    VenuePhoto? Photo = null)
+{
+    /// <summary>Tennis: the court the match is on ("Stadium Court"), when the feed names it.</summary>
+    public string? Court { get; init; }
+}
 
 /// <summary>
 /// A photo of a venue for the top of the game panel: from outside or of the playing area, whichever

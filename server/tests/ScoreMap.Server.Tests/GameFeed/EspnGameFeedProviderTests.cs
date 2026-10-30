@@ -716,4 +716,98 @@ public class EspnGameFeedProviderTests
         Assert.StartsWith("https://site.web.api.espn.com/apis/personalized/v2/scoreboard/header?",
             Assert.Single(handler.Requests).RequestUri!.AbsoluteUri);
     }
+
+    // Tennis: each event is a tournament, its matches under its groupings (singles, doubles).
+    private const string Wta = "tennis/wta";
+
+    [Fact]
+    public async Task Tennis_gives_one_game_per_main_draw_singles_match_with_both_sides_known()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        // Left out: a qualifying match (187134), doubles (185748, 185788) and matches with a side still TBD (185779, 185781).
+        Assert.Equal(["185706", "185732", "185733", "185776", "185777"], games.Select(g => g.Id).Order());
+    }
+
+    [Fact]
+    public async Task A_live_tennis_match_has_its_players_sets_won_and_games_in_each_set()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        var match = Assert.Single(games, g => g.Id == "185777");
+        Assert.Equal((Wta, new DateTimeOffset(2026, 10, 30, 20, 20, 0, TimeSpan.Zero), ProviderStatus.InProgress, 3),
+            (match.LeagueKey, match.StartTime, match.Status, match.Period));
+        Assert.Equal(new ProviderTeam("A. Tubello", "Alice Tubello", "https://a.espncdn.com/i/teamlogos/countries/500/fra.png", 1), match.Home);
+        Assert.Equal(new ProviderTeam("J. Ortenzi", "Jazmin Ortenzi", "https://a.espncdn.com/i/teamlogos/countries/500/arg.png", 1), match.Away);
+        Assert.Equal([new ProviderSet(2, 6), new ProviderSet(6, 2), new ProviderSet(1, 3)], match.Sets);
+        Assert.Null(match.EarlyEnding);
+    }
+
+    [Fact]
+    public async Task A_tennis_match_is_at_its_tournament_in_its_city_on_its_court_and_noted_with_its_round()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        var match = Assert.Single(games, g => g.Id == "185777");
+        Assert.Equal(new ProviderVenue("Curitiba Open", "Curitiba, Brazil", null, null, Court: "Quadra Central"), match.Venue);
+        Assert.Equal("Curitiba Open · Quarterfinal", match.Note);
+        // A match with no court named yet has none.
+        Assert.Null(Assert.Single(games, g => g.Id == "185706").Venue!.Court);
+    }
+
+    [Fact]
+    public async Task A_tiebreak_set_carries_both_sides_tiebreak_points()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        var match = Assert.Single(games, g => g.Id == "185732");
+        Assert.Equal(ProviderStatus.Final, match.Status);
+        Assert.Equal([new ProviderSet(7, 5), new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 2)], match.Sets);
+        Assert.Equal((2, 0), (match.Home.Score, match.Away.Score));
+    }
+
+    [Fact]
+    public async Task A_retirement_is_Final_and_names_the_side_that_advances_counting_the_sets_it_finished()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        var match = Assert.Single(games, g => g.Id == "185776");
+        Assert.Equal(ProviderStatus.Final, match.Status);
+        Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, "N. Leme Da Silva"), match.EarlyEnding);
+        // ESPN marks no winner for the 7-5 set the match stopped after, but it was finished.
+        Assert.Equal((0, 1), (match.Home.Score, match.Away.Score));
+    }
+
+    [Fact]
+    public async Task A_walkover_is_Final_with_no_score_and_names_the_side_that_advances()
+    {
+        var games = await FetchFixtureAsync("tennis-wta.json", Wta);
+
+        var match = Assert.Single(games, g => g.Id == "185706");
+        Assert.Equal(ProviderStatus.Final, match.Status);
+        Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Walkover, "C. Liu"), match.EarlyEnding);
+        Assert.Equal(((int?)null, (int?)null), (match.Home.Score, match.Away.Score));
+        Assert.Empty(match.Sets);
+    }
+
+    [Fact]
+    public async Task A_suspended_tennis_match_is_suspended()
+    {
+        var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json").Replace("STATUS_IN_PROGRESS", "STATUS_SUSPENDED"));
+
+        var games = await ProviderOver(handler).FetchScoreboardAsync(Wta, CancellationToken.None);
+
+        Assert.Equal(ProviderStatus.Suspended, Assert.Single(games, g => g.Id == "185777").Status);
+    }
+
+    [Fact]
+    public async Task Tennis_asks_for_no_summaries_as_it_has_no_last_score()
+    {
+        var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json"));
+
+        var games = await ProviderOver(handler).FetchScoreboardAsync(Wta, CancellationToken.None);
+
+        Assert.All(games, game => Assert.Null(game.LastScore));
+        Assert.All(handler.Requests, request => Assert.Contains("/tennis/wta/scoreboard?", request.RequestUri!.AbsoluteUri));
+    }
 }

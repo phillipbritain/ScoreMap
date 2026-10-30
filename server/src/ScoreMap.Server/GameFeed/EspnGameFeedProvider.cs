@@ -38,6 +38,11 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         // Today's scoreboard comes first, so a game listed on more than one day is reported as today has it.
         foreach (var e in scoreboards.SelectMany(s => s?.Events ?? []).DistinctBy(e => e.Id))
         {
+            if (league.StartsWith("tennis/", StringComparison.Ordinal))
+            {
+                games.AddRange(ToMatches(e, leagueKey));
+                continue;
+            }
             if (ToGame(e, leagueKey) is not { } game)
                 continue;
             // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
@@ -50,8 +55,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     }
 
     /// <summary>
-    /// The game with its last score. Soccer's comes with the scoreboard, from its goals, and cricket has
-    /// none (runs come off almost every ball). Every other sport's is only in the game's summary, which is
+    /// The game with its last score. Soccer's comes with the scoreboard, from its goals, and cricket and
+    /// tennis have none (runs come off almost every ball; games and sets aren't scored by anyone's play). Every other sport's is only in the game's summary, which is
     /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
     /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
     /// next time, up to <see cref="SummaryTries"/> times at one score; the last score stays as it was meanwhile.
@@ -59,7 +64,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private async Task<ProviderGame> WithLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
     {
         if (game.LastScore is not null || league.StartsWith("soccer/", StringComparison.Ordinal)
-            || league.StartsWith("cricket/", StringComparison.Ordinal)
+            || league.StartsWith("cricket/", StringComparison.Ordinal) || league.StartsWith("tennis/", StringComparison.Ordinal)
             || game.Home.Score is not { } home || game.Away.Score is not { } away || home + away == 0)
             return game;
 
@@ -210,7 +215,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             started ? status?.DisplayClock : null,
             started ? status?.Period : null,
             ToVenue(competition!.Venue),
-            ToBroadcasters(competition),
+            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts),
             status?.Type?.State == "in" ? ToPhase(status.Type) : ProviderPeriodPhase.Playing)
         {
             Note = ToNote(competition.Notes),
@@ -222,6 +227,87 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 ? new ProviderScoringPlay(goal.Team, GoalText(goal), null, goal.Clock)
                 : null,
         };
+    }
+
+    /// <summary>
+    /// Tennis: each event is a tournament, its matches the competitions under its groupings (Women's
+    /// Singles, Women's Doubles…). One game per main-draw singles match whose two players are known:
+    /// doubles, qualifying rounds and matches with a side still to be decided are left out. A match's
+    /// id is its competition's, as ESPN's Top Events give it.
+    /// </summary>
+    private static IEnumerable<ProviderGame> ToMatches(Event tournament, string leagueKey)
+    {
+        var singles = (tournament.Groupings ?? [])
+            .Where(g => g.Grouping?.Slug is "mens-singles" or "womens-singles")
+            .SelectMany(g => g.Competitions ?? []);
+        foreach (var match in singles)
+        {
+            var home = match.Competitors?.FirstOrDefault(c => c.HomeAway == "home");
+            var away = match.Competitors?.FirstOrDefault(c => c.HomeAway == "away");
+            var round = NullIfBlank(match.Round?.DisplayName);
+            if (match.Id is null || !IsKnownPlayer(home) || !IsKnownPlayer(away)
+                || round?.StartsWith("Qualifying", StringComparison.OrdinalIgnoreCase) == true)
+                continue;
+
+            var status = ToStatus(match.Status?.Type);
+            var started = match.Status?.Type?.State is "in" or "post";
+            var sets = started ? ToSets(home!, away!) : [];
+            var name = NullIfBlank(tournament.Name);
+            yield return new ProviderGame(
+                match.Id,
+                leagueKey,
+                match.Date ?? tournament.Date ?? DateTimeOffset.MinValue,
+                ToPlayer(home!, sets.Count > 0 ? SetsWon(home!, away!) : null),
+                ToPlayer(away!, sets.Count > 0 ? SetsWon(away!, home!) : null),
+                status,
+                null,
+                started ? match.Status?.Period : null,
+                new ProviderVenue(name, NullIfBlank(match.Venue?.FullName), null, null, Court: NullIfBlank(match.Venue?.Court)),
+                ToBroadcasters(match.Broadcasts, match.GeoBroadcasts))
+            {
+                Note = name is null ? round : round is null ? name : $"{name} · {round}",
+                Odds = ToOdds(match.Odds?.FirstOrDefault()),
+                Sets = sets,
+                EarlyEnding = ToEarlyEnding(match.Status?.Type, home!, away!),
+            };
+        }
+    }
+
+    /// <summary>A side ESPN has named a player for, not one still "TBD" (to be decided).</summary>
+    private static bool IsKnownPlayer(MatchSide? competitor) =>
+        competitor?.Athlete?.DisplayName is { } name && !string.IsNullOrWhiteSpace(name) && name != "TBD";
+
+    /// <summary>A player as a side: ESPN's short name where a team's abbreviation goes, and their country's flag where its logo goes.</summary>
+    private static ProviderTeam ToPlayer(MatchSide competitor, int? setsWon) =>
+        new(competitor.Athlete!.ShortName ?? competitor.Athlete.DisplayName!, competitor.Athlete.DisplayName!,
+            competitor.Athlete.Flag?.Href, setsWon);
+
+    /// <summary>Each set's games, from both sides' linescores, which list the sets in order.</summary>
+    private static IReadOnlyList<ProviderSet> ToSets(MatchSide home, MatchSide away)
+    {
+        var (homeSets, awaySets) = (home.Linescores ?? [], away.Linescores ?? []);
+        return homeSets.Zip(awaySets, (h, a) => new ProviderSet((int)(h.Value ?? 0), (int)(a.Value ?? 0), h.Tiebreak, a.Tiebreak)).ToList();
+    }
+
+    /// <summary>
+    /// The sets a side has won. ESPN marks the winner of each finished set, but not always the last one
+    /// finished before a retirement, so a set that's plainly over counts too: 6 games or more and 2 clear,
+    /// or 7-6.
+    /// </summary>
+    private static int SetsWon(MatchSide side, MatchSide other) =>
+        (side.Linescores ?? []).Zip(other.Linescores ?? []).Count(set =>
+            set.First.Winner == true
+            || (set.First.Value ?? 0, set.Second.Value ?? 0) is var (games, against) && ((games >= 6 && games - against >= 2) || (games == 7 && against == 6)));
+
+    /// <summary>Why a finished match ended early, and the side ESPN marks as its winner; null for one played out.</summary>
+    private static ProviderEarlyEnding? ToEarlyEnding(StatusType? type, MatchSide home, MatchSide away)
+    {
+        var name = type?.Name ?? "";
+        EarlyEndingReason? reason = name.Contains("RETIRED") ? EarlyEndingReason.Retired
+            : name.Contains("WALKOVER") ? EarlyEndingReason.Walkover
+            : null;
+        var winner = home.Winner == true ? home : away.Winner == true ? away : null;
+        return reason is { } why && winner is not null ? new ProviderEarlyEnding(why, ToPlayer(winner, null).Abbreviation) : null;
     }
 
     /// <summary>The headlines of the competition's notes, usually just one; null when it has none.</summary>
@@ -387,12 +473,12 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private static ProviderVenue? ToVenue(Venue? venue) =>
         venue is null ? null : new ProviderVenue(venue.FullName, venue.Address?.City, venue.Address?.State, venue.Address?.Country, venue.Id);
 
-    private static IReadOnlyList<ProviderBroadcaster> ToBroadcasters(Competition competition)
+    private static IReadOnlyList<ProviderBroadcaster> ToBroadcasters(List<Broadcast>? broadcasts, List<GeoBroadcast>? geoBroadcasts)
     {
-        var geo = (competition.GeoBroadcasts ?? [])
+        var geo = (geoBroadcasts ?? [])
             .Where(b => b.Media?.ShortName is not null && !string.Equals(b.Type?.ShortName, "Radio", StringComparison.OrdinalIgnoreCase))
             .Select(b => new ProviderBroadcaster(b.Media!.ShortName!, b.Region?.ToUpperInvariant()));
-        var plain = (competition.Broadcasts ?? [])
+        var plain = (broadcasts ?? [])
             .SelectMany(b => b.Names ?? [])
             .Select(name => new ProviderBroadcaster(name, null));
         var broadcasters = geo.Any() ? geo : plain;
@@ -405,13 +491,24 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record HeaderSport(List<HeaderLeague>? Leagues);
     private sealed record HeaderLeague(List<HeaderEvent>? Events);
     private sealed record HeaderEvent(string? Id, string? CompetitionId);
-    private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status);
+    private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status,
+        string? Name, List<EventGrouping>? Groupings);
     private sealed record Competition(DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,
         Situation? Situation, List<Detail>? Details, List<Note>? Notes);
     private sealed record Note(string? Headline);
     private sealed record Competitor(string? Id, string? HomeAway, Team? Team, string? Score, List<TeamRecord>? Records,
         CuratedRank? CuratedRank);
+    // Tennis: a tournament's matches, under its groupings.
+    private sealed record EventGrouping(GroupingType? Grouping, List<Match>? Competitions);
+    private sealed record GroupingType(string? Slug);
+    private sealed record Match(string? Id, DateTimeOffset? Date, Venue? Venue, List<MatchSide>? Competitors, Status? Status,
+        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, List<Odds>? Odds, Round? Round);
+    private sealed record Round(string? DisplayName);
+    private sealed record MatchSide(string? HomeAway, Player? Athlete, List<Linescore>? Linescores, bool? Winner);
+    private sealed record Player(string? DisplayName, string? ShortName, Flag? Flag);
+    private sealed record Flag(string? Href);
+    private sealed record Linescore(double? Value, int? Tiebreak, bool? Winner);
     private sealed record TeamRecord(string? Type, string? Summary);
     private sealed record CuratedRank(int? Current);
     private sealed record Odds(string? Details, double? OverUnder, OddsProvider? Provider);
@@ -435,7 +532,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Franchise(Venue? Venue);
     private sealed record Status(string? DisplayClock, int? Period, StatusType? Type);
     private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail, string? Description);
-    private sealed record Venue(string? Id, string? FullName, Address? Address);
+    private sealed record Venue(string? Id, string? FullName, Address? Address, string? Court);
     private sealed record Address(string? City, string? State, string? Country);
     private sealed record Broadcast(string? Market, List<string>? Names);
     private sealed record GeoBroadcast(GeoBroadcastType? Type, GeoMedia? Media, string? Region);

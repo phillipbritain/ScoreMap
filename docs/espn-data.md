@@ -16,6 +16,8 @@ The field names below are ESPN's, under `https://site.api.espn.com/apis/site/v2/
 
 From the **scoreboard**, for each game: its id, start, status (`status.type`), clock, period, the period's phase, its venue's name, city, state and country, the broadcasters (`geoBroadcasts`, else `broadcasts`), and its notes' headlines (`competitions[].notes`). For each team: abbreviation, name, logo, score (cricket's score text as its innings), its overall record (`records`, type `total`) and its poll ranking (`curatedRank.current`, 1–25; ESPN puts unranked teams at 99). Also the attendance, the first betting line (`odds[0]`: `details`, `overUnder`, `provider.name`), a Live game's `situation` (`lastPlay.text`, `downDistanceText`, `possession`, `balls`, `strikes`, `outs`, `onFirst`, `onSecond`, `onThird`), and soccer's goals and cards (`competitions[].details`, the scorer from `athletesInvolved`).
 
+In **tennis** (`tennis/atp`, `tennis/wta`) each event is a tournament, its matches the competitions under its `groupings`. Only main-draw singles matches are read: groupings `mens-singles` and `womens-singles`, leaving out rounds whose `round.displayName` starts "Qualifying" and matches with a side still "TBD". Each is a game with the competition's id (Top Events list it as `competitionId`). For each player: `athlete.shortName`, `displayName` and `flag.href`; each set's games from `linescores` (`value`, `tiebreak`, and `winner` for a set won); and `winner` for who advanced after a retirement (`STATUS_RETIRED`) or walkover (`STATUS_WALKOVER`). The venue is the event's `name` (the tournament) in the competition's `venue.fullName` (its city, "Shanghai, China PR"), with `venue.court`, and the note is the tournament and `round.displayName`. `format.regulation.periods` isn't read: it says 5 even at best-of-3 tournaments. Each day's tennis scoreboard lists the whole of each tournament under way.
+
 From the **summary**, for football, the last of its `scoringPlays`; for basketball, hockey and baseball, the last play marked `scoringPlay` among its `plays`. From each, the text, team, period (and baseball's `Top` or `Bottom`), clock, and the scores after it, to tell whether the summary has caught up with the scoreboard.
 
 ## Available but not read
@@ -59,7 +61,7 @@ Anything taken from here only refreshes when the score changes. Fresher would me
 - `news`, `article`, `videos`: ESPN's coverage of the game.
 - `pickcenter`, `againstTheSpread`, `odds`: more betting data, from several bookmakers.
 
-Soccer and cricket games never get a summary request. Soccer's summary has its key events (`keyEvents`), lineups and match stats; cricket's has scorecards.
+Soccer, cricket and tennis games never get a summary request. Soccer's summary has its key events (`keyEvents`), lineups and match stats; cricket's has scorecards.
 
 ### Not offered
 

@@ -68,7 +68,7 @@ What a first visit shows once ScoreMap is ready, in three steps, each a panel in
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 
 **Last score**:
-The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball.
+The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball, and nor has tennis.
 _Avoid_: Last play (that's any play, scoring or not), scoring summary
 
 **Situation**:

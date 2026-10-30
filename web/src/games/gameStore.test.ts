@@ -27,6 +27,7 @@ function game(id: string, homeScore: string | null = null): Game {
       longitude: -94.4839,
       timeZone: 'America/Chicago',
       photo: null,
+      court: null,
     },
     broadcasters: [],
     streamLinks: [],
@@ -37,6 +38,7 @@ function game(id: string, homeScore: string | null = null): Game {
     lastScore: null,
     keyEvents: [],
     topEvent: false,
+    scoreline: null,
   }
 }
 

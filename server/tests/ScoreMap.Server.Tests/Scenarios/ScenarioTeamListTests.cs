@@ -14,14 +14,16 @@ public class ScenarioTeamListTests
             File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-teams.json")), Json)!;
 
     // The leagues ScoreMap shows, from appsettings.json.
+    // Scenarios don't play tennis yet, so its leagues have no players listed and fills leave them out.
     private static readonly List<string> ConfiguredLeagues = JsonDocument
         .Parse(File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "appsettings.json")))
         .RootElement.GetProperty("Leagues").EnumerateArray()
+        .Where(league => league.GetProperty("Sport").GetString() != "Tennis")
         .Select(league => league.GetProperty("Name").GetString()!)
         .ToList();
 
     [Fact]
-    public void Every_configured_league_has_its_teams_and_the_list_has_no_other_league()
+    public void Every_configured_league_but_tennis_has_its_teams_and_the_list_has_no_other_league()
     {
         Assert.Equal(ConfiguredLeagues.Order(), Teams.Keys.Order());
         Assert.All(Teams, league => Assert.True(league.Value.Count >= 10, $"{league.Key} has {league.Value.Count} teams"));

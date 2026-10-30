@@ -34,7 +34,8 @@ interface PanelLink {
 export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
-  const venueName = venue.name ?? 'Unknown venue'
+  // A tennis match's venue is its tournament, which its note already names, so it shows the court.
+  const venueName = venue.court ?? venue.name ?? 'Unknown venue'
   const progress = progressLine(game, 'full')
   // A note on the game (a playoff round, say) goes beside its league.
   const league = game.note ? `${game.league} · ${game.note}` : game.league
@@ -201,14 +202,21 @@ function TeamRow({ team }: { team: GameTeam }) {
 
 /**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
- * minute), the betting line and the crowd, each with its label.
+ * minute), or in tennis the scoreline set by set, the betting line and the crowd, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
-  const { lastScore } = game
+  const { lastScore, scoreline } = game
   const odds = game.odds && oddsLine(game.odds)
-  const empty = !lastScore && !odds && game.attendance === null
+  const empty = !lastScore && !scoreline && !odds && game.attendance === null
   return (
     <div className="game-panel__band">
+      {scoreline && (
+        <BandCell label="Score" wide>
+          <div className="game-panel__clamp" data-tooltip={scoreline} data-tooltip-when-clipped>
+            {scoreline}
+          </div>
+        </BandCell>
+      )}
       {lastScore && (
         <BandCell label="Last score" wide>
           <div className="game-panel__clamp" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>

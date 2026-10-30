@@ -19,7 +19,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     period: null,
     clutchTime: false,
     hot: false,
-    venue: { name: null, city: null, region: null, country: null, latitude: 0, longitude: 0, timeZone: null, photo: null },
+    venue: { name: null, city: null, region: null, country: null, latitude: 0, longitude: 0, timeZone: null, photo: null, court: null },
     broadcasters: [],
     streamLinks: [],
     note: null,
@@ -29,6 +29,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     lastScore: null,
     keyEvents: [],
     topEvent,
+    scoreline: null,
   }
 }
 

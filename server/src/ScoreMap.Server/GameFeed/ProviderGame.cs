@@ -57,9 +57,9 @@ public sealed record ProviderSet(int Home, int Away, int? HomeTiebreak = null, i
 
 /// <summary>
 /// How a tennis match ended early: its <see cref="Reason"/>, and the side that advanced (its abbreviation),
-/// the winner whatever the score when it stopped.
+/// the winner whatever the score when it stopped; null if the provider doesn't say.
 /// </summary>
-public sealed record ProviderEarlyEnding(EarlyEndingReason Reason, string Winner);
+public sealed record ProviderEarlyEnding(EarlyEndingReason Reason, string? Winner);
 
 public enum EarlyEndingReason
 {

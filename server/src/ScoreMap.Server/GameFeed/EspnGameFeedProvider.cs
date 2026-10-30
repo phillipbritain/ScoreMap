@@ -299,7 +299,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             set.First.Winner == true
             || (set.First.Value ?? 0, set.Second.Value ?? 0) is var (games, against) && ((games >= 6 && games - against >= 2) || (games == 7 && against == 6)));
 
-    /// <summary>Why a finished match ended early, and the side ESPN marks as its winner; null for one played out.</summary>
+    /// <summary>Why a Final match ended early, and the side ESPN marks as its winner if it marks one; null for one played out.</summary>
     private static ProviderEarlyEnding? ToEarlyEnding(StatusType? type, MatchSide home, MatchSide away)
     {
         var name = type?.Name ?? "";
@@ -307,7 +307,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             : name.Contains("WALKOVER") ? EarlyEndingReason.Walkover
             : null;
         var winner = home.Winner == true ? home : away.Winner == true ? away : null;
-        return reason is { } why && winner is not null ? new ProviderEarlyEnding(why, ToPlayer(winner, null).Abbreviation) : null;
+        return reason is { } why ? new ProviderEarlyEnding(why, winner is null ? null : ToPlayer(winner, null).Abbreviation) : null;
     }
 
     /// <summary>The headlines of the competition's notes, usually just one; null when it has none.</summary>

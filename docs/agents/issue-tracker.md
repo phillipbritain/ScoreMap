@@ -15,6 +15,27 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+## Project board
+
+Issues sit on the ScoreMap project board (GitHub Project 1 for `phillipbritain`), with a Status of Backlog, Ready, In progress, In review or Done. GitHub's own project workflows set Ready and Done; an agent working an issue moves its card at two points:
+
+- **Starting work** on an issue: set it to **In progress**.
+- **Opening the PR** that closes it: set it to **In review**.
+
+Set the status like this, with `<n>` the issue number and `<option-id>` from the table:
+
+```sh
+ITEM=$(gh project item-add 1 --owner phillipbritain --url "https://github.com/phillipbritain/ScoreMap/issues/<n>" --format json --jq .id)
+gh project item-edit --project-id PVT_kwHOAiInZM4Bn2N0 --id "$ITEM" --field-id PVTSSF_lAHOAiInZM4Bn2N0zhmY9UE --single-select-option-id <option-id>
+```
+
+| Status | Option id |
+| --- | --- |
+| In progress | `47fc9ee4` |
+| In review | `df73e18b` |
+
+`item-add` returns the existing card when the issue is already on the board, so it is safe to run every time. It needs the `project` scope on `gh`; on a scope error, ask the user to run `gh auth refresh -h github.com -s project`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

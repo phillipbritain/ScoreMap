@@ -21,8 +21,8 @@ public static class Scoreline
             EarlyEndingReason.Retired => $"{sets} ret.".Trim(),
             _ => sets,
         };
-        if (game.EarlyEnding is { } ending)
-            line = $"{line} · {ending.Winner} advances";
+        if (game.EarlyEnding?.Winner is { } winner)
+            line = $"{line} · {winner} advances";
         return line.Length > 0 ? line : null;
     }
 

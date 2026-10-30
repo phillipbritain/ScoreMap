@@ -791,6 +791,16 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task A_retirement_with_no_winner_marked_still_ended_early()
+    {
+        var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json").Replace("\"winner\": true", "\"winner\": false"));
+
+        var games = await ProviderOver(handler).FetchScoreboardAsync(Wta, CancellationToken.None);
+
+        Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, null), Assert.Single(games, g => g.Id == "185776").EarlyEnding);
+    }
+
+    [Fact]
     public async Task A_suspended_tennis_match_is_suspended()
     {
         var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json").Replace("STATUS_IN_PROGRESS", "STATUS_SUSPENDED"));

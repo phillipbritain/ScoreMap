@@ -27,9 +27,9 @@ public class EspnGameFeedProviderTests
         Assert.Equal(Nfl, london.LeagueKey);
         Assert.Equal(new DateTimeOffset(2026, 10, 4, 13, 30, 0, TimeSpan.Zero), london.StartTime);
         Assert.Equal(new ProviderTeam("WSH", "Washington Commanders",
-            "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/wsh.png", 13), london.Home);
+            "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/wsh.png", 13), london.Sides().Home);
         Assert.Equal(new ProviderTeam("IND", "Indianapolis Colts",
-            "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ind.png", 30), london.Away);
+            "https://a.espncdn.com/i/teamlogos/nfl/500/scoreboard/ind.png", 30), london.Sides().Away);
         Assert.Equal(ProviderStatus.Final, london.Status);
         Assert.Equal("0:00", london.DisplayClock);
         Assert.Equal(4, london.Period);
@@ -44,8 +44,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games, g => g.Id == "401872978");
         Assert.Equal(ProviderStatus.InProgress, game.Status);
-        Assert.Equal(22, game.Home.Score);
-        Assert.Equal(19, game.Away.Score);
+        Assert.Equal(22, game.Sides().Home.Score);
+        Assert.Equal(19, game.Sides().Away.Score);
         Assert.Equal("4:28", game.DisplayClock);
         Assert.Equal(3, game.Period);
         Assert.Equal(new ProviderVenue("Bank of America Stadium", "Charlotte", "NC", "USA", "3628"), game.Venue);
@@ -59,8 +59,8 @@ public class EspnGameFeedProviderTests
         var game = Assert.Single(games, g => g.Id == "401872979");
         Assert.Equal(ProviderStatus.Scheduled, game.Status);
         Assert.Equal(new DateTimeOffset(2026, 10, 6, 0, 15, 0, TimeSpan.Zero), game.StartTime);
-        Assert.Null(game.Home.Score);
-        Assert.Null(game.Away.Score);
+        Assert.Null(game.Sides().Home.Score);
+        Assert.Null(game.Sides().Away.Score);
         Assert.Null(game.DisplayClock);
         Assert.Null(game.Period);
     }
@@ -82,8 +82,8 @@ public class EspnGameFeedProviderTests
         Assert.Equal(ProviderStatus.InProgress, game.Status);
         Assert.Equal(7, game.Period);
         Assert.Equal(ProviderPeriodPhase.InningTop, game.Phase);
-        Assert.Equal(1, game.Home.Score);
-        Assert.Equal(2, game.Away.Score);
+        Assert.Equal(1, game.Sides().Home.Score);
+        Assert.Equal(2, game.Sides().Away.Score);
         Assert.Equal(new ProviderVenue("Dodger Stadium", "Los Angeles", "California", null, "19"), game.Venue);
     }
 
@@ -95,8 +95,8 @@ public class EspnGameFeedProviderTests
         var game = Assert.Single(games, g => g.Id == "1551869");
         Assert.Equal((ProviderStatus.InProgress, 2), (game.Status, game.Period));
         // "100/6 (13/20 ov, target 187)" chasing "186/6".
-        Assert.Equal((100, new ProviderInnings(6, "13", 20, 187)), (game.Home.Score, game.Home.Innings));
-        Assert.Equal((186, new ProviderInnings(6)), (game.Away.Score, game.Away.Innings));
+        Assert.Equal((100, new ProviderInnings(6, "13", 20, 187)), (game.Sides().Home.Score, game.Sides().Home.Innings));
+        Assert.Equal((186, new ProviderInnings(6)), (game.Sides().Away.Score, game.Sides().Away.Innings));
         Assert.Equal(new ProviderVenue("Mangaung Oval, Bloemfontein", "Bloemfontein", "", "South Africa", "59042"), game.Venue);
     }
 
@@ -108,8 +108,8 @@ public class EspnGameFeedProviderTests
         var game = Assert.Single(games, g => g.Id == "1527676");
         Assert.Equal(ProviderStatus.Final, game.Status);
         // "127" all out, chased down with "128/2 (12.1/20 ov, target 128)".
-        Assert.Equal((127, new ProviderInnings(null)), (game.Away.Score, game.Away.Innings));
-        Assert.Equal((128, new ProviderInnings(2, "12.1", 20, 128)), (game.Home.Score, game.Home.Innings));
+        Assert.Equal((127, new ProviderInnings(null)), (game.Sides().Away.Score, game.Sides().Away.Innings));
+        Assert.Equal((128, new ProviderInnings(2, "12.1", 20, 128)), (game.Sides().Home.Score, game.Sides().Home.Innings));
     }
 
     [Fact]
@@ -119,8 +119,8 @@ public class EspnGameFeedProviderTests
 
         // No result: the home side batted first, and rain stopped play before the away side batted.
         var game = Assert.Single(games, g => g.Id == "1527685");
-        Assert.Equal((25, new ProviderInnings(2, "3.4", 20)), (game.Home.Score, game.Home.Innings));
-        Assert.Equal((null, null), (game.Away.Score, game.Away.Innings));
+        Assert.Equal((25, new ProviderInnings(2, "3.4", 20)), (game.Sides().Home.Score, game.Sides().Home.Innings));
+        Assert.Equal((null, null), (game.Sides().Away.Score, game.Sides().Away.Innings));
     }
 
     [Fact]
@@ -130,8 +130,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games);
         Assert.Equal(ProviderStatus.Final, game.Status);
-        Assert.Equal(("UGA", 38), (game.Home.Abbreviation, game.Home.Score));
-        Assert.Equal(("VAN", 14), (game.Away.Abbreviation, game.Away.Score));
+        Assert.Equal(("UGA", 38), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("VAN", 14), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
         Assert.Equal(4, game.Period);
     }
 
@@ -142,8 +142,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games);
         Assert.Equal(ProviderStatus.Final, game.Status);
-        Assert.Equal(("DEN", 97), (game.Home.Abbreviation, game.Home.Score));
-        Assert.Equal(("UTAH", 109), (game.Away.Abbreviation, game.Away.Score));
+        Assert.Equal(("DEN", 97), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("UTAH", 109), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
         Assert.Equal(4, game.Period);
     }
 
@@ -165,8 +165,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games, g => g.Id == "401891778");
         Assert.Equal(ProviderStatus.InProgress, game.Status);
-        Assert.Equal(("ANA", 2), (game.Home.Abbreviation, game.Home.Score));
-        Assert.Equal(("FLA", 1), (game.Away.Abbreviation, game.Away.Score));
+        Assert.Equal(("ANA", 2), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("FLA", 1), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
         Assert.Equal("6:35", game.DisplayClock);
         Assert.Equal(3, game.Period);
         Assert.Equal(ProviderPeriodPhase.Playing, game.Phase);
@@ -179,8 +179,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games);
         Assert.Equal(ProviderStatus.Final, game.Status);
-        Assert.Equal(("NFO", 1), (game.Home.Abbreviation, game.Home.Score));
-        Assert.Equal(("MNC", 0), (game.Away.Abbreviation, game.Away.Score));
+        Assert.Equal(("NFO", 1), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("MNC", 0), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
         Assert.Equal(2, game.Period);
         Assert.Equal(new ProviderVenue("The City Ground", "Nottingham", null, "England", "131"), game.Venue);
     }
@@ -192,8 +192,8 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games);
         Assert.Equal(ProviderStatus.Final, game.Status);
-        Assert.Equal(("ESP", 1), (game.Home.Abbreviation, game.Home.Score));
-        Assert.Equal(("ARG", 0), (game.Away.Abbreviation, game.Away.Score));
+        Assert.Equal(("ESP", 1), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("ARG", 0), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
         Assert.Equal(4, game.Period);
     }
 
@@ -204,7 +204,7 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(games);
         Assert.Equal(ProviderStatus.Scheduled, game.Status);
-        Assert.Null(game.Home.Score);
+        Assert.Null(game.Sides().Home.Score);
         Assert.Null(game.DisplayClock);
         Assert.Null(game.Period);
         Assert.Equal(new ProviderVenue("Soldier Field", "Chicago, Illinois", null, "USA", "1452"), game.Venue);
@@ -349,7 +349,7 @@ public class EspnGameFeedProviderTests
         var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
 
         Assert.Null(game.Venue);
-        Assert.Equal(new ProviderCity("Charlotte", "NC", "USA"), game.Home.HomeCity);
+        Assert.Equal(new ProviderCity("Charlotte", "NC", "USA"), game.Sides().Home.HomeCity);
         Assert.Contains(handler.Requests, r => r.RequestUri!.ToString() == "https://espn.test/sports/football/nfl/teams/29");
     }
 
@@ -361,7 +361,7 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
 
-        Assert.Equal(new ProviderCity("Duke", null, null), game.Home.HomeCity);
+        Assert.Equal(new ProviderCity("Duke", null, null), game.Sides().Home.HomeCity);
     }
 
     [Fact]
@@ -384,7 +384,7 @@ public class EspnGameFeedProviderTests
         var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
 
         Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/teams/"));
-        Assert.All(games, g => Assert.Null(g.Home.HomeCity));
+        Assert.All(games, g => Assert.Null(g.Sides().Home.HomeCity));
     }
 
     [Fact]
@@ -399,7 +399,7 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(await provider.FetchScoreboardAsync(Nfl, CancellationToken.None));
 
-        Assert.Null(game.Home.HomeCity);
+        Assert.Null(game.Sides().Home.HomeCity);
     }
 
     private static string Fixture(string name) =>
@@ -415,8 +415,8 @@ public class EspnGameFeedProviderTests
         var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
 
         var game = Assert.Single(games, g => g.Id == "401752865");
-        Assert.Equal(("ILL", 17, "5-2"), (game.Home.Abbreviation, game.Home.Rank, game.Home.Record));
-        Assert.Equal(("OSU", 1, "6-0"), (game.Away.Abbreviation, game.Away.Rank, game.Away.Record));
+        Assert.Equal(("ILL", 17, "5-2"), (game.Sides().Home.Abbreviation, game.Sides().Home.Rank, game.Sides().Home.Record));
+        Assert.Equal(("OSU", 1, "6-0"), (game.Sides().Away.Abbreviation, game.Sides().Away.Rank, game.Sides().Away.Record));
         Assert.Equal(60670, game.Attendance);
     }
 
@@ -427,7 +427,7 @@ public class EspnGameFeedProviderTests
         var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
 
         var game = Assert.Single(games, g => g.Id == "401761625");
-        Assert.Equal((null, null), (game.Home.Rank, game.Away.Rank));
+        Assert.Equal((null, null), (game.Sides().Home.Rank, game.Sides().Away.Rank));
         Assert.Null(game.Attendance);
     }
 
@@ -437,8 +437,8 @@ public class EspnGameFeedProviderTests
         var games = await FetchFixtureAsync("soccer-eng1-goals-and-cards.json", "soccer/eng.1");
 
         var game = Assert.Single(games, g => g.Id == "740656");
-        Assert.Equal(("ARS", "5-1-1"), (game.Home.Abbreviation, game.Home.Record));
-        Assert.Equal(("WHU", "1-1-5"), (game.Away.Abbreviation, game.Away.Record));
+        Assert.Equal(("ARS", "5-1-1"), (game.Sides().Home.Abbreviation, game.Sides().Home.Record));
+        Assert.Equal(("WHU", "1-1-5"), (game.Sides().Away.Abbreviation, game.Sides().Away.Record));
     }
 
     [Fact]
@@ -684,7 +684,7 @@ public class EspnGameFeedProviderTests
         for (var i = 0; i < 4; i++)
             await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
 
-        Assert.Equal((101, "ATL"), (game.Home.Score, game.LastScore?.Team));
+        Assert.Equal((101, "ATL"), (game.Sides().Home.Score, game.LastScore?.Team));
         Assert.Equal(4, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
     }
 
@@ -737,8 +737,8 @@ public class EspnGameFeedProviderTests
         var match = Assert.Single(games, g => g.Id == "185777");
         Assert.Equal((Wta, new DateTimeOffset(2026, 10, 30, 20, 20, 0, TimeSpan.Zero), ProviderStatus.InProgress, 3),
             (match.LeagueKey, match.StartTime, match.Status, match.Period));
-        Assert.Equal(new ProviderTeam("A. Tubello", "Alice Tubello", "https://a.espncdn.com/i/teamlogos/countries/500/fra.png", 1), match.Home);
-        Assert.Equal(new ProviderTeam("J. Ortenzi", "Jazmin Ortenzi", "https://a.espncdn.com/i/teamlogos/countries/500/arg.png", 1), match.Away);
+        Assert.Equal(new ProviderTeam("A. Tubello", "Alice Tubello", "https://a.espncdn.com/i/teamlogos/countries/500/fra.png", 1), match.Sides().Home);
+        Assert.Equal(new ProviderTeam("J. Ortenzi", "Jazmin Ortenzi", "https://a.espncdn.com/i/teamlogos/countries/500/arg.png", 1), match.Sides().Away);
         // The third set is still being played, so it has no winner yet.
         Assert.Equal([new ProviderSet(2, 6, HomeWon: false), new ProviderSet(6, 2, HomeWon: true), new ProviderSet(1, 3)], match.Sets);
         Assert.Null(match.EarlyEnding);
@@ -782,7 +782,7 @@ public class EspnGameFeedProviderTests
         var match = Assert.Single(games, g => g.Id == "185732");
         Assert.Equal(ProviderStatus.Final, match.Status);
         Assert.Equal([new ProviderSet(7, 5, HomeWon: true), new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 2, HomeWon: true)], match.Sets);
-        Assert.Equal((2, 0), (match.Home.Score, match.Away.Score));
+        Assert.Equal((2, 0), (match.Sides().Home.Score, match.Sides().Away.Score));
     }
 
     [Fact]
@@ -795,7 +795,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, "N. Leme Da Silva"), match.EarlyEnding);
         // ESPN marks no winner for the 7-5 set the match stopped after, but it was finished.
         Assert.Equal([new ProviderSet(5, 7, HomeWon: false)], match.Sets);
-        Assert.Equal((0, 1), (match.Home.Score, match.Away.Score));
+        Assert.Equal((0, 1), (match.Sides().Home.Score, match.Sides().Away.Score));
     }
 
     [Fact]
@@ -806,7 +806,7 @@ public class EspnGameFeedProviderTests
         var match = Assert.Single(games, g => g.Id == "185706");
         Assert.Equal(ProviderStatus.Final, match.Status);
         Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Walkover, "C. Liu"), match.EarlyEnding);
-        Assert.Equal(((int?)null, (int?)null), (match.Home.Score, match.Away.Score));
+        Assert.Equal(((int?)null, (int?)null), (match.Sides().Home.Score, match.Sides().Away.Score));
         Assert.Empty(match.Sets);
     }
 

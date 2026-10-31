@@ -41,7 +41,7 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   // The place under the venue's name; in tennis, already on the venue's line.
   const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
-  const [top, bottom] = sidesTopFirst(game)
+  const [top, bottom] = sidesTopFirst(game.sport, game.contest)
   // A note on the game (a playoff round, say) goes beside its league.
   const league = game.note ? `${game.league} · ${game.note}` : game.league
   // A Final game shows when it ended; any other, when it starts.

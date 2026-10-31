@@ -121,7 +121,7 @@ public class StreamFinderTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        server.Feed.SetScoreboard(Nfl, game with { Home = game.Home with { Score = 7 } });
+        server.Feed.SetScoreboard(Nfl, game.WithSides(home: game.Sides().Home with { Score = 7 }));
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 
         var change = await client.NextChangeAsync();

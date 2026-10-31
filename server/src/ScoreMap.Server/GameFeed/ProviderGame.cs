@@ -1,7 +1,8 @@
 namespace ScoreMap.Server.GameFeed;
 
 /// <summary>
-/// A game as a game feed provider reports it, in provider-neutral terms.
+/// A game as a game feed provider reports it, in provider-neutral terms. Its <see cref="Contest"/> is who
+/// competes and their scores (ADR-0020).
 /// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
 /// The rest is extra detail for the game panel, each part null (or empty) when the provider gives none:
 /// a note on the game, the crowd, the betting line, where play stands right now, the last score,
@@ -11,8 +12,7 @@ public sealed record ProviderGame(
     string Id,
     string LeagueKey,
     DateTimeOffset StartTime,
-    ProviderTeam Home,
-    ProviderTeam Away,
+    ProviderContest Contest,
     ProviderStatus Status,
     string? DisplayClock,
     int? Period,
@@ -42,14 +42,23 @@ public sealed record ProviderGame(
 
     /// <summary>
     /// Tennis: the games each side has won in each set so far, in order, the current set last. The
-    /// sides' scores are their sets won, and <see cref="Period"/> is the current set. <see cref="Home"/>
-    /// is the side ESPN lists first (its <c>order</c> 1), shown on top.
+    /// sides' scores are their sets won, and <see cref="Period"/> is the current set. The home side
+    /// is the one ESPN lists first (its <c>order</c> 1), shown on top.
     /// </summary>
     public IReadOnlyList<ProviderSet> Sets { get; init; } = [];
 
     /// <summary>Tennis: why a Final match ended before its sets were played out, and who advanced; null when it was played out.</summary>
     public ProviderEarlyEnding? EarlyEnding { get; init; }
 }
+
+/// <summary>
+/// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020). Its
+/// only shape so far is two sides, <see cref="ProviderSides"/>.
+/// </summary>
+public abstract record ProviderContest;
+
+/// <summary>A game between two sides: the home side and the away side.</summary>
+public sealed record ProviderSides(ProviderTeam Home, ProviderTeam Away) : ProviderContest;
 
 /// <summary>
 /// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and

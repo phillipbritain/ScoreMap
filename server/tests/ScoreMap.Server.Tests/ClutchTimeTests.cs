@@ -63,8 +63,9 @@ public class ClutchTimeTests
             Id: "1",
             LeagueKey: leagueKey,
             StartTime: server.Clock.GetUtcNow().AddHours(-2),
-            Home: new ProviderTeam("HOM", "Home Team", null, home),
-            Away: new ProviderTeam("AWY", "Away Team", null, away),
+            Contest: new ProviderSides(
+                new ProviderTeam("HOM", "Home Team", null, home),
+                new ProviderTeam("AWY", "Away Team", null, away)),
             Status: status,
             DisplayClock: clock,
             Period: period,

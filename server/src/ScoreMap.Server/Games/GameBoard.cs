@@ -59,7 +59,7 @@ public sealed class GameBoard(
             if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
             var endTime = status == GameStatus.Final ? stoppedAt : null;
-            var location = await venues.LocateAsync(game.Venue, game.Home, cancellationToken);
+            var location = await venues.LocateAsync(game.Venue, (game.Contest as ProviderSides)?.Home, cancellationToken);
             var added = ToGame(game, status, endTime, league, location);
             games.Add(added with { StreamLinks = streams.LinksFor(added) });
         }
@@ -158,8 +158,7 @@ public sealed class GameBoard(
             game.Status == ProviderStatus.Delayed,
             ToDisruption(game.Status),
             endTime,
-            ToTeam(game.Home),
-            ToTeam(game.Away),
+            ToContest(game.Contest),
             ClockLine.For(game, league),
             game.Period,
             ClutchTime.For(game, league),
@@ -192,6 +191,12 @@ public sealed class GameBoard(
             Court = venue?.Court,
         };
     }
+
+    private static GameContest ToContest(ProviderContest contest) => contest switch
+    {
+        ProviderSides sides => new GameSides(ToTeam(sides.Home), ToTeam(sides.Away)),
+        _ => throw new ArgumentOutOfRangeException(nameof(contest), contest, "No such contest"),
+    };
 
     private static GameTeam ToTeam(ProviderTeam team) =>
         new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record);

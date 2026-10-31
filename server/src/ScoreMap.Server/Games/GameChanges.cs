@@ -28,12 +28,18 @@ internal static class GameChanges
             return GameChangeKind.Started;
         if (before.Status != GameStatus.Final && after.Status == GameStatus.Final)
             return GameChangeKind.Finished;
-        if (before.Home.Score != after.Home.Score || before.Away.Score != after.Away.Score)
+        if (ScoreChanged(before.Contest, after.Contest))
             return GameChangeKind.ScoreChanged;
         if (!Same(before, after))
             return GameChangeKind.Updated;
         return null;
     }
+
+    private static bool ScoreChanged(GameContest before, GameContest after) => (before, after) switch
+    {
+        (GameSides b, GameSides a) => b.Home.Score != a.Home.Score || b.Away.Score != a.Away.Score,
+        _ => false,
+    };
 
     /// <summary>
     /// Record equality, except list fields compare by content (records compare lists by

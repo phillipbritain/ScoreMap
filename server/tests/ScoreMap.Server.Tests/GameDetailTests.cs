@@ -31,14 +31,15 @@ public class GameDetailTests
         };
         game = game with
         {
-            Home = game.Home with { Rank = 17, Record = "5-2" },
-            Away = game.Away with { Record = "6-0" },
+            Contest = new ProviderSides(
+                game.Sides().Home with { Rank = 17, Record = "5-2" },
+                game.Sides().Away with { Record = "6-0" }),
         };
 
         var sent = await SnapshotOfAsync(game);
 
-        Assert.Equal((17, "5-2"), (sent.Home.Rank, sent.Home.Record));
-        Assert.Equal((null, "6-0"), (sent.Away.Rank, sent.Away.Record));
+        Assert.Equal((17, "5-2"), (sent.Sides().Home.Rank, sent.Sides().Home.Record));
+        Assert.Equal((null, "6-0"), (sent.Sides().Away.Rank, sent.Sides().Away.Record));
         Assert.Equal("AFC Wild Card Playoffs", sent.Note);
         Assert.Equal(60670, sent.Attendance);
         Assert.Equal(new GameOdds("KC -3.5", 47.5, "DraftKings"), sent.Odds);

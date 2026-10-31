@@ -74,8 +74,11 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     delayed: false,
     disruption: null,
     endTime: null,
-    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: home, rank: null, record: null },
-    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: away, rank: null, record: null },
+    contest: {
+      kind: 'sides',
+      home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: home, rank: null, record: null },
+      away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: away, rank: null, record: null },
+    },
     clock,
     period: null,
     clutchTime: false,

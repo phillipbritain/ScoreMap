@@ -46,7 +46,9 @@ public sealed class StreamFinder(
     public IReadOnlyList<StreamLink> LinksFor(Game game)
     {
         var settings = options.Value;
-        if (settings.Sites.Count == 0 || game.Status is not (GameStatus.Upcoming or GameStatus.Live))
+        // Sites are searched for a game by its two sides.
+        if (settings.Sites.Count == 0 || game.Status is not (GameStatus.Upcoming or GameStatus.Live)
+            || game.Contest is not GameSides sides)
             return [];
 
         lock (_lock)
@@ -56,7 +58,7 @@ public sealed class StreamFinder(
             if (!_searches.TryGetValue(game.Id, out var search))
                 _searches[game.Id] = search = new Search();
             if (search.Running is null && now >= search.Expires)
-                search.Running = Task.Run(() => RunAsync(game, search, settings));
+                search.Running = Task.Run(() => RunAsync(game, sides, search, settings));
             return search.Links;
         }
     }
@@ -68,12 +70,12 @@ public sealed class StreamFinder(
             return Task.WhenAll(_searches.Values.Select(s => s.Running).OfType<Task>());
     }
 
-    private async Task RunAsync(Game game, Search search, StreamFinderOptions settings)
+    private async Task RunAsync(Game game, GameSides sides, Search search, StreamFinderOptions settings)
     {
         IReadOnlyList<StreamLink> links = [];
         try
         {
-            var perSite = await Task.WhenAll(settings.Sites.Select(site => SearchSiteAsync(site, game, settings)));
+            var perSite = await Task.WhenAll(settings.Sites.Select(site => SearchSiteAsync(site, game, sides, settings)));
             links = perSite.SelectMany(l => l).DistinctBy(l => l.Url).Take(MaxLinks).ToList();
         }
         finally
@@ -87,21 +89,21 @@ public sealed class StreamFinder(
         }
     }
 
-    private async Task<IReadOnlyList<StreamLink>> SearchSiteAsync(StreamSite site, Game game, StreamFinderOptions settings)
+    private async Task<IReadOnlyList<StreamLink>> SearchSiteAsync(StreamSite site, Game game, GameSides sides, StreamFinderOptions settings)
     {
         try
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStopping);
             timeout.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
             var searchUrl = new Uri(site.SearchUrl
-                .Replace("{query}", Uri.EscapeDataString($"{game.Away.FullName} {game.Home.FullName}"))
-                .Replace("{away}", Uri.EscapeDataString(game.Away.FullName))
-                .Replace("{home}", Uri.EscapeDataString(game.Home.FullName)));
+                .Replace("{query}", Uri.EscapeDataString($"{sides.Away.FullName} {sides.Home.FullName}"))
+                .Replace("{away}", Uri.EscapeDataString(sides.Away.FullName))
+                .Replace("{home}", Uri.EscapeDataString(sides.Home.FullName)));
 
             using var response = await httpClients.CreateClient(HttpClientName).GetAsync(searchUrl, timeout.Token);
             response.EnsureSuccessStatusCode();
             var page = await response.Content.ReadAsStringAsync(timeout.Token);
-            return LinksIn(page, searchUrl, site, game);
+            return LinksIn(page, searchUrl, site, sides);
         }
         catch (Exception e)
         {
@@ -110,7 +112,7 @@ public sealed class StreamFinder(
         }
     }
 
-    private static IReadOnlyList<StreamLink> LinksIn(string page, Uri pageUrl, StreamSite site, Game game)
+    private static IReadOnlyList<StreamLink> LinksIn(string page, Uri pageUrl, StreamSite site, GameSides sides)
     {
         var links = new List<StreamLink>();
         foreach (Match match in Regex.Matches(page, site.LinkPattern, RegexOptions.IgnoreCase, MatchTimeout))
@@ -120,7 +122,7 @@ public sealed class StreamFinder(
                 continue;
             var text = match.Groups["text"] is { Success: true } label ? label.Value : "";
             var said = Words($"{WebUtility.HtmlDecode(text)} {href.Value}");
-            if (!Mentions(said, game.Home) || !Mentions(said, game.Away))
+            if (!Mentions(said, sides.Home) || !Mentions(said, sides.Away))
                 continue;
             if (Uri.TryCreate(pageUrl, WebUtility.HtmlDecode(href.Value), out var url) && url.Scheme is "http" or "https")
                 links.Add(new StreamLink(site.Name, url.AbsoluteUri));

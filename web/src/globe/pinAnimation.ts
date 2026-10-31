@@ -15,7 +15,8 @@ export type PinAnimation = 'score' | 'start' | 'finish'
 export function pinAnimation(before: Game, after: Game): PinAnimation | null {
   if (before.status === 'Upcoming' && after.status === 'Live') return 'start'
   if (before.status === 'Live' && after.status === 'Final') return 'finish'
-  const scored = before.home.score !== after.home.score || before.away.score !== after.away.score
+  const [was, now] = [before.contest, after.contest]
+  const scored = was.home.score !== now.home.score || was.away.score !== now.away.score
   if (scored && (after.sport !== 'Basketball' || after.clutchTime)) return 'score'
   return null
 }

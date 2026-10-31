@@ -138,7 +138,7 @@ public class HotGameTests
         await using var client = await server.ConnectClientAsync();
         Assert.True(Assert.Single(await client.NextSnapshotAsync()).Hot);
 
-        server.Feed.SetScoreboard(Nfl, hot with { DisplayClock = "1:50", Home = hot.Home with { Score = 30 } });
+        server.Feed.SetScoreboard(Nfl, hot.WithSides(home: hot.Sides().Home with { Score = 30 }) with { DisplayClock = "1:50" });
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 
         var change = await client.NextChangeAsync();
@@ -150,8 +150,9 @@ public class HotGameTests
         Id: "1",
         LeagueKey: leagueKey,
         StartTime: DateTimeOffset.UnixEpoch,
-        Home: new ProviderTeam("HOM", "Home Team", null, home),
-        Away: new ProviderTeam("AWY", "Away Team", null, away),
+        Contest: new ProviderSides(
+            new ProviderTeam("HOM", "Home Team", null, home),
+            new ProviderTeam("AWY", "Away Team", null, away)),
         Status: InProgress,
         DisplayClock: clock,
         Period: period,
@@ -169,8 +170,9 @@ public class HotGameTests
     private static ProviderGame Chase(string overs, int runs, int target, int? wickets, int? overLimit) =>
         Game(Ipl, overs, 2, runs, target - 1) with
         {
-            Home = new ProviderTeam("HOM", "Home Team", null, runs, Innings: new ProviderInnings(wickets, overs, overLimit, target)),
-            Away = new ProviderTeam("AWY", "Away Team", null, target - 1, Innings: new ProviderInnings(7)),
+            Contest = new ProviderSides(
+                new ProviderTeam("HOM", "Home Team", null, runs, Innings: new ProviderInnings(wickets, overs, overLimit, target)),
+                new ProviderTeam("AWY", "Away Team", null, target - 1, Innings: new ProviderInnings(7))),
         };
 
     /// <summary>The game as a connected client is sent it, the feed reporting <paramref name="game"/>.</summary>

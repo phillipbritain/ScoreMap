@@ -39,11 +39,10 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
 
     private ProviderGame Fill(ProviderGame game, League league)
     {
-        var started = game.Home.Score is not null || game.Away.Score is not null;
+        var started = game.Sides().Home.Score is not null || game.Sides().Away.Score is not null;
         game = game with
         {
-            Home = WithRecord(game.Home, league),
-            Away = WithRecord(game.Away, league),
+            Contest = new ProviderSides(WithRecord(game.Sides().Home, league), WithRecord(game.Sides().Away, league)),
             Note = Note(game, league),
             Odds = league.Sport == Sport.Cricket ? null : Odds(game, league),
             Attendance = started ? Attendance(game, league) : null,
@@ -60,7 +59,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
         var (lastScore, keyEvents) = league.Sport == Sport.Soccer
             ? SoccerEvents(game, seen, minute)
             : (Scored(game, league, seen) ?? seen?.LastScore, (IReadOnlyList<ProviderKeyEvent>)[]);
-        _seen[key] = new Seen(game.Home.Score, game.Away.Score, lastScore, keyEvents, Math.Max(minute, seen?.Minute ?? 0));
+        _seen[key] = new Seen(game.Sides().Home.Score, game.Sides().Away.Score, lastScore, keyEvents, Math.Max(minute, seen?.Minute ?? 0));
 
         return game with
         {
@@ -125,7 +124,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     private static ProviderOdds Odds(ProviderGame game, League league)
     {
         var random = Seeded(game.Id, "odds");
-        var favourite = random.Next(2) == 0 ? game.Home : game.Away;
+        var favourite = random.Next(2) == 0 ? game.Sides().Home : game.Sides().Away;
         double Between(double low, double high, double step) => low + step * random.Next((int)((high - low) / step) + 1);
         var (line, total) = league.Sport switch
         {
@@ -164,7 +163,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     /// </summary>
     private static ProviderScoringPlay? Scored(ProviderGame game, League league, Seen? seen)
     {
-        var (home, away) = (game.Home.Score ?? 0, game.Away.Score ?? 0);
+        var (home, away) = (game.Sides().Home.Score ?? 0, game.Sides().Away.Score ?? 0);
         int homeGained, awayGained;
         if (seen is not null)
             (homeGained, awayGained) = (home - (seen.Home ?? 0), away - (seen.Away ?? 0));
@@ -177,7 +176,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
         if (homeGained <= 0 && awayGained <= 0)
             return null;
 
-        var team = homeGained > 0 ? game.Home : game.Away;
+        var team = homeGained > 0 ? game.Sides().Home : game.Sides().Away;
         var points = homeGained > 0 ? homeGained : awayGained;
         var random = Seeded(game.Id, $"{home}-{away}");
         var text = league.Sport switch
@@ -225,15 +224,15 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     {
         var events = seen?.KeyEvents.ToList() ?? [];
         var from = seen?.Minute ?? 0;
-        var (home, away) = (game.Home.Score ?? 0, game.Away.Score ?? 0);
+        var (home, away) = (game.Sides().Home.Score ?? 0, game.Sides().Away.Score ?? 0);
         var goals = new List<(int Minute, ProviderTeam Team)>();
         void GoalsFor(ProviderTeam team, int had, int has)
         {
             for (var goal = had + 1; goal <= has; goal++)
                 goals.Add((seen is null ? Seeded(game.Id, $"{team.Abbreviation} {goal}").Next(1, Math.Max(2, minute)) : minute, team));
         }
-        GoalsFor(game.Home, seen?.Home ?? 0, home);
-        GoalsFor(game.Away, seen?.Away ?? 0, away);
+        GoalsFor(game.Sides().Home, seen?.Home ?? 0, home);
+        GoalsFor(game.Sides().Away, seen?.Away ?? 0, away);
         foreach (var (at, team) in goals)
         {
             var random = Seeded(game.Id, $"goal {team.Abbreviation} {at}");
@@ -246,7 +245,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             var roll = random.NextDouble();
             if (roll < 0.035)
                 events.Add(new ProviderKeyEvent(roll < 0.003 ? KeyEventKind.RedCard : KeyEventKind.YellowCard,
-                    (random.Next(2) == 0 ? game.Home : game.Away).Abbreviation, Player(random), $"{at}'"));
+                    (random.Next(2) == 0 ? game.Sides().Home : game.Sides().Away).Abbreviation, Player(random), $"{at}'"));
         }
         // In the order they came; a goal and a card in the same minute, the goal first.
         var ordered = events.OrderBy(e => SoccerMinute(e.Clock)).ToList();
@@ -271,11 +270,11 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     private static ProviderSituation? Situation(ProviderGame game, League league)
     {
         var clockMinute = (game.DisplayClock ?? "").Split(':')[0];
-        var random = Seeded(game.Id, $"situation {game.Period} {game.Phase} {clockMinute} {game.Home.Score}-{game.Away.Score}");
+        var random = Seeded(game.Id, $"situation {game.Period} {game.Phase} {clockMinute} {game.Sides().Home.Score}-{game.Sides().Away.Score}");
         switch (league.Sport)
         {
             case Sport.Football:
-                var (offence, defence) = random.Next(2) == 0 ? (game.Home, game.Away) : (game.Away, game.Home);
+                var (offence, defence) = random.Next(2) == 0 ? (game.Sides().Home, game.Sides().Away) : (game.Sides().Away, game.Sides().Home);
                 var down = random.Next(1, 5);
                 var distance = down == 1 ? 10 : random.Next(1, 11);
                 var yardLine = random.Next(1, 50);

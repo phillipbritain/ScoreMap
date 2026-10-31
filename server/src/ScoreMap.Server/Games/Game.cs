@@ -1,10 +1,12 @@
+using System.Text.Json.Serialization;
 using ScoreMap.Server.GameFeed;
 
 namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// A game as ScoreMap sends it to browsers. Serialized camelCase over SignalR;
-/// mirrored by <c>web/src/games/game.ts</c>. <see cref="ClutchTime"/> says whether a basketball game is in
+/// mirrored by <c>web/src/games/game.ts</c>. Its <see cref="Contest"/> is who competes and their scores
+/// (ADR-0020). <see cref="ClutchTime"/> says whether a basketball game is in
 /// clutch time (see <see cref="Games.ClutchTime"/>); it's false in every other sport. <see cref="Hot"/> says
 /// whether the game is hot (see <see cref="HotGame"/>), by its sport's rule. The rest is extra detail for
 /// the game panel, each part null (or empty) when the feed gives none.
@@ -18,8 +20,7 @@ public sealed record Game(
     bool Delayed,
     Disruption? Disruption,
     DateTimeOffset? EndTime,
-    GameTeam Home,
-    GameTeam Away,
+    GameContest Contest,
     string? Clock,
     int? Period,
     bool ClutchTime,
@@ -54,6 +55,17 @@ public sealed record Game(
     /// <summary>Tennis: the score set by set, with tiebreaks; null in other sports and before play.</summary>
     public GameScoreline? Scoreline { get; init; }
 }
+
+/// <summary>
+/// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
+/// apart in JSON by its <c>kind</c>. Its only shape so far is two sides, <see cref="GameSides"/>.
+/// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(GameSides), "sides")]
+public abstract record GameContest;
+
+/// <summary>A game between two sides: the home side and the away side.</summary>
+public sealed record GameSides(GameTeam Home, GameTeam Away) : GameContest;
 
 /// <summary>
 /// A tennis match's score set by set (see <see cref="GameSet"/>). A match ended early has its

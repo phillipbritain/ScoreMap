@@ -1,6 +1,7 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
+using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
@@ -104,8 +105,8 @@ public sealed class ScenarioReaderTests : IDisposable
             away: """{ "name": "Chennai Super Kings", "abbreviation": "CSK", "score": 174, "innings": { "wickets": 7 } }"""));
 
         var game = Assert.Single(scenario.Games).ToProviderGame(DateTimeOffset.UnixEpoch);
-        Assert.Equal(new ProviderInnings(6, "18.2", 20, 175), game.Home.Innings);
-        Assert.Equal(new ProviderInnings(7), game.Away.Innings);
+        Assert.Equal(new ProviderInnings(6, "18.2", 20, 175), game.Sides().Home.Innings);
+        Assert.Equal(new ProviderInnings(7), game.Sides().Away.Innings);
     }
 
     [Fact]

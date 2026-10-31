@@ -32,6 +32,7 @@ const arrowhead: Game = {
     longitude: -94.4839,
     timeZone: 'America/Chicago',
     photo: null,
+    court: null,
   },
   broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
   streamLinks: [],
@@ -42,6 +43,7 @@ const arrowhead: Game = {
   lastScore: null,
   keyEvents: [],
   topEvent: false,
+  scoreline: null,
 }
 
 describe('pinFeatures', () => {

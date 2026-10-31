@@ -177,6 +177,7 @@ public sealed class GameBoard(
             LastScore = game.LastScore is { } play ? new ScoringPlay(play.Team, play.Text, ClockLine.When(play, league)) : null,
             KeyEvents = game.KeyEvents.Select(k => new KeyEvent(k.Kind, k.Team, k.Player, k.Clock)).ToList(),
             TopEvent = _topEvents.Contains(game.Id),
+            Scoreline = Scoreline.For(game, league),
         };
     }
 
@@ -186,7 +187,10 @@ public sealed class GameBoard(
         var timeZone = location.FoundBy == LocationSource.Nowhere
             ? null
             : TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
-        return new GameVenue(venue?.Name, venue?.City, RegionName.InFull(venue?.Region), venue?.Country, latitude, longitude, timeZone);
+        return new GameVenue(venue?.Name, venue?.City, RegionName.InFull(venue?.Region), venue?.Country, latitude, longitude, timeZone)
+        {
+            Court = venue?.Court,
+        };
     }
 
     private static GameTeam ToTeam(ProviderTeam team) =>

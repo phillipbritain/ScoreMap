@@ -4,6 +4,7 @@ import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
+import { sidesTopFirst } from '../games/sides'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
@@ -34,8 +35,13 @@ interface PanelLink {
 export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
-  const venueName = venue.name ?? 'Unknown venue'
+  // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
+  const tennis = game.sport === 'Tennis'
+  const venueName = (tennis ? [venue.court, place].filter(Boolean).join(' · ') : venue.name) || 'Unknown venue'
+  // The place under the venue's name; in tennis, already on the venue's line.
+  const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
+  const [top, bottom] = sidesTopFirst(game)
   // A note on the game (a playoff round, say) goes beside its league.
   const league = game.note ? `${game.league} · ${game.note}` : game.league
   // A Final game shows when it ended; any other, when it starts.
@@ -57,11 +63,13 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={league} data-tooltip-when-clipped>
+          <div className="game-panel__league" data-tooltip={`${game.sport} · ${league}`} data-tooltip-when-clipped>
+            {/* The sport goes here on a phone, where the details have no room for its column. */}
+            <span className="game-panel__league-sport">{game.sport} · </span>
             {league}
           </div>
-          <TeamRow team={game.away} />
-          <TeamRow team={game.home} />
+          <TeamRow team={top} />
+          <TeamRow team={bottom} />
           {progress && (
             <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
               {progress}
@@ -70,13 +78,19 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
         </div>
 
         <div className="game-panel__details">
+          <div className="game-panel__sport">
+            <div className="game-panel__label">Sport</div>
+            <div className="game-panel__value" data-tooltip={game.sport} data-tooltip-when-clipped>
+              {game.sport}
+            </div>
+          </div>
           <div>
             <div className="game-panel__label">Venue</div>
             <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
               {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
             </div>
-            <div className="game-panel__muted" data-tooltip={place} data-tooltip-when-clipped>
-              {place && <MapsLink query={place}>{place}</MapsLink>}
+            <div className="game-panel__muted" data-tooltip={placeLine} data-tooltip-when-clipped>
+              {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
             </div>
           </div>
           <div>
@@ -201,14 +215,28 @@ function TeamRow({ team }: { team: GameTeam }) {
 
 /**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
- * minute), the betting line and the crowd, each with its label.
+ * minute), or in tennis the scoreline set by set, the betting line and the crowd, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
-  const { lastScore } = game
+  const { lastScore, scoreline } = game
   const odds = game.odds && oddsLine(game.odds)
-  const empty = !lastScore && !odds && game.attendance === null
+  const empty = !lastScore && !scoreline && !odds && game.attendance === null
   return (
     <div className="game-panel__band">
+      {scoreline && (
+        // Each set in the progress line's look: its name, its score and who won it.
+        <BandCell wide>
+          <div className="game-panel__sets">
+            {scoreline.sets.map((set) => (
+              <span key={set.name} className="game-panel__set">
+                {[set.name, set.score, set.winner].filter(Boolean).join(' · ')}
+              </span>
+            ))}
+            {scoreline.ending && <span className="game-panel__strong">{scoreline.ending}</span>}
+            {scoreline.advanced && <span className="game-panel__one-line">{scoreline.advanced} advances</span>}
+          </div>
+        </BandCell>
+      )}
       {lastScore && (
         <BandCell label="Last score" wide>
           <div className="game-panel__clamp" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
@@ -244,10 +272,11 @@ function GameBand({ game }: { game: Game }) {
   )
 }
 
-function BandCell({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
+/** A cell of the band, with its label above it when it has one. */
+function BandCell({ label, wide = false, children }: { label?: string; wide?: boolean; children: ReactNode }) {
   return (
     <div className={wide ? 'game-panel__cell game-panel__cell--wide' : 'game-panel__cell'}>
-      <div className="game-panel__label">{label}</div>
+      {label && <div className="game-panel__label">{label}</div>}
       {children}
     </div>
   )

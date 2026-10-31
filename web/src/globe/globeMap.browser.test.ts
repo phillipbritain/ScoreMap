@@ -80,7 +80,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     period: null,
     clutchTime: false,
     hot: false,
-    venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null },
+    venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
     broadcasters: [],
     streamLinks: [],
     note: null,
@@ -90,6 +90,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     lastScore: null,
     keyEvents: [],
     topEvent: false,
+    scoreline: null,
   }
 }
 

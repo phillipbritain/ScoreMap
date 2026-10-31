@@ -46,8 +46,11 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             if (ToGame(e, leagueKey) is not { } game)
                 continue;
             // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
-            if (game.Venue is null && HomeTeamId(e) is { } teamId)
-                game = game with { Home = game.Home with { HomeCity = await HomeCityAsync(leagueKey, teamId, cancellationToken) } };
+            if (game.Venue is null && game.Contest is ProviderSides sides && HomeTeamId(e) is { } teamId)
+            {
+                var homeCity = await HomeCityAsync(leagueKey, teamId, cancellationToken);
+                game = game with { Contest = sides with { Home = sides.Home with { HomeCity = homeCity } } };
+            }
             games.Add(game);
         }
         ForgetLastScoresNoLongerReported(leagueKey, games);
@@ -65,7 +68,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     {
         if (game.LastScore is not null || league.StartsWith("soccer/", StringComparison.Ordinal)
             || league.StartsWith("cricket/", StringComparison.Ordinal) || league.StartsWith("tennis/", StringComparison.Ordinal)
-            || game.Home.Score is not { } home || game.Away.Score is not { } away || home + away == 0)
+            || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away } || home + away == 0)
             return game;
 
         var key = $"{game.LeagueKey}/{game.Id}";
@@ -209,8 +212,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             e.Id,
             leagueKey,
             e.Date ?? competition!.Date ?? DateTimeOffset.MinValue,
-            ToTeam(home, started, leagueKey),
-            ToTeam(away, started, leagueKey),
+            new ProviderSides(ToTeam(home, started, leagueKey), ToTeam(away, started, leagueKey)),
             ToStatus(status?.Type),
             started ? status?.DisplayClock : null,
             started ? status?.Period : null,
@@ -257,8 +259,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 match.Id,
                 leagueKey,
                 match.Date ?? tournament.Date ?? DateTimeOffset.MinValue,
-                ToPlayer(home!, sets.Count > 0 ? sets.Count(set => set.HomeWon == true) : null),
-                ToPlayer(away!, sets.Count > 0 ? sets.Count(set => set.HomeWon == false) : null),
+                new ProviderSides(
+                    ToPlayer(home!, sets.Count > 0 ? sets.Count(set => set.HomeWon == true) : null),
+                    ToPlayer(away!, sets.Count > 0 ? sets.Count(set => set.HomeWon == false) : null)),
                 status,
                 null,
                 started ? match.Status?.Period : null,

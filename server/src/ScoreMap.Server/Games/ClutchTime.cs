@@ -18,8 +18,7 @@ public static class ClutchTime
         if (league.Sport != Sport.Basketball
             || game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed)
             || game.Period is not { } period
-            || game.Home.Score is not { } home
-            || game.Away.Score is not { } away
+            || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away }
             || Math.Abs(home - away) > WithinPoints)
             return false;
 

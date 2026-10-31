@@ -59,7 +59,7 @@ public static partial class ScenarioReader
             foreach (var (venue, i) in inGroup.Take(entry.Count).Select((venue, i) => (venue, i)))
             {
                 var disruption = statuses[i] == GameStatus.Disrupted ? ScenarioGameMaker.DisruptionInTurn(disrupted++) : (ProviderStatus?)null;
-                var playing = writtenOutGames.Concat(filled).SelectMany(game => PlayingTeam.In(game.LeagueKey, game.Home, game.Away));
+                var playing = writtenOutGames.Concat(filled).SelectMany(game => PlayingTeam.In(game.LeagueKey, game.Sides.Home, game.Sides.Away));
                 filled.Add(maker.Make($"{scenario}-fill-{i + 1}", venue, statuses[i], playing, random, disruption));
             }
         }

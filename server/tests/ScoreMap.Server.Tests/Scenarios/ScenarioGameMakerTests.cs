@@ -49,8 +49,8 @@ public sealed class ScenarioGameMakerTests
         {
             Assert.Equal(ProviderStatus.Scheduled, game.Status);
             Assert.InRange(game.StartsIn, TimeSpan.FromMinutes(1), GameBoard.UpcomingWindow);
-            Assert.Null(game.Home.Score);
-            Assert.Null(game.Away.Score);
+            Assert.Null(game.Sides.Home.Score);
+            Assert.Null(game.Sides.Away.Score);
             Assert.Null(game.Clock);
             Assert.Null(game.Period);
         }
@@ -64,11 +64,11 @@ public sealed class ScenarioGameMakerTests
         {
             Assert.Equal(ProviderStatus.InProgress, game.Status);
             Assert.InRange(game.StartsIn, -league.PlannedLength, -TimeSpan.FromMinutes(1));
-            Assert.InRange(game.Away.Score!.Value, 0, MostPoints[league.Sport]);
-            if (YetToBat(game.Home, game, league))
-                Assert.Null(game.Home.Score);
+            Assert.InRange(game.Sides.Away.Score!.Value, 0, MostPoints[league.Sport]);
+            if (YetToBat(game.Sides.Home, game, league))
+                Assert.Null(game.Sides.Home.Score);
             else
-                Assert.InRange(game.Home.Score!.Value, 0, MostPoints[league.Sport]);
+                Assert.InRange(game.Sides.Home.Score!.Value, 0, MostPoints[league.Sport]);
             AssertClockFits(game, league);
         }
     }
@@ -97,11 +97,11 @@ public sealed class ScenarioGameMakerTests
             Assert.Equal(ProviderStatus.Final, game.Status);
             // The board takes a game first seen Final to have ended at its planned end, and shows it for 2 h after.
             Assert.InRange(game.StartsIn, -(league.PlannedLength + GameBoard.FinalWindow) + TimeSpan.FromMinutes(30), -league.PlannedLength);
-            Assert.InRange(game.Away.Score!.Value, 0, MostPoints[league.Sport]);
-            if (YetToBat(game.Home, game, league))
-                Assert.Null(game.Home.Score);
+            Assert.InRange(game.Sides.Away.Score!.Value, 0, MostPoints[league.Sport]);
+            if (YetToBat(game.Sides.Home, game, league))
+                Assert.Null(game.Sides.Home.Score);
             else
-                Assert.InRange(game.Home.Score!.Value, 0, MostPoints[league.Sport]);
+                Assert.InRange(game.Sides.Home.Score!.Value, 0, MostPoints[league.Sport]);
             Assert.Equal(league.Regulation, game.Period);
         }
     }
@@ -115,7 +115,7 @@ public sealed class ScenarioGameMakerTests
         if (games[0].League.Sport is Sport.Soccer or Sport.Cricket)
             return;
 
-        Assert.All(games, made => Assert.NotEqual(made.Game.Home.Score, made.Game.Away.Score));
+        Assert.All(games, made => Assert.NotEqual(made.Game.Sides.Home.Score, made.Game.Sides.Away.Score));
     }
 
     [Theory]
@@ -133,16 +133,16 @@ public sealed class ScenarioGameMakerTests
             {
                 // Stopped part way through, with the score it had.
                 Assert.InRange(game.StartsIn, -league.PlannedLength, -TimeSpan.FromMinutes(1));
-                Assert.NotNull(game.Away.Score);
-                Assert.Equal(YetToBat(game.Home, game, league), game.Home.Score is null);
+                Assert.NotNull(game.Sides.Away.Score);
+                Assert.Equal(YetToBat(game.Sides.Home, game, league), game.Sides.Home.Score is null);
                 Assert.NotNull(game.Period);
             }
             else
             {
                 // Shown from 3 h before the planned start until 2 h after the planned end.
                 Assert.InRange(game.StartsIn, -(league.PlannedLength + GameBoard.FinalWindow) + TimeSpan.FromMinutes(30), GameBoard.UpcomingWindow);
-                Assert.Null(game.Home.Score);
-                Assert.Null(game.Away.Score);
+                Assert.Null(game.Sides.Home.Score);
+                Assert.Null(game.Sides.Away.Score);
             }
         }
     }
@@ -156,17 +156,17 @@ public sealed class ScenarioGameMakerTests
         Assert.Contains(games, game => game.Period == 2);
         Assert.All(games.Where(game => game.Period == 1), game =>
         {
-            Assert.Null(game.Home.Innings);
-            Assert.Null(game.Away.Innings!.Target);
+            Assert.Null(game.Sides.Home.Innings);
+            Assert.Null(game.Sides.Away.Innings!.Target);
         });
         Assert.All(games.Where(game => game is { Period: 2, Phase: ProviderPeriodPhase.Playing }), game =>
         {
             // The away team's innings is over: its runs and wickets stay, its overs don't.
-            Assert.Null(game.Away.Innings!.Overs);
-            Assert.Equal(game.Away.Score + 1, game.Home.Innings!.Target);
+            Assert.Null(game.Sides.Away.Innings!.Overs);
+            Assert.Equal(game.Sides.Away.Score + 1, game.Sides.Home.Innings!.Target);
             // Still under way: not yet at the target, nor all out.
-            Assert.True(game.Home.Score < game.Home.Innings.Target, $"{game.Home.Score} chasing {game.Home.Innings.Target}");
-            Assert.NotNull(game.Home.Innings.Wickets);
+            Assert.True(game.Sides.Home.Score < game.Sides.Home.Innings.Target, $"{game.Sides.Home.Score} chasing {game.Sides.Home.Innings.Target}");
+            Assert.NotNull(game.Sides.Home.Innings.Wickets);
         });
     }
 
@@ -177,15 +177,15 @@ public sealed class ScenarioGameMakerTests
 
         Assert.All(games, game =>
         {
-            var chase = game.Home.Innings!;
+            var chase = game.Sides.Home.Innings!;
             Assert.True(
-                game.Home.Score >= chase.Target || chase.Wickets is null || chase.Overs == "20",
-                $"{game.Home.Score}/{chase.Wickets} in {chase.Overs} overs chasing {chase.Target}");
-            Assert.True(game.Home.Score <= chase.Target + 5, "a chase stops once it reaches its target, with a six at most");
+                game.Sides.Home.Score >= chase.Target || chase.Wickets is null || chase.Overs == "20",
+                $"{game.Sides.Home.Score}/{chase.Wickets} in {chase.Overs} overs chasing {chase.Target}");
+            Assert.True(game.Sides.Home.Score <= chase.Target + 5, "a chase stops once it reaches its target, with a six at most");
             Assert.InRange(Overs(chase.Overs), 0, 20);
         });
-        Assert.Contains(games, game => game.Home.Score >= game.Home.Innings!.Target);
-        Assert.Contains(games, game => game.Home.Score < game.Home.Innings!.Target);
+        Assert.Contains(games, game => game.Sides.Home.Score >= game.Sides.Home.Innings!.Target);
+        Assert.Contains(games, game => game.Sides.Home.Score < game.Sides.Home.Innings!.Target);
     }
 
     [Theory]
@@ -195,9 +195,9 @@ public sealed class ScenarioGameMakerTests
         foreach (var (game, league) in Make(leagueKey, GameStatus.Live))
         {
             var teams = Teams.For(league);
-            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Home.Abbreviation, game.Home.FullName, game.Home.LogoUrl));
-            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Away.Abbreviation, game.Away.FullName, game.Away.LogoUrl));
-            Assert.NotEqual(game.Home.FullName, game.Away.FullName);
+            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Sides.Home.Abbreviation, game.Sides.Home.FullName, game.Sides.Home.LogoUrl));
+            Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Sides.Away.Abbreviation, game.Sides.Away.FullName, game.Sides.Away.LogoUrl));
+            Assert.NotEqual(game.Sides.Home.FullName, game.Sides.Away.FullName);
             Assert.Equal(league.Key, game.LeagueKey);
             Assert.Equal(At.ToProviderVenue(), game.Venue);
             Assert.Equal("made", game.Id);
@@ -238,7 +238,7 @@ public sealed class ScenarioGameMakerTests
 
     /// <summary>In cricket, whether the home team hasn't batted yet: it bats second, in the second innings.</summary>
     private static bool YetToBat(ProviderTeam team, ScenarioGame game, League league) =>
-        league.Sport == Sport.Cricket && team == game.Home && game.Period == 1;
+        league.Sport == Sport.Cricket && team == game.Sides.Home && game.Period == 1;
 
     /// <summary>Overs as cricket writes them ("13.2" is 13 overs and 2 balls), as a number of overs.</summary>
     private static double Overs(string? overs) =>
@@ -259,5 +259,5 @@ file static class CricketGame
 {
     /// <summary>The side batting: the one with overs bowled to it.</summary>
     public static ProviderTeam? Batting(this ScenarioGame game) =>
-        game.Home.Innings?.Overs is not null ? game.Home : game.Away.Innings?.Overs is not null ? game.Away : null;
+        game.Sides.Home.Innings?.Overs is not null ? game.Sides.Home : game.Sides.Away.Innings?.Overs is not null ? game.Sides.Away : null;
 }

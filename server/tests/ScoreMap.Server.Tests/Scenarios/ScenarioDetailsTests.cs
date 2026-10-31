@@ -2,6 +2,7 @@ using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
+using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
@@ -50,12 +51,12 @@ public sealed class ScenarioDetailsTests : IDisposable
 
         Assert.All(games.Where(g => g.League.Sport != Sport.Cricket), g =>
         {
-            Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Home.Record);
-            Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Away.Record);
+            Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Home.Record);
+            Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Away.Record);
             Assert.NotNull(g.Game.Odds?.Line);
         });
         Assert.All(games.Where(g => g.League.Sport == Sport.Cricket), g =>
-            Assert.Equal((null, null, null), (g.Game.Home.Record, g.Game.Away.Record, g.Game.Odds)));
+            Assert.Equal((null, null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record, g.Game.Odds)));
     }
 
     [Fact]
@@ -73,7 +74,7 @@ public sealed class ScenarioDetailsTests : IDisposable
     {
         var games = Every(Watched(TimeSpan.Zero)).Select(g => g.Game).ToList();
 
-        Assert.All(games.Where(g => !g.LeagueKey.Contains("college")), g => Assert.Equal((null, null), (g.Home.Rank, g.Away.Rank)));
+        Assert.All(games.Where(g => !g.LeagueKey.Contains("college")), g => Assert.Equal((null, null), (g.Sides().Home.Rank, g.Sides().Away.Rank)));
         Assert.All(games.Where(g => g.Status == ProviderStatus.Scheduled), g => Assert.Null(g.Attendance));
         Assert.All(games.Where(g => g.Status is ProviderStatus.InProgress or ProviderStatus.Final), g => Assert.NotNull(g.Attendance));
     }
@@ -88,12 +89,12 @@ public sealed class ScenarioDetailsTests : IDisposable
         {
             foreach (var (before, after) in byGame.Zip(byGame.Skip(1)))
             {
-                var homeUp = after.Game.Home.Score > (before.Game.Home.Score ?? 0);
-                var awayUp = after.Game.Away.Score > (before.Game.Away.Score ?? 0);
+                var homeUp = after.Game.Sides().Home.Score > (before.Game.Sides().Home.Score ?? 0);
+                var awayUp = after.Game.Sides().Away.Score > (before.Game.Sides().Away.Score ?? 0);
                 if (!homeUp && !awayUp || before.Game.Status == ProviderStatus.Scheduled)
                     continue;
                 scores++;
-                Assert.Equal(homeUp ? after.Game.Home.Abbreviation : after.Game.Away.Abbreviation, after.Game.LastScore?.Team);
+                Assert.Equal(homeUp ? after.Game.Sides().Home.Abbreviation : after.Game.Sides().Away.Abbreviation, after.Game.LastScore?.Team);
                 Assert.Equal(after.Game.Period, after.Game.LastScore?.Period);
             }
         }
@@ -109,7 +110,7 @@ public sealed class ScenarioDetailsTests : IDisposable
         Assert.Contains(soccer, g => Goals(g) > 0);
         Assert.All(soccer, game =>
         {
-            Assert.Equal((game.Home.Score ?? 0) + (game.Away.Score ?? 0), Goals(game));
+            Assert.Equal((game.Sides().Home.Score ?? 0) + (game.Sides().Away.Score ?? 0), Goals(game));
             var minutes = game.KeyEvents.Select(e => int.Parse(e.Clock!.TrimEnd('\''))).ToList();
             Assert.Equal(minutes.Order(), minutes);
             var lastGoal = game.KeyEvents.LastOrDefault(e => e.Kind is KeyEventKind.Goal or KeyEventKind.PenaltyGoal or KeyEventKind.OwnGoal);

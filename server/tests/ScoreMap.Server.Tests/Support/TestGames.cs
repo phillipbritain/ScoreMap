@@ -18,8 +18,9 @@ public static class TestGames
         Id: id,
         LeagueKey: leagueKey,
         StartTime: startTime,
-        Home: new ProviderTeam("KC", "Kansas City Chiefs", null, homeScore),
-        Away: new ProviderTeam("BUF", "Buffalo Bills", null, awayScore),
+        Contest: new ProviderSides(
+            new ProviderTeam("KC", "Kansas City Chiefs", null, homeScore),
+            new ProviderTeam("BUF", "Buffalo Bills", null, awayScore)),
         Status: status,
         DisplayClock: clock,
         Period: period,

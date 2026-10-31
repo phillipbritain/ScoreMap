@@ -20,8 +20,9 @@ public sealed class AppServiceDataTests : IDisposable
         Id: "401872965",
         LeagueKey: "football/nfl",
         StartTime: new DateTimeOffset(2026, 10, 4, 13, 30, 0, TimeSpan.Zero),
-        Home: new ProviderTeam("WSH", "Washington Commanders", null, 13),
-        Away: new ProviderTeam("IND", "Indianapolis Colts", null, 30),
+        Contest: new ProviderSides(
+            new ProviderTeam("WSH", "Washington Commanders", null, 13),
+            new ProviderTeam("IND", "Indianapolis Colts", null, 30)),
         Status: ProviderStatus.Final,
         DisplayClock: "0:00",
         Period: 4,

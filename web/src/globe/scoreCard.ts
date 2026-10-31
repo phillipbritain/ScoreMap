@@ -25,7 +25,7 @@ export interface ScoreCard {
 }
 
 export function scoreCard(game: Game, flames: boolean): ScoreCard {
-  const [top, bottom] = sidesTopFirst(game)
+  const [top, bottom] = sidesTopFirst(game.sport, game.contest)
   return {
     gameId: game.id,
     status: game.status,

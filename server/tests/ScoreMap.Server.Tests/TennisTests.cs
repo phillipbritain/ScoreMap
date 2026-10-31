@@ -18,10 +18,11 @@ public class TennisTests
         Id: id,
         LeagueKey: Atp,
         StartTime: server.Clock.GetUtcNow().AddHours(-1),
-        Home: new ProviderTeam("J. Sinner", "Jannik Sinner", "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
-            status == Scheduled ? null : sets.Count(s => s.HomeWon == true)),
-        Away: new ProviderTeam("C. Alcaraz", "Carlos Alcaraz", "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
-            status == Scheduled ? null : sets.Count(s => s.HomeWon == false)),
+        Contest: new ProviderSides(
+            new ProviderTeam("J. Sinner", "Jannik Sinner", "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
+                status == Scheduled ? null : sets.Count(s => s.HomeWon == true)),
+            new ProviderTeam("C. Alcaraz", "Carlos Alcaraz", "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
+                status == Scheduled ? null : sets.Count(s => s.HomeWon == false))),
         Status: status,
         DisplayClock: null,
         Period: period,
@@ -59,7 +60,7 @@ public class TennisTests
 
         Assert.Equal(("ATP", "Tennis", GameStatus.Live), (game.League, game.Sport, game.Status));
         // The home side is shown on top, so its games come first.
-        Assert.Equal(("1", "0"), (game.Home.Score, game.Away.Score));
+        Assert.Equal(("1", "0"), (game.Sides().Home.Score, game.Sides().Away.Score));
         Assert.Equal("2nd set · 4–3", game.Clock);
         // Each finished set names its winner, its games first; the set in play reads top side first, as the progress line does.
         Assert.Equal(("1st 7-6(5) J. Sinner | 2nd 4-3", null, null), Parts(game.Scoreline));

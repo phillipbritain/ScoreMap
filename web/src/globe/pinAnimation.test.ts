@@ -8,8 +8,11 @@ function game(status: GameStatus, home: number | null, away: number | null): Gam
     status,
     clutchTime: false,
     hot: false,
-    home: { score: home },
-    away: { score: away },
+    contest: {
+      kind: 'sides',
+      home: { score: home },
+      away: { score: away },
+    },
     clock: null,
     period: null,
   } as Game

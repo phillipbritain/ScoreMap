@@ -93,7 +93,8 @@ public sealed class ScenarioPlay
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
                     played.Through = 0;
-                    var (home, away) = played.Sport.Start(played.Game.Sides().Home, played.Game.Sides().Away);
+                    var sides = played.Game.Sides();
+                    var (home, away) = played.Sport.Start(sides.Home, sides.Away);
                     played.Game = played.Game with { Status = ProviderStatus.InProgress, Contest = new ProviderSides(home, away) };
                     played.Game = Position(played);
                     break;
@@ -116,7 +117,8 @@ public sealed class ScenarioPlay
     {
         var sport = played.Sport;
         var step = Step / played.League.PlannedLength;
-        var (home, away) = sport.Step(played.Game.Sides().Home, played.Game.Sides().Away, played.Through, step, _random);
+        var sides = played.Game.Sides();
+        var (home, away) = sport.Step(sides.Home, sides.Away, played.Through, step, _random);
         played.Game = played.Game with { Contest = new ProviderSides(home, away) };
         played.Through = sport.After(home, away, played.Through + step);
         if (played.Through < 1)

@@ -38,7 +38,7 @@ internal static class GameChanges
     private static bool ScoreChanged(GameContest before, GameContest after) => (before, after) switch
     {
         (GameSides b, GameSides a) => b.Home.Score != a.Home.Score || b.Away.Score != a.Away.Score,
-        _ => false,
+        _ => throw new ArgumentOutOfRangeException(nameof(after), after, "No score change for this contest"),
     };
 
     /// <summary>

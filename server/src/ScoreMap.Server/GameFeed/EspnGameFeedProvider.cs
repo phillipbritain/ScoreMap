@@ -257,21 +257,36 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 match.Id,
                 leagueKey,
                 match.Date ?? tournament.Date ?? DateTimeOffset.MinValue,
-                ToPlayer(home!, sets.Count > 0 ? SetsWon(home!, away!) : null),
-                ToPlayer(away!, sets.Count > 0 ? SetsWon(away!, home!) : null),
+                ToPlayer(home!, sets.Count > 0 ? sets.Count(set => set.HomeWon == true) : null),
+                ToPlayer(away!, sets.Count > 0 ? sets.Count(set => set.HomeWon == false) : null),
                 status,
                 null,
                 started ? match.Status?.Period : null,
                 new ProviderVenue(name, NullIfBlank(match.Venue?.FullName), null, null, Court: NullIfBlank(match.Venue?.Court)),
                 ToBroadcasters(match.Broadcasts, match.GeoBroadcasts))
             {
-                Note = name is null ? round : round is null ? name : $"{name} · {round}",
+                Note = string.Join(" · ", new[] { name, ShortRound(round) }.OfType<string>()) is { Length: > 0 } note ? note : null,
                 Odds = ToOdds(match.Odds?.FirstOrDefault()),
                 Sets = sets,
                 EarlyEnding = ToEarlyEnding(match.Status?.Type, home!, away!),
             };
         }
     }
+
+    /// <summary>
+    /// A round in tennis's shorthand, so the game panel's note fits on its one line: "R1", "R16", "QF",
+    /// "SF"; any other ("Final") as ESPN names it.
+    /// </summary>
+    private static string? ShortRound(string? round) => round switch
+    {
+        "Quarterfinal" => "QF",
+        "Semifinal" => "SF",
+        _ when RoundNumber().Match(round ?? "") is { Success: true } numbered => $"R{numbered.Groups[1].Value}",
+        _ => round,
+    };
+
+    [GeneratedRegex(@"^Round (?:of )?(\d+)$")]
+    private static partial Regex RoundNumber();
 
     /// <summary>A side ESPN has named a player for, not one still "TBD" (to be decided).</summary>
     private static bool IsKnownPlayer(MatchSide? competitor) =>
@@ -282,22 +297,25 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         new(competitor.Athlete!.ShortName ?? competitor.Athlete.DisplayName!, competitor.Athlete.DisplayName!,
             competitor.Athlete.Flag?.Href, setsWon);
 
-    /// <summary>Each set's games, from both sides' linescores, which list the sets in order.</summary>
+    /// <summary>Each set's games and who won it, from both sides' linescores, which list the sets in order.</summary>
     private static IReadOnlyList<ProviderSet> ToSets(MatchSide home, MatchSide away)
     {
         var (homeSets, awaySets) = (home.Linescores ?? [], away.Linescores ?? []);
-        return homeSets.Zip(awaySets, (h, a) => new ProviderSet((int)(h.Value ?? 0), (int)(a.Value ?? 0), h.Tiebreak, a.Tiebreak)).ToList();
+        return homeSets.Zip(awaySets, (h, a) =>
+        {
+            var (homeGames, awayGames) = ((int)(h.Value ?? 0), (int)(a.Value ?? 0));
+            bool? homeWon = WonSet(h, homeGames, awayGames) ? true : WonSet(a, awayGames, homeGames) ? false : null;
+            return new ProviderSet(homeGames, awayGames, h.Tiebreak, a.Tiebreak, homeWon);
+        }).ToList();
     }
 
     /// <summary>
-    /// The sets a side has won. ESPN marks the winner of each finished set, but not always the last one
+    /// Whether a side won a set. ESPN marks the winner of each finished set, but not always the last one
     /// finished before a retirement, so a set that's plainly over counts too: 6 games or more and 2 clear,
     /// or 7-6.
     /// </summary>
-    private static int SetsWon(MatchSide side, MatchSide other) =>
-        (side.Linescores ?? []).Zip(other.Linescores ?? []).Count(set =>
-            set.First.Winner == true
-            || (set.First.Value ?? 0, set.Second.Value ?? 0) is var (games, against) && ((games >= 6 && games - against >= 2) || (games == 7 && against == 6)));
+    private static bool WonSet(Linescore side, int games, int against) =>
+        side.Winner == true || (games >= 6 && games - against >= 2) || (games == 7 && against == 6);
 
     /// <summary>Why a Final match ended early, and the side ESPN marks as its winner if it marks one; null for one played out.</summary>
     private static ProviderEarlyEnding? ToEarlyEnding(StatusType? type, MatchSide home, MatchSide away)

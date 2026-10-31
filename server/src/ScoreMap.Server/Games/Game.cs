@@ -51,9 +51,24 @@ public sealed record Game(
     /// <summary>Whether ESPN lists the game in its Top Events: the games it picks as the most important right now.</summary>
     public bool TopEvent { get; init; }
 
-    /// <summary>Tennis: the score set by set, with tiebreaks (see <see cref="Games.Scoreline"/>); null in other sports and before play.</summary>
-    public string? Scoreline { get; init; }
+    /// <summary>Tennis: the score set by set, with tiebreaks; null in other sports and before play.</summary>
+    public GameScoreline? Scoreline { get; init; }
 }
+
+/// <summary>
+/// A tennis match's score set by set (see <see cref="GameSet"/>). A match ended early has its
+/// <see cref="Ending"/> ("ret." or "W/O") and the side that <see cref="Advanced"/> (its abbreviation),
+/// when the feed says.
+/// </summary>
+public sealed record GameScoreline(IReadOnlyList<GameSet> Sets, string? Ending, string? Advanced);
+
+/// <summary>
+/// A tennis set: its <see cref="Name"/> ("1st"), its <see cref="Score"/> in games with the loser's
+/// tiebreak points after a tiebreak ("7-6(5)"), and its <see cref="Winner"/> (their abbreviation). A won
+/// set's score has the winner's games first; a set still being played has no winner, and its score has
+/// the home side's games first, as it's shown on top.
+/// </summary>
+public sealed record GameSet(string Name, string Score, string? Winner);
 
 /// <summary>
 /// A team in a game, or in tennis a player: their short name ("J. Sinner") is the abbreviation and their

@@ -739,7 +739,8 @@ public class EspnGameFeedProviderTests
             (match.LeagueKey, match.StartTime, match.Status, match.Period));
         Assert.Equal(new ProviderTeam("A. Tubello", "Alice Tubello", "https://a.espncdn.com/i/teamlogos/countries/500/fra.png", 1), match.Home);
         Assert.Equal(new ProviderTeam("J. Ortenzi", "Jazmin Ortenzi", "https://a.espncdn.com/i/teamlogos/countries/500/arg.png", 1), match.Away);
-        Assert.Equal([new ProviderSet(2, 6), new ProviderSet(6, 2), new ProviderSet(1, 3)], match.Sets);
+        // The third set is still being played, so it has no winner yet.
+        Assert.Equal([new ProviderSet(2, 6, HomeWon: false), new ProviderSet(6, 2, HomeWon: true), new ProviderSet(1, 3)], match.Sets);
         Assert.Null(match.EarlyEnding);
     }
 
@@ -750,9 +751,27 @@ public class EspnGameFeedProviderTests
 
         var match = Assert.Single(games, g => g.Id == "185777");
         Assert.Equal(new ProviderVenue("Curitiba Open", "Curitiba, Brazil", null, null, Court: "Quadra Central"), match.Venue);
-        Assert.Equal("Curitiba Open · Quarterfinal", match.Note);
+        // The round in tennis's shorthand, so the note fits on the game panel's one line.
+        Assert.Equal("Curitiba Open · QF", match.Note);
         // A match with no court named yet has none.
         Assert.Null(Assert.Single(games, g => g.Id == "185706").Venue!.Court);
+    }
+
+    [Theory]
+    [InlineData("Round 1", "R1")]
+    [InlineData("Round 2", "R2")]
+    [InlineData("Round of 16", "R16")]
+    [InlineData("Quarterfinal", "QF")]
+    [InlineData("Semifinal", "SF")]
+    [InlineData("Final", "Final")]
+    [InlineData("Third Place", "Third Place")]
+    public async Task A_tennis_rounds_note_is_in_shorthand(string round, string shorthand)
+    {
+        var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json").Replace("\"displayName\": \"Quarterfinal\"", $"\"displayName\": \"{round}\""));
+
+        var games = await ProviderOver(handler).FetchScoreboardAsync(Wta, CancellationToken.None);
+
+        Assert.Equal($"Curitiba Open · {shorthand}", Assert.Single(games, g => g.Id == "185777").Note);
     }
 
     [Fact]
@@ -762,7 +781,7 @@ public class EspnGameFeedProviderTests
 
         var match = Assert.Single(games, g => g.Id == "185732");
         Assert.Equal(ProviderStatus.Final, match.Status);
-        Assert.Equal([new ProviderSet(7, 5), new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 2)], match.Sets);
+        Assert.Equal([new ProviderSet(7, 5, HomeWon: true), new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 2, HomeWon: true)], match.Sets);
         Assert.Equal((2, 0), (match.Home.Score, match.Away.Score));
     }
 
@@ -775,6 +794,7 @@ public class EspnGameFeedProviderTests
         Assert.Equal(ProviderStatus.Final, match.Status);
         Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, "N. Leme Da Silva"), match.EarlyEnding);
         // ESPN marks no winner for the 7-5 set the match stopped after, but it was finished.
+        Assert.Equal([new ProviderSet(5, 7, HomeWon: false)], match.Sets);
         Assert.Equal((0, 1), (match.Home.Score, match.Away.Score));
     }
 

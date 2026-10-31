@@ -63,7 +63,9 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={league} data-tooltip-when-clipped>
+          <div className="game-panel__league" data-tooltip={`${game.sport} · ${league}`} data-tooltip-when-clipped>
+            {/* The sport goes here on a phone, where the details have no room for its column. */}
+            <span className="game-panel__league-sport">{game.sport} · </span>
             {league}
           </div>
           <TeamRow team={top} />
@@ -76,6 +78,12 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
         </div>
 
         <div className="game-panel__details">
+          <div className="game-panel__sport">
+            <div className="game-panel__label">Sport</div>
+            <div className="game-panel__value" data-tooltip={game.sport} data-tooltip-when-clipped>
+              {game.sport}
+            </div>
+          </div>
           <div>
             <div className="game-panel__label">Venue</div>
             <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
@@ -216,9 +224,16 @@ function GameBand({ game }: { game: Game }) {
   return (
     <div className="game-panel__band">
       {scoreline && (
-        <BandCell label="Score" wide>
-          <div className="game-panel__clamp" data-tooltip={scoreline} data-tooltip-when-clipped>
-            {scoreline}
+        // Each set in the progress line's look: its name, its score and who won it.
+        <BandCell wide>
+          <div className="game-panel__sets">
+            {scoreline.sets.map((set) => (
+              <span key={set.name} className="game-panel__set">
+                {[set.name, set.score, set.winner].filter(Boolean).join(' · ')}
+              </span>
+            ))}
+            {scoreline.ending && <span className="game-panel__strong">{scoreline.ending}</span>}
+            {scoreline.advanced && <span className="game-panel__one-line">{scoreline.advanced} advances</span>}
           </div>
         </BandCell>
       )}
@@ -257,10 +272,11 @@ function GameBand({ game }: { game: Game }) {
   )
 }
 
-function BandCell({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
+/** A cell of the band, with its label above it when it has one. */
+function BandCell({ label, wide = false, children }: { label?: string; wide?: boolean; children: ReactNode }) {
   return (
     <div className={wide ? 'game-panel__cell game-panel__cell--wide' : 'game-panel__cell'}>
-      <div className="game-panel__label">{label}</div>
+      {label && <div className="game-panel__label">{label}</div>}
       {children}
     </div>
   )

@@ -52,11 +52,12 @@ public sealed class VenueLocator
 
     /// <summary>
     /// Where a game's pin goes, trying in order: the corrections file, the venue looked up by name
-    /// and city (ESPN supplies no coordinates, ADR-0001), the venue's city centre, and the home team's city.
+    /// and city (ESPN supplies no coordinates, ADR-0001), the venue's city centre, and the home team's city
+    /// (<paramref name="home"/>, null in a game with no home side).
     /// Always answers; when every step fails the position is 0,0 and <see cref="VenueLocation.FoundBy"/>
     /// says so.
     /// </summary>
-    public async Task<VenueLocation> LocateAsync(ProviderVenue? venue, ProviderTeam home, CancellationToken cancellationToken)
+    public async Task<VenueLocation> LocateAsync(ProviderVenue? venue, ProviderTeam? home, CancellationToken cancellationToken)
     {
         if (_corrections.Find(venue?.Name) is { } corrected)
             return new(corrected, LocationSource.Correction);
@@ -71,12 +72,12 @@ public sealed class VenueLocator
             && await LookUpAsync(PlaceQuery(venue.City, venue.Region, venue.Country), cancellationToken) is { } city)
             return new(city, LocationSource.VenueCity);
 
-        if (home.HomeCity is { } homeCity && !string.IsNullOrWhiteSpace(homeCity.Name)
+        if (home?.HomeCity is { } homeCity && !string.IsNullOrWhiteSpace(homeCity.Name)
             && await LookUpAsync(PlaceQuery(homeCity.Name, homeCity.Region, homeCity.Country), cancellationToken) is { } homeTown)
             return new(homeTown, LocationSource.HomeTeamCity);
 
         _logger.LogWarning("No position found for venue {Venue} or home team {Team}; pinning at 0,0",
-            venue?.Name, home.FullName);
+            venue?.Name, home?.FullName);
         return new(new Coordinates(0, 0), LocationSource.Nowhere);
     }
 

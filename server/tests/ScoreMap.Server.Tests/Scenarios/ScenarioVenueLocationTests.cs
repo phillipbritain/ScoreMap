@@ -29,8 +29,9 @@ public class ScenarioVenueLocationTests : IDisposable
         Id: "401",
         LeagueKey: "soccer/eng.1",
         StartTime: new DateTimeOffset(2026, 10, 4, 17, 30, 0, TimeSpan.Zero),
-        Home: new ProviderTeam("HOM", "Home Team", null, 1),
-        Away: new ProviderTeam("AWY", "Away Team", null, 0),
+        Contest: new ProviderSides(
+            new ProviderTeam("HOM", "Home Team", null, 1),
+            new ProviderTeam("AWY", "Away Team", null, 0)),
         Status: ProviderStatus.InProgress,
         DisplayClock: "40'",
         Period: 1,

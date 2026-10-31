@@ -13,8 +13,11 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     delayed: false,
     disruption: null,
     endTime: null,
-    home: { abbreviation: 'HOM', fullName: 'Home', logoUrl: null, score: null, rank: null, record: null },
-    away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null, rank: null, record: null },
+    contest: {
+      kind: 'sides',
+      home: { abbreviation: 'HOM', fullName: 'Home', logoUrl: null, score: null, rank: null, record: null },
+      away: { abbreviation: 'AWY', fullName: 'Away', logoUrl: null, score: null, rank: null, record: null },
+    },
     clock: null,
     period: null,
     clutchTime: false,

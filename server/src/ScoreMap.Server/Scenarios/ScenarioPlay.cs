@@ -93,8 +93,8 @@ public sealed class ScenarioPlay
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
                     played.Through = 0;
-                    var (home, away) = played.Sport.Start(played.Game.Home, played.Game.Away);
-                    played.Game = played.Game with { Status = ProviderStatus.InProgress, Home = home, Away = away };
+                    var (home, away) = played.Sport.Start(played.Game.Sides().Home, played.Game.Sides().Away);
+                    played.Game = played.Game with { Status = ProviderStatus.InProgress, Contest = new ProviderSides(home, away) };
                     played.Game = Position(played);
                     break;
                 case ProviderStatus.InProgress:
@@ -116,8 +116,8 @@ public sealed class ScenarioPlay
     {
         var sport = played.Sport;
         var step = Step / played.League.PlannedLength;
-        var (home, away) = sport.Step(played.Game.Home, played.Game.Away, played.Through, step, _random);
-        played.Game = played.Game with { Home = home, Away = away };
+        var (home, away) = sport.Step(played.Game.Sides().Home, played.Game.Sides().Away, played.Through, step, _random);
+        played.Game = played.Game with { Contest = new ProviderSides(home, away) };
         played.Through = sport.After(home, away, played.Through + step);
         if (played.Through < 1)
         {
@@ -128,8 +128,7 @@ public sealed class ScenarioPlay
         (home, away) = sport.Settled(home, away, _random);
         played.Game = played.Game with
         {
-            Home = home,
-            Away = away,
+            Contest = new ProviderSides(home, away),
             Status = ProviderStatus.Final,
             Period = sport.Regulation,
             Phase = ProviderPeriodPhase.Playing,
@@ -186,7 +185,7 @@ public sealed class ScenarioPlay
         var venue = venues[_random.Next(venues.Count)];
         var id = $"{_scenario}-play-{_newGames + 1}";
         var playing = _games.Where(game => game != replacing)
-            .SelectMany(game => PlayingTeam.In(game.Game.LeagueKey, game.Game.Home, game.Game.Away)).ToList();
+            .SelectMany(game => PlayingTeam.In(game.Game.LeagueKey, game.Game.Sides().Home, game.Game.Sides().Away)).ToList();
         ScenarioGame made;
         try
         {

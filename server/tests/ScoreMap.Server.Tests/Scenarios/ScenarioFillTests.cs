@@ -51,9 +51,9 @@ public sealed class ScenarioFillTests : IDisposable
             Assert.Contains("london", venue.Groups);
             Assert.Equal(venue.ToProviderVenue(), game.Venue);
             var league = Assert.Single(Leagues, l => l.Key == game.LeagueKey);
-            Assert.Contains(Teams.For(league), team => team.Name == game.Home.FullName);
-            Assert.Contains(Teams.For(league), team => team.Name == game.Away.FullName);
-            Assert.NotEqual(game.Home.FullName, game.Away.FullName);
+            Assert.Contains(Teams.For(league), team => team.Name == game.Sides.Home.FullName);
+            Assert.Contains(Teams.For(league), team => team.Name == game.Sides.Away.FullName);
+            Assert.NotEqual(game.Sides.Home.FullName, game.Sides.Away.FullName);
         }
     }
 
@@ -176,7 +176,7 @@ public sealed class ScenarioFillTests : IDisposable
             }
             """);
 
-        var teams = scenario.Games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+        var teams = scenario.Games.SelectMany(g => new[] { (g.LeagueKey, g.Sides.Home.FullName), (g.LeagueKey, g.Sides.Away.FullName) }).ToList();
         Assert.Equal(12, teams.Count);
         Assert.Equal(teams.Count, teams.Distinct().Count());
     }

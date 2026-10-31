@@ -69,7 +69,7 @@ public class ScenarioSpeedTests
         server.Clock.Advance(TimeSpan.FromMilliseconds(250));
         var scored = await client.NextChangeAsync();
 
-        Assert.Equal((GameChangeKind.ScoreChanged, "21"), (scored.Kind, scored.Game.Home.Score));
+        Assert.Equal((GameChangeKind.ScoreChanged, "21"), (scored.Kind, scored.Game.Sides().Home.Score));
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public class ScenarioSpeedTests
         server.Clock.Advance(TimeSpan.FromMinutes(5));
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
-        Assert.Equal(("chiefs-bills", "14"), (snapshot.Single().Id, snapshot.Single().Home.Score));
+        Assert.Equal(("chiefs-bills", "14"), (snapshot.Single().Id, snapshot.Single().Sides().Home.Score));
         await Task.Delay(100);
         Assert.Empty(client.PendingChanges());
         Assert.Equal(startedAt, (await ListingAsync(http)).Clock.Reads);

@@ -69,9 +69,9 @@ public static partial class ScenarioReader
         if (game.Status == ProviderStatus.Final && change.Status is { } status && status != ProviderStatus.Final)
             throw new InvalidDataException(
                 $"makes \"{game.Id}\" {entry.Status} when it is already Final; a Final game can't go back");
-        if (change.HomeScore < game.Home.Score || change.AwayScore < game.Away.Score)
+        if (change.HomeScore < game.Sides.Home.Score || change.AwayScore < game.Sides.Away.Score)
             throw new InvalidDataException(
-                $"makes a score of \"{game.Id}\" go down, from {game.Home.Score}-{game.Away.Score}; scores only go up");
+                $"makes a score of \"{game.Id}\" go down, from {game.Sides.Home.Score}-{game.Sides.Away.Score}; scores only go up");
         return change;
     }
 

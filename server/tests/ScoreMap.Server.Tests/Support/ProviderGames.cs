@@ -14,8 +14,9 @@ public static class ProviderGames
             Id: id,
             LeagueKey: "football/nfl",
             StartTime: startTime,
-            Home: new ProviderTeam("KC", "Kansas City Chiefs", null, null),
-            Away: new ProviderTeam("BUF", "Buffalo Bills", null, null),
+            Contest: new ProviderSides(
+                new ProviderTeam("KC", "Kansas City Chiefs", null, null),
+                new ProviderTeam("BUF", "Buffalo Bills", null, null)),
             Status: status,
             DisplayClock: clock,
             Period: period,

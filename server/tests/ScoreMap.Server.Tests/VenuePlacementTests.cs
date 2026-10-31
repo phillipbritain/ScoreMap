@@ -12,8 +12,9 @@ public class VenuePlacementTests
         Id: id,
         LeagueKey: "football/nfl",
         StartTime: new DateTimeOffset(2026, 10, 4, 13, 30, 0, TimeSpan.Zero),
-        Home: new ProviderTeam("WSH", "Washington Commanders", null, 13),
-        Away: new ProviderTeam("IND", "Indianapolis Colts", null, 30),
+        Contest: new ProviderSides(
+            new ProviderTeam("WSH", "Washington Commanders", null, 13),
+            new ProviderTeam("IND", "Indianapolis Colts", null, 30)),
         Status: ProviderStatus.Final,
         DisplayClock: "0:00",
         Period: 4,
@@ -150,9 +151,9 @@ public class VenuePlacementTests
     {
         await using var server = new ScoreMapServer();
         server.Places.Add("Charlotte, NC, USA", new Coordinates(35.2272, -80.8431));
-        server.Feed.SetScoreboard("football/nfl", LondonGame() with
+        server.Feed.SetScoreboard("football/nfl", LondonGame().WithSides(
+            home: new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA"))) with
         {
-            Home = new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA")),
             Venue = null,
         });
 
@@ -169,9 +170,9 @@ public class VenuePlacementTests
         server.Places.Add("Charlotte, NC, USA", new Coordinates(35.2272, -80.8431));
         server.Feed.SetScoreboard("football/nfl",
             LondonGame("unfindable venue"),
-            LondonGame("no venue, home city known") with
+            LondonGame("no venue, home city known").WithSides(
+                home: new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA"))) with
             {
-                Home = new ProviderTeam("CAR", "Carolina Panthers", null, 7, new ProviderCity("Charlotte", "NC", "USA")),
                 Venue = null,
             },
             LondonGame("nothing known") with { Venue = null });

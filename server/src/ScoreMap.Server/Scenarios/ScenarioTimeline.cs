@@ -28,8 +28,9 @@ public sealed record ScenarioChange(
 {
     public ScenarioGame ApplyTo(ScenarioGame game) => game with
     {
-        Home = HomeScore is { } home ? game.Home with { Score = home } : game.Home,
-        Away = AwayScore is { } away ? game.Away with { Score = away } : game.Away,
+        Sides = new ProviderSides(
+            HomeScore is { } home ? game.Sides.Home with { Score = home } : game.Sides.Home,
+            AwayScore is { } away ? game.Sides.Away with { Score = away } : game.Sides.Away),
         Status = Status ?? game.Status,
         Period = Period ?? game.Period,
         Clock = Clock ?? game.Clock,

@@ -42,7 +42,7 @@ public class DemoTests
         return server;
     }
 
-    private static string? HomeScore(IReadOnlyList<Game> games) => Assert.Single(games).Home.Score;
+    private static string? HomeScore(IReadOnlyList<Game> games) => Assert.Single(games).Sides().Home.Score;
 
     [Fact]
     public async Task A_demo_viewer_gets_the_worldwide_scenarios_games_and_everyone_else_the_real_games()
@@ -74,7 +74,7 @@ public class DemoTests
         foreach (var viewer in new[] { first, second })
         {
             var change = await viewer.NextChangeAsync();
-            Assert.Equal((GameChangeKind.ScoreChanged, "21"), (change.Kind, change.Game.Home.Score));
+            Assert.Equal((GameChangeKind.ScoreChanged, "21"), (change.Kind, change.Game.Sides().Home.Score));
         }
         Assert.Empty(real.PendingChanges());
     }
@@ -93,7 +93,7 @@ public class DemoTests
         Assert.Empty(demo.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(58));
 
-        Assert.Equal("21", (await demo.NextChangeAsync()).Game.Home.Score);
+        Assert.Equal("21", (await demo.NextChangeAsync()).Game.Sides().Home.Score);
     }
 
     [Fact]
@@ -172,6 +172,6 @@ public class DemoTests
 
         Assert.Equal("14", HomeScore(await next.NextSnapshotAsync()));
         server.Clock.Advance(TimeSpan.FromMinutes(1));
-        Assert.Equal("21", (await next.NextChangeAsync()).Game.Home.Score);
+        Assert.Equal("21", (await next.NextChangeAsync()).Game.Sides().Home.Score);
     }
 }

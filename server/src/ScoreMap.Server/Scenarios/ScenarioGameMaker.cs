@@ -43,8 +43,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
             Id: id,
             LeagueKey: league.Key,
             StartsIn: TimeSpan.Zero,
-            Home: Team(home),
-            Away: Team(away),
+            Sides: new ProviderSides(Team(home), Team(away)),
             Venue: venue.ToProviderVenue(),
             Status: ProviderStatus.Scheduled,
             Clock: null,
@@ -71,14 +70,13 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     {
         var minutesIn = random.Next(1, (int)(league.PlannedLength.TotalMinutes * 0.9) + 1);
         var (home, away, through) = sport.PlayTo(
-            game.Home, game.Away, minutesIn / league.PlannedLength.TotalMinutes, random, mayFinish: false);
+            game.Sides.Home, game.Sides.Away, minutesIn / league.PlannedLength.TotalMinutes, random, mayFinish: false);
         var (period, clock, phase) = sport.Position(through);
         return game with
         {
             StartsIn = Minutes(-minutesIn),
             Status = ProviderStatus.InProgress,
-            Home = home,
-            Away = away,
+            Sides = new ProviderSides(home, away),
             Period = period,
             Clock = clock,
             Phase = phase,
@@ -93,14 +91,13 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     private static ScenarioGame Finished(ScenarioGame game, League league, SportPlay sport, Random random)
     {
         var startsIn = -(league.PlannedLength + Minutes(random.Next(5, 61)));
-        var (playedHome, playedAway, _) = sport.PlayTo(game.Home, game.Away, 1, random, mayFinish: true);
+        var (playedHome, playedAway, _) = sport.PlayTo(game.Sides.Home, game.Sides.Away, 1, random, mayFinish: true);
         var (home, away) = sport.Settled(playedHome, playedAway, random);
         return game with
         {
             StartsIn = startsIn,
             Status = ProviderStatus.Final,
-            Home = home,
-            Away = away,
+            Sides = new ProviderSides(home, away),
             Period = sport.Regulation,
         };
     }

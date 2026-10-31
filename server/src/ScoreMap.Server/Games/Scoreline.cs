@@ -2,35 +2,34 @@ using ScoreMap.Server.GameFeed;
 
 namespace ScoreMap.Server.Games;
 
-/// <summary>
-/// A tennis match's score set by set, the home side's games first as it's shown on top, with the
-/// loser's tiebreak points after a tiebreak set: "7-6(5) 4-3". A match ended early says so and names
-/// the side that advanced: "7-5 ret. · N. Leme Da Silva advances", "W/O · C. Liu advances".
-/// </summary>
+/// <summary>A tennis match's score set by set (see <see cref="GameScoreline"/>).</summary>
 public static class Scoreline
 {
     /// <summary>The match's scoreline; null in other sports, and before a tennis match has any.</summary>
-    public static string? For(ProviderGame game, League league)
+    public static GameScoreline? For(ProviderGame game, League league)
     {
-        if (league.Sport != Sport.Tennis)
+        if (league.Sport != Sport.Tennis || (game.Sets.Count == 0 && game.EarlyEnding is null))
             return null;
-        var sets = string.Join(" ", game.Sets.Select(Set));
-        var line = game.EarlyEnding?.Reason switch
+        var ending = game.EarlyEnding?.Reason switch
         {
+            EarlyEndingReason.Retired => "ret.",
             EarlyEndingReason.Walkover => "W/O",
-            EarlyEndingReason.Retired => $"{sets} ret.".Trim(),
-            _ => sets,
+            _ => null,
         };
-        if (game.EarlyEnding?.Winner is { } winner)
-            line = $"{line} · {winner} advances";
-        return line.Length > 0 ? line : null;
+        var sets = game.Sets.Select((set, i) => Set(set, i + 1, game)).ToList();
+        return new GameScoreline(sets, ending, game.EarlyEnding?.Winner);
     }
 
-    private static string Set(ProviderSet set)
+    /// <summary>A set: the winner's games first once it's won, the home side's while it's played.</summary>
+    private static GameSet Set(ProviderSet set, int number, ProviderGame game)
     {
-        var games = $"{set.Home}-{set.Away}";
-        // A tiebreak set's loser's points; none while its tiebreak is still being played.
-        var lost = set.Home > set.Away ? set.AwayTiebreak : set.Away > set.Home ? set.HomeTiebreak : null;
-        return lost is { } points ? $"{games}({points})" : games;
+        var (winner, first, second, loserTiebreak) = set.HomeWon switch
+        {
+            true => (game.Home.Abbreviation, set.Home, set.Away, set.AwayTiebreak),
+            false => (game.Away.Abbreviation, set.Away, set.Home, set.HomeTiebreak),
+            null => ((string?)null, set.Home, set.Away, (int?)null),
+        };
+        var score = loserTiebreak is { } points ? $"{first}-{second}({points})" : $"{first}-{second}";
+        return new GameSet(ClockLine.Ordinal(number), score, winner);
     }
 }

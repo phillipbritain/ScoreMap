@@ -128,7 +128,8 @@ public static class ClockLine
             : $"{Ordinal(set)} set";
     }
 
-    private static string Ordinal(int n) => (n % 100, n % 10) switch
+    /// <summary>"1st", "2nd", "3rd", "4th"…</summary>
+    internal static string Ordinal(int n) => (n % 100, n % 10) switch
     {
         (11 or 12 or 13, _) => $"{n}th",
         (_, 1) => $"{n}st",

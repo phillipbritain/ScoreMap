@@ -12,26 +12,35 @@ public class TennisTests
 
     private static readonly ProviderVenue Shanghai = new("Rolex Shanghai Masters", "Shanghai, China PR", null, null, Court: "Stadium Court");
 
-    /// <summary>A match between J. Sinner (home) and C. Alcaraz (away), each with their sets won.</summary>
+    /// <summary>A match between J. Sinner (home) and C. Alcaraz (away), each with the sets they won.</summary>
     private static ProviderGame Match(ScoreMapServer server, ProviderStatus status, int? period, IReadOnlyList<ProviderSet> sets,
         ProviderEarlyEnding? earlyEnding = null, string id = "184958") => new(
         Id: id,
         LeagueKey: Atp,
         StartTime: server.Clock.GetUtcNow().AddHours(-1),
         Home: new ProviderTeam("J. Sinner", "Jannik Sinner", "https://a.espncdn.com/i/teamlogos/countries/500/ita.png",
-            status == Scheduled ? null : sets.Count(s => s.Home > s.Away && s.Home >= 6)),
+            status == Scheduled ? null : sets.Count(s => s.HomeWon == true)),
         Away: new ProviderTeam("C. Alcaraz", "Carlos Alcaraz", "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
-            status == Scheduled ? null : sets.Count(s => s.Away > s.Home && s.Away >= 6)),
+            status == Scheduled ? null : sets.Count(s => s.HomeWon == false)),
         Status: status,
         DisplayClock: null,
         Period: period,
         Venue: Shanghai,
         Broadcasters: [])
     {
-        Note = "Rolex Shanghai Masters · Quarterfinal",
+        Note = "Rolex Shanghai Masters · QF",
         Sets = sets,
         EarlyEnding = earlyEnding,
     };
+
+    /// <summary>
+    /// A scoreline's parts, each set written "1st 7-6(5) J. Sinner" (its winner left off while it's
+    /// played) and the sets joined by " | ", so they compare by value.
+    /// </summary>
+    private static (string Sets, string? Ending, string? Advanced) Parts(GameScoreline? scoreline) =>
+        scoreline is null
+            ? throw new Xunit.Sdk.XunitException("No scoreline")
+            : (string.Join(" | ", scoreline.Sets.Select(set => $"{set.Name} {set.Score} {set.Winner}".TrimEnd())), scoreline.Ending, scoreline.Advanced);
 
     private static async Task<Game> ReceivedAsync(ScoreMapServer server, ProviderGame match)
     {
@@ -46,13 +55,14 @@ public class TennisTests
         await using var server = new ScoreMapServer();
 
         var game = await ReceivedAsync(server, Match(server, InProgress, 2,
-            [new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 5), new ProviderSet(4, 3)]));
+            [new ProviderSet(7, 6, HomeTiebreak: 7, AwayTiebreak: 5, HomeWon: true), new ProviderSet(4, 3)]));
 
         Assert.Equal(("ATP", "Tennis", GameStatus.Live), (game.League, game.Sport, game.Status));
         // The home side is shown on top, so its games come first.
         Assert.Equal(("1", "0"), (game.Home.Score, game.Away.Score));
         Assert.Equal("2nd set · 4–3", game.Clock);
-        Assert.Equal("7-6(5) 4-3", game.Scoreline);
+        // Each finished set names its winner, its games first; the set in play reads top side first, as the progress line does.
+        Assert.Equal(("1st 7-6(5) J. Sinner | 2nd 4-3", null, null), Parts(game.Scoreline));
         Assert.False(game.Hot);
     }
 
@@ -61,7 +71,7 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, InProgress, 2, [new ProviderSet(6, 4)]));
+        var game = await ReceivedAsync(server, Match(server, InProgress, 2, [new ProviderSet(6, 4, HomeWon: true)]));
 
         Assert.Equal("2nd set", game.Clock);
     }
@@ -71,10 +81,10 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(4, 6), new ProviderSet(6, 7, 3, 7)]));
+        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(4, 6, HomeWon: false), new ProviderSet(6, 7, 3, 7, HomeWon: false)]));
 
         Assert.Equal((GameStatus.Final, "Final"), (game.Status, game.Clock));
-        Assert.Equal("4-6 6-7(3)", game.Scoreline);
+        Assert.Equal(("1st 6-4 C. Alcaraz | 2nd 7-6(3) C. Alcaraz", null, null), Parts(game.Scoreline));
     }
 
     [Fact]
@@ -82,11 +92,11 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(7, 5), new ProviderSet(0, 1)],
+        var game = await ReceivedAsync(server, Match(server, Final, 2, [new ProviderSet(7, 5, HomeWon: true), new ProviderSet(0, 1)],
             new ProviderEarlyEnding(EarlyEndingReason.Retired, "J. Sinner")));
 
         Assert.Equal((GameStatus.Final, "Ret."), (game.Status, game.Clock));
-        Assert.Equal("7-5 0-1 ret. · J. Sinner advances", game.Scoreline);
+        Assert.Equal(("1st 7-5 J. Sinner | 2nd 0-1", "ret.", "J. Sinner"), Parts(game.Scoreline));
     }
 
     [Fact]
@@ -98,7 +108,7 @@ public class TennisTests
             new ProviderEarlyEnding(EarlyEndingReason.Walkover, "J. Sinner")));
 
         Assert.Equal((GameStatus.Final, "W/O"), (game.Status, game.Clock));
-        Assert.Equal("W/O · J. Sinner advances", game.Scoreline);
+        Assert.Equal(("", "W/O", "J. Sinner"), Parts(game.Scoreline));
     }
 
     [Fact]
@@ -106,7 +116,7 @@ public class TennisTests
     {
         await using var server = new ScoreMapServer();
 
-        var game = await ReceivedAsync(server, Match(server, Suspended, 2, [new ProviderSet(6, 4), new ProviderSet(2, 2)]));
+        var game = await ReceivedAsync(server, Match(server, Suspended, 2, [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(2, 2)]));
 
         Assert.Equal((GameStatus.Disrupted, Disruption.Suspended), (game.Status, game.Disruption));
     }
@@ -132,7 +142,7 @@ public class TennisTests
         var game = await ReceivedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
 
         Assert.Equal(("Rolex Shanghai Masters", "Shanghai, China PR", "Stadium Court"), (game.Venue.Name, game.Venue.City, game.Venue.Court));
-        Assert.Equal("Rolex Shanghai Masters · Quarterfinal", game.Note);
+        Assert.Equal("Rolex Shanghai Masters · QF", game.Note);
     }
 
     [Fact]

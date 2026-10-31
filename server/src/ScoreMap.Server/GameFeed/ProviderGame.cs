@@ -52,9 +52,10 @@ public sealed record ProviderGame(
 }
 
 /// <summary>
-/// A tennis set: the games each side won, and in a tiebreak each side's tiebreak points (null otherwise).
+/// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and
+/// whether the home side won it (false: the away side did; null while it's played, or if it never finished).
 /// </summary>
-public sealed record ProviderSet(int Home, int Away, int? HomeTiebreak = null, int? AwayTiebreak = null);
+public sealed record ProviderSet(int Home, int Away, int? HomeTiebreak = null, int? AwayTiebreak = null, bool? HomeWon = null);
 
 /// <summary>
 /// How a tennis match ended early: its <see cref="Reason"/>, and the side that advanced (its abbreviation),

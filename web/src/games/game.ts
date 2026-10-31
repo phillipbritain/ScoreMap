@@ -156,10 +156,27 @@ export interface Game {
   keyEvents: KeyEvent[]
   /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */
   topEvent: boolean
-  /**
-   * Tennis: the score set by set, the home side's games first (it is shown on top), with the loser's tiebreak points ("7-6(5) 4-3");
-   * a match ended early says so and names the side that advanced ("7-5 ret. · N. Leme Da Silva advances").
-   * Null in other sports and before play.
-   */
-  scoreline: string | null
+  /** Tennis: the score set by set; null in other sports and before play. */
+  scoreline: GameScoreline | null
+}
+
+/**
+ * A tennis match's score set by set. A match ended early has its ending ("ret." or "W/O") and the side
+ * that advanced (its abbreviation), when the feed says.
+ */
+export interface GameScoreline {
+  sets: GameSet[]
+  ending: string | null
+  advanced: string | null
+}
+
+/**
+ * A tennis set: its name ("1st"), its score in games with the loser's tiebreak points after a tiebreak
+ * ("7-6(5)"), and its winner (their abbreviation). A won set's score has the winner's games first; a set
+ * still being played has no winner, and its score has the top side's games first.
+ */
+export interface GameSet {
+  name: string
+  score: string
+  winner: string | null
 }

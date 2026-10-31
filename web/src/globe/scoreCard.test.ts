@@ -18,7 +18,7 @@ const arrowhead: Game = {
   period: 3,
   clutchTime: false,
   hot: false,
-  venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null },
+  venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39.0489, longitude: -94.4839, timeZone: 'America/Chicago', photo: null, court: null },
   broadcasters: [],
   streamLinks: [],
   note: null,
@@ -28,18 +28,25 @@ const arrowhead: Game = {
   lastScore: null,
   keyEvents: [],
   topEvent: false,
+  scoreline: null,
 }
 
 describe('scoreCard', () => {
-  it('shows both teams with logo, abbreviation and score, away first, plus the clock line', () => {
+  it('shows both teams with logo, abbreviation and score, away on top, plus the clock line', () => {
     expect(scoreCard(arrowhead, false)).toEqual({
       gameId: '401',
       status: 'Live',
-      away: { abbreviation: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
-      home: { abbreviation: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
+      top: { abbreviation: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
+      bottom: { abbreviation: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
       clockLine: '4:12',
       flames: false,
     })
+  })
+
+  it('shows a tennis match with the home side on top', () => {
+    const card = scoreCard({ ...arrowhead, sport: 'Tennis' }, false)
+
+    expect([card.top.abbreviation, card.bottom.abbreviation]).toEqual(['KC', 'BUF'])
   })
 
   it('shows flames when the game shows them', () => {
@@ -58,8 +65,8 @@ describe('scoreCard', () => {
 
     expect(scoreCard(upcoming, false)).toMatchObject({
       status: 'Upcoming',
-      away: { score: '' },
-      home: { score: '' },
+      top: { score: '' },
+      bottom: { score: '' },
       clockLine: '',
     })
   })

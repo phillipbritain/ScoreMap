@@ -21,6 +21,7 @@ public static class ClockLine
             Sport.Baseball => Innings(game, period, league.Regulation),
             Sport.Soccer => Halves(game, period, league.Regulation),
             Sport.Cricket => Innings(game, period),
+            Sport.Tennis => Sets(game, period),
             _ => throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport"),
         };
     }
@@ -108,7 +109,27 @@ public static class ClockLine
             : line;
     }
 
-    private static string Ordinal(int n) => (n % 100, n % 10) switch
+    /// <summary>
+    /// Tennis has no clock: the current set and its games, the home side's first as it's shown on top:
+    /// "2nd set · 4–3", or "2nd set" before its first game. Once over, "Final", or for a match ended early
+    /// "Ret." (a retirement) or "W/O" (a walkover).
+    /// </summary>
+    private static string Sets(ProviderGame game, int set)
+    {
+        if (game.Status == ProviderStatus.Final)
+            return game.EarlyEnding?.Reason switch
+            {
+                EarlyEndingReason.Retired => "Ret.",
+                EarlyEndingReason.Walkover => "W/O",
+                _ => "Final",
+            };
+        return game.Sets.ElementAtOrDefault(set - 1) is { } games
+            ? $"{Ordinal(set)} set · {games.Home}–{games.Away}"
+            : $"{Ordinal(set)} set";
+    }
+
+    /// <summary>"1st", "2nd", "3rd", "4th"…</summary>
+    internal static string Ordinal(int n) => (n % 100, n % 10) switch
     {
         (11 or 12 or 13, _) => $"{n}th",
         (_, 1) => $"{n}st",

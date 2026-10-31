@@ -152,7 +152,7 @@
       "logo": { "plate": { "fill": "offWhite.500", "padding": 1, "corner": 1 } },
       "size": {
         "width": 1200,
-        "height": 127,
+        "height": 140,
         "phoneHeight": 236,
         "scoreBlock": 340,
         "slant": 16,

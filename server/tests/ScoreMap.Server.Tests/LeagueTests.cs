@@ -25,6 +25,8 @@ public class LeagueTests
             ("soccer/uefa.champions", "Champions League", "Soccer"),
             ("soccer/fifa.world", "World Cup", "Soccer"),
             ("cricket/8048", "IPL", "Cricket"),
+            ("tennis/atp", "ATP", "Tennis"),
+            ("tennis/wta", "WTA", "Tennis"),
         ];
         await using var server = new ScoreMapServer();
         foreach (var (key, _, _) in leagues)
@@ -63,6 +65,8 @@ public class LeagueTests
             new LeagueListing("Champions League", "Soccer"),
             new LeagueListing("World Cup", "Soccer"),
             new LeagueListing("IPL", "Cricket"),
+            new LeagueListing("ATP", "Tennis"),
+            new LeagueListing("WTA", "Tennis"),
         ], leagues);
     }
 

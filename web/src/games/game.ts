@@ -1,11 +1,12 @@
 // A game as the server sends it over SignalR.
 // Mirrors server/src/ScoreMap.Server/Games/Game.cs (ADR-0003: shapes are defined on both sides).
 
+/** A team in a game, or in tennis a player: their short name ("J. Sinner") as the abbreviation, their country's flag as the logo. */
 export interface GameTeam {
   abbreviation: string
   fullName: string
   logoUrl: string | null
-  /** As its sport writes it: "24", or in cricket "186/6" (runs alone when all out); null before it scores anything. */
+  /** As its sport writes it: "24", in cricket "186/6" (runs alone when all out), in tennis sets won; null before it scores anything. */
   score: string | null
   /** Its place in its league's poll (college sports); null when unranked or there's no poll. */
   rank: number | null
@@ -14,6 +15,7 @@ export interface GameTeam {
 }
 
 export interface GameVenue {
+  /** In tennis, the tournament ("Rolex Shanghai Masters"). */
   name: string | null
   city: string | null
   /** Its state, province or the like: in full for a US state or Canadian province ("Arizona"), as the feed gives it otherwise; null when there's none. */
@@ -25,6 +27,8 @@ export interface GameVenue {
   timeZone: string | null
   /** A photo of the venue (from outside or of the playing area); null until the server finds one, and for venues with none. */
   photo: VenuePhoto | null
+  /** Tennis: the court the match is on ("Stadium Court"); null in other sports, or until the feed names it. */
+  court: string | null
 }
 
 /** A photo of a venue, for the top of the game panel. */
@@ -152,4 +156,27 @@ export interface Game {
   keyEvents: KeyEvent[]
   /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */
   topEvent: boolean
+  /** Tennis: the score set by set; null in other sports and before play. */
+  scoreline: GameScoreline | null
+}
+
+/**
+ * A tennis match's score set by set. A match ended early has its ending ("ret." or "W/O") and the side
+ * that advanced (its abbreviation), when the feed says.
+ */
+export interface GameScoreline {
+  sets: GameSet[]
+  ending: string | null
+  advanced: string | null
+}
+
+/**
+ * A tennis set: its name ("1st"), its score in games with the loser's tiebreak points after a tiebreak
+ * ("7-6(5)"), and its winner (their abbreviation). A won set's score has the winner's games first; a set
+ * still being played has no winner, and its score has the top side's games first.
+ */
+export interface GameSet {
+  name: string
+  score: string
+  winner: string | null
 }

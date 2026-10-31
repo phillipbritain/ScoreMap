@@ -4,8 +4,8 @@ namespace ScoreMap.Server.GameFeed;
 /// A game as a game feed provider reports it, in provider-neutral terms.
 /// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
 /// The rest is extra detail for the game panel, each part null (or empty) when the provider gives none:
-/// a note on the game, the crowd, the betting line, where play stands right now, the last score and,
-/// in soccer, the goals and cards.
+/// a note on the game, the crowd, the betting line, where play stands right now, the last score,
+/// in soccer the goals and cards, and in tennis the games in each set and how a match ended early.
 /// </summary>
 public sealed record ProviderGame(
     string Id,
@@ -39,6 +39,37 @@ public sealed record ProviderGame(
 
     /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
     public IReadOnlyList<ProviderKeyEvent> KeyEvents { get; init; } = [];
+
+    /// <summary>
+    /// Tennis: the games each side has won in each set so far, in order, the current set last. The
+    /// sides' scores are their sets won, and <see cref="Period"/> is the current set. <see cref="Home"/>
+    /// is the side ESPN lists first (its <c>order</c> 1), shown on top.
+    /// </summary>
+    public IReadOnlyList<ProviderSet> Sets { get; init; } = [];
+
+    /// <summary>Tennis: why a Final match ended before its sets were played out, and who advanced; null when it was played out.</summary>
+    public ProviderEarlyEnding? EarlyEnding { get; init; }
+}
+
+/// <summary>
+/// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and
+/// whether the home side won it (false: the away side did; null while it's played, or if it never finished).
+/// </summary>
+public sealed record ProviderSet(int Home, int Away, int? HomeTiebreak = null, int? AwayTiebreak = null, bool? HomeWon = null);
+
+/// <summary>
+/// How a tennis match ended early: its <see cref="Reason"/>, and the side that advanced (its abbreviation),
+/// the winner whatever the score when it stopped; null if the provider doesn't say.
+/// </summary>
+public sealed record ProviderEarlyEnding(EarlyEndingReason Reason, string? Winner);
+
+public enum EarlyEndingReason
+{
+    /// <summary>A side stopped partway through, injured or ill.</summary>
+    Retired,
+
+    /// <summary>A side withdrew before the match began.</summary>
+    Walkover,
 }
 
 /// <summary>
@@ -66,8 +97,11 @@ public sealed record ProviderCity(string Name, string? Region, string? Country);
 /// <summary>
 /// The venue as the provider reports it. It carries no coordinates (ESPN supplies none); the venue
 /// locator places it. <see cref="Id"/> is the provider's own id for the venue, used to ask it for a photo.
+/// In tennis, <see cref="Name"/> is the tournament, so all its matches share one spot, and
+/// <see cref="Court"/> the court the match is on, when the provider has named it.
 /// </summary>
-public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country, string? Id = null);
+public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country, string? Id = null,
+    string? Court = null);
 
 public sealed record Coordinates(double Latitude, double Longitude);
 

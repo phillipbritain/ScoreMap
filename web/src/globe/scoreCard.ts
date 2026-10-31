@@ -1,5 +1,6 @@
 import type { Game, GameStatus, GameTeam } from '../games/game'
 import { progressLine } from '../games/progressLine'
+import { sidesTopFirst } from '../games/sides'
 import { isHexColor, mixColours, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
 
@@ -10,13 +11,13 @@ export interface ScoreCardTeam {
   score: string
 }
 
-/** What a zoomed-in pin shows: both teams' logos, abbreviations and scores, and a short clock line. */
+/** What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst), and a short clock line. */
 export interface ScoreCard {
   gameId: string
   /** Drives the card's style, matching the small pin's status style. */
   status: GameStatus
-  away: ScoreCardTeam
-  home: ScoreCardTeam
+  top: ScoreCardTeam
+  bottom: ScoreCardTeam
   /** Blank when there is nothing to show, such as before an Upcoming game starts. */
   clockLine: string
   /** Flames rising from its top edge, when its game shows them (see showsFlames). */
@@ -24,11 +25,12 @@ export interface ScoreCard {
 }
 
 export function scoreCard(game: Game, flames: boolean): ScoreCard {
+  const [top, bottom] = sidesTopFirst(game)
   return {
     gameId: game.id,
     status: game.status,
-    away: cardTeam(game.away),
-    home: cardTeam(game.home),
+    top: cardTeam(top),
+    bottom: cardTeam(bottom),
     clockLine: progressLine(game, 'short') ?? '',
     flames,
   }

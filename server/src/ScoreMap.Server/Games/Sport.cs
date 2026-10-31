@@ -17,11 +17,12 @@ public enum Sport
     Hockey,
     Soccer,
     Cricket,
+    Tennis,
 }
 
 /// <summary>
 /// How a sport's games usually go, which a league can override (see <see cref="League"/>): how many
-/// periods make up a game before overtime (innings, in cricket), and how many minutes each lasts on the
+/// periods make up a game before overtime (innings, in cricket; sets, in tennis), and how many minutes each lasts on the
 /// game clock (null in a sport without one).
 /// </summary>
 public sealed record SportUsual(int RegulationPeriods, int? PeriodMinutes);
@@ -37,6 +38,8 @@ public static class Sports
         [Sport.Hockey] = ("Hockey", new(RegulationPeriods: 3, PeriodMinutes: 20)),
         [Sport.Soccer] = ("Soccer", new(RegulationPeriods: 2, PeriodMinutes: 45)),
         [Sport.Cricket] = ("Cricket", new(RegulationPeriods: 2, PeriodMinutes: null)),
+        // Best of 3 sets; ESPN gives no way to tell a best-of-5 match apart.
+        [Sport.Tennis] = ("Tennis", new(RegulationPeriods: 3, PeriodMinutes: null)),
     };
 
     private static IEnumerable<string> Names => All.Values.Select(sport => sport.Name);

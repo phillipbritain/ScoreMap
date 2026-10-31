@@ -105,6 +105,19 @@ export interface KeyEvent {
   clock: string | null
 }
 
+/**
+ * Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
+ * apart by its kind. Its only shape so far is two sides.
+ */
+export type GameContest = GameSides
+
+/** A game between two sides: the home side and the away side. */
+export interface GameSides {
+  kind: 'sides'
+  home: GameTeam
+  away: GameTeam
+}
+
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */
 export type GameStatus = 'Upcoming' | 'Live' | 'Final' | 'Disrupted'
 
@@ -124,8 +137,8 @@ export interface Game {
   disruption: Disruption | null
   /** ISO 8601 instant; set once the game is Final. */
   endTime: string | null
-  home: GameTeam
-  away: GameTeam
+  /** Who competes and their scores (ADR-0020). */
+  contest: GameContest
   clock: string | null
   period: number | null
   /**

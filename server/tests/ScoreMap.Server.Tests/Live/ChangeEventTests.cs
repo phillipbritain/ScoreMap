@@ -16,13 +16,13 @@ public class ChangeEventTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        server.Feed.SetScoreboard(Nfl, game with { Home = game.Home with { Score = 24 } });
+        server.Feed.SetScoreboard(Nfl, game.WithSides(home: game.Sides().Home with { Score = 24 }));
         server.Clock.Advance(TimeSpan.FromSeconds(15));
 
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.ScoreChanged, change.Kind);
         Assert.Equal("401", change.Game.Id);
-        Assert.Equal("24", change.Game.Home.Score);
+        Assert.Equal("24", change.Game.Sides().Home.Score);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class ChangeEventTests
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.Removed, change.Kind);
         Assert.Equal("402", change.Game.Id);
-        Assert.Equal("7", change.Game.Home.Score);
+        Assert.Equal("7", change.Game.Sides().Home.Score);
     }
 
     [Fact]
@@ -72,8 +72,9 @@ public class ChangeEventTests
         server.Feed.SetScoreboard(Nfl, upcoming with
         {
             Status = ProviderStatus.InProgress,
-            Home = upcoming.Home with { Score = 0 },
-            Away = upcoming.Away with { Score = 0 },
+            Contest = new ProviderSides(
+                upcoming.Sides().Home with { Score = 0 },
+                upcoming.Sides().Away with { Score = 0 }),
             DisplayClock = "15:00",
             Period = 1,
         });
@@ -81,7 +82,7 @@ public class ChangeEventTests
 
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.Started, change.Kind);
-        Assert.Equal("0", change.Game.Home.Score);
+        Assert.Equal("0", change.Game.Sides().Home.Score);
         Assert.Equal("Q1 15:00", change.Game.Clock);
         Assert.Empty(client.PendingChanges());
     }

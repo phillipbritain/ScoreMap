@@ -88,8 +88,9 @@ public class LeagueTests
         Id: id,
         LeagueKey: leagueKey,
         StartTime: server.Clock.GetUtcNow().AddMinutes(-30),
-        Home: new ProviderTeam("HOM", "Home Team", null, 1),
-        Away: new ProviderTeam("AWY", "Away Team", null, 0),
+        Contest: new ProviderSides(
+            new ProviderTeam("HOM", "Home Team", null, 1),
+            new ProviderTeam("AWY", "Away Team", null, 0)),
         Status: ProviderStatus.InProgress,
         DisplayClock: "10:00",
         Period: 1,

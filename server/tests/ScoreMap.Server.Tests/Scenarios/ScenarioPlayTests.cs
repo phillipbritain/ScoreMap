@@ -1,6 +1,7 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
+using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
@@ -97,8 +98,8 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.All(feed.SelectMany(games => games), game =>
         {
             var most = MostPoints[leagues[game.LeagueKey].Sport];
-            Assert.InRange(game.Home.Score ?? 0, 0, most);
-            Assert.InRange(game.Away.Score ?? 0, 0, most);
+            Assert.InRange(game.Sides().Home.Score ?? 0, 0, most);
+            Assert.InRange(game.Sides().Away.Score ?? 0, 0, most);
         });
     }
 
@@ -112,7 +113,7 @@ public sealed class ScenarioPlayTests : IDisposable
             .Where(game => game.Status == ProviderStatus.Final && leagues[game.LeagueKey].Sport != Sport.Soccer)
             .ToList();
         Assert.NotEmpty(finals);
-        Assert.All(finals, game => Assert.NotEqual(game.Home.Score, game.Away.Score));
+        Assert.All(finals, game => Assert.NotEqual(game.Sides().Home.Score, game.Sides().Away.Score));
     }
 
     [Fact]
@@ -142,7 +143,7 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 90, "new games came on");
         Assert.All(feed, games =>
         {
-            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Sides().Home.FullName), (g.LeagueKey, g.Sides().Away.FullName) }).ToList();
             Assert.Equal(teams.Count, teams.Distinct().Count());
         });
     }
@@ -165,7 +166,7 @@ public sealed class ScenarioPlayTests : IDisposable
         var whileShowing = feed.TakeWhile(games => games.Any(game => game.Id == "written")).ToList();
         Assert.True(whileShowing.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 110, "new games came on while it showed");
         Assert.All(whileShowing.SelectMany(games => games).Where(game => game.Id != "written"), game =>
-            Assert.DoesNotContain(new[] { game.Home.FullName, game.Away.FullName }, team => team is "NBA team 1" or "NBA team 2"));
+            Assert.DoesNotContain(new[] { game.Sides().Home.FullName, game.Sides().Away.FullName }, team => team is "NBA team 1" or "NBA team 2"));
     }
 
     [Fact]
@@ -178,7 +179,7 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 130, "new games came on");
         Assert.All(feed, games =>
         {
-            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Home.FullName), (g.LeagueKey, g.Away.FullName) }).ToList();
+            var teams = games.SelectMany(g => new[] { (g.LeagueKey, g.Sides().Home.FullName), (g.LeagueKey, g.Sides().Away.FullName) }).ToList();
             Assert.Equal(teams.Count, teams.Distinct().Count());
         });
     }
@@ -224,7 +225,7 @@ public sealed class ScenarioPlayTests : IDisposable
             for (var i = 1; i < seen.Count; i++)
             {
                 Assert.False(seen[i - 1].Status == ProviderStatus.Final && seen[i].Status != ProviderStatus.Final, $"{game.Key} went back from Final");
-                Assert.True((seen[i].Home.Score ?? 0) >= (seen[i - 1].Home.Score ?? 0) && (seen[i].Away.Score ?? 0) >= (seen[i - 1].Away.Score ?? 0),
+                Assert.True((seen[i].Sides().Home.Score ?? 0) >= (seen[i - 1].Sides().Home.Score ?? 0) && (seen[i].Sides().Away.Score ?? 0) >= (seen[i - 1].Sides().Away.Score ?? 0),
                     $"a score of {game.Key} went down");
             }
         }
@@ -254,7 +255,7 @@ public sealed class ScenarioPlayTests : IDisposable
 
         var feed = Watched(scenario, TimeSpan.FromMinutes(5));
 
-        Assert.All(feed.Select(games => games.Single(g => g.Id == "goal-fest")), game => Assert.Equal((9, 7), (game.Home.Score, game.Away.Score)));
+        Assert.All(feed.Select(games => games.Single(g => g.Id == "goal-fest")), game => Assert.Equal((9, 7), (game.Sides().Home.Score, game.Sides().Away.Score)));
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public sealed class ScenarioPlayTests : IDisposable
 
         Assert.Equal(ProviderStatus.Scheduled, play.GamesAt(StartedAt + game.StartsIn - TimeSpan.FromSeconds(1)).Single(g => g.Id == game.Id).Status);
         var started = play.GamesAt(StartedAt + game.StartsIn).Single(g => g.Id == game.Id);
-        Assert.Equal((ProviderStatus.InProgress, 1, 0, 0), (started.Status, started.Period, started.Home.Score, started.Away.Score));
+        Assert.Equal((ProviderStatus.InProgress, 1, 0, 0), (started.Status, started.Period, started.Sides().Home.Score, started.Sides().Away.Score));
     }
 
     [Fact]
@@ -383,14 +384,14 @@ public sealed class ScenarioPlayTests : IDisposable
             if (change.After.Status == ProviderStatus.Suspended)
             {
                 Assert.Equal(ProviderStatus.InProgress, change.Before!.Status);
-                Assert.Equal((change.Before.Home.Score, change.Before.Away.Score, change.Before.Period),
-                    (change.After.Home.Score, change.After.Away.Score, change.After.Period));
+                Assert.Equal((change.Before.Sides().Home.Score, change.Before.Sides().Away.Score, change.Before.Period),
+                    (change.After.Sides().Home.Score, change.After.Sides().Away.Score, change.After.Period));
             }
             else
                 Assert.Equal(ProviderStatus.Scheduled, change.Before!.Status);
         });
         Assert.All(feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Canceled),
-            game => Assert.Equal((null, null), (game.Home.Score, game.Away.Score)));
+            game => Assert.Equal((null, null), (game.Sides().Home.Score, game.Sides().Away.Score)));
         Assert.All(feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Suspended),
             game => Assert.NotNull(game.Period));
     }
@@ -471,7 +472,7 @@ public sealed class ScenarioPlayTests : IDisposable
     }
 
     private static string Describe(ProviderGame game) =>
-        $"{game.Id} {game.Status} {game.Home.Score}-{game.Away.Score} {game.Period} {game.DisplayClock} {game.Phase} {game.Venue?.Name}";
+        $"{game.Id} {game.Status} {game.Sides().Home.Score}-{game.Sides().Away.Score} {game.Period} {game.DisplayClock} {game.Phase} {game.Venue?.Name}";
 
     /// <summary>
     /// The feed every second of real time from the scenario's start, for <paramref name="length"/> of real
@@ -488,7 +489,7 @@ public sealed class ScenarioPlayTests : IDisposable
     private static bool IsDisrupted(ProviderStatus status) =>
         status is ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled;
 
-    private static int Points(ProviderGame game) => (game.Home.Score ?? 0) + (game.Away.Score ?? 0);
+    private static int Points(ProviderGame game) => (game.Sides().Home.Score ?? 0) + (game.Sides().Away.Score ?? 0);
 
     private Scenario Read(string json)
     {

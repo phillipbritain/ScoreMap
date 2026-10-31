@@ -42,8 +42,8 @@ public class ScenarioTests
         Assert.Equal("NFL", game.League);
         Assert.Equal(GameStatus.Live, game.Status);
         // Records are made up for scenario games (see ScenarioDetailsTests).
-        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "14"), game.Home with { Record = null });
-        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, "10"), game.Away with { Record = null });
+        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png", "14"), game.Sides().Home with { Record = null });
+        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", null, "10"), game.Sides().Away with { Record = null });
         Assert.Equal("Arrowhead Stadium", game.Venue.Name);
         Assert.Equal("Kansas City", game.Venue.City);
         Assert.Equal(2, game.Period);
@@ -114,7 +114,7 @@ public class ScenarioTests
             }
             """);
         await using var client = await server.ConnectClientAsync();
-        Assert.Equal("14", Assert.Single(await client.NextSnapshotAsync()).Home.Score);
+        Assert.Equal("14", Assert.Single(await client.NextSnapshotAsync()).Sides().Home.Score);
 
         server.Clock.Advance(TimeSpan.FromSeconds(9));
         await Task.Delay(100);
@@ -122,7 +122,7 @@ public class ScenarioTests
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         var scored = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.ScoreChanged, scored.Kind);
-        Assert.Equal("21", scored.Game.Home.Score);
+        Assert.Equal("21", scored.Game.Sides().Home.Score);
 
         server.Clock.Advance(TimeSpan.FromSeconds(10));
         var finished = await client.NextChangeAsync();
@@ -136,7 +136,7 @@ public class ScenarioTests
         var added = Assert.Single(restarted, c => c.Kind == GameChangeKind.Added);
         Assert.NotEqual("chiefs-bills", added.Game.Id);
         Assert.Equal(GameStatus.Live, added.Game.Status);
-        Assert.Equal("14", added.Game.Home.Score);
+        Assert.Equal("14", added.Game.Sides().Home.Score);
     }
 
     [Fact]
@@ -155,9 +155,9 @@ public class ScenarioTests
         {
             Assert.Single(london, v => v.Name == game.Venue.Name);
             var teams = ShippedTeams[game.League];
-            Assert.Contains(teams, team => team.Name == game.Home.FullName);
-            Assert.Contains(teams, team => team.Name == game.Away.FullName);
-            Assert.NotEqual(game.Home.FullName, game.Away.FullName);
+            Assert.Contains(teams, team => team.Name == game.Sides().Home.FullName);
+            Assert.Contains(teams, team => team.Name == game.Sides().Away.FullName);
+            Assert.NotEqual(game.Sides().Home.FullName, game.Sides().Away.FullName);
         });
         Assert.Equal(
             [(GameStatus.Upcoming, 2), (GameStatus.Live, 4), (GameStatus.Final, 2), (GameStatus.Disrupted, 2)],
@@ -192,7 +192,7 @@ public class ScenarioTests
         do change = await client.NextChangeAsync();
         while (change.Kind != GameChangeKind.ScoreChanged);
         var before = snapshot.Single(g => g.Id == change.Game.Id);
-        Assert.NotEqual((before.Home.Score, before.Away.Score), (change.Game.Home.Score, change.Game.Away.Score));
+        Assert.NotEqual((before.Sides().Home.Score, before.Sides().Away.Score), (change.Game.Sides().Home.Score, change.Game.Sides().Away.Score));
     }
 
     // The shipped team list, by league name.

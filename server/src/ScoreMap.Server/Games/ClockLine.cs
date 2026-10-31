@@ -97,7 +97,9 @@ public static class ClockLine
         if (game.Phase == ProviderPeriodPhase.Break)
             return "Innings break";
 
-        var batting = new[] { game.Home, game.Away }
+        if (game.Contest is not ProviderSides sides)
+            return $"{Ordinal(innings)} inns";
+        var batting = new[] { sides.Home, sides.Away }
             .OrderByDescending(team => team.Innings?.Target is not null)
             .FirstOrDefault(team => team.Innings?.Overs is not null);
         if (batting?.Innings is not { Overs: { } overs } state)

@@ -1,6 +1,7 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
+using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
@@ -32,10 +33,10 @@ public sealed class ScenarioTimelineTests : IDisposable
             "changes": [ { "at": "10s", "game": "kc-buf", "score": { "home": 21 } } ]
             """);
 
-        Assert.Equal(14, Single(scenario, "9s").Home.Score);
+        Assert.Equal(14, Single(scenario, "9s").Sides().Home.Score);
         var after = Single(scenario, "10s");
-        Assert.Equal(21, after.Home.Score);
-        Assert.Equal(10, after.Away.Score);
+        Assert.Equal(21, after.Sides().Home.Score);
+        Assert.Equal(10, after.Sides().Away.Score);
     }
 
     [Fact]
@@ -89,13 +90,13 @@ public sealed class ScenarioTimelineTests : IDisposable
         Assert.Equal(2, second.Count);
         Assert.DoesNotContain(second, g => lastOfFirst.Any(old => old.Id == g.Id));
         Assert.Equal(ProviderStatus.InProgress, second[0].Status);
-        Assert.Equal(14, second[0].Home.Score);
+        Assert.Equal(14, second[0].Sides().Home.Score);
         Assert.Equal(StartedAt.AddMinutes(1).AddMinutes(-40), second[0].StartTime);
         Assert.Equal(StartedAt.AddMinutes(1).AddMinutes(30), second[1].StartTime);
 
         var secondScored = At(scenario, "1m10s");
         Assert.Equal(second.Select(g => g.Id), secondScored.Select(g => g.Id));
-        Assert.Equal(21, secondScored[0].Home.Score);
+        Assert.Equal(21, secondScored[0].Sides().Home.Score);
 
         var third = At(scenario, "2m");
         Assert.DoesNotContain(third, g => second.Any(old => old.Id == g.Id) || lastOfFirst.Any(old => old.Id == g.Id));

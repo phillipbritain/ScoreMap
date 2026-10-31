@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
@@ -17,8 +18,9 @@ public class SnapshotTests
             Id: "401",
             LeagueKey: "football/nfl",
             StartTime: kickoff,
-            Home: new ProviderTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", 21),
-            Away: new ProviderTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", 17),
+            Contest: new ProviderSides(
+                new ProviderTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", 21),
+                new ProviderTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", 17)),
             Status: ProviderStatus.InProgress,
             DisplayClock: "4:12",
             Period: 3,
@@ -33,12 +35,28 @@ public class SnapshotTests
         Assert.Equal("NFL", game.League);
         Assert.Equal("Football", game.Sport);
         Assert.Equal(kickoff, game.StartTime);
-        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", "21"), game.Home);
-        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", "17"), game.Away);
+        Assert.Equal(new GameTeam("KC", "Kansas City Chiefs", "https://example.test/kc.png", "21"), game.Sides().Home);
+        Assert.Equal(new GameTeam("BUF", "Buffalo Bills", "https://example.test/buf.png", "17"), game.Sides().Away);
         Assert.Equal("Q3 4:12", game.Clock);
         Assert.Equal(3, game.Period);
         Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "Missouri", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
         Assert.Equal([new GameBroadcaster("CBS", "USA", null)], game.Broadcasters);
+    }
+
+    [Fact]
+    public async Task A_game_between_two_sides_reaches_the_browser_as_a_contest_of_kind_sides()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress));
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        // As the hub writes it: camelCase, the shape told apart by its kind (web/src/games/game.ts).
+        var contest = JsonSerializer.SerializeToElement(game, new JsonSerializerOptions(JsonSerializerDefaults.Web)).GetProperty("contest");
+        Assert.Equal(("sides", "KC", "BUF"), (contest.GetProperty("kind").GetString(),
+            contest.GetProperty("home").GetProperty("abbreviation").GetString(),
+            contest.GetProperty("away").GetProperty("abbreviation").GetString()));
     }
 
     [Theory]
@@ -54,7 +72,7 @@ public class SnapshotTests
         await using var client = await server.ConnectClientAsync();
         var game = Assert.Single(await client.NextSnapshotAsync());
 
-        Assert.Equal(("Cricket", awayScore, homeScore), (game.Sport, game.Away.Score, game.Home.Score));
+        Assert.Equal(("Cricket", awayScore, homeScore), (game.Sport, game.Sides().Away.Score, game.Sides().Home.Score));
     }
 
     [Fact]

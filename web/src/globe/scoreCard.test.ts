@@ -12,8 +12,11 @@ const arrowhead: Game = {
   delayed: false,
   disruption: null,
   endTime: null,
-  home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21', rank: null, record: null },
-  away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17', rank: null, record: null },
+  contest: {
+    kind: 'sides',
+    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21', rank: null, record: null },
+    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17', rank: null, record: null },
+  },
   clock: '4:12',
   period: 3,
   clutchTime: false,
@@ -59,8 +62,11 @@ describe('scoreCard', () => {
       status: 'Upcoming',
       clock: null,
       period: null,
-      home: { ...arrowhead.home, score: null },
-      away: { ...arrowhead.away, score: null },
+      contest: {
+        kind: 'sides',
+        home: { ...arrowhead.contest.home, score: null },
+        away: { ...arrowhead.contest.away, score: null },
+      },
     }
 
     expect(scoreCard(upcoming, false)).toMatchObject({

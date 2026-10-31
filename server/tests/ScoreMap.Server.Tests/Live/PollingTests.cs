@@ -94,12 +94,12 @@ public class PollingTests
         await dropped.NextSnapshotAsync();
         await server.DisconnectAsync(dropped);
 
-        server.Feed.SetScoreboard(Nfl, game with { Home = game.Home with { Score = 28 } });
+        server.Feed.SetScoreboard(Nfl, game.WithSides(home: game.Sides().Home with { Score = 28 }));
         server.Clock.Advance(TimeSpan.FromMinutes(1));
         await using var reconnected = await server.ConnectClientAsync();
 
         var snapshot = await reconnected.NextSnapshotAsync();
-        Assert.Equal("28", Assert.Single(snapshot).Home.Score);
+        Assert.Equal("28", Assert.Single(snapshot).Sides().Home.Score);
     }
 
     [Fact]
@@ -122,14 +122,14 @@ public class PollingTests
 
         await using var returning = await server.ConnectClientAsync();
         var snapshot = await returning.NextSnapshotAsync();
-        Assert.Equal("7", Assert.Single(snapshot).Home.Score);
+        Assert.Equal("7", Assert.Single(snapshot).Sides().Home.Score);
 
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 14));
         server.Clock.Advance(TimeSpan.FromSeconds(15));
         var change = await returning.NextChangeAsync();
 
         Assert.Equal(1, fetchesWhileAway);
-        Assert.Equal("14", change.Game.Home.Score);
+        Assert.Equal("14", change.Game.Sides().Home.Score);
     }
 
     /// <summary>Gives the server real time to act on the clock before asserting that nothing happened.</summary>

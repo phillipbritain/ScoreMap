@@ -197,8 +197,15 @@ public sealed class GameBoard(
         ProviderSides sides => new GameSides(ToTeam(sides.Home), ToTeam(sides.Away)),
         ProviderField field => new GameField(field.Entries
             .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl)).ToList()),
+        ProviderBouts card => new GameBouts(card.Bouts.Select(ToBout).ToList()),
         _ => throw new ArgumentOutOfRangeException(nameof(contest), contest, "No such contest"),
     };
+
+    private static GameBout ToBout(ProviderBout bout) => new(
+        bout.Id, ToBoutSide(bout.First), ToBoutSide(bout.Second), bout.WeightClass, bout.ScheduledRounds,
+        ToStatus(bout.Status) ?? GameStatus.Upcoming, bout.Round, bout.Clock, ClockLine.MethodName(bout.Method));
+
+    private static GameBoutSide ToBoutSide(ProviderBoutSide side) => new(side.Name, side.ShortName, side.FlagUrl, side.Record, side.Winner);
 
     private static GameTeam ToTeam(ProviderTeam team) =>
         new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record);

@@ -58,11 +58,13 @@ public sealed record Game(
 
 /// <summary>
 /// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
-/// apart in JSON by its <c>kind</c>: two sides (<see cref="GameSides"/>) or a field (<see cref="GameField"/>).
+/// apart in JSON by its <c>kind</c>: two sides (<see cref="GameSides"/>), a field (<see cref="GameField"/>) or a
+/// fight card (<see cref="GameBouts"/>).
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(GameSides), "sides")]
 [JsonDerivedType(typeof(GameField), "field")]
+[JsonDerivedType(typeof(GameBouts), "bouts")]
 public abstract record GameContest;
 
 /// <summary>A game between two sides: the home side and the away side.</summary>
@@ -81,6 +83,33 @@ public sealed record GameField(IReadOnlyList<GameEntrant> Entries) : GameContest
 
 /// <summary>One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.</summary>
 public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl);
+
+/// <summary>
+/// A fight card: its bouts, the main event first (the reverse of the order they're fought in). Two fight cards
+/// are equal when their bouts are, so an unchanged card isn't a change.
+/// </summary>
+public sealed record GameBouts(IReadOnlyList<GameBout> Bouts) : GameContest
+{
+    public bool Equals(GameBouts? other) => other is not null && Bouts.SequenceEqual(other.Bouts);
+
+    public override int GetHashCode() => Bouts.Aggregate(0, HashCode.Combine);
+}
+
+/// <summary>
+/// One bout on a fight card: its two sides, its weight class ("Lightweight"), how many rounds it's scheduled
+/// for, its status, the round it's in or ended in and the time into that round ("1:28"; each null before it
+/// starts), and once it's over how it was won: "KO/TKO", "Submission" or "Decision" (null for a draw or no
+/// contest, or when the feed doesn't say).
+/// </summary>
+public sealed record GameBout(
+    string Id, GameBoutSide First, GameBoutSide Second, string? WeightClass, int ScheduledRounds, GameStatus Status,
+    int? Round, string? Clock, string? Method);
+
+/// <summary>
+/// One of a bout's two sides: their name, short name ("R. Moicano"), their country's flag, their record ("21-7-1":
+/// wins, losses and draws) and whether they won it.
+/// </summary>
+public sealed record GameBoutSide(string Name, string ShortName, string? FlagUrl, string? Record, bool Winner);
 
 /// <summary>
 /// A tennis match's score set by set (see <see cref="GameSet"/>). A match ended early has its

@@ -4,12 +4,14 @@ namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// The short line saying where a game stands, written the way its sport reads it:
-/// "Q3 4:12", "Halftime", "Final/OT", "13.2/20 ov · need 87", "Lap 189" and so on.
+/// "Q3 4:12", "Halftime", "Final/OT", "13.2/20 ov · need 87", "Lap 189", "R2" and so on.
 /// </summary>
 public static class ClockLine
 {
     public static string? For(ProviderGame game, League league)
     {
+        if (game.Contest is ProviderBouts card)
+            return FightCard(game, card);
         if (game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed or ProviderStatus.Final)
             || game.Period is not { } period)
             return null;
@@ -130,6 +132,29 @@ public static class ClockLine
             ? $"{Ordinal(set)} set · {games.Home}–{games.Away}"
             : $"{Ordinal(set)} set";
     }
+
+    /// <summary>
+    /// A fight card has no clock of its own: the round of the bout on now ("R2"), or "Between bouts". Once over,
+    /// how its main event was won, with the round of a stoppage: "KO/TKO · R3", "Decision", or "Final" when the
+    /// feed doesn't say.
+    /// </summary>
+    private static string? FightCard(ProviderGame game, ProviderBouts card) => game.Status switch
+    {
+        ProviderStatus.InProgress or ProviderStatus.Delayed => card.OnNow?.Round is { } round ? $"R{round}" : "Between bouts",
+        ProviderStatus.Final => card.Bouts.FirstOrDefault() is { Method: { } method } main
+            ? method == BoutMethod.Decision || main.Round is null ? MethodName(method) : $"{MethodName(method)} · R{main.Round}"
+            : "Final",
+        _ => null,
+    };
+
+    /// <summary>How a bout was won, as fans write it: "KO/TKO", "Submission", "Decision"; null when unknown.</summary>
+    internal static string? MethodName(BoutMethod? method) => method switch
+    {
+        BoutMethod.KnockOut => "KO/TKO",
+        BoutMethod.Submission => "Submission",
+        BoutMethod.Decision => "Decision",
+        _ => null,
+    };
 
     /// <summary>"1st", "2nd", "3rd", "4th"…</summary>
     internal static string Ordinal(int n) => (n % 100, n % 10) switch

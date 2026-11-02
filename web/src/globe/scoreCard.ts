@@ -1,21 +1,26 @@
-import type { Game, GameEntrant, GameStatus, GameTeam } from '../games/game'
+import { shownBout } from '../games/bouts'
+import type { Game, GameBoutSide, GameEntrant, GameStatus, GameTeam } from '../games/game'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { isHexColor, mixColours, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
 
 export interface ScoreCardRow {
-  /** A side's abbreviation, an entrant's position and short name ("1 K. Larson"), or a game's name before its field is listed. */
+  /**
+   * A side's abbreviation, an entrant's position and short name ("1 K. Larson"), a bout's side's short name
+   * ("J. Jones"), or a game's name before its field is listed.
+   */
   label: string
   logoUrl: string | null
-  /** Blank until the game has a score. */
+  /** Blank until the game has a score; for a bout's side, "W" once they've won it. */
   score: string
 }
 
 /**
  * What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst),
  * and a short clock line. A field shows its top two entrants by position ("1 K. Larson") with their flags
- * and no score, or before its field is listed, the game's name (its note) on top.
+ * and no score, or before its field is listed, the game's name (its note) on top. A fight card shows the
+ * bout on now, else its main event (see shownBout), as two sides with their flags, the winner marked "W".
  */
 export interface ScoreCard {
   gameId: string
@@ -60,6 +65,10 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
     const [top, bottom] = sidesTopFirst(sport, contest)
     return [cardTeam(top), cardTeam(bottom)]
   }
+  if (contest.kind === 'bouts') {
+    const { first, second } = shownBout(contest)
+    return [cardBoutSide(first), cardBoutSide(second)]
+  }
   const blank: ScoreCardRow = { label: '', logoUrl: null, score: '' }
   if (contest.entries.length === 0) return [{ ...blank, label: note ?? '' }, blank]
   const [first, second] = contest.entries.map(cardEntrant)
@@ -68,6 +77,10 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
 
 function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardRow {
   return { label: abbreviation, logoUrl, score: score ?? '' }
+}
+
+function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRow {
+  return { label: shortName, logoUrl: flagUrl, score: winner ? 'W' : '' }
 }
 
 function cardEntrant({ position, shortName, flagUrl }: GameEntrant): ScoreCardRow {

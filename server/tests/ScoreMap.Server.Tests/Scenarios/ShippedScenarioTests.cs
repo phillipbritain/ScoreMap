@@ -270,6 +270,23 @@ public class ShippedScenarioTests
         Assert.Equal("Hard Rock Stadium", race.Venue.Name);
     }
 
+    [Fact]
+    public async Task Edge_cases_show_a_UFC_fight_card_under_way_with_every_bout_main_event_first()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "edge-cases");
+        var card = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "UFC");
+
+        Assert.Equal((GameStatus.Live, "MMA", "R2", false), (card.Status, card.Sport, card.Clock, card.Hot));
+        Assert.Equal("Madison Square Garden", card.Venue.Name);
+        var bouts = Assert.IsType<GameBouts>(card.Contest).Bouts;
+        Assert.Equal(("Jon Jones", GameStatus.Live, 5), (bouts[0].First.Name, bouts[0].Status, bouts[0].ScheduledRounds));
+        Assert.All(bouts.Skip(1), bout => Assert.Equal(GameStatus.Final, bout.Status));
+        Assert.Equal(["Decision", "KO/TKO", "Submission"], bouts.Select(bout => bout.Method).OfType<string>().Distinct().Order());
+        Assert.Contains(bouts, bout => bout.Status == GameStatus.Final && bout.Method is null && !bout.First.Winner && !bout.Second.Winner);
+    }
+
     /// <summary>A score in points, goals or runs; null for none, or for a cricket score with wickets.</summary>
     private static int? Points(string? score) => int.TryParse(score, out var points) ? points : null;
 

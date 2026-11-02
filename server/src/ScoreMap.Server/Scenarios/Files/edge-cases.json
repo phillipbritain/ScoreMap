@@ -7,6 +7,8 @@
 // - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
 // - An F1 race under way, its whole field listed (the Miami Grand Prix is run around Hard Rock Stadium).
+// - A UFC fight card under way, written out in full, main event first: the main event in its 2nd round,
+//   each bout before it won one of the three ways, and the opener a draw, with no winner or method.
 {
   "games": [
     {
@@ -139,6 +141,51 @@
       "startsIn": "-1h05m",
       "status": "live",
       "period": 42
+    },
+    {
+      "id": "edge-ufc-under-way",
+      "league": "UFC",
+      "note": "UFC 309: Jones vs. Miocic",
+      "bouts": [
+        {
+          "weightClass": "Heavyweight", "rounds": 5, "status": "live", "round": 2, "clock": "1:47",
+          "first": { "name": "Jon Jones", "shortName": "J. Jones", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "27-1-0" },
+          "second": { "name": "Stipe Miocic", "shortName": "S. Miocic", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "20-4-0" }
+        },
+        {
+          "weightClass": "Lightweight", "rounds": 5, "status": "final", "round": 5, "clock": "5:00", "method": "decision",
+          "first": { "name": "Charles Oliveira", "shortName": "C. Oliveira", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png", "record": "34-10-0", "winner": true },
+          "second": { "name": "Michael Chandler", "shortName": "M. Chandler", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "23-8-0" }
+        },
+        {
+          "weightClass": "Middleweight", "status": "final", "round": 2, "clock": "3:38", "method": "knockOut",
+          "first": { "name": "Bo Nickal", "shortName": "B. Nickal", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "6-0-0", "winner": true },
+          "second": { "name": "Paul Craig", "shortName": "P. Craig", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/gbr.png", "record": "17-8-1" }
+        },
+        {
+          "weightClass": "W Flyweight", "status": "final", "round": 3, "clock": "5:00", "method": "decision",
+          "first": { "name": "Viviane Araújo", "shortName": "V. Araújo", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png", "record": "12-5-0", "winner": true },
+          "second": { "name": "Karine Silva", "shortName": "K. Silva", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png", "record": "18-4-0" }
+        },
+        {
+          "weightClass": "Lightweight", "status": "final", "round": 1, "clock": "1:24", "method": "knockOut",
+          "first": { "name": "Mauricio Ruffy", "shortName": "M. Ruffy", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png", "record": "11-1-0", "winner": true },
+          "second": { "name": "James Llontop", "shortName": "J. Llontop", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/per.png", "record": "13-2-0" }
+        },
+        {
+          "weightClass": "Lightweight", "status": "final", "round": 1, "clock": "2:51", "method": "submission",
+          "first": { "name": "Jim Miller", "shortName": "J. Miller", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "37-17-0", "winner": true },
+          "second": { "name": "Damon Jackson", "shortName": "D. Jackson", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "record": "23-6-1" }
+        },
+        {
+          "weightClass": "Featherweight", "status": "final", "round": 3, "clock": "5:00",
+          "first": { "name": "David Onama", "shortName": "D. Onama", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/uga.png", "record": "13-2-0" },
+          "second": { "name": "Roberto Romero", "shortName": "R. Romero", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/mex.png", "record": "9-2-0" }
+        }
+      ],
+      "venue": { "name": "Madison Square Garden", "city": "New York" },
+      "startsIn": "-3h",
+      "status": "live"
     }
   ]
 }

@@ -40,8 +40,8 @@ describe('scoreCard', () => {
     expect(scoreCard(arrowhead, false)).toEqual({
       gameId: '401',
       status: 'Live',
-      top: { abbreviation: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
-      bottom: { abbreviation: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
+      top: { label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
+      bottom: { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
       clockLine: '4:12',
       flames: false,
     })
@@ -50,7 +50,7 @@ describe('scoreCard', () => {
   it('shows a tennis match with the home side on top', () => {
     const card = scoreCard({ ...arrowhead, sport: 'Tennis' }, false)
 
-    expect([card.top.abbreviation, card.bottom.abbreviation]).toEqual(['KC', 'BUF'])
+    expect([card.top.label, card.bottom.label]).toEqual(['KC', 'BUF'])
   })
 
   it('shows flames when the game shows them', () => {
@@ -112,8 +112,8 @@ describe('scoreCard', () => {
 
     it('shows the top two entrants by position, with no score, and the lap', () => {
       expect(scoreCard(talladega, false)).toMatchObject({
-        top: { abbreviation: '1 K. Larson', logoUrl: usa, score: '' },
-        bottom: { abbreviation: '2 W. Byron', logoUrl: usa, score: '' },
+        top: { label: '1 K. Larson', logoUrl: usa, score: '' },
+        bottom: { label: '2 W. Byron', logoUrl: usa, score: '' },
         clockLine: 'Lap 189',
       })
     })
@@ -122,8 +122,8 @@ describe('scoreCard', () => {
       const upcoming: Game = { ...talladega, status: 'Upcoming', clock: null, contest: { kind: 'field', entries: [] } }
 
       expect(scoreCard(upcoming, false)).toMatchObject({
-        top: { abbreviation: 'NASCAR Cup Series at Talladega', logoUrl: null, score: '' },
-        bottom: { abbreviation: '', logoUrl: null, score: '' },
+        top: { label: 'NASCAR Cup Series at Talladega', logoUrl: null, score: '' },
+        bottom: { label: '', logoUrl: null, score: '' },
       })
     })
   })

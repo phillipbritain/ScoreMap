@@ -4,8 +4,9 @@ import { sidesTopFirst } from '../games/sides'
 import { isHexColor, mixColours, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
 
-export interface ScoreCardTeam {
-  abbreviation: string
+export interface ScoreCardRow {
+  /** A side's abbreviation, an entrant's position and short name ("1 K. Larson"), or a game's name before its field is listed. */
+  label: string
   logoUrl: string | null
   /** Blank until the game has a score. */
   score: string
@@ -20,8 +21,8 @@ export interface ScoreCard {
   gameId: string
   /** Drives the card's style, matching the small pin's status style. */
   status: GameStatus
-  top: ScoreCardTeam
-  bottom: ScoreCardTeam
+  top: ScoreCardRow
+  bottom: ScoreCardRow
   /** Blank when there is nothing to show, such as before an Upcoming game starts. */
   clockLine: string
   /** Flames rising from its top edge, when its game shows them (see showsFlames). */
@@ -54,21 +55,21 @@ export function headerText(colour: string, status: GameStatus, theme: Theme): st
   return textOn(mixColours(fill, colour, card.header.tint), text, fill)
 }
 
-function cardRows({ sport, contest, note }: Game): [ScoreCardTeam, ScoreCardTeam] {
+function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] {
   if (contest.kind === 'sides') {
     const [top, bottom] = sidesTopFirst(sport, contest)
     return [cardTeam(top), cardTeam(bottom)]
   }
-  const blank: ScoreCardTeam = { abbreviation: '', logoUrl: null, score: '' }
-  if (contest.entries.length === 0) return [{ ...blank, abbreviation: note ?? '' }, blank]
+  const blank: ScoreCardRow = { label: '', logoUrl: null, score: '' }
+  if (contest.entries.length === 0) return [{ ...blank, label: note ?? '' }, blank]
   const [first, second] = contest.entries.map(cardEntrant)
   return [first, second ?? blank]
 }
 
-function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardTeam {
-  return { abbreviation, logoUrl, score: score ?? '' }
+function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardRow {
+  return { label: abbreviation, logoUrl, score: score ?? '' }
 }
 
-function cardEntrant({ position, shortName, flagUrl }: GameEntrant): ScoreCardTeam {
-  return { abbreviation: `${position} ${shortName}`, logoUrl: flagUrl, score: '' }
+function cardEntrant({ position, shortName, flagUrl }: GameEntrant): ScoreCardRow {
+  return { label: `${position} ${shortName}`, logoUrl: flagUrl, score: '' }
 }

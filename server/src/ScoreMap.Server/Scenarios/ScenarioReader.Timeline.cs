@@ -70,7 +70,7 @@ public static partial class ScenarioReader
             throw new InvalidDataException(
                 $"makes \"{game.Id}\" {entry.Status} when it is already Final; a Final game can't go back");
         if (game.Contest is not ProviderSides && (change.HomeScore is not null || change.AwayScore is not null))
-            throw new InvalidDataException($"gives \"{game.Id}\" a score, but it's a race, which has none");
+            throw new InvalidDataException($"gives \"{game.Id}\" a score, but it's a game among a field, which has none");
         if (game.Contest is ProviderSides sides && (change.HomeScore < sides.Home.Score || change.AwayScore < sides.Away.Score))
             throw new InvalidDataException(
                 $"makes a score of \"{game.Id}\" go down, from {sides.Home.Score}-{sides.Away.Score}; scores only go up");

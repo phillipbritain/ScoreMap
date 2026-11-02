@@ -72,9 +72,9 @@ public static partial class ScenarioReader
         }).ToList();
         var writtenOut = ids.ToHashSet();
         var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
-        if (plays && games.FirstOrDefault(game => game.Contest is ProviderField) is { } race)
+        if (plays && games.FirstOrDefault(game => game.Contest is ProviderField) is { } fieldGame)
             throw new ScenarioFileException(name, path,
-                $"game \"{race.Id}\" is a race, but races can't be played yet; write them in a scenario whose games stand still");
+                $"game \"{fieldGame.Id}\" is among a field, which can't be played yet; write it in a scenario whose games stand still");
         if (file.Fill is not null)
         {
             foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, lists))
@@ -148,9 +148,9 @@ public static partial class ScenarioReader
     private static ProviderField ReadField(GameEntry entry)
     {
         if (entry.Home is not null || entry.Away is not null)
-            throw new InvalidDataException("is a race, which has a field, not a home and an away team");
+            throw new InvalidDataException("is in a league that races, so it has a field, not a home and an away team");
         if (entry.Field is null)
-            throw new InvalidDataException("is a race with no field; give it one, empty before the race starts");
+            throw new InvalidDataException("has no field; give it one, empty before the game starts");
         return new ProviderField(entry.Field.Select((entrant, i) =>
             entrant is null || string.IsNullOrWhiteSpace(entrant.Name) || string.IsNullOrWhiteSpace(entrant.ShortName)
                 ? throw new InvalidDataException($"has entrant {i + 1} with no name or short name")

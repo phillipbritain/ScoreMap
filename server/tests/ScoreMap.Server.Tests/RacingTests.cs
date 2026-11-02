@@ -15,7 +15,7 @@ public class RacingTests
     private static ProviderEntrant Entrant(int position, string name) =>
         new(position, name, $"{name[0]}. {name.Split(' ')[^1]}", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png");
 
-    /// <summary>A race at Talladega with its field in this order, the leader first.</summary>
+    /// <summary>A NASCAR race at Talladega with its field in this order, the leader first.</summary>
     private static ProviderGame Race(ScoreMapServer server, ProviderStatus status, int? lap, params string[] order) => new(
         Id: "202610250041",
         LeagueKey: Nascar,
@@ -37,13 +37,13 @@ public class RacingTests
         server.Feed.SetScoreboard(Nascar, Race(server, InProgress, 189, "Kyle Larson", "William Byron", "Ryan Blaney"));
         await using var client = await server.ConnectClientAsync();
 
-        var race = Assert.Single(await client.NextSnapshotAsync());
+        var game = Assert.Single(await client.NextSnapshotAsync());
 
-        Assert.Equal("Racing", race.Sport);
-        Assert.Equal("NASCAR Cup Series", race.League);
-        Assert.Equal("Lap 189", race.Clock);
-        Assert.False(race.Hot);
-        var field = Assert.IsType<GameField>(race.Contest);
+        Assert.Equal("Racing", game.Sport);
+        Assert.Equal("NASCAR Cup Series", game.League);
+        Assert.Equal("Lap 189", game.Clock);
+        Assert.False(game.Hot);
+        var field = Assert.IsType<GameField>(game.Contest);
         Assert.Equal(
             [new GameEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"),
              new GameEntrant(2, "William Byron", "W. Byron", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"),
@@ -60,10 +60,10 @@ public class RacingTests
             Race(server, Scheduled, null) with { Id = "202611010020", StartTime = server.Clock.GetUtcNow().AddHours(1) });
         await using var client = await server.ConnectClientAsync();
 
-        var races = await client.NextSnapshotAsync();
+        var games = await client.NextSnapshotAsync();
 
-        Assert.Equal("Final", Assert.Single(races, g => g.Status == GameStatus.Final).Clock);
-        var upcoming = Assert.Single(races, g => g.Status == GameStatus.Upcoming);
+        Assert.Equal("Final", Assert.Single(games, g => g.Status == GameStatus.Final).Clock);
+        var upcoming = Assert.Single(games, g => g.Status == GameStatus.Upcoming);
         Assert.Null(upcoming.Clock);
         Assert.Empty(Assert.IsType<GameField>(upcoming.Contest).Entries);
     }

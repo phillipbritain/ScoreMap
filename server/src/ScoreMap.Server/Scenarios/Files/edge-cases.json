@@ -64,7 +64,7 @@
       "period": 4
     },
     {
-      "id": "edge-race-under-way",
+      "id": "edge-nascar-under-way",
       "league": "NASCAR Cup Series",
       "note": "Cook Out Clash at the Coliseum",
       "field": [
@@ -98,7 +98,7 @@
       "period": 112
     },
     {
-      "id": "edge-race-field-not-yet-listed",
+      "id": "edge-nascar-field-not-yet-listed",
       "league": "NASCAR Cup Series",
       "note": "Grant Park 165",
       "field": [],

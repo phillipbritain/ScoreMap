@@ -24,15 +24,16 @@ public sealed record ScenarioChange(
     ProviderStatus? Status = null,
     int? Period = null,
     string? Clock = null,
-    ProviderPeriodPhase? Phase = null)
+    ProviderPeriodPhase? Phase = null,
+    ProviderContest? Contest = null)
 {
     public ScenarioGame ApplyTo(ScenarioGame game) => game with
     {
-        Contest = game.Contest is ProviderSides sides
+        Contest = Contest ?? (game.Contest is ProviderSides sides
             ? new ProviderSides(
                 HomeScore is { } home ? sides.Home with { Score = home } : sides.Home,
                 AwayScore is { } away ? sides.Away with { Score = away } : sides.Away)
-            : game.Contest,
+            : game.Contest),
         Status = Status ?? game.Status,
         Period = Period ?? game.Period,
         Clock = Clock ?? game.Clock,

@@ -64,13 +64,12 @@ public static partial class ScenarioReader
             Status: entry.Status is null ? null : ReadStatus(entry.Status),
             Period: entry.Period,
             Clock: entry.Clock,
-            Phase: entry.Phase is null ? null : ReadPhase(entry.Phase));
+            Phase: entry.Phase is null ? null : ReadPhase(entry.Phase),
+            Contest: ReadContestChange(entry, game));
 
         if (game.Status == ProviderStatus.Final && change.Status is { } status && status != ProviderStatus.Final)
             throw new InvalidDataException(
                 $"makes \"{game.Id}\" {entry.Status} when it is already Final; a Final game can't go back");
-        if (game.Contest is ProviderBouts)
-            throw new InvalidDataException($"changes \"{game.Id}\", but it is a fight card, which a timeline can't change yet");
         if (game.Contest is not ProviderSides && (change.HomeScore is not null || change.AwayScore is not null))
             throw new InvalidDataException($"gives \"{game.Id}\" a score, but it's a game among a field, which has none");
         if (game.Contest is ProviderSides sides && (change.HomeScore < sides.Home.Score || change.AwayScore < sides.Away.Score))
@@ -82,7 +81,21 @@ public static partial class ScenarioReader
     private sealed record TimelineEntry(string? Length, List<ChangeEntry?>? Changes);
 
     private sealed record ChangeEntry(
-        string? At, string? Game, ScoreEntry? Score, string? Status, int? Period, string? Clock, string? Phase);
+        string? At, string? Game, ScoreEntry? Score, string? Status, int? Period, string? Clock, string? Phase,
+        List<EntrantEntry?>? Field, List<BoutEntry?>? Bouts);
+
+    private static ProviderContest? ReadContestChange(ChangeEntry entry, ScenarioGame game)
+    {
+        if (entry.Field is null && entry.Bouts is null)
+            return null;
+        if (entry.Field is not null && game.Contest is not ProviderField ||
+            entry.Bouts is not null && game.Contest is not ProviderBouts)
+            throw new InvalidDataException("changes a contest of the wrong shape");
+        var written = new GameEntry(null, null, null, null, null, null, null, null, null, null, null,
+            entry.Field, null, entry.Bouts);
+        return entry.Field is not null ? ReadField(written) : ReadBouts(written, game.Id,
+            entry.Status is null ? game.Status : ReadStatus(entry.Status));
+    }
 
     private sealed record ScoreEntry(int? Home, int? Away);
 }

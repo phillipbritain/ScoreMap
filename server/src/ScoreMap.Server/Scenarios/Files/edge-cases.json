@@ -6,7 +6,7 @@
 // - A tied score, long team names, missing logos and three-digit scores.
 // - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
-// - An F1 race under way, its whole grid listed (the Miami Grand Prix is run around Hard Rock Stadium).
+// - An F1 race under way, its whole field listed (the Miami Grand Prix is run around Hard Rock Stadium).
 {
   "games": [
     {

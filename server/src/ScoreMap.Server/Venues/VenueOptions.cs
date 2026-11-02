@@ -16,6 +16,13 @@ public sealed class VenueOptions
     public string SavedPhotosPath { get; set; } = "data/venue-photos.json";
 
     /// <summary>
+    /// File the venues of games whose scoreboard gives none (NASCAR races), looked up once per event in
+    /// ESPN's core API, are saved to. Relative paths resolve as for <see cref="SavedLocationsPath"/> (on
+    /// App Service, by default /home/data/event-venues.json).
+    /// </summary>
+    public string SavedEventVenuesPath { get; set; } = "data/event-venues.json";
+
+    /// <summary>
     /// The owner's corrections file, relative to the content root: venue names mapped to the
     /// position their pin should use. Overrides any lookup; re-read whenever it changes.
     /// </summary>

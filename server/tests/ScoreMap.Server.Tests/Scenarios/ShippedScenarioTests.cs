@@ -227,10 +227,31 @@ public class ShippedScenarioTests
 
         var unfindable = Assert.Single(snapshot, g => (g.Venue.Latitude, g.Venue.Longitude) == (reykjavik.Latitude, reykjavik.Longitude));
         Assert.Equal($"{unfindable.Venue.Name}, Reykjavík", server.Places.Queries[0]);
-        Assert.Contains(snapshot, g => g.Status == GameStatus.Live && g.Sides().Home.Score == g.Sides().Away.Score);
-        Assert.Contains(snapshot, g => g.Sides().Home.FullName.Length >= 30 && g.Sides().Away.FullName.Length >= 30);
-        Assert.Contains(snapshot, g => g.Sides().Home.LogoUrl is null && g.Sides().Away.LogoUrl is null);
-        Assert.Contains(snapshot, g => Points(g.Sides().Home.Score) >= 100 && Points(g.Sides().Away.Score) >= 100);
+        var twoSided = snapshot.Where(g => g.Contest is GameSides).ToList();
+        Assert.Contains(twoSided, g => g.Status == GameStatus.Live && g.Sides().Home.Score == g.Sides().Away.Score);
+        Assert.Contains(twoSided, g => g.Sides().Home.FullName.Length >= 30 && g.Sides().Away.FullName.Length >= 30);
+        Assert.Contains(twoSided, g => g.Sides().Home.LogoUrl is null && g.Sides().Away.LogoUrl is null);
+        Assert.Contains(twoSided, g => Points(g.Sides().Home.Score) >= 100 && Points(g.Sides().Away.Score) >= 100);
+    }
+
+    [Fact]
+    public async Task Edge_cases_show_a_NASCAR_race_under_way_with_its_whole_field_and_one_yet_to_list_its_field()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "edge-cases");
+        var races = (await client.NextSnapshotAsync()).Where(g => g.League == "NASCAR Cup Series").ToList();
+
+        var live = Assert.Single(races, g => g.Status == GameStatus.Live);
+        Assert.Equal("Racing", live.Sport);
+        Assert.StartsWith("Lap ", live.Clock);
+        var field = Assert.IsType<GameField>(live.Contest);
+        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's top 10");
+        Assert.Equal(Enumerable.Range(1, field.Entries.Count), field.Entries.Select(entrant => entrant.Position));
+        Assert.Equal("Los Angeles Memorial Coliseum", live.Venue.Name);
+        var upcoming = Assert.Single(races, g => g.Status == GameStatus.Upcoming);
+        Assert.Empty(Assert.IsType<GameField>(upcoming.Contest).Entries);
+        Assert.NotNull(upcoming.Note);
     }
 
     /// <summary>A score in points, goals or runs; null for none, or for a cricket score with wickets.</summary>
@@ -262,8 +283,11 @@ public class ShippedScenarioTests
         for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += step)
         {
             server.Clock.Advance(realStep);
-            await Task.Delay(10);
-            changes.AddRange(client.PendingChanges());
+            // Waits for the step's fetches to send their changes (there are nearly always some, as clocks run)
+            // and then go quiet, so the clock never runs on ahead of the poller, and a game can't finish and
+            // drop out between two fetches of its league.
+            for (var wait = TimeSpan.FromMilliseconds(500); await client.ChangeArrivedAsync(wait); wait = TimeSpan.FromMilliseconds(25))
+                changes.AddRange(client.PendingChanges());
             if (changes.Any(wanted))
                 return changes;
         }

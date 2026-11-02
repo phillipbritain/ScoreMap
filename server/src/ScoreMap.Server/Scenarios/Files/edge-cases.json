@@ -4,6 +4,8 @@
 //   scenario venue looked up through Nominatim at runtime. "notInVenueList" says it is made up on
 //   purpose; any other venue missing from the list stops startup, so a misspelt one can't slip by.
 // - A tied score, long team names, missing logos and three-digit scores.
+// - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
+//   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
 {
   "games": [
     {
@@ -60,6 +62,49 @@
       "status": "live",
       "clock": "0:48",
       "period": 4
+    },
+    {
+      "id": "edge-nascar-under-way",
+      "league": "NASCAR Cup Series",
+      "note": "Cook Out Clash at the Coliseum",
+      "field": [
+        { "name": "Kyle Larson", "shortName": "K. Larson", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "William Byron", "shortName": "W. Byron", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Ryan Blaney", "shortName": "R. Blaney", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Denny Hamlin", "shortName": "D. Hamlin", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Christopher Bell", "shortName": "C. Bell", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Chase Elliott", "shortName": "C. Elliott", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Shane van Gisbergen", "shortName": "S. van Gisbergen", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/nzl.png" },
+        { "name": "Tyler Reddick", "shortName": "T. Reddick", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Joey Logano", "shortName": "J. Logano", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Daniel Suárez", "shortName": "D. Suárez", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/mex.png" },
+        { "name": "Ross Chastain", "shortName": "R. Chastain", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Bubba Wallace", "shortName": "B. Wallace", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Chase Briscoe", "shortName": "C. Briscoe", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Alex Bowman", "shortName": "A. Bowman", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Ricky Stenhouse Jr.", "shortName": "R. Stenhouse Jr.", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Austin Cindric", "shortName": "A. Cindric", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Kyle Busch", "shortName": "K. Busch", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Brad Keselowski", "shortName": "B. Keselowski", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Michael McDowell", "shortName": "M. McDowell", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Carson Hocevar", "shortName": "C. Hocevar", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Josh Berry", "shortName": "J. Berry", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Ty Gibbs", "shortName": "T. Gibbs", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" },
+        { "name": "Chris Buescher", "shortName": "C. Buescher", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png" }
+      ],
+      "venue": { "name": "Los Angeles Memorial Coliseum", "city": "Los Angeles" },
+      "startsIn": "-1h10m",
+      "status": "live",
+      "period": 112
+    },
+    {
+      "id": "edge-nascar-field-not-yet-listed",
+      "league": "NASCAR Cup Series",
+      "note": "Grant Park 165",
+      "field": [],
+      "venue": { "name": "Soldier Field", "city": "Chicago" },
+      "startsIn": "1h30m",
+      "status": "upcoming"
     }
   ]
 }

@@ -11,7 +11,7 @@ import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
-import { headerText, scoreCard, type ScoreCard, type ScoreCardTeam } from './scoreCard'
+import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
@@ -523,7 +523,7 @@ function flames(): HTMLElement {
   return row
 }
 
-function logo({ logoUrl }: ScoreCardTeam): HTMLImageElement {
+function logo({ logoUrl }: ScoreCardRow): HTMLImageElement {
   const image = document.createElement('img')
   image.className = 'score-card__logo'
   image.alt = ''
@@ -532,10 +532,10 @@ function logo({ logoUrl }: ScoreCardTeam): HTMLImageElement {
   return image
 }
 
-function team({ abbreviation, logoUrl, score }: ScoreCardTeam): HTMLElement {
+function team({ label, logoUrl, score }: ScoreCardRow): HTMLElement {
   const row = document.createElement('div')
   row.className = 'score-card__team'
-  row.append(logo({ abbreviation, logoUrl, score }), span('score-card__abbreviation', abbreviation), span('score-card__score', score))
+  row.append(logo({ label, logoUrl, score }), span('score-card__abbreviation', label), span('score-card__score', score))
   return row
 }
 

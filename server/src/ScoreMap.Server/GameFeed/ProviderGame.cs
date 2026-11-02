@@ -52,13 +52,27 @@ public sealed record ProviderGame(
 }
 
 /// <summary>
-/// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020). Its
-/// only shape so far is two sides, <see cref="ProviderSides"/>.
+/// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020): two
+/// sides (<see cref="ProviderSides"/>) or a field (<see cref="ProviderField"/>).
 /// </summary>
 public abstract record ProviderContest;
 
 /// <summary>A game between two sides: the home side and the away side.</summary>
 public sealed record ProviderSides(ProviderTeam Home, ProviderTeam Away) : ProviderContest;
+
+/// <summary>
+/// A game among a field, such as a race: its entrants, ordered by position, the leader first; none before
+/// the provider lists them. Two fields are equal when their entrants are.
+/// </summary>
+public sealed record ProviderField(IReadOnlyList<ProviderEntrant> Entries) : ProviderContest
+{
+    public bool Equals(ProviderField? other) => other is not null && Entries.SequenceEqual(other.Entries);
+
+    public override int GetHashCode() => Entries.Aggregate(0, HashCode.Combine);
+}
+
+/// <summary>One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.</summary>
+public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl);
 
 /// <summary>
 /// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and

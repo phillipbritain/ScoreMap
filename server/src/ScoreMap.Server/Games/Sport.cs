@@ -18,6 +18,7 @@ public enum Sport
     Soccer,
     Cricket,
     Tennis,
+    Racing,
 }
 
 /// <summary>
@@ -40,6 +41,8 @@ public static class Sports
         [Sport.Cricket] = ("Cricket", new(RegulationPeriods: 2, PeriodMinutes: null)),
         // Best of 3 sets; ESPN gives no way to tell a best-of-5 match apart.
         [Sport.Tennis] = ("Tennis", new(RegulationPeriods: 3, PeriodMinutes: null)),
+        // A race is run in laps, with no periods; its period is the current lap.
+        [Sport.Racing] = ("Racing", new(RegulationPeriods: 1, PeriodMinutes: null)),
     };
 
     private static IEnumerable<string> Names => All.Values.Select(sport => sport.Name);

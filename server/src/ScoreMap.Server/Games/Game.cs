@@ -58,14 +58,29 @@ public sealed record Game(
 
 /// <summary>
 /// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
-/// apart in JSON by its <c>kind</c>. Its only shape so far is two sides, <see cref="GameSides"/>.
+/// apart in JSON by its <c>kind</c>: two sides (<see cref="GameSides"/>) or a field (<see cref="GameField"/>).
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(GameSides), "sides")]
+[JsonDerivedType(typeof(GameField), "field")]
 public abstract record GameContest;
 
 /// <summary>A game between two sides: the home side and the away side.</summary>
 public sealed record GameSides(GameTeam Home, GameTeam Away) : GameContest;
+
+/// <summary>
+/// A game among a field, such as a race: its entrants ordered by position, the leader first; none before
+/// the feed lists them. Two fields are equal when their entrants are, so an unchanged field isn't a change.
+/// </summary>
+public sealed record GameField(IReadOnlyList<GameEntrant> Entries) : GameContest
+{
+    public bool Equals(GameField? other) => other is not null && Entries.SequenceEqual(other.Entries);
+
+    public override int GetHashCode() => Entries.Aggregate(0, HashCode.Combine);
+}
+
+/// <summary>One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.</summary>
+public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl);
 
 /// <summary>
 /// A tennis match's score set by set (see <see cref="GameSet"/>). A match ended early has its

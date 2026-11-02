@@ -43,7 +43,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
             Id: id,
             LeagueKey: league.Key,
             StartsIn: TimeSpan.Zero,
-            Sides: new ProviderSides(Team(home), Team(away)),
+            Contest: new ProviderSides(Team(home), Team(away)),
             Venue: venue.ToProviderVenue(),
             Status: ProviderStatus.Scheduled,
             Clock: null,
@@ -76,7 +76,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
         {
             StartsIn = Minutes(-minutesIn),
             Status = ProviderStatus.InProgress,
-            Sides = new ProviderSides(home, away),
+            Contest = new ProviderSides(home, away),
             Period = period,
             Clock = clock,
             Phase = phase,
@@ -97,7 +97,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
         {
             StartsIn = startsIn,
             Status = ProviderStatus.Final,
-            Sides = new ProviderSides(home, away),
+            Contest = new ProviderSides(home, away),
             Period = sport.Regulation,
         };
     }

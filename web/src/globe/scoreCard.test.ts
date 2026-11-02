@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Game } from '../games/game'
+import type { Game, GameSides } from '../games/game'
 import { themeWith } from '../theme/testTheme'
 import { headerText, scoreCard } from './scoreCard'
 
@@ -33,6 +33,7 @@ const arrowhead: Game = {
   topEvent: false,
   scoreline: null,
 }
+const sides = arrowhead.contest as GameSides
 
 describe('scoreCard', () => {
   it('shows both teams with logo, abbreviation and score, away on top, plus the clock line', () => {
@@ -64,8 +65,8 @@ describe('scoreCard', () => {
       period: null,
       contest: {
         kind: 'sides',
-        home: { ...arrowhead.contest.home, score: null },
-        away: { ...arrowhead.contest.away, score: null },
+        home: { ...sides.home, score: null },
+        away: { ...sides.away, score: null },
       },
     }
 
@@ -89,6 +90,42 @@ describe('scoreCard', () => {
     const suspended: Game = { ...arrowhead, status: 'Disrupted', disruption: 'Suspended', clock: null }
 
     expect(scoreCard(suspended, false)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
+  })
+
+  describe('for a race', () => {
+    const usa = 'https://a.espncdn.com/i/teamlogos/countries/500/usa.png'
+    const talladega: Game = {
+      ...arrowhead,
+      sport: 'Racing',
+      league: 'NASCAR Cup Series',
+      note: 'NASCAR Cup Series at Talladega',
+      clock: 'Lap 189',
+      contest: {
+        kind: 'field',
+        entries: [
+          { position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: usa },
+          { position: 2, name: 'William Byron', shortName: 'W. Byron', flagUrl: usa },
+          { position: 3, name: 'Ryan Blaney', shortName: 'R. Blaney', flagUrl: usa },
+        ],
+      },
+    }
+
+    it('shows the top two entrants by position, with no score, and the lap', () => {
+      expect(scoreCard(talladega, false)).toMatchObject({
+        top: { abbreviation: '1 K. Larson', logoUrl: usa, score: '' },
+        bottom: { abbreviation: '2 W. Byron', logoUrl: usa, score: '' },
+        clockLine: 'Lap 189',
+      })
+    })
+
+    it("shows the race's name before its field is listed", () => {
+      const upcoming: Game = { ...talladega, status: 'Upcoming', clock: null, contest: { kind: 'field', entries: [] } }
+
+      expect(scoreCard(upcoming, false)).toMatchObject({
+        top: { abbreviation: 'NASCAR Cup Series at Talladega', logoUrl: null, score: '' },
+        bottom: { abbreviation: '', logoUrl: null, score: '' },
+      })
+    })
   })
 })
 

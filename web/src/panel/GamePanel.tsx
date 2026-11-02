@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import type { Game, GameTeam, PhotoCredit } from '../games/game'
+import type { Game, GameEntrant, GameField, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
@@ -41,7 +41,7 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   // The place under the venue's name; in tennis, already on the venue's line.
   const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
-  const [top, bottom] = sidesTopFirst(game.sport, game.contest)
+  const { contest } = game
   // A note on the game (a playoff round, say) goes beside its league.
   const league = game.note ? `${game.league} · ${game.note}` : game.league
   // A Final game shows when it ended; any other, when it starts.
@@ -68,8 +68,11 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
             <span className="game-panel__league-sport">{game.sport} · </span>
             {league}
           </div>
-          <TeamRow team={top} />
-          <TeamRow team={bottom} />
+          {contest.kind === 'sides' ? (
+            sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)
+          ) : (
+            <FieldRows field={contest} name={game.note} />
+          )}
           {progress && (
             <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
               {progress}
@@ -214,15 +217,63 @@ function TeamRow({ team }: { team: GameTeam }) {
 }
 
 /**
+ * A field's top two entrants by position, as its score card shows them, with no score; before its field
+ * is listed, the game's name.
+ */
+function FieldRows({ field, name }: { field: GameField; name: string | null }) {
+  if (field.entries.length === 0) return (
+      <div className="game-panel__team">
+        <span className="game-panel__logo" />
+        <span className="game-panel__team-name" data-tooltip={name ?? ''} data-tooltip-when-clipped>
+          {name}
+        </span>
+      </div>
+    )
+  return field.entries.slice(0, 2).map((entrant) => (
+    <div key={entrant.name} className="game-panel__team">
+      {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
+      <span className="game-panel__team-name" data-tooltip={`${entrant.position} ${entrant.name}`} data-tooltip-when-clipped>
+        <span className="game-panel__rank">{entrant.position} </span>
+        {entrant.name}
+      </span>
+    </div>
+  ))
+}
+
+/** How many of a field the band lists until the viewer asks for all of it. */
+const leaderboardLength = 10
+
+/**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
- * minute), or in tennis the scoreline set by set, the betting line and the crowd, each with its label.
+ * minute), or in tennis the scoreline set by set, or for a field its leaderboard, the betting line and
+ * the crowd, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
-  const { lastScore, scoreline } = game
+  const { lastScore, scoreline, contest } = game
+  const entries = contest.kind === 'field' ? contest.entries : []
+  // Which game the viewer asked to see the whole field of, so selecting another shows its top 10 again.
+  const [shownAllOf, setShownAllOf] = useState<string | null>(null)
+  const showAll = shownAllOf === game.id
   const odds = game.odds && oddsLine(game.odds)
-  const empty = !lastScore && !scoreline && !odds && game.attendance === null
+  const empty = !lastScore && !scoreline && entries.length === 0 && !odds && game.attendance === null
   return (
-    <div className="game-panel__band">
+    <div className={showAll ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
+      {entries.length > 0 && (
+        <BandCell label="Leaderboard" wide>
+          <ol className="game-panel__field">
+            {entries.slice(0, showAll ? entries.length : leaderboardLength).map((entrant) => (
+              <Entrant key={entrant.name} entrant={entrant} />
+            ))}
+            {entries.length > leaderboardLength && (
+              <li>
+                <button type="button" className="game-panel__show-all" onClick={() => setShownAllOf(showAll ? null : game.id)}>
+                  {showAll ? `Top ${leaderboardLength}` : `Show all ${entries.length}`}
+                </button>
+              </li>
+            )}
+          </ol>
+        </BandCell>
+      )}
       {scoreline && (
         // Each set in the progress line's look: its name, its score and who won it.
         <BandCell wide>
@@ -269,6 +320,15 @@ function GameBand({ game }: { game: Game }) {
       )}
       {empty && <div className="game-panel__muted game-panel__band-empty">No game details yet</div>}
     </div>
+  )
+}
+
+/** One of a field on its leaderboard: their position and short name, their full name on hover. */
+function Entrant({ entrant }: { entrant: GameEntrant }) {
+  return (
+    <li className="game-panel__entrant" data-tooltip={entrant.name}>
+      <span className="game-panel__rank">{entrant.position}</span> {entrant.shortName}
+    </li>
   )
 }
 

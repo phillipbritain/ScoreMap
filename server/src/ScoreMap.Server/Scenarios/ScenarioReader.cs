@@ -72,6 +72,9 @@ public static partial class ScenarioReader
         }).ToList();
         var writtenOut = ids.ToHashSet();
         var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
+        if (plays && games.FirstOrDefault(game => game.Contest is ProviderField) is { } race)
+            throw new ScenarioFileException(name, path,
+                $"game \"{race.Id}\" is a race, but races can't be played yet; write them in a scenario whose games stand still");
         if (file.Fill is not null)
         {
             foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, lists))
@@ -117,15 +120,16 @@ public static partial class ScenarioReader
                 $"has startsIn \"{entry.StartsIn}\", which isn't a time relative to the scenario's start such as \"-40m\" or \"1h30m\"");
         var status = ReadStatus(entry.Status);
         var phase = ReadPhase(entry.Phase);
-        var home = ReadTeam(entry.Home, "home");
-        var away = ReadTeam(entry.Away, "away");
+        ProviderContest contest = league.Sport == Sport.Racing
+            ? ReadField(entry)
+            : new ProviderSides(ReadTeam(entry.Home, "home"), ReadTeam(entry.Away, "away"));
         var venue = ReadVenue(entry.Venue, venues);
 
         return new ScenarioGame(
             Id: entry.Id ?? $"{scenario}-{index + 1}",
             LeagueKey: league.Key,
             StartsIn: startsIn,
-            Sides: new ProviderSides(home, away),
+            Contest: contest,
             Venue: venue,
             Status: status,
             Clock: entry.Clock,
@@ -133,7 +137,24 @@ public static partial class ScenarioReader
             Phase: phase)
         {
             Situation = ReadSituation(entry.Situation),
+            Note = entry.Note,
         };
+    }
+
+    /// <summary>
+    /// A race's field: its entrants in order, the leader first (none before the feed would list them),
+    /// in place of a home and an away team.
+    /// </summary>
+    private static ProviderField ReadField(GameEntry entry)
+    {
+        if (entry.Home is not null || entry.Away is not null)
+            throw new InvalidDataException("is a race, which has a field, not a home and an away team");
+        if (entry.Field is null)
+            throw new InvalidDataException("is a race with no field; give it one, empty before the race starts");
+        return new ProviderField(entry.Field.Select((entrant, i) =>
+            entrant is null || string.IsNullOrWhiteSpace(entrant.Name) || string.IsNullOrWhiteSpace(entrant.ShortName)
+                ? throw new InvalidDataException($"has entrant {i + 1} with no name or short name")
+                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag)).ToList());
     }
 
     /// <summary>
@@ -213,9 +234,17 @@ public static partial class ScenarioReader
     private sealed record ScenarioFile(
         List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted, string? SlowStart);
 
+    /// <summary>
+    /// A game written out in full: between a home and an away team, or for a race, among a <c>field</c>,
+    /// with the race's name as its <c>note</c>.
+    /// </summary>
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,
-        string? StartsIn, string? Status, string? Clock, int? Period, string? Phase, SituationEntry? Situation);
+        string? StartsIn, string? Status, string? Clock, int? Period, string? Phase, SituationEntry? Situation,
+        List<EntrantEntry?>? Field, string? Note);
+
+    /// <summary>One of a race's field, in order: their name, short name ("K. Larson") and country's flag.</summary>
+    private sealed record EntrantEntry(string? Name, string? ShortName, string? Flag);
 
     /// <summary>A team; in cricket, with its <c>innings</c> beyond its runs (see <see cref="ProviderInnings"/>).</summary>
     private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score, InningsEntry? Innings);

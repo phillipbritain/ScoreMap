@@ -476,6 +476,39 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* A field's leaderboard: its entrants side by side in order, wrapping onto the band's next line, then
+   the button to show the whole field. Shown whole, the band grows and scrolls. */
+.game-panel__field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: calc(0.5 * var(--spacing)) calc(3 * var(--spacing));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-panel__entrant {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.game-panel__show-all {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--game-color);
+  font: inherit;
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.game-panel__band.game-panel__band--expanded {
+  height: auto;
+  max-height: calc(4 * var(--spacing) + 8lh);
+  overflow-y: auto;
+}
+
 .game-panel__strong {
   font-weight: var(--typography-button-font-weight);
 }

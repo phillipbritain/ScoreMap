@@ -195,6 +195,8 @@ public sealed class GameBoard(
     private static GameContest ToContest(ProviderContest contest) => contest switch
     {
         ProviderSides sides => new GameSides(ToTeam(sides.Home), ToTeam(sides.Away)),
+        ProviderField field => new GameField(field.Entries
+            .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl)).ToList()),
         _ => throw new ArgumentOutOfRangeException(nameof(contest), contest, "No such contest"),
     };
 

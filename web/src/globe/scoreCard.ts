@@ -41,7 +41,9 @@ export function scoreCard(game: Game, flames: boolean): ScoreCard {
     status: game.status,
     top,
     bottom,
-    clockLine: progressLine(game, 'short') ?? '',
+    clockLine: game.contest.kind === 'bouts' && game.status === 'Upcoming'
+      ? new Date(game.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+      : progressLine(game, 'short') ?? '',
     flames,
   }
 }

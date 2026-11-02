@@ -68,6 +68,7 @@ public class LeagueTests
             new LeagueListing("ATP", "Tennis"),
             new LeagueListing("WTA", "Tennis"),
             new LeagueListing("NASCAR Cup Series", "Racing"),
+            new LeagueListing("Formula 1", "Racing"),
         ], leagues);
     }
 

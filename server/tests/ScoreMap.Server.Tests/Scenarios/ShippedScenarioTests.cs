@@ -254,6 +254,22 @@ public class ShippedScenarioTests
         Assert.NotNull(upcoming.Note);
     }
 
+    [Fact]
+    public async Task Edge_cases_show_an_F1_race_under_way_with_its_whole_grid()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "edge-cases");
+        var race = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "Formula 1");
+
+        Assert.Equal(GameStatus.Live, race.Status);
+        Assert.Equal("Racing", race.Sport);
+        Assert.Equal("Lap 42", race.Clock);
+        var field = Assert.IsType<GameField>(race.Contest);
+        Assert.Equal(Enumerable.Range(1, 22), field.Entries.Select(entrant => entrant.Position));
+        Assert.Equal("Hard Rock Stadium", race.Venue.Name);
+    }
+
     /// <summary>A score in points, goals or runs; null for none, or for a cricket score with wickets.</summary>
     private static int? Points(string? score) => int.TryParse(score, out var points) ? points : null;
 

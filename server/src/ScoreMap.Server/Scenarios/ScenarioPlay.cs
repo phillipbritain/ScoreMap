@@ -19,7 +19,7 @@ namespace ScoreMap.Server.Scenarios;
 /// games: the scenario clock's speed is what makes them play faster. <see cref="GamesAt"/> takes a
 /// lock, so the poller and a newly connected browser can ask at once.
 /// </remarks>
-public sealed class ScenarioPlay
+public sealed partial class ScenarioPlay
 {
     /// <summary>How often play moves on, in scenario time.</summary>
     public static readonly TimeSpan Step = TimeSpan.FromSeconds(1);
@@ -93,6 +93,11 @@ public sealed class ScenarioPlay
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
                     played.Through = 0;
+                    if (played.Game.Contest is not ProviderSides)
+                    {
+                        PlayContest(played, at);
+                        break;
+                    }
                     var sides = played.Game.Sides();
                     var (home, away) = played.Sport.Start(sides.Home, sides.Away);
                     played.Game = played.Game with { Status = ProviderStatus.InProgress, Contest = new ProviderSides(home, away) };
@@ -115,6 +120,11 @@ public sealed class ScenarioPlay
     /// </summary>
     private void Play(PlayedGame played, DateTimeOffset at)
     {
+        if (played.Game.Contest is not ProviderSides)
+        {
+            PlayContest(played, at);
+            return;
+        }
         var sport = played.Sport;
         var step = Step / played.League.PlannedLength;
         var sides = played.Game.Sides();
@@ -181,12 +191,27 @@ public sealed class ScenarioPlay
     /// </summary>
     private PlayedGame? NewGame(DateTimeOffset at, PlayedGame replacing)
     {
+        if (replacing.Game.Contest is not ProviderSides)
+        {
+            var replacementId = $"{_scenario}-play-{++_newGames}";
+            var contest = replacing.Game.Contest;
+            if (contest is ProviderField field)
+                contest = ProviderField.TiedByScore(field.Entries.Select(e => e with
+                    { ToPar = replacing.League.Sport == Sport.Golf ? 0 : null, Thru = replacing.League.Sport == Sport.Golf ? 0 : null }));
+            if (contest is ProviderBouts card)
+                contest = new ProviderBouts(card.Bouts.Select((b, i) => b with { Id = $"{replacementId}-bout-{i + 1}", Status = ProviderStatus.Scheduled,
+                    Round = null, Clock = null, Method = null, First = b.First with { Winner = false },
+                    Second = b.Second with { Winner = false } }).ToList());
+            return new PlayedGame(replacing.Game with { Id = replacementId, Contest = contest, Status = ProviderStatus.Scheduled,
+                StartTime = at + TimeSpan.FromSeconds(30), Period = null, DisplayClock = null }, replacing.League);
+        }
         var inUse = _games.Select(game => game.Game.Venue?.Name).ToHashSet();
         var free = _settings.Venues.Where(venue => !inUse.Contains(venue.Name)).ToList();
         var venues = free.Count > 0 ? free : _settings.Venues;
         var venue = venues[_random.Next(venues.Count)];
         var id = $"{_scenario}-play-{_newGames + 1}";
         var playing = _games.Where(game => game != replacing)
+            .Where(game => game.Game.Contest is ProviderSides)
             .SelectMany(game => PlayingTeam.In(game.Game.LeagueKey, game.Game.Sides().Home, game.Game.Sides().Away)).ToList();
         ScenarioGame made;
         try
@@ -217,9 +242,14 @@ public sealed class ScenarioPlay
         if (game.Status == ProviderStatus.InProgress)
         {
             // Where the scenario says it stands, if it says; otherwise however far its start time puts it.
-            var written = game.Period is { } period ? played.Sport.Through(period, game.Clock, game.Phase) : null;
+            var written = game.Contest is ProviderSides && game.Period is { } period ? played.Sport.Through(period, game.Clock, game.Phase) : null;
             played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 0.95);
-            played.Game = Position(played);
+            if (game.Contest is ProviderField field && game.Period is { } fieldPeriod)
+                played.Through = league.Sport == Sport.Golf
+                    ? (fieldPeriod - 1 + (game.Phase == ProviderPeriodPhase.Break ? 0.5 : (field.Entries.FirstOrDefault()?.Thru ?? 0) / 36.0)) / 4
+                    : (fieldPeriod - 1) / (double)RaceLaps;
+            if (game.Contest is ProviderSides)
+                played.Game = Position(played);
         }
         return played;
     }

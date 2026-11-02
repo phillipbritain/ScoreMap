@@ -36,13 +36,14 @@ internal static class GameChanges
     }
 
     /// <summary>
-    /// Two sides' score changes when either side's does; a field's when the lead changes hands from one
-    /// entrant leading alone to another (ADR-0020).
+    /// Two sides' score changes when either side's does; a field's when the lead changes hands (ADR-0020):
+    /// someone leads alone who didn't before, from another leading alone or from a tie for the lead. A tie
+    /// for the lead is no change until someone leads alone, nor is the field first being listed.
     /// </summary>
     private static bool ScoreChanged(GameContest before, GameContest after) => (before, after) switch
     {
         (GameSides b, GameSides a) => b.Home.Score != a.Home.Score || b.Away.Score != a.Away.Score,
-        (GameField b, GameField a) => Leader(b) is { } was && Leader(a) is { } now && was.Name != now.Name,
+        (GameField b, GameField a) => b.Entries.Count > 0 && Leader(a) is { } now && Leader(b)?.Name != now.Name,
         _ => throw new ArgumentOutOfRangeException(nameof(after), after, "No score change for this contest"),
     };
 

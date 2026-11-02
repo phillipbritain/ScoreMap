@@ -69,8 +69,8 @@ public abstract record GameContest;
 public sealed record GameSides(GameTeam Home, GameTeam Away) : GameContest;
 
 /// <summary>
-/// A game among a field, such as a race: its entrants ordered by position, the leader first; none before
-/// the feed lists them. Two fields are equal when their entrants are, so an unchanged field isn't a change.
+/// A game among a field, such as a race or a golf tournament: its entrants ordered by position, the leader
+/// first; none before the feed lists them. Two fields are equal when their entrants are, so an unchanged field isn't a change.
 /// </summary>
 public sealed record GameField(IReadOnlyList<GameEntrant> Entries) : GameContest
 {
@@ -79,8 +79,12 @@ public sealed record GameField(IReadOnlyList<GameEntrant> Entries) : GameContest
     public override int GetHashCode() => Entries.Aggregate(0, HashCode.Combine);
 }
 
-/// <summary>One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.</summary>
-public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl);
+/// <summary>
+/// One of a field: their position (1 for the leader, shared by those tied on score), name, short name
+/// ("K. Larson") and their country's flag. In golf, their <see cref="Score"/> to par as golf writes it
+/// ("-12", "E", "+3"); null in racing, and before they have one.
+/// </summary>
+public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl, string? Score = null);
 
 /// <summary>
 /// A tennis match's score set by set (see <see cref="GameSet"/>). A match ended early has its

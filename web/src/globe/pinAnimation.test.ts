@@ -97,6 +97,35 @@ describe('pinAnimation', () => {
     })
   })
 
+  describe('a fight card', () => {
+    const card = (status: GameStatus, ...bouts: [GameStatus, number | null][]): Game =>
+      ({
+        sport: 'MMA',
+        status,
+        clutchTime: false,
+        hot: false,
+        contest: {
+          kind: 'bouts',
+          bouts: bouts.map(([boutStatus, round], i) => ({ id: `bout-${i}`, status: boutStatus, round })),
+        },
+        clock: null,
+        period: null,
+      }) as Game
+
+    it('celebrates a bout finishing', () => {
+      expect(pinAnimation(card('Live', ['Upcoming', null], ['Live', 3]), card('Live', ['Upcoming', null], ['Final', 3]))).toBe('score')
+    })
+
+    it('does not animate a new round or the next bout starting', () => {
+      expect(pinAnimation(card('Live', ['Upcoming', null], ['Live', 1]), card('Live', ['Upcoming', null], ['Live', 2]))).toBeNull()
+      expect(pinAnimation(card('Live', ['Upcoming', null], ['Final', 3]), card('Live', ['Live', 1], ['Final', 3]))).toBeNull()
+    })
+
+    it('announces its start and finish as any game', () => {
+      expect(pinAnimation(card('Upcoming', ['Upcoming', null]), card('Live', ['Live', 1]))).toBe('start')
+      expect(pinAnimation(card('Live', ['Live', 5]), card('Final', ['Final', 5]))).toBe('finish')
+    })
+  })
   describe('a golf tournament', () => {
     /** Golfers in order as name and position, those tied sharing one. */
     const tournament = (...order: [string, number][]): Game =>

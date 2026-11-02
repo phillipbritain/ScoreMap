@@ -476,9 +476,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A field's leaderboard: its entrants side by side in order, wrapping onto the band's next line, then
-   the button to show the whole field. Shown whole, the band grows and scrolls. */
-.game-panel__field {
+/* A field's leaderboard, or a fight card's bouts: side by side in order, wrapping onto the band's next
+   line. A field has a button to show all; a fight card always lists every bout. Shown whole, the band grows and scrolls. */
+.game-panel__field,
+.game-panel__bouts {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -488,7 +489,8 @@ body {
   list-style: none;
 }
 
-.game-panel__entrant {
+.game-panel__entrant,
+.game-panel__bout {
   flex-shrink: 0;
   white-space: nowrap;
 }

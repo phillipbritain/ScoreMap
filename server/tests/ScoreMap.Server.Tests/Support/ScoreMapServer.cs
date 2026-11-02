@@ -371,6 +371,19 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
     public async Task<GameChange> NextChangeAsync() =>
         await _changes.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
 
+    /// <summary>Waits until a change event not yet read has arrived, or <paramref name="within"/> has passed; true if one has.</summary>
+    public async Task<bool> ChangeArrivedAsync(TimeSpan within)
+    {
+        try
+        {
+            return await _changes.Reader.WaitToReadAsync().AsTask().WaitAsync(within);
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>Change events received so far and not yet read.</summary>
     public IReadOnlyList<GameChange> PendingChanges()
     {

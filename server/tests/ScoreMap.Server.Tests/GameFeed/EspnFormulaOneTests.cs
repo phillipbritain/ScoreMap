@@ -75,6 +75,20 @@ public sealed class EspnFormulaOneTests : IDisposable
     }
 
     [Fact]
+    public async Task A_weekend_listing_no_race_yet_is_no_game()
+    {
+        var scoreboard = JsonNode.Parse(Fixture("f1.json"))!;
+        var competitions = scoreboard["events"]![0]!["competitions"]!.AsArray();
+        foreach (var session in competitions.Where(c => (string?)c!["type"]!["abbreviation"] != "FP1").ToList())
+            competitions.Remove(session);
+
+        var games = await ProviderOver(StubHttpHandler.Serving((Scoreboard, scoreboard.ToJsonString())))
+            .FetchScoreboardAsync(F1, CancellationToken.None);
+
+        Assert.Empty(games);
+    }
+
+    [Fact]
     public async Task A_race_under_way_gives_its_field_in_order_and_its_lap()
     {
         var game = await FetchOnly(RaceOnLap42());

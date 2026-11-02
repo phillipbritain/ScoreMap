@@ -255,7 +255,7 @@ public class ShippedScenarioTests
     }
 
     [Fact]
-    public async Task Edge_cases_show_an_F1_race_under_way_with_its_whole_grid()
+    public async Task Edge_cases_show_an_F1_race_under_way_with_its_whole_field()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 

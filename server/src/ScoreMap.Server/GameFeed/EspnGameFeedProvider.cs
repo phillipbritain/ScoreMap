@@ -304,7 +304,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private static ProviderGame? ToFieldGame(Event e, string leagueKey)
     {
         var competitions = e.Competitions ?? [];
-        var competition = competitions.Count == 1
+        // A competition that names its session must be the race; one that doesn't is NASCAR's only one.
+        var competition = competitions.Count == 1 && competitions[0].Type?.Abbreviation is null
             ? competitions[0]
             : competitions.FirstOrDefault(c => c.Type?.Abbreviation == "Race");
         if (e.Id is null || competition is null)

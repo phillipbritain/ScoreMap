@@ -4,7 +4,7 @@ namespace ScoreMap.Server.Games;
 
 /// <summary>
 /// The short line saying where a game stands, written the way its sport reads it:
-/// "Q3 4:12", "Halftime", "Final/OT", "13.2/20 ov · need 87" and so on.
+/// "Q3 4:12", "Halftime", "Final/OT", "13.2/20 ov · need 87", "Lap 189" and so on.
 /// </summary>
 public static class ClockLine
 {
@@ -22,6 +22,7 @@ public static class ClockLine
             Sport.Soccer => Halves(game, period, league.Regulation),
             Sport.Cricket => Innings(game, period),
             Sport.Tennis => Sets(game, period),
+            Sport.Racing => game.Status == ProviderStatus.Final ? "Final" : $"Lap {period}",
             _ => throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport"),
         };
     }

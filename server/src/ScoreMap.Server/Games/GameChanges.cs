@@ -35,11 +35,20 @@ internal static class GameChanges
         return null;
     }
 
+    /// <summary>
+    /// Two sides' score changes when either side's does; a field's when the lead changes hands from one
+    /// entrant leading alone to another (ADR-0020).
+    /// </summary>
     private static bool ScoreChanged(GameContest before, GameContest after) => (before, after) switch
     {
         (GameSides b, GameSides a) => b.Home.Score != a.Home.Score || b.Away.Score != a.Away.Score,
+        (GameField b, GameField a) => Leader(b) is { } was && Leader(a) is { } now && was.Name != now.Name,
         _ => throw new ArgumentOutOfRangeException(nameof(after), after, "No score change for this contest"),
     };
+
+    /// <summary>The entrant leading alone; null with no field yet, or with more than one at the front.</summary>
+    private static GameEntrant? Leader(GameField field) =>
+        field.Entries.Count(entrant => entrant.Position == 1) == 1 ? field.Entries[0] : null;
 
     /// <summary>
     /// Record equality, except list fields compare by content (records compare lists by

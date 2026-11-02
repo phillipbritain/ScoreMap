@@ -1,4 +1,4 @@
-import type { Game, GameStatus, GameTeam } from '../games/game'
+import type { Game, GameEntrant, GameStatus, GameTeam } from '../games/game'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { isHexColor, mixColours, textOn } from '../theme/palette'
@@ -11,7 +11,11 @@ export interface ScoreCardTeam {
   score: string
 }
 
-/** What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst), and a short clock line. */
+/**
+ * What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst),
+ * and a short clock line. A field shows its top two entrants by position ("1 K. Larson") with their flags
+ * and no score, or before its field is listed, the game's name (its note) on top.
+ */
 export interface ScoreCard {
   gameId: string
   /** Drives the card's style, matching the small pin's status style. */
@@ -25,12 +29,12 @@ export interface ScoreCard {
 }
 
 export function scoreCard(game: Game, flames: boolean): ScoreCard {
-  const [top, bottom] = sidesTopFirst(game.sport, game.contest)
+  const [top, bottom] = cardRows(game)
   return {
     gameId: game.id,
     status: game.status,
-    top: cardTeam(top),
-    bottom: cardTeam(bottom),
+    top,
+    bottom,
     clockLine: progressLine(game, 'short') ?? '',
     flames,
   }
@@ -50,6 +54,21 @@ export function headerText(colour: string, status: GameStatus, theme: Theme): st
   return textOn(mixColours(fill, colour, card.header.tint), text, fill)
 }
 
+function cardRows({ sport, contest, note }: Game): [ScoreCardTeam, ScoreCardTeam] {
+  if (contest.kind === 'sides') {
+    const [top, bottom] = sidesTopFirst(sport, contest)
+    return [cardTeam(top), cardTeam(bottom)]
+  }
+  const blank: ScoreCardTeam = { abbreviation: '', logoUrl: null, score: '' }
+  if (contest.entries.length === 0) return [{ ...blank, abbreviation: note ?? '' }, blank]
+  const [first, second] = contest.entries.map(cardEntrant)
+  return [first, second ?? blank]
+}
+
 function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardTeam {
   return { abbreviation, logoUrl, score: score ?? '' }
+}
+
+function cardEntrant({ position, shortName, flagUrl }: GameEntrant): ScoreCardTeam {
+  return { abbreviation: `${position} ${shortName}`, logoUrl: flagUrl, score: '' }
 }

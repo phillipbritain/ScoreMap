@@ -9,7 +9,8 @@ namespace ScoreMap.Server.GameFeed;
 /// The <see cref="HttpClient"/> base address is the sports root, e.g.
 /// <c>https://site.api.espn.com/apis/site/v2/sports/</c>; league keys are <c>{sport}/{league}</c>.
 /// </summary>
-public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider clock) : IGameFeedProvider
+public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider clock, string? savedEventVenuesPath = null)
+    : IGameFeedProvider
 {
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
 
@@ -17,6 +18,14 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     // more times it may be asked for at that score: the scoreboard doesn't carry it, so it's asked for again
     // only when the score has changed.
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Score, int TriesLeft, ProviderScoringPlay? Play)> _lastScores = new();
+
+    // Each event's venue from the core API, by league and event, loaded from and saved to savedEventVenuesPath
+    // (see EventVenueAsync), one lookup at a time.
+    private readonly SemaphoreSlim _eventVenuesGate = new(1, 1);
+    private Dictionary<string, ProviderVenue?>? _eventVenues;
+
+    private static readonly System.Text.Json.JsonSerializerOptions SavedJson =
+        new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true };
 
     /// <summary>How many times a game's summary is asked for at one score before waiting for the score to change.</summary>
     private const int SummaryTries = 3;
@@ -41,6 +50,12 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             if (league.StartsWith("tennis/", StringComparison.Ordinal))
             {
                 games.AddRange(ToMatches(e, leagueKey));
+                continue;
+            }
+            if (league.StartsWith("racing/", StringComparison.Ordinal))
+            {
+                if (ToRace(e, leagueKey) is { } race)
+                    games.Add(race with { Venue = await EventVenueAsync(league, race.Id, cancellationToken) });
                 continue;
             }
             if (ToGame(e, leagueKey) is not { } game)
@@ -274,6 +289,106 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 EarlyEnding = ToEarlyEnding(match.Status?.Type, home!, away!),
             };
         }
+    }
+
+    /// <summary>
+    /// Racing: each event is one race, with one competition, among a field of drivers ranked by their
+    /// <c>order</c>; none are listed before it starts. Its period is the current lap, and its note the race's
+    /// name. The scoreboard gives no venue (see <see cref="EventVenueAsync"/>).
+    /// </summary>
+    private static ProviderGame? ToRace(Event e, string leagueKey)
+    {
+        var competition = e.Competitions?.FirstOrDefault();
+        if (e.Id is null || competition is null)
+            return null;
+        var status = e.Status ?? competition.Status;
+        var started = status?.Type?.State is "in" or "post";
+        var entries = (competition.Competitors ?? [])
+            .Where(c => c.Order is not null && !string.IsNullOrWhiteSpace(c.Athlete?.DisplayName))
+            .OrderBy(c => c.Order)
+            .Select(c => new ProviderEntrant(c.Order!.Value, c.Athlete!.DisplayName!.Trim(),
+                NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(), c.Athlete.Flag?.Href))
+            .ToList();
+        return new ProviderGame(
+            e.Id,
+            leagueKey,
+            e.Date ?? competition.Date ?? DateTimeOffset.MinValue,
+            new ProviderField(entries),
+            ToStatus(status?.Type),
+            null,
+            started ? status?.Period : null,
+            null,
+            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts))
+        {
+            Note = NullIfBlank(e.Name),
+        };
+    }
+
+    /// <summary>ESPN's core API, a second unofficial endpoint (ADR-0001, ADR-0020), on its own host.</summary>
+    private const string CoreApi = "https://sports.core.api.espn.com/v2/sports/";
+
+    /// <summary>
+    /// An event's venue, for a league whose scoreboard gives none: the core API's event lists its venues as
+    /// links, and the first gives its name and address. Asked for once per event, and every answer (no
+    /// venue too) saved to <c>savedEventVenuesPath</c>, so later runs don't ask again; a failed request
+    /// isn't saved, so it's asked again next time.
+    /// </summary>
+    private async Task<ProviderVenue?> EventVenueAsync(string league, string eventId, CancellationToken cancellationToken)
+    {
+        var key = $"{league}/{eventId}";
+        await _eventVenuesGate.WaitAsync(cancellationToken);
+        try
+        {
+            _eventVenues ??= await LoadEventVenuesAsync(cancellationToken);
+            if (_eventVenues.TryGetValue(key, out var known))
+                return known;
+            var (sport, name) = league.Split('/', 2) switch
+            {
+                [var s, var l] => (s, l),
+                _ => (league, ""),
+            };
+            var coreEvent = await http.GetFromJsonAsync<CoreEvent>($"{CoreApi}{sport}/leagues/{name}/events/{eventId}", cancellationToken);
+            ProviderVenue? venue = null;
+            if (coreEvent?.Venues?.FirstOrDefault()?.Ref is { } link)
+            {
+                // The core API links over plain http; it answers the same over https.
+                var https = new UriBuilder(link) { Scheme = Uri.UriSchemeHttps, Port = -1 }.Uri;
+                venue = ToVenue(await http.GetFromJsonAsync<Venue>(https, cancellationToken));
+            }
+            _eventVenues[key] = venue;
+            await SaveEventVenuesAsync(_eventVenues, cancellationToken);
+            return venue;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or UriFormatException
+            || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            return null;
+        }
+        finally
+        {
+            _eventVenuesGate.Release();
+        }
+    }
+
+    private async Task<Dictionary<string, ProviderVenue?>> LoadEventVenuesAsync(CancellationToken cancellationToken)
+    {
+        if (savedEventVenuesPath is null || !File.Exists(savedEventVenuesPath))
+            return new Dictionary<string, ProviderVenue?>();
+        await using var file = File.OpenRead(savedEventVenuesPath);
+        return await System.Text.Json.JsonSerializer.DeserializeAsync<Dictionary<string, ProviderVenue?>>(file, SavedJson, cancellationToken)
+            ?? new Dictionary<string, ProviderVenue?>();
+    }
+
+    /// <summary>Saves through a temp file, so a crash mid-write never leaves a half-written file.</summary>
+    private async Task SaveEventVenuesAsync(Dictionary<string, ProviderVenue?> saved, CancellationToken cancellationToken)
+    {
+        if (savedEventVenuesPath is null)
+            return;
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(savedEventVenuesPath))!);
+        var temp = savedEventVenuesPath + ".tmp";
+        await using (var file = File.Create(temp))
+            await System.Text.Json.JsonSerializer.SerializeAsync(file, saved, SavedJson, cancellationToken);
+        File.Move(temp, savedEventVenuesPath, overwrite: true);
     }
 
     /// <summary>
@@ -518,8 +633,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,
         Situation? Situation, List<Detail>? Details, List<Note>? Notes);
     private sealed record Note(string? Headline);
+    // Racing: a driver, with their running position (order), in place of a team.
     private sealed record Competitor(string? Id, string? HomeAway, Team? Team, string? Score, List<TeamRecord>? Records,
-        CuratedRank? CuratedRank);
+        CuratedRank? CuratedRank, int? Order, Player? Athlete);
     // Tennis: a tournament's matches, under its groupings.
     private sealed record EventGrouping(GroupingType? Grouping, List<Match>? Competitions);
     private sealed record GroupingType(string? Slug);
@@ -555,6 +671,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail, string? Description);
     private sealed record Venue(string? Id, string? FullName, Address? Address, string? Court);
     private sealed record Address(string? City, string? State, string? Country);
+    // The core API: an event, its venues as links.
+    private sealed record CoreEvent(List<CoreLink>? Venues);
+    private sealed record CoreLink([property: System.Text.Json.Serialization.JsonPropertyName("$ref")] string? Ref);
     private sealed record Broadcast(string? Market, List<string>? Names);
     private sealed record GeoBroadcast(GeoBroadcastType? Type, GeoMedia? Media, string? Region);
     private sealed record GeoBroadcastType(string? ShortName);

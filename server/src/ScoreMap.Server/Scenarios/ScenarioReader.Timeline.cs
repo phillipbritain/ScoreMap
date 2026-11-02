@@ -69,6 +69,8 @@ public static partial class ScenarioReader
         if (game.Status == ProviderStatus.Final && change.Status is { } status && status != ProviderStatus.Final)
             throw new InvalidDataException(
                 $"makes \"{game.Id}\" {entry.Status} when it is already Final; a Final game can't go back");
+        if (game.Contest is ProviderBouts)
+            throw new InvalidDataException($"changes \"{game.Id}\", but it is a fight card, which a timeline can't change yet");
         if (game.Contest is not ProviderSides && (change.HomeScore is not null || change.AwayScore is not null))
             throw new InvalidDataException($"gives \"{game.Id}\" a score, but it's a game among a field, which has none");
         if (game.Contest is ProviderSides sides && (change.HomeScore < sides.Home.Score || change.AwayScore < sides.Away.Score))

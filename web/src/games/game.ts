@@ -107,9 +107,9 @@ export interface KeyEvent {
 
 /**
  * Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
- * apart by its kind: two sides, or a field.
+ * apart by its kind: two sides, a field, or a fight card's bouts.
  */
-export type GameContest = GameSides | GameField
+export type GameContest = GameSides | GameField | GameBouts
 
 /** A game between two sides: the home side and the away side. */
 export interface GameSides {
@@ -142,6 +142,39 @@ export interface GameEntrant {
 /** An entrant's position as a leaderboard writes it: "2", or "T2" when they share it with another. */
 export function positionText({ position }: GameEntrant, { entries }: GameField): string {
   return entries.filter((other) => other.position === position).length > 1 ? `T${position}` : `${position}`
+}
+
+/** A fight card: its bouts, the main event first (the reverse of the order they're fought in). */
+export interface GameBouts {
+  kind: 'bouts'
+  bouts: GameBout[]
+}
+
+/**
+ * One bout on a fight card: its two sides, its weight class ("Lightweight"), how many rounds it's scheduled
+ * for, its status, the round it's in or ended in and the time into that round ("1:28"; each null before it
+ * starts), and once it's over how it was won ("KO/TKO", "Submission" or "Decision"; null for a draw or no
+ * contest, or when the feed doesn't say).
+ */
+export interface GameBout {
+  id: string
+  first: GameBoutSide
+  second: GameBoutSide
+  weightClass: string | null
+  scheduledRounds: number
+  status: GameStatus
+  round: number | null
+  clock: string | null
+  method: string | null
+}
+
+/** One of a bout's two sides: their name, short name ("R. Moicano"), country's flag, record ("21-7-1") and whether they won it. */
+export interface GameBoutSide {
+  name: string
+  shortName: string
+  flagUrl: string | null
+  record: string | null
+  winner: boolean
 }
 
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */

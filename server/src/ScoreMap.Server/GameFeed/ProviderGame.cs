@@ -53,7 +53,7 @@ public sealed record ProviderGame(
 
 /// <summary>
 /// Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020): two
-/// sides (<see cref="ProviderSides"/>) or a field (<see cref="ProviderField"/>).
+/// sides (<see cref="ProviderSides"/>), a field (<see cref="ProviderField"/>) or a fight card (<see cref="ProviderBouts"/>).
 /// </summary>
 public abstract record ProviderContest;
 
@@ -93,6 +93,69 @@ public sealed record ProviderField(IReadOnlyList<ProviderEntrant> Entries) : Pro
 /// (<see cref="Thru"/>, 0 before they start it); both null in racing.
 /// </summary>
 public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl, int? ToPar = null, int? Thru = null);
+
+/// <summary>
+/// A fight card: its bouts, the main event first (the reverse of the order they're fought in). Two fight
+/// cards are equal when their bouts are.
+/// </summary>
+public sealed record ProviderBouts(IReadOnlyList<ProviderBout> Bouts) : ProviderContest
+{
+    public bool Equals(ProviderBouts? other) => other is not null && Bouts.SequenceEqual(other.Bouts);
+
+    public override int GetHashCode() => Bouts.Aggregate(0, HashCode.Combine);
+
+    /// <summary>The bout being fought now; null before the card starts, between bouts and once it's over.</summary>
+    public ProviderBout? OnNow => Bouts.LastOrDefault(bout => bout.Status is ProviderStatus.InProgress or ProviderStatus.Delayed);
+
+    /// <summary>
+    /// The card's status, from its bouts': under way once any bout has started, and over once none is still to
+    /// come or under way. One with no bout started takes <paramref name="calledOff"/> when that is Postponed or
+    /// Canceled, so a card called off reads as one, and is otherwise still to come.
+    /// </summary>
+    public ProviderStatus Status(ProviderStatus calledOff = ProviderStatus.Scheduled)
+    {
+        if (!Bouts.Any(bout => bout.Status is ProviderStatus.InProgress or ProviderStatus.Delayed or ProviderStatus.Final))
+            return calledOff is ProviderStatus.Postponed or ProviderStatus.Canceled ? calledOff : ProviderStatus.Scheduled;
+        return Bouts.Any(bout => bout.Status is ProviderStatus.Scheduled or ProviderStatus.InProgress or ProviderStatus.Delayed)
+            ? ProviderStatus.InProgress
+            : ProviderStatus.Final;
+    }
+}
+
+/// <summary>
+/// One bout on a fight card: its two sides in the provider's order, its weight class ("Lightweight"), how
+/// many rounds it's scheduled for, its status, the round it's in or ended in and the time into that round
+/// (each null before it starts), and once it's over, how it was won (null for a draw or no contest, or
+/// when the provider doesn't say).
+/// </summary>
+public sealed record ProviderBout(
+    string Id,
+    ProviderBoutSide First,
+    ProviderBoutSide Second,
+    string? WeightClass,
+    int ScheduledRounds,
+    ProviderStatus Status,
+    int? Round = null,
+    string? Clock = null,
+    BoutMethod? Method = null);
+
+/// <summary>
+/// One of a bout's two sides: their name, short name ("R. Moicano"), their country's flag, their record
+/// ("21-7-1": wins, losses and draws) and whether they won it.
+/// </summary>
+public sealed record ProviderBoutSide(string Name, string ShortName, string? FlagUrl, string? Record, bool Winner = false);
+
+/// <summary>How a bout was won.</summary>
+public enum BoutMethod
+{
+    /// <summary>A knockout or technical knockout, a doctor's or corner's stoppage among them.</summary>
+    KnockOut,
+
+    Submission,
+
+    /// <summary>The judges' scorecards, after the scheduled rounds.</summary>
+    Decision,
+}
 
 /// <summary>
 /// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and

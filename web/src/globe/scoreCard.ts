@@ -1,5 +1,5 @@
 import { shownBout } from '../games/bouts'
-import type { Game, GameBoutSide, GameEntrant, GameStatus, GameTeam } from '../games/game'
+import { positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { isHexColor, mixColours, textOn } from '../theme/palette'
@@ -19,7 +19,7 @@ export interface ScoreCardRow {
 /**
  * What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst),
  * and a short clock line. A field shows its top two entrants by position ("1 K. Larson") with their flags
- * and no score, or before its field is listed, the game's name (its note) on top. A fight card shows the
+ * and in golf their scores to par, or before its field is listed, the game's name (its note) on top. A fight card shows the
  * bout on now, else its main event (see shownBout), as two sides with their flags, the winner marked "W".
  */
 export interface ScoreCard {
@@ -73,7 +73,7 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
   }
   const blank: ScoreCardRow = { label: '', logoUrl: null, score: '' }
   if (contest.entries.length === 0) return [{ ...blank, label: note ?? '' }, blank]
-  const [first, second] = contest.entries.map(cardEntrant)
+  const [first, second] = contest.entries.map((entrant) => cardEntrant(entrant, contest))
   return [first, second ?? blank]
 }
 
@@ -85,6 +85,6 @@ function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRo
   return { label: shortName, logoUrl: flagUrl, score: winner ? 'W' : '' }
 }
 
-function cardEntrant({ position, shortName, flagUrl }: GameEntrant): ScoreCardRow {
-  return { label: `${position} ${shortName}`, logoUrl: flagUrl, score: '' }
+function cardEntrant(entrant: GameEntrant, field: GameField): ScoreCardRow {
+  return { label: `${positionText(entrant, field)} ${entrant.shortName}`, logoUrl: entrant.flagUrl, score: entrant.score ?? '' }
 }

@@ -118,18 +118,30 @@ export interface GameSides {
   away: GameTeam
 }
 
-/** A game among a field, such as a race: its entrants ordered by position, the leader first; none before the feed lists them. */
+/**
+ * A game among a field, such as a race or a golf tournament: its entrants ordered by position, the leader
+ * first; none before the feed lists them.
+ */
 export interface GameField {
   kind: 'field'
   entries: GameEntrant[]
 }
 
-/** One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag. */
+/**
+ * One of a field: their position (1 for the leader, shared by those tied on score), name, short name
+ * ("K. Larson") and their country's flag. In golf, their score to par ("-12", "E", "+3"); null in racing.
+ */
 export interface GameEntrant {
   position: number
   name: string
   shortName: string
   flagUrl: string | null
+  score: string | null
+}
+
+/** An entrant's position as a leaderboard writes it: "2", or "T2" when they share it with another. */
+export function positionText({ position }: GameEntrant, { entries }: GameField): string {
+  return entries.filter((other) => other.position === position).length > 1 ? `T${position}` : `${position}`
 }
 
 /** A fight card: its bouts, the main event first (the reverse of the order they're fought in). */

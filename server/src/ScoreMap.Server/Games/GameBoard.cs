@@ -196,7 +196,8 @@ public sealed class GameBoard(
     {
         ProviderSides sides => new GameSides(ToTeam(sides.Home), ToTeam(sides.Away)),
         ProviderField field => new GameField(field.Entries
-            .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl)).ToList()),
+            .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl, ToParText(entrant.ToPar)))
+            .ToList()),
         ProviderBouts card => new GameBouts(card.Bouts.Select(ToBout).ToList()),
         _ => throw new ArgumentOutOfRangeException(nameof(contest), contest, "No such contest"),
     };
@@ -209,6 +210,15 @@ public sealed class GameBoard(
 
     private static GameTeam ToTeam(ProviderTeam team) =>
         new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record);
+
+    /// <summary>A score to par as golf writes it: "-12", "E" (level) or "+3".</summary>
+    private static string? ToParText(int? toPar) => toPar switch
+    {
+        null => null,
+        0 => "E",
+        > 0 => $"+{toPar}",
+        _ => toPar.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
+    };
 
     /// <summary>The team's score as its sport writes it: "24", or in cricket "186/6", or "127" all out.</summary>
     private static string? ScoreText(ProviderTeam team) => (team.Score, team.Innings?.Wickets) switch

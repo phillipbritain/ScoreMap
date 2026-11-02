@@ -52,9 +52,10 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 games.AddRange(ToMatches(e, leagueKey));
                 continue;
             }
-            if (league.StartsWith("racing/", StringComparison.Ordinal))
+            var golf = league.StartsWith("golf/", StringComparison.Ordinal);
+            if (golf || league.StartsWith("racing/", StringComparison.Ordinal))
             {
-                if (ToFieldGame(e, leagueKey) is { } fieldGame)
+                if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is { } fieldGame)
                     games.Add(fieldGame.Venue is null
                         ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
                         : fieldGame);
@@ -409,12 +410,78 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             _ => null,
         };
 
+    /// <summary>
+    /// Golf: each event is one game, its tournament, with one competition. Its field is ranked by
+    /// <c>order</c>, which ESPN keeps unique even for ties, so golfers level on score to par share a position
+    /// (see <see cref="ProviderField.TiedByScore"/>). Its period is the current round, and the holes each golfer
+    /// has played of it are the hole scores in their linescore for that round. Play is between rounds once no
+    /// one is part-way through one (see <see cref="Rounds"/>). Its scoreboard gives no venue (see
+    /// <see cref="EventVenueAsync"/>).
+    /// </summary>
+    private static ProviderGame? ToTournament(Event e, string leagueKey)
+    {
+        if (e.Id is null || e.Competitions?.FirstOrDefault() is not { } competition)
+            return null;
+        var status = competition.Status ?? e.Status;
+        var started = status?.Type?.State is "in" or "post";
+        var round = started ? status?.Period : null;
+        var golfers = (competition.Competitors ?? [])
+            .Where(c => c.Order is not null && !string.IsNullOrWhiteSpace(c.Athlete?.DisplayName))
+            .OrderBy(c => c.Order)
+            .Select(c => new ProviderEntrant(0, c.Athlete!.DisplayName!.Trim(),
+                NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(), c.Athlete.Flag?.Href,
+                ToPar(c.Score), round is { } r ? HolesPlayed(c, r) : null))
+            .ToList();
+        var (period, phase) = status?.Type?.State == "in" && round is { } current
+            ? Rounds(current, golfers)
+            : (round, ProviderPeriodPhase.Playing);
+        return new ProviderGame(
+            e.Id,
+            leagueKey,
+            competition.Date ?? e.Date ?? DateTimeOffset.MinValue,
+            ProviderField.TiedByScore(golfers),
+            ToStatus(status?.Type),
+            null,
+            period,
+            null,
+            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts),
+            phase)
+        {
+            Note = NullIfBlank(e.Name),
+        };
+    }
+
+    /// <summary>A score to par as golf writes it ("-12", "E", "+3"); null for anything else.</summary>
+    private static int? ToPar(string? score) =>
+        score?.Trim() == "E" ? 0 : int.TryParse(score, System.Globalization.NumberStyles.AllowLeadingSign, null, out var toPar) ? toPar : null;
+
+    /// <summary>The holes a golfer has played of a round: the hole scores in their linescore for it.</summary>
+    private static int HolesPlayed(Competitor golfer, int round) =>
+        golfer.Linescores?.FirstOrDefault(l => l.Period == round)?.Linescores?.Count ?? 0;
+
+    /// <summary>
+    /// ESPN's round and whether play is between rounds, which it doesn't say (ADR-0020): it is once some
+    /// golfers have played the round and none is part-way through it, or, from round 2, before anyone has
+    /// begun it, when it's after the round before.
+    /// </summary>
+    private static (int Round, ProviderPeriodPhase Phase) Rounds(int round, List<ProviderEntrant> golfers)
+    {
+        if (golfers.Any(g => g.Thru is > 0 and < HolesInARound))
+            return (round, ProviderPeriodPhase.Playing);
+        if (golfers.Any(g => g.Thru == HolesInARound))
+            return (round, ProviderPeriodPhase.Break);
+        return round > 1 ? (round - 1, ProviderPeriodPhase.Break) : (round, ProviderPeriodPhase.Playing);
+    }
+
+    private const int HolesInARound = 18;
+
     /// <summary>ESPN's core API, a second unofficial endpoint (ADR-0001, ADR-0020), on its own host.</summary>
     private const string CoreApi = "https://sports.core.api.espn.com/v2/sports/";
 
     /// <summary>
-    /// An event's venue, for a league whose scoreboard gives none: the core API's event lists its venues as
-    /// links, and the first gives its name and address. Asked for once per event, and every answer (no
+    /// An event's venue, for a league whose scoreboard gives none: golf's core API event lists its courses,
+    /// and the first gives the venue's name and address; any other's lists its venues as links, and the
+    /// first gives its name and address. Asked for once per event, and every answer (no
     /// venue too) saved to <c>savedEventVenuesPath</c>, so later runs don't ask again; a failed request
     /// isn't saved, so it's asked again next time.
     /// </summary>
@@ -434,7 +501,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             };
             var coreEvent = await http.GetFromJsonAsync<CoreEvent>($"{CoreApi}{sport}/leagues/{name}/events/{eventId}", cancellationToken);
             ProviderVenue? venue = null;
-            if (coreEvent?.Venues?.FirstOrDefault()?.Ref is { } link)
+            if (coreEvent?.Courses?.FirstOrDefault() is { Name: { } course } first && !string.IsNullOrWhiteSpace(course))
+                venue = ToVenue(new Venue(first.Id, course.Trim(), first.Address, null));
+            else if (coreEvent?.Venues?.FirstOrDefault()?.Ref is { } link)
             {
                 // The core API links over plain http; it answers the same over https.
                 var https = new UriBuilder(link) { Scheme = Uri.UriSchemeHttps, Port = -1 }.Uri;
@@ -742,8 +811,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Regulation(int? Periods);
     // Racing: a driver, with their running position (order), in place of a team. MMA: a bout's side, in its
     // corner's order, with whether they won (cricket writes it as text, "true").
+    // Golf: a golfer, with a linescore per round, each listing the holes played of it.
     private sealed record Competitor(string? Id, string? HomeAway, Team? Team, string? Score, List<TeamRecord>? Records,
-        CuratedRank? CuratedRank, int? Order, Player? Athlete, System.Text.Json.JsonElement? Winner)
+        CuratedRank? CuratedRank, int? Order, Player? Athlete, System.Text.Json.JsonElement? Winner, List<Linescore>? Linescores)
     {
         public bool Won => Winner is { ValueKind: System.Text.Json.JsonValueKind.True }
             || Winner is { ValueKind: System.Text.Json.JsonValueKind.String } text && text.GetString() == "true";
@@ -757,7 +827,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record MatchSide(string? HomeAway, Player? Athlete, List<Linescore>? Linescores, bool? Winner);
     private sealed record Player(string? DisplayName, string? ShortName, Flag? Flag);
     private sealed record Flag(string? Href);
-    private sealed record Linescore(double? Value, int? Tiebreak, bool? Winner);
+    private sealed record Linescore(double? Value, int? Tiebreak, bool? Winner, int? Period, List<Linescore>? Linescores);
     private sealed record TeamRecord(string? Type, string? Summary);
     private sealed record CuratedRank(int? Current);
     private sealed record Odds(string? Details, double? OverUnder, OddsProvider? Provider);
@@ -785,8 +855,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail, string? Description);
     private sealed record Venue(string? Id, string? FullName, Address? Address, string? Court);
     private sealed record Address(string? City, string? State, string? Country);
-    // The core API: an event, its venues as links.
-    private sealed record CoreEvent(List<CoreLink>? Venues);
+    // The core API: an event, its venues as links, and in golf its courses.
+    private sealed record CoreEvent(List<CoreLink>? Venues, List<CoreCourse>? Courses);
+    private sealed record CoreCourse(string? Id, string? Name, Address? Address);
     private sealed record CoreLink([property: System.Text.Json.Serialization.JsonPropertyName("$ref")] string? Ref);
     private sealed record Broadcast(string? Market, List<string>? Names);
     private sealed record GeoBroadcast(GeoBroadcastType? Type, GeoMedia? Media, string? Region);

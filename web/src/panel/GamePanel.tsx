@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
-import type { Game, GameBout, GameBoutSide, GameEntrant, GameField, GameTeam, PhotoCredit } from '../games/game'
+import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam, type PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
@@ -216,8 +216,8 @@ function TeamRow({ team }: { team: GameTeam }) {
 }
 
 /**
- * A field's top two entrants by position, as its score card shows them, with no score; before its field
- * is listed, the game's name.
+ * A field's top two entrants by position, as its score card shows them, a tie marked ("T2"), with golf's
+ * score to par; before its field is listed, the game's name.
  */
 function FieldRows({ field, name }: { field: GameField; name: string | null }) {
   if (field.entries.length === 0) return (
@@ -228,15 +228,19 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
         </span>
       </div>
     )
-  return field.entries.slice(0, 2).map((entrant) => (
-    <div key={entrant.name} className="game-panel__team">
-      {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" data-tooltip={`${entrant.position} ${entrant.name}`} data-tooltip-when-clipped>
-        <span className="game-panel__rank">{entrant.position} </span>
-        {entrant.name}
-      </span>
-    </div>
-  ))
+  return field.entries.slice(0, 2).map((entrant) => {
+    const position = positionText(entrant, field)
+    return (
+      <div key={entrant.name} className="game-panel__team">
+        {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
+        <span className="game-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
+          <span className="game-panel__rank">{position} </span>
+          {entrant.name}
+        </span>
+        {entrant.score !== null && <span className="game-panel__team-score">{entrant.score}</span>}
+      </div>
+    )
+  })
 }
 
 /**
@@ -268,7 +272,8 @@ const leaderboardLength = 10
  */
 function GameBand({ game }: { game: Game }) {
   const { lastScore, scoreline, contest } = game
-  const entries = contest.kind === 'field' ? contest.entries : []
+  const field: GameField = contest.kind === 'field' ? contest : { kind: 'field', entries: [] }
+  const { entries } = field
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
   // Which game the viewer asked to see the whole field of, so selecting another shows its top 10 again.
   const [shownAllOf, setShownAllOf] = useState<string | null>(null)
@@ -282,7 +287,7 @@ function GameBand({ game }: { game: Game }) {
         <BandCell label="Leaderboard" wide>
           <ol className="game-panel__field">
             {entries.slice(0, showAll ? entries.length : leaderboardLength).map((entrant) => (
-              <Entrant key={entrant.name} entrant={entrant} />
+              <Entrant key={entrant.name} entrant={entrant} field={field} />
             ))}
             {entries.length > leaderboardLength && (
               <li>
@@ -352,11 +357,15 @@ function GameBand({ game }: { game: Game }) {
   )
 }
 
-/** One of a field on its leaderboard: their position and short name, their full name on hover. */
-function Entrant({ entrant }: { entrant: GameEntrant }) {
+/**
+ * One of a field on its leaderboard: their position ("T2" when tied), short name and in golf their score
+ * to par, their full name on hover.
+ */
+function Entrant({ entrant, field }: { entrant: GameEntrant; field: GameField }) {
   return (
     <li className="game-panel__entrant" data-tooltip={entrant.name}>
-      <span className="game-panel__rank">{entrant.position}</span> {entrant.shortName}
+      <span className="game-panel__rank">{positionText(entrant, field)}</span> {entrant.shortName}
+      {entrant.score !== null && <span className="game-panel__strong"> {entrant.score}</span>}
     </li>
   )
 }

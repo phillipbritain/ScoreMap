@@ -19,6 +19,7 @@ public enum Sport
     Cricket,
     Tennis,
     Racing,
+    Golf,
 
     /// <summary>Mixed martial arts, configured and shown as "MMA".</summary>
     Mma,
@@ -46,6 +47,8 @@ public static class Sports
         [Sport.Tennis] = ("Tennis", new(RegulationPeriods: 3, PeriodMinutes: null)),
         // A race is run in laps, with no periods; its period is the current lap.
         [Sport.Racing] = ("Racing", new(RegulationPeriods: 1, PeriodMinutes: null)),
+        // A tournament is played over four rounds, its period the current round.
+        [Sport.Golf] = ("Golf", new(RegulationPeriods: 4, PeriodMinutes: null)),
         // A game is a fight card of bouts, each 3 rounds of 5 minutes, or 5 for a main event, which each bout carries itself.
         [Sport.Mma] = ("MMA", new(RegulationPeriods: 3, PeriodMinutes: 5)),
     };

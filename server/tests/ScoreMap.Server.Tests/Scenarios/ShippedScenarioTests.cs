@@ -262,8 +262,11 @@ public class ShippedScenarioTests
         for (var elapsed = TimeSpan.Zero; elapsed < within; elapsed += step)
         {
             server.Clock.Advance(realStep);
-            await Task.Delay(10);
-            changes.AddRange(client.PendingChanges());
+            // Waits for the step's fetches to send their changes (there are nearly always some, as clocks run)
+            // and then go quiet, so the clock never runs on ahead of the poller, and a game can't finish and
+            // drop out between two fetches of its league.
+            for (var wait = TimeSpan.FromMilliseconds(500); await client.ChangeArrivedAsync(wait); wait = TimeSpan.FromMilliseconds(25))
+                changes.AddRange(client.PendingChanges());
             if (changes.Any(wanted))
                 return changes;
         }

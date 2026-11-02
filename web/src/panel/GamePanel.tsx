@@ -261,9 +261,6 @@ const sideWithRecord = ({ name, record }: GameBoutSide): string => (record ? `${
 /** How many of a field the band lists until the viewer asks for all of it. */
 const leaderboardLength = 10
 
-/** How many of a fight card's bouts the band lists, main event first, until the viewer asks for all of them. */
-const boutsLength = 3
-
 /**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
  * minute), or in tennis the scoreline set by set, or for a field its leaderboard, or for a fight card its
@@ -273,14 +270,14 @@ function GameBand({ game }: { game: Game }) {
   const { lastScore, scoreline, contest } = game
   const entries = contest.kind === 'field' ? contest.entries : []
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
-  // Which game the viewer asked to see the whole field or card of, so selecting another shows its first few again.
+  // Which game the viewer asked to see the whole field of, so selecting another shows its top 10 again.
   const [shownAllOf, setShownAllOf] = useState<string | null>(null)
   const showAll = shownAllOf === game.id
   const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
   const odds = game.odds && oddsLine(game.odds)
   const empty = !lastScore && !scoreline && entries.length === 0 && bouts.length === 0 && !odds && game.attendance === null
   return (
-    <div className={showAll ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
+    <div className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {entries.length > 0 && (
         <BandCell label="Leaderboard" wide>
           <ol className="game-panel__field">
@@ -300,16 +297,9 @@ function GameBand({ game }: { game: Game }) {
       {bouts.length > 0 && (
         <BandCell label="Fight card" wide>
           <ol className="game-panel__bouts">
-            {bouts.slice(0, showAll ? bouts.length : boutsLength).map((bout) => (
+            {bouts.map((bout) => (
               <Bout key={bout.id} bout={bout} />
             ))}
-            {bouts.length > boutsLength && (
-              <li>
-                <button type="button" className="game-panel__show-all" onClick={toggleShowAll}>
-                  {showAll ? 'Show fewer' : `Show all ${bouts.length}`}
-                </button>
-              </li>
-            )}
           </ol>
         </BandCell>
       )}

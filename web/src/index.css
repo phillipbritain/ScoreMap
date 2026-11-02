@@ -477,7 +477,7 @@ body {
 }
 
 /* A field's leaderboard, or a fight card's bouts: side by side in order, wrapping onto the band's next
-   line, then the button to show them all. Shown whole, the band grows and scrolls. */
+   line. A field has a button to show all; a fight card always lists every bout. Shown whole, the band grows and scrolls. */
 .game-panel__field,
 .game-panel__bouts {
   display: flex;

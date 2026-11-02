@@ -170,7 +170,7 @@ describe('scoreCard for a fight card', () => {
     })
   })
 
-  it('shows the main event before the card starts', () => {
+  it('shows the main event and the card start time in the viewer’s time zone before it starts', () => {
     const upcoming: Game = {
       ...ufc309,
       status: 'Upcoming',
@@ -178,7 +178,11 @@ describe('scoreCard for a fight card', () => {
       contest: { kind: 'bouts', bouts: [main, { ...coMain, status: 'Upcoming', round: null }] },
     }
 
-    expect(scoreCard(upcoming, false)).toMatchObject({ top: { label: 'J. Jones' }, bottom: { label: 'S. Miocic' }, clockLine: '' })
+    expect(scoreCard(upcoming, false)).toMatchObject({
+      top: { label: 'J. Jones' },
+      bottom: { label: 'S. Miocic' },
+      clockLine: new Date(upcoming.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+    })
   })
 
   it("shows the main event's winner once the card is over", () => {

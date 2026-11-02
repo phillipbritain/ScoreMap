@@ -26,8 +26,9 @@ function scoreChanged(was: GameContest, now: GameContest): boolean {
     return was.home.score !== now.home.score || was.away.score !== now.away.score
   }
   if (was.kind === 'field' && now.kind === 'field') {
-    const [leader, newLeader] = [soleLeader(was), soleLeader(now)]
-    return leader !== null && newLeader !== null && leader.name !== newLeader.name
+    // Someone leads alone who didn't before, from another leading alone or from a tie for the lead.
+    const newLeader = soleLeader(now)
+    return was.entries.length > 0 && newLeader !== null && soleLeader(was)?.name !== newLeader.name
   }
   if (was.kind === 'bouts' && now.kind === 'bouts') {
     const finished = finishedBouts(was)

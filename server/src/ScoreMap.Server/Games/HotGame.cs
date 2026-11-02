@@ -6,7 +6,7 @@ namespace ScoreMap.Server.Games;
 /// Whether a game is hot (see GLOSSARY.md): Live, the trailing side one score from tying or taking the
 /// lead, and little left to play, judged by each sport's own rule from the score and what's left (never
 /// win probability). In basketball it's exactly clutch time. A fight card is hot while its main event is in
-/// its last scheduled round; a race never is. Browsers show flames on a hot game, if the viewer has them on.
+/// its last scheduled round; golf is hot late in a close final round; a race never is. Browsers show flames on a hot game, if the viewer has them on.
 /// </summary>
 public static class HotGame
 {
@@ -16,8 +16,11 @@ public static class HotGame
             return false;
         if (game.Contest is ProviderBouts card)
             return card.Bouts.FirstOrDefault() is { } main && card.OnNow == main && main.Round == main.ScheduledRounds;
-        if (game.Period is not { } period
-            || game.Contest is not ProviderSides sides)
+        if (game.Period is not { } period)
+            return false;
+        if (game.Contest is ProviderField field)
+            return league.Sport == Sport.Golf && Golf(game, field, period, league.Regulation);
+        if (game.Contest is not ProviderSides sides)
             return false;
 
         return league.Sport switch
@@ -78,6 +81,15 @@ public static class HotGame
         var runners = new[] { situation?.OnFirst, situation?.OnSecond, situation?.OnThird }.Count(on => on == true);
         return against - runs is var behind && behind >= 0 && behind <= runners + 1;
     }
+
+    /// <summary>
+    /// The final round, once the leader has played 9 holes or more, leading by no more than 1 shot (level
+    /// counts). Not between rounds.
+    /// </summary>
+    private static bool Golf(ProviderGame game, ProviderField field, int round, int regulation) =>
+        round >= regulation && game.Phase != ProviderPeriodPhase.Break
+        && field.Entries is [{ Thru: >= 9, ToPar: { } leader }, { ToPar: { } second }, ..]
+        && second - leader <= 1;
 
     private const int BallsPerOver = 6;
 

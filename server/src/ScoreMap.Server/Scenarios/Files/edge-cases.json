@@ -9,6 +9,8 @@
 // - An F1 race under way, its whole field listed (the Miami Grand Prix is run around Hard Rock Stadium).
 // - A UFC fight card under way, written out in full, main event first: the main event in its 2nd round,
 //   each bout before it won one of the three ways, and the opener a draw, with no winner or method.
+// - A golf tournament in its final round, hot, with golfers tied for 2nd and level par, scores to par and
+//   the leader's holes (Brookside, beside the Rose Bowl, stands in for its course).
 {
   "games": [
     {
@@ -141,6 +143,32 @@
       "startsIn": "-1h05m",
       "status": "live",
       "period": 42
+    },
+    {
+      "id": "edge-golf-final-round",
+      "league": "PGA Tour",
+      "note": "Arroyo Seco Invitational",
+      "field": [
+        { "name": "Scottie Scheffler", "shortName": "S. Scheffler", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "score": -15, "thru": 12 },
+        { "name": "Rory McIlroy", "shortName": "R. McIlroy", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/nir.png", "score": -14, "thru": 14 },
+        { "name": "Ludvig Åberg", "shortName": "L. Åberg", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png", "score": -14, "thru": 13 },
+        { "name": "Xander Schauffele", "shortName": "X. Schauffele", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "score": -12, "thru": 15 },
+        { "name": "Hideki Matsuyama", "shortName": "H. Matsuyama", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png", "score": -11, "thru": 16 },
+        { "name": "Tommy Fleetwood", "shortName": "T. Fleetwood", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png", "score": -11, "thru": 14 },
+        { "name": "Collin Morikawa", "shortName": "C. Morikawa", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "score": -11, "thru": 17 },
+        { "name": "Jon Rahm", "shortName": "J. Rahm", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png", "score": -10, "thru": 18 },
+        { "name": "Viktor Hovland", "shortName": "V. Hovland", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/nor.png", "score": -9, "thru": 18 },
+        { "name": "Sungjae Im", "shortName": "S. Im", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/kor.png", "score": -8, "thru": 16 },
+        { "name": "Min Woo Lee", "shortName": "M. W. Lee", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png", "score": -8, "thru": 18 },
+        { "name": "Shane Lowry", "shortName": "S. Lowry", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/irl.png", "score": -6, "thru": 18 },
+        { "name": "Corey Conners", "shortName": "C. Conners", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/can.png", "score": -4, "thru": 18 },
+        { "name": "Adam Scott", "shortName": "A. Scott", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png", "score": 0, "thru": 18 },
+        { "name": "Joaquín Niemann", "shortName": "J. Niemann", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/chi.png", "score": 2, "thru": 18 }
+      ],
+      "venue": { "name": "Rose Bowl", "city": "Pasadena" },
+      "startsIn": "-78h",
+      "status": "live",
+      "period": 4
     },
     {
       "id": "edge-ufc-under-way",

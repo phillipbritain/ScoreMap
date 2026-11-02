@@ -25,6 +25,7 @@ public static class ClockLine
             Sport.Cricket => Innings(game, period),
             Sport.Tennis => Sets(game, period),
             Sport.Racing => game.Status == ProviderStatus.Final ? "Final" : $"Lap {period}",
+            Sport.Golf => Rounds(game, period),
             _ => throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport"),
         };
     }
@@ -155,6 +156,21 @@ public static class ClockLine
         BoutMethod.Decision => "Decision",
         _ => null,
     };
+
+    /// <summary>
+    /// Golf has no clock: the round and the holes the leader has played of it, "R2 · Thru 14" ("R1" before
+    /// they tee off), "After R2" between rounds, "Final".
+    /// </summary>
+    private static string Rounds(ProviderGame game, int round)
+    {
+        if (game.Status == ProviderStatus.Final)
+            return "Final";
+        if (game.Phase == ProviderPeriodPhase.Break)
+            return $"After R{round}";
+        return game.Contest is ProviderField { Entries: [{ Thru: > 0 and var thru }, ..] }
+            ? $"R{round} · Thru {thru}"
+            : $"R{round}";
+    }
 
     /// <summary>"1st", "2nd", "3rd", "4th"…</summary>
     internal static string Ordinal(int n) => (n % 100, n % 10) switch

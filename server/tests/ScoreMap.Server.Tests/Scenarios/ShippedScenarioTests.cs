@@ -271,6 +271,23 @@ public class ShippedScenarioTests
     }
 
     [Fact]
+    public async Task Edge_cases_show_a_golf_tournament_hot_in_its_final_round_with_scores_to_par_and_ties()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "edge-cases");
+        var tournament = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "PGA Tour");
+
+        Assert.Equal((GameStatus.Live, "Golf", "R4 · Thru 12", true), (tournament.Status, tournament.Sport, tournament.Clock, tournament.Hot));
+        var field = Assert.IsType<GameField>(tournament.Contest);
+        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's top 10");
+        Assert.Equal([(1, "-15"), (2, "-14"), (2, "-14")], field.Entries.Take(3).Select(entrant => (entrant.Position, entrant.Score)));
+        Assert.Contains(field.Entries, entrant => entrant.Score == "E");
+        Assert.Equal("Rose Bowl", tournament.Venue.Name);
+    }
+
+
+    [Fact]
     public async Task Edge_cases_show_a_UFC_fight_card_under_way_with_every_bout_main_event_first()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };

@@ -14,17 +14,17 @@ public class ScenarioTeamListTests
             File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-teams.json")), Json)!;
 
     // The leagues ScoreMap shows, from appsettings.json.
-    // Scenarios don't play tennis yet, and a race has a field and a fight card bouts, not two teams, so
+    // Scenarios don't play tennis yet, and a race or golf tournament has a field and a fight card bouts, not two teams, so
     // their leagues have no teams listed and fills leave them out.
     private static readonly List<string> ConfiguredLeagues = JsonDocument
         .Parse(File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "appsettings.json")))
         .RootElement.GetProperty("Leagues").EnumerateArray()
-        .Where(league => league.GetProperty("Sport").GetString() is not ("Tennis" or "Racing" or "MMA"))
+        .Where(league => league.GetProperty("Sport").GetString() is not ("Tennis" or "Racing" or "Golf" or "MMA"))
         .Select(league => league.GetProperty("Name").GetString()!)
         .ToList();
 
     [Fact]
-    public void Every_configured_league_but_tennis_racing_and_MMA_has_its_teams_and_the_list_has_no_other_league()
+    public void Every_configured_league_but_tennis_racing_golf_and_MMA_has_its_teams_and_the_list_has_no_other_league()
     {
         Assert.Equal(ConfiguredLeagues.Order(), Teams.Keys.Order());
         Assert.All(Teams, league => Assert.True(league.Value.Count >= 10, $"{league.Key} has {league.Value.Count} teams"));

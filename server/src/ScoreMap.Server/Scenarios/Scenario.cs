@@ -58,7 +58,7 @@ public sealed record Scenario(
 /// One made-up game in a scenario. <see cref="StartsIn"/> is its start relative to when the scenario
 /// started (negative for a game already under way). <see cref="Situation"/> is where play stands, if
 /// the scenario says (in baseball, the runners on base); it stays as written while the game plays.
-/// Its <see cref="Contest"/> is two sides, or written out in full, a race's field or a fight card's bouts; play and fill make
+/// Its <see cref="Contest"/> is two sides, or written out in full, a race's or golf tournament's field or a fight card's bouts; play and fill make
 /// only games between two sides.
 /// </summary>
 public sealed record ScenarioGame(

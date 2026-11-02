@@ -4,7 +4,7 @@ ScoreMap was built for games between two sides, but motor racing and golf are co
 
 What one game is follows what counts as a result. An F1 weekend is one game, its race: practice doesn't count and qualifying only sets the grid, so ESPN's FP1–FP3 and Qualifying competitions are left out, and NASCAR and F1 are alike one game per event. A golf tournament is one game, Live for all four days, its nights between rounds being breaks as halftime is, rather than one game a round (no one follows a round on its own) or a new between-rounds status. A UFC card is one game, not one a bout: ESPN gives each bout only the start time of its part of the card (every prelim one time, every main-card bout another), so bouts as games would go Live in batches and sit Live for hours, twelve pins on one venue.
 
-Checked against ESPN responses saved in `server/tests/ScoreMap.Server.Tests/Fixtures/Espn/` in October 2026: NASCAR at Talladega (`nascar-final.json`) and Martinsville before it started (`nascar.json`), the Mexico City Grand Prix during FP2 (`f1.json`), the Mexico Open during round 2 (`golf-pga.json`), a UFC Fight Night (`ufc.json`), and the core API's NASCAR event and venue and golf event (`*-core-*.json`).
+Checked against ESPN responses saved in `server/tests/ScoreMap.Server.Tests/Fixtures/Espn/` in October 2026: NASCAR at Talladega (`nascar-final.json`) and Martinsville before it started (`nascar.json`), the Mexico City Grand Prix during FP2 (`f1.json`), the Mexico Open during round 2 (`golf-pga.json`), a UFC Fight Night before it started and once it was over (`ufc.json`, `ufc-final.json`), and the core API's NASCAR event and venue and golf event (`*-core-*.json`).
 
 ## Consequences
 

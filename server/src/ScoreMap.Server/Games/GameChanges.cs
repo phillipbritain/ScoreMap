@@ -37,12 +37,14 @@ internal static class GameChanges
 
     /// <summary>
     /// Two sides' score changes when either side's does; a field's when the lead changes hands from one
-    /// entrant leading alone to another (ADR-0020).
+    /// entrant leading alone to another; a fight card's when a bout finishes (ADR-0020).
     /// </summary>
     private static bool ScoreChanged(GameContest before, GameContest after) => (before, after) switch
     {
         (GameSides b, GameSides a) => b.Home.Score != a.Home.Score || b.Away.Score != a.Away.Score,
         (GameField b, GameField a) => Leader(b) is { } was && Leader(a) is { } now && was.Name != now.Name,
+        (GameBouts b, GameBouts a) => a.Bouts.Any(bout => bout.Status == GameStatus.Final
+            && b.Bouts.FirstOrDefault(old => old.Id == bout.Id)?.Status is not GameStatus.Final),
         _ => throw new ArgumentOutOfRangeException(nameof(after), after, "No score change for this contest"),
     };
 

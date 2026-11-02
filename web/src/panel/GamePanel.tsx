@@ -1,5 +1,6 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import type { Game, GameEntrant, GameField, GameTeam, PhotoCredit } from '../games/game'
+import { boutLine, shownBout } from '../games/bouts'
+import type { Game, GameBout, GameBoutSide, GameEntrant, GameField, GameTeam, PhotoCredit } from '../games/game'
 import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
@@ -68,11 +69,9 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
             <span className="game-panel__league-sport">{game.sport} · </span>
             {league}
           </div>
-          {contest.kind === 'sides' ? (
-            sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)
-          ) : (
-            <FieldRows field={contest} name={game.note} />
-          )}
+          {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)}
+          {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
+          {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
           {progress && (
             <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
               {progress}
@@ -240,22 +239,46 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
   ))
 }
 
+/**
+ * A fight card's bout on now, else its main event, as its score card shows it: each side's flag, name and
+ * record, the winner marked "W".
+ */
+function BoutRows({ bout }: { bout: GameBout }) {
+  return [bout.first, bout.second].map((side) => (
+    <div key={side.name} className="game-panel__team">
+      {side.flagUrl ? <img src={side.flagUrl} alt="" /> : <span className="game-panel__logo" />}
+      <span className="game-panel__team-name" data-tooltip={sideWithRecord(side)} data-tooltip-when-clipped>
+        {side.name}
+      </span>
+      {side.record && <span className="game-panel__record">{side.record}</span>}
+      <span className="game-panel__team-score">{side.winner ? 'W' : ''}</span>
+    </div>
+  ))
+}
+
+const sideWithRecord = ({ name, record }: GameBoutSide): string => (record ? `${name} (${record})` : name)
+
 /** How many of a field the band lists until the viewer asks for all of it. */
 const leaderboardLength = 10
 
+/** How many of a fight card's bouts the band lists, main event first, until the viewer asks for all of them. */
+const boutsLength = 3
+
 /**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
- * minute), or in tennis the scoreline set by set, or for a field its leaderboard, the betting line and
- * the crowd, each with its label.
+ * minute), or in tennis the scoreline set by set, or for a field its leaderboard, or for a fight card its
+ * bouts, the betting line and the crowd, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
   const { lastScore, scoreline, contest } = game
   const entries = contest.kind === 'field' ? contest.entries : []
-  // Which game the viewer asked to see the whole field of, so selecting another shows its top 10 again.
+  const bouts = contest.kind === 'bouts' ? contest.bouts : []
+  // Which game the viewer asked to see the whole field or card of, so selecting another shows its first few again.
   const [shownAllOf, setShownAllOf] = useState<string | null>(null)
   const showAll = shownAllOf === game.id
+  const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
   const odds = game.odds && oddsLine(game.odds)
-  const empty = !lastScore && !scoreline && entries.length === 0 && !odds && game.attendance === null
+  const empty = !lastScore && !scoreline && entries.length === 0 && bouts.length === 0 && !odds && game.attendance === null
   return (
     <div className={showAll ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {entries.length > 0 && (
@@ -266,8 +289,24 @@ function GameBand({ game }: { game: Game }) {
             ))}
             {entries.length > leaderboardLength && (
               <li>
-                <button type="button" className="game-panel__show-all" onClick={() => setShownAllOf(showAll ? null : game.id)}>
+                <button type="button" className="game-panel__show-all" onClick={toggleShowAll}>
                   {showAll ? `Top ${leaderboardLength}` : `Show all ${entries.length}`}
+                </button>
+              </li>
+            )}
+          </ol>
+        </BandCell>
+      )}
+      {bouts.length > 0 && (
+        <BandCell label="Fight card" wide>
+          <ol className="game-panel__bouts">
+            {bouts.slice(0, showAll ? bouts.length : boutsLength).map((bout) => (
+              <Bout key={bout.id} bout={bout} />
+            ))}
+            {bouts.length > boutsLength && (
+              <li>
+                <button type="button" className="game-panel__show-all" onClick={toggleShowAll}>
+                  {showAll ? 'Show fewer' : `Show all ${bouts.length}`}
                 </button>
               </li>
             )}
@@ -328,6 +367,24 @@ function Entrant({ entrant }: { entrant: GameEntrant }) {
   return (
     <li className="game-panel__entrant" data-tooltip={entrant.name}>
       <span className="game-panel__rank">{entrant.position}</span> {entrant.shortName}
+    </li>
+  )
+}
+
+/**
+ * A bout on the fight card: its sides' short names, the winner's in bold, then how it stands (see boutLine),
+ * or its weight class before it starts; in full on hover.
+ */
+function Bout({ bout }: { bout: GameBout }) {
+  const line = boutLine(bout) || bout.weightClass
+  const tooltip = [`${sideWithRecord(bout.first)} v ${sideWithRecord(bout.second)}`, bout.weightClass, boutLine(bout)]
+    .filter(Boolean)
+    .join(' · ')
+  const side = ({ shortName, winner }: GameBoutSide) => (winner ? <span className="game-panel__strong">{shortName}</span> : shortName)
+  return (
+    <li className="game-panel__bout" data-tooltip={tooltip}>
+      {side(bout.first)} v {side(bout.second)}
+      {line && <span className="game-panel__muted"> · {line}</span>}
     </li>
   )
 }

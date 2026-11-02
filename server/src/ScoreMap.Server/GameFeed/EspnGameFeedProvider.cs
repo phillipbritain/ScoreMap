@@ -60,6 +60,12 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                         : fieldGame);
                 continue;
             }
+            if (league.StartsWith("mma/", StringComparison.Ordinal))
+            {
+                if (ToFightCard(e, leagueKey) is { } fightCard)
+                    games.Add(fightCard);
+                continue;
+            }
             if (ToGame(e, leagueKey) is not { } game)
                 continue;
             // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
@@ -333,6 +339,75 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             Note = NullIfBlank(e.Name),
         };
     }
+
+    /// <summary>
+    /// MMA: each event is one game, its fight card (ADR-0020), with one competition a bout, listed in the
+    /// order they're fought, the main event last; the game lists them main event first. A bout's own date is
+    /// only the start of its part of the card (prelims or main card), so the card's progress comes from the
+    /// bouts' statuses (see <see cref="ProviderBouts.Status"/>), the event's own only for a card called off. Its
+    /// start is the first bout's, its venue the bouts' (each gives the same one), its note the event's name,
+    /// and its broadcasters the main event's.
+    /// </summary>
+    private static ProviderGame? ToFightCard(Event e, string leagueKey)
+    {
+        var bouts = (e.Competitions ?? []).Select(ToBout).OfType<ProviderBout>().Reverse().ToList();
+        if (e.Id is null || bouts.Count == 0)
+            return null;
+        var competitions = e.Competitions!;
+        var main = competitions[^1];
+        var card = new ProviderBouts(bouts);
+        return new ProviderGame(
+            e.Id,
+            leagueKey,
+            competitions.Select(c => c.Date).Min() ?? e.Date ?? DateTimeOffset.MinValue,
+            card,
+            card.Status(ToStatus(e.Status?.Type)),
+            null,
+            null,
+            ToVenue(competitions.Select(c => c.Venue).FirstOrDefault(venue => venue is not null)),
+            ToBroadcasters(main.Broadcasts, main.GeoBroadcasts))
+        {
+            Note = NullIfBlank(e.Name),
+        };
+    }
+
+    /// <summary>
+    /// A bout: its sides in ESPN's <c>order</c>, its weight class (its type's abbreviation), its scheduled rounds,
+    /// and once started its round and the time into it. How it was won is the last "Unofficial Winner" detail
+    /// ESPN gave, which it may correct (a decision, then a KO/TKO); details are listed newest first.
+    /// </summary>
+    private static ProviderBout? ToBout(Competition bout)
+    {
+        var sides = (bout.Competitors ?? [])
+            .Where(c => c.Order is 1 or 2 && !string.IsNullOrWhiteSpace(c.Athlete?.DisplayName))
+            .OrderBy(c => c.Order)
+            .Select(c => new ProviderBoutSide(c.Athlete!.DisplayName!.Trim(), NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(),
+                c.Athlete.Flag?.Href, NullIfBlank(c.Records?.FirstOrDefault(r => r.Type == "total")?.Summary), c.Won))
+            .ToList();
+        if (bout.Id is null || sides is not [var first, var second])
+            return null;
+        var status = ToStatus(bout.Status?.Type);
+        var started = bout.Status?.Type?.State is "in" or "post" && bout.Status.Period > 0;
+        return new ProviderBout(
+            bout.Id,
+            first,
+            second,
+            NullIfBlank(bout.Type?.Abbreviation),
+            bout.Format?.Regulation?.Periods ?? 3,
+            status,
+            started ? bout.Status!.Period : null,
+            started ? NullIfBlank(bout.Status!.DisplayClock) : null,
+            status == ProviderStatus.Final ? BoutMethodOf(bout.Details) : null);
+    }
+
+    private static BoutMethod? BoutMethodOf(List<Detail>? details) =>
+        (details ?? []).Select(detail => detail.Type?.Text).FirstOrDefault(text => text?.StartsWith("Unofficial Winner ", StringComparison.Ordinal) == true) switch
+        {
+            "Unofficial Winner Kotko" => BoutMethod.KnockOut,
+            "Unofficial Winner Submission" => BoutMethod.Submission,
+            "Unofficial Winner Decision" => BoutMethod.Decision,
+            _ => null,
+        };
 
     /// <summary>ESPN's core API, a second unofficial endpoint (ADR-0001, ADR-0020), on its own host.</summary>
     private const string CoreApi = "https://sports.core.api.espn.com/v2/sports/";
@@ -656,15 +731,23 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record HeaderEvent(string? Id, string? CompetitionId);
     private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status,
         string? Name, List<EventGrouping>? Groupings, Venue? Circuit);
-    private sealed record Competition(DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
+    private sealed record Competition(string? Id, DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,
-        Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type);
-    // F1: which session of the weekend a competition is ("FP1", "Qual", "Race").
+        Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type, Format? Format);
+    // F1: which session of the weekend a competition is ("FP1", "Qual", "Race"); MMA: a bout's weight class.
     private sealed record CompetitionType(string? Abbreviation);
     private sealed record Note(string? Headline);
-    // Racing: a driver, with their running position (order), in place of a team.
+    // MMA: a bout's scheduled rounds.
+    private sealed record Format(Regulation? Regulation);
+    private sealed record Regulation(int? Periods);
+    // Racing: a driver, with their running position (order), in place of a team. MMA: a bout's side, in its
+    // corner's order, with whether they won (cricket writes it as text, "true").
     private sealed record Competitor(string? Id, string? HomeAway, Team? Team, string? Score, List<TeamRecord>? Records,
-        CuratedRank? CuratedRank, int? Order, Player? Athlete);
+        CuratedRank? CuratedRank, int? Order, Player? Athlete, System.Text.Json.JsonElement? Winner)
+    {
+        public bool Won => Winner is { ValueKind: System.Text.Json.JsonValueKind.True }
+            || Winner is { ValueKind: System.Text.Json.JsonValueKind.String } text && text.GetString() == "true";
+    }
     // Tennis: a tournament's matches, under its groupings.
     private sealed record EventGrouping(GroupingType? Grouping, List<Match>? Competitions);
     private sealed record GroupingType(string? Slug);
@@ -683,7 +766,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         int? Balls, int? Strikes, int? Outs, bool? OnFirst, bool? OnSecond, bool? OnThird);
     private sealed record LastPlay(string? Text);
     private sealed record Detail(Clock? Clock, TeamRef? Team, bool? ScoringPlay, bool? RedCard, bool? YellowCard,
-        bool? PenaltyKick, bool? OwnGoal, bool? Shootout, List<Athlete>? AthletesInvolved);
+        bool? PenaltyKick, bool? OwnGoal, bool? Shootout, List<Athlete>? AthletesInvolved, DetailType? Type);
+    // MMA: what happened in a bout ("Takedown", "Unofficial Winner Kotko").
+    private sealed record DetailType(string? Text);
     private sealed record Clock(string? DisplayValue);
     private sealed record TeamRef(string? Id, string? Abbreviation);
     private sealed record Athlete(string? DisplayName);

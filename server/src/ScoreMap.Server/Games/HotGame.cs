@@ -5,14 +5,18 @@ namespace ScoreMap.Server.Games;
 /// <summary>
 /// Whether a game is hot (see GLOSSARY.md): Live, the trailing side one score from tying or taking the
 /// lead, and little left to play, judged by each sport's own rule from the score and what's left (never
-/// win probability). In basketball it's exactly clutch time. Every rule so far is for a game between two
-/// sides. Browsers show flames on a hot game, if the viewer has them on.
+/// win probability). In basketball it's exactly clutch time. A fight card is hot while its main event is in
+/// its last scheduled round; a race never is. Browsers show flames on a hot game, if the viewer has them on.
 /// </summary>
 public static class HotGame
 {
     public static bool For(ProviderGame game, League league)
     {
-        if (game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed) || game.Period is not { } period
+        if (game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed))
+            return false;
+        if (game.Contest is ProviderBouts card)
+            return card.Bouts.FirstOrDefault() is { } main && card.OnNow == main && main.Round == main.ScheduledRounds;
+        if (game.Period is not { } period
             || game.Contest is not ProviderSides sides)
             return false;
 

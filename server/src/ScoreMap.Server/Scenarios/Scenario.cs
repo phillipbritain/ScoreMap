@@ -58,7 +58,7 @@ public sealed record Scenario(
 /// One made-up game in a scenario. <see cref="StartsIn"/> is its start relative to when the scenario
 /// started (negative for a game already under way). <see cref="Situation"/> is where play stands, if
 /// the scenario says (in baseball, the runners on base); it stays as written while the game plays.
-/// Its <see cref="Contest"/> is two sides, or for a race written out in full, a field; play and fill make
+/// Its <see cref="Contest"/> is two sides, or written out in full, a race's field or a fight card's bouts; play and fill make
 /// only games between two sides.
 /// </summary>
 public sealed record ScenarioGame(
@@ -74,7 +74,7 @@ public sealed record ScenarioGame(
 {
     public ProviderSituation? Situation { get; init; }
 
-    /// <summary>A race's name, as the feed gives it for one (see <see cref="ProviderGame.Note"/>); null for any other game.</summary>
+    /// <summary>A race's or a fight card's name, as the feed gives it for one (see <see cref="ProviderGame.Note"/>); null for any other game.</summary>
     public string? Note { get; init; }
 
     /// <summary>The game's two sides, for a game the scenario knows is between two sides.</summary>

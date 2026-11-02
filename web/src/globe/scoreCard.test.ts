@@ -129,6 +129,75 @@ describe('scoreCard', () => {
   })
 })
 
+describe('scoreCard for a fight card', () => {
+  const usa = 'https://a.espncdn.com/i/teamlogos/countries/500/usa.png'
+  const bra = 'https://a.espncdn.com/i/teamlogos/countries/500/bra.png'
+  const side = (name: string, shortName: string, flagUrl: string, winner = false) => ({ name, shortName, flagUrl, record: '20-4-0', winner })
+  const main = {
+    id: 'main',
+    first: side('Jon Jones', 'J. Jones', usa),
+    second: side('Stipe Miocic', 'S. Miocic', usa),
+    weightClass: 'Heavyweight',
+    scheduledRounds: 5,
+    status: 'Upcoming' as const,
+    round: null,
+    clock: null,
+    method: null,
+  }
+  const coMain = {
+    ...main,
+    id: 'co-main',
+    first: side('Charles Oliveira', 'C. Oliveira', bra),
+    second: side('Michael Chandler', 'M. Chandler', usa),
+    scheduledRounds: 3,
+    status: 'Live' as const,
+    round: 2,
+  }
+  const ufc309: Game = {
+    ...arrowhead,
+    sport: 'MMA',
+    league: 'UFC',
+    note: 'UFC 309: Jones vs. Miocic',
+    clock: 'R2',
+    contest: { kind: 'bouts', bouts: [main, coMain] },
+  }
+
+  it('shows the bout on now as two sides, with their flags and no score, and its round', () => {
+    expect(scoreCard(ufc309, false)).toMatchObject({
+      top: { label: 'C. Oliveira', logoUrl: bra, score: '' },
+      bottom: { label: 'M. Chandler', logoUrl: usa, score: '' },
+      clockLine: 'R2',
+    })
+  })
+
+  it('shows the main event before the card starts', () => {
+    const upcoming: Game = {
+      ...ufc309,
+      status: 'Upcoming',
+      clock: null,
+      contest: { kind: 'bouts', bouts: [main, { ...coMain, status: 'Upcoming', round: null }] },
+    }
+
+    expect(scoreCard(upcoming, false)).toMatchObject({ top: { label: 'J. Jones' }, bottom: { label: 'S. Miocic' }, clockLine: '' })
+  })
+
+  it("shows the main event's winner once the card is over", () => {
+    const finished = { ...main, status: 'Final' as const, round: 3, clock: '1:28', method: 'KO/TKO', second: { ...main.second, winner: true } }
+    const final: Game = {
+      ...ufc309,
+      status: 'Final',
+      clock: 'KO/TKO · R3',
+      contest: { kind: 'bouts', bouts: [finished, { ...coMain, status: 'Final', method: 'Decision' }] },
+    }
+
+    expect(scoreCard(final, false)).toMatchObject({
+      top: { label: 'J. Jones', score: '' },
+      bottom: { label: 'S. Miocic', score: 'W' },
+      clockLine: 'KO/TKO · R3',
+    })
+  })
+})
+
 describe("a score card's header text", () => {
   // A dark card with light text, its header strongly tinted with the game's colour.
   const theme = themeWith((json) => {

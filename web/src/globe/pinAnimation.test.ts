@@ -73,7 +73,7 @@ describe('pinAnimation', () => {
         hot: false,
         contest: {
           kind: 'field',
-          entries: order.map((name, i) => ({ position: i + 1, name, shortName: name, flagUrl: null })),
+          entries: order.map((name, i) => ({ position: i + 1, name, shortName: name, flagUrl: null, score: null })),
         },
         clock: null,
         period: null,
@@ -94,6 +94,31 @@ describe('pinAnimation', () => {
     it('announces its start and finish as any game', () => {
       expect(pinAnimation(race('Upcoming'), race('Live', 'Larson'))).toBe('start')
       expect(pinAnimation(race('Live', 'Larson'), race('Final', 'Byron'))).toBe('finish')
+    })
+  })
+
+  describe('a golf tournament', () => {
+    /** Golfers in order as name and position, those tied sharing one. */
+    const tournament = (...order: [string, number][]): Game =>
+      ({
+        sport: 'Golf',
+        status: 'Live',
+        clutchTime: false,
+        hot: false,
+        contest: {
+          kind: 'field',
+          entries: order.map(([name, position]) => ({ position, name, shortName: name, flagUrl: null, score: null })),
+        },
+        clock: null,
+        period: null,
+      }) as Game
+
+    it('does not animate a tie for the lead', () => {
+      expect(pinAnimation(tournament(['Griffin', 1], ['Akina', 2]), tournament(['Akina', 1], ['Griffin', 1]))).toBeNull()
+    })
+
+    it('celebrates someone leading alone after a tie for the lead', () => {
+      expect(pinAnimation(tournament(['Akina', 1], ['Griffin', 1]), tournament(['Akina', 1], ['Griffin', 2]))).toBe('score')
     })
   })
 })

@@ -78,6 +78,9 @@ To switch while running (each run's scenario and speed are its own):
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
+
+To see field games and fight cards move, pick `worldwide`: its NASCAR race counts laps and changes leaders, its PGA Tour tournament plays holes and rounds with overnight breaks, and its UFC fight card finishes bouts. For a timeline, `field` or `bouts` replaces that contest using the same format as an initial game (list entrants in position order, bouts main event first); `period`, `clock` and `status` can change alongside it.
+
 ## Demos
 
 A **demo** (`GLOSSARY.md`, ADR-0019) is the web URL with `?demo` (any value): `npm run page -- reset "$web/?demo"`. It shows `worldwide` from its own game board, apart from the pill's scenario, which other tabs keep on: switching or pausing that changes nothing in a demo. Every demo tab shares one demo board at Normal, started afresh (clock at noon Eastern) when the first opens, and stopped a minute after the last closes. A demo has no pill, media keys, clock or Behaviour and Theme tools, uses the built-in theme and behaviour whatever drafts the tuners saved, opens on first-visit settings and the viewer's region, and saves nothing to localStorage. A label at the top says the games are made up; `Shift+S` hides it with the Feedback button. On the live site the same link opens one.

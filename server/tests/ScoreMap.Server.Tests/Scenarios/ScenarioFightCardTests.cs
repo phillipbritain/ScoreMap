@@ -92,20 +92,17 @@ public sealed class ScenarioFightCardTests : IDisposable
     }
 
     [Fact]
-    public void A_fight_card_cant_be_played_yet()
+    public void A_timeline_can_finish_a_bout()
     {
-        var error = Assert.Throws<ScenarioFileException>(() => Read(extra: """, "play": true"""));
-
-        Assert.Contains("\"card\" is a fight card, which can't be played yet", error.Message);
-    }
-
-    [Fact]
-    public void A_timeline_cant_change_a_fight_card_yet()
-    {
-        var error = Assert.Throws<ScenarioFileException>(() => Read(extra: """
-            , "timeline": { "length": "10m", "changes": [ { "at": "1m", "game": "card", "status": "final" } ] }
-            """));
-
-        Assert.Contains("is a fight card, which a timeline can't change yet", error.Message);
+        var scenario = Read(extra: """
+            , "timeline": { "length": "10m", "changes": [ { "at": "1m", "game": "card", "status": "final",
+              "bouts": [
+              { "rounds": 5, "status": "final", "round": 5, "method": "decision",
+                "first": { "name": "Jon Jones", "shortName": "J. Jones", "winner": true },
+                "second": { "name": "Stipe Miocic", "shortName": "S. Miocic" } } ] } ] }
+            """);
+        var changed = scenario.Timeline!.Changes[0].ApplyTo(scenario.Games[0]);
+        Assert.Equal(ProviderStatus.Final, changed.Status);
+        Assert.True(Assert.IsType<ProviderBouts>(changed.Contest).Bouts[0].First.Winner);
     }
 }

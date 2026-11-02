@@ -72,9 +72,6 @@ public static partial class ScenarioReader
         }).ToList();
         var writtenOut = ids.ToHashSet();
         var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
-        if (plays && games.FirstOrDefault(game => game.Contest is not ProviderSides) is { } unplayable)
-            throw new ScenarioFileException(name, path,
-                $"game \"{unplayable.Id}\" is {ContestName(unplayable.Contest)}, which can't be played yet; write it in a scenario whose games stand still");
         if (file.Fill is not null)
         {
             foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, lists))

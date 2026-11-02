@@ -39,6 +39,9 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
 
     private ProviderGame Fill(ProviderGame game, League league)
     {
+        // A race has none of a two-sided game's detail; ESPN gives it none either.
+        if (game.Contest is not ProviderSides)
+            return game;
         var sides = game.Sides();
         var started = sides.Home.Score is not null || sides.Away.Score is not null;
         game = game with

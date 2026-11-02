@@ -19,6 +19,8 @@ The app is still being shaped, so keep the process light:
 
 Commit work on a branch named for the issue (a worktree's own `worktree-<issue>-…` branch counts), created from `main`: pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
 
+Working an issue, move its card on the project board: to **In progress** when starting work, and to **In review** when opening its pull request (the commands are in `docs/agents/issue-tracker.md`).
+
 ### Issue tracker
 
 Issues are tracked in GitHub Issues for phillipbritain/ScoreMap, using the `gh` CLI. See `docs/agents/issue-tracker.md`.

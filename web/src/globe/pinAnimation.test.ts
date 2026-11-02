@@ -63,4 +63,37 @@ describe('pinAnimation', () => {
     expect(pinAnimation(game('Live', 1, 0), game('Disrupted', 1, 0))).toBeNull()
     expect(pinAnimation(game('Disrupted', 1, 0), game('Live', 1, 0))).toBeNull()
   })
+
+  describe('a race', () => {
+    const race = (status: GameStatus, ...order: string[]): Game =>
+      ({
+        sport: 'Racing',
+        status,
+        clutchTime: false,
+        hot: false,
+        contest: {
+          kind: 'field',
+          entries: order.map((name, i) => ({ position: i + 1, name, shortName: name, flagUrl: null })),
+        },
+        clock: null,
+        period: null,
+      }) as Game
+
+    it('celebrates the lead changing hands', () => {
+      expect(pinAnimation(race('Live', 'Larson', 'Byron'), race('Live', 'Byron', 'Larson'))).toBe('score')
+    })
+
+    it('does not animate a change in order behind the leader', () => {
+      expect(pinAnimation(race('Live', 'Larson', 'Byron', 'Blaney'), race('Live', 'Larson', 'Blaney', 'Byron'))).toBeNull()
+    })
+
+    it('does not animate the field first being listed', () => {
+      expect(pinAnimation(race('Live'), race('Live', 'Larson', 'Byron'))).toBeNull()
+    })
+
+    it('announces its start and finish as any game', () => {
+      expect(pinAnimation(race('Upcoming'), race('Live', 'Larson'))).toBe('start')
+      expect(pinAnimation(race('Live', 'Larson'), race('Final', 'Byron'))).toBe('finish')
+    })
+  })
 })

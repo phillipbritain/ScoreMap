@@ -35,7 +35,9 @@ builder.Services.AddHttpClient(nameof(EspnGameFeedProvider), client =>
 });
 builder.Services.AddSingleton<IGameFeedProvider>(sp => new EspnGameFeedProvider(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(EspnGameFeedProvider)),
-    sp.GetRequiredService<TimeProvider>()));
+    sp.GetRequiredService<TimeProvider>(),
+    Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath,
+        sp.GetRequiredService<IOptions<VenueOptions>>().Value.SavedEventVenuesPath)));
 
 // Venue locator, with OpenStreetMap Nominatim as its place search. The place search is a
 // singleton so its rate limit holds across the whole app.
@@ -49,6 +51,7 @@ builder.Services.AddOptions<VenueOptions>()
         {
             options.SavedLocationsPath = Path.Combine(home, options.SavedLocationsPath);
             options.SavedPhotosPath = Path.Combine(home, options.SavedPhotosPath);
+            options.SavedEventVenuesPath = Path.Combine(home, options.SavedEventVenuesPath);
         }
     });
 builder.Services.Configure<NominatimOptions>(builder.Configuration.GetSection("Nominatim"));

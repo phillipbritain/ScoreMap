@@ -107,15 +107,29 @@ export interface KeyEvent {
 
 /**
  * Who competes in a game, and their scores, in one of the shapes a game's score takes (ADR-0020), told
- * apart by its kind. Its only shape so far is two sides.
+ * apart by its kind: two sides, or a field.
  */
-export type GameContest = GameSides
+export type GameContest = GameSides | GameField
 
 /** A game between two sides: the home side and the away side. */
 export interface GameSides {
   kind: 'sides'
   home: GameTeam
   away: GameTeam
+}
+
+/** A game among a field, such as a race: its entrants ordered by position, the leader first; none before the feed lists them. */
+export interface GameField {
+  kind: 'field'
+  entries: GameEntrant[]
+}
+
+/** One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag. */
+export interface GameEntrant {
+  position: number
+  name: string
+  shortName: string
+  flagUrl: string | null
 }
 
 /** A game's status in ScoreMap's terms (see GLOSSARY.md). */

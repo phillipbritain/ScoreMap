@@ -10,7 +10,7 @@ public sealed class League
 
     /// <summary>
     /// The league's sport, configured by its display name ("Football", "Basketball", "Baseball",
-    /// "Hockey", "Soccer", "Cricket", "Tennis" or "Racing"). The clock line is written in the sport's style.
+    /// "Hockey", "Soccer", "Cricket", "Tennis", "Racing" or "Golf"). The clock line is written in the sport's style.
     /// </summary>
     public required Sport Sport { get; init; }
 

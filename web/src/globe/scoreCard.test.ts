@@ -103,9 +103,9 @@ describe('scoreCard', () => {
       contest: {
         kind: 'field',
         entries: [
-          { position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: usa },
-          { position: 2, name: 'William Byron', shortName: 'W. Byron', flagUrl: usa },
-          { position: 3, name: 'Ryan Blaney', shortName: 'R. Blaney', flagUrl: usa },
+          { position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: usa, score: null },
+          { position: 2, name: 'William Byron', shortName: 'W. Byron', flagUrl: usa, score: null },
+          { position: 3, name: 'Ryan Blaney', shortName: 'R. Blaney', flagUrl: usa, score: null },
         ],
       },
     }
@@ -115,6 +115,28 @@ describe('scoreCard', () => {
         top: { label: '1 K. Larson', logoUrl: usa, score: '' },
         bottom: { label: '2 W. Byron', logoUrl: usa, score: '' },
         clockLine: 'Lap 189',
+      })
+    })
+
+    it("shows a golf tournament's top two with their scores to par, a tie marked", () => {
+      const mexicoOpen: Game = {
+        ...talladega,
+        sport: 'Golf',
+        clock: 'R2 · Thru 14',
+        contest: {
+          kind: 'field',
+          entries: [
+            { position: 1, name: 'Ben Griffin', shortName: 'B. Griffin', flagUrl: usa, score: '-12' },
+            { position: 2, name: 'Kihei Akina', shortName: 'K. Akina', flagUrl: usa, score: '-11' },
+            { position: 2, name: 'Andrew Novak', shortName: 'A. Novak', flagUrl: usa, score: '-11' },
+          ],
+        },
+      }
+
+      expect(scoreCard(mexicoOpen, false)).toMatchObject({
+        top: { label: '1 B. Griffin', logoUrl: usa, score: '-12' },
+        bottom: { label: 'T2 K. Akina', logoUrl: usa, score: '-11' },
+        clockLine: 'R2 · Thru 14',
       })
     })
 

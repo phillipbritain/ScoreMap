@@ -120,7 +120,7 @@ public static partial class ScenarioReader
                 $"has startsIn \"{entry.StartsIn}\", which isn't a time relative to the scenario's start such as \"-40m\" or \"1h30m\"");
         var status = ReadStatus(entry.Status);
         var phase = ReadPhase(entry.Phase);
-        ProviderContest contest = league.Sport == Sport.Racing
+        ProviderContest contest = league.Sport is Sport.Racing or Sport.Golf
             ? ReadField(entry)
             : new ProviderSides(ReadTeam(entry.Home, "home"), ReadTeam(entry.Away, "away"));
         var venue = ReadVenue(entry.Venue, venues);
@@ -142,19 +142,20 @@ public static partial class ScenarioReader
     }
 
     /// <summary>
-    /// A race's field: its entrants in order, the leader first (none before the feed would list them),
-    /// in place of a home and an away team.
+    /// A race's or golf tournament's field: its entrants in order, the leader first (none before the feed
+    /// would list them), in place of a home and an away team. A golfer has their score to par and the holes
+    /// they've played of the round (<c>thru</c>), and golfers level on score share a position.
     /// </summary>
     private static ProviderField ReadField(GameEntry entry)
     {
         if (entry.Home is not null || entry.Away is not null)
-            throw new InvalidDataException("is in a league that races, so it has a field, not a home and an away team");
+            throw new InvalidDataException("is in a league whose games are among a field, so it has a field, not a home and an away team");
         if (entry.Field is null)
             throw new InvalidDataException("has no field; give it one, empty before the game starts");
-        return new ProviderField(entry.Field.Select((entrant, i) =>
+        return ProviderField.TiedByScore(entry.Field.Select((entrant, i) =>
             entrant is null || string.IsNullOrWhiteSpace(entrant.Name) || string.IsNullOrWhiteSpace(entrant.ShortName)
                 ? throw new InvalidDataException($"has entrant {i + 1} with no name or short name")
-                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag)).ToList());
+                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag, entrant.Score, entrant.Thru)));
     }
 
     /// <summary>
@@ -235,16 +236,19 @@ public static partial class ScenarioReader
         List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted, string? SlowStart);
 
     /// <summary>
-    /// A game written out in full: between a home and an away team, or for a race, among a <c>field</c>,
-    /// with the race's name as its <c>note</c>.
+    /// A game written out in full: between a home and an away team, or for a race or a golf tournament,
+    /// among a <c>field</c>, with the game's name as its <c>note</c>.
     /// </summary>
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,
         string? StartsIn, string? Status, string? Clock, int? Period, string? Phase, SituationEntry? Situation,
         List<EntrantEntry?>? Field, string? Note);
 
-    /// <summary>One of a race's field, in order: their name, short name ("K. Larson") and country's flag.</summary>
-    private sealed record EntrantEntry(string? Name, string? ShortName, string? Flag);
+    /// <summary>
+    /// One of a field, in order: their name, short name ("K. Larson") and country's flag; in golf, their
+    /// <c>score</c> to par (-12; 0 is level) and the holes they've played of the round (<c>thru</c>).
+    /// </summary>
+    private sealed record EntrantEntry(string? Name, string? ShortName, string? Flag, int? Score, int? Thru);
 
     /// <summary>A team; in cricket, with its <c>innings</c> beyond its runs (see <see cref="ProviderInnings"/>).</summary>
     private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score, InningsEntry? Innings);

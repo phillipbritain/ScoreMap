@@ -61,18 +61,38 @@ public abstract record ProviderContest;
 public sealed record ProviderSides(ProviderTeam Home, ProviderTeam Away) : ProviderContest;
 
 /// <summary>
-/// A game among a field, such as a race: its entrants, ordered by position, the leader first; none before
-/// the provider lists them. Two fields are equal when their entrants are.
+/// A game among a field, such as a race or a golf tournament: its entrants, ordered by position, the leader
+/// first; none before the provider lists them. Entrants tied on score share a position. Two fields are equal
+/// when their entrants are.
 /// </summary>
 public sealed record ProviderField(IReadOnlyList<ProviderEntrant> Entries) : ProviderContest
 {
     public bool Equals(ProviderField? other) => other is not null && Entries.SequenceEqual(other.Entries);
 
     public override int GetHashCode() => Entries.Aggregate(0, HashCode.Combine);
+
+    /// <summary>
+    /// A field of these entrants in this order, positioned by it: each one level on score to par with the one
+    /// before shares their position (two at -11 after the leader are both 2nd, the next 4th).
+    /// </summary>
+    public static ProviderField TiedByScore(IEnumerable<ProviderEntrant> inOrder)
+    {
+        var entries = new List<ProviderEntrant>();
+        foreach (var entrant in inOrder)
+        {
+            var tied = entries.Count > 0 && entrant.ToPar is not null && entrant.ToPar == entries[^1].ToPar;
+            entries.Add(entrant with { Position = tied ? entries[^1].Position : entries.Count + 1 });
+        }
+        return new ProviderField(entries);
+    }
 }
 
-/// <summary>One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.</summary>
-public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl);
+/// <summary>
+/// One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.
+/// In golf, their score to par (-12; 0 is level) and the holes they've played of the current round
+/// (<see cref="Thru"/>, 0 before they start it); both null in racing.
+/// </summary>
+public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl, int? ToPar = null, int? Thru = null);
 
 /// <summary>
 /// A tennis set: the games each side won, in a tiebreak each side's tiebreak points (null otherwise), and
@@ -180,7 +200,7 @@ public enum ProviderPeriodPhase
     /// <summary>The period is being played (or the game hasn't started or has finished).</summary>
     Playing,
 
-    /// <summary>A break after the period: end of a quarter, halftime, an intermission or cricket's innings break.</summary>
+    /// <summary>A break after the period: end of a quarter, halftime, an intermission, cricket's innings break or golf's night after a round.</summary>
     Break,
 
     /// <summary>A shootout (hockey) or penalty shootout (soccer).</summary>

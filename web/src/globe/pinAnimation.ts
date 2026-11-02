@@ -11,7 +11,8 @@ export type PinAnimation = 'score' | 'start' | 'finish'
  * changes that only redraw it (the clock, the period, a delay). A game that starts or finishes
  * plays that, even if its score changed in the same update. Basketball scores so often that its
  * score changes pulse only in clutch time, as the server judges it on the score after the basket.
- * A field's score changes when the lead changes hands, as the server's GameChanges has it.
+ * A field's score changes when the lead changes hands, as the server's GameChanges has it: a tie for the
+ * lead isn't a change until someone leads alone.
  */
 export function pinAnimation(before: Game, after: Game): PinAnimation | null {
   if (before.status === 'Upcoming' && after.status === 'Live') return 'start'
@@ -25,8 +26,9 @@ function scoreChanged(was: GameContest, now: GameContest): boolean {
     return was.home.score !== now.home.score || was.away.score !== now.away.score
   }
   if (was.kind === 'field' && now.kind === 'field') {
-    const [leader, newLeader] = [soleLeader(was), soleLeader(now)]
-    return leader !== null && newLeader !== null && leader.name !== newLeader.name
+    // Someone leads alone who didn't before, from another leading alone or from a tie for the lead.
+    const newLeader = soleLeader(now)
+    return was.entries.length > 0 && newLeader !== null && soleLeader(was)?.name !== newLeader.name
   }
   return false
 }

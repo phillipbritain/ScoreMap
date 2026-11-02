@@ -55,7 +55,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             if (league.StartsWith("racing/", StringComparison.Ordinal))
             {
                 if (ToFieldGame(e, leagueKey) is { } fieldGame)
-                    games.Add(fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) });
+                    games.Add(fieldGame.Venue is null
+                        ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
+                        : fieldGame);
                 continue;
             }
             if (ToGame(e, leagueKey) is not { } game)
@@ -292,16 +294,23 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     }
 
     /// <summary>
-    /// Racing: each event is one race, with one competition, among a field of drivers ranked by their
-    /// <c>order</c>; none are listed before it starts. Its period is the current lap, and its note the race's
-    /// name. The scoreboard gives no venue (see <see cref="EventVenueAsync"/>).
+    /// Racing: each event is one game, its race, among a field of drivers ranked by their <c>order</c>; none
+    /// are listed before it starts. A NASCAR event has one competition, the race; an F1 weekend has five
+    /// (FP1–FP3, qualifying and the race), and only the race counts (ADR-0020), so the game's start, status,
+    /// lap and field are the race's, its id the event's. Its period is the current lap, and its note the
+    /// event's name. Its venue is the event's <c>circuit</c> (F1); NASCAR's scoreboard gives none (see
+    /// <see cref="EventVenueAsync"/>).
     /// </summary>
     private static ProviderGame? ToFieldGame(Event e, string leagueKey)
     {
-        var competition = e.Competitions?.FirstOrDefault();
+        var competitions = e.Competitions ?? [];
+        var competition = competitions.Count == 1
+            ? competitions[0]
+            : competitions.FirstOrDefault(c => c.Type?.Abbreviation == "Race");
         if (e.Id is null || competition is null)
             return null;
-        var status = e.Status ?? competition.Status;
+        // An F1 event's own status isn't the race's: it reads Final while practice runs.
+        var status = competition.Status ?? e.Status;
         var started = status?.Type?.State is "in" or "post";
         var entries = (competition.Competitors ?? [])
             .Where(c => c.Order is not null && !string.IsNullOrWhiteSpace(c.Athlete?.DisplayName))
@@ -312,12 +321,12 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         return new ProviderGame(
             e.Id,
             leagueKey,
-            e.Date ?? competition.Date ?? DateTimeOffset.MinValue,
+            competition.Date ?? e.Date ?? DateTimeOffset.MinValue,
             new ProviderField(entries),
             ToStatus(status?.Type),
             null,
             started ? status?.Period : null,
-            null,
+            ToVenue(e.Circuit),
             ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts))
         {
             Note = NullIfBlank(e.Name),
@@ -645,10 +654,12 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record HeaderLeague(List<HeaderEvent>? Events);
     private sealed record HeaderEvent(string? Id, string? CompetitionId);
     private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status,
-        string? Name, List<EventGrouping>? Groupings);
+        string? Name, List<EventGrouping>? Groupings, Venue? Circuit);
     private sealed record Competition(DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,
-        Situation? Situation, List<Detail>? Details, List<Note>? Notes);
+        Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type);
+    // F1: which session of the weekend a competition is ("FP1", "Qual", "Race").
+    private sealed record CompetitionType(string? Abbreviation);
     private sealed record Note(string? Headline);
     // Racing: a driver, with their running position (order), in place of a team.
     private sealed record Competitor(string? Id, string? HomeAway, Team? Team, string? Score, List<TeamRecord>? Records,

@@ -54,8 +54,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             }
             if (league.StartsWith("racing/", StringComparison.Ordinal))
             {
-                if (ToRace(e, leagueKey) is { } race)
-                    games.Add(race with { Venue = await EventVenueAsync(league, race.Id, cancellationToken) });
+                if (ToFieldGame(e, leagueKey) is { } fieldGame)
+                    games.Add(fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) });
                 continue;
             }
             if (ToGame(e, leagueKey) is not { } game)
@@ -296,7 +296,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// <c>order</c>; none are listed before it starts. Its period is the current lap, and its note the race's
     /// name. The scoreboard gives no venue (see <see cref="EventVenueAsync"/>).
     /// </summary>
-    private static ProviderGame? ToRace(Event e, string leagueKey)
+    private static ProviderGame? ToFieldGame(Event e, string leagueKey)
     {
         var competition = e.Competitions?.FirstOrDefault();
         if (e.Id is null || competition is null)
@@ -370,25 +370,42 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         }
     }
 
+    /// <summary>The saved venues; none when there's no file, or one that can't be read, so each venue is asked for again.</summary>
     private async Task<Dictionary<string, ProviderVenue?>> LoadEventVenuesAsync(CancellationToken cancellationToken)
     {
         if (savedEventVenuesPath is null || !File.Exists(savedEventVenuesPath))
             return new Dictionary<string, ProviderVenue?>();
-        await using var file = File.OpenRead(savedEventVenuesPath);
-        return await System.Text.Json.JsonSerializer.DeserializeAsync<Dictionary<string, ProviderVenue?>>(file, SavedJson, cancellationToken)
-            ?? new Dictionary<string, ProviderVenue?>();
+        try
+        {
+            await using var file = File.OpenRead(savedEventVenuesPath);
+            return await System.Text.Json.JsonSerializer.DeserializeAsync<Dictionary<string, ProviderVenue?>>(file, SavedJson, cancellationToken)
+                ?? new Dictionary<string, ProviderVenue?>();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            return new Dictionary<string, ProviderVenue?>();
+        }
     }
 
-    /// <summary>Saves through a temp file, so a crash mid-write never leaves a half-written file.</summary>
+    /// <summary>
+    /// Saves through a temp file, so a crash mid-write never leaves a half-written file. A save that fails
+    /// leaves the venues known until the server restarts, and the next venue found tries the save again.
+    /// </summary>
     private async Task SaveEventVenuesAsync(Dictionary<string, ProviderVenue?> saved, CancellationToken cancellationToken)
     {
         if (savedEventVenuesPath is null)
             return;
-        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(savedEventVenuesPath))!);
-        var temp = savedEventVenuesPath + ".tmp";
-        await using (var file = File.Create(temp))
-            await System.Text.Json.JsonSerializer.SerializeAsync(file, saved, SavedJson, cancellationToken);
-        File.Move(temp, savedEventVenuesPath, overwrite: true);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(savedEventVenuesPath))!);
+            var temp = savedEventVenuesPath + ".tmp";
+            await using (var file = File.Create(temp))
+                await System.Text.Json.JsonSerializer.SerializeAsync(file, saved, SavedJson, cancellationToken);
+            File.Move(temp, savedEventVenuesPath, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+        }
     }
 
     /// <summary>

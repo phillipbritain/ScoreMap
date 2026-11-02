@@ -38,14 +38,14 @@ public sealed class EspnRacingTests : IDisposable
     [Fact]
     public async Task A_race_is_one_game_with_its_field_in_order_and_its_last_lap()
     {
-        var race = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
+        var game = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
-        Assert.Equal("202610250041", race.Id);
-        Assert.Equal(ProviderStatus.Final, race.Status);
-        Assert.Equal(189, race.Period);
-        Assert.Null(race.DisplayClock);
-        Assert.Equal("NASCAR Cup Series at Talladega", race.Note);
-        var field = Assert.IsType<ProviderField>(race.Contest);
+        Assert.Equal("202610250041", game.Id);
+        Assert.Equal(ProviderStatus.Final, game.Status);
+        Assert.Equal(189, game.Period);
+        Assert.Null(game.DisplayClock);
+        Assert.Equal("NASCAR Cup Series at Talladega", game.Note);
+        var field = Assert.IsType<ProviderField>(game.Contest);
         Assert.Equal(40, field.Entries.Count);
         Assert.Equal(Enumerable.Range(1, 40), field.Entries.Select(entrant => entrant.Position));
         Assert.Equal(
@@ -59,27 +59,79 @@ public sealed class EspnRacingTests : IDisposable
     {
         var first = Talladega();
         await ProviderOver(first).FetchScoreboardAsync(Nascar, CancellationToken.None);
-        var race = Assert.Single(await ProviderOver(first).FetchScoreboardAsync(Nascar, CancellationToken.None));
+        var game = Assert.Single(await ProviderOver(first).FetchScoreboardAsync(Nascar, CancellationToken.None));
         var later = StubHttpHandler.Serving((Scoreboard, Fixture("nascar-final.json")));
         var laterRace = Assert.Single(await ProviderOver(later).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
         var talladega = new ProviderVenue("Talladega Superspeedway", "Talladega", "AL", "USA", "15");
-        Assert.Equal(talladega, race.Venue);
+        Assert.Equal(talladega, game.Venue);
         Assert.Equal(talladega, laterRace.Venue);
         Assert.Single(first.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal));
         Assert.DoesNotContain(later.Requests, request => request.RequestUri!.Host == "sports.core.api.espn.com");
     }
 
-    [Fact]
-    public async Task A_failed_venue_request_is_not_saved_and_is_tried_again()
+    public static TheoryData<string> VenueFailures => ["error status", "timeout", "not JSON"];
+
+    [Theory]
+    [MemberData(nameof(VenueFailures))]
+    public async Task A_failed_venue_request_is_not_saved_and_is_tried_again(string failure)
     {
-        var failing = StubHttpHandler.Serving((Scoreboard, Fixture("nascar-final.json")), (CoreEvent, StubHttpHandler.ServerError));
-        var race = Assert.Single(await ProviderOver(failing).FetchScoreboardAsync(Nascar, CancellationToken.None));
+        var failing = new StubHttpHandler(request => request.RequestUri!.Host != "sports.core.api.espn.com"
+            ? Fixture("nascar-final.json")
+            : failure switch
+            {
+                "error status" => StubHttpHandler.ServerError,
+                "timeout" => throw new TaskCanceledException("The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
+                    new TimeoutException("The operation was canceled.")),
+                _ => "<html>Service Unavailable</html>",
+            });
+        var game = Assert.Single(await ProviderOver(failing).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
         var retried = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
-        Assert.Null(race.Venue);
+        Assert.Null(game.Venue);
         Assert.Equal("Talladega Superspeedway", retried.Venue?.Name);
+    }
+
+    [Fact]
+    public async Task Cancelling_while_a_venue_is_asked_for_cancels_the_fetch()
+    {
+        using var cancel = new CancellationTokenSource();
+        var handler = new StubHttpHandler(request =>
+        {
+            if (request.RequestUri!.Host != "sports.core.api.espn.com")
+                return Fixture("nascar-final.json");
+            cancel.Cancel();
+            throw new TaskCanceledException("Cancelled", null, cancel.Token);
+        });
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ProviderOver(handler).FetchScoreboardAsync(Nascar, cancel.Token));
+    }
+
+    [Fact]
+    public async Task A_saved_venues_file_that_cant_be_read_is_started_afresh_and_venues_asked_for_again()
+    {
+        Directory.CreateDirectory(_folder);
+        await File.WriteAllTextAsync(SavedVenuesPath, "{ not JSON");
+
+        var game = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        Assert.Equal("Talladega Superspeedway", game.Venue?.Name);
+    }
+
+    [Fact]
+    public async Task A_venue_that_cant_be_saved_is_still_used_and_kept_until_the_server_restarts()
+    {
+        // A folder where the file should be, so saving it fails.
+        Directory.CreateDirectory(SavedVenuesPath);
+        var handler = Talladega();
+        var provider = ProviderOver(handler);
+
+        await provider.FetchScoreboardAsync(Nascar, CancellationToken.None);
+        var game = Assert.Single(await provider.FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        Assert.Equal("Talladega Superspeedway", game.Venue?.Name);
+        Assert.Single(handler.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -87,11 +139,11 @@ public sealed class EspnRacingTests : IDisposable
     {
         var handler = StubHttpHandler.Serving((Scoreboard, Fixture("nascar.json")));
 
-        var race = Assert.Single(await ProviderOver(handler).FetchScoreboardAsync(Nascar, CancellationToken.None));
+        var game = Assert.Single(await ProviderOver(handler).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
-        Assert.Equal(ProviderStatus.Scheduled, race.Status);
-        Assert.Empty(Assert.IsType<ProviderField>(race.Contest).Entries);
-        Assert.Null(race.Period);
-        Assert.Equal("NASCAR Cup Series at Martinsville", race.Note);
+        Assert.Equal(ProviderStatus.Scheduled, game.Status);
+        Assert.Empty(Assert.IsType<ProviderField>(game.Contest).Entries);
+        Assert.Null(game.Period);
+        Assert.Equal("NASCAR Cup Series at Martinsville", game.Note);
     }
 }

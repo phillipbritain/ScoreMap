@@ -29,6 +29,12 @@ public sealed class VenueOptions
     public string CorrectionsPath { get; set; } = "venue-corrections.json";
 
     /// <summary>
+    /// The checked-in IndyCar track list, relative to the content root: each race's name mapped to its
+    /// track's name, city and position (see <see cref="GameFeed.TrackList"/>). Re-read whenever it changes.
+    /// </summary>
+    public string IndyCarTracksPath { get; set; } = "indycar-tracks.json";
+
+    /// <summary>
     /// The checked-in scenario venue lookups (ADR-0009), relative to the content root: venue queries
     /// ("Name, City") mapped to their position, made by scripts/lookup-scenario-venues.cs from
     /// scenario-venues.json. Used before the saved lookups; a missing file means none.

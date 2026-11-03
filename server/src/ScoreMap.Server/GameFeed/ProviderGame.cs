@@ -201,13 +201,14 @@ public sealed record ProviderInnings(int? Wickets, string? Overs = null, int? Ov
 public sealed record ProviderCity(string Name, string? Region, string? Country);
 
 /// <summary>
-/// The venue as the provider reports it. It carries no coordinates (ESPN supplies none); the venue
-/// locator places it. <see cref="Id"/> is the provider's own id for the venue, used to ask it for a photo.
+/// The venue as the provider reports it. ESPN supplies no coordinates, so the venue locator places it,
+/// unless it comes with its <see cref="Location"/> (an IndyCar race's, from the checked-in track list).
+/// <see cref="Id"/> is the provider's own id for the venue, used to ask it for a photo.
 /// In tennis, <see cref="Name"/> is the tournament, so all its matches share one spot, and
 /// <see cref="Court"/> the court the match is on, when the provider has named it.
 /// </summary>
 public sealed record ProviderVenue(string? Name, string? City, string? Region, string? Country, string? Id = null,
-    string? Court = null);
+    string? Court = null, Coordinates? Location = null);
 
 public sealed record Coordinates(double Latitude, double Longitude);
 

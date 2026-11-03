@@ -26,6 +26,7 @@ public class LeagueTests
             ("soccer/uefa.champions", "Champions League", "Soccer"),
             ("soccer/fifa.world", "World Cup", "Soccer"),
             ("cricket/8048", "IPL", "Cricket"),
+            ("rugby/180659", "Six Nations", "Rugby"),
             ("tennis/atp", "ATP", "Tennis"),
             ("tennis/wta", "WTA", "Tennis"),
         ];
@@ -67,6 +68,7 @@ public class LeagueTests
             new LeagueListing("Champions League", "Soccer"),
             new LeagueListing("World Cup", "Soccer"),
             new LeagueListing("IPL", "Cricket"),
+            new LeagueListing("Six Nations", "Rugby"),
             new LeagueListing("ATP", "Tennis"),
             new LeagueListing("WTA", "Tennis"),
             new LeagueListing("NASCAR Cup Series", "Racing"),

@@ -27,7 +27,8 @@ public class ScenarioTeamListTests
     public void Every_configured_league_but_tennis_racing_golf_and_MMA_has_its_teams_and_the_list_has_no_other_league()
     {
         Assert.Equal(ConfiguredLeagues.Order(), Teams.Keys.Order());
-        Assert.All(Teams, league => Assert.True(league.Value.Count >= 10, $"{league.Key} has {league.Value.Count} teams"));
+        // The Six Nations, the smallest, has 6.
+        Assert.All(Teams, league => Assert.True(league.Value.Count >= 6, $"{league.Key} has {league.Value.Count} teams"));
     }
 
     [Fact]

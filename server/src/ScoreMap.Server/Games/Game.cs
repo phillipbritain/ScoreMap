@@ -46,7 +46,7 @@ public sealed record Game(
     /// <summary>The last score: who scored and how, and when in the game.</summary>
     public ScoringPlay? LastScore { get; init; }
 
-    /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
+    /// <summary>Soccer and rugby: the scores and cards so far, in the order they happened.</summary>
     public IReadOnlyList<KeyEvent> KeyEvents { get; init; } = [];
 
     /// <summary>Whether ESPN lists the game in its Top Events: the games it picks as the most important right now.</summary>
@@ -203,7 +203,7 @@ public sealed record GameSituation(
 /// </summary>
 public sealed record ScoringPlay(string Team, string Text, string? When);
 
-/// <summary>A goal or card in soccer: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
+/// <summary>A goal or card in soccer, or a score or card in rugby: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
 public sealed record KeyEvent(KeyEventKind Kind, string Team, string? Player, string? Clock);
 
 /// <summary>

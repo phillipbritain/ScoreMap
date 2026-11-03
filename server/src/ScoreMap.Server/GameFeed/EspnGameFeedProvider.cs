@@ -82,7 +82,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     }
 
     /// <summary>
-    /// The game with its last score. Soccer's comes with the scoreboard, from its goals, and cricket and
+    /// The game with its last score. Soccer's and rugby's come with the scoreboard, from their scoring, and cricket and
     /// tennis have none (runs come off almost every ball; games and sets aren't scored by anyone's play). Every other sport's is only in the game's summary, which is
     /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
     /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
@@ -90,7 +90,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// </summary>
     private async Task<ProviderGame> WithLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
     {
-        if (game.LastScore is not null || league.StartsWith("soccer/", StringComparison.Ordinal)
+        if (game.LastScore is not null || league.StartsWith("soccer/", StringComparison.Ordinal) || league.StartsWith("rugby/", StringComparison.Ordinal)
             || league.StartsWith("cricket/", StringComparison.Ordinal) || league.StartsWith("tennis/", StringComparison.Ordinal)
             || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away } || home + away == 0)
             return game;
@@ -230,7 +230,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             .Where(c => c.Id is not null && c.Team?.Abbreviation is not null)
             .DistinctBy(c => c.Id)
             .ToDictionary(c => c.Id!, c => c.Team!.Abbreviation!);
-        var keyEvents = started ? ToKeyEvents(competition.Details, teams) : [];
+        var rugby = leagueKey.StartsWith("rugby/", StringComparison.Ordinal);
+        var keyEvents = !started ? [] : rugby ? ToRugbyKeyEvents(competition.Details, teams) : ToKeyEvents(competition.Details, teams);
 
         return new ProviderGame(
             e.Id,
@@ -249,8 +250,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             Odds = ToOdds(competition.Odds?.FirstOrDefault()),
             Situation = status?.Type?.State == "in" ? ToSituation(competition.Situation, teams) : null,
             KeyEvents = keyEvents,
-            LastScore = keyEvents.LastOrDefault(k => k.Kind is KeyEventKind.Goal or KeyEventKind.PenaltyGoal or KeyEventKind.OwnGoal) is { } goal
-                ? new ProviderScoringPlay(goal.Team, GoalText(goal), null, goal.Clock)
+            LastScore = keyEvents.LastOrDefault(k => k.Kind is not (KeyEventKind.YellowCard or KeyEventKind.RedCard)) is { } score
+                ? new ProviderScoringPlay(score.Team, ScoreText(score, rugby), null, score.Clock)
                 : null,
         };
     }
@@ -679,15 +680,47 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         return events;
     }
 
-    private static string GoalText(ProviderKeyEvent goal)
+    /// <summary>
+    /// Rugby's scores and cards, from the scoreboard's details, which name each by its type ("try", "conversion",
+    /// "penalty goal", "drop goal", "yellow card"); substitutions and anything else are left out.
+    /// </summary>
+    private static IReadOnlyList<ProviderKeyEvent> ToRugbyKeyEvents(List<Detail>? details, Dictionary<string, string> teams)
     {
-        var what = goal.Kind switch
+        var events = new List<ProviderKeyEvent>();
+        foreach (var detail in details ?? [])
         {
-            KeyEventKind.PenaltyGoal => "Penalty",
+            if (detail.Team?.Id is not { } id || !teams.TryGetValue(id, out var team))
+                continue;
+            KeyEventKind? kind = detail.Type?.Text?.Trim().ToLowerInvariant() switch
+            {
+                "try" or "penalty try" => KeyEventKind.Try,
+                "conversion" => KeyEventKind.Conversion,
+                "penalty goal" => KeyEventKind.PenaltyGoal,
+                "drop goal" => KeyEventKind.DropGoal,
+                "yellow card" => KeyEventKind.YellowCard,
+                "red card" => KeyEventKind.RedCard,
+                _ => null,
+            };
+            if (kind is not null)
+                events.Add(new ProviderKeyEvent(kind.Value, team,
+                    NullIfBlank(detail.AthletesInvolved?.FirstOrDefault()?.DisplayName), detail.Clock?.DisplayValue));
+        }
+        return events;
+    }
+
+    /// <summary>A score as the last score reads it: "Goal: Declan Rice", "Penalty: Bukayo Saka", "Try: Paolo Garbisi", "Penalty goal: Thomas Ramos".</summary>
+    private static string ScoreText(ProviderKeyEvent score, bool rugby)
+    {
+        var what = score.Kind switch
+        {
+            KeyEventKind.PenaltyGoal => rugby ? "Penalty goal" : "Penalty",
             KeyEventKind.OwnGoal => "Own goal",
+            KeyEventKind.Try => "Try",
+            KeyEventKind.Conversion => "Conversion",
+            KeyEventKind.DropGoal => "Drop goal",
             _ => "Goal",
         };
-        return goal.Player is { } player ? $"{what}: {player}" : what;
+        return score.Player is { } player ? $"{what}: {player}" : what;
     }
 
     private static ProviderTeam ToTeam(Competitor competitor, bool started, string leagueKey)
@@ -697,7 +730,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             competitor.Team.Logo,
             started && int.TryParse(competitor.Score, out var score) ? score : null,
             Rank: competitor.CuratedRank?.Current is >= 1 and <= TopRanked ? competitor.CuratedRank.Current : null,
-            Record: NullIfBlank(competitor.Records?.FirstOrDefault(r => r.Type == "total")?.Summary));
+            // Rugby's "total" is the side's form ("LWWWW"), not a record.
+            Record: leagueKey.StartsWith("rugby/", StringComparison.Ordinal) ? null
+                : NullIfBlank(competitor.Records?.FirstOrDefault(r => r.Type == "total")?.Summary));
         return started && leagueKey.StartsWith("cricket/", StringComparison.Ordinal) ? WithInnings(team, competitor.Score) : team;
     }
 

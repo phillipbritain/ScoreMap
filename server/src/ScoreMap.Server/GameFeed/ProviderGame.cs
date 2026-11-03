@@ -6,7 +6,7 @@ namespace ScoreMap.Server.GameFeed;
 /// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
 /// The rest is extra detail for the game panel, each part null (or empty) when the provider gives none:
 /// a note on the game, the crowd, the betting line, where play stands right now, the last score,
-/// in soccer the goals and cards, and in tennis the games in each set and how a match ended early.
+/// in soccer and rugby the scores and cards, and in tennis the games in each set and how a match ended early.
 /// </summary>
 public sealed record ProviderGame(
     string Id,
@@ -37,7 +37,7 @@ public sealed record ProviderGame(
     /// <summary>The last score: who scored and how, and when in the game.</summary>
     public ProviderScoringPlay? LastScore { get; init; }
 
-    /// <summary>Soccer: the goals and cards so far, in the order they happened.</summary>
+    /// <summary>Soccer and rugby: the scores and cards so far, in the order they happened.</summary>
     public IReadOnlyList<ProviderKeyEvent> KeyEvents { get; init; } = [];
 
     /// <summary>
@@ -243,7 +243,7 @@ public sealed record ProviderSituation(
 public sealed record ProviderScoringPlay(
     string Team, string Text, int? Period, string? Clock, ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing);
 
-/// <summary>A goal or card in soccer: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
+/// <summary>A goal or card in soccer, or a score or card in rugby: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
 public sealed record ProviderKeyEvent(KeyEventKind Kind, string Team, string? Player, string? Clock);
 
 public enum ProviderStatus

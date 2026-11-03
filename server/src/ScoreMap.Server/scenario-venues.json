@@ -1138,6 +1138,33 @@
     ]
   },
   {
+    "name": "Principality Stadium",
+    "city": "Cardiff",
+    "region": null,
+    "country": "Wales",
+    "groups": [
+      "worldwide"
+    ]
+  },
+  {
+    "name": "Murrayfield Stadium",
+    "city": "Edinburgh",
+    "region": null,
+    "country": "Scotland",
+    "groups": [
+      "worldwide"
+    ]
+  },
+  {
+    "name": "Aviva Stadium",
+    "city": "Dublin",
+    "region": null,
+    "country": "Ireland",
+    "groups": [
+      "worldwide"
+    ]
+  },
+  {
     "name": "Santiago Bernabéu",
     "city": "Madrid",
     "region": null,

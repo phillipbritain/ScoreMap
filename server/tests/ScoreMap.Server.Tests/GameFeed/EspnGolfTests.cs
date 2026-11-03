@@ -4,12 +4,16 @@ using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.GameFeed;
 
-/// <summary>Runs a saved real ESPN PGA Tour scoreboard (the Mexico Open in round 2) and the core API's event through the adapter.</summary>
+/// <summary>
+/// Runs saved real ESPN scoreboards and the core API's events through the adapter: the PGA Tour's Mexico Open in
+/// round 2, and the LPGA Tour's Maybank Championship once finished.
+/// </summary>
 public sealed class EspnGolfTests : IDisposable
 {
     private const string Pga = "golf/pga";
     private const string Scoreboard = "https://espn.test/sports/golf/pga/scoreboard";
     private const string CoreEvent = "https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401850978";
+    private const string Lpga = "golf/lpga";
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-espn-golf-{Guid.NewGuid():N}");
 
@@ -85,5 +89,25 @@ public sealed class EspnGolfTests : IDisposable
         var game = await TournamentAsync(scoreboard.ToJsonString());
 
         Assert.Equal((ProviderStatus.InProgress, 2, ProviderPeriodPhase.Break), (game.Status, game.Period, game.Phase));
+    }
+
+    [Fact]
+    public async Task An_LPGA_tournament_is_one_game_with_its_field_scores_to_par_and_round_at_its_first_course()
+    {
+        var game = Assert.Single(await ProviderOver(StubHttpHandler.Serving(
+                ("https://espn.test/sports/golf/lpga/scoreboard", Fixture("golf-lpga.json")),
+                ("https://sports.core.api.espn.com/v2/sports/golf/leagues/lpga/events/401835174", Fixture("golf-lpga-core-event.json"))))
+            .FetchScoreboardAsync(Lpga, CancellationToken.None));
+
+        Assert.Equal(("401835174", ProviderStatus.Final, 4), (game.Id, game.Status, game.Period));
+        Assert.Equal("Maybank Championship", game.Note);
+        var field = Assert.IsType<ProviderField>(game.Contest);
+        Assert.Equal(78, field.Entries.Count);
+        Assert.Equal(
+            [(1, "Miyu Yamashita", -22), (2, "Yan Liu", -20), (3, "Marisa Tojai", -19), (3, "Pauline Roussin-Bouchard", -19), (5, "Robyn Choi", -17)],
+            field.Entries.Take(5).Select(entrant => (entrant.Position, entrant.Name, entrant.ToPar)));
+        Assert.Equal(
+            new ProviderVenue("Kuala Lumpur Golf and Country Club (West Course)", "Kuala Lumpur", null, "Malaysia", "11198"),
+            game.Venue);
     }
 }

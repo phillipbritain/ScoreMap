@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
@@ -12,9 +14,56 @@ namespace ScoreMap.Server.Tests.Scenarios;
 /// The scenario files that ship in the repo, run as the owner runs them locally: each shows what
 /// its description in the run-scoremap skill says.
 /// </summary>
-public class ShippedScenarioTests
+public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
 {
     private static readonly string ShippedFolder = Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "Scenarios", "Files");
+
+    [Theory]
+    [InlineData("crowded")]
+    [InlineData("worldwide")]
+    public async Task Live_games_usually_finish_with_regular_finals_and_a_visible_disrupted_share(string name)
+    {
+        using var server = new ScoreMapServer { UseShippedScenarios = true };
+        var scenario = server.Services.GetRequiredService<ScenarioLibrary>().Read(name);
+        var clock = new FakeTimeProvider(server.Clock.GetUtcNow());
+        var feed = server.Services.GetRequiredService<ScenarioLibrary>().Start(scenario, clock);
+        var leagues = server.Services.GetRequiredService<IOptions<List<League>>>().Value;
+        async Task<List<ProviderGame>> Snapshot()
+        {
+            var games = new List<ProviderGame>();
+            foreach (var league in leagues)
+                games.AddRange(await feed.FetchScoreboardAsync(league.Key, CancellationToken.None));
+            return games;
+        }
+        var initial = await Snapshot();
+        var initialFinals = initial.Where(g => g.Status == ProviderStatus.Final).Select(g => g.Id).ToHashSet();
+        var live = new HashSet<string>();
+        var finals = new HashSet<string>();
+        var suspended = new HashSet<string>();
+        var disruptedShares = new List<double>();
+        TimeSpan? firstFinish = null;
+        // The shipped seed is intentional: this guards the owner's repeatable 90-minute run (#253).
+        for (var seconds = 0; seconds <= 90 * 60; seconds += 4)
+        {
+            if (seconds > 0)
+                clock.Advance(TimeSpan.FromSeconds(4));
+            var games = await Snapshot();
+            Assert.Equal(initial.Count, games.Count);
+            live.UnionWith(games.Where(g => g.Status == ProviderStatus.InProgress).Select(g => g.Id));
+            finals.UnionWith(games.Where(g => g.Status == ProviderStatus.Final && !initialFinals.Contains(g.Id)).Select(g => g.Id));
+            suspended.UnionWith(games.Where(g => g.Status == ProviderStatus.Suspended && live.Contains(g.Id)).Select(g => g.Id));
+            if (finals.Count > 0)
+                firstFinish ??= TimeSpan.FromSeconds(seconds);
+            disruptedShares.Add(games.Count(g => g.Status is ProviderStatus.Suspended or ProviderStatus.Postponed or ProviderStatus.Canceled) / (double)games.Count);
+        }
+        output.WriteLine($"{name}: first {firstFinish}, Finals {finals.Count}, suspensions {suspended.Count}, disrupted {disruptedShares.Average():P2}");
+        Assert.NotNull(firstFinish);
+        Assert.True(firstFinish <= TimeSpan.FromMinutes(10), $"first finish at {firstFinish}");
+        Assert.True(finals.Count >= 18, $"only {finals.Count} new Finals");
+        var liveFinals = finals.Count(live.Contains);
+        Assert.True(liveFinals > suspended.Count, $"{liveFinals} Live games finished; {suspended.Count} were suspended");
+        Assert.InRange(disruptedShares.Average(), scenario.Play!.DisruptedShare * 0.8, scenario.Play.DisruptedShare * 1.2);
+    }
 
     [Fact]
     public async Task Every_scenario_file_in_the_repo_loads_and_worldwide_is_the_default()
@@ -105,7 +154,7 @@ public class ShippedScenarioTests
     }
 
     [Fact]
-    public async Task Worldwide_has_a_close_basketball_game_coming_into_clutch_time()
+    public async Task Worldwide_has_a_close_basketball_game_that_plays_into_its_closing_minutes()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await server.ConnectClientAsync();
@@ -115,7 +164,9 @@ public class ShippedScenarioTests
         Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
         Assert.InRange(Math.Abs(int.Parse(close.Sides().Home.Score!) - int.Parse(close.Sides().Away.Score!)), 0, 5);
 
-        await AdvanceUntilAsync(server, client, $"{close.Id} in clutch time", c => c.Game.Id == close.Id && c.Game.ClutchTime,
+        // The score keeps playing at random, so its margin need not stay within five points.
+        await AdvanceUntilAsync(server, client, $"{close.Id} in its closing minutes",
+            c => c.Game.Id == close.Id && c.Game.Clock is { } clock && clock.StartsWith("Q4 4:", StringComparison.Ordinal),
             within: TimeSpan.FromMinutes(10));
     }
 
@@ -199,8 +250,7 @@ public class ShippedScenarioTests
         await using var client = await StartAsync(server, name);
         await client.NextSnapshotAsync();
 
-        // New Live games start up to 90% of the way through, so the first finish can take a while; in crowded,
-        // whose few Live games are often suspended before they end, up to about 45 minutes.
+        // The sustained feed regression above checks finish frequency; this checks delivery to a browser.
         var changes = new List<GameChange>();
         foreach (var (waitingFor, wanted) in new (string, Func<GameChange, bool>)[]
         {
@@ -212,7 +262,7 @@ public class ShippedScenarioTests
         })
         {
             if (!changes.Any(wanted))
-                changes.AddRange(await AdvanceUntilAsync(server, client, waitingFor, wanted, within: TimeSpan.FromMinutes(60)));
+                changes.AddRange(await AdvanceUntilAsync(server, client, waitingFor, wanted, within: TimeSpan.FromMinutes(10)));
         }
     }
 

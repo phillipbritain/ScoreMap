@@ -9,8 +9,8 @@ namespace ScoreMap.Server.Scenarios;
 /// sport's margins, the clock and period move forward, they go to breaks and they finish; Upcoming
 /// games start. Play disrupts games to keep the scenario's share of them Disrupted: an Upcoming game
 /// is Postponed or Canceled, a Live one Suspended with its score and period. A game that has been
-/// Final or Disrupted for <see cref="DropsOutAfter"/> drops out, and a new game takes its place at a
-/// random venue, Upcoming or straight into Live, so the number of Live games stays roughly steady.
+/// Final for <see cref="DropsOutAfter"/> or Disrupted for <see cref="DisruptedDropsOutAfter"/> drops out,
+/// and a new game takes its place at a random venue, Upcoming or straight into Live, so the number of Live games stays roughly steady.
 /// </summary>
 /// <remarks>
 /// Play moves on in steps of <see cref="Step"/> of scenario time counted from the scenario's start, so
@@ -24,8 +24,16 @@ public sealed partial class ScenarioPlay
     /// <summary>How often play moves on, in scenario time.</summary>
     public static readonly TimeSpan Step = TimeSpan.FromSeconds(1);
 
-    /// <summary>How long a Final or Disrupted game stays before a new game takes its place, in scenario time.</summary>
+    /// <summary>How long a Final game stays before a new game takes its place, in scenario time.</summary>
     public static readonly TimeSpan DropsOutAfter = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// How long a Disrupted game stays. Keeping it visible longer avoids suspending Live games every
+    /// minute just to replenish the Disrupted share, so most Live games can play through to Final.
+    /// </summary>
+    public static readonly TimeSpan DisruptedDropsOutAfter = TimeSpan.FromMinutes(30);
+
+    private static TimeSpan Retention(ProviderStatus status) => IsDisrupted(status) ? DisruptedDropsOutAfter : DropsOutAfter;
 
     /// <summary>The share of new games that start Upcoming (soon) rather than straight into Live.</summary>
     private const double UpcomingShare = 0.25;
@@ -35,13 +43,6 @@ public sealed partial class ScenarioPlay
     /// scenario time; with a fraction of a game fewer, proportionately longer.
     /// </summary>
     private static readonly TimeSpan DisruptionTakes = TimeSpan.FromSeconds(5);
-
-    /// <summary>
-    /// How far above the scenario's share play aims, as a multiple of it. A Disrupted game that drops out
-    /// leaves its place empty for a few seconds before play disrupts another, so aiming at the share
-    /// itself would keep a little under it.
-    /// </summary>
-    private const double AimAbove = 1.1;
 
     /// <summary>The share of the Upcoming games play disrupts that are Postponed rather than Canceled.</summary>
     private const double PostponedShare = 2.0 / 3;
@@ -106,7 +107,7 @@ public sealed partial class ScenarioPlay
                 case ProviderStatus.InProgress:
                     Play(played, at);
                     break;
-                case var status when (status == ProviderStatus.Final || IsDisrupted(status)) && at - played.StoppedAt >= DropsOutAfter:
+                case var status when (status == ProviderStatus.Final || IsDisrupted(status)) && at - played.StoppedAt >= Retention(status):
                     // Without teams free for a new game, the old one stays until some are.
                     _games[i] = NewGame(at, replacing: played) ?? played;
                     break;
@@ -156,7 +157,7 @@ public sealed partial class ScenarioPlay
     /// </summary>
     private void Disrupt(DateTimeOffset at)
     {
-        var shortBy = _settings.DisruptedShare * AimAbove * _games.Count - _games.Count(played => IsDisrupted(played.Game.Status));
+        var shortBy = _settings.DisruptedShare * _games.Count - _games.Count(played => IsDisrupted(played.Game.Status));
         if (shortBy <= 0 || _random.NextDouble() >= shortBy * (Step / DisruptionTakes))
             return;
         var candidates = _games
@@ -230,7 +231,7 @@ public sealed partial class ScenarioPlay
 
     /// <summary>
     /// A game as play takes it on at <paramref name="at"/>. A Live one's clock is set by how far in it is;
-    /// a Final or Disrupted one has been so for a random part of <see cref="DropsOutAfter"/>, so the games a
+    /// a Final or Disrupted one has been so for a random part of its retention time, so the games a
     /// scenario starts with don't all drop out at once.
     /// </summary>
     private PlayedGame Begin(ScenarioGame game, DateTimeOffset at)
@@ -238,12 +239,12 @@ public sealed partial class ScenarioPlay
         var league = _settings.Leagues.Single(l => l.Key == game.LeagueKey);
         var played = new PlayedGame(game.ToProviderGame(at), league) { StoppedAt = at };
         if (game.Status == ProviderStatus.Final || IsDisrupted(game.Status))
-            played.StoppedAt = at - DropsOutAfter * _random.NextDouble();
+            played.StoppedAt = at - Retention(game.Status) * _random.NextDouble();
         if (game.Status == ProviderStatus.InProgress)
         {
             // Where the scenario says it stands, if it says; otherwise however far its start time puts it.
             var written = game.Contest is ProviderSides && game.Period is { } period ? played.Sport.Through(period, game.Clock, game.Phase) : null;
-            played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 0.95);
+            played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 1);
             if (game.Contest is ProviderField field && game.Period is { } fieldPeriod)
                 played.Through = league.Sport == Sport.Golf
                     ? (fieldPeriod - 1 + (game.Phase == ProviderPeriodPhase.Break ? 0.5 : (field.Entries.FirstOrDefault()?.Thru ?? 0) / 36.0)) / 4

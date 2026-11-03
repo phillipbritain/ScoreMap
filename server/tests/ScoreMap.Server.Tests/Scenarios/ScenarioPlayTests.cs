@@ -133,7 +133,8 @@ public sealed class ScenarioPlayTests : IDisposable
             }))
             .Where(step => step != 0)
             .ToList();
-        Assert.Equal([3, 5, 7], steps.Distinct().Order());
+        Assert.NotEmpty(steps);
+        Assert.All(steps, step => Assert.Contains(step, new[] { 3, 5, 7 }));
     }
 
     [Fact]

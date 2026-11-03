@@ -1,0 +1,20 @@
+{
+  "Grand Prix of St. Petersburg": { "name": "Streets of St. Petersburg", "city": "St. Petersburg", "region": "FL", "country": "USA", "latitude": 27.7676, "longitude": -82.6290 },
+  "Grand Prix of Phoenix": { "name": "Phoenix Raceway", "city": "Avondale", "region": "AZ", "country": "USA", "latitude": 33.3748, "longitude": -112.3112 },
+  "Grand Prix of Arlington": { "name": "Streets of Arlington", "city": "Arlington", "region": "TX", "country": "USA", "latitude": 32.7480, "longitude": -97.0870 },
+  "Grand Prix of Alabama": { "name": "Barber Motorsports Park", "city": "Birmingham", "region": "AL", "country": "USA", "latitude": 33.5329, "longitude": -86.6198 },
+  "Grand Prix of Long Beach": { "name": "Streets of Long Beach", "city": "Long Beach", "region": "CA", "country": "USA", "latitude": 33.7633, "longitude": -118.1924 },
+  "Grand Prix of Indianapolis (Road Course)": { "name": "Indianapolis Motor Speedway", "city": "Speedway", "region": "IN", "country": "USA", "latitude": 39.7950, "longitude": -86.2348 },
+  "Indianapolis 500": { "name": "Indianapolis Motor Speedway", "city": "Speedway", "region": "IN", "country": "USA", "latitude": 39.7950, "longitude": -86.2348 },
+  "Grand Prix of Detroit": { "name": "Streets of Detroit", "city": "Detroit", "region": "MI", "country": "USA", "latitude": 42.3300, "longitude": -83.0410 },
+  "Grand Prix of Illinois": { "name": "World Wide Technology Raceway", "city": "Madison", "region": "IL", "country": "USA", "latitude": 38.6508, "longitude": -90.1360 },
+  "Grand Prix of Road America": { "name": "Road America", "city": "Elkhart Lake", "region": "WI", "country": "USA", "latitude": 43.7980, "longitude": -87.9895 },
+  "Grand Prix of Mid-Ohio": { "name": "Mid-Ohio Sports Car Course", "city": "Lexington", "region": "OH", "country": "USA", "latitude": 40.6890, "longitude": -82.6370 },
+  "Grand Prix of Nashville": { "name": "Nashville Superspeedway", "city": "Lebanon", "region": "TN", "country": "USA", "latitude": 36.0451, "longitude": -86.4118 },
+  "Grand Prix of Portland": { "name": "Portland International Raceway", "city": "Portland", "region": "OR", "country": "USA", "latitude": 45.5952, "longitude": -122.6941 },
+  "Grand Prix of Ontario": { "name": "Streets of Markham", "city": "Markham", "region": "ON", "country": "Canada", "latitude": 43.8561, "longitude": -79.3370 },
+  "Grand Prix of Washington, D.C.": { "name": "Streets of Washington, D.C.", "city": "Washington", "region": "DC", "country": "USA", "latitude": 38.8895, "longitude": -77.0230 },
+  "Grand Prix of Milwaukee Race 1": { "name": "Milwaukee Mile", "city": "West Allis", "region": "WI", "country": "USA", "latitude": 43.0186, "longitude": -88.0103 },
+  "Grand Prix of Milwaukee Race 2": { "name": "Milwaukee Mile", "city": "West Allis", "region": "WI", "country": "USA", "latitude": 43.0186, "longitude": -88.0103 },
+  "Grand Prix of Monterey": { "name": "WeatherTech Raceway Laguna Seca", "city": "Monterey", "region": "CA", "country": "USA", "latitude": 36.5844, "longitude": -121.7534 }
+}

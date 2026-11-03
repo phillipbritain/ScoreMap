@@ -47,7 +47,7 @@ App settings reach the server as environment variables, and `__` separates confi
 | `Espn__BaseUrl`              | ESPN's scoreboard API                                                                                 | Game feed.                                                                                                       |
 | `Feedback__GitHubToken`      | None: feedback is only logged                                                                         | The token feedback is filed as issues with. Passed to the template as `feedbackGitHubToken`, see [configuration.md](configuration.md#feedback). |
 
-The venue corrections file (`venue-corrections.json`) ships with the app. To change a correction, edit the file in the repo and redeploy.
+The venue corrections file (`venue-corrections.json`) and the IndyCar track list (`indycar-tracks.json`) ship with the app. To change a correction or a track, edit the file in the repo and redeploy.
 
 ## Deploy
 

@@ -75,6 +75,7 @@ public class LeagueTests
             new LeagueListing("Formula 1", "Racing"),
             new LeagueListing("IndyCar Series", "Racing"),
             new LeagueListing("PGA Tour", "Golf"),
+            new LeagueListing("LPGA Tour", "Golf"),
             new LeagueListing("UFC", "MMA"),
         ], leagues);
     }

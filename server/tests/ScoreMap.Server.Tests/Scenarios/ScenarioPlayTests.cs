@@ -524,6 +524,7 @@ public sealed class ScenarioPlayTests : IDisposable
 
     private Scenario Read(string json) => Read(json, Leagues);
 
+    // For a league kept out of Leagues, as adding one there would change what the other tests' fills draw.
     private Scenario Read(string json, IReadOnlyList<League> leagues)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);

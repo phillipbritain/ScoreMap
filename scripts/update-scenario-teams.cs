@@ -96,7 +96,8 @@ foreach (var (name, key) in leagues)
         var picked = new List<JsonNode>();
         foreach (var school in schools)
         {
-            // ESPN sometimes lists a school twice under different ids (Clemson's softball team), the same in all we keep.
+            // ESPN sometimes lists a school twice under different ids (Clemson's softball team); keep one when the
+            // listings match in every field written to the file.
             var found = teams.Where(team => (string?)team["location"] == school)
                 .DistinctBy(team => ((string?)team["displayName"], (string?)team["abbreviation"], (string?)team["logos"]?[0]?["href"]))
                 .ToList();

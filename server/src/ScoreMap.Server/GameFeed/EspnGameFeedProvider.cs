@@ -166,7 +166,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     }
 
     /// <summary>A play from a game's summary as a score, naming its team by abbreviation; null if the team isn't in the game.</summary>
-    private static ProviderScoringPlay? ToScoringPlay(Play play, List<Competitor> competitors)
+    private static ProviderScoringPlay? ToScoringPlay(Play play, List<SummaryCompetitor> competitors)
     {
         var team = play.Team?.Abbreviation
             ?? competitors.FirstOrDefault(c => c.Id is not null && c.Id == play.Team?.Id)?.Team?.Abbreviation;
@@ -892,7 +892,11 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record TeamRef(string? Id, string? Abbreviation);
     private sealed record Athlete(string? DisplayName);
     private sealed record Summary(SummaryHeader? Header, List<Play>? ScoringPlays, List<Play>? Plays);
-    private sealed record SummaryHeader(List<Competition>? Competitions);
+    // Summary broadcasts have a different shape from scoreboard broadcasts. Read only
+    // the team ids needed to name the scoring side here.
+    private sealed record SummaryHeader(List<SummaryCompetition>? Competitions);
+    private sealed record SummaryCompetition(List<SummaryCompetitor>? Competitors);
+    private sealed record SummaryCompetitor(string? Id, Team? Team);
     private sealed record Play(string? Text, bool? ScoringPlay, TeamRef? Team, PlayPeriod? Period, Clock? Clock,
         int? HomeScore, int? AwayScore);
     private sealed record PlayPeriod(int? Number, string? Type);

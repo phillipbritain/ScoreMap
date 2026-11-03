@@ -19,6 +19,31 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task College_hockey_scoreboard_keeps_a_tied_overtime_final_and_its_venue()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("college-hockey.json", "hockey/mens-college-hockey"));
+
+        Assert.Equal(ProviderStatus.Final, game.Status);
+        Assert.Equal(4, game.Period);
+        Assert.Equal(("MRMK", 5), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("CONN", 5), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
+        Assert.Equal(new ProviderVenue("Lawler Arena", "North Andover", "MA", "USA", "1218"), game.Venue);
+    }
+
+    [Fact]
+    public async Task College_hockey_summary_gives_the_last_marked_goal()
+    {
+        var provider = ProviderOver(StubHttpHandler.Serving(
+            ("https://espn.test/sports/hockey/mens-college-hockey/scoreboard", Fixture("college-hockey-final.json")),
+            ("https://espn.test/sports/hockey/mens-college-hockey/summary?event=401862341", Fixture("college-hockey-summary.json"))));
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("hockey/mens-college-hockey", CancellationToken.None));
+
+        Assert.Equal(new ProviderScoringPlay("DEN",
+            "Even Strength Goal Scored by Kyle Chyzowski assisted by Boston Buckberger and Garrett Brown", 3, "14:08"), game.LastScore);
+    }
+
+    [Fact]
     public async Task Final_game_abroad_carries_its_real_venue_teams_scores_and_broadcasters()
     {
         var games = await FetchFixtureAsync("nfl.json", Nfl);

@@ -5,8 +5,8 @@ A globe showing sports games happening around the world, with live scores, so fa
 ## Language
 
 **Sport**:
-A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in Leagues and Display Settings on the rail. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer.
-_Avoid_: American football, football (for soccer)
+A kind of game, such as football, basketball, soccer or cricket. Sports group leagues in Leagues and Display Settings on the rail. ScoreMap is for viewers in the US, so football means American football, and soccer is soccer. Rugby means rugby union.
+_Avoid_: American football, football (for soccer), rugby union (say rugby)
 
 **League**:
 A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users show or hide in Leagues on the rail.
@@ -92,7 +92,7 @@ Where play stands in a Live game right now: in football the down and distance an
 _Avoid_: Game state, status (a game's status is Upcoming, Live, Final or Disrupted)
 
 **Key events**:
-Soccer's goals and cards, in the order they came, each with its team, player and minute.
+Soccer's goals and cards, or rugby's tries, conversions, penalty and drop goals and cards, in the order they came, each with its team, player and minute.
 _Avoid_: Incidents, timeline
 
 **Pulse**:
@@ -104,7 +104,7 @@ In basketball, the last 5 minutes of the last period of regulation, or any time 
 _Avoid_: Crunch time, close game
 
 **Hot game**:
-A Live game coming down to the wire: the trailing side is one score from tying or taking the lead, and little is left to play. In football, the last 4 minutes of the 4th quarter or any time in overtime, within 8 points. In hockey, the last 5 minutes of the 3rd period within 1 goal, or any time in overtime or a shootout. In soccer, from the 85th minute within 1 goal, from the 115th minute of extra time within 1 goal, or any time in a penalty shootout. In baseball, from the last inning of regulation on (the 9th, or the 7th in college softball), while the tying run is on base or at the plate. In cricket, the last 2 overs of a limited-overs chase, while the chasing side needs no more than 2 runs a ball and has wickets left. In golf, the final round once the leader has played 9 holes, leading by no more than 1 shot. In UFC, a fight card's main event in its last scheduled round. A race is never hot. In basketball, the exception: a game in clutch time.
+A Live game coming down to the wire: the trailing side is one score from tying or taking the lead, and little is left to play. In football, the last 4 minutes of the 4th quarter or any time in overtime, within 8 points. In hockey, the last 5 minutes of the 3rd period within 1 goal, or any time in overtime or a shootout. In soccer, from the 85th minute within 1 goal, from the 115th minute of extra time within 1 goal, or any time in a penalty shootout. In rugby, from the 75th minute, or any time in extra time, within a converted try (7 points). In baseball, from the last inning of regulation on (the 9th, or the 7th in college softball), while the tying run is on base or at the plate. In cricket, the last 2 overs of a limited-overs chase, while the chasing side needs no more than 2 runs a ball and has wickets left. In golf, the final round once the leader has played 9 holes, leading by no more than 1 shot. In UFC, a fight card's main event in its last scheduled round. A race is never hot. In basketball, the exception: a game in clutch time.
 _Avoid_: Close game, thriller, top event (ESPN's pick, not ScoreMap's)
 
 **Venue**:

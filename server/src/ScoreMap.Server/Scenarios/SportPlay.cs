@@ -8,7 +8,8 @@ namespace ScoreMap.Server.Scenarios;
 /// stretches of play and the breaks it goes through from start to finish, with their periods and clock,
 /// and how often and by how much a team scores, so a whole game ends at roughly the sport's usual margins.
 /// How far through a game is runs from 0 (just started) to 1 (finished), across its planned length.
-/// Cricket is played a ball at a time, to one side at once: the away team bats first, and the home team
+/// Rugby is scored a penalty or drop goal (3), a try (5) or a converted try (7) at a time, and counts its
+/// minutes up as soccer does. Cricket is played a ball at a time, to one side at once: the away team bats first, and the home team
 /// chases its runs. A side all out ends its innings early, and a chase won (or all out) ends the game.
 /// </summary>
 internal sealed class SportPlay
@@ -35,7 +36,7 @@ internal sealed class SportPlay
         _plannedMinutes = league.PlannedLength.TotalMinutes;
         Regulation = league.Regulation;
         PeriodMinutes = league.PeriodClockMinutes ?? 0;
-        _segments = Segments(league.Sport, Regulation);
+        _segments = Segments(league.Sport, Regulation, PeriodMinutes);
         _totalWeight = _segments.Sum(s => s.Weight);
         _playingShare = _segments.Where(s => s.Playing).Sum(s => s.Weight) / _totalWeight;
 
@@ -47,6 +48,8 @@ internal sealed class SportPlay
             Sport.Basketball => new Scoring(52, BasketballPoints, 137, 2),
             Sport.Baseball => new Scoring(3, [(1, 0.65), (2, 0.25), (3, 0.08), (4, 0.02)], 11, 1),
             Sport.Hockey => new Scoring(3, [(1, 1.0)], 7, 1),
+            // About 25 points a side: 3 or 4 tries, most of them converted, and a couple of penalty goals.
+            Sport.Rugby => new Scoring(5.5, [(7, 0.4), (5, 0.2), (3, 0.4)], 60, null),
             _ => new Scoring(1.4, [(1, 1.0)], 6, null),
         };
     }
@@ -68,16 +71,16 @@ internal sealed class SportPlay
     public int Regulation { get; }
 
     /// <summary>
-    /// How long a period lasts on the game clock (a half in soccer); not used in baseball or cricket, which
+    /// How long a period lasts on the game clock (a half in soccer and rugby); not used in baseball or cricket, which
     /// have no clock.
     /// </summary>
     private int PeriodMinutes { get; }
 
-    /// <summary>How long soccer's halftime lasts.</summary>
-    private const int SoccerHalftimeMinutes = 15;
+    /// <summary>How long soccer's and rugby's halftime lasts.</summary>
+    private const int HalftimeMinutes = 15;
 
-    /// <summary>A soccer clock: the minute of the game, such as <c>67'</c>.</summary>
-    private static string SoccerClock(int minute) => $"{minute}'";
+    /// <summary>A clock counting minutes up, as soccer's and rugby's do: the minute of the game, such as <c>67'</c>.</summary>
+    private static string MinuteClock(int minute) => $"{minute}'";
 
     /// <summary>A period's clock counting down, with <paramref name="left"/> to go, such as <c>8:05</c>.</summary>
     private static string Countdown(TimeSpan left) => $"{(int)left.TotalMinutes}:{left.Seconds:00}";
@@ -268,7 +271,7 @@ internal sealed class SportPlay
             Sport.Baseball => null,
             // The overs bowled in the innings, which Through reads back; the clock line doesn't show it.
             Sport.Cricket => segment.Playing ? Overs((int)(done * CricketOvers * BallsPerOver)) : null,
-            Sport.Soccer => SoccerClock(segment.Playing
+            Sport.Soccer or Sport.Rugby => MinuteClock(segment.Playing
                 ? (segment.Period - 1) * PeriodMinutes + Math.Min(PeriodMinutes, (int)(done * PeriodMinutes) + 1)
                 : segment.Period * PeriodMinutes),
             _ => Countdown(TimeSpan.FromSeconds(Math.Floor((segment.Playing ? 1 - done : 0) * PeriodMinutes * 60))),
@@ -302,7 +305,7 @@ internal sealed class SportPlay
                 return 0;
             case Sport.Cricket:
                 return Math.Clamp(Balls(clock) / (double)(CricketOvers * BallsPerOver), 0, 1);
-            case Sport.Soccer:
+            case Sport.Soccer or Sport.Rugby:
                 // The minute of the game, such as 67' (or 90'+3, in added time): halfway through it, as
                 // its very start could round down to the minute before.
                 var digits = new string((clock ?? "").TakeWhile(char.IsAsciiDigit).ToArray());
@@ -330,7 +333,7 @@ internal sealed class SportPlay
         return (_segments[^1], 1);
     }
 
-    private static List<Segment> Segments(Sport sport, int regulation)
+    private static List<Segment> Segments(Sport sport, int regulation, int periodMinutes)
     {
         var segments = new List<Segment>();
         switch (sport)
@@ -352,13 +355,13 @@ internal sealed class SportPlay
                 segments.Add(new(1, ProviderPeriodPhase.Break, 0.1, false));
                 segments.Add(new(2, ProviderPeriodPhase.Playing, 1, true));
                 break;
-            case Sport.Soccer:
-                // Two 45-minute halves around a 15-minute halftime.
+            case Sport.Soccer or Sport.Rugby:
+                // Two halves (45 minutes in soccer, 40 in rugby) around a 15-minute halftime.
                 for (var half = 1; half <= regulation; half++)
                 {
                     segments.Add(new(half, ProviderPeriodPhase.Playing, 1, true));
                     if (half < regulation)
-                        segments.Add(new(half, ProviderPeriodPhase.Break, SoccerHalftimeMinutes / 45.0, false));
+                        segments.Add(new(half, ProviderPeriodPhase.Break, HalftimeMinutes / (double)periodMinutes, false));
                 }
                 break;
             default:

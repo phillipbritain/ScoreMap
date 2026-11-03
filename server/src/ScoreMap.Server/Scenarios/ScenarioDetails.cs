@@ -11,14 +11,15 @@ namespace ScoreMap.Server.Scenarios;
 /// a game has started, and while it's Live where play stands. Each comes from a seed of the game or team,
 /// so it's the same every time a game is asked for. A game's last score is made up as its score changes
 /// (the team whose score went up scored, as its sport scores), and for a game first seen with a score,
-/// from that score; in soccer its goals, and cards now and then, come with the minute they came in.
-/// Cricket has no last score or situation, as ESPN gives none.
+/// from that score; in soccer its goals, and in rugby its tries, conversions and penalty and drop goals, come
+/// with the minute they came in, and cards now and then. Cricket has no last score or situation, as ESPN gives
+/// none, and cricket and rugby teams no record (ESPN gives a rugby side's form instead).
 /// </summary>
 internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
 {
     private readonly Dictionary<string, League> _leagues = leagues.ToDictionary(league => league.Key);
 
-    // Each game's scores when last seen, its last score and (soccer) its goals and cards, by game id.
+    // Each game's scores when last seen, its last score and (soccer, rugby) its scores and cards, by game id.
     private readonly Dictionary<string, Seen> _seen = new();
 
     private sealed record Seen(int? Home, int? Away, ProviderScoringPlay? LastScore, IReadOnlyList<ProviderKeyEvent> KeyEvents, int Minute);
@@ -57,12 +58,15 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
         var key = $"{league.Key}/{game.Id}";
         var seen = _seen.GetValueOrDefault(key);
         // A Final game has no clock, so has played its whole game.
-        var minute = league.Sport != Sport.Soccer ? 0
+        var minute = league.Sport is not (Sport.Soccer or Sport.Rugby) ? 0
             : game.Status == ProviderStatus.Final ? league.Regulation * (league.PeriodClockMinutes ?? 45)
             : SoccerMinute(game.DisplayClock);
-        var (lastScore, keyEvents) = league.Sport == Sport.Soccer
-            ? SoccerEvents(game, seen, minute)
-            : (Scored(game, league, seen) ?? seen?.LastScore, (IReadOnlyList<ProviderKeyEvent>)[]);
+        var (lastScore, keyEvents) = league.Sport switch
+        {
+            Sport.Soccer => SoccerEvents(game, seen, minute),
+            Sport.Rugby => RugbyEvents(game, seen, minute),
+            _ => (Scored(game, league, seen) ?? seen?.LastScore, (IReadOnlyList<ProviderKeyEvent>)[]),
+        };
         _seen[key] = new Seen(sides.Home.Score, sides.Away.Score, lastScore, keyEvents, Math.Max(minute, seen?.Minute ?? 0));
 
         return game with
@@ -84,7 +88,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     /// </summary>
     private static ProviderTeam WithRecord(ProviderTeam team, League league)
     {
-        if (league.Sport == Sport.Cricket)
+        if (league.Sport is Sport.Cricket or Sport.Rugby)
             return team;
         var random = Seeded(league.Key, team.FullName);
         var played = league.Sport switch
@@ -120,6 +124,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             Sport.Baseball => Pick(random, $"Division Series - Game {random.Next(1, 6)}", "Doubleheader - Game 2", "Inclement Weather - Makeup date"),
             Sport.Hockey => Pick(random, $"First Round - Game {random.Next(1, 8)}", "Outdoor Game", "Rivalry Night"),
             Sport.Soccer => Pick(random, "1st Leg", $"2nd Leg - Aggregate {random.Next(4)}-{random.Next(4)}", "Derby"),
+            Sport.Rugby => Pick(random, "Round 3", "Triple Crown decider", "Grand Slam decider"),
             _ => Pick(random, "Qualifier 1", "Eliminator", "Final"),
         };
     }
@@ -139,6 +144,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             Sport.Basketball => ($"{favourite.Abbreviation} -{Number(Between(1, 13, 0.5))}", Between(208.5, 241.5, 1)),
             Sport.Baseball => ($"{favourite.Abbreviation} -{random.Next(110, 220)}", Between(6.5, 10.5, 0.5)),
             Sport.Hockey => ($"{favourite.Abbreviation} -{random.Next(110, 200)}", Between(5.5, 6.5, 1)),
+            Sport.Rugby => ($"{favourite.Abbreviation} -{Number(Between(1.5, 20.5, 1))}", Between(38.5, 55.5, 1)),
             _ => ($"{favourite.Abbreviation} -{random.Next(105, 260)}", Between(2.5, 3.5, 1)),
         };
         return new ProviderOdds(line, total, "DraftKings");
@@ -153,6 +159,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             Sport.Football => 68000,
             Sport.Baseball => 40000,
             Sport.Soccer => 45000,
+            Sport.Rugby => 65000,
             Sport.Cricket => 33000,
             _ => 18500,
         };
@@ -246,23 +253,107 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             var kind = random.NextDouble() switch { < 0.1 => KeyEventKind.PenaltyGoal, < 0.13 => KeyEventKind.OwnGoal, _ => KeyEventKind.Goal };
             events.Add(new ProviderKeyEvent(kind, team.Abbreviation, Player(random), $"{at}'"));
         }
+        Cards(events, game, from, minute, chance: 0.035, redChance: 0.003);
+        return InOrder(events, kind => kind switch { KeyEventKind.PenaltyGoal => "Penalty", KeyEventKind.OwnGoal => "Own goal", _ => "Goal" });
+    }
+
+    // Rugby's scores and cards.
+
+    /// <summary>
+    /// Rugby's scores and cards so far, coming as soccer's goals and cards do (see <see cref="SoccerEvents"/>).
+    /// The points a team gained are made up of converted tries (a try and its conversion), tries, and penalty
+    /// or now and then drop goals, as they add up. The last score is the last of them.
+    /// </summary>
+    private static (ProviderScoringPlay? LastScore, IReadOnlyList<ProviderKeyEvent> KeyEvents) RugbyEvents(ProviderGame game, Seen? seen, int minute)
+    {
+        var events = seen?.KeyEvents.ToList() ?? [];
+        var sides = game.Sides();
+        void ScoresFor(ProviderTeam team, int had, int has)
+        {
+            var random = Seeded(game.Id, $"{team.Abbreviation} {had}-{has}");
+            for (var left = has - had; left > 0;)
+            {
+                var points = RugbyScore(left, random);
+                if (points < 2)
+                    break;
+                var at = seen is null ? random.Next(1, Math.Max(2, minute)) : minute;
+                KeyEventKind[] kinds = points switch
+                {
+                    7 => [KeyEventKind.Try, KeyEventKind.Conversion],
+                    5 => [KeyEventKind.Try],
+                    3 => [random.NextDouble() < 0.1 ? KeyEventKind.DropGoal : KeyEventKind.PenaltyGoal],
+                    _ => [KeyEventKind.Conversion],
+                };
+                var kicker = Player(random);
+                events.AddRange(kinds.Select(kind =>
+                    new ProviderKeyEvent(kind, team.Abbreviation, kind == KeyEventKind.Try ? Player(random) : kicker, $"{at}'")));
+                left -= points;
+            }
+        }
+        ScoresFor(sides.Home, seen?.Home ?? 0, sides.Home.Score ?? 0);
+        ScoresFor(sides.Away, seen?.Away ?? 0, sides.Away.Score ?? 0);
+        Cards(events, game, seen?.Minute ?? 0, minute, chance: 0.02, redChance: 0.002);
+        return InOrder(events, kind => kind switch
+        {
+            KeyEventKind.Try => "Try",
+            KeyEventKind.Conversion => "Conversion",
+            KeyEventKind.DropGoal => "Drop goal",
+            _ => "Penalty goal",
+        });
+    }
+
+    private static readonly (int Points, double Chance)[] RugbyScores = [(7, 0.4), (5, 0.2), (3, 0.4)];
+
+    /// <summary>
+    /// The points of one rugby score towards <paramref name="left"/> still to make up: a converted try (7), a try
+    /// (5) or a penalty or drop goal (3), picked among those that leave points the rest can add up to. Points
+    /// no score adds up to (1, 2 or 4, only ever written out by hand) end with a lone conversion's 2, and a
+    /// 1 is left out.
+    /// </summary>
+    private static int RugbyScore(int left, Random random)
+    {
+        static bool AddsUp(int points) => points is 0 or 3 or >= 5;
+        var fits = RugbyScores.Where(score => AddsUp(left - score.Points)).ToArray();
+        if (fits.Length == 0)
+            return Math.Min(left, 2);
+        var roll = random.NextDouble() * fits.Sum(score => score.Chance);
+        foreach (var (points, chance) in fits)
+        {
+            if (roll < chance)
+                return points;
+            roll -= chance;
+        }
+        return fits[^1].Points;
+    }
+
+    /// <summary>A card now and then in each minute after <paramref name="from"/> up to <paramref name="minute"/>, from a seed of the game and minute.</summary>
+    private static void Cards(List<ProviderKeyEvent> events, ProviderGame game, int from, int minute, double chance, double redChance)
+    {
+        var sides = game.Sides();
         for (var at = from + 1; at <= minute; at++)
         {
             var random = Seeded(game.Id, $"card {at}");
             var roll = random.NextDouble();
-            if (roll < 0.035)
-                events.Add(new ProviderKeyEvent(roll < 0.003 ? KeyEventKind.RedCard : KeyEventKind.YellowCard,
+            if (roll < chance)
+                events.Add(new ProviderKeyEvent(roll < redChance ? KeyEventKind.RedCard : KeyEventKind.YellowCard,
                     (random.Next(2) == 0 ? sides.Home : sides.Away).Abbreviation, Player(random), $"{at}'"));
         }
-        // In the order they came; a goal and a card in the same minute, the goal first.
+    }
+
+    /// <summary>
+    /// The key events in the order they came (a score and a card in the same minute, the score first), and the
+    /// last score: the last of them that isn't a card, its kind named by <paramref name="name"/>.
+    /// </summary>
+    private static (ProviderScoringPlay? LastScore, IReadOnlyList<ProviderKeyEvent> KeyEvents) InOrder(
+        List<ProviderKeyEvent> events, Func<KeyEventKind, string> name)
+    {
         var ordered = events.OrderBy(e => SoccerMinute(e.Clock)).ToList();
-        var last = ordered.LastOrDefault(e => e.Kind is KeyEventKind.Goal or KeyEventKind.PenaltyGoal or KeyEventKind.OwnGoal);
-        var text = last is null ? null : (last.Kind switch { KeyEventKind.PenaltyGoal => "Penalty", KeyEventKind.OwnGoal => "Own goal", _ => "Goal" }) + $": {last.Player}";
-        var lastScore = last is null ? null : new ProviderScoringPlay(last.Team, text!, null, last.Clock);
+        var last = ordered.LastOrDefault(e => e.Kind is not (KeyEventKind.YellowCard or KeyEventKind.RedCard));
+        var lastScore = last is null ? null : new ProviderScoringPlay(last.Team, $"{name(last.Kind)}: {last.Player}", null, last.Clock);
         return (lastScore, ordered);
     }
 
-    /// <summary>The minute of a soccer clock such as "67'", or 0 when there's none.</summary>
+    /// <summary>The minute of a clock counting minutes up (soccer's and rugby's) such as "67'", or 0 when there's none.</summary>
     private static int SoccerMinute(string? clock) =>
         int.TryParse(new string((clock ?? "").TakeWhile(char.IsAsciiDigit).ToArray()), out var minute) ? minute : 0;
 

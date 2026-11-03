@@ -76,6 +76,10 @@
     "latitude": 38.8682612,
     "longitude": -77.0126092
   },
+  "Aviva Stadium, Dublin": {
+    "latitude": 53.3352254,
+    "longitude": -6.2281851
+  },
   "Azadi Stadium, Tehran": {
     "latitude": 35.7244962,
     "longitude": 51.2755487
@@ -444,6 +448,10 @@
     "latitude": -29.8290201,
     "longitude": 31.0313741
   },
+  "Murrayfield Stadium, Edinburgh": {
+    "latitude": 55.9423133,
+    "longitude": -3.2408951
+  },
   "National Stadium, Tokyo": {
     "latitude": 35.677954,
     "longitude": 139.7147442
@@ -507,6 +515,10 @@
   "Prince Moulay Abdellah Stadium, Rabat": {
     "latitude": 33.9598204,
     "longitude": -6.889071
+  },
+  "Principality Stadium, Cardiff": {
+    "latitude": 51.4782484,
+    "longitude": -3.1826256
   },
   "Providence Park, Portland": {
     "latitude": 45.5215291,

@@ -1,0 +1,323 @@
+{
+ "leagues": [
+  {
+   "id": "102",
+   "uid": "s:1~l:102",
+   "name": "NCAA Softball",
+   "abbreviation": "CSOFT",
+   "slug": "college-softball",
+   "season": {
+    "year": 2026,
+    "startDate": "2025-06-12T04:00Z",
+    "endDate": "2026-06-11T03:59Z",
+    "displayName": "2025-26",
+    "type": {
+     "id": "1",
+     "type": 1,
+     "name": "Preseason",
+     "abbreviation": "pre"
+    }
+   },
+   "calendarType": "day",
+   "calendarIsWhitelist": true,
+   "calendarStartDate": "2025-06-12T04:00Z",
+   "calendarEndDate": "2026-06-11T03:59Z"
+  }
+ ],
+ "events": [
+  {
+   "id": "401873589",
+   "uid": "s:1~l:102~e:401873589",
+   "date": "2026-05-30T23:00Z",
+   "name": "Nebraska Cornhuskers at Alabama Crimson Tide",
+   "shortName": "NEB @ ALA",
+   "season": {
+    "year": 2026,
+    "type": 5,
+    "slug": "world-series"
+   },
+   "competitions": [
+    {
+     "id": "401873589",
+     "uid": "s:1~l:102~e:401873589~c:401873589",
+     "date": "2026-05-30T23:00Z",
+     "attendance": 12679,
+     "timeValid": true,
+     "neutralSite": true,
+     "conferenceCompetition": false,
+     "playByPlayAvailable": true,
+     "recent": false,
+     "wasSuspended": false,
+     "venue": {
+      "id": "5006",
+      "fullName": "OGE Energy Field at Devon Park",
+      "address": {
+       "city": "Oklahoma City",
+       "state": "Oklahoma"
+      },
+      "indoor": false
+     },
+     "competitors": [
+      {
+       "id": "560",
+       "uid": "s:1~l:102~t:560",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": true,
+       "score": "5",
+       "team": {
+        "id": "560",
+        "uid": "s:1~l:102~t:560",
+        "location": "Alabama",
+        "name": "Crimson Tide",
+        "abbreviation": "ALA",
+        "displayName": "Alabama Crimson Tide",
+        "shortDisplayName": "Alabama",
+        "color": "A42D47",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/guid/23dace84-9fe7-3784-b7ea-efac2bb1cf42/logos/default.png"
+       }
+      },
+      {
+       "id": "511",
+       "uid": "s:1~l:102~t:511",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "score": "1",
+       "team": {
+        "id": "511",
+        "uid": "s:1~l:102~t:511",
+        "location": "Nebraska",
+        "name": "Cornhuskers",
+        "abbreviation": "NEB",
+        "displayName": "Nebraska Cornhuskers",
+        "shortDisplayName": "Nebraska",
+        "color": "FE0D04",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/guid/4a84e16a-0827-3d92-aa21-f28d050c0c9c/logos/default.png"
+       }
+      }
+     ],
+     "notes": [
+      {
+       "type": "event",
+       "headline": "Women's College World Series - Double Elimination Round"
+      }
+     ],
+     "status": {
+      "period": 7,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "Final",
+       "detail": "Final",
+       "shortDetail": "Final",
+       "altDetail": "Final"
+      }
+     },
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "ESPN"
+       ]
+      }
+     ],
+     "format": {
+      "regulation": {
+       "periods": 7
+      }
+     },
+     "startDate": "2026-05-30T23:00Z",
+     "broadcast": "ESPN",
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "1",
+        "shortName": "TV"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "ESPN",
+        "logo": "https://a.espncdn.com/guid/335fd2d2-97b9-336b-81ee-573eb6bdcffc/logos/default.png",
+        "darkLogo": ""
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ]
+    }
+   ],
+   "status": {
+    "period": 7,
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final",
+     "shortDetail": "Final",
+     "altDetail": "Final"
+    }
+   }
+  },
+  {
+   "id": "401873588",
+   "uid": "s:1~l:102~e:401873588",
+   "date": "2026-05-30T19:00Z",
+   "name": "Texas Tech Red Raiders at Tennessee Lady Volunteers",
+   "shortName": "TTU @ TENN",
+   "season": {
+    "year": 2026,
+    "type": 5,
+    "slug": "world-series"
+   },
+   "competitions": [
+    {
+     "id": "401873588",
+     "uid": "s:1~l:102~e:401873588~c:401873588",
+     "date": "2026-05-30T19:00Z",
+     "attendance": 0,
+     "timeValid": true,
+     "neutralSite": true,
+     "conferenceCompetition": false,
+     "playByPlayAvailable": true,
+     "recent": false,
+     "wasSuspended": false,
+     "venue": {
+      "id": "5006",
+      "fullName": "OGE Energy Field at Devon Park",
+      "address": {
+       "city": "Oklahoma City",
+       "state": "Oklahoma"
+      },
+      "indoor": false
+     },
+     "competitors": [
+      {
+       "id": "611",
+       "uid": "s:1~l:102~t:611",
+       "type": "team",
+       "order": 0,
+       "homeAway": "home",
+       "winner": true,
+       "score": "2",
+       "team": {
+        "id": "611",
+        "uid": "s:1~l:102~t:611",
+        "location": "Tennessee",
+        "name": "Lady Volunteers",
+        "abbreviation": "TENN",
+        "displayName": "Tennessee Lady Volunteers",
+        "shortDisplayName": "Tennessee",
+        "color": "EE9627",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/guid/6fd39e66-540c-3e65-95f4-ef80e4c7a9bb/logos/default.png"
+       }
+      },
+      {
+       "id": "613",
+       "uid": "s:1~l:102~t:613",
+       "type": "team",
+       "order": 1,
+       "homeAway": "away",
+       "winner": false,
+       "score": "1",
+       "team": {
+        "id": "613",
+        "uid": "s:1~l:102~t:613",
+        "location": "Texas Tech",
+        "name": "Red Raiders",
+        "abbreviation": "TTU",
+        "displayName": "Texas Tech Red Raiders",
+        "shortDisplayName": "Texas Tech",
+        "color": "D60039",
+        "isActive": true,
+        "logo": "https://a.espncdn.com/guid/36be32e7-44f9-3e1d-9990-ebe750249131/logos/default.png"
+       }
+      }
+     ],
+     "notes": [
+      {
+       "type": "event",
+       "headline": "Women's College World Series - Double Elimination Round"
+      }
+     ],
+     "status": {
+      "period": 9,
+      "type": {
+       "id": "3",
+       "name": "STATUS_FINAL",
+       "state": "post",
+       "completed": true,
+       "description": "Final",
+       "detail": "Final/9",
+       "shortDetail": "Final/9",
+       "altDetail": "Final"
+      }
+     },
+     "broadcasts": [
+      {
+       "market": "national",
+       "names": [
+        "ABC"
+       ]
+      }
+     ],
+     "format": {
+      "regulation": {
+       "periods": 7
+      }
+     },
+     "startDate": "2026-05-30T19:00Z",
+     "broadcast": "ABC",
+     "geoBroadcasts": [
+      {
+       "type": {
+        "id": "1",
+        "shortName": "TV"
+       },
+       "market": {
+        "id": "1",
+        "type": "National"
+       },
+       "media": {
+        "shortName": "ABC",
+        "logo": "https://a.espncdn.com/guid/2acff74d-269f-36ac-96eb-9c66f8ba52ff/logos/default.png",
+        "darkLogo": "https://a.espncdn.com/guid/2acff74d-269f-36ac-96eb-9c66f8ba52ff/logos/default-dark.png"
+       },
+       "lang": "en",
+       "region": "us"
+      }
+     ]
+    }
+   ],
+   "status": {
+    "period": 9,
+    "type": {
+     "id": "3",
+     "name": "STATUS_FINAL",
+     "state": "post",
+     "completed": true,
+     "description": "Final",
+     "detail": "Final/9",
+     "shortDetail": "Final/9",
+     "altDetail": "Final"
+    }
+   }
+  }
+ ],
+ "eventsDate": {
+  "date": "2026-05-30T23:00Z",
+  "seasonType": 5
+ }
+}

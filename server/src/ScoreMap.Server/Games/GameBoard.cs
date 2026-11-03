@@ -11,8 +11,9 @@ namespace ScoreMap.Server.Games;
 /// ScoreMap's games: it maps provider statuses to ScoreMap's and keeps only games inside
 /// their pin windows. Each update of a league compares the result with the last one and
 /// reports what changed, so games entering and leaving their windows come out as added
-/// and removed. It also keeps which games are top events (see <see cref="UpdateTopEventsAsync"/>).
-/// Not thread-safe: the poller serializes every call.
+/// and removed. It also keeps which games are top events (see <see cref="UpdateTopEvents"/>).
+/// State access is not thread-safe: the poller serializes reads and updates. Fetch and lookup
+/// methods perform only external work and may run concurrently.
 /// </summary>
 public sealed class GameBoard(
     IGameFeedProvider feed,
@@ -44,10 +45,18 @@ public sealed class GameBoard(
     /// <summary>Every game currently on the board, across all leagues.</summary>
     public IReadOnlyList<Game> Games => _games.Values.SelectMany(g => g).ToList();
 
-    /// <summary>Fetches the league, replaces its games and returns what changed since the last update.</summary>
-    public async Task<IReadOnlyList<GameChange>> UpdateLeagueAsync(League league, CancellationToken cancellationToken)
+    private readonly Dictionary<string, IReadOnlyList<ProviderGame>> _reported = new();
+
+    // Fetching and venue resolution do not touch board state and may run outside its serialization gate.
+    public Task<IReadOnlyList<ProviderGame>> FetchLeagueAsync(League league, CancellationToken cancellationToken) =>
+        feed.FetchScoreboardAsync(league.Key, cancellationToken);
+
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
+        feed.FetchTopEventsAsync(cancellationToken);
+
+    /// <summary>Applies basic game data without waiting for optional venue lookups.</summary>
+    public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard)
     {
-        var scoreboard = await feed.FetchScoreboardAsync(league.Key, cancellationToken);
         var now = clock.GetUtcNow();
         ForgetGamesNoLongerReported(league.Key, scoreboard);
         var games = new List<Game>();
@@ -59,22 +68,61 @@ public sealed class GameBoard(
             if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
             var endTime = status == GameStatus.Final ? stoppedAt : null;
-            var location = await venues.LocateAsync(game.Venue, (game.Contest as ProviderSides)?.Home, cancellationToken);
+            var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
+            var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
+            var location = venues.Fallback(game.Venue);
+            if (location.FoundBy == LocationSource.Nowhere && previousGame is not null && SameVenue(previous, game))
+                location = new(new Coordinates(previousGame.Venue.Latitude, previousGame.Venue.Longitude),
+                    previousGame.Venue.TimeZone is null ? LocationSource.Nowhere : LocationSource.Venue);
             var added = ToGame(game, status, endTime, league, location);
             games.Add(added with { StreamLinks = streams.LinksFor(added) });
         }
 
         var before = _games.GetValueOrDefault(league.Key, []);
         _games[league.Key] = games;
+        _reported[league.Key] = scoreboard;
         return GameChanges.Between(before, games);
     }
 
-    /// <summary>
-    /// Fetches the feed's top events. Each league's next update marks its games that are among them, and
-    /// unmarks those no longer, so the change reaches browsers with the league's other changes.
-    /// </summary>
-    public async Task UpdateTopEventsAsync(CancellationToken cancellationToken) =>
-        _topEvents = await feed.FetchTopEventsAsync(cancellationToken);
+    /// <summary>Only games currently inside their pin windows need optional enrichment.</summary>
+    public IReadOnlyList<ProviderGame> GamesToEnrich(League league) =>
+        _reported.GetValueOrDefault(league.Key, []).Where(g =>
+            _games.GetValueOrDefault(league.Key, []).Any(shown => shown.Id == g.Id)).ToList();
+
+    public Task<VenueLocation> LocateVenueAsync(ProviderGame game, CancellationToken cancellationToken) =>
+        venues.LocateAsync(game.Venue, (game.Contest as ProviderSides)?.Home, cancellationToken);
+
+    /// <summary>Enriches the current game, preserving any scores received during the lookup.</summary>
+    public IReadOnlyList<GameChange> UpdateVenue(League league, ProviderGame requested, VenueLocation location)
+    {
+        var current = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == requested.Id);
+        if (!SameVenue(current, requested))
+            return [];
+        var before = _games.GetValueOrDefault(league.Key, []);
+        var after = before.Select(g => g.Id == requested.Id
+            ? g with { Venue = ToVenue(requested.Venue, location) with { Photo = g.Venue.Photo } }
+            : g).ToList();
+        _games[league.Key] = after;
+        return GameChanges.Between(before, after);
+    }
+
+    private static bool SameVenue(ProviderGame? a, ProviderGame b) => a is not null &&
+        a.Venue == b.Venue && (a.Contest as ProviderSides)?.Home.HomeCity == (b.Contest as ProviderSides)?.Home.HomeCity;
+
+    public IReadOnlyList<GameChange> UpdateTopEvents(IReadOnlySet<string> topEvents, IReadOnlySet<string> currentLeagues)
+    {
+        _topEvents = topEvents;
+        var changes = new List<GameChange>();
+        foreach (var (key, before) in _games)
+        {
+            if (!currentLeagues.Contains(key))
+                continue;
+            var after = before.Select(g => g with { TopEvent = topEvents.Contains(g.Id) }).ToList();
+            changes.AddRange(GameChanges.Between(before, after));
+            _games[key] = after;
+        }
+        return changes;
+    }
 
     public bool HasLiveGames(League league) =>
         _games.TryGetValue(league.Key, out var games) && games.Any(g => g.Status == GameStatus.Live);

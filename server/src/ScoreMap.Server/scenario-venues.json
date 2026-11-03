@@ -1,5 +1,14 @@
 [
   {
+    "name": "Augusta National Golf Club",
+    "city": "Augusta",
+    "region": "GA",
+    "country": "USA",
+    "groups": [
+      "worldwide"
+    ]
+  },
+  {
     "name": "Emirates Stadium",
     "city": "London",
     "region": null,

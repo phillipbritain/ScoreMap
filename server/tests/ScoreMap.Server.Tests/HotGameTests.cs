@@ -43,6 +43,14 @@ public class HotGameTests
         int period, string clock, int home, int away, bool expected) =>
         Assert.Equal(expected, (await SentAsync(Game(Nhl, clock, period, home, away))).Hot);
 
+    [Theory]
+    [InlineData(3, "5:00", Playing, true)]
+    [InlineData(3, "5:01", Playing, false)]
+    [InlineData(4, "4:30", Playing, true)]
+    [InlineData(5, "0:00", Shootout, true)]
+    public async Task College_hockey_uses_the_hockey_hot_game_rules(int period, string clock, ProviderPeriodPhase phase, bool expected) =>
+        Assert.Equal(expected, (await SentAsync(Game("hockey/mens-college-hockey", clock, period, 2, 2, phase))).Hot);
+
     [Fact]
     public async Task Hockey_in_a_shootout() =>
         Assert.True((await SentAsync(Game(Nhl, "0:00", 5, 2, 2, Shootout))).Hot);

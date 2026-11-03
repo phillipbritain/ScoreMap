@@ -62,6 +62,14 @@ public class ClockLineTests
         Assert.Equal(expected, await ClockLineAsync("baseball/mlb", status, "0:00", inning, phase));
 
     [Theory]
+    [InlineData(InProgress, 7, InningBottom, "Bot 7th")]
+    [InlineData(InProgress, 8, InningTop, "Top 8th")]
+    [InlineData(Final, 7, Playing, "Final")]
+    [InlineData(Final, 8, Playing, "Final/8")]
+    public async Task Softball_over_7_innings(ProviderStatus status, int inning, ProviderPeriodPhase phase, string expected) =>
+        Assert.Equal(expected, await ClockLineAsync("baseball/college-softball", status, "0:00", inning, phase));
+
+    [Theory]
     [InlineData(InProgress, "67'", 2, Playing, "67'")]
     [InlineData(InProgress, "45'+2'", 1, Playing, "45'+2'")]
     [InlineData(InProgress, "45'", 1, Break, "HT")]

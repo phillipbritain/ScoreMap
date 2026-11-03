@@ -48,6 +48,13 @@ public class ClockLineTests
         Assert.Equal(expected, await ClockLineAsync("hockey/nhl", status, clock, period, phase));
 
     [Theory]
+    [InlineData(InProgress, "2:10", 4, Playing, "OT 2:10")]
+    [InlineData(InProgress, "0:00", 5, Shootout, "SO")]
+    [InlineData(Final, "0:00", 4, Playing, "Final/OT")]
+    public async Task College_hockey(ProviderStatus status, string clock, int period, ProviderPeriodPhase phase, string expected) =>
+        Assert.Equal(expected, await ClockLineAsync("hockey/mens-college-hockey", status, clock, period, phase));
+
+    [Theory]
     [InlineData(InProgress, 7, InningTop, "Top 7th")]
     [InlineData(InProgress, 7, InningMiddle, "Mid 7th")]
     [InlineData(InProgress, 1, InningBottom, "Bot 1st")]

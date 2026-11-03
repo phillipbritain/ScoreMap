@@ -72,3 +72,13 @@ Soccer, rugby, cricket and tennis games never get a summary request. Soccer's su
 ### Not offered
 
 ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scoreboard is the only one that has a venue's `capacity`, and ScoreMap shows attendance instead.
+
+### NCAA men's hockey
+
+`hockey/mens-college-hockey` uses the default scoreboard: on 31 October 2026 it
+listed 25 games across Division I; `groups=50` returned none. Its periods and
+clock use the hockey rules, including tied finals recorded as `Final/OT` in period 4.
+Most summaries have no plays, so those games have no last score. The 2026 championship
+(game 401862341) has goal plays marked `scoringPlay`, although its play list is incomplete.
+Scenario teams come from teams appearing in the current year's scoreboard, because
+the teams endpoint also lists defunct and lower-division teams as active.

@@ -6,7 +6,7 @@
 //
 //     dotnet run scripts/update-scenario-teams.cs
 //
-// The NCAA leagues have hundreds of teams, so they keep only the schools in ncaaSchools; NCAA Baseball
+// The NCAA leagues other than hockey have hundreds of teams, so they keep only the schools in ncaaSchools; NCAA Baseball
 // and NCAA Softball also leave out those with no varsity team in the sport. ESPN has no teams endpoint for cricket, so a cricket
 // league's teams are those in its games this year, or last year's before this year's season starts. The file is written only once every league is
 // fetched, so a failed run leaves it as it was. Exits with 1 if a school isn't found or ESPN fails.
@@ -85,7 +85,20 @@ foreach (var (name, key) in leagues)
             break;
     }
 
-    if (name.StartsWith("NCAA", StringComparison.Ordinal))
+    // Hockey's teams endpoint includes defunct and lower-division teams as active.
+    // Keep teams also appearing on the Division I scoreboard; the intersection leaves
+    // out exhibition opponents which have no listing in the league's teams endpoint.
+    if (key == "hockey/mens-college-hockey")
+    {
+        var scoreboard = JsonNode.Parse(await http.GetStringAsync($"{path}/scoreboard?dates={DateTime.UtcNow.Year}&limit=1000"))!;
+        var playing = scoreboard["events"]!.AsArray()
+            .SelectMany(game => game!["competitions"]![0]!["competitors"]!.AsArray())
+            .Select(side => (string)side!["id"]!)
+            .ToHashSet();
+        teams = teams.Where(team => playing.Contains((string)team["id"]!)).ToList();
+    }
+
+    if (name.StartsWith("NCAA", StringComparison.Ordinal) && key != "hockey/mens-college-hockey")
     {
         var schools = name switch
         {

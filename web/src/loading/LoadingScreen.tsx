@@ -59,6 +59,8 @@ export function LoadingScreen({ stage, slow = false, onGone }: LoadingScreenProp
         latestOnGone.current()
       })
     return () => {
+      // Effect-local cancellation flag; this variable is never read during render.
+      // oxlint-disable-next-line react/immutability
       cancelled = true
     }
   }, [leaving, gone])

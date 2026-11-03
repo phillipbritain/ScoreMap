@@ -41,6 +41,8 @@ export function useClickAway(open: boolean, inside: (target: Element) => boolean
     }
     const onClick = (event: MouseEvent) => {
       if (isClickAway(press, { x: event.clientX, y: event.clientY, away: away(event.target) })) latest.current.onAway()
+      // Effect-local listener state; this variable is never read during render.
+      // oxlint-disable-next-line react/immutability
       press = null
     }
     window.addEventListener('pointerdown', onPointerDown, true)

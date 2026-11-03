@@ -1,12 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { League } from './viewerSettings'
 
 // Served by the server from its "Leagues" configuration (Program.cs).
 const leaguesPath = '/api/leagues'
 
-/** The configured leagues in order, for the rail's Leagues and Display Settings. Empty until they load. */
-export function useLeagues(): League[] {
-  const [leagues, setLeagues] = useState<League[]>([])
+type LeagueListState =
+  | { status: 'loading' | 'failed'; leagues: readonly [] }
+  | { status: 'ready'; leagues: readonly League[] }
+
+export type LeagueList = LeagueListState & { retry: () => void }
+
+/** Configured leagues in order, with an explicit retry after a failed request. No background retries. */
+export function useLeagues(): LeagueList {
+  const [state, setState] = useState<LeagueListState>({ status: 'loading', leagues: [] })
+  const [attempt, setAttempt] = useState(0)
+  const retry = useCallback(() => {
+    setState({ status: 'loading', leagues: [] })
+    setAttempt((current) => current + 1)
+  }, [])
   useEffect(() => {
     const abort = new AbortController()
     fetch(leaguesPath, { signal: abort.signal })
@@ -14,11 +25,13 @@ export function useLeagues(): League[] {
         if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
         return response.json() as Promise<League[]>
       })
-      .then(setLeagues)
-      .catch((error: unknown) => {
-        if (!abort.signal.aborted) console.error('Could not load the league list', error)
+      .then((leagues) => {
+        if (!abort.signal.aborted) setState({ status: 'ready', leagues })
+      })
+      .catch(() => {
+        if (!abort.signal.aborted) setState({ status: 'failed', leagues: [] })
       })
     return () => abort.abort()
-  }, [])
-  return leagues
+  }, [attempt])
+  return { ...state, retry }
 }

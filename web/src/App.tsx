@@ -114,7 +114,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     globeCamera.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
   }, [behaviour.zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
-  const leagues = useLeagues()
+  const leagueList = useLeagues()
+  const { leagues } = leagueList
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls(demo)
   const { setListing: setScenarioListing } = scenarios
@@ -281,7 +282,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           <WelcomeTourScreen
             progress={tourStep}
             onEvent={(event) => setTourProgress((current) => tourProgressAfter(current, event))}
-            leagues={leagues}
+            leagueList={leagueList}
             settings={viewerSettings}
             onChange={setViewerSettings}
             onOpenGame={setSelectedGameId}

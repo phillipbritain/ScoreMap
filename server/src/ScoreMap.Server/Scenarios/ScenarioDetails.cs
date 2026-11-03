@@ -124,7 +124,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             Sport.Baseball => Pick(random, $"Division Series - Game {random.Next(1, 6)}", "Doubleheader - Game 2", "Inclement Weather - Makeup date"),
             Sport.Hockey => Pick(random, $"First Round - Game {random.Next(1, 8)}", "Outdoor Game", "Rivalry Night"),
             Sport.Soccer => Pick(random, "1st Leg", $"2nd Leg - Aggregate {random.Next(4)}-{random.Next(4)}", "Derby"),
-            Sport.Rugby => Pick(random, "Calcutta Cup", "Triple Crown decider", "Grand Slam decider"),
+            Sport.Rugby => Pick(random, "Round 3", "Triple Crown decider", "Grand Slam decider"),
             _ => Pick(random, "Qualifier 1", "Eliminator", "Final"),
         };
     }
@@ -274,6 +274,8 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
             for (var left = has - had; left > 0;)
             {
                 var points = RugbyScore(left, random);
+                if (points < 2)
+                    break;
                 var at = seen is null ? random.Next(1, Math.Max(2, minute)) : minute;
                 KeyEventKind[] kinds = points switch
                 {
@@ -305,8 +307,8 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
     /// <summary>
     /// The points of one rugby score towards <paramref name="left"/> still to make up: a converted try (7), a try
     /// (5) or a penalty or drop goal (3), picked among those that leave points the rest can add up to. Points
-    /// no score adds up to (1, 2 or 4, only ever written out by hand) end with a lone conversion's 2, or a 1
-    /// left out.
+    /// no score adds up to (1, 2 or 4, only ever written out by hand) end with a lone conversion's 2, and a
+    /// 1 is left out.
     /// </summary>
     private static int RugbyScore(int left, Random random)
     {

@@ -11,6 +11,8 @@ public enum LocationSource
 {
     /// <summary>The owner's corrections file.</summary>
     Correction,
+    /// <summary>The position given with the venue (an IndyCar race's track list).</summary>
+    Given,
     /// <summary>The venue, looked up by name and city.</summary>
     Venue,
     /// <summary>The centre of the venue's city.</summary>
@@ -51,8 +53,9 @@ public sealed class VenueLocator
     }
 
     /// <summary>
-    /// Where a game's pin goes, trying in order: the corrections file, the venue looked up by name
-    /// and city (ESPN supplies no coordinates, ADR-0001), the venue's city centre, and the home team's city
+    /// Where a game's pin goes, trying in order: the corrections file, the position given with the venue,
+    /// the venue looked up by name and city (ESPN supplies no coordinates, ADR-0001), the venue's city
+    /// centre, and the home team's city
     /// (<paramref name="home"/>, null in a game with no home side).
     /// Always answers; when every step fails the position is 0,0 and <see cref="VenueLocation.FoundBy"/>
     /// says so.
@@ -61,6 +64,9 @@ public sealed class VenueLocator
     {
         if (_corrections.Find(venue?.Name) is { } corrected)
             return new(corrected, LocationSource.Correction);
+
+        if (venue?.Location is { } given)
+            return new(given, LocationSource.Given);
 
         if (!string.IsNullOrWhiteSpace(venue?.Name))
         {

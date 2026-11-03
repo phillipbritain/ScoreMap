@@ -8,10 +8,15 @@ namespace ScoreMap.Server.GameFeed;
 /// provider-neutral games. All knowledge of ESPN's response shape stays in this file.
 /// The <see cref="HttpClient"/> base address is the sports root, e.g.
 /// <c>https://site.api.espn.com/apis/site/v2/sports/</c>; league keys are <c>{sport}/{league}</c>.
+/// IndyCar's races, which ESPN gives no venue for anywhere, are placed from <c>indyCarTracks</c>, and one
+/// missing from it is left out.
 /// </summary>
-public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider clock, string? savedEventVenuesPath = null)
+public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider clock, string? savedEventVenuesPath = null,
+    TrackList? indyCarTracks = null)
     : IGameFeedProvider
 {
+    private const string IndyCar = "racing/irl";
+
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
 
     // Each started game's last score, by league and game, with the score it was looked up at and how many
@@ -55,10 +60,19 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             var golf = league.StartsWith("golf/", StringComparison.Ordinal);
             if (golf || league.StartsWith("racing/", StringComparison.Ordinal))
             {
-                if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is { } fieldGame)
-                    games.Add(fieldGame.Venue is null
-                        ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
-                        : fieldGame);
+                if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is not { } fieldGame)
+                    continue;
+                if (league == IndyCar)
+                {
+                    // ESPN has no IndyCar venue, on the scoreboard or in the core API's event, so a race is at its
+                    // track in the track list, and one missing from it (logged there) is left out, having no pin.
+                    if (indyCarTracks?.Find(fieldGame.Note) is { } track)
+                        games.Add(fieldGame with { Venue = track });
+                    continue;
+                }
+                games.Add(fieldGame.Venue is null
+                    ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
+                    : fieldGame);
                 continue;
             }
             if (league.StartsWith("mma/", StringComparison.Ordinal))
@@ -307,7 +321,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// (FP1–FP3, qualifying and the race), and only the race counts (ADR-0020), so the game's start, status,
     /// lap and field are the race's, its id the event's. Its period is the current lap, and its note the
     /// event's name. Its venue is the event's <c>circuit</c> (F1); NASCAR's scoreboard gives none (see
-    /// <see cref="EventVenueAsync"/>).
+    /// <see cref="EventVenueAsync"/>), and nor does IndyCar's (see <see cref="TrackList"/>).
     /// </summary>
     private static ProviderGame? ToFieldGame(Event e, string leagueKey)
     {

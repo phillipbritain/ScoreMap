@@ -33,11 +33,17 @@ builder.Services.AddHttpClient(nameof(EspnGameFeedProvider), client =>
     AutomaticDecompression = DecompressionMethods.All,
     PooledConnectionLifetime = TimeSpan.FromMinutes(5),
 });
-builder.Services.AddSingleton<IGameFeedProvider>(sp => new EspnGameFeedProvider(
-    sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(EspnGameFeedProvider)),
-    sp.GetRequiredService<TimeProvider>(),
-    Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath,
-        sp.GetRequiredService<IOptions<VenueOptions>>().Value.SavedEventVenuesPath)));
+builder.Services.AddSingleton<IGameFeedProvider>(sp =>
+{
+    var contentRoot = sp.GetRequiredService<IHostEnvironment>().ContentRootPath;
+    var venueOptions = sp.GetRequiredService<IOptions<VenueOptions>>().Value;
+    return new EspnGameFeedProvider(
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(EspnGameFeedProvider)),
+        sp.GetRequiredService<TimeProvider>(),
+        Path.Combine(contentRoot, venueOptions.SavedEventVenuesPath),
+        new TrackList(Path.Combine(contentRoot, venueOptions.IndyCarTracksPath),
+            sp.GetRequiredService<ILogger<TrackList>>()));
+});
 
 // Venue locator, with OpenStreetMap Nominatim as its place search. The place search is a
 // singleton so its rate limit holds across the whole app.

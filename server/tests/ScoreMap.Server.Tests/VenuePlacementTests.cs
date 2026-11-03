@@ -117,6 +117,22 @@ public class VenuePlacementTests
     }
 
     [Fact]
+    public async Task A_venue_given_with_its_position_is_pinned_there_without_a_lookup()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/nfl", LondonGame() with
+        {
+            Venue = new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England", Location: Tottenham),
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
+
+        Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
+        Assert.Empty(server.Places.Queries);
+    }
+
+    [Fact]
     public async Task A_correction_made_while_the_server_runs_moves_the_pin()
     {
         await using var server = new ScoreMapServer();

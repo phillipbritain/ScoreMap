@@ -21,7 +21,7 @@ public static class ClockLine
             Sport.Football or Sport.Basketball => Timed(game, period, league.Regulation, league.Regulation == 2 ? "H" : "Q"),
             Sport.Hockey => Timed(game, period, league.Regulation, "P"),
             Sport.Baseball => Innings(game, period, league.Regulation),
-            Sport.Soccer => Halves(game, period, league.Regulation),
+            Sport.Soccer or Sport.Rugby => Halves(game, period, league.Regulation),
             Sport.Cricket => Innings(game, period),
             Sport.Tennis => Sets(game, period),
             Sport.Racing => game.Status == ProviderStatus.Final ? "Final" : $"Lap {period}",
@@ -58,7 +58,7 @@ public static class ClockLine
     private static string PeriodName(int period, int regulation, string prefix) =>
         period > regulation ? OvertimeName(period - regulation) : $"{prefix}{period}";
 
-    /// <summary>Soccer counts minutes up: "67'", "HT", "ET HT", "Pens", "FT", "AET".</summary>
+    /// <summary>Soccer and rugby count minutes up: "67'", "HT", "ET HT", "Pens", "FT", "AET".</summary>
     private static string? Halves(ProviderGame game, int period, int regulation)
     {
         if (game.Status == ProviderStatus.Final)

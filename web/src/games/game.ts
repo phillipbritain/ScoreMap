@@ -94,10 +94,10 @@ export interface ScoringPlay {
   when: string | null
 }
 
-/** What a soccer key event was. */
-export type KeyEventKind = 'Goal' | 'PenaltyGoal' | 'OwnGoal' | 'YellowCard' | 'RedCard'
+/** What a soccer or rugby key event was; a rugby penalty goal is a PenaltyGoal. */
+export type KeyEventKind = 'Goal' | 'PenaltyGoal' | 'OwnGoal' | 'YellowCard' | 'RedCard' | 'Try' | 'Conversion' | 'DropGoal'
 
-/** A goal or card in soccer: the team (its abbreviation), the player and the minute ("23'"). */
+/** A goal or card in soccer, or a score or card in rugby: the team (its abbreviation), the player and the minute ("23'"). */
 export interface KeyEvent {
   kind: KeyEventKind
   team: string
@@ -224,7 +224,7 @@ export interface Game {
   situation: GameSituation | null
   /** The last score; null before anyone scores, and in cricket. */
   lastScore: ScoringPlay | null
-  /** Soccer: the goals and cards so far, in the order they happened; empty in other sports. */
+  /** Soccer and rugby: the scores and cards so far, in the order they happened; empty in other sports. */
   keyEvents: KeyEvent[]
   /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */
   topEvent: boolean

@@ -2776,5 +2776,37 @@
       "abbreviation": "SRH",
       "logoUrl": "https://a.espncdn.com/i/teamlogos/cricket/500/628333.png"
     }
+  ],
+  "Six Nations": [
+    {
+      "name": "England",
+      "abbreviation": "ENG",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/1.png"
+    },
+    {
+      "name": "France",
+      "abbreviation": "FRA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/9.png"
+    },
+    {
+      "name": "Ireland",
+      "abbreviation": "IRE",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/3.png"
+    },
+    {
+      "name": "Italy",
+      "abbreviation": "ITA",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/20.png"
+    },
+    {
+      "name": "Scotland",
+      "abbreviation": "SCO",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/2.png"
+    },
+    {
+      "name": "Wales",
+      "abbreviation": "WAL",
+      "logoUrl": "https://a.espncdn.com/i/teamlogos/rugby/teams/500/4.png"
+    }
   ]
 }

@@ -2343,6 +2343,8 @@ body {
 
 .welcome-tour__actions {
   display: flex;
+  flex-wrap: wrap;
+  gap: calc(2 * var(--spacing));
   justify-content: flex-end;
   margin-top: calc(4 * var(--spacing));
 }

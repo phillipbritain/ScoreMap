@@ -35,7 +35,9 @@ public sealed class ScenarioPlayTests : IDisposable
 
     // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 110 games at a time,
     // so with 60 games showing, play has to steer clear of the teams already playing.
-    internal static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
+    internal static readonly ScenarioTeamList Teams = TeamsFor(Leagues);
+
+    private static ScenarioTeamList TeamsFor(IReadOnlyList<League> leagues) => new(leagues.ToDictionary(
         l => l.Name,
         l => (IReadOnlyList<ScenarioTeam>)Enumerable.Range(1, 20).Select(n => new ScenarioTeam($"{l.Name} team {n}", $"T{n}", null)).ToList()));
 
@@ -331,6 +333,35 @@ public sealed class ScenarioPlayTests : IDisposable
     }
 
     [Fact]
+    public void A_softball_game_ends_after_its_7th_inning()
+    {
+        // In the 6th of a 2-hour game, so it finishes inside the half hour watched at 6×.
+        League softballLeague = new() { Key = "baseball/college-softball", Name = "NCAA Softball", Sport = Sport.Baseball, RegulationPeriods = 7, PlannedLength = TimeSpan.FromHours(2) };
+        var scenario = Read("""
+            {
+              "games": [
+                { "id": "softball", "league": "NCAA Softball", "home": { "name": "Home", "abbreviation": "HOM" }, "away": { "name": "Away", "abbreviation": "AWY" },
+                  "venue": { "name": "Stadium 50", "city": "City 50" }, "startsIn": "-1h40m", "status": "live", "period": 6 }
+              ],
+              "fill": { "count": 1, "group": "london" },
+              "play": true,
+              "disrupted": 0
+            }
+            """, [softballLeague]);
+
+        var softball = Watched(scenario, TimeSpan.FromMinutes(30))
+            .Select(games => games.SingleOrDefault(game => game.Id == "softball"))
+            .OfType<ProviderGame>()
+            .ToList();
+
+        Assert.Contains(softball, game => game is { Status: ProviderStatus.InProgress, Period: 7 });
+        Assert.All(softball, game => Assert.InRange(game.Period ?? 0, 6, 7));
+        var final = softball.Last();
+        Assert.Equal((ProviderStatus.Final, 7), (final.Status, final.Period));
+        Assert.NotEqual(final.Sides().Home.Score, final.Sides().Away.Score);
+    }
+
+    [Fact]
     public void The_fill_starts_the_disrupted_share_of_its_games_disrupted()
     {
         var scenario = Read("""{ "fill": { "count": 40, "group": "worldwide", "mix": { "live": 1, "upcoming": 1 } }, "play": true, "disrupted": 0.1 }""");
@@ -491,9 +522,11 @@ public sealed class ScenarioPlayTests : IDisposable
 
     private static int Points(ProviderGame game) => (game.Sides().Home.Score ?? 0) + (game.Sides().Away.Score ?? 0);
 
-    private Scenario Read(string json)
+    private Scenario Read(string json) => Read(json, Leagues);
+
+    private Scenario Read(string json, IReadOnlyList<League> leagues)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);
-        return ScenarioReader.Read(_folder, "sample", Leagues, Venues, Teams);
+        return ScenarioReader.Read(_folder, "sample", leagues, Venues, TeamsFor(leagues));
     }
 }

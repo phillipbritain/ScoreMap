@@ -88,6 +88,20 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task College_softball_games_are_between_two_sides_at_their_venue()
+    {
+        var games = await FetchFixtureAsync("college-softball.json", "baseball/college-softball");
+
+        Assert.Equal(["401873589", "401873588"], games.Select(g => g.Id));
+        var game = Assert.Single(games, g => g.Id == "401873588");
+        Assert.Equal(ProviderStatus.Final, game.Status);
+        Assert.Equal(9, game.Period);
+        Assert.Equal(("TENN", 2), (game.Sides().Home.Abbreviation, game.Sides().Home.Score));
+        Assert.Equal(("TTU", 1), (game.Sides().Away.Abbreviation, game.Sides().Away.Score));
+        Assert.Equal(new ProviderVenue("OGE Energy Field at Devon Park", "Oklahoma City", "Oklahoma", null, "5006"), game.Venue);
+    }
+
+    [Fact]
     public async Task Cricket_chase_in_progress_carries_runs_wickets_overs_and_target()
     {
         var games = await FetchFixtureAsync("cricket-live.json", "cricket/8656");

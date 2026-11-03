@@ -7,7 +7,7 @@
 //     dotnet run scripts/update-scenario-teams.cs
 //
 // The NCAA leagues have hundreds of teams, so they keep only the schools in ncaaSchools; NCAA Baseball
-// also leaves out those with no varsity baseball. ESPN has no teams endpoint for cricket, so a cricket
+// and NCAA Softball also leave out those with no varsity team in the sport. ESPN has no teams endpoint for cricket, so a cricket
 // league's teams are those in its games this year, or last year's before this year's season starts. The file is written only once every league is
 // fetched, so a failed run leaves it as it was. Exits with 1 if a school isn't found or ESPN fails.
 #:property PublishAot=false
@@ -35,6 +35,8 @@ string[] ncaaSchools =
 ];
 // Schools above with no varsity baseball team, though ESPN lists one.
 string[] noBaseball = ["Colorado", "Iowa State", "SMU", "Syracuse", "Wisconsin"];
+// Schools above with no varsity softball team (none in ESPN's 2026 games), though ESPN lists one.
+string[] noSoftball = ["Cincinnati", "Colorado", "Kansas State", "Miami", "SMU", "TCU", "USC", "Vanderbilt", "Wake Forest", "West Virginia"];
 
 var leagues = JsonNode.Parse(File.ReadAllText(Path.Combine(serverProject, "appsettings.json")))!["Leagues"]!.AsArray()
     .Select(league => (Name: (string)league!["Name"]!, Key: (string)league["Key"]!))
@@ -85,11 +87,19 @@ foreach (var (name, key) in leagues)
 
     if (name.StartsWith("NCAA", StringComparison.Ordinal))
     {
-        var schools = name == "NCAA Baseball" ? ncaaSchools.Except(noBaseball) : ncaaSchools;
+        var schools = name switch
+        {
+            "NCAA Baseball" => ncaaSchools.Except(noBaseball),
+            "NCAA Softball" => ncaaSchools.Except(noSoftball),
+            _ => ncaaSchools,
+        };
         var picked = new List<JsonNode>();
         foreach (var school in schools)
         {
-            var found = teams.Where(team => (string?)team["location"] == school).ToList();
+            // ESPN sometimes lists a school twice under different ids (Clemson's softball team), the same in all we keep.
+            var found = teams.Where(team => (string?)team["location"] == school)
+                .DistinctBy(team => ((string?)team["displayName"], (string?)team["abbreviation"], (string?)team["logos"]?[0]?["href"]))
+                .ToList();
             if (found.Count == 1)
                 picked.Add(found[0]);
             else

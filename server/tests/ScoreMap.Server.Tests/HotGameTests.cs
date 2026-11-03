@@ -15,6 +15,7 @@ public class HotGameTests
     private const string Nfl = "football/nfl";
     private const string Nba = "basketball/nba";
     private const string Mlb = "baseball/mlb";
+    private const string Softball = "baseball/college-softball";
     private const string Nhl = "hockey/nhl";
     private const string Mls = "soccer/usa.1";
     private const string Ipl = "cricket/8048";
@@ -91,6 +92,13 @@ public class HotGameTests
         Assert.False((await SentAsync(Baseball(inning, half, 3, 3, runners: 0))).Hot);
 
     [Theory]
+    [InlineData(6, InningBottom, false)]
+    [InlineData(7, InningBottom, true)]
+    [InlineData(8, InningTop, true)]
+    public async Task Softball_from_the_7th_its_last_inning(int inning, ProviderPeriodPhase half, bool expected) =>
+        Assert.Equal(expected, (await SentAsync(Baseball(inning, half, 3, 3, runners: 0, Softball))).Hot);
+
+    [Theory]
     [InlineData("18", 150, 174, true)]
     [InlineData("18.4", 160, 176, true)]
     [InlineData("17.5", 160, 165, false)]
@@ -160,8 +168,8 @@ public class HotGameTests
         Broadcasters: [],
         Phase: phase);
 
-    private static ProviderGame Baseball(int inning, ProviderPeriodPhase half, int home, int away, int runners) =>
-        Game(Mlb, null, inning, home, away, half) with
+    private static ProviderGame Baseball(int inning, ProviderPeriodPhase half, int home, int away, int runners, string league = Mlb) =>
+        Game(league, null, inning, home, away, half) with
         {
             Situation = new ProviderSituation(null, Outs: 1, OnFirst: runners >= 1, OnSecond: runners >= 2, OnThird: runners >= 3),
         };

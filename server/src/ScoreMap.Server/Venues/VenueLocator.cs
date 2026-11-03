@@ -52,6 +52,12 @@ public sealed class VenueLocator
         _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
+    /// <summary>The immediate position while a lookup is pending: corrections, given coordinates, or 0,0.</summary>
+    public VenueLocation Fallback(ProviderVenue? venue) =>
+        _corrections.Find(venue?.Name) is { } corrected ? new(corrected, LocationSource.Correction) :
+        venue?.Location is { } given ? new(given, LocationSource.Given) :
+        new(new Coordinates(0, 0), LocationSource.Nowhere);
+
     /// <summary>
     /// Where a game's pin goes, trying in order: the corrections file, the position given with the venue,
     /// the venue looked up by name and city (ESPN supplies no coordinates, ADR-0001), the venue's city

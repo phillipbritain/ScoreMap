@@ -66,14 +66,17 @@ public sealed class GamesHub(
 
     private async Task ConnectAsync(Poller poller, BrowserConnections connections, TimeSpan slowStart)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, connections.Group);
         try
         {
             if (slowStart > TimeSpan.Zero)
                 await Task.Delay(slowStart, realTime, Context.ConnectionAborted);
             await poller.SendSnapshotAsync(
-                Context.ConnectionId,
-                games => Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted),
+                async games =>
+                {
+                    await Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted);
+                    await Groups.AddToGroupAsync(Context.ConnectionId, connections.Group, Context.ConnectionAborted);
+                    connections.Connected(Context.ConnectionId);
+                },
                 Context.ConnectionAborted);
         }
         catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
@@ -82,7 +85,6 @@ public sealed class GamesHub(
             // went wrong, so return quietly rather than let SignalR log it as an error.
             return;
         }
-        connections.Connected(Context.ConnectionId);
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)

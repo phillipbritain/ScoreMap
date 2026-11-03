@@ -142,7 +142,7 @@ public class ScenarioSwitchingTests
     }
 
     [Fact]
-    public async Task A_switch_waits_for_a_fetch_under_way_so_no_fetch_sees_it_half_made()
+    public async Task A_switch_cancels_a_fetch_under_way_and_discards_its_old_source_results()
     {
         await using var server = new ScoreMapServer();
         server.WriteScenario("first", OneGame("a"));
@@ -151,20 +151,19 @@ public class ScenarioSwitchingTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
         // The next fetch of real games is under way, and stays so until the feed releases it.
-        server.Feed.HoldUntilReleased(Nfl);
+        server.Feed.HoldUntilReleased(Nfl, ignoreCancellation: true);
         server.Clock.Advance(TimeSpan.FromSeconds(15));
         await server.Feed.WaitForFetchesAsync(Nfl, 2);
 
         var switching = http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" });
-        await Task.Delay(200);
-        Assert.False(switching.IsCompleted, "the switch was made while a fetch was under way");
-        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
-        server.Feed.Release(Nfl);
-
         (await switching.WaitAsync(TimeSpan.FromSeconds(10))).EnsureSuccessStatusCode();
+        server.Feed.Release(Nfl);
+        Assert.Equal("first", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
         Assert.Equivalent(
             new[] { (GameChangeKind.Removed, "real-game"), (GameChangeKind.Added, "a") },
             new[] { await client.NextChangeAsync(), await client.NextChangeAsync() }.Select(c => (c.Kind, c.Game.Id)));
+        await using var returning = await server.ConnectClientAsync();
+        Assert.Equal("a", Assert.Single(await returning.NextSnapshotAsync()).Id);
     }
 
     [Theory]

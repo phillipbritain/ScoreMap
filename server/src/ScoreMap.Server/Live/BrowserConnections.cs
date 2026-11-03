@@ -42,6 +42,11 @@ public sealed class BrowserConnections(string group)
             return _ids.Contains(connectionId);
     }
 
+    public bool HasAnyConnected
+    {
+        get { lock (_ids) return _ids.Count > 0; }
+    }
+
     /// <summary>Completes as soon as at least one browser is connected.</summary>
     public Task WhenAnyConnectedAsync(CancellationToken cancellationToken)
     {

@@ -9,7 +9,8 @@
 // The NCAA leagues other than hockey have hundreds of teams, so they keep only the schools in ncaaSchools; NCAA Baseball
 // and NCAA Softball also leave out those with no varsity team in the sport. ESPN has no teams endpoint for cricket, so a cricket
 // league's teams are those in its games this year, or last year's before this year's season starts. The file is written only once every league is
-// fetched, so a failed run leaves it as it was. Exits with 1 if a school isn't found or ESPN fails.
+// fetched, so a failed run leaves it as it was. Tennis, racing, golf and MMA don't use team lists and are skipped.
+// Exits with 1 if a league has no teams, a school isn't found or ESPN fails.
 #:property PublishAot=false
 
 using System.Text.Encodings.Web;
@@ -39,6 +40,7 @@ string[] noBaseball = ["Colorado", "Iowa State", "SMU", "Syracuse", "Wisconsin"]
 string[] noSoftball = ["Cincinnati", "Colorado", "Kansas State", "Miami", "SMU", "TCU", "USC", "Vanderbilt", "Wake Forest", "West Virginia"];
 
 var leagues = JsonNode.Parse(File.ReadAllText(Path.Combine(serverProject, "appsettings.json")))!["Leagues"]!.AsArray()
+    .Where(league => (string?)league!["Sport"] is not ("Tennis" or "Racing" or "Golf" or "MMA"))
     .Select(league => (Name: (string)league!["Name"]!, Key: (string)league["Key"]!))
     .ToList();
 
@@ -121,6 +123,9 @@ foreach (var (name, key) in leagues)
         }
         teams = picked;
     }
+
+    if (teams.Count == 0)
+        problems.Add($"{name}: no teams found");
 
     list[name] = new JsonArray(teams
         .Select(team => new JsonObject

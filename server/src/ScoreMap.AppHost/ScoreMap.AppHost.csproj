@@ -1,13 +1,11 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.6.1">
+<Project Sdk="Aspire.AppHost.Sdk/13.6.4">
 
   <ItemGroup>
     <ProjectReference Include="..\ScoreMap.Server\ScoreMap.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.1" />
-    <!-- Aspire 13.6.1 brings MessagePack 2.5.302, which has GHSA-qhrr-8q5h-9q3h; drop this once Aspire brings a patched one. -->
-    <PackageReference Include="MessagePack" Version="2.5.307" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.4" />
   </ItemGroup>
 
   <PropertyGroup>

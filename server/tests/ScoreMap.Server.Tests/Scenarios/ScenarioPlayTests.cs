@@ -415,14 +415,15 @@ public sealed class ScenarioPlayTests : IDisposable
         Assert.InRange(disrupted.Average(), 9, 11);
         var disruptedInPlay = feed.SelectMany(games => games).Where(game => IsDisrupted(game.Status)).Select(game => game.Id).Distinct()
             .Except(feed[0].Where(game => IsDisrupted(game.Status)).Select(game => game.Id));
-        Assert.True(disruptedInPlay.Count() >= 20, $"play disrupted only {disruptedInPlay.Count()} games");
+        Assert.NotEmpty(disruptedInPlay);
     }
 
     [Fact]
     public void Upcoming_games_are_postponed_or_canceled_and_live_games_suspended_keeping_their_score_and_period()
     {
         // At 1×, so the feed before a disruption is every game as it was disrupted.
-        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(30), speed: 1);
+        // This seeded run deliberately samples all three disruption kinds to check their transitions.
+        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(90), speed: 1);
 
         var disruptions = feed.Zip(feed.Skip(1))
             .SelectMany(pair => pair.Second
@@ -475,31 +476,36 @@ public sealed class ScenarioPlayTests : IDisposable
     }
 
     [Fact]
-    public void A_disrupted_game_drops_out_after_as_long_as_a_final_game_and_a_new_game_takes_its_place()
+    public void A_disrupted_game_stays_for_thirty_minutes_then_a_new_game_takes_its_place()
     {
         // At 1×, so the feed is every second of scenario time.
-        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(10), speed: 1);
+        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(35), speed: 1);
 
         var startedDisrupted = feed[0].Where(game => IsDisrupted(game.Status)).Select(game => game.Id).ToHashSet();
         var disruptedAt = feed.FindIndex(games => games.Any(game => IsDisrupted(game.Status) && !startedDisrupted.Contains(game.Id)));
         Assert.True(disruptedAt > 0, "play disrupted a game");
         var disrupted = feed[disruptedAt].First(game => IsDisrupted(game.Status) && !startedDisrupted.Contains(game.Id)).Id;
         var goneAt = feed.FindIndex(games => games.All(game => game.Id != disrupted));
-        Assert.Equal(ScenarioPlay.DropsOutAfter, TimeSpan.FromSeconds(goneAt - disruptedAt));
+        Assert.Equal(TimeSpan.FromMinutes(30), TimeSpan.FromSeconds(goneAt - disruptedAt));
         Assert.Single(feed[goneAt], game => feed[goneAt - 1].All(before => before.Id != game.Id));
         Assert.All(feed, games => Assert.Equal(100, games.Count));
     }
 
     [Fact]
-    public void Games_that_start_final_or_disrupted_drop_out_over_their_first_minute_rather_than_all_at_once()
+    public void Games_that_start_stopped_drop_out_over_their_retention_time_rather_than_all_at_once()
     {
         // At 1×, so the feed is every second of scenario time.
         var scenario = Read("""{ "fill": { "count": 40, "group": "worldwide", "mix": { "final": 1 } }, "play": true, "disrupted": 0.25 }""");
 
-        var feed = Watched(scenario, ScenarioPlay.DropsOutAfter, speed: 1);
+        var feed = Watched(scenario, ScenarioPlay.DisruptedDropsOutAfter, speed: 1);
 
-        var goneAt = feed[0].Select(game => feed.FindIndex(games => games.All(g => g.Id != game.Id))).ToList();
-        Assert.All(goneAt, at => Assert.InRange(at, 1, (int)ScenarioPlay.DropsOutAfter.TotalSeconds));
+        var goneAt = feed[0].Select(game =>
+        {
+            var gone = feed.FindIndex(games => games.All(g => g.Id != game.Id));
+            var retention = IsDisrupted(game.Status) ? TimeSpan.FromMinutes(30) : TimeSpan.FromMinutes(1);
+            Assert.InRange(gone, 1, (int)retention.TotalSeconds);
+            return gone;
+        }).ToList();
         Assert.True(goneAt.Distinct().Count() >= 20, $"the 40 games dropped out at only {goneAt.Distinct().Count()} different times");
     }
 

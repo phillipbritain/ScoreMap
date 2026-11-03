@@ -62,13 +62,13 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     }
 
     /// <summary>
-    /// Live: started up to 90% of a game ago, standing where its sport would be that far through its
+    /// Live: started anywhere within the planned length, short of its end, standing where its sport would be that far through its
     /// planned length (in cricket, perhaps further, past an innings over early): its period, clock,
     /// phase (perhaps a break) and score.
     /// </summary>
     private static ScenarioGame UnderWay(ScenarioGame game, League league, SportPlay sport, Random random)
     {
-        var minutesIn = random.Next(1, (int)(league.PlannedLength.TotalMinutes * 0.9) + 1);
+        var minutesIn = random.Next(1, (int)league.PlannedLength.TotalMinutes);
         var (home, away, through) = sport.PlayTo(
             game.Sides.Home, game.Sides.Away, minutesIn / league.PlannedLength.TotalMinutes, random, mayFinish: false);
         var (period, clock, phase) = sport.Position(through);

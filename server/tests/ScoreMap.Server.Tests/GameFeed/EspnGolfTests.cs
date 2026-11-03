@@ -6,14 +6,16 @@ namespace ScoreMap.Server.Tests.GameFeed;
 
 /// <summary>
 /// Runs saved real ESPN scoreboards and the core API's events through the adapter: the PGA Tour's Mexico Open in
-/// round 2, and the LPGA Tour's Maybank Championship once finished.
+/// round 2, and the LPGA Tour's Maybank Championship once Final.
 /// </summary>
 public sealed class EspnGolfTests : IDisposable
 {
     private const string Pga = "golf/pga";
-    private const string Scoreboard = "https://espn.test/sports/golf/pga/scoreboard";
-    private const string CoreEvent = "https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401850978";
+    private const string PgaScoreboard = "https://espn.test/sports/golf/pga/scoreboard";
+    private const string PgaCoreEvent = "https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401850978";
     private const string Lpga = "golf/lpga";
+    private const string LpgaScoreboard = "https://espn.test/sports/golf/lpga/scoreboard";
+    private const string LpgaCoreEvent = "https://sports.core.api.espn.com/v2/sports/golf/leagues/lpga/events/401835174";
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-espn-golf-{Guid.NewGuid():N}");
 
@@ -32,8 +34,8 @@ public sealed class EspnGolfTests : IDisposable
         Path.Combine(_folder, "event-venues.json"));
 
     private static StubHttpHandler MexicoOpen(string scoreboard) => StubHttpHandler.Serving(
-        (Scoreboard, scoreboard),
-        (CoreEvent, Fixture("golf-pga-core-event.json")));
+        (PgaScoreboard, scoreboard),
+        (PgaCoreEvent, Fixture("golf-pga-core-event.json")));
 
     private async Task<ProviderGame> TournamentAsync(string scoreboard) =>
         Assert.Single(await ProviderOver(MexicoOpen(scoreboard)).FetchScoreboardAsync(Pga, CancellationToken.None));
@@ -95,8 +97,8 @@ public sealed class EspnGolfTests : IDisposable
     public async Task An_LPGA_tournament_is_one_game_with_its_field_scores_to_par_and_round_at_its_first_course()
     {
         var game = Assert.Single(await ProviderOver(StubHttpHandler.Serving(
-                ("https://espn.test/sports/golf/lpga/scoreboard", Fixture("golf-lpga.json")),
-                ("https://sports.core.api.espn.com/v2/sports/golf/leagues/lpga/events/401835174", Fixture("golf-lpga-core-event.json"))))
+                (LpgaScoreboard, Fixture("golf-lpga.json")),
+                (LpgaCoreEvent, Fixture("golf-lpga-core-event.json"))))
             .FetchScoreboardAsync(Lpga, CancellationToken.None));
 
         Assert.Equal(("401835174", ProviderStatus.Final, 4), (game.Id, game.Status, game.Period));

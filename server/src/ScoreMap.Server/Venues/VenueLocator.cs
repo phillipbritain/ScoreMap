@@ -136,14 +136,9 @@ public sealed class VenueLocator
         }
     }
 
-    private async Task<Dictionary<string, Coordinates?>> LoadAsync(CancellationToken cancellationToken)
-    {
-        if (!File.Exists(_savedLocationsPath))
-            return new Dictionary<string, Coordinates?>();
-        await using var file = File.OpenRead(_savedLocationsPath);
-        return await JsonSerializer.DeserializeAsync<Dictionary<string, Coordinates?>>(file, Json, cancellationToken)
-            ?? new Dictionary<string, Coordinates?>();
-    }
+    private async Task<Dictionary<string, Coordinates?>> LoadAsync(CancellationToken cancellationToken) =>
+        await VenueCache.ReadAsync<Dictionary<string, Coordinates?>>(_savedLocationsPath, Json, _logger, cancellationToken)
+        ?? new Dictionary<string, Coordinates?>();
 
     private async Task<Dictionary<string, Coordinates>> LoadScenarioLocationsAsync(CancellationToken cancellationToken)
     {
@@ -154,12 +149,6 @@ public sealed class VenueLocator
             ?? new Dictionary<string, Coordinates>();
     }
 
-    private async Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_savedLocationsPath)!);
-        var temp = _savedLocationsPath + ".tmp";
-        await using (var file = File.Create(temp))
-            await JsonSerializer.SerializeAsync(file, saved, Json, cancellationToken);
-        File.Move(temp, _savedLocationsPath, overwrite: true);
-    }
+    private Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken) =>
+        VenueCache.SaveAsync(_savedLocationsPath, saved, Json, _logger, cancellationToken);
 }

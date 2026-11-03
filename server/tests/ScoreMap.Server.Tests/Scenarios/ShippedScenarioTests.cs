@@ -138,7 +138,7 @@ public class ShippedScenarioTests
     }
 
     // The sports with a rule for a hot game (see HotGame); one without (tennis, until #219) has none to show.
-    private static readonly string[] SportsWithAHotRule = ["Baseball", "Basketball", "Cricket", "Football", "Hockey", "Soccer"];
+    private static readonly string[] SportsWithAHotRule = ["Baseball", "Basketball", "Cricket", "Football", "Hockey", "Rugby", "Soccer"];
 
     [Fact]
     public async Task Worldwide_writes_out_a_game_in_every_sport_with_a_rule_to_become_hot()
@@ -148,7 +148,7 @@ public class ShippedScenarioTests
         var snapshot = await client.NextSnapshotAsync();
 
         var writtenOut = snapshot.Where(g => g.Id is "worldwide-raptors-celtics" or "worldwide-chiefs-bills" or "worldwide-oilers-flames"
-            or "worldwide-arsenal-chelsea" or "worldwide-yankees-red-sox" or "worldwide-mumbai-chennai");
+            or "worldwide-arsenal-chelsea" or "worldwide-yankees-red-sox" or "worldwide-mumbai-chennai" or "worldwide-ireland-france");
         Assert.Equal(SportsWithAHotRule, writtenOut.Select(g => g.Sport).Order());
     }
 
@@ -199,7 +199,8 @@ public class ShippedScenarioTests
         await using var client = await StartAsync(server, name);
         await client.NextSnapshotAsync();
 
-        // New Live games start up to 90% of the way through, so the first finish can take a while.
+        // New Live games start up to 90% of the way through, so the first finish can take a while; in crowded,
+        // whose few Live games are often suspended before they end, up to about 45 minutes.
         var changes = new List<GameChange>();
         foreach (var (waitingFor, wanted) in new (string, Func<GameChange, bool>)[]
         {
@@ -211,7 +212,7 @@ public class ShippedScenarioTests
         })
         {
             if (!changes.Any(wanted))
-                changes.AddRange(await AdvanceUntilAsync(server, client, waitingFor, wanted, within: TimeSpan.FromMinutes(30)));
+                changes.AddRange(await AdvanceUntilAsync(server, client, waitingFor, wanted, within: TimeSpan.FromMinutes(60)));
         }
     }
 

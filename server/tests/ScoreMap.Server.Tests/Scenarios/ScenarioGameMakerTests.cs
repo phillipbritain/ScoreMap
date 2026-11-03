@@ -18,6 +18,7 @@ public sealed class ScenarioGameMakerTests
         new() { Key = "hockey/nhl", Name = "NHL", Sport = Sport.Hockey, PlannedLength = TimeSpan.FromMinutes(150) },
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "cricket/8048", Name = "IPL", Sport = Sport.Cricket, PlannedLength = TimeSpan.FromMinutes(210) },
+        new() { Key = "rugby/180659", Name = "Six Nations", Sport = Sport.Rugby, PlannedLength = TimeSpan.FromHours(2) },
     ];
 
     private static readonly ScenarioVenue At = new("Emirates Stadium", "London", null, "England", ["worldwide"]);
@@ -37,6 +38,7 @@ public sealed class ScenarioGameMakerTests
         [Sport.Hockey] = 8,
         [Sport.Soccer] = 6,
         [Sport.Cricket] = 260,
+        [Sport.Rugby] = 60,
     };
 
     public static TheoryData<string> LeagueKeys => new(Leagues.Select(l => l.Key));
@@ -111,8 +113,8 @@ public sealed class ScenarioGameMakerTests
     public void A_final_game_in_a_sport_without_draws_never_ends_level(string leagueKey)
     {
         var games = Make(leagueKey, GameStatus.Final).ToList();
-        // A level game is a draw in soccer, and in cricket a tie, settled by a Super Over the score doesn't show.
-        if (games[0].League.Sport is Sport.Soccer or Sport.Cricket)
+        // A level game is a draw in soccer and rugby, and in cricket a tie, settled by a Super Over the score doesn't show.
+        if (games[0].League.Sport is Sport.Soccer or Sport.Rugby or Sport.Cricket)
             return;
 
         Assert.All(games, made => Assert.NotEqual(made.Game.Sides.Home.Score, made.Game.Sides.Away.Score));
@@ -223,8 +225,8 @@ public sealed class ScenarioGameMakerTests
                 if (game.Phase == ProviderPeriodPhase.Playing)
                     Assert.InRange(Overs(game.Batting()!.Innings!.Overs), 0, 20);
                 break;
-            case Sport.Soccer:
-                Assert.InRange(Minute(game), 1, 90);
+            case Sport.Soccer or Sport.Rugby:
+                Assert.InRange(Minute(game), 1, league.Regulation * league.PeriodClockMinutes!.Value);
                 Assert.True(Minute(game) <= Math.Ceiling(-game.StartsIn.TotalMinutes), $"minute {game.Clock} {-game.StartsIn} in");
                 Assert.Contains(game.Phase, new[] { ProviderPeriodPhase.Playing, ProviderPeriodPhase.Break });
                 break;

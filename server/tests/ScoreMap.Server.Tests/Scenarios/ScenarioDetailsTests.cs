@@ -45,16 +45,18 @@ public sealed class ScenarioDetailsTests : IDisposable
         game.KeyEvents.Count(e => e.Kind is KeyEventKind.Goal or KeyEventKind.PenaltyGoal or KeyEventKind.OwnGoal);
 
     [Fact]
-    public void Every_team_but_crickets_has_a_record_and_every_game_but_crickets_a_betting_line()
+    public void Every_team_but_crickets_and_rugbys_has_a_record_and_every_game_but_crickets_a_betting_line()
     {
         var games = Every(Watched(TimeSpan.Zero)).ToList();
 
-        Assert.All(games.Where(g => g.League.Sport != Sport.Cricket), g =>
+        Assert.All(games.Where(g => g.League.Sport is not (Sport.Cricket or Sport.Rugby)), g =>
         {
             Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Home.Record);
             Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Away.Record);
-            Assert.NotNull(g.Game.Odds?.Line);
         });
+        Assert.All(games.Where(g => g.League.Sport != Sport.Cricket), g => Assert.NotNull(g.Game.Odds?.Line));
+        Assert.All(games.Where(g => g.League.Sport == Sport.Rugby), g =>
+            Assert.Equal((null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record)));
         Assert.All(games.Where(g => g.League.Sport == Sport.Cricket), g =>
             Assert.Equal((null, null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record, g.Game.Odds)));
     }
@@ -85,7 +87,7 @@ public sealed class ScenarioDetailsTests : IDisposable
         var polls = Watched(TimeSpan.FromMinutes(10));
 
         var scores = 0;
-        foreach (var byGame in Every(polls).Where(g => g.League.Sport is not (Sport.Soccer or Sport.Cricket)).GroupBy(g => g.Game.Id))
+        foreach (var byGame in Every(polls).Where(g => g.League.Sport is not (Sport.Soccer or Sport.Rugby or Sport.Cricket)).GroupBy(g => g.Game.Id))
         {
             foreach (var (before, after) in byGame.Zip(byGame.Skip(1)))
             {
@@ -117,6 +119,37 @@ public sealed class ScenarioDetailsTests : IDisposable
             Assert.Equal((lastGoal?.Team, lastGoal?.Clock), (game.LastScore?.Team, game.LastScore?.Clock));
         });
     }
+
+    [Fact]
+    public void Rugby_lists_a_score_for_each_in_the_score_in_the_order_they_came_and_the_last_is_the_last_score()
+    {
+        var rugby = Every(Watched(TimeSpan.FromMinutes(10))).Where(g => g.League.Sport == Sport.Rugby).Select(g => g.Game)
+            .Where(g => g.Status != ProviderStatus.Scheduled).ToList();
+
+        Assert.Contains(rugby, g => g.KeyEvents.Any(e => e.Kind == KeyEventKind.Try));
+        Assert.Contains(rugby, g => g.KeyEvents.Any(e => e.Kind == KeyEventKind.PenaltyGoal));
+        Assert.All(rugby, game =>
+        {
+            Assert.Equal(game.Sides().Home.Score ?? 0, RugbyPoints(game, game.Sides().Home.Abbreviation));
+            Assert.Equal(game.Sides().Away.Score ?? 0, RugbyPoints(game, game.Sides().Away.Abbreviation));
+            var minutes = game.KeyEvents.Select(e => int.Parse(e.Clock!.TrimEnd('\''))).ToList();
+            Assert.Equal(minutes.Order(), minutes);
+            // Each conversion follows its team's try.
+            Assert.All(game.KeyEvents.Select((e, i) => (e, i)).Where(k => k.e.Kind == KeyEventKind.Conversion),
+                k => Assert.Equal((KeyEventKind.Try, k.e.Team), (game.KeyEvents[k.i - 1].Kind, game.KeyEvents[k.i - 1].Team)));
+            var last = game.KeyEvents.LastOrDefault(e => e.Kind is not (KeyEventKind.YellowCard or KeyEventKind.RedCard));
+            Assert.Equal((last?.Team, last?.Clock), (game.LastScore?.Team, game.LastScore?.Clock));
+        });
+    }
+
+    /// <summary>The points a team's listed scores add up to: 5 a try, 2 a conversion, 3 a penalty or drop goal.</summary>
+    private static int RugbyPoints(ProviderGame game, string team) => game.KeyEvents.Where(e => e.Team == team).Sum(e => e.Kind switch
+    {
+        KeyEventKind.Try => 5,
+        KeyEventKind.Conversion => 2,
+        KeyEventKind.PenaltyGoal or KeyEventKind.DropGoal => 3,
+        _ => 0,
+    });
 
     [Fact]
     public void Situation_only_while_a_game_is_being_played_and_never_in_soccer_or_cricket()

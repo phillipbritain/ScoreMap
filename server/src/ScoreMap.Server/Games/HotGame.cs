@@ -5,7 +5,7 @@ namespace ScoreMap.Server.Games;
 /// <summary>
 /// Whether a game is hot (see GLOSSARY.md): Live, the trailing side one score from tying or taking the
 /// lead, and little left to play, judged by each sport's own rule from the score and what's left (never
-/// win probability). In basketball it's exactly clutch time. A fight card is hot while its main event is in
+/// win probability). In rugby, one score is a converted try. In basketball it's exactly clutch time. A fight card is hot while its main event is in
 /// its last scheduled round; golf is hot late in a close final round; a race never is. Browsers show flames on a hot game, if the viewer has them on.
 /// </summary>
 public static class HotGame
@@ -30,6 +30,7 @@ public static class HotGame
             Sport.Hockey => game.Phase == ProviderPeriodPhase.Shootout
                 || Timed(game, sides, period, league.Regulation, TimeSpan.FromMinutes(5), withinPoints: 1),
             Sport.Soccer => Soccer(game, sides, period, league.Regulation),
+            Sport.Rugby => Rugby(game, sides, period, league.Regulation),
             Sport.Baseball => Baseball(game, sides, period, league.Regulation),
             Sport.Cricket => Cricket(sides),
             _ => false,
@@ -55,13 +56,25 @@ public static class HotGame
     {
         if (game.Phase == ProviderPeriodPhase.Shootout)
             return true;
-        if (Margin(sides) is not (0 or 1))
-            return false;
-        var digits = new string((game.DisplayClock ?? "").TakeWhile(char.IsAsciiDigit).ToArray());
-        if (!int.TryParse(digits, out var minute))
+        if (Margin(sides) is not (0 or 1) || Minute(game.DisplayClock) is not { } minute)
             return false;
         return period == regulation ? minute >= 85 : period > regulation && minute >= 115;
     }
+
+    /// <summary>
+    /// Rugby counts minutes up, as soccer does ("75'", "80'+2'"): from the 75th minute of the second half, or
+    /// any time in extra time, within a converted try (7 points). Not at half time.
+    /// </summary>
+    private static bool Rugby(ProviderGame game, ProviderSides sides, int period, int regulation)
+    {
+        if (game.Phase == ProviderPeriodPhase.Break || Margin(sides) is not (>= 0 and <= 7))
+            return false;
+        return period > regulation || (period == regulation && Minute(game.DisplayClock) >= 75);
+    }
+
+    /// <summary>The minute of a clock counting minutes up ("85'", "90'+3'"); null if it can't be read.</summary>
+    private static int? Minute(string? clock) =>
+        int.TryParse(new string((clock ?? "").TakeWhile(char.IsAsciiDigit).ToArray()), out var minute) ? minute : null;
 
     /// <summary>
     /// From the last inning of regulation on, while the tying run is on base or at the plate: the side

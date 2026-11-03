@@ -26,6 +26,7 @@ public sealed class ScenarioPlayTests : IDisposable
         new() { Key = "soccer/uefa.champions", Name = "Champions League", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "soccer/fifa.world", Name = "World Cup", Sport = Sport.Soccer, PlannedLength = TimeSpan.FromHours(2) },
         new() { Key = "cricket/8048", Name = "IPL", Sport = Sport.Cricket, PlannedLength = TimeSpan.FromMinutes(210) },
+        new() { Key = "rugby/180659", Name = "Six Nations", Sport = Sport.Rugby, PlannedLength = TimeSpan.FromHours(2) },
     ];
 
     // 120 venues around the world, the first 10 of them also in "london".
@@ -33,7 +34,7 @@ public sealed class ScenarioPlayTests : IDisposable
         .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
 
-    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 110 games at a time,
+    // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 120 games at a time,
     // so with 60 games showing, play has to steer clear of the teams already playing.
     internal static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
         l => l.Name,
@@ -48,6 +49,7 @@ public sealed class ScenarioPlayTests : IDisposable
         [Sport.Hockey] = 8,
         [Sport.Soccer] = 6,
         [Sport.Cricket] = 260,
+        [Sport.Rugby] = 60,
     };
 
     private const string SixtyLiveGames = """{ "fill": { "count": 60, "group": "worldwide" }, "play": true }""";
@@ -110,10 +112,28 @@ public sealed class ScenarioPlayTests : IDisposable
 
         var leagues = Leagues.ToDictionary(league => league.Key);
         var finals = feed.SelectMany(games => games)
-            .Where(game => game.Status == ProviderStatus.Final && leagues[game.LeagueKey].Sport != Sport.Soccer)
+            .Where(game => game.Status == ProviderStatus.Final && leagues[game.LeagueKey].Sport is not (Sport.Soccer or Sport.Rugby))
             .ToList();
         Assert.NotEmpty(finals);
         Assert.All(finals, game => Assert.NotEqual(game.Sides().Home.Score, game.Sides().Away.Score));
+    }
+
+    [Fact]
+    public void A_rugby_score_goes_up_by_a_penalty_or_drop_goal_a_try_or_a_converted_try()
+    {
+        // At 1×, so the feed is every step of play.
+        var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(30), speed: 1);
+
+        var steps = feed.SelectMany(games => games).Where(game => game.LeagueKey == "rugby/180659" && game.Status != ProviderStatus.Scheduled)
+            .GroupBy(game => game.Id)
+            .SelectMany(game => game.Zip(game.Skip(1)).SelectMany(pair => new[]
+            {
+                (pair.Second.Sides().Home.Score ?? 0) - (pair.First.Sides().Home.Score ?? 0),
+                (pair.Second.Sides().Away.Score ?? 0) - (pair.First.Sides().Away.Score ?? 0),
+            }))
+            .Where(step => step != 0)
+            .ToList();
+        Assert.Equal([3, 5, 7], steps.Distinct().Order());
     }
 
     [Fact]
@@ -188,19 +208,19 @@ public sealed class ScenarioPlayTests : IDisposable
     public void Play_keeps_a_game_on_when_no_teams_are_free_to_replace_it()
     {
         // The written-out game's teams aren't in the team list, so when it finishes, replacing it frees none,
-        // and the fill has taken every team (20 in each of 11 leagues).
+        // and the fill has taken every team (20 in each of 12 leagues).
         var feed = Watched(Read("""
             {
               "games": [ { "id": "written", "league": "NBA", "home": { "name": "Made Up Home", "abbreviation": "MUH", "score": 99 },
                            "away": { "name": "Made Up Away", "abbreviation": "MUA", "score": 97 },
                            "venue": { "name": "Stadium 100", "city": "City 100" }, "startsIn": "-2h", "status": "final" } ],
-              "fill": { "count": 110, "group": "worldwide" },
+              "fill": { "count": 120, "group": "worldwide" },
               "play": true,
               "disrupted": 0
             }
             """), TimeSpan.FromMinutes(5), speed: 1);
 
-        Assert.All(feed, games => Assert.Equal(111, games.Count));
+        Assert.All(feed, games => Assert.Equal(121, games.Count));
         Assert.All(feed, games => Assert.Contains(games, game => game.Id == "written"));
     }
 
@@ -306,6 +326,7 @@ public sealed class ScenarioPlayTests : IDisposable
 
     [Theory]
     [InlineData("Premier League", "63'", 2, "64'")]
+    [InlineData("Six Nations", "63'", 2, "64'")]
     [InlineData("NHL", "9:40", 2, "9:3")]
     [InlineData("NBA", "5:10", 2, "5:0")]
     public void A_written_out_live_game_plays_on_from_its_written_period_and_clock(string league, string clock, int period, string soon)

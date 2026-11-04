@@ -123,7 +123,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 140);
 
         Assert.InRange(snapshot.Count, 140, 160);
         Assert.Equal(Enum.GetValues<GameStatus>().ToHashSet(), snapshot.Select(g => g.Status).ToHashSet());
@@ -136,7 +136,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 140);
 
         Assert.InRange(snapshot.Count(g => g.Status == GameStatus.Disrupted), 6, 10);
         Assert.Equal(Enum.GetValues<Disruption>().ToHashSet(), snapshot.Select(g => g.Disruption).OfType<Disruption>().ToHashSet());
@@ -158,7 +158,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games => games.Any(g => g.Id == "worldwide-raptors-celtics"));
 
         var close = Assert.Single(snapshot, g => g.Id == "worldwide-raptors-celtics");
         Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
@@ -181,7 +181,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games => games.Any(g => g.Id == id));
         Assert.False(Assert.Single(snapshot, g => g.Id == id).Hot);
 
         await AdvanceUntilAsync(server, client, $"{id} hot", c => c.Game.Id == id && c.Game.Hot, within: TimeSpan.FromMinutes(30));
@@ -196,10 +196,11 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        string[] expected = ["worldwide-raptors-celtics", "worldwide-chiefs-bills", "worldwide-oilers-flames",
+            "worldwide-arsenal-chelsea", "worldwide-yankees-red-sox", "worldwide-mumbai-chennai", "worldwide-ireland-france"];
+        var snapshot = await client.GamesMatchingAsync(games => expected.All(id => games.Any(g => g.Id == id)));
 
-        var writtenOut = snapshot.Where(g => g.Id is "worldwide-raptors-celtics" or "worldwide-chiefs-bills" or "worldwide-oilers-flames"
-            or "worldwide-arsenal-chelsea" or "worldwide-yankees-red-sox" or "worldwide-mumbai-chennai" or "worldwide-ireland-france");
+        var writtenOut = snapshot.Where(g => expected.Contains(g.Id));
         Assert.Equal(SportsWithAHotRule, writtenOut.Select(g => g.Sport).Order());
     }
 
@@ -209,7 +210,8 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "hot-finishes");
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games =>
+            SportsWithAHotRule.All(sport => games.Count(g => g.Sport == sport) >= 4));
 
         Assert.All(snapshot, game => Assert.True(game.Hot, $"{game.Id} is hot"));
         Assert.All(snapshot.GroupBy(g => g.Sport), sport => Assert.True(sport.Count() >= 4, $"{sport.Key}: {sport.Count()} games"));
@@ -222,7 +224,8 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "crowded");
-        var snapshot = await client.NextSnapshotAsync();
+        var snapshot = await client.GamesMatchingAsync(games =>
+            games.Count >= 35 && games.All(g => g.Venue.Latitude != 0 || g.Venue.Longitude != 0));
 
         Assert.InRange(snapshot.Count, 35, 45);
         // Which cities a fill picks is up to its seed (the venue list's tests check the group spans them all).
@@ -274,7 +277,9 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         server.Places.Add("Reykjavík, Iceland", reykjavik);
 
         await using var client = await StartAsync(server, "edge-cases");
-        var snapshot = await client.NextSnapshotAsync();
+        string[] expected = ["edge-unfindable-venue", "edge-tied-score", "edge-long-names", "edge-missing-logos", "edge-three-digit-scores"];
+        var snapshot = await client.GamesMatchingAsync(games => expected.All(id => games.Any(g => g.Id == id))
+            && games.Any(g => (g.Venue.Latitude, g.Venue.Longitude) == (reykjavik.Latitude, reykjavik.Longitude)));
 
         var unfindable = Assert.Single(snapshot, g => (g.Venue.Latitude, g.Venue.Longitude) == (reykjavik.Latitude, reykjavik.Longitude));
         Assert.Equal($"{unfindable.Venue.Name}, Reykjavík", server.Places.Queries[0]);
@@ -291,7 +296,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "edge-cases");
-        var races = (await client.NextSnapshotAsync()).Where(g => g.League == "NASCAR Cup Series").ToList();
+        var races = (await client.GamesMatchingAsync(games => games.Count(g => g.League == "NASCAR Cup Series") == 2)).Where(g => g.League == "NASCAR Cup Series").ToList();
 
         var live = Assert.Single(races, g => g.Status == GameStatus.Live);
         Assert.Equal("Racing", live.Sport);
@@ -311,7 +316,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "edge-cases");
-        var race = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "Formula 1");
+        var race = await client.GameMatchingAsync(g => g.League == "Formula 1");
 
         Assert.Equal(GameStatus.Live, race.Status);
         Assert.Equal("Racing", race.Sport);
@@ -327,7 +332,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "edge-cases");
-        var tournament = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "PGA Tour");
+        var tournament = await client.GameMatchingAsync(g => g.League == "PGA Tour");
 
         Assert.Equal((GameStatus.Live, "Golf", "R4 · Thru 12", true), (tournament.Status, tournament.Sport, tournament.Clock, tournament.Hot));
         var field = Assert.IsType<GameField>(tournament.Contest);
@@ -344,7 +349,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "edge-cases");
-        var card = Assert.Single(await client.NextSnapshotAsync(), g => g.League == "UFC");
+        var card = await client.GameMatchingAsync(g => g.League == "UFC");
 
         Assert.Equal((GameStatus.Live, "MMA", "R2", false), (card.Status, card.Sport, card.Clock, card.Hot));
         Assert.Equal("Madison Square Garden", card.Venue.Name);

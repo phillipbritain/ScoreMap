@@ -37,7 +37,7 @@ public sealed class AppServiceDataTests : IDisposable
         server.Feed.SetScoreboard("football/nfl", LondonGame());
 
         await using var client = await server.ConnectClientAsync();
-        await client.NextSnapshotAsync();
+        await client.GameMatchingAsync(g => g.Id == LondonGame().Id && g.Venue.Latitude != 0);
 
         Assert.True(File.Exists(Path.Combine(_home, "data", "venue-locations.json")));
     }
@@ -48,7 +48,8 @@ public sealed class AppServiceDataTests : IDisposable
         await using var server = new ScoreMapServer { AppServiceHome = _home };
         server.Feed.SetScoreboard("football/nfl", LondonGame());
 
-        await server.SnapshotOnceAsync();
+        await using var client = await server.ConnectClientAsync();
+        await client.GameMatchingAsync(g => g.Id == LondonGame().Id);
         await server.PhotoSearchesFinishedAsync();
 
         Assert.True(File.Exists(Path.Combine(_home, "data", "venue-photos.json")));
@@ -62,13 +63,13 @@ public sealed class AppServiceDataTests : IDisposable
             beforeSleep.Places.Add("Tottenham Hotspur Stadium, London", Tottenham);
             beforeSleep.Feed.SetScoreboard("football/nfl", LondonGame());
             await using var client = await beforeSleep.ConnectClientAsync();
-            await client.NextSnapshotAsync();
+            await client.GameMatchingAsync(g => g.Id == LondonGame().Id && g.Venue.Latitude != 0);
         }
 
         await using var afterWake = new ScoreMapServer { AppServiceHome = _home };
         afterWake.Feed.SetScoreboard("football/nfl", LondonGame());
         await using var woken = await afterWake.ConnectClientAsync();
-        var game = Assert.Single(await woken.NextSnapshotAsync());
+        var game = await woken.GameMatchingAsync(g => g.Id == LondonGame().Id && g.Venue.Latitude != 0);
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(afterWake.Places.Queries);

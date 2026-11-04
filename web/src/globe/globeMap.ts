@@ -85,7 +85,7 @@ export interface GlobeMapOptions {
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
   /**
-   * Called each time the stage moves on (see stage): to drawing, then to ready, once each. Until
+   * Called each time the stage moves on (see stage): to drawing, then to ready, or an initial style error. Until
    * ready, the globe takes no keyboard input (the loading screen's dim takes the pointer's and touch).
    */
   onStage: (stage: LoadingStage) => void
@@ -94,9 +94,10 @@ export interface GlobeMapOptions {
 /**
  * How far the globe's initial load has got: waiting for the server's first snapshot of games, then
  * drawing them until it first settles (or would but for score cards that have given up settling), then
- * ready (see GLOSSARY.md) for as long as the globe exists.
+ * ready (see GLOSSARY.md) for as long as the globe exists. Initialization errors replace loading
+ * with a retry action; a construction error is reported by Globe when no GlobeMap could be created.
  */
-export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready'
+export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready' | 'styleError' | 'constructionError'
 
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
@@ -139,6 +140,7 @@ export class GlobeMap {
   private selectedGameId: string | null = null
   private clustering: PinLayout
   private destroyed = false
+  private styleFailed = false
   /** Whether the map has gone idle since it last drew a frame or was given anything to show (see settled). */
   private idle = false
   /** Whether it has been given the server's first snapshot of games (see show). */
@@ -175,57 +177,63 @@ export class GlobeMap {
       dragRotate: false,
       touchPitch: false,
     })
-    map.touchZoomRotate.disableRotation()
-    // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
-    map.keyboard.disable()
     this.map = map
     this.theme = theme
-    traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
-    // Made over in the theme as it is when the base style loads, which setTheme may have changed by then.
-    const transformStyle = (_previous: unknown, base: StyleSpecification) => {
-      this.base = base
-      return globeStyle(base, this.theme)
-    }
-    if ('url' in style) map.setStyle(style.url, { transformStyle })
-    else map.setStyle(style)
-    const currentTheme = () => this.theme
-    this.glow = addGlobeGlow(map, currentTheme)
-    // Before the pins' layers are added on style load, so they're drawn under the pins.
-    this.reachRings = addReachRings(map)
-    this.names = addPlaceNames(map, currentTheme, cityLabels)
-    this.trails = trailLayer(currentTheme)
-    this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.flamesOf, this.names, this.trails, (gameId) =>
-      this.onSelect(gameId),
-    )
-    drawFlamesOnDemand(map)
-    this.clustering = this.pinLayoutNow()
+    try {
+      map.touchZoomRotate.disableRotation()
+      // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
+      map.keyboard.disable()
+      traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
+      // Made over in the theme as it is when the base style loads, which setTheme may have changed by then.
+      const transformStyle = (_previous: unknown, base: StyleSpecification) => {
+        this.base = base
+        return globeStyle(base, this.theme)
+      }
+      map.on('error', this.initialStyleError)
+      if ('url' in style) map.setStyle(style.url, { transformStyle })
+      else map.setStyle(style)
+      const currentTheme = () => this.theme
+      this.glow = addGlobeGlow(map, currentTheme)
+      // Before the pins' layers are added on style load, so they're drawn under the pins.
+      this.reachRings = addReachRings(map)
+      this.names = addPlaceNames(map, currentTheme, cityLabels)
+      this.trails = trailLayer(currentTheme)
+      this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.flamesOf, this.names, this.trails, (gameId) =>
+        this.onSelect(gameId),
+      )
+      drawFlamesOnDemand(map)
+      this.clustering = this.pinLayoutNow()
 
-    map.on('style.load', this.addPins)
-    map.on('zoom', this.recluster)
-    // Games cross the card radius as the globe turns, and zooming crosses cardZoom.
-    map.on('move', this.showOuterPins)
-    // Cards follow the clustered source, which changes as the camera moves and data arrives.
-    map.on('render', this.syncCards)
-    // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
-    // lets go of tiles held over from the last load after a frame's render event, and goes idle
-    // without drawing another frame (as after the reload on zooming in to cardZoom).
-    map.on('idle', this.syncCards)
-    // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
-    map.on('render', this.drew)
-    map.on('idle', this.goneIdle)
-    map.on('click', pinClusterLayer, this.zoomToPinCluster)
-    map.on('click', smallPinLayer, this.selectPin)
-    map.on('click', outerPinClusterLayer, this.centreOnOuterPinCluster)
-    map.on('click', outerSmallPinLayer, this.selectPin)
-    map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
-    for (const layer of [pinClusterLayer, smallPinLayer, outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer]) {
-      map.on('mouseenter', layer, this.pointAt)
-      map.on('mouseleave', layer, this.stopPointing)
-    }
+      map.on('style.load', this.addPins)
+      map.on('zoom', this.recluster)
+      // Games cross the card radius as the globe turns, and zooming crosses cardZoom.
+      map.on('move', this.showOuterPins)
+      // Cards follow the clustered source, which changes as the camera moves and data arrives.
+      map.on('render', this.syncCards)
+      // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
+      // lets go of tiles held over from the last load after a frame's render event, and goes idle
+      // without drawing another frame (as after the reload on zooming in to cardZoom).
+      map.on('idle', this.syncCards)
+      // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
+      map.on('render', this.drew)
+      map.on('idle', this.goneIdle)
+      map.on('click', pinClusterLayer, this.zoomToPinCluster)
+      map.on('click', smallPinLayer, this.selectPin)
+      map.on('click', outerPinClusterLayer, this.centreOnOuterPinCluster)
+      map.on('click', outerSmallPinLayer, this.selectPin)
+      map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
+      for (const layer of [pinClusterLayer, smallPinLayer, outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer]) {
+        map.on('mouseenter', layer, this.pointAt)
+        map.on('mouseleave', layer, this.stopPointing)
+      }
 
-    // Remember where the viewer leaves the globe.
-    map.on('moveend', this.saveCamera)
-    window.addEventListener('pagehide', this.saveCamera)
+      // Remember where the viewer leaves the globe.
+      map.on('moveend', this.saveCamera)
+      window.addEventListener('pagehide', this.saveCamera)
+    } catch (error) {
+      this.destroy()
+      throw error
+    }
   }
 
   /**
@@ -397,9 +405,10 @@ export class GlobeMap {
    * drawing until it first settles, or would but for score cards that have given up settling (see
    * noteReady), then ready for good, through pans, changes of games, fresh snapshots and
    * reconnections. Everything that waits for the globe to load reads this; settled
-   * says whether it's still right now.
+   * says whether it's still right now. A failed initial style stays at styleError until destroyed.
    */
   stage(): LoadingStage {
+    if (this.styleFailed) return 'styleError'
     if (this.wasReady) return 'ready'
     return this.hasGames ? 'drawing' : 'waitingForGames'
   }
@@ -438,13 +447,23 @@ export class GlobeMap {
 
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
+    if (this.destroyed) return
     this.destroyed = true
+    this.map.off('error', this.initialStyleError)
     window.removeEventListener('pagehide', this.saveCamera)
-    this.cards.clear()
-    this.glow.remove()
-    this.names.remove()
-    this.reachRings.remove()
+    this.cards?.clear()
+    this.glow?.remove()
+    this.names?.remove()
+    this.reachRings?.remove()
     this.map.remove()
+  }
+
+  // A style request/validation failure leaves no style. Tiles, glyphs and sprites fail after
+  // the style exists, and must not replace a usable globe with the initialization error.
+  private readonly initialStyleError = () => {
+    if (this.destroyed || this.map.getStyle()) return
+    this.styleFailed = true
+    this.tellStage()
   }
 
   private readonly addPins = () => {

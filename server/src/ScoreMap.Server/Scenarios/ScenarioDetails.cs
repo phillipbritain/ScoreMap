@@ -26,7 +26,7 @@ internal sealed class ScenarioDetails(IReadOnlyList<League> leagues)
 
     /// <summary>
     /// The league's games, with their detail made up. Games of a league the server doesn't show come back
-    /// as they are. Not thread-safe: the poller asks for one league at a time.
+    /// as they are. Not thread-safe: the scenario provider serializes calls.
     /// </summary>
     public IReadOnlyList<ProviderGame> Fill(string leagueKey, IReadOnlyList<ProviderGame> games)
     {

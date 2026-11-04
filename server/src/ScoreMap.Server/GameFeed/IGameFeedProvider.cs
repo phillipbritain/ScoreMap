@@ -14,6 +14,13 @@ public interface IGameFeedProvider
     Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Returns optional details already available and starts any missing lookup without waiting.
+    /// Call only for games inside their pin windows; new details arrive on a later poll.
+    /// Cancellation stops queued and active optional work.
+    /// </summary>
+    ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken) => game;
+
+    /// <summary>
     /// Fetches the games the source picks as its most important right now, across every sport (ESPN's
     /// Top Events), by game id. It may list games in leagues ScoreMap doesn't show.
     /// </summary>

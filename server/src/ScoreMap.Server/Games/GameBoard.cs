@@ -51,13 +51,15 @@ public sealed class GameBoard(
         var now = clock.GetUtcNow();
         ForgetGamesNoLongerReported(league.Key, scoreboard);
         var games = new List<Game>();
-        foreach (var game in scoreboard)
+        foreach (var reported in scoreboard)
         {
+            var game = reported;
             if (ToStatus(game.Status) is not { } status)
                 continue;
             var stoppedAt = RecordSighting(league, game, now);
             if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
+            game = feed.EnrichGame(game, cancellationToken);
             var endTime = status == GameStatus.Final ? stoppedAt : null;
             var location = await venues.LocateAsync(game.Venue, (game.Contest as ProviderSides)?.Home, cancellationToken);
             var added = ToGame(game, status, endTime, league, location);

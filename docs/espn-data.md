@@ -9,8 +9,10 @@ The field names below are ESPN's, under `https://site.api.espn.com/apis/site/v2/
 | Request | When | Size |
 | --- | --- | --- |
 | `scoreboard?dates=YYYYMMDD&limit=500` | Every poll of a league, for yesterday and today (and near midnight, tomorrow) | Tens of KB per day |
-| `summary?event={id}` | A US sport's game whose score has changed since the server last asked (for its last score) | About 5–500 KB; basketball and hockey list every play |
+| `summary?event={id}` | A game inside its pin window whose score needs last-score details | About 5–500 KB; basketball and hockey list every play |
 | `teams/{id}` | Once per home team, only for a game with no venue (for its city) | Small |
+
+Summary lookups run in the background, at most four at once across all leagues, with only one queued or active lookup per game. The board chooses which games are inside their pin windows; the feed adapter decides which need a summary. Basic scores return immediately with any cached last score, and new details reach browsers on a later poll. A caught-up summary is kept until the score changes; a failed, empty or lagging summary is tried up to three times at the same score while keeping the last detail available. Cancellation releases queued and active work without spending a retry. A result finishing after a scenario switch only updates the real feed's cache, never the scenario's games.
 
 ## What ScoreMap reads
 

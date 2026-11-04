@@ -5,7 +5,7 @@ using ScoreMap.Server.Sports.Shared;
 
 namespace ScoreMap.Server.Sports;
 
-internal abstract class SportScenario(League league)
+internal abstract partial class SportScenario(League league)
 {
     protected League League { get; } = league;
     internal abstract SportPlay CreatePlay();

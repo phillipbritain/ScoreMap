@@ -41,9 +41,11 @@ export default defineConfig({
         extends: true,
         test: { name: 'unit', environment: 'node', exclude: [browserTests, '**/node_modules/**'] },
       },
-      // `npm run test:browser`: the globe map, in headless Chromium.
+      // `npm run test:browser`: globe and keyboard interactions, in headless Chromium.
       {
         extends: true,
+        // Prebundle React together so the first browser run uses one hooks dispatcher.
+        optimizeDeps: { include: ['react', 'react-dom/client', 'react/jsx-runtime'] },
         test: {
           name: 'browser',
           include: [browserTests],

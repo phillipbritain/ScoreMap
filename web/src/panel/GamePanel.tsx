@@ -61,7 +61,12 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   const colourStyle = { '--game-color': colour, '--text-on-game-color': textOnColour } as CSSProperties
 
   return (
-    <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel">
+    <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel" onKeyDown={(event) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation()
+        onClose()
+      }
+    }}>
       <div className="game-panel__main">
         <div className="game-panel__score">
           <div className="game-panel__league" data-tooltip={`${game.sport} · ${league}`} data-tooltip-when-clipped>

@@ -141,8 +141,10 @@ public class EspnSummaryEnrichmentTests
         using var http = server.CreateClient();
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "other" })).EnsureSuccessStatusCode();
         var scenario = Assert.Single(await server.SnapshotOnceAsync());
-        handler.Release.SetResult();
+        // Switching retires the poller's generation: optional work must finish by cancellation,
+        // even while fake HTTP is still stalled, before it can publish anything to the cache.
         await provider.EnrichmentFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        handler.Release.SetResult();
         server.Clock.Advance(TimeSpan.FromSeconds(2));
         var after = Assert.Single(await server.SnapshotOnceAsync());
         Assert.Equal("10", after.Sides().Home.Score);

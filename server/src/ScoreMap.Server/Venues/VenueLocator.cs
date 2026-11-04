@@ -52,6 +52,12 @@ public sealed class VenueLocator
         _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
+    /// <summary>The immediate position while a lookup is pending: corrections, given coordinates, or 0,0.</summary>
+    public VenueLocation Fallback(ProviderVenue? venue) =>
+        _corrections.Find(venue?.Name) is { } corrected ? new(corrected, LocationSource.Correction) :
+        venue?.Location is { } given ? new(given, LocationSource.Given) :
+        new(new Coordinates(0, 0), LocationSource.Nowhere);
+
     /// <summary>
     /// Where a game's pin goes, trying in order: the corrections file, the position given with the venue,
     /// the venue looked up by name and city (ESPN supplies no coordinates, ADR-0001), the venue's city
@@ -136,14 +142,9 @@ public sealed class VenueLocator
         }
     }
 
-    private async Task<Dictionary<string, Coordinates?>> LoadAsync(CancellationToken cancellationToken)
-    {
-        if (!File.Exists(_savedLocationsPath))
-            return new Dictionary<string, Coordinates?>();
-        await using var file = File.OpenRead(_savedLocationsPath);
-        return await JsonSerializer.DeserializeAsync<Dictionary<string, Coordinates?>>(file, Json, cancellationToken)
-            ?? new Dictionary<string, Coordinates?>();
-    }
+    private async Task<Dictionary<string, Coordinates?>> LoadAsync(CancellationToken cancellationToken) =>
+        await VenueCache.ReadAsync<Dictionary<string, Coordinates?>>(_savedLocationsPath, Json, _logger, cancellationToken)
+        ?? new Dictionary<string, Coordinates?>();
 
     private async Task<Dictionary<string, Coordinates>> LoadScenarioLocationsAsync(CancellationToken cancellationToken)
     {
@@ -154,12 +155,6 @@ public sealed class VenueLocator
             ?? new Dictionary<string, Coordinates>();
     }
 
-    private async Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_savedLocationsPath)!);
-        var temp = _savedLocationsPath + ".tmp";
-        await using (var file = File.Create(temp))
-            await JsonSerializer.SerializeAsync(file, saved, Json, cancellationToken);
-        File.Move(temp, _savedLocationsPath, overwrite: true);
-    }
+    private Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken) =>
+        VenueCache.SaveAsync(_savedLocationsPath, saved, Json, _logger, cancellationToken);
 }

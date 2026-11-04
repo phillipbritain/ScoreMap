@@ -76,9 +76,11 @@ public class SlowDependencyTests
         await server.Feed.WaitForTotalFetchesAsync(5);
         Assert.Equal(5, server.Feed.TotalFetches);
 
-        // Stop is a completion barrier for both the active requests and work queued for a slot.
+        // Cancellation can free a slot before every queued worker observes its own cancellation.
+        // Stop must drain them all while the number of simultaneous fetches stays bounded.
         await server.Services.GetRequiredService<Poller>().StopAsync(CancellationToken.None);
-        Assert.Equal(5, server.Feed.TotalFetches);
+        Assert.Equal(4, server.Feed.MaximumConcurrentFetches);
+        Assert.Equal(0, server.Feed.ActiveFetches);
     }
 
     [Fact]

@@ -265,6 +265,40 @@ describe('score cards', () => {
 })
 
 describe('selection', () => {
+  it('selects a named score card with Enter and Space, including after a live update', async () => {
+    const { globe, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    globe.show([game('A')])
+    await vi.waitFor(() => expect(card('A')).not.toBeNull())
+    const button = card('A')!
+    expect(button.tagName).toBe('BUTTON')
+    expect(button.getAttribute('aria-label')).toContain('Buffalo Bills')
+    expect(button.getAttribute('aria-label')).toContain('Kansas City Chiefs')
+    button.focus()
+    await userEvent.keyboard('{Enter}')
+    expect(onSelect).toHaveBeenLastCalledWith('A')
+    globe.show([game('A', { home: '7' })])
+    await vi.waitFor(() => expect(button.textContent).toContain('7'))
+    expect(document.activeElement).toBe(button)
+    await userEvent.keyboard(' ')
+    expect(onSelect.mock.calls).toEqual([['A'], ['A']])
+  })
+
+  it('moves focus to the map when a focused card is removed or becomes a small pin', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A')])
+    const first = await cardShown('A')
+    first.focus()
+    globe.show([])
+    await vi.waitFor(() => expect(card('A')).toBeNull())
+    expect(document.activeElement).toBe(map.getCanvas())
+    globe.show([game('B')])
+    const second = await cardShown('B')
+    second.focus()
+    map.jumpTo({ zoom: 2 })
+    await vi.waitFor(() => expect(card('B')).toBeNull())
+    expect(document.activeElement).toBe(map.getCanvas())
+  })
+
   it('rings the selected game’s small pin and leaves the globe where it is', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 20 })

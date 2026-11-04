@@ -51,6 +51,84 @@ public class TennisTests
     }
 
     [Fact]
+    public async Task An_unchanged_match_rebuilt_from_provider_data_pushes_nothing()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Atp, Match(server, InProgress, 2,
+            [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(2, 2)]));
+        await using var client = await server.ConnectClientAsync();
+        var original = Assert.Single(await client.NextSnapshotAsync());
+
+        // Poll once with identical data built afresh, then change the set: that must be the first event.
+        server.Feed.SetScoreboard(Atp, Match(server, InProgress, 2,
+            [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(2, 2)]));
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        await server.Feed.WaitForFetchesAsync(Atp, 2);
+        server.Feed.SetScoreboard(Atp, Match(server, InProgress, 2,
+            [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(3, 2)]) with { StartTime = original.StartTime });
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.Updated, change.Kind);
+        Assert.Equal(("1st 6-4 J. Sinner | 2nd 3-2", null, null), Parts(change.Game.Scoreline));
+    }
+
+    [Theory]
+    [InlineData("set score", "1st 7-4 J. Sinner | 2nd 6-4 C. Alcaraz", "ret.", "J. Sinner")]
+    [InlineData("set winner", "1st 6-4 C. Alcaraz | 2nd 6-4 J. Sinner", "ret.", "J. Sinner")]
+    [InlineData("ending", "1st 6-4 J. Sinner | 2nd 6-4 C. Alcaraz", "W/O", "J. Sinner")]
+    [InlineData("advancing side", "1st 6-4 J. Sinner | 2nd 6-4 C. Alcaraz", "ret.", "C. Alcaraz")]
+    public async Task A_scoreline_correction_is_pushed_as_an_update(
+        string correction, string expectedSets, string expectedEnding, string expectedAdvanced)
+    {
+        await using var server = new ScoreMapServer();
+        var original = Match(server, Final, 2,
+            [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(4, 6, HomeWon: false)],
+            new ProviderEarlyEnding(EarlyEndingReason.Retired, "J. Sinner"));
+        server.Feed.SetScoreboard(Atp, original);
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        // Keep sets won unchanged, including when the winners of the two sets are corrected.
+        var corrected = correction switch
+        {
+            "set score" => original with { Sets = [new ProviderSet(7, 4, HomeWon: true), new ProviderSet(4, 6, HomeWon: false)] },
+            "set winner" => original with { Sets = [new ProviderSet(4, 6, HomeWon: false), new ProviderSet(6, 4, HomeWon: true)] },
+            "ending" => original with { EarlyEnding = new ProviderEarlyEnding(EarlyEndingReason.Walkover, "J. Sinner") },
+            "advancing side" => original with { EarlyEnding = new ProviderEarlyEnding(EarlyEndingReason.Retired, "C. Alcaraz") },
+            _ => throw new ArgumentOutOfRangeException(nameof(correction)),
+        };
+        server.Feed.SetScoreboard(Atp, corrected);
+        server.Clock.Advance(TimeSpan.FromMinutes(3));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.Updated, change.Kind);
+        Assert.Equal((expectedSets, expectedEnding, expectedAdvanced), Parts(change.Game.Scoreline));
+    }
+
+    [Theory]
+    [InlineData(Scheduled, InProgress, GameChangeKind.Started)]
+    [InlineData(InProgress, InProgress, GameChangeKind.ScoreChanged)]
+    [InlineData(InProgress, Final, GameChangeKind.Finished)]
+    public async Task A_scoreline_change_preserves_score_and_status_event_precedence(
+        ProviderStatus before, ProviderStatus after, GameChangeKind expectedKind)
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Atp, Match(server, before, 1, [new ProviderSet(5, 4)]));
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        server.Feed.SetScoreboard(Atp, Match(server, after, 1, [new ProviderSet(6, 4, HomeWon: true)]));
+        server.Clock.Advance(TimeSpan.FromMinutes(3));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal(expectedKind, change.Kind);
+        Assert.Equal(("1", "0"), (change.Game.Sides().Home.Score, change.Game.Sides().Away.Score));
+        Assert.Equal(("1st 6-4 J. Sinner", null, null), Parts(change.Game.Scoreline));
+        Assert.Empty(client.PendingChanges());
+    }
+
+    [Fact]
     public async Task A_live_match_scores_sets_won_and_its_progress_line_shows_the_current_set_and_its_games()
     {
         await using var server = new ScoreMapServer();

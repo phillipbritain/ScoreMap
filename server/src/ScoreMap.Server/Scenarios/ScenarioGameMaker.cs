@@ -1,3 +1,4 @@
+using ScoreMap.Server.Sports;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
@@ -50,7 +51,7 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
             Period: null,
             Phase: ProviderPeriodPhase.Playing);
 
-        var sport = new SportPlay(league);
+        var sport = ScenarioSports.For(league).CreatePlay();
         return status switch
         {
             GameStatus.Upcoming => game with { StartsIn = Minutes(random.Next(5, 171)) },

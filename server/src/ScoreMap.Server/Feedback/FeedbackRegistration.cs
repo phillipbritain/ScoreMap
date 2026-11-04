@@ -12,7 +12,7 @@ public static class FeedbackRegistration
     {
         services.Configure<FeedbackOptions>(configuration.GetSection("Feedback"));
         services.AddHttpClient(GitHubFeedbackSink.HttpClientName);
-        services.AddSingleton<FeedbackGuard>();
+        services.AddSingleton<FeedbackFiling>();
         services.AddSingleton<IFeedbackSink>(sp =>
             string.IsNullOrWhiteSpace(sp.GetRequiredService<IOptions<FeedbackOptions>>().Value.GitHubToken)
                 ? ActivatorUtilities.CreateInstance<LoggedFeedbackSink>(sp)

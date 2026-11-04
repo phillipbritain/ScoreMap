@@ -1,6 +1,6 @@
 using System.Net;
 using System.Security.Cryptography;
-using ScoreMap.Server.Games;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Scenarios;
 
 namespace ScoreMap.Server.Feedback;
@@ -16,7 +16,7 @@ public sealed record FeedbackResult(FeedbackOutcome Outcome, string? IssueUrl = 
 /// towards the allowances; a failed submission returns exactly the day and send it reserved.
 /// </summary>
 public sealed class FeedbackFiling(
-    TimeProvider clock, IFeedbackSink sink, GameBoard board, DemoBoard demo, ILogger<FeedbackFiling> logger)
+    TimeProvider clock, IFeedbackSink sink, RunningGameBoard board, DemoBoard demo, ILogger<FeedbackFiling> logger)
 {
     public const int PerVisitorLimit = 3;
     public static readonly TimeSpan PerVisitorWindow = TimeSpan.FromMinutes(10);

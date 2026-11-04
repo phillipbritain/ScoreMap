@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Scenarios;
 
 namespace ScoreMap.Server.Tests.Scenarios;
@@ -50,7 +51,7 @@ public sealed class ScenarioGameMakerTests
         foreach (var (game, _) in Make(leagueKey, GameStatus.Upcoming))
         {
             Assert.Equal(ProviderStatus.Scheduled, game.Status);
-            Assert.InRange(game.StartsIn, TimeSpan.FromMinutes(1), GameBoard.UpcomingWindow);
+            Assert.InRange(game.StartsIn, TimeSpan.FromMinutes(1), RunningGameBoard.UpcomingWindow);
             Assert.Null(game.Sides.Home.Score);
             Assert.Null(game.Sides.Away.Score);
             Assert.Null(game.Clock);
@@ -98,7 +99,7 @@ public sealed class ScenarioGameMakerTests
         {
             Assert.Equal(ProviderStatus.Final, game.Status);
             // The board takes a game first seen Final to have ended at its planned end, and shows it for 2 h after.
-            Assert.InRange(game.StartsIn, -(league.PlannedLength + GameBoard.FinalWindow) + TimeSpan.FromMinutes(30), -league.PlannedLength);
+            Assert.InRange(game.StartsIn, -(league.PlannedLength + RunningGameBoard.FinalWindow) + TimeSpan.FromMinutes(30), -league.PlannedLength);
             Assert.InRange(game.Sides.Away.Score!.Value, 0, MostPoints[league.Sport]);
             if (YetToBat(game.Sides.Home, game, league))
                 Assert.Null(game.Sides.Home.Score);
@@ -142,7 +143,7 @@ public sealed class ScenarioGameMakerTests
             else
             {
                 // Shown from 3 h before the planned start until 2 h after the planned end.
-                Assert.InRange(game.StartsIn, -(league.PlannedLength + GameBoard.FinalWindow) + TimeSpan.FromMinutes(30), GameBoard.UpcomingWindow);
+                Assert.InRange(game.StartsIn, -(league.PlannedLength + RunningGameBoard.FinalWindow) + TimeSpan.FromMinutes(30), RunningGameBoard.UpcomingWindow);
                 Assert.Null(game.Sides.Home.Score);
                 Assert.Null(game.Sides.Away.Score);
             }

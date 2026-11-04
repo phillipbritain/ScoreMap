@@ -282,14 +282,15 @@ public sealed class ScoreMapServer(
     }
 
     /// <summary>Connects a browser stand-in to the games hub: to the real games, or to a demo's (ADR-0019).</summary>
-    public async Task<TestClient> ConnectClientAsync(bool demo = false)
+    public async Task<TestClient> ConnectClientAsync(bool demo = false, WebApplicationFactory<Program>? app = null)
     {
+        var host = app?.Server ?? Server;
         var path = demo ? $"{GamesHub.Path}?{GamesHub.DemoQuery}" : GamesHub.Path;
         var client = new TestClient(demo, new HubConnectionBuilder()
-            .WithUrl(new Uri(Server.BaseAddress, path), options =>
+            .WithUrl(new Uri(host.BaseAddress, path), options =>
             {
                 options.Transports = HttpTransportType.LongPolling;
-                options.HttpMessageHandlerFactory = _ => Server.CreateHandler();
+                options.HttpMessageHandlerFactory = _ => host.CreateHandler();
             })
             .Build());
         await client.StartAsync();
@@ -314,10 +315,10 @@ public sealed class ScoreMapServer(
     /// </summary>
     public async Task DisconnectAsync(TestClient client)
     {
-        var connections = Services.GetRequiredService<BrowserConnections>();
+        var connections = Services.GetRequiredService<RunningGameBoard>();
         var demo = Services.GetRequiredService<DemoBoard>();
         var id = client.ConnectionId;
-        Func<bool> connected = client.Demo ? () => demo.IsWatching(id) : () => connections.IsConnected(id);
+        Func<bool> connected = client.Demo ? () => demo.IsWatching(id) : () => connections.IsWatching(id);
         // The hub counts a browser only once it has sent its snapshot, which the client can have first.
         await WaitUntilAsync(connected, "The server did not see the client connect");
         await client.DisposeAsync();

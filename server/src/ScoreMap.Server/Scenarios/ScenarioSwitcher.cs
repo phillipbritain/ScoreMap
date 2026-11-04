@@ -147,7 +147,10 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
         lock (_sourceGate)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             return _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
+        }
     }
 
     public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
@@ -159,7 +162,10 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
     {
         lock (_sourceGate)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
             return _running.Feed.FetchTopEventsAsync(cancellationToken);
+        }
     }
 
     private Source Start(string name, Speed? speed)

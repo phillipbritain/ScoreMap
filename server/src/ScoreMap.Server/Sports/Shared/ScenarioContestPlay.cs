@@ -21,6 +21,19 @@ internal abstract partial class SportScenario
         _ => throw new ArgumentOutOfRangeException(nameof(contest)),
     };
 
+    /// <summary>
+    /// Whether play moves this sport's two-sided games on itself (<see cref="PlaySides"/>), as it does
+    /// a field or a fight card, rather than through its <see cref="SportPlay"/>: tennis, whose sets live on the game.
+    /// </summary>
+    internal virtual bool PlaysSidesItself => false;
+
+    /// <summary>A Live two-sided game as play takes it on, for a sport that plays them itself.</summary>
+    internal virtual ProviderGame TakeOn(ProviderGame game) => game;
+
+    /// <summary>Moves a two-sided game on from <paramref name="before"/> to <paramref name="through"/>, for a sport that plays them itself.</summary>
+    protected virtual (ProviderGame Game, double Through) PlaySides(ProviderGame game, double before, double through, Random random) =>
+        throw new InvalidOperationException($"{League.Sport} games play through their SportPlay");
+
     internal (ProviderGame Game, double Through) PlayContest(ProviderGame game, double before, double through, Random random)
     {
         game = game with { Status = ProviderStatus.InProgress };
@@ -28,6 +41,8 @@ internal abstract partial class SportScenario
             (game, through) = Field.Advance(game, field, before, through, random);
         else if (game.Contest is ProviderBouts card)
             game = MmaScenario.AdvanceCard(game, card, random);
+        else if (game.Contest is ProviderSides)
+            (game, through) = PlaySides(game, before, through, random);
         if (game.Contest is ProviderField && through >= 1)
             game = game with { Status = ProviderStatus.Final, Phase = ProviderPeriodPhase.Playing };
         return (game, through);

@@ -49,7 +49,7 @@ internal abstract partial class SportScenario
     protected static double Between(Random random, double low, double high, double step) =>
         low + step * random.Next((int)((high - low) / step) + 1);
 
-    internal int Attendance(ProviderGame game) =>
+    internal virtual int? Attendance(ProviderGame game) =>
         (int)(Capacity * (0.6 + 0.4 * Seeded(game.Id, "crowd").NextDouble()));
     protected abstract int Capacity { get; }
 

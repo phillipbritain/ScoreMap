@@ -345,6 +345,7 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
+    public bool ChangePrecededSnapshot { get; private set; }
 
     private readonly Channel<ScenarioEndpoints.ScenarioListing> _scenarioChanges =
         Channel.CreateUnbounded<ScenarioEndpoints.ScenarioListing>();
@@ -356,7 +357,11 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
     internal async Task StartAsync()
     {
         connection.On<IReadOnlyList<Game>>(GamesHub.SnapshotMessage, games => _snapshot.TrySetResult(games));
-        connection.On<GameChange>(GamesHub.ChangeMessage, change => _changes.Writer.TryWrite(change));
+        connection.On<GameChange>(GamesHub.ChangeMessage, change =>
+        {
+            if (!_snapshot.Task.IsCompleted) ChangePrecededSnapshot = true;
+            _changes.Writer.TryWrite(change);
+        });
         connection.On<ScenarioEndpoints.ScenarioListing>(GamesHub.ScenarioChangedMessage, listing => _scenarioChanges.Writer.TryWrite(listing));
         await connection.StartAsync();
     }

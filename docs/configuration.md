@@ -10,7 +10,7 @@ The leagues shown are listed under `Leagues` in `appsettings.json`. Each has a `
 
 The server reads each league's games from ESPN's scoreboards for yesterday and today (and, within 3 hours of midnight, tomorrow), in US Eastern days as ESPN keeps them. Outside soccer, rugby, cricket, tennis, racing and golf, a game's last score isn't on the scoreboard, so the server also asks for the game's summary, but only when its score has changed since it last asked (see [espn-data.md](espn-data.md)).
 
-While at least one browser is connected, the server polls each league about every 15 seconds while it has Live games and every 3 minutes otherwise, and pushes change events to browsers over SignalR. With no browser connected it doesn't poll at all; the next browser to connect gets a freshly fetched snapshot, as does a browser reconnecting after a dropped connection.
+While at least one browser is connected, the server polls each league about every 15 seconds while it has Live games and every 3 minutes otherwise, and pushes change events to browsers over SignalR. With no browser connected it doesn't poll at all; a connecting or reconnecting browser allows up to 250 ms for fresh data, then gets the current board (possibly empty on a cold start). Pending requests deliver changes afterward. At most four feed requests run at once; independent leagues do not wait for a slow league or Top Events. Venue lookups run separately: pending games keep their last known position for the same venue, or the correction/given position, or 0,0 until the lookup finishes. Nominatim keeps its application-wide rate limit. Scenario switches cancel obsolete work and discard late results.
 
 ## Venues
 

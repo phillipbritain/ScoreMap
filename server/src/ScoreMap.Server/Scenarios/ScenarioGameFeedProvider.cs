@@ -12,6 +12,7 @@ namespace ScoreMap.Server.Scenarios;
 /// </summary>
 public sealed class ScenarioGameFeedProvider : IGameFeedProvider
 {
+    private readonly Lock _lock = new();
     private readonly Scenario _scenario;
     private readonly TimeProvider _clock;
     private readonly DateTimeOffset _startedAt;
@@ -30,10 +31,13 @@ public sealed class ScenarioGameFeedProvider : IGameFeedProvider
 
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
-        var now = _clock.GetUtcNow();
-        var all = _play is not null ? _play.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
-        var games = _details.Fill(leagueKey, all.Where(game => game.LeagueKey == leagueKey).ToList());
-        return Task.FromResult(games);
+        lock (_lock)
+        {
+            var now = _clock.GetUtcNow();
+            var all = _play is not null ? _play.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
+            var games = _details.Fill(leagueKey, all.Where(game => game.LeagueKey == leagueKey).ToList());
+            return Task.FromResult(games);
+        }
     }
 
     /// <summary>About one game in five, picked by its id, so a game stays a top event for as long as it runs.</summary>

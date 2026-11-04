@@ -8,6 +8,24 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
 {
     private readonly Dictionary<string, IReadOnlyList<ProviderGame>> _scoreboards = new();
     private readonly Dictionary<string, int> _fetches = new();
+    private TaskCompletionSource _fetchChanged = NewSignal();
+    private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private TaskCompletionSource? _topEventsGate;
+    private bool _holdAll;
+    private readonly HashSet<string> _ignoreCancellation = [];
+
+    public void HoldAllScoreboards() { lock (_scoreboards) _holdAll = true; }
+    public void HoldTopEvents() { lock (_scoreboards) _topEventsGate = NewSignal(); }
+    public void ReleaseTopEvents() { lock (_scoreboards) _topEventsGate?.TrySetResult(); }
+    public int TotalFetches { get { lock (_scoreboards) return _fetches.Values.Sum() + _topEventsFetches; } }
+    public Task WaitForTotalFetchesAsync(int count) => WaitForAsync(() => TotalFetches >= count);
+
+    private void Fetched()
+    {
+        var changed = _fetchChanged;
+        _fetchChanged = NewSignal();
+        changed.TrySetResult();
+    }
     private readonly HashSet<string> _failing = [];
     private readonly HashSet<string> _timingOut = [];
     private readonly HashSet<string> _holding = [];
@@ -48,10 +66,19 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         lock (_scoreboards)
         {
             _topEventsFetches++;
+            Fetched();
+            if (_topEventsGate is { } gate)
+                return TopEventsOnceReleasedAsync(gate.Task, cancellationToken);
             return _topEventsFailing
                 ? Task.FromException<IReadOnlySet<string>>(new HttpRequestException("top events are down"))
                 : Task.FromResult(_topEvents);
         }
+    }
+
+    private async Task<IReadOnlySet<string>> TopEventsOnceReleasedAsync(Task release, CancellationToken cancellationToken)
+    {
+        await release.WaitAsync(cancellationToken);
+        lock (_scoreboards) return _topEvents;
     }
 
     public void SetScoreboard(string leagueKey, params ProviderGame[] games)
@@ -101,10 +128,13 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     /// Makes fetches of the league wait until <see cref="Release"/> is called, then answer as usual: a
     /// fetch under way for as long as a test needs.
     /// </summary>
-    public void HoldUntilReleased(string leagueKey)
+    public void HoldUntilReleased(string leagueKey, bool ignoreCancellation = false)
     {
         lock (_scoreboards)
-            _gates[leagueKey] = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        {
+            _gates[leagueKey] = NewSignal();
+            if (ignoreCancellation) _ignoreCancellation.Add(leagueKey);
+        }
     }
 
     /// <summary>Lets fetches of the league waiting since <see cref="HoldUntilReleased"/> go on, and later ones through.</summary>
@@ -128,14 +158,20 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     }
 
     /// <summary>Waits (in real time, briefly) until the league has been fetched at least <paramref name="count"/> times.</summary>
-    public async Task WaitForFetchesAsync(string leagueKey, int count)
+    public Task WaitForFetchesAsync(string leagueKey, int count) => WaitForAsync(() => Fetches(leagueKey) >= count);
+
+    private async Task WaitForAsync(Func<bool> reached)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(10);
-        while (Fetches(leagueKey) < count)
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        while (true)
         {
-            if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"{leagueKey} fetched {Fetches(leagueKey)} times, expected {count}");
-            await Task.Delay(10);
+            Task changed;
+            lock (_scoreboards)
+            {
+                if (reached()) return;
+                changed = _fetchChanged.Task;
+            }
+            await changed.WaitAsync(timeout.Token);
         }
     }
 
@@ -148,6 +184,9 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         lock (_scoreboards)
         {
             _fetches[leagueKey] = _fetches.GetValueOrDefault(leagueKey) + 1;
+            Fetched();
+            if (_holdAll && !_gates.ContainsKey(leagueKey))
+                _gates[leagueKey] = NewSignal();
             if (_failing.Contains(leagueKey))
                 return Task.FromException<IReadOnlyList<ProviderGame>>(new HttpRequestException("feed is down"));
             if (_holding.Contains(leagueKey))
@@ -157,7 +196,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
                     "The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
                     new TimeoutException("The operation was canceled.")));
             if (_gates.TryGetValue(leagueKey, out var gate))
-                return AnswerOnceReleasedAsync(leagueKey, gate.Task, cancellationToken);
+                return AnswerOnceReleasedAsync(leagueKey, gate.Task, _ignoreCancellation.Contains(leagueKey) ? CancellationToken.None : cancellationToken);
             return Task.FromResult(Scoreboard(leagueKey));
         }
     }

@@ -405,6 +405,17 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
     public async Task<Game> GameMatchingAsync(Func<Game, bool> ready) =>
         (await GamesMatchingAsync(games => games.Any(ready))).Single(ready);
 
+    /// <summary>
+    /// Waits until the board's one game has been placed, and returns it. The first snapshot waits at most
+    /// 250 ms for venue lookups (#261), so a looked-up pin can arrive in a later change. A placed venue
+    /// has a time zone; the 0,0 pin used while a lookup is pending has none.
+    /// </summary>
+    public async Task<Game> PlacedGameAsync() => Assert.Single(await PlacedGamesAsync(1));
+
+    /// <summary>Waits until the board holds <paramref name="count"/> games, all placed (see <see cref="PlacedGameAsync"/>).</summary>
+    public Task<IReadOnlyList<Game>> PlacedGamesAsync(int count) =>
+        GamesMatchingAsync(games => games.Count == count && games.All(g => g.Venue.TimeZone is not null));
+
     /// <summary>The next change event the server pushed, in the order they arrived.</summary>
     public async Task<GameChange> NextChangeAsync() =>
         await _changes.Reader.ReadAsync().AsTask().WaitAsync(Timeout);

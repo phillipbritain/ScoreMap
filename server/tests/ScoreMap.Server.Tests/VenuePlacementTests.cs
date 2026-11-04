@@ -29,7 +29,7 @@ public class VenuePlacementTests
         server.Feed.SetScoreboard("football/nfl", LondonGame());
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Equal("Tottenham Hotspur Stadium", game.Venue.Name);
@@ -45,9 +45,9 @@ public class VenuePlacementTests
         server.Feed.SetScoreboard("football/nfl", LondonGame("a"), LondonGame("b"));
 
         await using (var first = await server.ConnectClientAsync())
-            await first.NextSnapshotAsync();
+            await first.PlacedGamesAsync(2);
         await using var second = await server.ConnectClientAsync();
-        var games = await second.NextSnapshotAsync();
+        var games = await second.PlacedGamesAsync(2);
 
         Assert.All(games, g => Assert.Equal((51.6043, -0.0664), (g.Venue.Latitude, g.Venue.Longitude)));
         Assert.Equal(["Tottenham Hotspur Stadium, London"], server.Places.Queries);
@@ -62,7 +62,7 @@ public class VenuePlacementTests
             firstRun.Places.Add("Tottenham Hotspur Stadium, London", Tottenham);
             firstRun.Feed.SetScoreboard("football/nfl", LondonGame());
             await using var client = await firstRun.ConnectClientAsync();
-            await client.NextSnapshotAsync();
+            await client.PlacedGameAsync();
             savedLocations = File.ReadAllText(firstRun.SavedVenueLocationsPath);
         }
 
@@ -73,7 +73,7 @@ public class VenuePlacementTests
             await using var laterRun = new ScoreMapServer(path);
             laterRun.Feed.SetScoreboard("football/nfl", LondonGame());
             await using var client = await laterRun.ConnectClientAsync();
-            var game = Assert.Single(await client.NextSnapshotAsync());
+            var game = await client.PlacedGameAsync();
 
             Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
             Assert.Empty(laterRun.Places.Queries);
@@ -88,12 +88,14 @@ public class VenuePlacementTests
     public async Task A_venue_the_search_cannot_find_is_not_searched_for_again()
     {
         await using var server = new ScoreMapServer();
+        // The city is found, so the pin's arrival shows the lookups are done.
+        server.Places.Add("London, England", new Coordinates(51.5074, -0.1278));
         server.Feed.SetScoreboard("football/nfl", LondonGame());
 
         await using (var first = await server.ConnectClientAsync())
-            await first.NextSnapshotAsync();
+            await first.PlacedGameAsync();
         await using var second = await server.ConnectClientAsync();
-        await second.NextSnapshotAsync();
+        await second.PlacedGameAsync();
 
         Assert.Equal(["Tottenham Hotspur Stadium, London", "London, England"], server.Places.Queries);
     }
@@ -110,7 +112,7 @@ public class VenuePlacementTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((39.9008, -75.1675), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(server.Places.Queries);
@@ -126,7 +128,7 @@ public class VenuePlacementTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(server.Places.Queries);
@@ -143,7 +145,8 @@ public class VenuePlacementTests
         server.CorrectVenue("Tottenham Hotspur Stadium", Tottenham);
         server.Clock.Advance(TimeSpan.FromMinutes(3)); // the correction applies from the next poll
         await using var second = await server.ConnectClientAsync();
-        var game = Assert.Single(await second.NextSnapshotAsync());
+        // The pin was already placed (at 1,1), so wait for the corrected one to be delivered.
+        var game = await second.GameMatchingAsync(g => (g.Venue.Latitude, g.Venue.Longitude) == (51.6043, -0.0664));
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
     }
@@ -153,10 +156,14 @@ public class VenuePlacementTests
     {
         await using var server = new ScoreMapServer();
         server.Places.Add("London, England", new Coordinates(51.5074, -0.1278));
+        // Held until the snapshot has gone, as a slow search would be, so the pin arrives as a change.
+        server.Places.Hold("London, England");
         server.Feed.SetScoreboard("football/nfl", LondonGame());
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        await client.NextSnapshotAsync();
+        server.Places.Release("London, England");
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((51.5074, -0.1278), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Equal("Tottenham Hotspur Stadium", game.Venue.Name);
@@ -174,7 +181,7 @@ public class VenuePlacementTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((35.2272, -80.8431), (game.Venue.Latitude, game.Venue.Longitude));
     }
@@ -194,7 +201,7 @@ public class VenuePlacementTests
             LondonGame("nothing known") with { Venue = null });
 
         await using var client = await server.ConnectClientAsync();
-        var games = await client.NextSnapshotAsync();
+        var games = await client.GamesMatchingAsync(games => games.Count == 3);
 
         Assert.Equal(["unfindable venue", "no venue, home city known", "nothing known"], games.Select(g => g.Id));
     }

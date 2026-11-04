@@ -49,7 +49,7 @@ public class ScenarioVenueLocationTests : IDisposable
 
         server.Feed.SetScoreboard("soccer/eng.1", GameAt(new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England")));
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(server.Places.Queries);

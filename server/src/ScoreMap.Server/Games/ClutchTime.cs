@@ -1,3 +1,5 @@
+using ScoreMap.Server.Sports;
+using ScoreMap.Server.Sports.Shared;
 using ScoreMap.Server.GameFeed;
 
 namespace ScoreMap.Server.Games;
@@ -10,20 +12,5 @@ namespace ScoreMap.Server.Games;
 /// </summary>
 public static class ClutchTime
 {
-    private static readonly TimeSpan LastMinutes = TimeSpan.FromMinutes(5);
-    private const int WithinPoints = 5;
-
-    public static bool For(ProviderGame game, League league)
-    {
-        if (league.Sport != Sport.Basketball
-            || game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed)
-            || game.Period is not { } period
-            || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away }
-            || Math.Abs(home - away) > WithinPoints)
-            return false;
-
-        if (period > league.Regulation)
-            return true;
-        return period == league.Regulation && PeriodClock.TimeLeft(game.DisplayClock) <= LastMinutes;
-    }
+    public static bool For(ProviderGame game, League league) => SportRules.For(league.Sport).Clutch(game, league);
 }

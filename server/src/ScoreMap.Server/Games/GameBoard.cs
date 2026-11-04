@@ -57,18 +57,20 @@ public sealed class GameBoard(
         feed.FetchTopEventsAsync(cancellationToken);
 
     /// <summary>Applies basic game data without waiting for optional venue lookups.</summary>
-    public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard)
+    public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         ForgetGamesNoLongerReported(league.Key, scoreboard);
         var games = new List<Game>();
-        foreach (var game in scoreboard)
+        foreach (var reported in scoreboard)
         {
+            var game = reported;
             if (ToStatus(game.Status) is not { } status)
                 continue;
             var stoppedAt = RecordSighting(league, game, now);
             if (!IsInPinWindow(game, status, stoppedAt, league, now))
                 continue;
+            game = feed.EnrichGame(game, cancellationToken);
             var endTime = status == GameStatus.Final ? stoppedAt : null;
             var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
             var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);

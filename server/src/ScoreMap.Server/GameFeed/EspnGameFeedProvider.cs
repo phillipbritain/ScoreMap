@@ -17,6 +17,13 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 {
     private const string IndyCar = "racing/irl";
 
+    /// <summary>The maximum simultaneous summary requests across all leagues on this provider.</summary>
+    public const int SummaryConcurrency = 4;
+
+    private readonly SemaphoreSlim _summarySlots = new(SummaryConcurrency, SummaryConcurrency);
+    private readonly Lock _summaryLock = new();
+    private readonly Dictionary<string, Task> _summaryWork = new();
+
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
 
     // Each started game's last score, by league and game, with the score it was looked up at and how many
@@ -92,46 +99,104 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             games.Add(game);
         }
         ForgetLastScoresNoLongerReported(leagueKey, games);
-        return await Task.WhenAll(games.Select(game => WithLastScoreAsync(game, league, cancellationToken)));
+        return games.Select(game => game.LastScore is not null ? game : game with
+        {
+            LastScore = _lastScores.GetValueOrDefault($"{game.LeagueKey}/{game.Id}").Play,
+        }).ToList();
     }
 
-    /// <summary>
-    /// The game with its last score. Soccer's and rugby's come with the scoreboard, from their scoring, and cricket and
-    /// tennis have none (runs come off almost every ball; games and sets aren't scored by anyone's play). Every other sport's is only in the game's summary, which is
-    /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
-    /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
-    /// next time, up to <see cref="SummaryTries"/> times at one score; the last score stays as it was meanwhile.
-    /// </summary>
-    private async Task<ProviderGame> WithLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
+    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
     {
-        if (game.LastScore is not null || league.StartsWith("soccer/", StringComparison.Ordinal) || league.StartsWith("rugby/", StringComparison.Ordinal)
+        var league = game.LeagueKey.Split('?')[0];
+        if (league.StartsWith("soccer/", StringComparison.Ordinal) || league.StartsWith("rugby/", StringComparison.Ordinal)
             || league.StartsWith("cricket/", StringComparison.Ordinal) || league.StartsWith("tennis/", StringComparison.Ordinal)
             || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away } || home + away == 0)
             return game;
 
         var key = $"{game.LeagueKey}/{game.Id}";
+        lock (_summaryLock)
+        {
+            var known = _lastScores.GetValueOrDefault(key);
+            if (!cancellationToken.IsCancellationRequested && !_summaryWork.ContainsKey(key)
+                && (known.Score != $"{home}-{away}" || known.TriesLeft > 0))
+                _summaryWork[key] = Task.Run(() => RefreshLastScoreAsync(game, league, key, cancellationToken));
+            return game with { LastScore = known.Play };
+        }
+    }
+
+    /// <summary>Completes when every optional summary lookup started so far has finished. For tests.</summary>
+    public Task EnrichmentFinishedAsync()
+    {
+        lock (_summaryLock)
+            return Task.WhenAll(_summaryWork.Values);
+    }
+
+    private async Task RefreshLastScoreAsync(ProviderGame game, string league, string key, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _summarySlots.WaitAsync(cancellationToken);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await FetchLastScoreAsync(game, league, cancellationToken);
+            }
+            finally { _summarySlots.Release(); }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Optional work never prevents delivery of the basic scoreboard.
+        }
+        finally
+        {
+            lock (_summaryLock)
+                _summaryWork.Remove(key);
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the cached last score. Soccer's and rugby's come with the scoreboard, from their scoring, and cricket and
+    /// tennis have none (runs come off almost every ball; games and sets aren't scored by anyone's play). Every other sport's is only in the game's summary, which is
+    /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
+    /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
+    /// next time, up to <see cref="SummaryTries"/> times at one score; the last score stays as it was meanwhile.
+    /// </summary>
+    private async Task FetchLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
+    {
+        var key = $"{game.LeagueKey}/{game.Id}";
+        var sides = (ProviderSides)game.Contest;
+        var (home, away) = (sides.Home.Score, sides.Away.Score);
         var score = $"{home}-{away}";
         var known = _lastScores.GetValueOrDefault(key);
         var triesLeft = known.Score == score ? known.TriesLeft : SummaryTries;
         if (triesLeft == 0)
-            return game with { LastScore = known.Play };
+            return;
         _lastScores[key] = (score, triesLeft - 1, known.Play);
         try
         {
             var summary = await http.GetFromJsonAsync<Summary>($"{league}/summary?event={game.Id}", cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
             // Football's summary lists its scoring plays; the other sports' only list every play.
             var plays = summary?.ScoringPlays ?? summary?.Plays?.Where(p => p.ScoringPlay == true).ToList() ?? [];
             if (plays.LastOrDefault() is not { } last)
-                return game with { LastScore = known.Play };
+                return;
             var play = ToScoringPlay(last, summary!.Header?.Competitions?.FirstOrDefault()?.Competitors ?? []) ?? known.Play;
             var caughtUp = last.HomeScore == home && last.AwayScore == away;
             _lastScores[key] = (score, caughtUp ? 0 : triesLeft - 1, play);
-            return game with { LastScore = play };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // A canceled attempt can be tried again, including at an unchanged score.
+            if (known.Score is null)
+                _lastScores.TryRemove(key, out _);
+            else
+                _lastScores[key] = known;
+            throw;
         }
         catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException
             || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
         {
-            return game with { LastScore = known.Play };
+            return;
         }
     }
 

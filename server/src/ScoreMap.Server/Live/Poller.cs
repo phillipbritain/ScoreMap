@@ -26,10 +26,11 @@ public sealed class Poller(
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly SemaphoreSlim _fetchSlots = new(MaximumConcurrentFetches);
     private readonly CancellationTokenSource _lifetime = new();
-    private FetchGeneration _generation = new();
-    private sealed class FetchGeneration
+    private FetchGeneration? _generation;
+    private FetchGeneration Generation => _generation ??= new(_lifetime.Token);
+    private sealed class FetchGeneration(CancellationToken lifetime)
     {
-        public CancellationTokenSource Cancellation { get; } = new();
+        public CancellationTokenSource Cancellation { get; } = CancellationTokenSource.CreateLinkedTokenSource(lifetime);
         public int Workers { get; set; }
         public bool Retired { get; set; }
     }
@@ -167,7 +168,7 @@ public sealed class Poller(
                         await ApplyAsync(() =>
                         {
                             _applied.Add(key);
-                            return board.UpdateLeague(league, scoreboard);
+                            return board.UpdateLeague(league, scoreboard, token);
                         }, token);
                     }
                 }
@@ -195,7 +196,7 @@ public sealed class Poller(
 
     private void StartWork(Func<CancellationToken, Task> action, Action finish)
     {
-        var generation = _generation;
+        var generation = Generation;
         generation.Workers++;
         Task? task = null;
         task = RunAsync();
@@ -203,8 +204,7 @@ public sealed class Poller(
         async Task RunAsync()
         {
             await Task.Yield();
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(generation.Cancellation.Token, _lifetime.Token);
-            var token = linked.Token;
+            var token = generation.Cancellation.Token;
             try { await action(token); }
             catch (OperationCanceledException) when (token.IsCancellationRequested) { }
             catch (Exception e) when (!token.IsCancellationRequested)
@@ -243,11 +243,12 @@ public sealed class Poller(
 
     private void RetireGeneration()
     {
-        _generation.Cancellation.Cancel();
-        _generation.Retired = true;
-        if (_generation.Workers == 0)
-            _generation.Cancellation.Dispose();
-        _generation = new();
+        var generation = Generation;
+        generation.Cancellation.Cancel();
+        generation.Retired = true;
+        if (generation.Workers == 0)
+            generation.Cancellation.Dispose();
+        _generation = new(_lifetime.Token);
         _fetching.Clear();
         _enriching.Clear();
         _nextFetch.Clear();

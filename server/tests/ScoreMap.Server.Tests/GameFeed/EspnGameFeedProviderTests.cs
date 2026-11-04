@@ -37,7 +37,7 @@ public class EspnGameFeedProviderTests
             ("https://espn.test/sports/hockey/mens-college-hockey/scoreboard", Fixture("college-hockey-final.json")),
             ("https://espn.test/sports/hockey/mens-college-hockey/summary?event=401862341", Fixture("college-hockey-summary.json"))));
 
-        var game = Assert.Single(await provider.FetchScoreboardAsync("hockey/mens-college-hockey", CancellationToken.None));
+        var game = Assert.Single(await FetchEnrichedAsync(provider, "hockey/mens-college-hockey", CancellationToken.None));
 
         Assert.Equal(new ProviderScoringPlay("DEN",
             "Even Strength Goal Scored by Kyle Chyzowski assisted by Boston Buckberger and Garrett Brown", 3, "14:08"), game.LastScore);
@@ -574,8 +574,8 @@ public class EspnGameFeedProviderTests
             : throw new InvalidOperationException("Asked for a summary"));
         var provider = ProviderOver(handler);
 
-        await provider.FetchScoreboardAsync("soccer/eng.1", CancellationToken.None);
-        var cricket = await provider.FetchScoreboardAsync("cricket/8656", CancellationToken.None);
+        await FetchEnrichedAsync(provider, "soccer/eng.1", CancellationToken.None);
+        var cricket = await FetchEnrichedAsync(provider, "cricket/8656", CancellationToken.None);
 
         Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/summary"));
         Assert.All(cricket, game => Assert.Null(game.LastScore));
@@ -588,7 +588,7 @@ public class EspnGameFeedProviderTests
             ("https://espn.test/sports/football/college-football/scoreboard", Fixture("college-football-ranked.json")),
             ("https://espn.test/sports/football/college-football/summary?event=401752865", Fixture("college-football-summary.json"))));
 
-        var games = await provider.FetchScoreboardAsync("football/college-football", CancellationToken.None);
+        var games = await FetchEnrichedAsync(provider, "football/college-football", CancellationToken.None);
 
         var game = Assert.Single(games, g => g.Id == "401752865");
         Assert.Equal(new ProviderScoringPlay("ILL",
@@ -604,15 +604,38 @@ public class EspnGameFeedProviderTests
           "status":{"displayClock":"1.8","period":4,"type":{"name":"STATUS_IN_PROGRESS","state":"in"}}}]}]}
         """;
 
+    private static async Task<IReadOnlyList<ProviderGame>> FetchEnrichedAsync(
+        EspnGameFeedProvider provider, string league, CancellationToken cancellationToken)
+    {
+        var games = await provider.FetchScoreboardAsync(league, cancellationToken);
+        foreach (var game in games)
+            provider.EnrichGame(game, cancellationToken);
+        await provider.EnrichmentFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        return await provider.FetchScoreboardAsync(league, cancellationToken);
+    }
+
     private static StubHttpHandler BasketballServing(Func<string> scoreboard, Func<string> summary) =>
         new(request => request.RequestUri!.AbsolutePath.Contains("/scoreboard") ? scoreboard() : summary());
+
+    [Fact]
+    public async Task Basic_scoreboards_do_not_request_optional_summaries()
+    {
+        var handler = BasketballServing(() => BasketballScoreboard(99, 98), () => Fixture("nba-summary.json"));
+        var provider = ProviderOver(handler);
+
+        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+
+        Assert.Equal(99, game.Sides().Home.Score);
+        Assert.Null(game.LastScore);
+        Assert.DoesNotContain(handler.Requests, r => r.RequestUri!.AbsolutePath.Contains("/summary"));
+    }
 
     [Fact]
     public async Task Basketball_last_score_is_the_last_scoring_play_among_every_play()
     {
         var provider = ProviderOver(BasketballServing(() => BasketballScoreboard(99, 98), () => Fixture("nba-summary.json")));
 
-        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        var game = Assert.Single(await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None));
 
         // The summary goes on past it, with a rebound and the end of the game.
         Assert.Equal(new ProviderScoringPlay("ATL",
@@ -631,7 +654,7 @@ public class EspnGameFeedProviderTests
             """;
         var provider = ProviderOver(BasketballServing(() => scoreboard, () => Fixture("mlb-summary.json")));
 
-        var game = Assert.Single(await provider.FetchScoreboardAsync("baseball/mlb", CancellationToken.None));
+        var game = Assert.Single(await FetchEnrichedAsync(provider, "baseball/mlb", CancellationToken.None));
 
         Assert.Equal(("PHI", "Bohm homered to right (357 feet).", 10, ProviderPeriodPhase.InningTop),
             (game.LastScore!.Team, game.LastScore.Text, game.LastScore.Period, game.LastScore.Phase));
@@ -645,13 +668,13 @@ public class EspnGameFeedProviderTests
         var provider = ProviderOver(handler);
         int Summaries() => handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary"));
 
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
-        var unchanged = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
+        var unchanged = Assert.Single(await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None));
         Assert.Equal(1, Summaries());
         Assert.NotNull(unchanged.LastScore);
 
         (home, away) = (101, 98);
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
         Assert.Equal(2, Summaries());
     }
 
@@ -664,15 +687,15 @@ public class EspnGameFeedProviderTests
         var provider = ProviderOver(handler);
         int Summaries() => handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary"));
 
-        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        var game = Assert.Single(await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None));
         for (var i = 0; i < 4; i++)
-            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+            await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
 
         Assert.Equal("ATL", game.LastScore?.Team);
         Assert.Equal(3, Summaries());
 
         home = 103;
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
         Assert.Equal(4, Summaries());
     }
 
@@ -683,7 +706,7 @@ public class EspnGameFeedProviderTests
         var provider = ProviderOver(handler);
 
         for (var i = 0; i < 5; i++)
-            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+            await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
 
         Assert.Equal(3, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
     }
@@ -694,7 +717,7 @@ public class EspnGameFeedProviderTests
         var handler = BasketballServing(() => BasketballScoreboard(0, 0), () => throw new InvalidOperationException("Asked for a summary"));
         var provider = ProviderOver(handler);
 
-        var scoreless = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        var scoreless = Assert.Single(await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None));
         await FetchFixtureAsync("nfl-scheduled-odds.json", Nfl);
 
         Assert.Null(scoreless.LastScore);
@@ -716,19 +739,19 @@ public class EspnGameFeedProviderTests
             _ => "<html>Service Unavailable</html>",
         });
         var provider = ProviderOver(handler);
-        await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+        await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
 
         (home, failing) = (101, true);
-        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None));
+        var game = Assert.Single(await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None));
         for (var i = 0; i < 4; i++)
-            await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None);
+            await FetchEnrichedAsync(provider, "basketball/nba", CancellationToken.None);
 
         Assert.Equal((101, "ATL"), (game.Sides().Home.Score, game.LastScore?.Team));
         Assert.Equal(4, handler.Requests.Count(r => r.RequestUri!.AbsolutePath.Contains("/summary")));
     }
 
     [Fact]
-    public async Task Cancelling_while_a_summary_is_asked_for_cancels_the_fetch()
+    public async Task Cancelling_optional_summary_work_leaves_basic_scores_available()
     {
         using var cancel = new CancellationTokenSource();
         var handler = BasketballServing(() => BasketballScoreboard(99, 98), () =>
@@ -738,7 +761,12 @@ public class EspnGameFeedProviderTests
         });
         var provider = ProviderOver(handler);
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => provider.FetchScoreboardAsync("basketball/nba", cancel.Token));
+        var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", cancel.Token));
+        provider.EnrichGame(game, cancel.Token);
+        await provider.EnrichmentFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.True(cancel.IsCancellationRequested);
+        Assert.Equal(99, Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None)).Sides().Home.Score);
     }
 
     [Fact]
@@ -874,7 +902,7 @@ public class EspnGameFeedProviderTests
     {
         var handler = StubHttpHandler.Returning(Fixture("tennis-wta.json"));
 
-        var games = await ProviderOver(handler).FetchScoreboardAsync(Wta, CancellationToken.None);
+        var games = await FetchEnrichedAsync(ProviderOver(handler), Wta, CancellationToken.None);
 
         Assert.All(games, game => Assert.Null(game.LastScore));
         Assert.All(handler.Requests, request => Assert.Contains("/tennis/wta/scoreboard?", request.RequestUri!.AbsoluteUri));

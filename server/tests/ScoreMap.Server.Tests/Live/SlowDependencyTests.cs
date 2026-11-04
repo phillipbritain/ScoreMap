@@ -9,6 +9,23 @@ namespace ScoreMap.Server.Tests.Live;
 public class SlowDependencyTests
 {
     [Fact]
+    public async Task Switching_source_cancels_old_fetches_before_publishing_the_new_source()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.Hold(Nfl);
+        await using var client = await server.ConnectClientAsync();
+        await server.Feed.WaitForFetchesAsync(Nfl, 1);
+        await client.NextSnapshotAsync();
+        var oldFetch = server.Feed.FetchToken(Nfl);
+
+        await server.Services.GetRequiredService<Poller>().StartAfreshAsync(() =>
+        {
+            Assert.True(oldFetch.IsCancellationRequested);
+            return new PollingOptions();
+        }, CancellationToken.None);
+    }
+
+    [Fact]
     public async Task A_stalled_league_does_not_block_snapshots_or_an_independent_leagues_changes()
     {
         await using var server = new ScoreMapServer();

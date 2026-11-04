@@ -79,7 +79,7 @@ public class FeedbackTests
         var board = server.Services.GetRequiredService<GameBoard>();
         var league = board.Leagues.Single(l => l.Key == Nfl);
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "before"));
-        board.UpdateLeague(league, await board.FetchLeagueAsync(league, CancellationToken.None));
+        board.UpdateLeague(league, await board.FetchLeagueAsync(league, CancellationToken.None), CancellationToken.None);
         var snapshot = board.Games;
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "after-1"), LiveGame(server.Clock, "after-2"));
         server.Feed.HoldUntilReleased(Nfl);
@@ -94,7 +94,7 @@ public class FeedbackTests
         {
             server.Feed.Release(Nfl);
         }
-        board.UpdateLeague(league, await fetch.WaitAsync(TimeSpan.FromSeconds(10)));
+        board.UpdateLeague(league, await fetch.WaitAsync(TimeSpan.FromSeconds(10)), CancellationToken.None);
         Assert.Equal(["after-1", "after-2"], board.Games.Select(g => g.Id));
         Assert.Equal(["before"], snapshot.Select(g => g.Id));
     }
@@ -106,7 +106,7 @@ public class FeedbackTests
         var board = server.Services.GetRequiredService<GameBoard>();
         var league = board.Leagues.Single(l => l.Key == Nfl);
         var requested = LiveGame(server.Clock, "game");
-        board.UpdateLeague(league, [requested]);
+        board.UpdateLeague(league, [requested], CancellationToken.None);
         var snapshot = board.Games;
         var before = Assert.Single(snapshot);
         var location = new VenueLocation(new Coordinates(51.6043, -0.0664), LocationSource.Venue);
@@ -127,8 +127,8 @@ public class FeedbackTests
         var board = server.Services.GetRequiredService<GameBoard>();
         var league = board.Leagues.Single(l => l.Key == Nfl);
         var other = new League { Key = "test/other", Name = "Other", Sport = Sport.Football };
-        board.UpdateLeague(league, [LiveGame(server.Clock, "first"), LiveGame(server.Clock, "second")]);
-        board.UpdateLeague(other, [LiveGame(server.Clock, "third", leagueKey: other.Key)]);
+        board.UpdateLeague(league, [LiveGame(server.Clock, "first"), LiveGame(server.Clock, "second")], CancellationToken.None);
+        board.UpdateLeague(other, [LiveGame(server.Clock, "third", leagueKey: other.Key)], CancellationToken.None);
         var snapshot = board.Games;
 
         board.UpdateTopEvents(new HashSet<string> { "first", "third" }, new HashSet<string> { league.Key, other.Key });
@@ -162,7 +162,7 @@ public class FeedbackTests
         {
             server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
             var league = board.Leagues.Single(l => l.Key == Nfl);
-            board.UpdateLeague(league, await board.FetchLeagueAsync(league, CancellationToken.None));
+            board.UpdateLeague(league, await board.FetchLeagueAsync(league, CancellationToken.None), CancellationToken.None);
         }
         var gameId = demo ? "demo-game" : "real-game";
         // Empty scoreboards need no outside lookups, and each new key exercises league insertion.
@@ -171,7 +171,7 @@ public class FeedbackTests
         {
             await start.Task;
             for (var i = 0; i < 2000; i++)
-                board.UpdateLeague(new League { Key = $"test/{i}", Name = $"League {i}", Sport = Sport.Football }, []);
+                board.UpdateLeague(new League { Key = $"test/{i}", Name = $"League {i}", Sport = Sport.Football }, [], CancellationToken.None);
         });
         var reader = Task.Run(async () =>
         {

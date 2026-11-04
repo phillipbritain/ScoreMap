@@ -5,6 +5,16 @@ namespace ScoreMap.Server.Sports.Shared;
 
 internal static class ClockFormat
 {
+    internal static string QuarterOrHalf(int regulation) => regulation == 2 ? "H" : "Q";
+
+    internal static string? WhenTimed(ProviderScoringPlay play, League league, string prefix)
+    {
+        if (play.Period is not { } period)
+            return play.Clock;
+        var name = PeriodName(period, league.Regulation, prefix);
+        return play.Clock is { } clock ? $"{name} {clock}" : name;
+    }
+
     internal static string PeriodName(int period, int regulation, string prefix) =>
         period > regulation ? OvertimeName(period - regulation) : $"{prefix}{period}";
 

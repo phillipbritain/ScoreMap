@@ -122,7 +122,10 @@ public static partial class ScenarioReader
         {
             Sport.Racing or Sport.Golf => ReadField(entry),
             Sport.Mma => ReadBouts(entry, id, status),
-            _ => new ProviderSides(ReadTeam(entry.Home, "home"), ReadTeam(entry.Away, "away")),
+            Sport.Football or Sport.Basketball or Sport.Baseball or Sport.Hockey
+                or Sport.Soccer or Sport.Cricket or Sport.Rugby or Sport.Tennis =>
+                    new ProviderSides(ReadTeam(entry.Home, "home"), ReadTeam(entry.Away, "away")),
+            _ => throw new InvalidDataException($"has unsupported sport {league.Sport}"),
         };
         var venue = ReadVenue(entry.Venue, venues);
 

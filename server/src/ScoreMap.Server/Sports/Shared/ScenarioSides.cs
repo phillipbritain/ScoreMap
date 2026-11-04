@@ -1,8 +1,8 @@
 using ScoreMap.Server.GameFeed;
 
-namespace ScoreMap.Server.Scenarios;
+namespace ScoreMap.Server.Sports.Shared;
 
-/// <summary>Scenarios make only games between two sides.</summary>
+/// <summary>Access to two sides after scenario play or detail has selected that contest shape.</summary>
 internal static class ScenarioSides
 {
     /// <summary>A scenario game's two sides.</summary>

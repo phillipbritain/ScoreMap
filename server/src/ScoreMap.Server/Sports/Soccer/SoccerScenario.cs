@@ -2,16 +2,16 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Sports.Shared;
-
 using static ScoreMap.Server.Sports.Shared.ScenarioFabrication;
 
 namespace ScoreMap.Server.Sports;
 
-internal sealed partial class SoccerScenario(League league) : SportScenario(league)
+internal sealed class SoccerScenario(League league) : SportScenario(league)
 {
     protected override FieldPlay Field => RacingFieldPlay.Instance;
 
     internal override SportPlay CreatePlay() => new MinutePlay(League, new(1.4, [(1, 1.0)], 6, null));
+
     protected override int Capacity => 45000;
     protected override int UsualScore => 1;
     protected override string NoteText(Random random) => Pick(random, "1st Leg", $"2nd Leg - Aggregate {random.Next(4)}-{random.Next(4)}", "Derby");

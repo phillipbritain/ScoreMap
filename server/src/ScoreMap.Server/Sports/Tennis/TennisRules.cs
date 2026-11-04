@@ -1,15 +1,16 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
-namespace ScoreMap.Server.Sports;
-
 using ScoreMap.Server.Sports.Shared;
+
+namespace ScoreMap.Server.Sports;
 
 internal sealed class TennisRules : SportRule
 {
     internal static readonly TennisRules Instance = new();
     internal override string Name => "Tennis";
-    internal override SportUsual Usual => new(3, null);
+    // Best of three; the feed does not identify best-of-five matches.
+    internal override SportUsual Usual { get; } = new(3, null);
 
     protected override string? ClockInPlay(ProviderGame game, League league, int period) =>
         Sets(game, period);

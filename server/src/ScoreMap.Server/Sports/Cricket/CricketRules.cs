@@ -1,15 +1,15 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
-namespace ScoreMap.Server.Sports;
-
 using ScoreMap.Server.Sports.Shared;
+
+namespace ScoreMap.Server.Sports;
 
 internal sealed class CricketRules : SportRule
 {
     internal static readonly CricketRules Instance = new();
     internal override string Name => "Cricket";
-    internal override SportUsual Usual => new(2, null);
+    internal override SportUsual Usual { get; } = new(2, null);
 
     protected override string? ClockInPlay(ProviderGame game, League league, int period) =>
         Innings(game, period);

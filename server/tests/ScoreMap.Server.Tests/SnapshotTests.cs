@@ -86,7 +86,7 @@ public class SnapshotTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
+        var game = await client.PlacedGameAsync();
 
         Assert.Equal("Europe/London", game.Venue.TimeZone);
     }

@@ -50,6 +50,13 @@ public class TennisTests
         return Assert.Single(await client.NextSnapshotAsync());
     }
 
+    private static async Task<Game> PlacedAsync(ScoreMapServer server, ProviderGame match)
+    {
+        server.Feed.SetScoreboard(Atp, match);
+        await using var client = await server.ConnectClientAsync();
+        return await client.PlacedGameAsync();
+    }
+
     [Fact]
     public async Task An_unchanged_match_rebuilt_from_provider_data_pushes_nothing()
     {
@@ -231,7 +238,7 @@ public class TennisTests
         server.Places.Add("Rolex Shanghai Masters, Shanghai, China PR", new Coordinates(31.04, 121.36));
         server.Places.Add("Shanghai, China PR", new Coordinates(31.23, 121.47));
 
-        var game = await ReceivedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
+        var game = await PlacedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
 
         Assert.Equal((31.04, 121.36), (game.Venue.Latitude, game.Venue.Longitude));
     }
@@ -242,7 +249,7 @@ public class TennisTests
         await using var server = new ScoreMapServer();
         server.Places.Add("Shanghai, China PR", new Coordinates(31.23, 121.47));
 
-        var game = await ReceivedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
+        var game = await PlacedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
 
         Assert.Equal((31.23, 121.47), (game.Venue.Latitude, game.Venue.Longitude));
     }
@@ -254,7 +261,7 @@ public class TennisTests
         server.Places.Add("Rolex Shanghai Masters, Shanghai, China PR", new Coordinates(31.04, 121.36));
         server.CorrectVenue("Rolex Shanghai Masters", new Coordinates(31.05, 121.37));
 
-        var game = await ReceivedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
+        var game = await PlacedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
 
         Assert.Equal((31.05, 121.37), (game.Venue.Latitude, game.Venue.Longitude));
     }

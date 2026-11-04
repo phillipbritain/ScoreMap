@@ -3,6 +3,7 @@ import { focusGameNavigation } from '../games/gameFocus'
 import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
@@ -62,7 +63,7 @@ interface PlacedCardCluster {
  */
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
-  private games = new Map<string, Game>()
+  private games = new Map<string, PlacedGame>()
   private selectedGameId: string | null = null
   /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
   private hoveredGameId: string | null = null
@@ -158,7 +159,7 @@ export class ScoreCardMarkers {
     return element ? element.getBoundingClientRect() : null
   }
 
-  setGames(games: readonly Game[]): void {
+  setGames(games: readonly PlacedGame[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
     this.settleAgain()
     this.sync()

@@ -2,7 +2,7 @@ import { createExpression, type ExpressionSpecification } from '@maplibre/maplib
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
 import { describe, expect, it } from 'vitest'
-import type { Game } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
@@ -104,7 +104,7 @@ describe('addPlaceNames', () => {
     return { map, gameCities }
   }
   // Everglades City, about 100 km from Miami.
-  const evergladesGame = { venue: { longitude: -81.3851, latitude: 25.8573 } } as Game
+  const evergladesGame = { venue: { longitude: -81.3851, latitude: 25.8573 } } as PlacedGame
 
   it('names the shown games afresh by new settings', () => {
     const { map, gameCities } = mapWithCityNames()

@@ -130,7 +130,7 @@ _Avoid_: Minor city, town
 ### Loading
 
 **Loading screen**:
-What ScoreMap shows when it first opens, until it's ready: the globe dimmed as it loads, with a little rocket flying in the middle, and a message if it's slow. The rail and scenario pills can still be used, but the globe can't be moved yet.
+What ScoreMap shows when it first opens: the globe dimmed with a little flying rocket and a message if it's slow, or an error with a Try again action if the globe cannot start or the map fails to load. The rail and scenario pills stay usable, but the globe cannot be moved until it's ready.
 _Avoid_: Spinner, splash, overlay, veil
 
 **Ready**:

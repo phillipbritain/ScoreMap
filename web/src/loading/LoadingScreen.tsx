@@ -16,6 +16,8 @@ interface LoadingScreenProps {
   stage: LoadingStage
   /** Shows the stage's slow message from the start, as if it had already lasted too long (the tuner's preview). */
   slow?: boolean
+  /** Starts a fresh globe after an initialization failure. */
+  onRetry?: () => void
   /** Called once the loading screen has gone, its fade played. */
   onGone: () => void
 }
@@ -26,7 +28,7 @@ interface LoadingScreenProps {
  * the dim fades away (at once with reduce motion: the CSS has no fade then) and the loading screen is
  * gone for good. What it shows comes from loadingScreenView; this only draws it.
  */
-export function LoadingScreen({ stage, slow = false, onGone }: LoadingScreenProps) {
+export function LoadingScreen({ stage, slow = false, onRetry, onGone }: LoadingScreenProps) {
   const element = useRef<HTMLDivElement>(null)
   const [gone, setGone] = useState(false)
   const latestOnGone = useRef(onGone)
@@ -35,13 +37,14 @@ export function LoadingScreen({ stage, slow = false, onGone }: LoadingScreenProp
   const msInStage = elapsed.stage === stage ? elapsed.ms : 0
   const view = loadingScreenView(stage, slow ? Infinity : msInStage)
   const leaving = !view.shown
+  const failed = stage === 'styleError' || stage === 'constructionError'
 
   useEffect(() => {
-    if (stage === 'ready') return
+    if (stage === 'ready' || failed) return
     const since = performance.now()
     const timer = setInterval(() => setElapsed({ stage, ms: performance.now() - since }), tickMs)
     return () => clearInterval(timer)
-  }, [stage])
+  }, [stage, failed])
 
   useEffect(() => {
     latestOnGone.current = onGone
@@ -66,6 +69,14 @@ export function LoadingScreen({ stage, slow = false, onGone }: LoadingScreenProp
   }, [leaving, gone])
 
   if (gone) return null
+  if (failed) return (
+    <div className="loading-screen" role="alert">
+      <div className="loading-screen__error">
+        <p>{view.message}</p>
+        <button type="button" className="loading-screen__retry" onClick={onRetry}>Try again</button>
+      </div>
+    </div>
+  )
   return <Dimmed ref={element} message={view.message} leaving={leaving} label="Loading ScoreMap" />
 }
 

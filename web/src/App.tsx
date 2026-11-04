@@ -96,6 +96,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
+  const [globeAttempt, setGlobeAttempt] = useState(0)
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   // A loading screen the theme tuner holds up to be looked at, apart from the real one (local runs only).
   const [loadingPreview, setLoadingPreview] = useState<LoadingPreview>('off')
@@ -181,6 +182,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
       <Tooltips />
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
+          key={`globe-${globeAttempt}`}
           ref={globeCamera}
           theme={theme}
           cityLabels={behaviour.cityLabels}
@@ -204,7 +206,17 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
         />
         {/* Over the globe until it's ready, under the bottom stack and the rail, which come after it
             so they stay usable while loading. */}
-        {!loadingScreenGone && <LoadingScreen stage={stage} onGone={() => setLoadingScreenGone(true)} />}
+        {!loadingScreenGone && (
+          <LoadingScreen
+            key={`loading-${globeAttempt}`}
+            stage={stage}
+            onRetry={() => {
+              setStage('waitingForGames')
+              setGlobeAttempt((attempt) => attempt + 1)
+            }}
+            onGone={() => setLoadingScreenGone(true)}
+          />
+        )}
         {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
             the rail, which stay usable. */}
         {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}

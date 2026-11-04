@@ -65,9 +65,9 @@ public sealed partial class RunningGameBoard
                 var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var location = venues.Fallback(game.Venue);
-                if (location.FoundBy == LocationSource.Nowhere && previousGame is not null && SameVenue(previous, game))
-                    location = new(new Coordinates(previousGame.Venue.Latitude, previousGame.Venue.Longitude),
-                        previousGame.Venue.TimeZone is null ? LocationSource.Nowhere : LocationSource.Venue);
+                if (location.FoundBy == LocationSource.Nowhere && previousGame is not null && SameVenue(previous, game)
+                    && previousGame.Venue is { Latitude: { } latitude, Longitude: { } longitude })
+                    location = new(new Coordinates(latitude, longitude), LocationSource.Venue);
                 var added = ToGame(game, status, endTime, league, location);
                 games.Add(added with { StreamLinks = streams.LinksFor(added) });
             }
@@ -228,13 +228,14 @@ public sealed partial class RunningGameBoard
             };
         }
 
+        /// <summary>A venue found nowhere (its lookup pending, or finished with nothing) goes out unplaced: no position or time zone.</summary>
         private static GameVenue ToVenue(ProviderVenue? venue, VenueLocation location)
         {
             var (latitude, longitude) = (location.Location.Latitude, location.Location.Longitude);
-            var timeZone = location.FoundBy == LocationSource.Nowhere
-                ? null
-                : TimeZoneLookup.GetTimeZone(latitude, longitude).Result;
-            return new GameVenue(venue?.Name, venue?.City, RegionName.InFull(venue?.Region), venue?.Country, latitude, longitude, timeZone)
+            var placed = location.FoundBy != LocationSource.Nowhere;
+            var timeZone = placed ? TimeZoneLookup.GetTimeZone(latitude, longitude).Result : null;
+            return new GameVenue(venue?.Name, venue?.City, RegionName.InFull(venue?.Region), venue?.Country,
+                placed ? latitude : null, placed ? longitude : null, timeZone)
             {
                 Court = venue?.Court,
             };

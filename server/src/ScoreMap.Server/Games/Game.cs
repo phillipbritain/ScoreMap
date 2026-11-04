@@ -150,12 +150,14 @@ public sealed record GameTeam(string Abbreviation, string FullName, string? Logo
 /// <summary>
 /// Where a game is played. <see cref="Region"/> is its state, province or the like, spelled out in full
 /// for a US state or Canadian province ("Arizona", "Ontario"), as the feed gives it otherwise, and null
-/// where the feed gives none. <see cref="TimeZone"/> is the venue's IANA time zone (e.g. "America/Chicago"),
-/// or null when the venue could not be placed. <see cref="Photo"/> is null until a photo of the venue
+/// where the feed gives none. <see cref="Latitude"/> and <see cref="Longitude"/> are its position once
+/// placed (looked up, given with the venue or corrected), and both null while it is unplaced: its lookup
+/// still pending, or finished without finding it. <see cref="TimeZone"/> is the venue's IANA time zone
+/// (e.g. "America/Chicago"), likewise null while unplaced. <see cref="Photo"/> is null until a photo of the venue
 /// has been found, and stays null for a venue that has none. In tennis, <see cref="Name"/> is the
 /// tournament and <see cref="City"/> its city as the feed writes it ("Shanghai, China PR").
 /// </summary>
-public sealed record GameVenue(string? Name, string? City, string? Region, string? Country, double Latitude, double Longitude, string? TimeZone,
+public sealed record GameVenue(string? Name, string? City, string? Region, string? Country, double? Latitude, double? Longitude, string? TimeZone,
     VenuePhoto? Photo = null)
 {
     /// <summary>Tennis: the court the match is on ("Stadium Court"), when the feed names it.</summary>

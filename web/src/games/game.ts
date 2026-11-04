@@ -21,9 +21,10 @@ export interface GameVenue {
   /** Its state, province or the like: in full for a US state or Canadian province ("Arizona"), as the feed gives it otherwise; null when there's none. */
   region: string | null
   country: string | null
-  latitude: number
-  longitude: number
-  /** The venue's IANA time zone, e.g. "America/Chicago"; null when the venue could not be placed. */
+  /** Its position once placed (looked up, given with the venue or corrected); both null while unplaced: its lookup still pending, or finished without finding it. */
+  latitude: number | null
+  longitude: number | null
+  /** The venue's IANA time zone, e.g. "America/Chicago"; null while the venue is unplaced. */
   timeZone: string | null
   /** A photo of the venue (from outside or of the playing area); null until the server finds one, and for venues with none. */
   photo: VenuePhoto | null

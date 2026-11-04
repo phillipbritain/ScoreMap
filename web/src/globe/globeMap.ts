@@ -11,6 +11,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
+import { placedGames, type PlacedGame } from '../games/placedGames'
 import { gameColour, type PickedColours } from '../settings/gameColour'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
@@ -131,8 +132,11 @@ export class GlobeMap {
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
   private readonly onStage: (stage: LoadingStage) => void
-  /** The games as the globe last showed them, which tells what has changed in the next ones. */
-  private shown = new Map<string, Game>()
+  /**
+   * The games as the globe last showed them, which tells what has changed in the next ones: only
+   * those whose venues are placed (see placedGames), so a game coming into place appears at its venue.
+   */
+  private shown = new Map<string, PlacedGame>()
   /** The pins last given to the pin source, so it's reloaded only when they change. */
   private pinsKey = ''
   /** The pins last given to the outer pin source, likewise. */
@@ -245,21 +249,25 @@ export class GlobeMap {
    *
    * Given null (no games yet: the server's first snapshot hasn't arrived), it shows nothing and keeps
    * waiting for games (see stage). An empty list is a snapshot with no games in it.
+   *
+   * A game whose venue isn't placed (its lookup pending, or found nothing) is left off the globe
+   * altogether: no pin, card, name or ring. Once placed, it comes into view at its venue.
    */
   show(games: readonly Game[] | null, quietly = false): void {
     if (!games) return
     this.hasGames = true
     this.tellStage()
     this.unsettle()
+    const placed = placedGames(games)
     const before = this.shown
-    this.shown = new Map(games.map((game) => [game.id, game]))
+    this.shown = new Map(placed.map((game) => [game.id, game]))
     this.showPins()
     // Names first: cards are laid out around them.
-    this.names.showGames(games)
+    this.names.showGames(placed)
     if (this.reachShown) this.showReachRings()
-    this.cards.setGames(games)
+    this.cards.setGames(placed)
     if (quietly) return
-    for (const game of games) {
+    for (const game of placed) {
       const last = before.get(game.id)
       const animation = last && pinAnimation(last, game)
       if (animation) void this.animate(game, animation)
@@ -270,7 +278,8 @@ export class GlobeMap {
    * Highlights the selected game's pin (a ring around its small pin, or its score card highlighted).
    * The globe stays where it is, unless the game panel (its box on the page) would cover the pin:
    * then it lifts just far enough to clear it (see liftClearOf). Selecting the game already
-   * selected does nothing, so later games arriving don't move the camera.
+   * selected does nothing, so later games arriving don't move the camera. A game not on the globe
+   * (its venue not placed) is selected without moving it, and stays so once placed.
    */
   select(gameId: string | null, panel: ScreenBox | null = null): void {
     if (gameId === this.selectedGameId) return
@@ -646,7 +655,7 @@ export class GlobeMap {
    * far from the centre of the view), or the pin cluster it's in. Games not on the map (off screen)
    * don't animate.
    */
-  private async animate(game: Game, animation: PinAnimation): Promise<void> {
+  private async animate(game: PlacedGame, animation: PinAnimation): Promise<void> {
     const map = this.map
     const { lng: longitude, lat: latitude } = map.getCenter()
     const zoomedIn = pinSize(map.getZoom()) === 'card'

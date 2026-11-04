@@ -14,6 +14,10 @@ public sealed class FakePlaceSearch : IPlaceSearch
     private readonly Dictionary<string, Exception> _failures = new();
     private readonly Dictionary<string, Action> _onSearch = new();
     private readonly List<string> _queries = [];
+    private readonly Dictionary<string, TaskCompletionSource> _held = new();
+
+    public void Hold(string query) => _held[query] = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    public void Release(string query) => _held[query].TrySetResult();
 
     public IReadOnlyList<string> Queries
     {
@@ -33,7 +37,7 @@ public sealed class FakePlaceSearch : IPlaceSearch
     /// <summary>Runs an action when a query is asked, before answering it.</summary>
     public void OnSearch(string query, Action action) => _onSearch[query] = action;
 
-    public Task<Coordinates?> SearchAsync(string query, CancellationToken cancellationToken)
+    public async Task<Coordinates?> SearchAsync(string query, CancellationToken cancellationToken)
     {
         lock (_queries)
             _queries.Add(query);
@@ -42,6 +46,8 @@ public sealed class FakePlaceSearch : IPlaceSearch
         cancellationToken.ThrowIfCancellationRequested();
         if (_failures.TryGetValue(query, out var failure))
             throw failure;
-        return Task.FromResult(_places.GetValueOrDefault(query));
+        if (_held.TryGetValue(query, out var held))
+            await held.Task.WaitAsync(cancellationToken);
+        return _places.GetValueOrDefault(query);
     }
 }

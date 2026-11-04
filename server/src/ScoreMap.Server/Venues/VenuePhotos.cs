@@ -128,22 +128,13 @@ public sealed class VenuePhotos
     /// </summary>
     private Dictionary<string, VenuePhoto?> Load()
     {
-        if (!File.Exists(_savedPhotosPath))
-            return new Dictionary<string, VenuePhoto?>();
-        using var file = File.OpenRead(_savedPhotosPath);
-        var saved = JsonSerializer.Deserialize<SavedPhotos>(file, Json);
+        var saved = VenueCache.Read<SavedPhotos>(_savedPhotosPath, Json, _logger);
         return saved is { Version: SavedFileVersion, Photos: { } photos } ? photos : new Dictionary<string, VenuePhoto?>();
     }
 
     /// <summary>Saves through a temp file, so a crash mid-write never leaves a half-written file. Searches run one at a time, so saves do too.</summary>
-    private async Task SaveAsync(Dictionary<string, VenuePhoto?> saved, CancellationToken cancellationToken)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_savedPhotosPath)!);
-        var temp = _savedPhotosPath + ".tmp";
-        await using (var file = File.Create(temp))
-            await JsonSerializer.SerializeAsync(file, new SavedPhotos(SavedFileVersion, saved), Json, cancellationToken);
-        File.Move(temp, _savedPhotosPath, overwrite: true);
-    }
+    private Task SaveAsync(Dictionary<string, VenuePhoto?> saved, CancellationToken cancellationToken) =>
+        VenueCache.SaveAsync(_savedPhotosPath, new SavedPhotos(SavedFileVersion, saved), Json, _logger, cancellationToken);
 
     /// <summary>The saved-photos file: its version (see <see cref="SavedFileVersion"/>), and the answers by venue.</summary>
     private sealed record SavedPhotos(int Version, Dictionary<string, VenuePhoto?>? Photos);

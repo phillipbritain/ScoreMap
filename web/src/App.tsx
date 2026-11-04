@@ -5,6 +5,8 @@ import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import type { Game } from './games/game'
+import { GameNavigation } from './games/GameNavigation'
+import { useGameSelection } from './games/useGameSelection'
 import { applyChange } from './games/gameStore'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
@@ -93,14 +95,12 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // from when it's shown again until the next snapshot.
   const [asleep, setAsleep] = useState(false)
   const [waking, setWaking] = useState(false)
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
   const [globeAttempt, setGlobeAttempt] = useState(0)
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   // A loading screen the theme tuner holds up to be looked at, apart from the real one (local runs only).
   const [loadingPreview, setLoadingPreview] = useState<LoadingPreview>('off')
-  const panel = useRef<HTMLElement>(null)
   // The rail's hold on the globe's camera, and where the camera last settled, for the zoom buttons' limits.
   const globeCamera = useRef<GlobeCamera>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
@@ -115,7 +115,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     globeCamera.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
   }, [behaviour.zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
-  const leagues = useLeagues()
+  const leagueList = useLeagues()
+  const { leagues } = leagueList
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls(demo)
   const { setListing: setScenarioListing } = scenarios
@@ -173,7 +174,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
-  const selectedGame = visible.find((game) => game.id === selectedGameId) ?? null
+  const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
   const selectedColour = selectedGame && gameColour(colours, selectedGame, theme)
 
   return (
@@ -195,7 +196,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           fromSnapshot={fromSnapshot}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
-          onSelectGame={setSelectedGameId}
+          onSelectGame={selectGame}
           startCamera={camera}
           onCameraMove={(moved) => {
             store.saveCamera(moved)
@@ -271,9 +272,10 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             game={selectedGame}
             colour={selectedColour}
             textOnColour={textOn(selectedColour, theme.palette.text.primary, theme.palette.background.paper)}
-            onClose={() => setSelectedGameId(null)}
+            onClose={closeGame}
           />
         )}
+        <GameNavigation games={visible} onSelect={selectGame} inert={touring || !loadingScreenGone} />
         <Rail
           leagues={leagues}
           settings={viewerSettings}
@@ -293,10 +295,10 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           <WelcomeTourScreen
             progress={tourStep}
             onEvent={(event) => setTourProgress((current) => tourProgressAfter(current, event))}
-            leagues={leagues}
+            leagueList={leagueList}
             settings={viewerSettings}
             onChange={setViewerSettings}
-            onOpenGame={setSelectedGameId}
+            onOpenGame={selectGame}
           />
         )}
         {BehaviourTuner && ThemeTuner && tuning && (

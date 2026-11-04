@@ -9,6 +9,8 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed partial class BasketballScenario(League league) : SportScenario(league)
 {
+    protected override FieldPlay Field => RacingFieldPlay.Instance;
+
     private readonly BasketballScenarioFormat _format = BasketballScenarioFormat.For(league);
 
     internal override SportPlay CreatePlay() => new CountdownPlay(League, _format.Scoring);

@@ -196,14 +196,7 @@ public sealed partial class ScenarioPlay
         if (replacing.Game.Contest is not ProviderSides)
         {
             var replacementId = $"{_scenario}-play-{++_newGames}";
-            var contest = replacing.Game.Contest;
-            if (contest is ProviderField field)
-                contest = ProviderField.TiedByScore(field.Entries.Select(e => e with
-                    { ToPar = replacing.League.Sport == Sport.Golf ? 0 : null, Thru = replacing.League.Sport == Sport.Golf ? 0 : null }));
-            if (contest is ProviderBouts card)
-                contest = new ProviderBouts(card.Bouts.Select((b, i) => b with { Id = $"{replacementId}-bout-{i + 1}", Status = ProviderStatus.Scheduled,
-                    Round = null, Clock = null, Method = null, First = b.First with { Winner = false },
-                    Second = b.Second with { Winner = false } }).ToList());
+            var contest = replacing.Scenario.ResetContest(replacing.Game.Contest, replacementId);
             return new PlayedGame(replacing.Game with { Id = replacementId, Contest = contest, Status = ProviderStatus.Scheduled,
                 StartTime = at + TimeSpan.FromSeconds(30), Period = null, DisplayClock = null }, replacing.League);
         }
@@ -247,22 +240,30 @@ public sealed partial class ScenarioPlay
             var written = game.Contest is ProviderSides && game.Period is { } period ? played.Sport.Through(period, game.Clock, game.Phase) : null;
             played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 1);
             if (game.Contest is ProviderField field && game.Period is { } fieldPeriod)
-                played.Through = league.Sport == Sport.Golf
-                    ? (fieldPeriod - 1 + (game.Phase == ProviderPeriodPhase.Break ? 0.5 : (field.Entries.FirstOrDefault()?.Thru ?? 0) / 36.0)) / 4
-                    : (fieldPeriod - 1) / (double)RaceLaps;
+                played.Through = played.Scenario.FieldThrough(field, fieldPeriod, game.Phase);
             if (game.Contest is ProviderSides)
                 played.Game = Position(played);
         }
         return played;
     }
 
-    private sealed class PlayedGame(ProviderGame game, League league)
+    private sealed class PlayedGame
     {
-        public ProviderGame Game { get; set; } = game;
+        public PlayedGame(ProviderGame game, League league)
+        {
+            Game = game;
+            League = league;
+            Scenario = ScenarioSports.For(league);
+            Sport = Scenario.CreatePlay();
+        }
 
-        public League League { get; } = league;
+        public SportScenario Scenario { get; }
 
-        public SportPlay Sport { get; } = ScenarioSports.For(league).CreatePlay();
+        public ProviderGame Game { get; set; }
+
+        public League League { get; }
+
+        public SportPlay Sport { get; }
 
         /// <summary>How far through the game it is, from 0 (just started) to 1 (finished).</summary>
         public double Through { get; set; }

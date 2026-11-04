@@ -9,6 +9,8 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed partial class CricketScenario(League league) : SportScenario(league)
 {
+    protected override FieldPlay Field => RacingFieldPlay.Instance;
+
     internal override SportPlay CreatePlay() => new CricketPlay(League);
     protected override int Capacity => 33000;
     protected override int UsualScore => 1;

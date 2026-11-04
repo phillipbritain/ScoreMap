@@ -9,6 +9,8 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed partial class RugbyScenario(League league) : SportScenario(league)
 {
+    protected override FieldPlay Field => RacingFieldPlay.Instance;
+
     private static readonly (int Points, double Chance)[] Scores = [(7, 0.4), (5, 0.2), (3, 0.4)];
     internal override SportPlay CreatePlay() => new MinutePlay(League, new(5.5, Scores, 60, null));
     protected override int Capacity => 65000;

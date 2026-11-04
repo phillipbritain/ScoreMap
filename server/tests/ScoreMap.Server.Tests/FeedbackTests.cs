@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +45,87 @@ public class FeedbackTests
         (await response.Content.ReadFromJsonAsync<FeedbackEndpoints.FeedbackReply>())!;
 
     [Fact]
+    public async Task A_failed_submission_from_yesterday_does_not_refund_todays_allowance()
+    {
+        await using var server = new ScoreMapServer();
+        server.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 4, 23, 59, 0, TimeSpan.Zero));
+        var sink = new ControlledSink();
+        await using var app = server.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddSingleton<IFeedbackSink>(sink)));
+        var yesterday = SendAsync(app, "Pending yesterday's feedback");
+        var filing = await sink.NextPendingAsync();
+        try
+        {
+            server.Clock.Advance(TimeSpan.FromMinutes(1));
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Today's first feedback", visitor: "198.51.100.1")).StatusCode);
+            filing.SetException(new FeedbackNotFiledException(new Exception("Filing failed")));
+            Assert.Equal(HttpStatusCode.BadGateway, (await yesterday).StatusCode);
+            for (var i = 1; i < 20; i++)
+                Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "More feedback today", visitor: $"198.51.100.{i + 1}")).StatusCode);
+
+            var closed = await SendAsync(app, "Today's allowance is full", visitor: "198.51.100.100");
+            Assert.Equal(HttpStatusCode.TooManyRequests, closed.StatusCode);
+            Assert.Equal("Feedback is closed for today, try tomorrow", (await ReplyAsync(closed)).Error);
+        }
+        finally
+        {
+            filing.TrySetCanceled();
+        }
+    }
+
+    [Fact]
+    public async Task Overlapping_failures_refund_their_own_sends_and_keep_the_successful_sends_expiry()
+    {
+        await using var server = new ScoreMapServer();
+        var sink = new ControlledSink();
+        await using var app = server.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddSingleton<IFeedbackSink>(sink)));
+        var first = SendAsync(app, "Pending first feedback");
+        var firstFiling = await sink.NextPendingAsync();
+        server.Clock.Advance(TimeSpan.FromMinutes(1));
+        var second = SendAsync(app, "Pending second feedback");
+        var secondFiling = await sink.NextPendingAsync();
+        try
+        {
+            server.Clock.Advance(TimeSpan.FromMinutes(1));
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Third feedback succeeds")).StatusCode);
+            secondFiling.SetException(new FeedbackNotFiledException(new Exception("Second failed first")));
+            Assert.Equal(HttpStatusCode.BadGateway, (await second).StatusCode);
+            firstFiling.SetException(new FeedbackNotFiledException(new Exception("First failed last")));
+            Assert.Equal(HttpStatusCode.BadGateway, (await first).StatusCode);
+            // The failed first send would expire now; the successful third still has two minutes left.
+            server.Clock.Advance(TimeSpan.FromMinutes(8));
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "One replacement feedback")).StatusCode);
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Another replacement feedback")).StatusCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, (await SendAsync(app, "Still three sends in ten minutes")).StatusCode);
+            server.Clock.Advance(TimeSpan.FromMinutes(2));
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "The successful send has expired")).StatusCode);
+        }
+        finally
+        {
+            firstFiling.TrySetCanceled();
+            secondFiling.TrySetCanceled();
+        }
+    }
+
+    private sealed class ControlledSink : IFeedbackSink
+    {
+        private readonly Channel<TaskCompletionSource<Uri>> _pending = Channel.CreateUnbounded<TaskCompletionSource<Uri>>();
+
+        public Task<TaskCompletionSource<Uri>> NextPendingAsync() =>
+            _pending.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(10));
+
+        public Task<Uri> FileAsync(FeedbackIssue issue, CancellationToken cancellationToken)
+        {
+            if (!issue.Title.StartsWith("Pending", StringComparison.Ordinal))
+                return Task.FromResult(new Uri("https://github.com/phillipbritain/ScoreMap/issues/300"));
+            var filing = new TaskCompletionSource<Uri>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pending.Writer.TryWrite(filing);
+            return filing.Task.WaitAsync(cancellationToken);
+        }
+    }
+
+    [Fact]
     public async Task Preparation_failures_return_both_the_visitors_and_the_days_allowance()
     {
         await using var server = new ScoreMapServer { FeedbackToken = "token" };
@@ -53,16 +135,16 @@ public class FeedbackTests
         using var client = app.CreateClient();
         options.Fail = true;
 
-        for (var i = 0; i < FeedbackGuard.PerVisitorLimit; i++)
+        for (var i = 0; i < FeedbackFiling.PerVisitorLimit; i++)
             Assert.Equal(HttpStatusCode.InternalServerError, (await SendAsync(app, "Preparation will fail")).StatusCode);
         Assert.Empty(server.GitHub.Issues);
         options.Fail = false;
 
-        for (var i = 0; i < FeedbackGuard.PerVisitorLimit; i++)
+        for (var i = 0; i < FeedbackFiling.PerVisitorLimit; i++)
             Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Preparation works again")).StatusCode);
-        for (var i = FeedbackGuard.PerVisitorLimit; i < FeedbackGuard.DailyCap; i++)
+        for (var i = FeedbackFiling.PerVisitorLimit; i < FeedbackFiling.DailyCap; i++)
             Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Still room for feedback", visitor: $"203.0.113.{i + 20}")).StatusCode);
-        Assert.Equal(FeedbackGuard.DailyCap, server.GitHub.Issues.Count);
+        Assert.Equal(FeedbackFiling.DailyCap, server.GitHub.Issues.Count);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await SendAsync(app, "The day is now full")).StatusCode);
     }
 

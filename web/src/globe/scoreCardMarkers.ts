@@ -1,3 +1,5 @@
+import { gameLabel } from '../games/gameLabel'
+import { focusGameNavigation } from '../games/gameFocus'
 import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
@@ -200,7 +202,9 @@ export class ScoreCardMarkers {
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.
         const element = document.createElement('div')
-        element.append(document.createElement('div'))
+        const button = document.createElement('button')
+        button.type = 'button'
+        element.append(button)
         element.addEventListener('click', (event) => {
           event.stopPropagation()
           this.onSelect(gameId)
@@ -235,6 +239,7 @@ export class ScoreCardMarkers {
       if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme) continue
       placed.drawnFrom = { game, color, flames, selected, theme }
       const card = scoreCard(game, flames)
+      placed.marker.getElement().firstElementChild!.setAttribute('aria-label', gameLabel(game))
       const header = headerText(color, card.status, theme)
       const drawn = JSON.stringify({ card, color, header, selected })
       if (placed.drawn !== drawn) {
@@ -259,6 +264,7 @@ export class ScoreCardMarkers {
     for (const [gameId, { marker }] of this.placed) {
       if (keep.has(gameId)) continue
       if (gameId === this.hoveredGameId) this.hover(null)
+      this.releaseFocus(marker.getElement())
       marker.remove()
       this.placed.delete(gameId)
       this.animating.delete(gameId)
@@ -375,6 +381,7 @@ export class ScoreCardMarkers {
       if (inCardCluster !== placed.inCardCluster) {
         placed.inCardCluster = inCardCluster
         // Hidden rather than removed, so the card keeps its size for laying out the next frame.
+        if (inCardCluster) this.releaseFocus(placed.marker.getElement())
         placed.marker.getElement().toggleAttribute('data-in-card-cluster', inCardCluster)
         moved = true
       }
@@ -479,9 +486,16 @@ export class ScoreCardMarkers {
     this.trails.hover(gameId)
   }
 
+  private releaseFocus(element: HTMLElement): void {
+    if (element.contains(document.activeElement)) focusGameNavigation(this.map.getCanvas())
+  }
+
   clear(): void {
     this.hover(null)
-    for (const { marker } of this.placed.values()) marker.remove()
+    for (const { marker } of this.placed.values()) {
+      this.releaseFocus(marker.getElement())
+      marker.remove()
+    }
     this.cardClusters = []
     this.placed.clear()
     this.animating.clear()

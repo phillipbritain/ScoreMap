@@ -11,6 +11,7 @@ import {
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
+import type { LeagueList } from '../settings/leagues'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
@@ -24,7 +25,7 @@ interface WelcomeTourScreenProps {
   progress: Exclude<TourProgress, 'finished'>
   /** Moves the tour on (see tourProgressAfter). */
   onEvent: (event: TourEvent) => void
-  leagues: readonly League[]
+  leagueList: LeagueList
   settings: ViewerSettings
   /** Sets the viewer settings, as Leagues on the rail would, for the choice made on Welcome. */
   onChange: (settings: ViewerSettings) => void
@@ -38,9 +39,10 @@ interface WelcomeTourScreenProps {
  * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
  * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChange, onOpenGame }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame }: WelcomeTourScreenProps) {
+  const { leagues } = leagueList
   const choose = (choice: TourChoice) => {
-    // My leagues' settings were set as its picker opened, and the viewer has picked since.
+    // My leagues applies its completed picks before making the choice.
     if (choice !== 'myLeagues') onChange(settingsForChoice(settings, choice, leagues))
     onEvent({ kind: 'chose', choice })
   }
@@ -49,7 +51,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChan
       {/* Catches every press, so nothing under the tour can be used. */}
       <div className="welcome-tour__dim" />
       {progress === 'welcome' && (
-        <WelcomeStep onChoose={choose} leagues={leagues} settings={settings} onChange={onChange} />
+        <WelcomeStep onChoose={choose} leagueList={leagueList} settings={settings} onChange={onChange} />
       )}
       {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
       {progress === 'scoreCard' && (
@@ -67,19 +69,25 @@ export function WelcomeTourScreen({ progress, onEvent, leagues, settings, onChan
 
 interface WelcomeStepProps {
   onChoose: (choice: TourChoice) => void
-  leagues: readonly League[]
+  leagueList: LeagueList
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
 }
 
 /**
- * Welcome: what ScoreMap is, and what to see first. My leagues switches every league off and opens its
- * picker in the panel; "Show these" then makes the choice.
+ * Welcome: what ScoreMap is, and what to see first. My leagues starts with nothing picked;
+ * only "Show these" applies the picks, so Back can leave them without changing the viewer settings.
  */
-function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps) {
+function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepProps) {
+  const { leagues, status, retry } = leagueList
   const [picking, setPicking] = useState(false)
+  const [pickedLeagues, setPickedLeagues] = useState<string[]>([])
+  const pickedSettings = pickedLeagues.reduce(
+    (current, name) => withLeague(current, name, true),
+    settingsForChoice(settings, 'myLeagues', leagues),
+  )
   const pickMyLeagues = () => {
-    onChange(settingsForChoice(settings, 'myLeagues', leagues))
+    setPickedLeagues([])
     setPicking(true)
   }
   return (
@@ -88,9 +96,20 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
       headingLevel="h2"
       action={
         picking && (
-          <TourButton onClick={() => onChoose('myLeagues')} disabled={!canShowPicks(settings, leagues)}>
-            Show these
-          </TourButton>
+          <>
+            <TourButton onClick={() => setPicking(false)}>Back</TourButton>
+            {status === 'failed' && <TourButton onClick={retry}>Retry</TourButton>}
+            <TourButton
+              onClick={() => {
+                if (status !== 'ready' || !canShowPicks(pickedSettings, leagues)) return
+                onChange(pickedSettings)
+                onChoose('myLeagues')
+              }}
+              disabled={status !== 'ready' || !canShowPicks(pickedSettings, leagues)}
+            >
+              Show these
+            </TourButton>
+          </>
         )
       }
     >
@@ -103,7 +122,22 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
           <p className="welcome-tour__text welcome-tour__note welcome-tour__note--above">
             You can change this any time in the Leagues settings on the right.
           </p>
-          <LeaguePicker leagues={leagues} settings={settings} onChange={onChange} />
+          {status === 'loading' && <p className="welcome-tour__text" role="status">Loading leagues…</p>}
+          {status === 'failed' && (
+            <p className="welcome-tour__text" role="alert">Could not load leagues. Retry, or go back to choose another way to explore.</p>
+          )}
+          {status === 'ready' && leagues.length === 0 && (
+            <p className="welcome-tour__text" role="status">No leagues are available. Go back to choose another way to explore.</p>
+          )}
+          {status === 'ready' && leagues.length > 0 && (
+            <LeaguePicker
+              leagues={leagues}
+              settings={pickedSettings}
+              onChange={(next) => setPickedLeagues(
+                leagues.filter((league) => isLeagueOn(next, league.name)).map((league) => league.name),
+              )}
+            />
+          )}
         </>
       ) : (
         <>
@@ -140,7 +174,11 @@ function WelcomeStep({ onChoose, leagues, settings, onChange }: WelcomeStepProps
  * there, and its leagues as chips in it. A sport with one league has no chips: its switch is that
  * league. Each switch shows half-way while only some of its leagues are on.
  */
-function LeaguePicker({ leagues, settings, onChange }: Omit<WelcomeStepProps, 'onChoose'>) {
+function LeaguePicker({ leagues, settings, onChange }: {
+  leagues: readonly League[]
+  settings: ViewerSettings
+  onChange: (settings: ViewerSettings) => void
+}) {
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
   const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
   return (

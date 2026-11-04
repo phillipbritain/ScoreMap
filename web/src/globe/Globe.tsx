@@ -68,18 +68,30 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGa
 
   useEffect(() => {
     if (!container.current) return
-    const instance = new GlobeMap(container.current, {
-      style: { url: baseStyleUrl },
-      theme: latest.current.theme,
-      cityLabels: latest.current.cityLabels,
-      zoomSettings: latest.current.zoomSettings,
-      colours: latest.current.colours,
-      flames: latest.current.flames,
-      startCamera: latest.current.startCamera,
-      onSelect: (gameId) => latest.current.onSelectGame(gameId),
-      onCameraMove: (camera) => latest.current.onCameraMove(camera),
-      onStage: (stage) => latest.current.onStage(stage),
-    })
+    let instance: GlobeMap
+    try {
+      instance = new GlobeMap(container.current, {
+        style: { url: baseStyleUrl },
+        theme: latest.current.theme,
+        cityLabels: latest.current.cityLabels,
+        zoomSettings: latest.current.zoomSettings,
+        colours: latest.current.colours,
+        flames: latest.current.flames,
+        startCamera: latest.current.startCamera,
+        onSelect: (gameId) => latest.current.onSelectGame(gameId),
+        onCameraMove: (camera) => latest.current.onCameraMove(camera),
+        onStage: (stage) => {
+          if (stage === 'styleError') {
+            globe.current?.destroy()
+            globe.current = null
+          }
+          latest.current.onStage(stage)
+        },
+      })
+    } catch {
+      latest.current.onStage('constructionError')
+      return
+    }
     globe.current = instance
     return () => {
       instance.destroy()

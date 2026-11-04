@@ -1751,6 +1751,25 @@ body {
   text-align: center;
 }
 
+/* An initialization failure takes the rocket's place until the viewer retries. */
+.loading-screen__error {
+  max-width: 32em;
+  padding: calc(3 * var(--spacing));
+  color: var(--loading-screen-message);
+  font-size: var(--typography-body2-font-size);
+  text-align: center;
+}
+
+.loading-screen__retry {
+  padding: calc(1.5 * var(--spacing)) calc(4 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: var(--controls-on-fill);
+  color: var(--controls-on-text);
+  font: inherit;
+  cursor: pointer;
+}
+
 @keyframes loading-screen-leave {
   from {
     opacity: 1;

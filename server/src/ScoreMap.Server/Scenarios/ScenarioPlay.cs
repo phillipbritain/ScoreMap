@@ -96,7 +96,7 @@ public sealed partial class ScenarioPlay
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
                     played.Through = 0;
-                    if (played.Game.Contest is not ProviderSides)
+                    if (played.PlaysItself)
                     {
                         PlayContest(played, at);
                         break;
@@ -123,7 +123,7 @@ public sealed partial class ScenarioPlay
     /// </summary>
     private void Play(PlayedGame played, DateTimeOffset at)
     {
-        if (played.Game.Contest is not ProviderSides)
+        if (played.PlaysItself)
         {
             PlayContest(played, at);
             return;
@@ -238,12 +238,14 @@ public sealed partial class ScenarioPlay
         if (game.Status == ProviderStatus.InProgress)
         {
             // Where the scenario says it stands, if it says; otherwise however far its start time puts it.
-            var written = game.Contest is ProviderSides && game.Period is { } period ? played.Sport.Through(period, game.Clock, game.Phase) : null;
+            var written = game.Contest is ProviderSides && !played.PlaysItself && game.Period is { } period
+                ? played.Sport.Through(period, game.Clock, game.Phase)
+                : null;
             played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 1);
             if (game.Contest is ProviderField field && game.Period is { } fieldPeriod)
                 played.Through = played.Scenario.FieldThrough(field, fieldPeriod, game.Phase);
             if (game.Contest is ProviderSides)
-                played.Game = Position(played);
+                played.Game = played.PlaysItself ? played.Scenario.TakeOn(played.Game) : Position(played);
         }
         return played;
     }
@@ -265,6 +267,9 @@ public sealed partial class ScenarioPlay
         public League League { get; }
 
         public SportPlay Sport { get; }
+
+        /// <summary>Whether its sport's scenario moves it on itself (a field, a fight card, a tennis match), not its <see cref="Sport"/>.</summary>
+        public bool PlaysItself => Game.Contest is not ProviderSides || Scenario.PlaysSidesItself;
 
         /// <summary>How far through the game it is, from 0 (just started) to 1 (finished).</summary>
         public double Through { get; set; }

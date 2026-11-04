@@ -53,10 +53,11 @@ public sealed class Poller(
         await _lock.WaitAsync(cancellationToken);
         try
         {
+            // Invalidate old workers before the callback makes the new source visible.
+            RetireGeneration();
             var intervals = change();
             _liveInterval = intervals.LiveInterval;
             _quietInterval = intervals.QuietInterval;
-            RetireGeneration();
         }
         finally { _lock.Release(); }
     }

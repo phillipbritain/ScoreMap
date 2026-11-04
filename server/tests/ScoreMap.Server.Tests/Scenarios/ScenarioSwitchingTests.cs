@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
@@ -25,6 +26,24 @@ public class ScenarioSwitchingTests
           ]
         }
         """;
+
+    [Fact]
+    public async Task Cancelled_old_workers_cannot_fetch_from_the_new_source()
+    {
+        await using var server = new ScoreMapServer { Scenario = "first" };
+        server.WriteScenario("first", OneGame("a"));
+        var switcher = server.Services.GetRequiredService<ScenarioSwitcher>();
+        switcher.SwitchTo("real");
+        using var oldGeneration = new CancellationTokenSource();
+        oldGeneration.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            switcher.FetchScoreboardAsync(Nfl, oldGeneration.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            switcher.FetchTopEventsAsync(oldGeneration.Token));
+        Assert.Equal(0, server.Feed.Fetches(Nfl));
+        Assert.Equal(0, server.Feed.TopEventsFetches);
+    }
 
     [Fact]
     public async Task Run_locally_the_server_lists_every_scenario_file_and_the_running_one()

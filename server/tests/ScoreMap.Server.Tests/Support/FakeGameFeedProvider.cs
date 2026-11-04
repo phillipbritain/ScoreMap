@@ -8,6 +8,12 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
 {
     private readonly Dictionary<string, IReadOnlyList<ProviderGame>> _scoreboards = new();
     private readonly Dictionary<string, int> _fetches = new();
+    private readonly Dictionary<string, CancellationToken> _fetchTokens = new();
+
+    public CancellationToken FetchToken(string leagueKey)
+    {
+        lock (_scoreboards) return _fetchTokens[leagueKey];
+    }
     private TaskCompletionSource _fetchChanged = NewSignal();
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private TaskCompletionSource? _topEventsGate;
@@ -205,6 +211,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         slow.Clock?.Advance(slow.Takes);
         lock (_scoreboards)
         {
+            _fetchTokens[leagueKey] = cancellationToken;
             _fetches[leagueKey] = _fetches.GetValueOrDefault(leagueKey) + 1;
             Fetched();
             if (_holdAll && !_gates.ContainsKey(leagueKey))

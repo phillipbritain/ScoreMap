@@ -70,7 +70,7 @@ public class SlowDependencyTests
         await using var client = await server.ConnectClientAsync();
         await started.Task.WaitAsync(TimeSpan.FromSeconds(10));
         var game = Assert.Single(await client.NextSnapshotAsync());
-        Assert.Equal((0d, 0d), (game.Venue.Latitude, game.Venue.Longitude));
+        Assert.Equal((null, null), (game.Venue.Latitude, game.Venue.Longitude));
 
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 42) with
         {

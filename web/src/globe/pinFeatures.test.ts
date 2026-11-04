@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 import { pinFeatures } from './pinFeatures'
 
 /** Every game in one colour. */
@@ -8,7 +9,7 @@ const inRed = () => '#ff0000'
 /** No game showing flames. */
 const noFlames = () => false
 
-const arrowhead: Game = {
+const arrowhead: PlacedGame = {
   id: '401',
   league: 'NFL',
   sport: 'Football',

@@ -45,7 +45,7 @@ A game ESPN lists in its Top Events, the games it picks as the most important ri
 _Avoid_: Featured game, highlight, hot game (ScoreMap's own, by the score and time left)
 
 **Pin**:
-The marker for one game on the globe, placed at the game's venue.
+The marker for one game on the globe, placed at the game's venue. A game whose venue isn't placed yet (its lookup still running, or finding nothing) has no pin, though it is in the Games list.
 _Avoid_: Marker, dot, icon
 
 **Score card**:

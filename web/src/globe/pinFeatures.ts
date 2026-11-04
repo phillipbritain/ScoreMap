@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import type { Game, GameStatus } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 
 export interface PinProperties {
   gameId: string
@@ -20,7 +21,7 @@ export type PinFeature = Feature<Point, PinProperties>
  * apart on screen (see cardLayout), so each stays reachable.
  */
 export function pinFeatures(
-  games: readonly Game[],
+  games: readonly PlacedGame[],
   colourOf: (game: Game) => string,
   flamesOf: (game: Game) => boolean,
 ): FeatureCollection<Point, PinProperties> {

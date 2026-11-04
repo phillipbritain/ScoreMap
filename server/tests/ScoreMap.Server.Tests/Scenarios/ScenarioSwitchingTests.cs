@@ -1,10 +1,11 @@
-using System.Net;
 using System.Net.Http.Json;
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
+using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
-using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
 namespace ScoreMap.Server.Tests.Scenarios;
@@ -33,7 +34,7 @@ public class ScenarioSwitchingTests
         await using var server = new ScoreMapServer { Scenario = "first" };
         server.WriteScenario("first", OneGame("a"));
         var switcher = server.Services.GetRequiredService<ScenarioSwitcher>();
-        switcher.SwitchTo("real");
+        await server.Services.GetRequiredService<RunningGameBoard>().StartAfreshAsync("real", null, CancellationToken.None);
         using var oldGeneration = new CancellationTokenSource();
         oldGeneration.Cancel();
 

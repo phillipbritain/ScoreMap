@@ -1,5 +1,6 @@
-﻿using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Live;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
@@ -125,7 +126,7 @@ public class ChangeEventTests
     public async Task A_game_entering_its_pin_window_is_pushed_as_added_without_any_feed_change()
     {
         await using var server = new ScoreMapServer();
-        var kickoff = server.Clock.GetUtcNow() + GameBoard.UpcomingWindow + TimeSpan.FromMinutes(1);
+        var kickoff = server.Clock.GetUtcNow() + RunningGameBoard.UpcomingWindow + TimeSpan.FromMinutes(1);
         server.Feed.SetScoreboard(Nfl, Game("401", Nfl, kickoff, ProviderStatus.Scheduled, null, null, null, null));
         await using var client = await server.ConnectClientAsync();
         Assert.Empty(await client.NextSnapshotAsync());
@@ -145,7 +146,7 @@ public class ChangeEventTests
         await using var client = await server.ConnectClientAsync();
         Assert.Single(await client.NextSnapshotAsync());
 
-        server.Clock.Advance(GameBoard.FinalWindow);
+        server.Clock.Advance(RunningGameBoard.FinalWindow);
 
         var change = await client.NextChangeAsync();
         Assert.Equal((GameChangeKind.Removed, "401"), (change.Kind, change.Game.Id));

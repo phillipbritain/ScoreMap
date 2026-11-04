@@ -6,14 +6,14 @@ namespace ScoreMap.Server.Hubs;
 
 /// <summary>
 /// The SignalR hub browsers connect to. Sends a snapshot of current games on connect
-/// (including every automatic reconnect), and tells the poller who is connected.
-/// Change events are pushed to it by the <see cref="Poller"/>. Run locally on a scenario with a slow
+/// (including every automatic reconnect), through the running board's join operation.
+/// Change events are pushed to it by the <see cref="RunningGameBoard"/>. Run locally on a scenario with a slow
 /// start, it holds back the snapshot that long first, so the loading screen can be watched (ADR-0009).
 /// A browser that connects with <see cref="DemoQuery"/> in the hub's address watches the
 /// <see cref="DemoBoard"/> instead of the real game board (ADR-0019).
 /// </summary>
 public sealed class GamesHub(
-    Poller poller, BrowserConnections connections, DemoBoard demo, IServiceProvider services, TimeProvider realTime) : Hub
+    RunningGameBoard board, DemoBoard demo, IServiceProvider services, TimeProvider realTime) : Hub
 {
     public const string Path = "/hubs/games";
 
@@ -47,7 +47,7 @@ public sealed class GamesHub(
             var run = demo.Join(Context.ConnectionId);
             try
             {
-                await ConnectAsync(run.Poller, run.Connections, slowStart: TimeSpan.Zero);
+                await ConnectAsync(run, slowStart: TimeSpan.Zero);
             }
             catch
             {
@@ -59,25 +59,18 @@ public sealed class GamesHub(
         else
         {
             var slowStart = services.GetService<ScenarioSwitcher>()?.SlowStart ?? TimeSpan.Zero;
-            await ConnectAsync(poller, connections, slowStart);
+            await ConnectAsync(board, slowStart);
         }
         await base.OnConnectedAsync();
     }
 
-    private async Task ConnectAsync(Poller poller, BrowserConnections connections, TimeSpan slowStart)
+    private async Task ConnectAsync(RunningGameBoard board, TimeSpan slowStart)
     {
         try
         {
             if (slowStart > TimeSpan.Zero)
                 await Task.Delay(slowStart, realTime, Context.ConnectionAborted);
-            await poller.SendSnapshotAsync(
-                async games =>
-                {
-                    await Clients.Caller.SendAsync(SnapshotMessage, games, Context.ConnectionAborted);
-                    await Groups.AddToGroupAsync(Context.ConnectionId, connections.Group, Context.ConnectionAborted);
-                    connections.Connected(Context.ConnectionId);
-                },
-                Context.ConnectionAborted);
+            await board.JoinAsync(Context.ConnectionId, Context.ConnectionAborted);
         }
         catch (OperationCanceledException) when (Context.ConnectionAborted.IsCancellationRequested)
         {
@@ -92,7 +85,7 @@ public sealed class GamesHub(
         if (Context.Items.ContainsKey(WatchesDemo))
             demo.Leave(Context.ConnectionId);
         else
-            connections.Disconnected(Context.ConnectionId);
+            board.Leave(Context.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
 }

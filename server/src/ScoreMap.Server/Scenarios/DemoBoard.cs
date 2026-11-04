@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Live;
 
@@ -24,14 +23,11 @@ public sealed class DemoBoard(
     // Every demo browser from when it joins, before its snapshot, which the running board's
     // connections count only from after it: so a browser still connecting keeps the board running.
     private readonly HashSet<string> _viewers = [];
-    private Run? _running;
+    private RunningGameBoard? _running;
     // While nobody watches: when the running board stops, and the wait for then.
     private DateTimeOffset? _stopsAt;
     private CancellationTokenSource? _stopping;
     private int _runs;
-
-    /// <summary>A demo board running: its games, the poller keeping them current, and its browsers.</summary>
-    public sealed record Run(GameBoard Board, Poller Poller, BrowserConnections Connections);
 
     /// <summary>The demo board's games now, or none while it isn't running.</summary>
     public IReadOnlyList<Game> Games
@@ -39,7 +35,7 @@ public sealed class DemoBoard(
         get
         {
             lock (_lock)
-                return _running?.Board.Games ?? [];
+                return _running?.Games ?? [];
         }
     }
 
@@ -50,7 +46,7 @@ public sealed class DemoBoard(
     public bool IsWatching(string connectionId)
     {
         lock (_lock)
-            return _running?.Connections.IsConnected(connectionId) == true;
+            return _running?.IsWatching(connectionId) == true;
     }
 
     /// <summary>
@@ -58,9 +54,9 @@ public sealed class DemoBoard(
     /// running (or was due to stop), and returns it. Call <see cref="Leave"/> when the browser leaves,
     /// whether or not it got as far as its snapshot.
     /// </summary>
-    public Run Join(string connectionId)
+    public RunningGameBoard Join(string connectionId)
     {
-        Run? stopped = null;
+        RunningGameBoard? stopped = null;
         try
         {
             lock (_lock)
@@ -91,7 +87,7 @@ public sealed class DemoBoard(
         {
             if (!_viewers.Remove(connectionId))
                 return;
-            _running?.Connections.Disconnected(connectionId);
+            _running?.Leave(connectionId);
             if (_viewers.Count > 0 || _running is null)
                 return;
             _stopsAt = realTime.GetUtcNow() + StopsAfter;
@@ -100,18 +96,15 @@ public sealed class DemoBoard(
         }
     }
 
-    private Run Start()
+    private RunningGameBoard Start()
     {
         var clock = new ScenarioClock(realTime, Speed.Normal);
         var feed = library.Start(library.Read(Scenario), clock);
-        var board = ActivatorUtilities.CreateInstance<GameBoard>(services, feed, (TimeProvider)clock);
-        // A group of its own each time, so nothing late from a board that has stopped reaches the next one's browsers.
-        var connections = new BrowserConnections($"demo-{++_runs}");
-        var poller = ActivatorUtilities.CreateInstance<Poller>(
-            services, board, connections, Options.Create(ScenarioSwitcher.ScenarioPolling(Speed.Normal)));
-        _ = poller.StartAsync(CancellationToken.None);
+        // A fresh group prevents late delivery from a stopped run reaching the next one's viewers.
+        var board = RunningGameBoard.CreateDemo(services, feed, clock, $"demo-{++_runs}");
+        _ = board.StartAsync(CancellationToken.None);
         logger.LogInformation("Started the demo board");
-        return new Run(board, poller, connections);
+        return board;
     }
 
     private void CancelStop()
@@ -122,7 +115,7 @@ public sealed class DemoBoard(
         _stopsAt = null;
     }
 
-    private async Task StopLaterAsync(Run run, CancellationToken cancellationToken)
+    private async Task StopLaterAsync(RunningGameBoard run, CancellationToken cancellationToken)
     {
         try
         {
@@ -142,16 +135,16 @@ public sealed class DemoBoard(
         await StopAsync(run);
     }
 
-    private async Task StopAsync(Run run)
+    private async Task StopAsync(RunningGameBoard run)
     {
-        await run.Poller.StopAsync(CancellationToken.None);
-        run.Poller.Dispose();
+        await run.StopAsync(CancellationToken.None);
+        run.Dispose();
         logger.LogInformation("Stopped the demo board, with nobody watching");
     }
 
     public async ValueTask DisposeAsync()
     {
-        Run? running;
+        RunningGameBoard? running;
         lock (_lock)
         {
             (running, _running) = (_running, null);

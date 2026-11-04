@@ -12,6 +12,22 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     private TaskCompletionSource? _topEventsGate;
     private bool _holdAll;
+    private int _activeFetches;
+    private int _maximumConcurrentFetches;
+    public int ActiveFetches { get { lock (_scoreboards) return _activeFetches; } }
+    public int MaximumConcurrentFetches { get { lock (_scoreboards) return _maximumConcurrentFetches; } }
+
+    private async Task<T> ObserveFetchAsync<T>(Func<Task<T>> fetch)
+    {
+        lock (_scoreboards)
+        {
+            _activeFetches++;
+            _maximumConcurrentFetches = Math.Max(_maximumConcurrentFetches, _activeFetches);
+        }
+        try { return await fetch(); }
+        finally { lock (_scoreboards) _activeFetches--; }
+    }
+
     private readonly HashSet<string> _ignoreCancellation = [];
 
     public void HoldAllScoreboards() { lock (_scoreboards) _holdAll = true; }
@@ -61,7 +77,10 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         }
     }
 
-    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
+        ObserveFetchAsync(() => FetchTopEvents(cancellationToken));
+
+    private Task<IReadOnlySet<string>> FetchTopEvents(CancellationToken cancellationToken)
     {
         lock (_scoreboards)
         {
@@ -175,7 +194,10 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         }
     }
 
-    public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
+        ObserveFetchAsync(() => FetchScoreboard(leagueKey, cancellationToken));
+
+    private Task<IReadOnlyList<ProviderGame>> FetchScoreboard(string leagueKey, CancellationToken cancellationToken)
     {
         (FakeTimeProvider Clock, TimeSpan Takes) slow;
         lock (_scoreboards)

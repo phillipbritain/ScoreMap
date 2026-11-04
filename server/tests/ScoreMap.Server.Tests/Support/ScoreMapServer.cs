@@ -375,6 +375,35 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
 
     public Task<IReadOnlyList<Game>> NextSnapshotAsync() => _snapshot.Task.WaitAsync(Timeout);
 
+    private Dictionary<(string League, string Id), Game>? _observedGames;
+
+    /// <summary>
+    /// Observes the initial snapshot and subsequent changes until the requested game state arrives.
+    /// Consumes changes through that point; raw snapshot and change methods retain their wire semantics.
+    /// </summary>
+    public async Task<IReadOnlyList<Game>> GamesMatchingAsync(Func<IReadOnlyList<Game>, bool> ready)
+    {
+        using var waiting = new CancellationTokenSource(Timeout);
+        var snapshot = await _snapshot.Task.WaitAsync(waiting.Token);
+        _observedGames ??= snapshot.ToDictionary(g => (g.League, g.Id));
+        while (true)
+        {
+            var games = _observedGames.Values.ToArray();
+            if (ready(games))
+                return games;
+            var change = await _changes.Reader.ReadAsync(waiting.Token);
+            var key = (change.Game.League, change.Game.Id);
+            if (change.Kind == GameChangeKind.Removed)
+                _observedGames.Remove(key);
+            else
+                _observedGames[key] = change.Game;
+        }
+    }
+
+    /// <summary>Waits for a particular game or its enrichment, consuming changes through its arrival.</summary>
+    public async Task<Game> GameMatchingAsync(Func<Game, bool> ready) =>
+        (await GamesMatchingAsync(games => games.Any(ready))).Single(ready);
+
     /// <summary>The next change event the server pushed, in the order they arrived.</summary>
     public async Task<GameChange> NextChangeAsync() =>
         await _changes.Reader.ReadAsync().AsTask().WaitAsync(Timeout);

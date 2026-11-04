@@ -4,10 +4,8 @@ import { accentColour, gameColour, type PickedColours } from './settings/gameCol
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
-import type { Game } from './games/game'
 import { GameNavigation } from './games/GameNavigation'
 import { useGameSelection } from './games/useGameSelection'
-import { applyChange } from './games/gameStore'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeCamera } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
@@ -17,8 +15,7 @@ import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
-import { watchForSleep } from './live/asleep'
-import { connectToGames } from './live/liveConnection'
+import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { Rail } from './rail/Rail'
@@ -85,16 +82,6 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const store = demo ? demoStore : savedStore
   // What the behaviour tuner draws on the globe to show its settings at work (local runs only).
   const [overlays, setOverlays] = useState(noOverlays)
-  // Null until the server's first snapshot arrives.
-  const [games, setGames] = useState<Game[] | null>(null)
-  // Whether the games are as a snapshot brought them, which the globe shows without pulses, or a change has come since.
-  const [fromSnapshot, setFromSnapshot] = useState(true)
-  // When the connection to the server was lost (performance.now()), until the next snapshot; null while connected.
-  const [cutOffSince, setCutOffSince] = useState<number | null>(null)
-  // Asleep (see GLOSSARY.md): disconnected once the page has been hidden for the idle timeout. Waking:
-  // from when it's shown again until the next snapshot.
-  const [asleep, setAsleep] = useState(false)
-  const [waking, setWaking] = useState(false)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
   const [globeAttempt, setGlobeAttempt] = useState(0)
@@ -121,43 +108,13 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const scenarios = useScenarioControls(demo)
   const { setListing: setScenarioListing } = scenarios
 
-  const idleTimeoutMs = behaviour.asleep.idleTimeoutMinutes * 60_000
-  useEffect(
-    () =>
-      watchForSleep(document, idleTimeoutMs, {
-        onSleep: () => setAsleep(true),
-        onWake: () => {
-          setAsleep(false)
-          setWaking(true)
-          setCutOffSince(performance.now())
-        },
-      }),
-    [idleTimeoutMs],
+  // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
+  // any browser go to every pill and clock.
+  const { games, fromSnapshot, cutOffSince, waking } = useLiveGames(
+    behaviour.asleep.idleTimeoutMinutes * 60_000,
+    demo,
+    setScenarioListing,
   )
-  // Connected while awake: falling asleep disconnects, and waking connects afresh, for a fresh snapshot.
-  useEffect(() => {
-    if (asleep) return
-    return connectToGames(
-      {
-        onSnapshot: (snapshot) => {
-          setGames(snapshot)
-          setFromSnapshot(true)
-          setCutOffSince(null)
-          setWaking(false)
-        },
-        // The snapshot always comes first; a change before it has nothing to apply to.
-        // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
-        onChange: (change) => {
-          setGames((current) => current && applyChange(current, change))
-          setFromSnapshot(false)
-        },
-        // A switch or a change of speed made in any browser: every pill and clock follows.
-        onScenarioChanged: setScenarioListing,
-        onCutOff: () => setCutOffSince((since) => since ?? performance.now()),
-      },
-      demo,
-    )
-  }, [setScenarioListing, demo, asleep])
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
   // The welcome tour, once the loading screen has gone, until it's finished. While it shows, the globe

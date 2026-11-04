@@ -1,3 +1,4 @@
+using ScoreMap.Server.Sports;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
@@ -261,7 +262,7 @@ public sealed partial class ScenarioPlay
 
         public League League { get; } = league;
 
-        public SportPlay Sport { get; } = new(league);
+        public SportPlay Sport { get; } = ScenarioSports.For(league).CreatePlay();
 
         /// <summary>How far through the game it is, from 0 (just started) to 1 (finished).</summary>
         public double Through { get; set; }

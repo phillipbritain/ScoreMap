@@ -1,0 +1,139 @@
+using Microsoft.Extensions.DependencyInjection;
+using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Live;
+using ScoreMap.Server.Tests.Support;
+using static ScoreMap.Server.Tests.Support.TestGames;
+
+namespace ScoreMap.Server.Tests.Live;
+
+public class SlowDependencyTests
+{
+    [Fact]
+    public async Task A_stalled_league_does_not_block_snapshots_or_an_independent_leagues_changes()
+    {
+        await using var server = new ScoreMapServer();
+        const string nba = "basketball/nba";
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "slow"));
+        server.Feed.HoldUntilReleased(Nfl);
+        server.Feed.SetScoreboard(nba, LiveGame(server.Clock, "healthy"));
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+        Assert.Equal("healthy", Assert.Single(snapshot).Id);
+
+        server.Feed.SetScoreboard(nba, LiveGame(server.Clock, "healthy", homeScore: 42));
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        Assert.Equal("42", (await client.NextChangeAsync()).Game.Sides().Home.Score);
+
+        server.Feed.Release(Nfl);
+        Assert.Equal("slow", (await client.NextChangeAsync()).Game.Id);
+        Assert.False(client.ChangePrecededSnapshot);
+    }
+
+    [Fact]
+    public async Task A_pending_venue_delivers_basic_scores_then_moves_the_pin_when_the_lookup_finishes()
+    {
+        await using var server = new ScoreMapServer();
+        const string query = "Slow Stadium, London";
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        server.Places.Add(query, new Coordinates(51.6, -0.1));
+        server.Places.Hold(query);
+        server.Places.OnSearch(query, () => started.TrySetResult());
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401") with
+        {
+            Venue = new ProviderVenue("Slow Stadium", "London", null, "England"),
+        });
+        await using var client = await server.ConnectClientAsync();
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var game = Assert.Single(await client.NextSnapshotAsync());
+        Assert.Equal((0d, 0d), (game.Venue.Latitude, game.Venue.Longitude));
+
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 42) with
+        {
+            Venue = new ProviderVenue("Slow Stadium", "London", null, "England"),
+        });
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        Assert.Equal("42", (await client.NextChangeAsync()).Game.Sides().Home.Score);
+
+        server.Places.Release(query);
+        var moved = (await client.NextChangeAsync()).Game;
+        Assert.Equal((51.6, -0.1), (moved.Venue.Latitude, moved.Venue.Longitude));
+        Assert.Equal("42", moved.Sides().Home.Score);
+        Assert.False(client.ChangePrecededSnapshot);
+    }
+
+    [Fact]
+    public async Task Feed_concurrency_is_bounded_even_while_a_browser_gets_its_snapshot()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.HoldAllScoreboards();
+        server.Feed.HoldTopEvents();
+        await using var client = await server.ConnectClientAsync();
+        await server.Feed.WaitForTotalFetchesAsync(4);
+        Assert.Empty(await client.NextSnapshotAsync());
+        Assert.Equal(4, server.Feed.TotalFetches);
+
+        server.Feed.ReleaseTopEvents();
+        await server.Feed.WaitForTotalFetchesAsync(5);
+        Assert.Equal(5, server.Feed.TotalFetches);
+
+        // Stop is a completion barrier for both the active requests and work queued for a slot.
+        await server.Services.GetRequiredService<Poller>().StopAsync(CancellationToken.None);
+        Assert.Equal(5, server.Feed.TotalFetches);
+    }
+
+    [Fact]
+    public async Task A_stalled_top_events_request_does_not_suppress_games_and_marks_them_when_it_finishes()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.HoldTopEvents();
+        server.Feed.SetTopEvents("401");
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        await using var client = await server.ConnectClientAsync();
+        Assert.False(Assert.Single(await client.NextSnapshotAsync()).TopEvent);
+
+        server.Feed.ReleaseTopEvents();
+        Assert.True((await client.NextChangeAsync()).Game.TopEvent);
+        Assert.False(client.ChangePrecededSnapshot);
+    }
+
+    [Fact]
+    public async Task A_second_browser_gets_its_snapshot_before_a_pending_fetches_changes()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        await using var first = await server.ConnectClientAsync();
+        await first.NextSnapshotAsync();
+        server.Feed.HoldUntilReleased(Nfl);
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 42));
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        await server.Feed.WaitForFetchesAsync(Nfl, 2);
+        await using var second = await server.ConnectClientAsync();
+        Assert.NotEqual("42", Assert.Single(await second.NextSnapshotAsync()).Sides().Home.Score);
+
+        server.Feed.Release(Nfl);
+        Assert.Equal("42", (await second.NextChangeAsync()).Game.Sides().Home.Score);
+        Assert.False(second.ChangePrecededSnapshot);
+    }
+    [Fact]
+    public async Task A_late_venue_lookup_does_not_restore_a_game_removed_from_the_board()
+    {
+        await using var server = new ScoreMapServer();
+        const string query = "Slow Stadium, London";
+        server.Places.Add(query, new Coordinates(51.6, -0.1));
+        server.Places.Hold(query);
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401") with
+        {
+            Venue = new ProviderVenue("Slow Stadium", "London", null, "England"),
+        });
+        await using var first = await server.ConnectClientAsync();
+        Assert.Single(await first.NextSnapshotAsync());
+        server.Feed.SetScoreboard(Nfl);
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+        Assert.Equal(ScoreMap.Server.Games.GameChangeKind.Removed, (await first.NextChangeAsync()).Kind);
+
+        server.Places.Release(query);
+        await using var second = await server.ConnectClientAsync();
+        Assert.Empty(await second.NextSnapshotAsync());
+        Assert.Empty(first.PendingChanges());
+    }
+}

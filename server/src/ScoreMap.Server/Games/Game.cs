@@ -120,7 +120,13 @@ public sealed record GameBoutSide(string Name, string ShortName, string? FlagUrl
 /// <see cref="Ending"/> ("ret." or "W/O") and the side that <see cref="Advanced"/> (its abbreviation),
 /// when the feed says.
 /// </summary>
-public sealed record GameScoreline(IReadOnlyList<GameSet> Sets, string? Ending, string? Advanced);
+public sealed record GameScoreline(IReadOnlyList<GameSet> Sets, string? Ending, string? Advanced)
+{
+    public bool Equals(GameScoreline? other) => other is not null
+        && Sets.SequenceEqual(other.Sets) && Ending == other.Ending && Advanced == other.Advanced;
+
+    public override int GetHashCode() => HashCode.Combine(Sets.Aggregate(0, HashCode.Combine), Ending, Advanced);
+}
 
 /// <summary>
 /// A tennis set: its <see cref="Name"/> ("1st"), its <see cref="Score"/> in games with the loser's

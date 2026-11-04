@@ -11,7 +11,7 @@ namespace ScoreMap.Server.Scenarios;
 /// serves every browser. Picking a scenario starts it afresh, with the scenario clock set to its start
 /// (noon Eastern on 4 August 2026) and running at the speed it had; the speed can be changed while a
 /// scenario runs. Make switches and changes of speed through <see cref="Poller.StartAfreshAsync"/>,
-/// between the poller's fetches, so none reads the old scenario on the new clock.
+/// with source reads serialized, so none reads the old scenario on the new clock.
 /// </summary>
 public sealed class ScenarioSwitcher : IGameFeedProvider
 {
@@ -30,6 +30,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     private readonly TimeProvider _realTime;
     private readonly ScenarioClock _clock;
     private volatile Source _running;
+    private readonly Lock _sourceGate = new();
 
     private sealed record Source(string Name, IGameFeedProvider Feed, bool CanControlPlay, TimeSpan SlowStart = default);
 
@@ -117,8 +118,11 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// </summary>
     public PollingOptions SwitchTo(string name, Speed? speed = null)
     {
-        _running = Start(name, speed);
-        return Polling;
+        lock (_sourceGate)
+        {
+            _running = Start(name, speed);
+            return Polling;
+        }
     }
 
     /// <summary>
@@ -128,23 +132,35 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// </summary>
     public PollingOptions ChangeSpeed(Speed speed)
     {
-        if (IsRealGames(_running.Name))
-            throw new InvalidOperationException("Real games play in real time, so their speed can't be changed");
-        if (!_running.CanControlPlay)
-            throw new InvalidOperationException(
-                $"The games in scenario \"{_running.Name}\" stand still, with no play or timeline, so its speed can't be changed");
-        _clock.ChangeSpeed(speed);
-        return Polling;
+        lock (_sourceGate)
+        {
+            if (IsRealGames(_running.Name))
+                throw new InvalidOperationException("Real games play in real time, so their speed can't be changed");
+            if (!_running.CanControlPlay)
+                throw new InvalidOperationException(
+                    $"The games in scenario \"{_running.Name}\" stand still, with no play or timeline, so its speed can't be changed");
+            _clock.ChangeSpeed(speed);
+            return Polling;
+        }
     }
 
-    public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
-        _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
+    public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
+    {
+        lock (_sourceGate)
+            return _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
+    }
 
-    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken) =>
-        _running.Feed.EnrichGame(game, cancellationToken);
+    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
+    {
+        lock (_sourceGate)
+            return _running.Feed.EnrichGame(game, cancellationToken);
+    }
 
-    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
-        _running.Feed.FetchTopEventsAsync(cancellationToken);
+    public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
+    {
+        lock (_sourceGate)
+            return _running.Feed.FetchTopEventsAsync(cancellationToken);
+    }
 
     private Source Start(string name, Speed? speed)
     {

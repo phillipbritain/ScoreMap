@@ -39,16 +39,10 @@ public static class ScenarioEndpoints
                 ? Listing(switcher)
                 : new ScenarioListing(ScenarioSwitcher.RealGames, [], Speed.Normal.Name, [], CanControlPlay: false, ClockAnchor.RealTime(services.GetRequiredService<TimeProvider>())));
 
-        // Switches every browser's games, in order:
-        // 1. Under the poller's lock, between its fetches, the switcher starts the new source and hands
-        //    back its polling intervals. Outside the lock a fetch could read the old scenario on the new
-        //    scenario clock, and its games would come out wrong (#53).
-        // 2. The poller, woken, fetches every league straight away on its own loop; the change events it
-        //    sends take the old games away and bring the new ones.
-        // 3. Meanwhile (the switch doesn't wait for that fetch), every browser gets the new listing, so
-        //    each one's scenario pill, media keys and clock follow.
+        // The running board owns cancellation, source/clock changes and fresh delivery. The listing
+        // is sent immediately; switching does not wait for any external fetch.
         app.MapPut("/api/scenarios/running", async (
-            ScenarioSwitch request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
+            ScenarioSwitch request, IServiceProvider services, RunningGameBoard board, IHubContext<GamesHub> hub,
             CancellationToken cancellationToken) =>
         {
             if (services.GetService<ScenarioSwitcher>() is not { } switcher)
@@ -60,7 +54,7 @@ public static class ScenarioEndpoints
                 return NoSuchSpeed(request.Speed);
             try
             {
-                await poller.StartAfreshAsync(() => switcher.SwitchTo(name, speed), cancellationToken);
+                await board.StartAfreshAsync(name, speed, cancellationToken);
             }
             catch (ScenarioFileException e)
             {
@@ -69,10 +63,9 @@ public static class ScenarioEndpoints
             return Results.Ok(await TellEveryBrowserAsync(switcher, hub, cancellationToken));
         });
 
-        // Carries on from where the running scenario is, at the new speed, in every browser: in the same
-        // order as a switch, and under the poller's lock for the same reason.
+        // Carries on from the current scenario time at the new speed, in every browser.
         app.MapPut("/api/scenarios/speed", async (
-            SpeedChange request, IServiceProvider services, Poller poller, IHubContext<GamesHub> hub,
+            SpeedChange request, IServiceProvider services, RunningGameBoard board, IHubContext<GamesHub> hub,
             CancellationToken cancellationToken) =>
         {
             if (services.GetService<ScenarioSwitcher>() is not { } switcher)
@@ -81,7 +74,7 @@ public static class ScenarioEndpoints
                 return NoSuchSpeed(request.Speed);
             try
             {
-                await poller.StartAfreshAsync(() => switcher.ChangeSpeed(speed), cancellationToken);
+                await board.ChangeSpeedAsync(speed, cancellationToken);
             }
             catch (InvalidOperationException e)
             {

@@ -199,6 +199,10 @@ _Avoid_: Finished, completed, over, ended
 
 ### Local runs
 
+**Running game board**:
+One shared set of games being kept current for its viewers, including their first snapshot and the changes that follow. Real games (or the local scenario) have one running game board; a demo has its own, shared by every demo viewer (ADR-0019).
+_Avoid_: Per-viewer board, poller (for the whole running game board)
+
 **Scenario**:
 A named set of made-up games between real teams of their league at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally, or in a demo.
 _Avoid_: Dummy data, fake data, simulation, demo (a demo shows one scenario; it isn't one)

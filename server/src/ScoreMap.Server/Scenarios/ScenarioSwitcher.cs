@@ -10,8 +10,8 @@ namespace ScoreMap.Server.Scenarios;
 /// or from real games, and can be switched between them while the server runs. One source at a time
 /// serves every browser. Picking a scenario starts it afresh, with the scenario clock set to its start
 /// (noon Eastern on 4 August 2026) and running at the speed it had; the speed can be changed while a
-/// scenario runs. Make switches and changes of speed through <see cref="Poller.StartAfreshAsync"/>,
-/// with source reads serialized, so none reads the old scenario on the new clock.
+/// scenario runs. The <see cref="RunningGameBoard"/> owns source and speed changes, with source reads
+/// serialized so none reads the old scenario on the new clock.
 /// </summary>
 public sealed class ScenarioSwitcher : IGameFeedProvider
 {
@@ -49,7 +49,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         _clock = new ScenarioClock(realTime, speed);
         BoardClock = new BoardTime(this);
         // At the speed the clock was just made with.
-        _running = Start(startWith, speed: null);
+        _running = Start(startWith, ReadScenario(startWith), speed: null);
     }
 
     /// <summary>The running scenario's name, or <see cref="RealGames"/>.</summary>
@@ -110,17 +110,19 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// </summary>
     public bool Has(string name) => IsRealGames(name) || Scenarios.Contains(name);
 
+    /// <summary>Reads and validates a scenario before the running board takes its gate.</summary>
+    internal Scenario? ReadScenario(string name) => IsRealGames(name) ? null : _library.Read(name);
+
     /// <summary>
     /// Switches to the scenario <paramref name="name"/>, started afresh, at <paramref name="speed"/> if
     /// given (else at the speed it had), or to real games, and returns the <see cref="Polling"/> for it.
-    /// Started Paused, its games stand still as they start. A bad scenario file throws a
-    /// <see cref="ScenarioFileException"/> and leaves the running source, and the speed, as they were.
+    /// Started Paused, its games stand still as they start. The scenario is already read and validated.
     /// </summary>
-    public PollingOptions SwitchTo(string name, Speed? speed = null)
+    internal PollingOptions SwitchTo(string name, Scenario? scenario, Speed? speed)
     {
         lock (_sourceGate)
         {
-            _running = Start(name, speed);
+            _running = Start(name, scenario, speed);
             return Polling;
         }
     }
@@ -130,7 +132,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     /// carries on from where it is, and returns the <see cref="Polling"/> for that speed. Throws an
     /// <see cref="InvalidOperationException"/> where play can't be controlled (<see cref="CanControlPlay"/>).
     /// </summary>
-    public PollingOptions ChangeSpeed(Speed speed)
+    internal PollingOptions ChangeSpeed(Speed speed)
     {
         lock (_sourceGate)
         {
@@ -168,7 +170,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         }
     }
 
-    private Source Start(string name, Speed? speed)
+    private Source Start(string name, Scenario? scenario, Speed? speed)
     {
         if (IsRealGames(name))
         {
@@ -176,7 +178,7 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
                 _clock.Restart(speed);
             return new Source(RealGames, _realGames, CanControlPlay: false);
         }
-        var scenario = _library.Read(name);
+        ArgumentNullException.ThrowIfNull(scenario);
         _clock.Restart(speed);
         return new Source(name, _library.Start(scenario, _clock), CanControlPlay: scenario.ChangesOverTime, scenario.SlowStart);
     }

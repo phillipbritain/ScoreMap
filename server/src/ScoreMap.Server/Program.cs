@@ -98,13 +98,10 @@ builder.Services.AddSingleton<OfficialWatchLinks>();
 builder.Services.AddStreamFinder(builder.Configuration);
 builder.Services.TryAddSingleton<IStreamLinkSource, NoStreamLinks>();
 
-builder.Services.AddSingleton<GameBoard>();
-
-// Live updates: the poller fetches while browsers are connected and pushes change events.
+// The running board owns shared games, viewers and ordered live delivery.
 builder.Services.Configure<PollingOptions>(builder.Configuration.GetSection("Polling"));
-builder.Services.AddSingleton(new BrowserConnections(GamesHub.RealGamesGroup));
-builder.Services.AddSingleton<Poller>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<Poller>());
+builder.Services.AddSingleton<RunningGameBoard>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RunningGameBoard>());
 // Demos (ADR-0019): the worldwide scenario on a game board of its own, for whoever opens one.
 builder.Services.Configure<ScenarioOptions>(builder.Configuration.GetSection("Scenarios"));
 builder.Services.AddSingleton<ScenarioLibrary>();

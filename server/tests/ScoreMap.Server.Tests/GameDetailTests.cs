@@ -14,7 +14,7 @@ public class GameDetailTests
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard(game.LeagueKey, game with { StartTime = server.Clock.GetUtcNow().AddHours(-1) });
         await using var client = await server.ConnectClientAsync();
-        return Assert.Single(await client.NextSnapshotAsync());
+        return await client.GameMatchingAsync(g => g.Id == game.Id);
     }
 
     private static ProviderGame Live(string leagueKey) =>
@@ -112,7 +112,7 @@ public class GameDetailTests
         };
         server.Feed.SetScoreboard("soccer/eng.1", game);
         await using var client = await server.ConnectClientAsync();
-        await client.NextSnapshotAsync();
+        await client.GameMatchingAsync(g => g.Id == game.Id);
 
         // The same cards, in a new list as every fetch makes, then a second card.
         server.Feed.SetScoreboard("soccer/eng.1", game with { KeyEvents = game.KeyEvents.ToList() });

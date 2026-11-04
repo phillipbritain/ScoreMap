@@ -1,3 +1,4 @@
+using ScoreMap.Server.Sports;
 using System.ComponentModel;
 using System.Globalization;
 
@@ -38,37 +39,19 @@ public sealed record SportUsual(int RegulationPeriods, int? PeriodMinutes);
 public static class Sports
 {
     /// <summary>Each sport's name, which browsers show and configuration uses, and how its games usually go.</summary>
-    private static readonly Dictionary<Sport, (string Name, SportUsual Usual)> All = new()
-    {
-        [Sport.Football] = ("Football", new(RegulationPeriods: 4, PeriodMinutes: 15)),
-        [Sport.Basketball] = ("Basketball", new(RegulationPeriods: 4, PeriodMinutes: 12)),
-        [Sport.Baseball] = ("Baseball", new(RegulationPeriods: 9, PeriodMinutes: null)),
-        [Sport.Hockey] = ("Hockey", new(RegulationPeriods: 3, PeriodMinutes: 20)),
-        [Sport.Soccer] = ("Soccer", new(RegulationPeriods: 2, PeriodMinutes: 45)),
-        [Sport.Cricket] = ("Cricket", new(RegulationPeriods: 2, PeriodMinutes: null)),
-        [Sport.Rugby] = ("Rugby", new(RegulationPeriods: 2, PeriodMinutes: 40)),
-        // Best of 3 sets; ESPN gives no way to tell a best-of-5 match apart.
-        [Sport.Tennis] = ("Tennis", new(RegulationPeriods: 3, PeriodMinutes: null)),
-        // A race is run in laps, with no periods; its period is the current lap.
-        [Sport.Racing] = ("Racing", new(RegulationPeriods: 1, PeriodMinutes: null)),
-        // A tournament is played over four rounds, its period the current round.
-        [Sport.Golf] = ("Golf", new(RegulationPeriods: 4, PeriodMinutes: null)),
-        // A game is a fight card of bouts, each 3 rounds of 5 minutes, or 5 for a main event, which each bout carries itself.
-        [Sport.Mma] = ("MMA", new(RegulationPeriods: 3, PeriodMinutes: 5)),
-    };
-
-    private static IEnumerable<string> Names => All.Values.Select(sport => sport.Name);
+    private static IEnumerable<string> Names => Enum.GetValues<Sport>().Select(sport => sport.DisplayName());
 
     /// <summary>The name browsers show and configuration uses, e.g. "Football".</summary>
-    public static string DisplayName(this Sport sport) => All[sport].Name;
+    public static string DisplayName(this Sport sport) => SportRules.For(sport).Name;
 
     /// <summary>How the sport's games usually go, unless a league says otherwise.</summary>
-    public static SportUsual Usual(this Sport sport) => All[sport].Usual;
+    public static SportUsual Usual(this Sport sport) => SportRules.For(sport).Usual;
 
     /// <summary>The sport with this display name (ignoring case), or an error naming the known ones.</summary>
     public static Sport Parse(string name) =>
-        All.FirstOrDefault(s => string.Equals(s.Value.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)) is { Value.Name: not null } found
-            ? found.Key
+        Enum.GetValues<Sport>().Where(sport => string.Equals(sport.DisplayName(), name.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Select(sport => (Sport?)sport).FirstOrDefault() is { } found
+            ? found
             : throw new FormatException(
                 $"Unknown sport \"{name}\"; expected one of: {string.Join(", ", Names.Select(n => $"\"{n}\""))}.");
 }

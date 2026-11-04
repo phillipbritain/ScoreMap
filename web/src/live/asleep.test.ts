@@ -25,9 +25,14 @@ describe('watchForSleep', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
-  const watch = (page: PageVisibility, timeout = minutes(5)) => {
+  const watch = (page: PageVisibility, timeout = minutes(5), startAsleep = false) => {
     const calls: string[] = []
-    const stop = watchForSleep(page, timeout, { onSleep: () => calls.push('sleep'), onWake: () => calls.push('wake') })
+    const stop = watchForSleep(
+      page,
+      timeout,
+      { onSleep: () => calls.push('sleep'), onWake: () => calls.push('wake') },
+      startAsleep,
+    )
     return { calls, stop }
   }
 
@@ -102,6 +107,16 @@ describe('watchForSleep', () => {
     hide()
     vi.advanceTimersByTime(minutes(1))
     expect(calls).toEqual(['sleep'])
+  })
+
+  it('can start out asleep, as when watching again with a new idle timeout, waking when the page is shown', () => {
+    const { page, show } = fakePage(true)
+    const { calls } = watch(page, minutes(5), true)
+
+    vi.advanceTimersByTime(minutes(60))
+    expect(calls).toEqual([])
+    show()
+    expect(calls).toEqual(['wake'])
   })
 
   it('stops watching when stopped', () => {

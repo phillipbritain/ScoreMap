@@ -41,18 +41,16 @@ public static class FeedbackEndpoints
             var visitor = http.Connection.RemoteIpAddress;
             if (!guard.TryTakeToday())
                 return Refused(StatusCodes.Status429TooManyRequests, ClosedForToday);
-            if (!guard.TrySend(visitor))
-            {
-                guard.GiveBackToday();
-                return Refused(StatusCodes.Status429TooManyRequests, "That's a lot of feedback at once, try again in a few minutes");
-            }
-
-            var context = submission.Context ?? new FeedbackContext();
-            var issue = FeedbackIssue.Write(text, context, http.Request.Headers.UserAgent.ToString(), board.Leagues,
-                context.Demo ? demo.Games : board.Games);
+            var visitorReserved = false;
             var filed = false;
             try
             {
+                visitorReserved = guard.TrySend(visitor);
+                if (!visitorReserved)
+                    return Refused(StatusCodes.Status429TooManyRequests, "That's a lot of feedback at once, try again in a few minutes");
+                var context = submission.Context ?? new FeedbackContext();
+                var issue = FeedbackIssue.Write(text, context, http.Request.Headers.UserAgent.ToString(), board.Leagues,
+                    context.Demo ? demo.Games : board.Games);
                 var url = await sink.FileAsync(issue, cancellationToken);
                 filed = true;
                 return Reply(StatusCodes.Status200OK, new FeedbackReply(IssueUrl: url.AbsoluteUri));
@@ -67,7 +65,8 @@ public static class FeedbackEndpoints
                 if (!filed)
                 {
                     guard.GiveBackToday();
-                    guard.GiveBackSend(visitor);
+                    if (visitorReserved)
+                        guard.GiveBackSend(visitor);
                 }
             }
         });

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using GeoTimeZone;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
@@ -12,7 +13,7 @@ namespace ScoreMap.Server.Games;
 /// their pin windows. Each update of a league compares the result with the last one and
 /// reports what changed, so games entering and leaving their windows come out as added
 /// and removed. It also keeps which games are top events (see <see cref="UpdateTopEventsAsync"/>).
-/// Not thread-safe: the poller serializes every call.
+/// The poller serializes updates. Games can be read concurrently from the published immutable state.
 /// </summary>
 public sealed class GameBoard(
     IGameFeedProvider feed,
@@ -30,6 +31,7 @@ public sealed class GameBoard(
     public static readonly TimeSpan FinalWindow = TimeSpan.FromHours(2);
 
     private readonly Dictionary<string, IReadOnlyList<Game>> _games = new();
+    private IReadOnlyList<Game> _snapshot = ImmutableArray<Game>.Empty;
 
     // The ids of the games the feed last listed as its top events.
     private IReadOnlySet<string> _topEvents = new HashSet<string>();
@@ -41,8 +43,8 @@ public sealed class GameBoard(
 
     public IReadOnlyList<League> Leagues => leagues.Value;
 
-    /// <summary>Every game currently on the board, across all leagues.</summary>
-    public IReadOnlyList<Game> Games => _games.Values.SelectMany(g => g).ToList();
+    /// <summary>A consistent snapshot of every game on the board, safe to read while leagues update.</summary>
+    public IReadOnlyList<Game> Games => Volatile.Read(ref _snapshot);
 
     /// <summary>Fetches the league, replaces its games and returns what changed since the last update.</summary>
     public async Task<IReadOnlyList<GameChange>> UpdateLeagueAsync(League league, CancellationToken cancellationToken)
@@ -66,6 +68,7 @@ public sealed class GameBoard(
 
         var before = _games.GetValueOrDefault(league.Key, []);
         _games[league.Key] = games;
+        Volatile.Write(ref _snapshot, _games.Values.SelectMany(g => g).ToImmutableArray());
         return GameChanges.Between(before, games);
     }
 

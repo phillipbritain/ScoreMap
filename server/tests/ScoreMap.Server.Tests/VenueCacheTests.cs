@@ -34,7 +34,7 @@ public sealed class VenueCacheTests
             var game = LiveGame(server.Clock, "401", homeScore: 21);
             server.Feed.SetScoreboard(Nfl, game);
             await using var client = await server.ConnectClientAsync();
-            Assert.Equal(Position.Latitude, Assert.Single(await client.NextSnapshotAsync()).Venue.Latitude);
+            Assert.Equal(Position.Latitude, (await client.PlacedGameAsync()).Venue.Latitude);
             await server.PhotoSearchesFinishedAsync();
 
             server.Feed.SetScoreboard(Nfl, game.WithSides(home: game.Sides().Home with { Score = 24 }));
@@ -147,7 +147,7 @@ public sealed class VenueCacheTests
             var game = LiveGame(server.Clock, "401", homeScore: 21);
             server.Feed.SetScoreboard(Nfl, game);
             await using var client = await server.ConnectClientAsync();
-            var snapshot = Assert.Single(await client.NextSnapshotAsync());
+            var snapshot = await client.PlacedGameAsync();
             Assert.Equal(Position.Latitude, snapshot.Venue.Latitude);
             await server.PhotoSearchesFinishedAsync();
 
@@ -193,7 +193,7 @@ public sealed class VenueCacheTests
             server.Feed.SetScoreboard(Nfl, game);
             await using var client = await server.ConnectClientAsync();
 
-            var snapshot = Assert.Single(await client.NextSnapshotAsync());
+            var snapshot = await client.PlacedGameAsync();
             Assert.Equal(Position.Latitude, snapshot.Venue.Latitude);
             Assert.Equal(Position.Longitude, snapshot.Venue.Longitude);
             await server.PhotoSearchesFinishedAsync();

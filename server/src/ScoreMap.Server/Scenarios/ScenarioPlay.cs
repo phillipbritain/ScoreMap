@@ -1,4 +1,5 @@
 using ScoreMap.Server.Sports;
+using ScoreMap.Server.Sports.Shared;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 

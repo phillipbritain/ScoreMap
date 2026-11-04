@@ -1,6 +1,6 @@
-using ScoreMap.Server.Sports;
 using System.ComponentModel;
 using System.Globalization;
+using ScoreMap.Server.Sports;
 
 namespace ScoreMap.Server.Games;
 
@@ -38,7 +38,6 @@ public sealed record SportUsual(int RegulationPeriods, int? PeriodMinutes);
 
 public static class Sports
 {
-    /// <summary>Each sport's name, which browsers show and configuration uses, and how its games usually go.</summary>
     private static IEnumerable<string> Names => Enum.GetValues<Sport>().Select(sport => sport.DisplayName());
 
     /// <summary>The name browsers show and configuration uses, e.g. "Football".</summary>

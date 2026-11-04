@@ -2,16 +2,16 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Sports.Shared;
-
 using static ScoreMap.Server.Sports.Shared.ScenarioFabrication;
 
 namespace ScoreMap.Server.Sports;
 
-internal sealed partial class BaseballScenario(League league) : SportScenario(league)
+internal sealed class BaseballScenario(League league) : SportScenario(league)
 {
     protected override FieldPlay Field => RacingFieldPlay.Instance;
 
     internal override SportPlay CreatePlay() => new BaseballPlay(League, new(3, [(1, 0.65), (2, 0.25), (3, 0.08), (4, 0.02)], 11, 1));
+
     protected override int Capacity => 40000;
     protected override int UsualScore => 1;
     protected override string NoteText(Random random) => Pick(random, $"Division Series - Game {random.Next(1, 6)}", "Doubleheader - Game 2", "Inclement Weather - Makeup date");

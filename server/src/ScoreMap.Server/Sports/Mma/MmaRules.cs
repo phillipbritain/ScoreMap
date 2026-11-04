@@ -1,15 +1,16 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
-namespace ScoreMap.Server.Sports;
-
 using ScoreMap.Server.Sports.Shared;
+
+namespace ScoreMap.Server.Sports;
 
 internal sealed class MmaRules : SportRule
 {
     internal static readonly MmaRules Instance = new();
     internal override string Name => "MMA";
-    internal override SportUsual Usual => new(3, 5);
+    // Individual bouts carry their scheduled rounds, including five-round main events.
+    internal override SportUsual Usual { get; } = new(3, 5);
 
     protected override string? ClockInPlay(ProviderGame game, League league, int period) =>
         throw new ArgumentOutOfRangeException(nameof(league), league.Sport, "No clock line for this sport");

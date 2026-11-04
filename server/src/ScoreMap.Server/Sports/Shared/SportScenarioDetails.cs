@@ -51,7 +51,6 @@ internal sealed class SportScenarioDetails(League league, SportScenario sport)
                 : null,
         };
     }
-
 }
 
 internal sealed record ScenarioSeen(int? Home, int? Away, ProviderScoringPlay? LastScore,

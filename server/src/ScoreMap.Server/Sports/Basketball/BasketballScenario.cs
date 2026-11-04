@@ -2,18 +2,18 @@ using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Sports.Shared;
-
 using static ScoreMap.Server.Sports.Shared.ScenarioFabrication;
 
 namespace ScoreMap.Server.Sports;
 
-internal sealed partial class BasketballScenario(League league) : SportScenario(league)
+internal sealed class BasketballScenario(League league) : SportScenario(league)
 {
     protected override FieldPlay Field => RacingFieldPlay.Instance;
 
     private readonly BasketballScenarioFormat _format = BasketballScenarioFormat.For(league);
 
     internal override SportPlay CreatePlay() => new CountdownPlay(League, _format.Scoring);
+
     protected override int Capacity => 18500;
     protected override int UsualScore => 2;
     protected override string NoteText(Random random) => Pick(random, "Play-In Tournament", $"Conference Semifinals - Game {random.Next(1, 8)}", "Cup Knockout Round");

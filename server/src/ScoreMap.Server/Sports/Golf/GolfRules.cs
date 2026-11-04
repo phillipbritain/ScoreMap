@@ -1,15 +1,16 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 
-namespace ScoreMap.Server.Sports;
-
 using ScoreMap.Server.Sports.Shared;
+
+namespace ScoreMap.Server.Sports;
 
 internal sealed class GolfRules : SportRule
 {
     internal static readonly GolfRules Instance = new();
     internal override string Name => "Golf";
-    internal override SportUsual Usual => new(4, null);
+    // A tournament has four rounds, the current round being its period.
+    internal override SportUsual Usual { get; } = new(4, null);
 
     protected override string? ClockInPlay(ProviderGame game, League league, int period) =>
         Rounds(game, period);

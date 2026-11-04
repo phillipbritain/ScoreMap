@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using ScoreMap.Server.Scenarios;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Live;
@@ -12,17 +14,23 @@ public class SlowDependencyTests
     public async Task Switching_source_cancels_old_fetches_before_publishing_the_new_source()
     {
         await using var server = new ScoreMapServer();
+        server.WriteScenario("next", """{ "games": [] }""");
         server.Feed.Hold(Nfl);
         await using var client = await server.ConnectClientAsync();
         await server.Feed.WaitForFetchesAsync(Nfl, 1);
         await client.NextSnapshotAsync();
         var oldFetch = server.Feed.FetchToken(Nfl);
 
-        await server.Services.GetRequiredService<Poller>().StartAfreshAsync(() =>
-        {
-            Assert.True(oldFetch.IsCancellationRequested);
-            return new PollingOptions();
-        }, CancellationToken.None);
+        var sourceWhenCancelled = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var switcher = server.Services.GetRequiredService<ScenarioSwitcher>();
+        using var cancelled = oldFetch.Register(() => sourceWhenCancelled.TrySetResult(switcher.Running));
+        using var http = server.CreateClient();
+
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "next" })).EnsureSuccessStatusCode();
+
+        Assert.Equal("real", await sourceWhenCancelled.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+        Assert.Equal("next", switcher.Running);
+        Assert.True(oldFetch.IsCancellationRequested);
     }
 
     [Fact]
@@ -95,7 +103,7 @@ public class SlowDependencyTests
 
         // Cancellation can free a slot before every queued worker observes its own cancellation.
         // Stop must drain them all while the number of simultaneous fetches stays bounded.
-        await server.Services.GetRequiredService<Poller>().StopAsync(CancellationToken.None);
+        await server.Services.GetRequiredService<RunningGameBoard>().StopAsync(CancellationToken.None);
         Assert.Equal(4, server.Feed.MaximumConcurrentFetches);
         Assert.Equal(0, server.Feed.ActiveFetches);
     }

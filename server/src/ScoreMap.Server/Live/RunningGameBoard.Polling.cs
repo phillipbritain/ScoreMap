@@ -1,28 +1,14 @@
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 
 namespace ScoreMap.Server.Live;
 
-/// <summary>
-/// Fetches independent leagues concurrently while browsers watch. External work never owns the
-/// board gate; only applying results and sending ordered snapshots/changes do. Optional venue
-/// resolution runs separately from score fetching, using the locator's application-wide rate limit.
-/// </summary>
-public sealed class Poller(
-    GameBoard board,
-    BrowserConnections connections,
-    IHubContext<GamesHub> hub,
-    TimeProvider clock,
-    IOptions<PollingOptions> polling,
-    ILogger<Poller> logger) : BackgroundService
+public sealed partial class RunningGameBoard
 {
-    public const int MaximumConcurrentFetches = 4;
-    public static readonly TimeSpan SnapshotFreshnessBudget = TimeSpan.FromMilliseconds(250);
+    private const int MaximumConcurrentFetches = 4;
+    private static readonly TimeSpan SnapshotFreshnessBudget = TimeSpan.FromMilliseconds(250);
 
-    private TimeSpan _liveInterval = polling.Value.LiveInterval;
-    private TimeSpan _quietInterval = polling.Value.QuietInterval;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly SemaphoreSlim _fetchSlots = new(MaximumConcurrentFetches);
     private readonly CancellationTokenSource _lifetime = new();
@@ -44,91 +30,21 @@ public sealed class Poller(
     private int _joining;
     private const string TopEventsKey = "#top-events";
 
-    /// <summary>
-    /// Changes source/clock atomically with board application. Old requests are cancelled and their
-    /// late results discarded, so a slow dependency cannot delay a scenario switch.
-    /// </summary>
-    public async Task StartAfreshAsync(Func<PollingOptions> change, CancellationToken cancellationToken)
-    {
-        await _lock.WaitAsync(cancellationToken);
-        try
-        {
-            // Invalidate old workers before the callback makes the new source visible.
-            RetireGeneration();
-            var intervals = change();
-            _liveInterval = intervals.LiveInterval;
-            _quietInterval = intervals.QuietInterval;
-        }
-        finally { _lock.Release(); }
-    }
-
-    /// <summary>
-    /// Allows at most 250 ms of dependency work before sending the current board. The caller sends
-    /// the snapshot and joins the delivery group inside <paramref name="send"/>, under the board gate,
-    /// so no change can precede or fall between the snapshot and group membership.
-    /// </summary>
-    public async Task SendSnapshotAsync(Func<IReadOnlyList<Game>, Task> send, CancellationToken cancellationToken)
-    {
-        await _lock.WaitAsync(cancellationToken);
-        try
-        {
-            _joining++;
-            ScheduleDue();
-        }
-        finally { _lock.Release(); }
-
-        try
-        {
-            using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            // Real time: a scenario clock or fake scheduling clock must not lengthen this bound.
-            budget.CancelAfter(SnapshotFreshnessBudget);
-            try
-            {
-                while (true)
-                {
-                    Task[] work;
-                    await _lock.WaitAsync(budget.Token);
-                    try { work = _work.ToArray(); }
-                    finally { _lock.Release(); }
-                    if (work.Length == 0)
-                        break;
-                    await Task.WhenAll(work).WaitAsync(budget.Token);
-                }
-            }
-            catch (OperationCanceledException) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested) { }
-
-            await _lock.WaitAsync(cancellationToken);
-            try { await send(board.Games); }
-            finally { _lock.Release(); }
-        }
-        finally
-        {
-            await _lock.WaitAsync(CancellationToken.None);
-            try
-            {
-                _joining--;
-                if (cancellationToken.IsCancellationRequested && _joining == 0 && !connections.HasAnyConnected)
-                    RetireGeneration();
-            }
-            finally { _lock.Release(); }
-        }
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var stopped = stoppingToken.Register(() => _lifetime.Cancel());
         while (!stoppingToken.IsCancellationRequested)
         {
-            await connections.WhenAnyConnectedAsync(stoppingToken);
+            await _connections.WhenAnyConnectedAsync(stoppingToken);
             DateTimeOffset next;
             Task wake;
             await _lock.WaitAsync(stoppingToken);
             try
             {
-                if (connections.HasAnyConnected)
+                if (_connections.HasAnyConnected)
                     ScheduleDue();
                 next = _nextFetch.Where(p => !_fetching.Contains(p.Key)).Select(p => p.Value)
-                    .DefaultIfEmpty(clock.GetUtcNow() + _quietInterval).Min();
+                    .DefaultIfEmpty(_clock.GetUtcNow() + _quietInterval).Min();
                 wake = _wake.Task;
             }
             finally { _lock.Release(); }
@@ -139,9 +55,9 @@ public sealed class Poller(
     // Called under the board gate. Workers yield before calling any outside dependency.
     private void ScheduleDue()
     {
-        var now = clock.GetUtcNow();
+        var now = _clock.GetUtcNow();
         Schedule(TopEventsKey, null);
-        foreach (var league in board.Leagues)
+        foreach (var league in _board.Leagues)
             Schedule(league.Key, league);
 
         void Schedule(string key, League? league)
@@ -155,21 +71,21 @@ public sealed class Poller(
             StartWork(async token =>
             {
                 await _fetchSlots.WaitAsync(token);
-                startedAt = clock.GetUtcNow();
+                startedAt = _clock.GetUtcNow();
                 try
                 {
                     if (league is null)
                     {
-                        var topEvents = await board.FetchTopEventsAsync(token);
-                        await ApplyAsync(() => board.UpdateTopEvents(topEvents, _applied), token);
+                        var topEvents = await _board.FetchTopEventsAsync(token);
+                        await ApplyAsync(() => _board.UpdateTopEvents(topEvents, _applied), token);
                     }
                     else
                     {
-                        var scoreboard = await board.FetchLeagueAsync(league, token);
+                        var scoreboard = await _board.FetchLeagueAsync(league, token);
                         await ApplyAsync(() =>
                         {
                             _applied.Add(key);
-                            return board.UpdateLeague(league, scoreboard, token);
+                            return _board.UpdateLeague(league, scoreboard, token);
                         }, token);
                     }
                 }
@@ -177,17 +93,17 @@ public sealed class Poller(
             }, () =>
             {
                 _fetching.Remove(key);
-                _nextFetch[key] = startedAt + (league is not null && board.HasLiveGames(league) ? _liveInterval : _quietInterval);
+                _nextFetch[key] = startedAt + (league is not null && _board.HasLiveGames(league) ? _liveInterval : _quietInterval);
                 if (league is not null && !_enriching.Contains(key))
                 {
-                    var games = board.GamesToEnrich(league);
+                    var games = _board.GamesToEnrich(league);
                     _enriching.Add(key);
                     StartWork(async enrichmentToken =>
                     {
                         foreach (var game in games)
                         {
-                            var location = await board.LocateVenueAsync(game, enrichmentToken);
-                            await ApplyAsync(() => board.UpdateVenue(league, game, location), enrichmentToken);
+                            var location = await _board.LocateVenueAsync(game, enrichmentToken);
+                            await ApplyAsync(() => _board.UpdateVenue(league, game, location), enrichmentToken);
                         }
                     }, () => _enriching.Remove(key));
                 }
@@ -210,7 +126,7 @@ public sealed class Poller(
             catch (OperationCanceledException) when (token.IsCancellationRequested) { }
             catch (Exception e) when (!token.IsCancellationRequested)
             {
-                logger.LogWarning(e, "Could not refresh games; keeping the last available data");
+                _logger.LogWarning(e, "Could not refresh games; keeping the last available data");
             }
             finally
             {
@@ -237,7 +153,7 @@ public sealed class Poller(
         {
             cancellationToken.ThrowIfCancellationRequested();
             foreach (var change in apply())
-                await hub.Clients.Group(connections.Group).SendAsync(GamesHub.ChangeMessage, change, cancellationToken);
+                await _hub.Clients.Group(_connections.Group).SendAsync(GamesHub.ChangeMessage, change, cancellationToken);
         }
         finally { _lock.Release(); }
     }
@@ -270,12 +186,12 @@ public sealed class Poller(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var now = clock.GetUtcNow();
+            var now = _clock.GetUtcNow();
             if (due <= now)
                 return;
             using var waiting = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
-            var delay = Task.Delay(due - now, clock, waiting.Token);
-            var moved = clock.GetUtcNow() - now > TimeSpan.FromMilliseconds(1);
+            var delay = Task.Delay(due - now, _clock, waiting.Token);
+            var moved = _clock.GetUtcNow() - now > TimeSpan.FromMilliseconds(1);
             if (!moved)
                 await Task.WhenAny(delay, wake);
             await waiting.CancelAsync();

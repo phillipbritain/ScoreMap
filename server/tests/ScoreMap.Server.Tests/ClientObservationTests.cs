@@ -35,9 +35,9 @@ public class ClientObservationTests
         });
         await using var client = await server.ConnectClientAsync();
         var basic = await client.GameMatchingAsync(g => g.Id == "game");
-        Assert.Equal((0d, 0d), (basic.Venue.Latitude, basic.Venue.Longitude));
+        Assert.Equal((null, null), (basic.Venue.Latitude, basic.Venue.Longitude));
 
-        var enriched = client.GameMatchingAsync(g => g.Id == "game" && g.Venue.Latitude != 0);
+        var enriched = client.GameMatchingAsync(g => g.Id == "game" && g.Venue.Latitude is not null);
         Assert.False(enriched.IsCompleted);
         server.Places.Release(query);
 

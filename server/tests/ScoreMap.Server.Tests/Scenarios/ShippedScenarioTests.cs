@@ -225,7 +225,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
 
         await using var client = await StartAsync(server, "crowded");
         var snapshot = await client.GamesMatchingAsync(games =>
-            games.Count >= 35 && games.All(g => g.Venue.Latitude != 0 || g.Venue.Longitude != 0));
+            games.Count >= 35 && games.All(g => g.Venue.Latitude is not null));
 
         Assert.InRange(snapshot.Count, 35, 45);
         // Which cities a fill picks is up to its seed (the venue list's tests check the group spans them all).
@@ -426,11 +426,12 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     private static double KmFrom((double Lat, double Lon) centre, GameVenue venue)
     {
         var (lat, lon) = centre;
+        var (venueLat, venueLon) = (venue.Latitude!.Value, venue.Longitude!.Value);
         const double radiusKm = 6371;
         double Rad(double degrees) => degrees * Math.PI / 180;
-        var dLat = Rad(venue.Latitude - lat);
-        var dLon = Rad(venue.Longitude - lon);
-        var a = Math.Pow(Math.Sin(dLat / 2), 2) + Math.Cos(Rad(lat)) * Math.Cos(Rad(venue.Latitude)) * Math.Pow(Math.Sin(dLon / 2), 2);
+        var dLat = Rad(venueLat - lat);
+        var dLon = Rad(venueLon - lon);
+        var a = Math.Pow(Math.Sin(dLat / 2), 2) + Math.Cos(Rad(lat)) * Math.Cos(Rad(venueLat)) * Math.Pow(Math.Sin(dLon / 2), 2);
         return 2 * radiusKm * Math.Asin(Math.Sqrt(a));
     }
 }

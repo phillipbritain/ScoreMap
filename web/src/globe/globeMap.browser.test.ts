@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import { themeWith } from '../theme/testTheme'
@@ -64,7 +65,7 @@ interface GameAt {
   clock?: string | null
 }
 
-function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home = '0', away = '0', clock = null }: GameAt = {}): Game {
+function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home = '0', away = '0', clock = null }: GameAt = {}): PlacedGame {
   return {
     id,
     league: 'NFL',
@@ -95,6 +96,12 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     topEvent: false,
     scoreline: null,
   }
+}
+
+/** A game whose venue lookup is pending, or found nothing: the server sends it with no position. */
+function unplaced(id: string): Game {
+  const placed = game(id)
+  return { ...placed, venue: { ...placed.venue, latitude: null, longitude: null } }
 }
 
 const opened: GlobeMap[] = []
@@ -129,7 +136,7 @@ function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
  * What the map has drawn in a layer at a game's venue. Asked of a box around it: asked of no box or
  * the whole canvas, the globe projection leaves out circle layers.
  */
-function drawnAt(map: MapLibreMap, layer: string, { venue }: Game) {
+function drawnAt(map: MapLibreMap, layer: string, { venue }: PlacedGame) {
   // Nothing yet, until the style has loaded and the pins' layers are added.
   if (!map.getLayer(layer)) return []
   const { x, y } = map.project([venue.longitude, venue.latitude])
@@ -143,7 +150,7 @@ function drawnAt(map: MapLibreMap, layer: string, { venue }: Game) {
 }
 
 /** Waits until the map has drawn these games' small pins, or the pin clusters they're in. */
-async function pinsDrawn(map: MapLibreMap, layer: string, ...games: Game[]) {
+async function pinsDrawn(map: MapLibreMap, layer: string, ...games: PlacedGame[]) {
   await vi.waitFor(() => expect(games.every((game) => drawnAt(map, layer, game).length > 0)).toBe(true), {
     timeout: 10_000,
   })
@@ -208,7 +215,7 @@ async function cardClusterDrawn(map: MapLibreMap) {
 const smallGlobe = { width: 400, height: 300 }
 
 /** Where a game's venue is on the page. */
-function venueOnPage(map: MapLibreMap, { venue }: Game) {
+function venueOnPage(map: MapLibreMap, { venue }: PlacedGame) {
   const { x, y } = map.project([venue.longitude, venue.latitude])
   const { left, top } = container.getBoundingClientRect()
   return { x: left + x, y: top + y }
@@ -407,6 +414,56 @@ describe('selection', () => {
   })
 })
 
+describe('games not placed yet', () => {
+  // Where the server used to put a game before its venue was placed.
+  const nullIsland = game('NULL ISLAND')
+
+  it('draws no pin for a game not placed yet, then its pin at its venue once it is placed', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const b = game('B', { longitude: -20, latitude: 20 })
+    globe.show([unplaced('A'), b])
+    await pinsDrawn(map, smallPinLayer, b)
+
+    for (const layer of [smallPinLayer, pinClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
+
+    const a = game('A', { longitude: 20 })
+    globe.show([a, b])
+
+    await pinsDrawn(map, smallPinLayer, a)
+    for (const layer of [smallPinLayer, pinClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
+  })
+
+  it('gives a game not placed yet no score card, then gives it one once it is placed', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([unplaced('A'), game('B', { longitude: 2 })])
+    await cardShown('B')
+    await pause(300)
+
+    expect(card('A')).toBeNull()
+
+    globe.show([game('A', { longitude: -2 }), game('B', { longitude: 2 })])
+    await cardShown('A')
+  })
+
+  it('leaves the globe where it is when a game not placed yet is selected, even once it is placed under the panel', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 30, zoom: 2 })
+    // Under the panel, as 0°, 0° is too.
+    const a = game('A', { latitude: -10 })
+    globe.show([unplaced('A')])
+
+    globe.select('A', panelAcrossBottom())
+    await pause(500)
+    expect(map.getCenter().lng).toBeCloseTo(0)
+    expect(map.getCenter().lat).toBeCloseTo(30)
+
+    globe.show([a])
+    await pinsDrawn(map, selectedPinLayer, a)
+    await pause(500)
+    expect(map.getCenter().lng).toBeCloseTo(0)
+    expect(map.getCenter().lat).toBeCloseTo(30)
+  })
+})
+
 describe('zooming in to pin clusters and card clusters', () => {
   it('does not zoom in when the viewer double-clicks the globe', async () => {
     const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
@@ -537,7 +594,7 @@ describe('score cards near the centre of the view', () => {
   const outerVenue = { longitude: 38, latitude: 25 }
 
   /** Whether a game's venue is on the globe's canvas, so what's drawn there can be found. */
-  function onCanvas(map: MapLibreMap, { venue }: Game) {
+  function onCanvas(map: MapLibreMap, { venue }: PlacedGame) {
     const { x, y } = map.project([venue.longitude, venue.latitude])
     return x > 0 && x < wideGlobe.width && y > 0 && y < wideGlobe.height
   }
@@ -1030,7 +1087,7 @@ describe('glow', () => {
 
 describe('flames', () => {
   /** What the map has drawn in a flame layer near a game's venue: a flame stands above its pin or cluster. */
-  function flamesNear(map: MapLibreMap, layer: string, { venue }: Game) {
+  function flamesNear(map: MapLibreMap, layer: string, { venue }: PlacedGame) {
     if (!map.getLayer(layer)) return []
     const { x, y } = map.project([venue.longitude, venue.latitude])
     return map.queryRenderedFeatures(

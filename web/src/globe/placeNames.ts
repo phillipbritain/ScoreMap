@@ -8,7 +8,7 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import type { Game } from '../games/game'
+import type { PlacedGame } from '../games/placedGames'
 import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
@@ -201,7 +201,7 @@ function atZoom(stops: readonly number[], zoom: number): number {
 /** The place names on a map with the globe's style. */
 export interface PlaceNames {
   /** Names the cities for these games, the games shown (see cityLabels). */
-  showGames(games: readonly Game[]): void
+  showGames(games: readonly PlacedGame[]): void
   /** Names the cities for the games shown by these settings from now on. */
   setSettings(settings: CityLabelSettings): void
   /**

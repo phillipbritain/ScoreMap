@@ -92,6 +92,22 @@ public class SnapshotTests
     }
 
     [Fact]
+    public async Task A_placed_venue_has_its_position()
+    {
+        await using var server = new ScoreMapServer();
+        server.Places.Add("Tottenham Hotspur Stadium, London", new Coordinates(51.6043, -0.0664));
+        server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
+        {
+            Venue = new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"),
+        });
+
+        await using var client = await server.ConnectClientAsync();
+        var game = await client.GameMatchingAsync(g => g.Venue.TimeZone is not null);
+
+        Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
+    }
+
+    [Fact]
     public async Task A_venue_in_a_Canadian_province_names_the_province_in_full()
     {
         await using var server = new ScoreMapServer();
@@ -138,7 +154,7 @@ public class SnapshotTests
     }
 
     [Fact]
-    public async Task A_venue_that_could_not_be_placed_has_no_time_zone()
+    public async Task A_venue_that_could_not_be_placed_is_marked_unplaced_with_no_position_or_time_zone()
     {
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard("football/nfl", ProviderGames.NflGame(server.Clock.GetUtcNow(), ProviderStatus.InProgress) with
@@ -149,6 +165,8 @@ public class SnapshotTests
         await using var client = await server.ConnectClientAsync();
         var game = Assert.Single(await client.NextSnapshotAsync());
 
+        Assert.Null(game.Venue.Latitude);
+        Assert.Null(game.Venue.Longitude);
         Assert.Null(game.Venue.TimeZone);
     }
 

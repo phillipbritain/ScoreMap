@@ -70,6 +70,8 @@ body {
    has its glass on a layer behind its content (::before), since glass on the surface itself would keep
    the glass inside from seeing past it. */
 .score-card,
+.game-navigation summary,
+.game-navigation ul,
 .game-panel,
 .rail__group::before,
 .rail__popover,
@@ -619,6 +621,9 @@ body {
    With the pointer on it, its border is bolder (a ring around it, so the card keeps its size and
    doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
 .score-card {
+  appearance: none;
+  box-sizing: content-box;
+  text-align: left;
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
@@ -2512,4 +2517,61 @@ body {
     margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }
+}
+
+/* Keyboard selection stays available for games in any pin or card cluster. */
+.game-navigation {
+  position: absolute;
+  top: calc(14 * var(--spacing));
+  left: calc(3 * var(--spacing));
+  z-index: 3;
+  max-width: calc(100% - 24 * var(--spacing));
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+}
+
+.game-navigation summary,
+.game-navigation ul {
+  --frost: var(--controls-frost);
+  --glass-tint: var(--controls-surface);
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--controls-corner);
+  padding: calc(2 * var(--spacing));
+}
+
+.game-navigation summary { cursor: pointer; }
+
+.game-navigation ul {
+  list-style: none;
+  margin: var(--spacing) 0 0;
+  max-height: 45vh;
+  overflow: auto;
+  width: min(80vw, 80ch);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.game-navigation button {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: var(--menu-item-corner);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: calc(2 * var(--spacing));
+  cursor: pointer;
+}
+
+.game-navigation button:hover { background: var(--palette-action-hover); }
+
+.score-card:focus-visible,
+.game-navigation summary:focus-visible,
+.game-navigation button:focus-visible,
+.game-panel button:focus-visible,
+.game-panel a:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--spacing);
 }

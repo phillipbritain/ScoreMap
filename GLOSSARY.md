@@ -44,6 +44,10 @@ _Avoid_: Fight, match
 A game ESPN lists in its Top Events, the games it picks as the most important right now across every sport, as its front page shows them. "Top Events" in Leagues on the rail shows only these, whichever leagues are switched off.
 _Avoid_: Featured game, highlight, hot game (ScoreMap's own, by the score and time left)
 
+**Running game board**:
+One shared set of games being kept current for its viewers, including their first snapshot and the changes that follow. Real games (or the local scenario) have one running game board; a demo has its own, shared by every demo viewer (ADR-0019).
+_Avoid_: Per-viewer board, poller (for the whole running game board)
+
 **Pin**:
 The marker for one game on the globe, placed at the game's venue. A game whose venue isn't placed yet (its lookup still running, or finding nothing) has no pin, though it is in the Games list.
 _Avoid_: Marker, dot, icon
@@ -198,10 +202,6 @@ A game that has finished and recently enough to still get a pin.
 _Avoid_: Finished, completed, over, ended
 
 ### Local runs
-
-**Running game board**:
-One shared set of games being kept current for its viewers, including their first snapshot and the changes that follow. Real games (or the local scenario) have one running game board; a demo has its own, shared by every demo viewer (ADR-0019).
-_Avoid_: Per-viewer board, poller (for the whole running game board)
 
 **Scenario**:
 A named set of made-up games between real teams of their league at real venues, and how they change over time, shown in place of real games when ScoreMap runs locally, or in a demo.

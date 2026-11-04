@@ -34,6 +34,9 @@ public sealed class ScoreMapServer(
 
     public FakeGameFeedProvider Feed { get; } = new();
 
+    /// <summary>Uses a real adapter over fake HTTP when a test exercises feed-to-browser behavior.</summary>
+    public IGameFeedProvider? FeedProvider { get; init; }
+
     public FakePlaceSearch Places { get; } = new();
 
     /// <summary>Everything the server logs.</summary>
@@ -241,12 +244,12 @@ public sealed class ScoreMapServer(
             if (services.Any(d => d.ServiceType == typeof(ScenarioSwitcher)))
             {
                 services.RemoveAllKeyed<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey);
-                services.AddKeyedSingleton<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey, Feed);
+                services.AddKeyedSingleton<IGameFeedProvider>(ScenarioSwitcher.RealGamesKey, FeedProvider ?? Feed);
             }
             else
             {
                 services.RemoveAll<IGameFeedProvider>();
-                services.AddSingleton<IGameFeedProvider>(Feed);
+                services.AddSingleton<IGameFeedProvider>(FeedProvider ?? Feed);
             }
             services.RemoveAll<IPlaceSearch>();
             services.AddSingleton<IPlaceSearch>(Places);

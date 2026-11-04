@@ -140,6 +140,9 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
     public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken) =>
         _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
 
+    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken) =>
+        _running.Feed.EnrichGame(game, cancellationToken);
+
     public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
         _running.Feed.FetchTopEventsAsync(cancellationToken);
 

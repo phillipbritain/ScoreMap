@@ -1,6 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using ScoreMap.Server.Feedback;
+using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.TestGames;
@@ -20,7 +25,7 @@ public class FeedbackTests
 
     private static readonly object WideScreen = new { screenWidth = 1440, screenHeight = 900, phoneLayout = false };
 
-    private static async Task<HttpResponseMessage> SendAsync(ScoreMapServer server, string text, object? context = null,
+    private static async Task<HttpResponseMessage> SendAsync(WebApplicationFactory<Program> server, string text, object? context = null,
         string? website = null, string visitor = "203.0.113.7", string userAgent = Chrome)
     {
         using var http = server.CreateClient();
@@ -35,6 +40,135 @@ public class FeedbackTests
 
     private static async Task<FeedbackEndpoints.FeedbackReply> ReplyAsync(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<FeedbackEndpoints.FeedbackReply>())!;
+
+    [Fact]
+    public async Task Preparation_failures_return_both_the_visitors_and_the_days_allowance()
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        var options = new FailingLeagues();
+        await using var app = server.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddSingleton<IOptions<List<League>>>(options)));
+        using var client = app.CreateClient();
+        options.Fail = true;
+
+        for (var i = 0; i < FeedbackGuard.PerVisitorLimit; i++)
+            Assert.Equal(HttpStatusCode.InternalServerError, (await SendAsync(app, "Preparation will fail")).StatusCode);
+        Assert.Empty(server.GitHub.Issues);
+        options.Fail = false;
+
+        for (var i = 0; i < FeedbackGuard.PerVisitorLimit; i++)
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Preparation works again")).StatusCode);
+        for (var i = FeedbackGuard.PerVisitorLimit; i < FeedbackGuard.DailyCap; i++)
+            Assert.Equal(HttpStatusCode.OK, (await SendAsync(app, "Still room for feedback", visitor: $"203.0.113.{i + 20}")).StatusCode);
+        Assert.Equal(FeedbackGuard.DailyCap, server.GitHub.Issues.Count);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await SendAsync(app, "The day is now full")).StatusCode);
+    }
+
+    private sealed class FailingLeagues : IOptions<List<League>>
+    {
+        public bool Fail { get; set; }
+        public List<League> Value => Fail ? throw new InvalidOperationException("Cannot prepare context") : [];
+    }
+
+    [Fact]
+    public async Task A_snapshot_stays_unchanged_and_a_league_is_published_only_when_its_update_finishes()
+    {
+        await using var server = new ScoreMapServer();
+        var board = server.Services.GetRequiredService<GameBoard>();
+        var league = board.Leagues.Single(l => l.Key == Nfl);
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "before"));
+        await board.UpdateLeagueAsync(league, CancellationToken.None);
+        var snapshot = board.Games;
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "after-1"), LiveGame(server.Clock, "after-2"));
+        server.Feed.HoldUntilReleased(Nfl);
+        var update = board.UpdateLeagueAsync(league, CancellationToken.None);
+        try
+        {
+            await server.Feed.WaitForFetchesAsync(Nfl, 2);
+            Assert.False(update.IsCompleted);
+            Assert.Equal(["before"], board.Games.Select(g => g.Id));
+        }
+        finally
+        {
+            server.Feed.Release(Nfl);
+        }
+        await update.WaitAsync(TimeSpan.FromSeconds(10));
+        Assert.Equal(["after-1", "after-2"], board.Games.Select(g => g.Id));
+        Assert.Equal(["before"], snapshot.Select(g => g.Id));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Feedback_reads_complete_leagues_while_updates_publish_and_GitHub_is_pending(bool demo)
+    {
+        await using var server = new ScoreMapServer { FeedbackToken = "token" };
+        server.WriteScenario(DemoBoard.Scenario, ScenarioGame("demo-game"));
+        var sink = new WaitingSink();
+        await using var app = server.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddSingleton<IFeedbackSink>(sink)));
+        using var client = app.CreateClient();
+        var demoBoard = app.Services.GetRequiredService<DemoBoard>();
+        var run = demo ? demoBoard.Join("feedback-test") : null;
+        var board = run?.Board ?? app.Services.GetRequiredService<GameBoard>();
+        if (run is not null)
+            await run.Poller.SendSnapshotAsync("feedback-test", _ => Task.CompletedTask, CancellationToken.None);
+        else
+        {
+            server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
+            await board.UpdateLeagueAsync(board.Leagues.Single(l => l.Key == Nfl), CancellationToken.None);
+        }
+        var gameId = demo ? "demo-game" : "real-game";
+        // Empty scoreboards need no outside lookups, and each new key exercises league insertion.
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var writer = Task.Run(async () =>
+        {
+            await start.Task;
+            for (var i = 0; i < 2000; i++)
+                await board.UpdateLeagueAsync(new League { Key = $"test/{i}", Name = $"League {i}", Sport = Sport.Football }, CancellationToken.None);
+        });
+        var reader = Task.Run(async () =>
+        {
+            await start.Task;
+            for (var i = 0; i < 2000; i++)
+            {
+                var games = demo ? demoBoard.Games : board.Games;
+                Assert.Equal([gameId], games.Select(g => g.Id));
+            }
+        });
+        var submission = SendAsync(app, "Feedback during league updates", new { demo, gameId });
+        try
+        {
+            await sink.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.Contains($"Open game:** NFL, {(demo ? "scenario" : "ESPN")} game {gameId}", sink.Issue!.Body);
+            start.SetResult();
+            // Both board reads and updates must finish before the external request is released.
+            await Task.WhenAll(writer, reader).WaitAsync(TimeSpan.FromSeconds(10));
+            Assert.False(submission.IsCompleted);
+        }
+        finally
+        {
+            start.TrySetResult();
+            sink.Release.TrySetResult();
+            if (demo)
+                demoBoard.Leave("feedback-test");
+        }
+        Assert.Equal(HttpStatusCode.OK, (await submission).StatusCode);
+    }
+
+    private sealed class WaitingSink : IFeedbackSink
+    {
+        public FeedbackIssue? Issue { get; private set; }
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public async Task<Uri> FileAsync(FeedbackIssue issue, CancellationToken cancellationToken)
+        {
+            Issue = issue;
+            Entered.SetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return new Uri("https://github.com/phillipbritain/ScoreMap/issues/300");
+        }
+    }
 
     [Fact]
     public async Task With_a_token_feedback_is_filed_as_a_needs_triage_issue_and_the_reply_links_to_it()

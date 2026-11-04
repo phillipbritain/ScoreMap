@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using GeoTimeZone;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.GameFeed;
@@ -12,8 +13,8 @@ namespace ScoreMap.Server.Games;
 /// their pin windows. Each update of a league compares the result with the last one and
 /// reports what changed, so games entering and leaving their windows come out as added
 /// and removed. It also keeps which games are top events (see <see cref="UpdateTopEvents"/>).
-/// State access is not thread-safe: the poller serializes reads and updates. Fetch and lookup
-/// methods perform only external work and may run concurrently.
+/// The poller serializes state access except Games, which reads the published immutable snapshot.
+/// Fetch and lookup methods perform only external work and may run concurrently.
 /// </summary>
 public sealed class GameBoard(
     IGameFeedProvider feed,
@@ -31,6 +32,7 @@ public sealed class GameBoard(
     public static readonly TimeSpan FinalWindow = TimeSpan.FromHours(2);
 
     private readonly Dictionary<string, IReadOnlyList<Game>> _games = new();
+    private IReadOnlyList<Game> _snapshot = ImmutableArray<Game>.Empty;
 
     // The ids of the games the feed last listed as its top events.
     private IReadOnlySet<string> _topEvents = new HashSet<string>();
@@ -42,8 +44,8 @@ public sealed class GameBoard(
 
     public IReadOnlyList<League> Leagues => leagues.Value;
 
-    /// <summary>Every game currently on the board, across all leagues.</summary>
-    public IReadOnlyList<Game> Games => _games.Values.SelectMany(g => g).ToList();
+    /// <summary>A consistent snapshot of every game on the board, safe to read while leagues update.</summary>
+    public IReadOnlyList<Game> Games => Volatile.Read(ref _snapshot);
 
     private readonly Dictionary<string, IReadOnlyList<ProviderGame>> _reported = new();
 
@@ -81,6 +83,7 @@ public sealed class GameBoard(
         var before = _games.GetValueOrDefault(league.Key, []);
         _games[league.Key] = games;
         _reported[league.Key] = scoreboard;
+        PublishSnapshot();
         return GameChanges.Between(before, games);
     }
 
@@ -103,6 +106,7 @@ public sealed class GameBoard(
             ? g with { Venue = ToVenue(requested.Venue, location) with { Photo = g.Venue.Photo } }
             : g).ToList();
         _games[league.Key] = after;
+        PublishSnapshot();
         return GameChanges.Between(before, after);
     }
 
@@ -121,8 +125,12 @@ public sealed class GameBoard(
             changes.AddRange(GameChanges.Between(before, after));
             _games[key] = after;
         }
+        PublishSnapshot();
         return changes;
     }
+
+    private void PublishSnapshot() =>
+        Volatile.Write(ref _snapshot, _games.Values.SelectMany(g => g).ToImmutableArray());
 
     public bool HasLiveGames(League league) =>
         _games.TryGetValue(league.Key, out var games) && games.Any(g => g.Status == GameStatus.Live);

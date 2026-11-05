@@ -261,7 +261,7 @@ public class TennisTests
         server.Places.Add("Rolex Shanghai Masters, Shanghai, China PR", new Coordinates(31.04, 121.36));
         server.CorrectVenue("Rolex Shanghai Masters", new Coordinates(31.05, 121.37));
 
-        var game = await PlacedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
+        var game = await ReceivedAsync(server, Match(server, InProgress, 1, [new ProviderSet(1, 0)]));
 
         Assert.Equal((31.05, 121.37), (game.Venue.Latitude, game.Venue.Longitude));
     }

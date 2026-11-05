@@ -3,6 +3,8 @@ using ScoreMap.Server.Scenarios;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Venues;
+using System.Text.Json;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
@@ -10,6 +12,63 @@ namespace ScoreMap.Server.Tests.Live;
 
 public class SlowDependencyTests
 {
+    [Theory]
+    [InlineData(false, "saved")]
+    [InlineData(true, "saved")]
+    [InlineData(false, "scenario")]
+    [InlineData(true, "scenario")]
+    [InlineData(false, "correction")]
+    [InlineData(true, "given")]
+    [InlineData(false, "saved miss")]
+    [InlineData(true, "saved miss")]
+    public async Task Known_venues_are_placed_in_the_join_snapshot_while_an_earlier_unknown_is_held(bool anotherLeague, string source)
+    {
+        await using var server = new ScoreMapServer();
+        var position = new Coordinates(51.6, -0.1);
+        var venue = new ProviderVenue("Known Stadium", "London", null, null);
+        if (source == "correction")
+            server.CorrectVenue(venue.Name!, position);
+        else if (source == "given")
+            venue = venue with { Location = position };
+        else
+            File.WriteAllText(source == "scenario" ? server.ScenarioVenueLocationsPath : server.SavedVenueLocationsPath,
+                JsonSerializer.Serialize(new Dictionary<string, Coordinates?>
+                {
+                    ["Known Stadium, London"] = source == "saved miss" ? null : position,
+                    ["London"] = position,
+                }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+
+        var unknownVenue = new ProviderVenue("Unknown Stadium", null, null, null);
+        server.Places.Hold("Unknown Stadium");
+        using var cancellation = new CancellationTokenSource();
+        var pending = server.Services.GetRequiredService<VenueLocator>().LocateAsync(unknownVenue, null, cancellation.Token);
+        try
+        {
+            Assert.False(pending.IsCompleted);
+            var unknown = LiveGame(server.Clock, "unknown") with { Venue = unknownVenue };
+            var known = LiveGame(server.Clock, "known") with { Venue = venue };
+            if (anotherLeague)
+            {
+                server.Feed.SetScoreboard(Nfl, unknown);
+                server.Feed.SetScoreboard("basketball/nba", known with { LeagueKey = "basketball/nba" });
+            }
+            else
+                server.Feed.SetScoreboard(Nfl, unknown, known);
+
+            await using var client = await server.ConnectClientAsync();
+            var snapshot = await client.NextSnapshotAsync();
+            var placed = Assert.Single(snapshot, g => g.Id == "known");
+            Assert.Equal((51.6, -0.1), (placed.Venue.Latitude, placed.Venue.Longitude));
+            Assert.Null(Assert.Single(snapshot, g => g.Id == "unknown").Venue.Latitude);
+            Assert.False(client.ChangePrecededSnapshot);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        }
+    }
+
     [Fact]
     public async Task Switching_source_cancels_old_fetches_before_publishing_the_new_source()
     {

@@ -47,7 +47,8 @@ public class VenuePlacementTests
         await using (var first = await server.ConnectClientAsync())
             await first.PlacedGamesAsync(2);
         await using var second = await server.ConnectClientAsync();
-        var games = await second.PlacedGamesAsync(2);
+        var games = await second.NextSnapshotAsync();
+        Assert.Equal(2, games.Count);
 
         Assert.All(games, g => Assert.Equal((51.6043, -0.0664), (g.Venue.Latitude, g.Venue.Longitude)));
         Assert.Equal(["Tottenham Hotspur Stadium, London"], server.Places.Queries);
@@ -73,7 +74,7 @@ public class VenuePlacementTests
             await using var laterRun = new ScoreMapServer(path);
             laterRun.Feed.SetScoreboard("football/nfl", LondonGame());
             await using var client = await laterRun.ConnectClientAsync();
-            var game = await client.PlacedGameAsync();
+            var game = Assert.Single(await client.NextSnapshotAsync());
 
             Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
             Assert.Empty(laterRun.Places.Queries);
@@ -95,7 +96,7 @@ public class VenuePlacementTests
         await using (var first = await server.ConnectClientAsync())
             await first.PlacedGameAsync();
         await using var second = await server.ConnectClientAsync();
-        await second.PlacedGameAsync();
+        Assert.NotNull(Assert.Single(await second.NextSnapshotAsync()).Venue.Latitude);
 
         Assert.Equal(["Tottenham Hotspur Stadium, London", "London, England"], server.Places.Queries);
     }
@@ -112,7 +113,7 @@ public class VenuePlacementTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = await client.PlacedGameAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
 
         Assert.Equal((39.9008, -75.1675), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(server.Places.Queries);
@@ -128,7 +129,7 @@ public class VenuePlacementTests
         });
 
         await using var client = await server.ConnectClientAsync();
-        var game = await client.PlacedGameAsync();
+        var game = Assert.Single(await client.NextSnapshotAsync());
 
         Assert.Equal((51.6043, -0.0664), (game.Venue.Latitude, game.Venue.Longitude));
         Assert.Empty(server.Places.Queries);

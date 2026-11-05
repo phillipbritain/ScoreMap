@@ -1,15 +1,21 @@
 import { shownBout } from './bouts'
 import type { Game } from './game'
 import { progressLine } from './progressLine'
+import { sidesTopFirst } from './sides'
 
-/** A game's full name and current progress, shared by its keyboard selection controls. */
+/**
+ * A game's full name and current progress, shared by its keyboard selection controls: two sides top first,
+ * as its card shows them (see sidesTopFirst).
+ */
 export function gameLabel(game: Game): string {
   const { contest } = game
   let name: string
   switch (contest.kind) {
-    case 'sides':
-      name = `${contest.away.fullName} ${contest.away.score ?? ''} vs ${contest.home.fullName} ${contest.home.score ?? ''}`
+    case 'sides': {
+      const [top, bottom] = sidesTopFirst(game.sport, contest)
+      name = `${top.fullName} ${top.score ?? ''} vs ${bottom.fullName} ${bottom.score ?? ''}`
       break
+    }
     case 'bouts': {
       const bout = shownBout(contest)
       name = [game.note, bout && `${bout.first.name} vs ${bout.second.name}`].filter(Boolean).join(' · ')

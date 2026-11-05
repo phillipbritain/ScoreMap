@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, type Ref, type RefObject } from 'react'
 import type { Game } from '../games/game'
+import type { RecentChanges } from '../games/recentChanges'
 import type { PickedColours } from '../settings/gameColour'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
@@ -23,8 +24,11 @@ interface GlobeProps {
   showGameCityReach: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
-  /** Whether these games came in a snapshot from the server, so they show without animating (see GlobeMap.show). */
-  fromSnapshot: boolean
+  /**
+   * What the server said changed in the games since its last snapshot, for the globe to animate, each
+   * change once (see GlobeMap.show).
+   */
+  changes: RecentChanges
   /**
    * The game whose panel is open: its pin is highlighted, and the globe lifts it clear of the panel
    * if the panel would cover it.
@@ -57,7 +61,7 @@ export interface GlobeCamera {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGameCityReach, games, fromSnapshot, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGameCityReach, games, changes, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames })
@@ -118,7 +122,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGa
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.
-  useEffect(() => globe.current?.show(games, fromSnapshot), [games, fromSnapshot])
+  useEffect(() => globe.current?.show(games, changes), [games, changes])
   useEffect(
     () => globe.current?.select(selectedGameId, panel.current?.getBoundingClientRect() ?? null),
     [selectedGameId, panel],

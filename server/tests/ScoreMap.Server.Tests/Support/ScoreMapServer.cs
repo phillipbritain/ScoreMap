@@ -146,7 +146,7 @@ public sealed class ScoreMapServer(
     /// <summary>How long GitHub gets to answer, when a test sets it.</summary>
     public TimeSpan? FeedbackTimeout { get; init; }
 
-    public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
+    public FakeTimeProvider Clock { get; init; } = new(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero));
 
     private readonly List<(string Key, string Name, string Sport, TimeSpan? PlannedLength)> _extraLeagues = [];
 

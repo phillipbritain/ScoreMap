@@ -21,15 +21,22 @@ public sealed class VenueCacheTests
     [InlineData("saved")]
     [InlineData("scenario")]
     [InlineData("saved miss")]
+    [InlineData("league")]
+    [InlineData("league miss")]
     public async Task Known_lookups_answer_while_an_unknown_search_is_held(string source)
     {
         await using var server = new ScoreMapServer();
         var json = JsonSerializer.Serialize(new Dictionary<string, Coordinates?>
         {
-            [Query] = source == "saved miss" ? null : Position,
+            [Query] = source.EndsWith("miss") ? null : Position,
             ["Kansas City"] = Position,
         }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        File.WriteAllText(source == "scenario" ? server.ScenarioVenueLocationsPath : server.SavedVenueLocationsPath, json);
+        File.WriteAllText(source switch
+        {
+            "scenario" => server.ScenarioVenueLocationsPath,
+            "league" or "league miss" => server.LeagueVenueLocationsPath,
+            _ => server.SavedVenueLocationsPath,
+        }, json);
         server.Places.Hold("Unknown");
         using var cancellation = new CancellationTokenSource();
         var locator = server.Services.GetRequiredService<VenueLocator>();
@@ -39,7 +46,7 @@ public sealed class VenueCacheTests
             Assert.False(unknown.IsCompleted);
             var known = locator.LocateAsync(new ProviderVenue(VenueName, "Kansas City", null, null), null, CancellationToken.None);
             Assert.True(known.IsCompletedSuccessfully);
-            Assert.Equal(new VenueLocation(Position, source == "saved miss" ? LocationSource.VenueCity : LocationSource.Venue), await known);
+            Assert.Equal(new VenueLocation(Position, source.EndsWith("miss") ? LocationSource.VenueCity : LocationSource.Venue), await known);
             Assert.Equal(["Unknown"], server.Places.Queries);
         }
         finally

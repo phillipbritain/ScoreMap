@@ -1,6 +1,7 @@
 import type { Game } from '../games/game'
 import type { GameChange } from '../games/gameChange'
 import { applyChange } from '../games/gameStore'
+import { noRecentChanges, recordChange, type RecentChanges } from '../games/recentChanges'
 import type { ScenarioListing } from '../scenarios/scenarioPicker'
 import { watchForSleep, type PageVisibility } from './asleep'
 
@@ -30,8 +31,11 @@ export type GamesHub = (events: GamesHubEvents, demo: boolean) => GamesHubConnec
 export interface LiveGamesState {
   /** Null until the first snapshot arrives. */
   games: Game[] | null
-  /** Whether the games are as a snapshot brought them, which the globe shows without pulses, or a change has come since. */
-  fromSnapshot: boolean
+  /**
+   * What changed in the games since the last snapshot, as the server judged it, for the globe to animate.
+   * A snapshot brings none, so the globe shows it without pulses.
+   */
+  changes: RecentChanges
   /** When ScoreMap was cut off from the server (the clock's time), until the next snapshot; null while connected. */
   cutOffSince: number | null
   /** Whether ScoreMap is waking up (see GLOSSARY.md "Asleep"): from when it's shown again until the next snapshot. */
@@ -45,7 +49,7 @@ const backoffMs = (attempt: number) => Math.min(maxRetryDelayMs, 1000 * 2 ** att
 
 export const noLiveGames: LiveGamesState = {
   games: null,
-  fromSnapshot: true,
+  changes: noRecentChanges,
   cutOffSince: null,
   waking: false,
 }
@@ -104,11 +108,11 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
 
     const connection = hub(
       {
-        snapshot: live((games) => update({ games, fromSnapshot: true, cutOffSince: null, waking: false })),
+        snapshot: live((games) => update({ games, changes: noRecentChanges, cutOffSince: null, waking: false })),
         // The snapshot always comes first; a change before it has nothing to apply to.
-        // The globe animates what changed by comparing the games it's given (see GlobeMap.show).
+        // The server's own judgement of what changed is kept for the globe to animate (see GlobeMap.show).
         change: live((change) => {
-          if (state.games) update({ games: applyChange(state.games, change), fromSnapshot: false })
+          if (state.games) update({ games: applyChange(state.games, change), changes: recordChange(state.changes, change) })
         }),
         // A switch or a change of speed made in any browser: every pill and clock follows.
         scenarioChanged: live(options.onScenarioChanged),

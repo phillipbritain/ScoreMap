@@ -21,7 +21,7 @@ namespace ScoreMap.Server.Scenarios;
 /// games: the scenario clock's speed is what makes them play faster. <see cref="GamesAt"/> takes a
 /// lock, so the poller and a newly connected browser can ask at once.
 /// </remarks>
-public sealed partial class ScenarioPlay
+public sealed class ScenarioPlay
 {
     /// <summary>How often play moves on, in scenario time.</summary>
     public static readonly TimeSpan Step = TimeSpan.FromSeconds(1);
@@ -95,19 +95,10 @@ public sealed partial class ScenarioPlay
             switch (played.Game.Status)
             {
                 case ProviderStatus.Scheduled when at >= played.Game.StartTime:
-                    played.Through = 0;
-                    if (played.PlaysItself)
-                    {
-                        PlayContest(played, at);
-                        break;
-                    }
-                    var sides = played.Game.Sides();
-                    var (home, away) = played.Sport.Start(sides.Home, sides.Away);
-                    played.Game = played.Game with { Status = ProviderStatus.InProgress, Contest = new ProviderSides(home, away) };
-                    played.Game = Position(played);
+                    Moved(played, played.Play.Start(played.Game, StepOf(played), _random), at);
                     break;
                 case ProviderStatus.InProgress:
-                    Play(played, at);
+                    Moved(played, played.Play.Step(played.Game, played.Through, StepOf(played), _random), at);
                     break;
                 case var status when (status == ProviderStatus.Final || IsDisrupted(status)) && at - played.StoppedAt >= Retention(status):
                     // Without teams free for a new game, the old one stays until some are.
@@ -117,38 +108,15 @@ public sealed partial class ScenarioPlay
         }
     }
 
-    /// <summary>
-    /// One step of a Live game: it may score, then its clock moves on, perhaps to a break or the end (in
-    /// cricket, sooner when an innings is over early).
-    /// </summary>
-    private void Play(PlayedGame played, DateTimeOffset at)
-    {
-        if (played.PlaysItself)
-        {
-            PlayContest(played, at);
-            return;
-        }
-        var sport = played.Sport;
-        var step = Step / played.League.PlannedLength;
-        var sides = played.Game.Sides();
-        var (home, away) = sport.Step(sides.Home, sides.Away, played.Through, step, _random);
-        played.Game = played.Game with { Contest = new ProviderSides(home, away) };
-        played.Through = sport.After(home, away, played.Through + step);
-        if (played.Through < 1)
-        {
-            played.Game = Position(played);
-            return;
-        }
+    /// <summary>How far one step moves a game through its planned length.</summary>
+    private static double StepOf(PlayedGame played) => Step / played.League.PlannedLength;
 
-        (home, away) = sport.Settled(home, away, _random);
-        played.Game = played.Game with
-        {
-            Contest = new ProviderSides(home, away),
-            Status = ProviderStatus.Final,
-            Period = sport.Regulation,
-            Phase = ProviderPeriodPhase.Playing,
-        };
-        played.StoppedAt = at;
+    /// <summary>A game as a step of play left it, stopped if that finished it.</summary>
+    private static void Moved(PlayedGame played, Played moved, DateTimeOffset at)
+    {
+        (played.Game, played.Through) = moved;
+        if (played.Game.Status == ProviderStatus.Final)
+            played.StoppedAt = at;
     }
 
     /// <summary>
@@ -179,12 +147,6 @@ public sealed partial class ScenarioPlay
     private static bool IsDisrupted(ProviderStatus status) =>
         status is ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled;
 
-    private static ProviderGame Position(PlayedGame played)
-    {
-        var (period, clock, phase) = played.Sport.Position(played.Through);
-        return played.Game with { Period = period, DisplayClock = clock, Phase = phase };
-    }
-
     /// <summary>
     /// A new game at a venue no game is at (if there is one), between teams in no other game showing,
     /// Upcoming and starting soon, or straight into Live. The teams of the game it is
@@ -197,7 +159,7 @@ public sealed partial class ScenarioPlay
         if (replacing.Game.Contest is not ProviderSides)
         {
             var replacementId = $"{_scenario}-play-{++_newGames}";
-            var contest = replacing.Scenario.ResetContest(replacing.Game.Contest, replacementId);
+            var contest = replacing.Scenario.Replayed(replacing.Game.Contest, replacementId);
             return new PlayedGame(replacing.Game with { Id = replacementId, Contest = contest, Status = ProviderStatus.Scheduled,
                 StartTime = at + TimeSpan.FromSeconds(30), Period = null, DisplayClock = null }, replacing.League);
         }
@@ -235,18 +197,9 @@ public sealed partial class ScenarioPlay
         var played = new PlayedGame(game.ToProviderGame(at), league) { StoppedAt = at };
         if (game.Status == ProviderStatus.Final || IsDisrupted(game.Status))
             played.StoppedAt = at - Retention(game.Status) * _random.NextDouble();
+        // Where the scenario says it stands, if it says; otherwise however far its start time puts it.
         if (game.Status == ProviderStatus.InProgress)
-        {
-            // Where the scenario says it stands, if it says; otherwise however far its start time puts it.
-            var written = game.Contest is ProviderSides && !played.PlaysItself && game.Period is { } period
-                ? played.Sport.Through(period, game.Clock, game.Phase)
-                : null;
-            played.Through = Math.Clamp(written ?? -game.StartsIn / league.PlannedLength, 0, 1);
-            if (game.Contest is ProviderField field && game.Period is { } fieldPeriod)
-                played.Through = played.Scenario.FieldThrough(field, fieldPeriod, game.Phase);
-            if (game.Contest is ProviderSides)
-                played.Game = played.PlaysItself ? played.Scenario.TakeOn(played.Game) : Position(played);
-        }
+            (played.Game, played.Through) = played.Play.TakeOn(played.Game, -game.StartsIn / league.PlannedLength);
         return played;
     }
 
@@ -257,7 +210,7 @@ public sealed partial class ScenarioPlay
             Game = game;
             League = league;
             Scenario = ScenarioSports.For(league);
-            Sport = Scenario.CreatePlay();
+            Play = Scenario.PlayFor(game.Contest);
         }
 
         public SportScenario Scenario { get; }
@@ -266,10 +219,8 @@ public sealed partial class ScenarioPlay
 
         public League League { get; }
 
-        public SportPlay Sport { get; }
-
-        /// <summary>Whether its sport's scenario moves it on itself (a field, a fight card, a tennis match), not its <see cref="Sport"/>.</summary>
-        public bool PlaysItself => Game.Contest is not ProviderSides || Scenario.PlaysSidesItself;
+        /// <summary>How it moves on, chosen by the shape of its contest.</summary>
+        public GamePlay Play { get; }
 
         /// <summary>How far through the game it is, from 0 (just started) to 1 (finished).</summary>
         public double Through { get; set; }

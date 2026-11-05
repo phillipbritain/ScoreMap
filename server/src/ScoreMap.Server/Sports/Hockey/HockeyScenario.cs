@@ -8,8 +8,6 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed class HockeyScenario(League league) : SportScenario(league)
 {
-    protected override FieldPlay Field => RacingFieldPlay.Instance;
-
     internal override SportPlay CreatePlay() => new CountdownPlay(League, new(3, [(1, 1.0)], 7, 1));
 
     protected override int Capacity => 18500;

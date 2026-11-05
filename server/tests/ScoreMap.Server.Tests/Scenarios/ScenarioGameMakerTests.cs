@@ -207,6 +207,32 @@ public sealed class ScenarioGameMakerTests
         }
     }
 
+    // Fill makes two-sided games for any league the team list supplies, whatever its sport, though the
+    // shipped list gives none of these leagues teams.
+    [Theory]
+    [InlineData("golf/pga", Sport.Golf)]
+    [InlineData("tennis/atp", Sport.Tennis)]
+    [InlineData("mma/ufc", Sport.Mma)]
+    [InlineData("racing/f1", Sport.Racing)]
+    public void A_league_supplied_with_teams_gets_two_sided_games_whatever_its_sport(string leagueKey, Sport sport)
+    {
+        var league = new League { Key = leagueKey, Name = leagueKey, Sport = sport, PlannedLength = TimeSpan.FromHours(2) };
+        var teams = new ScenarioTeamList(new Dictionary<string, IReadOnlyList<ScenarioTeam>>
+        {
+            [league.Name] = Enumerable.Range(1, 4).Select(n => new ScenarioTeam($"Side {n}", $"S{n}", null)).ToList(),
+        });
+        var maker = new ScenarioGameMaker([league], teams);
+
+        var live = maker.Make("made", At, GameStatus.Live, [], new Random(1));
+        var final = maker.Make("made", At, GameStatus.Final, [], new Random(1));
+
+        Assert.Equal(ProviderStatus.InProgress, live.Status);
+        Assert.NotNull(live.Sides.Home.Score);
+        Assert.NotNull(live.Period);
+        Assert.Equal(ProviderStatus.Final, final.Status);
+        Assert.NotNull(final.Sides.Away.Score);
+    }
+
     private static void AssertClockFits(ScenarioGame game, League league)
     {
         Assert.InRange(game.Period!.Value, 1, league.Regulation);

@@ -8,8 +8,6 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed class RacingScenario(League league) : SportScenario(league)
 {
-    protected override FieldPlay Field => RacingFieldPlay.Instance;
-
     // Preserve the existing two-sided fill behaviour; this does not add specialized fill support.
     internal override SportPlay CreatePlay() => new CountdownPlay(League, new(1.4, [(1, 1.0)], 6, null));
 

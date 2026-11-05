@@ -164,10 +164,13 @@ public sealed class ScenarioDetailsTests : IDisposable
     }
 
     [Fact]
-    public void Cricket_has_no_last_score()
+    public void Cricket_has_a_crowd_once_started_but_no_odds_or_last_score_or_key_events()
     {
         var cricket = Every(Watched(TimeSpan.FromMinutes(5))).Where(g => g.League.Sport == Sport.Cricket).ToList();
+        var started = cricket.Where(g => g.Game.Status is ProviderStatus.InProgress or ProviderStatus.Final).ToList();
 
-        Assert.All(cricket, g => Assert.Null(g.Game.LastScore));
+        Assert.Contains(started, g => g.Game.Sides().Home.Score > 0 || g.Game.Sides().Away.Score > 0);
+        Assert.All(started, g => Assert.InRange(g.Game.Attendance ?? 0, 1, 33000));
+        Assert.All(cricket, g => Assert.Equal((null, null, 0), (g.Game.Odds, g.Game.LastScore, g.Game.KeyEvents.Count)));
     }
 }

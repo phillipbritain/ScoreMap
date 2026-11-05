@@ -1,4 +1,5 @@
 using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Games;
 
 namespace ScoreMap.Server.Scenarios;
 
@@ -9,7 +10,7 @@ public static partial class ScenarioReader
     /// changes are in order within the timeline's length, and no game goes back from Final or has a
     /// score that goes down (ADR-0009).
     /// </summary>
-    private static ScenarioTimeline ReadTimeline(TimelineEntry entry, IReadOnlyList<ScenarioGame> games, string scenario, string path)
+    private static ScenarioTimeline ReadTimeline(TimelineEntry entry, IReadOnlyList<ScenarioGame> games, IReadOnlyList<League> leagues, string scenario, string path)
     {
         if (!RelativeTime.TryParse(entry.Length, out var length) || length <= TimeSpan.Zero)
             throw new ScenarioFileException(scenario, path,
@@ -24,7 +25,7 @@ public static partial class ScenarioReader
         {
             try
             {
-                var read = ReadChange(change, current, length);
+                var read = ReadChange(change, current, leagues, length);
                 if (read.At < previousAt.Time)
                     throw new InvalidDataException(
                         $"is at {change!.At}, out of order: it comes after a change at {previousAt.Text}; list changes in time order");
@@ -40,7 +41,7 @@ public static partial class ScenarioReader
         return new ScenarioTimeline(length, changes);
     }
 
-    private static ScenarioChange ReadChange(ChangeEntry? entry, Dictionary<string, ScenarioGame> games, TimeSpan length)
+    private static ScenarioChange ReadChange(ChangeEntry? entry, Dictionary<string, ScenarioGame> games, IReadOnlyList<League> leagues, TimeSpan length)
     {
         if (entry is null)
             throw new InvalidDataException("is empty");
@@ -57,6 +58,9 @@ public static partial class ScenarioReader
             throw new InvalidDataException(
                 $"has unknown game \"{entry.Game}\"; the scenario's games are {string.Join(", ", games.Keys)}");
 
+        var (sets, ending) = ReadTennis(entry.Sets, entry.EarlyEnding,
+            entry.Status is null ? game.Status : ReadStatus(entry.Status),
+            leagues.Single(league => league.Key == game.LeagueKey).Sport == Sport.Tennis);
         var change = new ScenarioChange(
             at, entry.Game,
             HomeScore: entry.Score?.Home,
@@ -65,16 +69,25 @@ public static partial class ScenarioReader
             Period: entry.Period,
             Clock: entry.Clock,
             Phase: entry.Phase is null ? null : ReadPhase(entry.Phase),
-            Contest: ReadContestChange(entry, game));
+            Contest: ReadContestChange(entry, game),
+            Sets: sets,
+            EarlyEnding: ending);
 
         if (game.Status == ProviderStatus.Final && change.Status is { } status && status != ProviderStatus.Final)
             throw new InvalidDataException(
                 $"makes \"{game.Id}\" {entry.Status} when it is already Final; a Final game can't go back");
         if (game.Contest is not ProviderSides && (change.HomeScore is not null || change.AwayScore is not null))
             throw new InvalidDataException($"gives \"{game.Id}\" a score, but it's a game among a field, which has none");
-        if (game.Contest is ProviderSides sides && (change.HomeScore < sides.Home.Score || change.AwayScore < sides.Away.Score))
-            throw new InvalidDataException(
-                $"makes a score of \"{game.Id}\" go down, from {sides.Home.Score}-{sides.Away.Score}; scores only go up");
+        if (game.Contest is ProviderSides sides)
+        {
+            var home = game.Sets.Count > 0 ? game.Sets.Count(set => set.HomeWon == true) : sides.Home.Score;
+            var away = game.Sets.Count > 0 ? game.Sets.Count(set => set.HomeWon == false) : sides.Away.Score;
+            var nextHome = sets is not null ? sets.Count(set => set.HomeWon == true) : change.HomeScore;
+            var nextAway = sets is not null ? sets.Count(set => set.HomeWon == false) : change.AwayScore;
+            if (nextHome < home || nextAway < away)
+                throw new InvalidDataException(
+                    $"makes a score of \"{game.Id}\" go down, from {home}-{away}; scores only go up");
+        }
         return change;
     }
 
@@ -82,7 +95,7 @@ public static partial class ScenarioReader
 
     private sealed record ChangeEntry(
         string? At, string? Game, ScoreEntry? Score, string? Status, int? Period, string? Clock, string? Phase,
-        List<EntrantEntry?>? Field, List<BoutEntry?>? Bouts);
+        List<EntrantEntry?>? Field, List<BoutEntry?>? Bouts, List<SetEntry?>? Sets, EarlyEndingEntry? EarlyEnding);
 
     private static ProviderContest? ReadContestChange(ChangeEntry entry, ScenarioGame game)
     {

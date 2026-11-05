@@ -12,12 +12,12 @@ import {
   type ViewerSettings,
 } from '../settings/viewerSettings'
 import type { LeagueList } from '../settings/leagues'
+import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
   scoreCardToTry,
   settingsForChoice,
-  type CardOnScreen,
   type TourChoice, type TourEvent, type TourProgress } from './welcomeTour'
 
 interface WelcomeTourScreenProps {
@@ -31,6 +31,8 @@ interface WelcomeTourScreenProps {
   onChange: (settings: ViewerSettings) => void
   /** Opens a game's panel, as clicking its score card on the globe would: Click a score card's lit card. */
   onOpenGame: (gameId: string) => void
+  /** The score cards a viewer can see now, for Click a score card to point at (see GlobeMap.shownScoreCards). */
+  scoreCards: () => ShownScoreCard[]
 }
 
 /**
@@ -39,7 +41,7 @@ interface WelcomeTourScreenProps {
  * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
  * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
   const choose = (choice: TourChoice) => {
     // My leagues applies its completed picks before making the choice.
@@ -57,6 +59,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
       {progress === 'scoreCard' && (
         <ScoreCardStep
           onDone={() => onEvent({ kind: 'done' })}
+          scoreCards={scoreCards}
           onOpenGame={(gameId) => {
             onOpenGame(gameId)
             onEvent({ kind: 'gameOpened' })
@@ -288,6 +291,7 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
 interface ScoreCardStepProps {
   onDone: () => void
   onOpenGame: (gameId: string) => void
+  scoreCards: () => ShownScoreCard[]
 }
 
 /**
@@ -295,24 +299,24 @@ interface ScoreCardStepProps {
  * lit and pressable as part of the tour; or, with none clear of the panel, an example card in it.
  * Nothing moves the globe to bring a card into view.
  */
-function ScoreCardStep({ onDone, onOpenGame }: ScoreCardStepProps) {
+function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
-  const gameId = useScoreCardToTry(panel)
-  const card = () => (gameId ? scoreCardElements(gameId) : [])
+  const toTry = useScoreCardToTry(panel, scoreCards)
+  const card = () => scoreCards().filter((shown) => shown.gameId === toTry?.gameId)
   return (
     <>
-      {gameId && (
+      {toTry && (
         <TourPointer
           panel={panel}
-          target={card}
-          aim={() => card().flatMap((element) => [...element.querySelectorAll('.score-card__team')])}
-          onTargetClick={() => onOpenGame(gameId)}
-          targetLabel={`Open ${cardName(card()[0])}`}
+          target={() => card().map((shown) => shown.element)}
+          aim={() => card().flatMap((shown) => shown.rows)}
+          onTargetClick={() => onOpenGame(toTry.gameId)}
+          targetLabel={`Open ${toTry.label}`}
         />
       )}
       <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
-        {gameId === null && (
+        {toTry === null && (
           <>
             <p className="welcome-tour__text">
               Each game shows as a score card like this one. Click one to open a panel with details for the event,
@@ -321,7 +325,7 @@ function ScoreCardStep({ onDone, onOpenGame }: ScoreCardStepProps) {
             <ExampleScoreCard />
           </>
         )}
-        {gameId && (
+        {toTry && (
           <p className="welcome-tour__text">
             Try this one: it opens a panel with details for the event, venue, last score, where to watch, and more
           </p>
@@ -331,13 +335,24 @@ function ScoreCardStep({ onDone, onOpenGame }: ScoreCardStepProps) {
   )
 }
 
+/** The score card Click a score card points at: its game, and its name as its own button gives it. */
+interface CardToTry {
+  gameId: string
+  label: string
+}
+
 /**
  * The score card for Click a score card to point at, following the cards as they're laid out: null
  * for none (the example card), undefined until the panel has been measured. Once picked, a card is
- * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards.
+ * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards; its name
+ * follows its game (a new score, say).
  */
-function useScoreCardToTry(panel: RefObject<HTMLElement | null>): string | null | undefined {
-  const [gameId, setGameId] = useState<string | null | undefined>(undefined)
+function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () => ShownScoreCard[]): CardToTry | null | undefined {
+  const [toTry, setToTry] = useState<CardToTry | null | undefined>(undefined)
+  const latest = useRef(scoreCards)
+  useEffect(() => {
+    latest.current = scoreCards
+  })
   useEffect(() => {
     let frame = 0
     const look = () => {
@@ -345,33 +360,19 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>): string | null 
       const panelBox = panel.current?.getBoundingClientRect()
       const screen = panel.current?.closest('.welcome-tour')?.getBoundingClientRect()
       if (!panelBox || !screen) return
-      const cards = scoreCardsOnScreen()
-      setGameId((current) => {
-        const kept = cards.filter((card) => card.gameId === current)
-        return scoreCardToTry(kept, panelBox, screen) ?? scoreCardToTry(cards, panelBox, screen)
+      const cards = latest.current()
+      setToTry((current) => {
+        const kept = cards.filter((card) => card.gameId === current?.gameId)
+        const gameId = scoreCardToTry(kept, panelBox, screen) ?? scoreCardToTry(cards, panelBox, screen)
+        const picked = cards.find((card) => card.gameId === gameId)
+        if (!picked) return null
+        return current?.gameId === picked.gameId && current.label === picked.label ? current : { gameId: picked.gameId, label: picked.label }
       })
     }
     look()
     return () => cancelAnimationFrame(frame)
   }, [panel])
-  return gameId
-}
-
-/** The score cards on the globe, but those whose games are counted in a card cluster (hidden). */
-function scoreCardsOnScreen(): CardOnScreen[] {
-  return [...document.querySelectorAll<HTMLElement>('.score-card[data-game-id]')]
-    .filter((element) => !element.closest('[data-in-card-cluster]'))
-    .map((element) => ({ gameId: element.dataset.gameId!, box: element.getBoundingClientRect() }))
-}
-
-function scoreCardElements(gameId: string): Element[] {
-  return [...document.querySelectorAll(`.score-card[data-game-id="${CSS.escape(gameId)}"]`)]
-}
-
-/** A card's game by its teams, "BOS at NYK", for its button's name. */
-function cardName(card: Element | undefined): string {
-  const teams = [...(card?.querySelectorAll('.score-card__abbreviation') ?? [])].map((team) => team.textContent)
-  return teams.length === 2 ? `${teams[0]} at ${teams[1]}` : 'this game'
+  return toTry
 }
 
 /** A score card drawn as the globe draws a Live one, labelled as an example. */

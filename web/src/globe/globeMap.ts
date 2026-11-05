@@ -52,7 +52,7 @@ import { pulse } from './pinPulse'
 import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
 import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
-import { ScoreCardMarkers } from './scoreCardMarkers'
+import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import { cardZoom, clusterMaxZoom, hasCard, pinLayout, pinSize, zoomSettings as builtInZoomSettings, type PinLayout, type ZoomSettings } from './zoomLevels'
 
@@ -425,6 +425,11 @@ export class GlobeMap {
     if (this.styleFailed) return 'styleError'
     if (this.wasReady) return 'ready'
     return this.hasGames ? 'drawing' : 'waitingForGames'
+  }
+
+  /** The score cards on the page now that a viewer can see, none while pins are small (see ScoreCardMarkers.shownCards). */
+  shownScoreCards(): ShownScoreCard[] {
+    return this.cards.shownCards()
   }
 
   /**

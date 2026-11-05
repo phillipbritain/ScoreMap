@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
@@ -35,13 +34,5 @@ internal sealed class TennisScenario(League league) : SportScenario(league)
 
     internal override ProviderTeam WithRecord(ProviderTeam team) => team;
     protected override string NoteText(Random random) => Pick(random, "R1", "R2", "R3", "R16", "QF", "SF", "Final");
-    internal override ProviderOdds? Odds(ProviderGame game) => null;
-    internal override int? Attendance(ProviderGame game) => null;
     internal override bool HasPlayDetails => false;
-
-    // None of these is asked for: there are no odds, crowd or last score.
-    protected override (string Line, double Total) BettingLine(Random random, ProviderTeam favourite) => throw new UnreachableException();
-    protected override int Capacity => throw new UnreachableException();
-    protected override int UsualScore => throw new UnreachableException();
-    protected override string ScoreText(int points, Random random) => throw new UnreachableException();
 }

@@ -25,7 +25,9 @@ public sealed record ScenarioChange(
     int? Period = null,
     string? Clock = null,
     ProviderPeriodPhase? Phase = null,
-    ProviderContest? Contest = null)
+    ProviderContest? Contest = null,
+    IReadOnlyList<ProviderSet>? Sets = null,
+    ProviderEarlyEnding? EarlyEnding = null)
 {
     public ScenarioGame ApplyTo(ScenarioGame game) => game with
     {
@@ -34,6 +36,8 @@ public sealed record ScenarioChange(
                 HomeScore is { } home ? sides.Home with { Score = home } : sides.Home,
                 AwayScore is { } away ? sides.Away with { Score = away } : sides.Away)
             : game.Contest),
+        Sets = Sets ?? game.Sets,
+        EarlyEnding = EarlyEnding ?? game.EarlyEnding,
         Status = Status ?? game.Status,
         Period = Period ?? game.Period,
         Clock = Clock ?? game.Clock,

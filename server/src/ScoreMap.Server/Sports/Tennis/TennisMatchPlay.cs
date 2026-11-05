@@ -20,10 +20,11 @@ internal static class TennisMatchPlay
 
     /// <summary>
     /// A match as play takes it on, with no clock and with its sets: the first time, made up (from its id)
-    /// to fit the sets each player is written as having won, then the set being played at 0-0.
+    /// to fit shorthand scores when no sets were written. A completed set is followed by a new one at 0-0.
     /// </summary>
     internal static ProviderGame TakeOn(ProviderGame game)
     {
+        game = TennisScenario.Written(game);
         var sides = game.Sides();
         var (home, away) = (sides.Home.Score ?? 0, sides.Away.Score ?? 0);
         var sets = game.Sets;
@@ -36,6 +37,8 @@ internal static class TennisMatchPlay
                 .Append(new ProviderSet(0, 0))
                 .ToList();
         }
+        if (sets[^1].HomeWon is not null)
+            sets = sets.Append(new ProviderSet(0, 0)).ToList();
         return game with
         {
             Contest = new ProviderSides(sides.Home with { Score = home }, sides.Away with { Score = away }),

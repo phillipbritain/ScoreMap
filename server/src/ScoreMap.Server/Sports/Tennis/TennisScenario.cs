@@ -25,6 +25,22 @@ internal sealed class TennisScenario(League league) : SportScenario(league)
     protected override (ProviderGame Game, double Through) PlaySides(ProviderGame game, double before, double through, Random random) =>
         TennisMatchPlay.Advance(game, League, before, through, random);
 
+    /// <summary>Explicit sets are the score; shorthand alone stays as written outside play.</summary>
+    internal static ProviderGame Written(ProviderGame game)
+    {
+        if (game.Sets.Count == 0)
+            return game.EarlyEnding is null ? game : game with { Period = game.Period ?? 1 };
+        var sides = game.Sides();
+        return game with
+        {
+            Contest = new ProviderSides(
+                sides.Home with { Score = game.Sets.Count(set => set.HomeWon == true) },
+                sides.Away with { Score = game.Sets.Count(set => set.HomeWon == false) }),
+            Period = game.Sets.Count,
+            DisplayClock = null,
+        };
+    }
+
     internal override ProviderTeam WithRecord(ProviderTeam team) => team;
     protected override string NoteText(Random random) => Pick(random, "R1", "R2", "R3", "R16", "QF", "SF", "Final");
     internal override ProviderOdds? Odds(ProviderGame game) => null;

@@ -23,6 +23,8 @@ internal sealed class SportScenarioDetails(League league, SportScenario sport)
         // A race has none of a two-sided game's detail; ESPN gives it none either.
         if (game.Contest is not ProviderSides)
             return game;
+        if (sport is TennisScenario)
+            game = TennisScenario.Written(game);
         var sides = game.Sides();
         var started = sides.Home.Score is not null || sides.Away.Score is not null;
         game = game with

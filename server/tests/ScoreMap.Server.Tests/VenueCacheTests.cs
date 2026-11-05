@@ -17,6 +17,38 @@ public sealed class VenueCacheTests
     private static readonly Coordinates Position = new(39.0489, -94.4839);
     private static readonly VenuePhoto Photo = new("https://photos.test/arrowhead.jpg", null);
 
+    [Theory]
+    [InlineData("saved")]
+    [InlineData("scenario")]
+    [InlineData("saved miss")]
+    public async Task Known_lookups_answer_while_an_unknown_search_is_held(string source)
+    {
+        await using var server = new ScoreMapServer();
+        var json = JsonSerializer.Serialize(new Dictionary<string, Coordinates?>
+        {
+            [Query] = source == "saved miss" ? null : Position,
+            ["Kansas City"] = Position,
+        }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        File.WriteAllText(source == "scenario" ? server.ScenarioVenueLocationsPath : server.SavedVenueLocationsPath, json);
+        server.Places.Hold("Unknown");
+        using var cancellation = new CancellationTokenSource();
+        var locator = server.Services.GetRequiredService<VenueLocator>();
+        var unknown = locator.LocateAsync(new ProviderVenue("Unknown", null, null, null), null, cancellation.Token);
+        try
+        {
+            Assert.False(unknown.IsCompleted);
+            var known = locator.LocateAsync(new ProviderVenue(VenueName, "Kansas City", null, null), null, CancellationToken.None);
+            Assert.True(known.IsCompletedSuccessfully);
+            Assert.Equal(new VenueLocation(Position, source == "saved miss" ? LocationSource.VenueCity : LocationSource.Venue), await known);
+            Assert.Equal(["Unknown"], server.Places.Queries);
+        }
+        finally
+        {
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => unknown);
+        }
+    }
+
     [Fact]
     public async Task Unreadable_cache_paths_and_failed_replacements_do_not_stop_game_updates()
     {

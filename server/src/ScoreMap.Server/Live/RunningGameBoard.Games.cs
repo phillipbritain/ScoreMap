@@ -64,7 +64,7 @@ public sealed partial class RunningGameBoard
                 var endTime = status == GameStatus.Final ? stoppedAt : null;
                 var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
-                var location = venues.Fallback(game.Venue);
+                var location = venues.Fallback(game.Venue, (game.Contest as ProviderSides)?.Home);
                 if (location.FoundBy == LocationSource.Nowhere && previousGame is not null && SameVenue(previous, game)
                     && previousGame.Venue is { Latitude: { } latitude, Longitude: { } longitude })
                     location = new(new Coordinates(latitude, longitude), LocationSource.Venue);

@@ -1,5 +1,6 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Sports.Shared;
 using static ScoreMap.Server.Sports.Shared.ScenarioFabrication;
 
@@ -9,20 +10,38 @@ namespace ScoreMap.Server.Sports;
 /// A tennis match under scenario play, game by game, as the feed reports a live one: its score is the
 /// sets each player has won, its period the set being played, and its sets the games in each; it has
 /// no game clock. The server holds three games in four; a set goes to the first to 6 games by 2 clear,
-/// or 7-6 after a tiebreak at 6-6; the match to the first to win most of its sets (2 of 3).
+/// or 7-6 after a tiebreak at 6-6; the match to the first to win most of its sets (2 of 3). A match made
+/// up for a tennis league the team list supplies is scored as a generic countdown game.
 /// </summary>
-internal static class TennisMatchPlay
+internal sealed class TennisMatchPlay(League league) : SidesPlay
 {
+    private readonly CountdownPlay _madeUp = new(league, new(1.4, [(1, 1.0)], 6, null));
+
     private const double HoldChance = 0.75;
 
     /// <summary>About how many games a match has for each set it can last: a best of three about 24 in its planned length.</summary>
     private const int GamesPerSet = 8;
 
+    internal override Played TakeOn(ProviderGame game, double sinceStart) => new(Taken(game), Math.Clamp(sinceStart, 0, 1));
+
+    internal override Played Start(ProviderGame game, double step, Random random) => Step(game, 0, step, random);
+
+    internal override Played Step(ProviderGame game, double through, double step, Random random)
+    {
+        var (moved, after) = Advance(game with { Status = ProviderStatus.InProgress }, through, Math.Min(1, through + step), random);
+        return new(moved, after);
+    }
+
+    internal override MadeUp Live(ProviderTeam home, ProviderTeam away, double through, Random random) =>
+        _madeUp.Live(home, away, through, random);
+
+    internal override MadeUp Final(ProviderTeam home, ProviderTeam away, Random random) => _madeUp.Final(home, away, random);
+
     /// <summary>
     /// A match as play takes it on, with no clock and with its sets: the first time, made up (from its id)
     /// to fit shorthand scores when no sets were written. A completed set is followed by a new one at 0-0.
     /// </summary>
-    internal static ProviderGame TakeOn(ProviderGame game)
+    private static ProviderGame Taken(ProviderGame game)
     {
         game = TennisScenario.Written(game);
         var sides = game.Sides();
@@ -54,10 +73,9 @@ internal static class TennisMatchPlay
     /// length, perhaps by a game. It is Final once a player has won most of its sets, and never before,
     /// however long it runs.
     /// </summary>
-    internal static (ProviderGame Game, double Through) Advance(
-        ProviderGame game, League league, double before, double through, Random random)
+    private (ProviderGame Game, double Through) Advance(ProviderGame game, double before, double through, Random random)
     {
-        game = TakeOn(game);
+        game = Taken(game);
         if (random.NextDouble() >= GamesPerSet * league.Regulation * (through - before))
             return (game, Math.Min(through, 0.99));
 

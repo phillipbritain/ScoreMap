@@ -8,5 +8,6 @@ namespace ScoreMap.Server.Sports;
 internal abstract partial class SportScenario(League league)
 {
     protected League League { get; } = league;
-    internal abstract SportPlay CreatePlay();
+    /// <summary>Play for this sport's two-sided games, written or made up.</summary>
+    internal abstract SidesPlay CreatePlay();
 }

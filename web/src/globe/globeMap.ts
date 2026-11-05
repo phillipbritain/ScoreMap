@@ -12,6 +12,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
+import { changeSince, lastNumber, noRecentChanges, type RecentChanges } from '../games/recentChanges'
 import { gameColour, type PickedColours } from '../settings/gameColour'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
@@ -133,10 +134,12 @@ export class GlobeMap {
   private readonly onCameraMove: (camera: Camera) => void
   private readonly onStage: (stage: LoadingStage) => void
   /**
-   * The games as the globe last showed them, which tells what has changed in the next ones: only
-   * those whose venues are placed (see placedGames), so a game coming into place appears at its venue.
+   * The games as the globe last showed them, which tells which of the next ones were shown both times:
+   * only those whose venues are placed (see placedGames), so a game coming into place appears at its venue.
    */
   private shown = new Map<string, PlacedGame>()
+  /** The number of the latest change from the server the globe has played (see show), so none plays twice. */
+  private changesPlayed = 0
   /** The pins last given to the pin source, so it's reloaded only when they change. */
   private pinsKey = ''
   /** The pins last given to the outer pin source, likewise. */
@@ -241,11 +244,12 @@ export class GlobeMap {
   }
 
   /**
-   * Shows these games, and animates the ones that changed since they were last shown (see
-   * pinAnimation): the app hands over whole lists of games, so the globe finds what changed itself.
-   * Only a game shown both times can animate. A game coming into view (a new game, or one the
-   * viewer's settings showed again) appears without one. Given quietly (games from a snapshot, after
-   * ScoreMap was asleep or cut off), nothing animates: what changed while it was away didn't just happen.
+   * Shows these games, and animates the ones the server said changed (see pinAnimation), each change
+   * once: a change already played doesn't play again when the games are shown again, say for the
+   * viewer's settings. Only a game shown both times can animate. A game coming into view (a new game,
+   * one newly placed, or one the viewer's settings showed again) appears without one. Given no changes
+   * (games from a snapshot, after ScoreMap was asleep or cut off), nothing animates: what changed while
+   * it was away didn't just happen.
    *
    * Given null (no games yet: the server's first snapshot hasn't arrived), it shows nothing and keeps
    * waiting for games (see stage). An empty list is a snapshot with no games in it.
@@ -253,7 +257,7 @@ export class GlobeMap {
    * A game whose venue isn't placed (its lookup pending, or found nothing) is left off the globe
    * altogether: no pin, card, name or ring. Once placed, it comes into view at its venue.
    */
-  show(games: readonly Game[] | null, quietly = false): void {
+  show(games: readonly Game[] | null, changes: RecentChanges = noRecentChanges): void {
     if (!games) return
     this.hasGames = true
     this.tellStage()
@@ -266,10 +270,11 @@ export class GlobeMap {
     this.names.showGames(placed)
     if (this.reachShown) this.showReachRings()
     this.cards.setGames(placed)
-    if (quietly) return
+    const played = this.changesPlayed
+    this.changesPlayed = Math.max(played, lastNumber(changes))
     for (const game of placed) {
-      const last = before.get(game.id)
-      const animation = last && pinAnimation(last, game)
+      const kind = before.has(game.id) ? changeSince(changes, game.id, played) : null
+      const animation = kind && pinAnimation(kind, game)
       if (animation) void this.animate(game, animation)
     }
   }

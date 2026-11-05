@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
+import type { GameChangeKind } from '../games/gameChange'
+import { noRecentChanges, recordChange, type RecentChanges } from '../games/recentChanges'
 import type { PlacedGame } from '../games/placedGames'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
@@ -973,16 +975,31 @@ describe('place names', () => {
 })
 
 describe('animations', () => {
+  /** What the server said changed in these games, as the live connection keeps it. */
+  const changed = (kind: GameChangeKind, ...games: Game[]): RecentChanges =>
+    games.reduce((changes, g) => recordChange(changes, { kind, game: g }), noRecentChanges)
+
+  /** Every pin pulse that starts from now, kept even after it has played and removed itself. */
+  const watchPulses = () => {
+    const pulses = new Set<Element>()
+    const watching = new MutationObserver(() => container.querySelectorAll('.pin-pulse').forEach((pulse) => pulses.add(pulse)))
+    watching.observe(container, { childList: true, subtree: true })
+    return { pulses, stop: () => watching.disconnect() }
+  }
+
   it.each([
-    ['score', game('A', { home: '0' }), game('A', { home: '7' })],
-    ['start', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: '0' })],
-    ['finish', game('A', { home: '21' }), game('A', { status: 'Final', home: '21' })],
-  ] as const)('plays %s on a game’s score card', async (animation, before, after) => {
+    ['score', 'ScoreChanged', 'Live', game('A', { home: '0' }), game('A', { home: '7' })],
+    ['start', 'Started', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: '0' })],
+    ['finish', 'Finished', 'Live', game('A', { home: '21' }), game('A', { status: 'Final', home: '21' })],
+    // The server judges any game reaching Final as finishing, not only a live one.
+    ['finish', 'Finished', 'Disrupted', game('A', { status: 'Disrupted', home: '21' }), game('A', { status: 'Final', home: '21' })],
+    ['finish', 'Finished', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { status: 'Final', home: null, away: null })],
+  ] as const)('plays %s on a game’s score card, for %s from %s', async (animation, kind, _from, before, after) => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show([before])
     await cardShown('A')
 
-    globe.show([after])
+    globe.show([after], changed(kind, after))
 
     await vi.waitFor(() => expect(card('A')!.classList).toContain(`score-card--animate-${animation}`))
   })
@@ -992,7 +1009,7 @@ describe('animations', () => {
     globe.show([game('A', { home: '0' })])
     await pinsDrawn(map, smallPinLayer, game('A'))
 
-    globe.show([game('A', { home: '7' })])
+    globe.show([game('A', { home: '7' })], changed('ScoreChanged', game('A')))
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--pin.pin-pulse--score')).not.toBeNull())
   })
@@ -1002,7 +1019,7 @@ describe('animations', () => {
     globe.show([game('A', { home: '0' }), game('B')])
     await pinsDrawn(map, pinClusterLayer, game('A'))
 
-    globe.show([game('A', { home: '7' }), game('B')])
+    globe.show([game('A', { home: '7' }), game('B')], changed('ScoreChanged', game('A')))
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--cluster.pin-pulse--score')).not.toBeNull())
   })
@@ -1014,15 +1031,13 @@ describe('animations', () => {
     const near = game('NEAR', { home: '0' })
     globe.show([near, game('FAR', { longitude: 90, home: '0' })])
     await pinsDrawn(map, smallPinLayer, near)
-    const pulses: Element[] = []
-    const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
-    watching.observe(container, { childList: true, subtree: true })
+    const watching = watchPulses()
 
-    globe.show([near, game('FAR', { longitude: 90, home: '7' })])
+    globe.show([near, game('FAR', { longitude: 90, home: '7' })], changed('ScoreChanged', game('FAR')))
     await pause(500)
-    watching.disconnect()
+    watching.stop()
 
-    expect(pulses).toEqual([])
+    expect([...watching.pulses]).toEqual([])
   })
 
   it('does not animate a change the globe did not show, while the game was hidden', async () => {
@@ -1030,20 +1045,49 @@ describe('animations', () => {
     const other = game('B', { longitude: 40 })
     globe.show([game('A', { home: '0' }), other])
     await pinsDrawn(map, smallPinLayer, game('A'), other)
-    // Every pulse that starts, kept even after it has played and removed itself.
-    const pulses: Element[] = []
-    const watching = new MutationObserver(() => pulses.push(...container.querySelectorAll('.pin-pulse')))
-    watching.observe(container, { childList: true, subtree: true })
+    const watching = watchPulses()
 
-    // Hidden by the viewer's settings, then shown again with a new score. Straight after, so the map
-    // still has its pin and could animate it: only what the globe last showed rules it out.
-    globe.show([other])
-    globe.show([game('A', { home: '7' }), other])
+    // Hidden by the viewer's settings as its score changes, then shown again. Straight after, so the
+    // map still has its pin and could animate it: only what the globe last showed rules it out.
+    const changes = changed('ScoreChanged', game('A'))
+    globe.show([other], changes)
+    globe.show([game('A', { home: '7' }), other], changes)
     await pinsDrawn(map, smallPinLayer, game('A'))
     await pause(500)
-    watching.disconnect()
+    watching.stop()
 
-    expect(pulses).toEqual([])
+    expect([...watching.pulses]).toEqual([])
+  })
+
+  it('does not animate games shown without changes, as a snapshot brings them', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    globe.show([game('A', { status: 'Upcoming', home: null, away: null })])
+    await pinsDrawn(map, smallPinLayer, game('A'))
+    const watching = watchPulses()
+
+    globe.show([game('A', { status: 'Final', home: '7' })])
+    await pause(500)
+    watching.stop()
+
+    expect([...watching.pulses]).toEqual([])
+  })
+
+  it('plays a change once, however often the games are shown again (a redraw for the viewer’s settings)', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const other = game('B', { longitude: 40 })
+    globe.show([game('A', { home: '0' }), other])
+    await pinsDrawn(map, smallPinLayer, game('A'), other)
+    const watching = watchPulses()
+
+    const changes = changed('ScoreChanged', game('A'))
+    globe.show([game('A', { home: '7' }), other], changes)
+    await vi.waitFor(() => expect(watching.pulses.size).toBe(1))
+    globe.show([game('A', { home: '7' })], changes)
+    globe.show([game('A', { home: '7' }), other], changes)
+    await pause(500)
+    watching.stop()
+
+    expect(watching.pulses.size).toBe(1)
   })
 
   it('does not animate a change that only redraws the game', async () => {
@@ -1051,7 +1095,7 @@ describe('animations', () => {
     globe.show([game('A', { clock: '12:00' })])
     await cardShown('A')
 
-    globe.show([game('A', { clock: '11:42' })])
+    globe.show([game('A', { clock: '11:42' })], changed('Updated', game('A')))
     await vi.waitFor(() => expect(card('A')!.textContent).toContain('11:42'))
     await pause(300)
 

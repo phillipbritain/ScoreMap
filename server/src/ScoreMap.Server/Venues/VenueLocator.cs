@@ -39,6 +39,7 @@ public sealed class VenueLocator
     private readonly VenueCorrections _corrections;
     private readonly string _scenarioLocationsPath;
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly Lock _knownLock = new();
     private Dictionary<string, Coordinates?>? _saved;
     private Dictionary<string, Coordinates>? _scenarioLocations;
 
@@ -52,11 +53,25 @@ public sealed class VenueLocator
         _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
-    /// <summary>The immediate position while a lookup is pending: corrections, given coordinates, or 0,0.</summary>
-    public VenueLocation Fallback(ProviderVenue? venue) =>
-        _corrections.Find(venue?.Name) is { } corrected ? new(corrected, LocationSource.Correction) :
-        venue?.Location is { } given ? new(given, LocationSource.Given) :
-        new(new Coordinates(0, 0), LocationSource.Nowhere);
+    /// <summary>
+    /// The position already known, including saved misses along the fallback chain, or 0,0 while
+    /// a search is needed. Never waits for a search or a save.
+    /// </summary>
+    public VenueLocation Fallback(ProviderVenue? venue, ProviderTeam? home)
+    {
+        if (_corrections.Find(venue?.Name) is { } corrected)
+            return new(corrected, LocationSource.Correction);
+        if (venue?.Location is { } given)
+            return new(given, LocationSource.Given);
+        foreach (var (query, source) in Queries(venue, home))
+        {
+            if (!TryKnown(query, out var known))
+                break;
+            if (known is not null)
+                return new(known, source);
+        }
+        return new(new Coordinates(0, 0), LocationSource.Nowhere);
+    }
 
     /// <summary>
     /// Where a game's pin goes, trying in order: the corrections file, the position given with the venue,
@@ -68,29 +83,30 @@ public sealed class VenueLocator
     /// </summary>
     public async Task<VenueLocation> LocateAsync(ProviderVenue? venue, ProviderTeam? home, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         if (_corrections.Find(venue?.Name) is { } corrected)
             return new(corrected, LocationSource.Correction);
 
         if (venue?.Location is { } given)
             return new(given, LocationSource.Given);
 
-        if (!string.IsNullOrWhiteSpace(venue?.Name))
-        {
-            if (await LookUpAsync(VenueQuery(venue), cancellationToken) is { } found)
-                return new(found, LocationSource.Venue);
-        }
-
-        if (!string.IsNullOrWhiteSpace(venue?.City)
-            && await LookUpAsync(PlaceQuery(venue.City, venue.Region, venue.Country), cancellationToken) is { } city)
-            return new(city, LocationSource.VenueCity);
-
-        if (home?.HomeCity is { } homeCity && !string.IsNullOrWhiteSpace(homeCity.Name)
-            && await LookUpAsync(PlaceQuery(homeCity.Name, homeCity.Region, homeCity.Country), cancellationToken) is { } homeTown)
-            return new(homeTown, LocationSource.HomeTeamCity);
+        foreach (var (query, source) in Queries(venue, home))
+            if (await LookUpAsync(query, cancellationToken) is { } found)
+                return new(found, source);
 
         _logger.LogWarning("No position found for venue {Venue} or home team {Team}; pinning at 0,0",
             venue?.Name, home?.FullName);
         return new(new Coordinates(0, 0), LocationSource.Nowhere);
+    }
+
+    private static IEnumerable<(string Query, LocationSource Source)> Queries(ProviderVenue? venue, ProviderTeam? home)
+    {
+        if (!string.IsNullOrWhiteSpace(venue?.Name))
+            yield return (VenueQuery(venue), LocationSource.Venue);
+        if (!string.IsNullOrWhiteSpace(venue?.City))
+            yield return (PlaceQuery(venue.City, venue.Region, venue.Country), LocationSource.VenueCity);
+        if (home?.HomeCity is { } homeCity && !string.IsNullOrWhiteSpace(homeCity.Name))
+            yield return (PlaceQuery(homeCity.Name, homeCity.Region, homeCity.Country), LocationSource.HomeTeamCity);
     }
 
     /// <summary>The place-search query for a venue by name: "Name, City", or just the name when the city is missing.</summary>
@@ -108,17 +124,16 @@ public sealed class VenueLocator
     /// </summary>
     private async Task<Coordinates?> LookUpAsync(string query, CancellationToken cancellationToken)
     {
-        // One lookup at a time, so concurrent snapshots never repeat a query.
+        cancellationToken.ThrowIfCancellationRequested();
+        if (TryKnown(query, out var known))
+            return known;
+
+        // Only unknown searches and saves wait; recheck after waiting to avoid duplicate queries.
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            _scenarioLocations ??= await LoadScenarioLocationsAsync(cancellationToken);
-            if (_scenarioLocations.TryGetValue(query, out var checkedIn))
-                return checkedIn;
-
-            _saved ??= await LoadAsync(cancellationToken);
-            if (_saved.TryGetValue(query, out var saved))
-                return saved;
+            if (TryKnown(query, out known))
+                return known;
 
             Coordinates? found;
             try
@@ -132,8 +147,9 @@ public sealed class VenueLocator
                 return null;
             }
 
-            _saved[query] = found;
-            await SaveAsync(_saved, cancellationToken);
+            lock (_knownLock)
+                _saved![query] = found;
+            await SaveAsync(_saved!, cancellationToken);
             return found;
         }
         finally
@@ -142,17 +158,28 @@ public sealed class VenueLocator
         }
     }
 
-    private async Task<Dictionary<string, Coordinates?>> LoadAsync(CancellationToken cancellationToken) =>
-        await VenueCache.ReadAsync<Dictionary<string, Coordinates?>>(_savedLocationsPath, Json, _logger, cancellationToken)
-        ?? new Dictionary<string, Coordinates?>();
+    private bool TryKnown(string query, out Coordinates? found)
+    {
+        // This lock protects local data only: no search or save can hold up a cache hit.
+        lock (_knownLock)
+        {
+            _scenarioLocations ??= LoadScenarioLocations();
+            if (_scenarioLocations.TryGetValue(query, out var checkedIn))
+            {
+                found = checkedIn;
+                return true;
+            }
+            _saved ??= VenueCache.Read<Dictionary<string, Coordinates?>>(_savedLocationsPath, Json, _logger) ?? [];
+            return _saved.TryGetValue(query, out found);
+        }
+    }
 
-    private async Task<Dictionary<string, Coordinates>> LoadScenarioLocationsAsync(CancellationToken cancellationToken)
+    private Dictionary<string, Coordinates> LoadScenarioLocations()
     {
         if (!File.Exists(_scenarioLocationsPath))
-            return new Dictionary<string, Coordinates>();
-        await using var file = File.OpenRead(_scenarioLocationsPath);
-        return await JsonSerializer.DeserializeAsync<Dictionary<string, Coordinates>>(file, Json, cancellationToken)
-            ?? new Dictionary<string, Coordinates>();
+            return [];
+        using var file = File.OpenRead(_scenarioLocationsPath);
+        return JsonSerializer.Deserialize<Dictionary<string, Coordinates>>(file, Json) ?? [];
     }
 
     private Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken) =>

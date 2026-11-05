@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
@@ -64,6 +65,157 @@ public sealed class TennisScenarioTests : IDisposable
         Assert.Null(match.Attendance);
         Assert.Null(match.LastScore);
         Assert.Empty(match.KeyEvents);
+    }
+
+    private const string WrittenSets = """
+        , "sets": [ { "home": 7, "away": 6, "homeTiebreak": 7, "awayTiebreak": 4, "homeWon": true },
+                    { "home": 2, "away": 3 } ]
+        """;
+
+    [Fact]
+    public async Task A_standing_live_match_delivers_its_written_sets()
+    {
+        var match = await ReceivedAsync(SinnerAlcaraz(false).Replace("\"period\": 2", "\"period\": 2" + WrittenSets));
+
+        Assert.Equal("2nd set · 2–3", match.Clock);
+        var scoreline = Assert.IsType<GameScoreline>(match.Scoreline);
+        Assert.Equal([new GameSet("1st", "7-6(4)", "J. Sinner"), new GameSet("2nd", "2-3", null)], scoreline.Sets);
+    }
+
+    [Theory]
+    [InlineData("retired", "ret.", "Ret.")]
+    [InlineData("walkover", "W/O", "W/O")]
+    public async Task A_final_match_delivers_its_written_early_ending(string reason, string ending, string clock)
+    {
+        var written = SinnerAlcaraz(false).Replace("\"status\": \"live\"", "\"status\": \"final\"")
+            .Replace("\"period\": 2", "\"period\": 2" + (reason == "retired" ? WrittenSets : "")
+                + $$""", "earlyEnding": { "reason": "{{reason}}", "winner": "C. Alcaraz" }""");
+        var match = await ReceivedAsync(written);
+
+        var scoreline = Assert.IsType<GameScoreline>(match.Scoreline);
+        Assert.Equal((ending, "C. Alcaraz"), (scoreline.Ending, scoreline.Advanced));
+        Assert.Equal(clock, match.Clock);
+        Assert.Equal(reason == "retired" ? 2 : 0, scoreline.Sets.Count);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Written_sets_supply_the_score_and_current_set_when_play_begins_or_stands_still(bool play)
+    {
+        var written = SinnerAlcaraz(play).Replace("\"score\": 1", "\"score\": 0")
+            .Replace("\"period\": 2", "\"period\": 1" + WrittenSets);
+        var match = await ReceivedAsync(written);
+
+        Assert.Equal(("1", "0"), (match.Sides().Home.Score, match.Sides().Away.Score));
+        Assert.Equal("2nd set · 2–3", match.Clock);
+        Assert.Equal(["7-6(4)", "2-3"], Assert.IsType<GameScoreline>(match.Scoreline).Sets.Select(set => set.Score));
+    }
+
+    [Fact]
+    public async Task A_timeline_replaces_the_written_sets_and_can_end_in_retirement()
+    {
+        var written = SinnerAlcaraz(false).Replace("\"period\": 2", "\"period\": 2" + WrittenSets)
+            .TrimEnd().TrimEnd('}') + """
+            , "timeline": { "length": "1m", "changes": [
+              { "at": "10s", "game": "sinner-alcaraz", "status": "final",
+                "sets": [ { "home": 7, "away": 6, "homeTiebreak": 7, "awayTiebreak": 4, "homeWon": true },
+                          { "home": 2, "away": 4 } ],
+                "earlyEnding": { "reason": "retired", "winner": "J. Sinner" } }
+            ] } }
+            """;
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), written);
+        var scenario = ScenarioReader.Read(_folder, "sample", [Atp], []);
+        var clock = new FakeTimeProvider(StartedAt);
+        var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp]);
+
+        var before = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        Assert.Equal(new ProviderSet(2, 3), before.Sets[1]);
+        clock.Advance(TimeSpan.FromSeconds(10));
+        var after = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        Assert.Equal(ProviderStatus.Final, after.Status);
+        Assert.Equal([new ProviderSet(7, 6, 7, 4, true), new ProviderSet(2, 4)], after.Sets);
+        Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, "J. Sinner"), after.EarlyEnding);
+        clock.Advance(TimeSpan.FromSeconds(50));
+        var loop = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        Assert.Equal("sinner-alcaraz-loop2", loop.Id);
+        Assert.Equal(before.Sets, loop.Sets);
+        Assert.Null(loop.EarlyEnding);
+    }
+
+    [Fact]
+    public async Task Play_begins_the_next_set_without_replacing_a_written_completed_set()
+    {
+        var written = SinnerAlcaraz(true).Replace("\"period\": 2", """
+            "period": 1, "sets": [ { "home": 6, "away": 4, "homeWon": true } ]
+            """);
+        var match = await ReceivedAsync(written);
+
+        Assert.Equal("2nd set · 0–0", match.Clock);
+        Assert.Equal([new GameSet("1st", "6-4", "J. Sinner"), new GameSet("2nd", "0-0", null)],
+            Assert.IsType<GameScoreline>(match.Scoreline).Sets);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task An_upcoming_match_has_no_made_up_score_or_sets(bool play)
+    {
+        var written = SinnerAlcaraz(play).Replace("\"status\": \"live\"", "\"status\": \"upcoming\"")
+            .Replace("\"startsIn\": \"-1h\"", "\"startsIn\": \"1h\"")
+            .Replace("\"score\": 1", "\"score\": null").Replace("\"score\": 0", "\"score\": null")
+            .Replace(", \"period\": 2", "");
+        var match = await ReceivedAsync(written);
+
+        Assert.Equal((null, null), (match.Sides().Home.Score, match.Sides().Away.Score));
+        Assert.Null(match.Scoreline);
+        Assert.Null(match.Clock);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_final_match_keeps_just_its_completed_written_sets(bool play)
+    {
+        var written = SinnerAlcaraz(play).Replace("\"status\": \"live\"", "\"status\": \"final\"")
+            .Replace("\"period\": 2", """
+                "period": 2, "sets": [ { "home": 6, "away": 4, "homeWon": true },
+                                       { "home": 7, "away": 5, "homeWon": true } ]
+                """);
+        var match = await ReceivedAsync(written);
+
+        Assert.Equal("Final", match.Clock);
+        Assert.Equal(("2", "0"), (match.Sides().Home.Score, match.Sides().Away.Score));
+        Assert.Equal([new GameSet("1st", "6-4", "J. Sinner"), new GameSet("2nd", "7-5", "J. Sinner")],
+            Assert.IsType<GameScoreline>(match.Scoreline).Sets);
+    }
+
+    [Fact]
+    public async Task A_suspended_match_keeps_its_last_written_set_without_starting_another()
+    {
+        var written = SinnerAlcaraz(true).Replace("\"status\": \"live\"", "\"status\": \"suspended\"")
+            .Replace("\"period\": 2", """
+                "period": 1, "sets": [ { "home": 6, "away": 4, "homeWon": true } ]
+                """);
+        var match = await ReceivedAsync(written);
+
+        Assert.Equal(new GameSet("1st", "6-4", "J. Sinner"), Assert.Single(Assert.IsType<GameScoreline>(match.Scoreline).Sets));
+    }
+
+    [Fact]
+    public async Task Playing_forward_keeps_the_completed_written_sets()
+    {
+        File.WriteAllText(Path.Combine(_folder, "sample.json"),
+            SinnerAlcaraz(true).Replace("\"period\": 2", "\"period\": 2" + WrittenSets));
+        var scenario = ScenarioReader.Read(_folder, "sample", [Atp, Nhl], ScenarioPlayTests.Venues, NhlTeams);
+        var clock = new FakeTimeProvider(StartedAt);
+        var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp, Nhl]);
+        clock.Advance(TimeSpan.FromMinutes(30));
+
+        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+
+        Assert.Equal(new ProviderSet(7, 6, 7, 4, true), match.Sets[0]);
+        Assert.True(match.Sets.Sum(set => set.Home + set.Away) > 18);
     }
 
     [Fact]

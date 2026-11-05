@@ -72,6 +72,10 @@ public sealed record ScenarioGame(
     int? Period,
     ProviderPeriodPhase Phase)
 {
+    public IReadOnlyList<ProviderSet> Sets { get; init; } = [];
+
+    public ProviderEarlyEnding? EarlyEnding { get; init; }
+
     public ProviderSituation? Situation { get; init; }
 
     /// <summary>A race's or a fight card's name, as the feed gives it for one (see <see cref="ProviderGame.Note"/>); null for any other game.</summary>
@@ -93,6 +97,8 @@ public sealed record ScenarioGame(
         Broadcasters: [],
         Phase: Phase)
     {
+        Sets = Sets,
+        EarlyEnding = EarlyEnding,
         Situation = Situation,
         Note = Note,
     };

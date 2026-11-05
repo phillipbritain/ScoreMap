@@ -14,13 +14,13 @@ internal sealed class CricketPlay(League league) : SegmentPlay(league,
     private const double WicketChance = 0.05;
     private static readonly (int Points, double Chance)[] RunsOffABall = [(0, 0.35), (1, 0.38), (2, 0.08), (4, 0.12), (6, 0.07)];
 
-    public override (ProviderTeam Home, ProviderTeam Away) Start(ProviderTeam home, ProviderTeam away) =>
+    protected override (ProviderTeam Home, ProviderTeam Away) StartScores(ProviderTeam home, ProviderTeam away) =>
         (home with { Score = null, Innings = null }, InToBat(away, target: null));
 
-    public override (ProviderTeam Home, ProviderTeam Away) Step(ProviderTeam home, ProviderTeam away, double through, double step, Random random) =>
+    protected override (ProviderTeam Home, ProviderTeam Away) StepScores(ProviderTeam home, ProviderTeam away, double through, double step, Random random) =>
         Bowl(home, away, through + step, random, mayFinish: true);
 
-    public override double After(ProviderTeam home, ProviderTeam away, double through)
+    protected override double After(ProviderTeam home, ProviderTeam away, double through)
     {
         var (segment, _) = SegmentAt(through);
         if (!segment.Playing)
@@ -31,10 +31,10 @@ internal sealed class CricketPlay(League league) : SegmentPlay(league,
         return segment.Period == 2 ? 1 : Math.Max(through, Through(1, null, ProviderPeriodPhase.Break) ?? through);
     }
 
-    public override (ProviderTeam Home, ProviderTeam Away, double Through) PlayTo(
+    protected override (ProviderTeam Home, ProviderTeam Away, double Through) PlayTo(
         ProviderTeam home, ProviderTeam away, double through, Random random, bool mayFinish)
     {
-        (home, away) = Start(home, away);
+        (home, away) = StartScores(home, away);
         var step = 1 / PlannedMinutes;
         var at = 0.0;
         while (at < through)

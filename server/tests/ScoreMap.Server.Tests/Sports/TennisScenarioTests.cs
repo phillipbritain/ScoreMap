@@ -281,4 +281,26 @@ public sealed class TennisScenarioTests : IDisposable
         Assert.InRange(final.Sides().Home.Score!.Value + final.Sides().Away.Score!.Value, 2, 3);
         Assert.All(final.Sets, set => Assert.NotNull(set.HomeWon));
     }
+
+    [Fact]
+    public void A_made_up_live_match_under_play_shows_its_sets()
+    {
+        var teams = new ScenarioTeamList(new Dictionary<string, IReadOnlyList<ScenarioTeam>>
+        {
+            ["ATP"] = [new("Jannik Sinner", "J. Sinner", null), new("Carlos Alcaraz", "C. Alcaraz", null)],
+        });
+        var maker = new ScenarioGameMaker([Atp], teams);
+        var venue = ScenarioPlayTests.Venues[0];
+        var made = maker.Make("made", venue, GameStatus.Live, [], new Random(1));
+        var play = new ScenarioPlay(new Scenario("sample", [made],
+            Play: new PlaySettings([Atp], [venue], maker, 0, new HashSet<string> { "made" })), StartedAt, new Random(1));
+
+        var match = Assert.Single(play.GamesAt(StartedAt));
+
+        Assert.Null(match.DisplayClock);
+        Assert.NotEmpty(match.Sets);
+        Assert.Equal(match.Sets.Count, match.Period);
+        Assert.Equal(match.Sets.Count(set => set.HomeWon == true), match.Sides().Home.Score);
+        Assert.Equal(match.Sets.Count(set => set.HomeWon == false), match.Sides().Away.Score);
+    }
 }

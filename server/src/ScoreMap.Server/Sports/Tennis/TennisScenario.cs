@@ -15,15 +15,7 @@ namespace ScoreMap.Server.Sports;
 /// </summary>
 internal sealed class TennisScenario(League league) : SportScenario(league)
 {
-    protected override FieldPlay Field => RacingFieldPlay.Instance;
-
-    // Unused: play moves a written match on itself, and a made-up one would need players, which the team list has none of.
-    internal override SportPlay CreatePlay() => new CountdownPlay(League, new(1.4, [(1, 1.0)], 6, null));
-
-    internal override bool PlaysSidesItself => true;
-    internal override ProviderGame TakeOn(ProviderGame game) => TennisMatchPlay.TakeOn(game);
-    protected override (ProviderGame Game, double Through) PlaySides(ProviderGame game, double before, double through, Random random) =>
-        TennisMatchPlay.Advance(game, League, before, through, random);
+    internal override SidesPlay CreatePlay() => new TennisMatchPlay(League);
 
     /// <summary>Explicit sets are the score; shorthand alone stays as written outside play.</summary>
     internal static ProviderGame Written(ProviderGame game)

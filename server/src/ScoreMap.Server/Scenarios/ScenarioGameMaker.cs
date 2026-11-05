@@ -7,7 +7,7 @@ namespace ScoreMap.Server.Scenarios;
 /// <summary>
 /// Makes up a game at a venue from the venue list, in a given status: two teams from the team list in
 /// a random configured league, neither of them already in a game showing (ADR-0009). Its start, score
-/// and clock fit its status, as its sport plays out (see <see cref="SportPlay"/>), and its start keeps
+/// and clock fit its status, as its sport plays out (see <see cref="SidesPlay"/>), and its start keeps
 /// it inside its pin window when the scenario starts. Used by <c>fill</c>; play uses it to bring on
 /// new games.
 /// </summary>
@@ -67,21 +67,11 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     /// planned length (in cricket, perhaps further, past an innings over early): its period, clock,
     /// phase (perhaps a break) and score.
     /// </summary>
-    private static ScenarioGame UnderWay(ScenarioGame game, League league, SportPlay sport, Random random)
+    private static ScenarioGame UnderWay(ScenarioGame game, League league, SidesPlay sport, Random random)
     {
         var minutesIn = random.Next(1, (int)league.PlannedLength.TotalMinutes);
-        var (home, away, through) = sport.PlayTo(
-            game.Sides.Home, game.Sides.Away, minutesIn / league.PlannedLength.TotalMinutes, random, mayFinish: false);
-        var (period, clock, phase) = sport.Position(through);
-        return game with
-        {
-            StartsIn = Minutes(-minutesIn),
-            Status = ProviderStatus.InProgress,
-            Contest = new ProviderSides(home, away),
-            Period = period,
-            Clock = clock,
-            Phase = phase,
-        };
+        var made = sport.Live(game.Sides.Home, game.Sides.Away, minutesIn / league.PlannedLength.TotalMinutes, random);
+        return Standing(game, made) with { StartsIn = Minutes(-minutesIn), Status = ProviderStatus.InProgress };
     }
 
     /// <summary>
@@ -89,30 +79,31 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     /// a sport without draws). The board takes a game first seen Final to have ended at its planned end
     /// and shows it for two hours after, so it keeps its pin a while.
     /// </summary>
-    private static ScenarioGame Finished(ScenarioGame game, League league, SportPlay sport, Random random)
+    private static ScenarioGame Finished(ScenarioGame game, League league, SidesPlay sport, Random random)
     {
         var startsIn = -(league.PlannedLength + Minutes(random.Next(5, 61)));
-        var (playedHome, playedAway, _) = sport.PlayTo(game.Sides.Home, game.Sides.Away, 1, random, mayFinish: true);
-        var (home, away) = sport.Settled(playedHome, playedAway, random);
-        return game with
-        {
-            StartsIn = startsIn,
-            Status = ProviderStatus.Final,
-            Contest = new ProviderSides(home, away),
-            Period = sport.Regulation,
-        };
+        var made = sport.Final(game.Sides.Home, game.Sides.Away, random);
+        return Standing(game, made) with { StartsIn = startsIn, Status = ProviderStatus.Final };
     }
 
     /// <summary>
     /// Disrupted: suspended part way through with its score so far, or postponed or canceled around
     /// its planned start with no score.
     /// </summary>
-    private static ScenarioGame Disrupted(ScenarioGame game, League league, SportPlay sport, ProviderStatus status, Random random)
+    private static ScenarioGame Disrupted(ScenarioGame game, League league, SidesPlay sport, ProviderStatus status, Random random)
     {
         return status == ProviderStatus.Suspended
             ? UnderWay(game, league, sport, random) with { Status = status }
             : game with { StartsIn = Minutes(random.Next(-30, 121)), Status = status };
     }
+
+    private static ScenarioGame Standing(ScenarioGame game, MadeUp made) => game with
+    {
+        Contest = new ProviderSides(made.Home, made.Away),
+        Period = made.Period,
+        Clock = made.Clock,
+        Phase = made.Phase,
+    };
 
     /// <summary>
     /// The way the <paramref name="n"/>th (from 0) of a batch of Disrupted games is disrupted: Postponed,

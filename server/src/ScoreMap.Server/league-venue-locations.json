@@ -1,0 +1,3607 @@
+{
+  "3M Arena at Mariucci, Minneapolis": null,
+  "ABHA Arena, Doha": null,
+  "AMSOIL Arena, Duluth": {
+    "latitude": 46.7804759,
+    "longitude": -92.0996865
+  },
+  "AT&T Stadium, Arlington": {
+    "latitude": 32.7478503,
+    "longitude": -97.0928337
+  },
+  "Abessinio Court at Eleanor R. Baldwin Arena, Boca Raton": null,
+  "Acrisure Arena, Palm Springs": null,
+  "Acrisure Bounce House, Orlando": null,
+  "Acrisure Stadium, Pittsburgh": {
+    "latitude": 40.4467166,
+    "longitude": -80.0157199
+  },
+  "Addition Financial Arena, Orlando": {
+    "latitude": 28.6073409,
+    "longitude": -81.1972969
+  },
+  "Adidas Arena, Paris": {
+    "latitude": 48.8995985,
+    "longitude": 2.3607486
+  },
+  "Agganis Arena, Boston": {
+    "latitude": 42.3522233,
+    "longitude": -71.11773
+  },
+  "Aggie Memorial Stadium, Las Cruces": {
+    "latitude": 32.2796361,
+    "longitude": -106.7411114
+  },
+  "Akron, OH": {
+    "latitude": 41.083064,
+    "longitude": -81.518485
+  },
+  "Al Lawson Center, Tallahassee": null,
+  "Al McGuire Center, Milwaukee": {
+    "latitude": 43.0396198,
+    "longitude": -87.9267551
+  },
+  "Alamodome, San Antonio": {
+    "latitude": 29.4168923,
+    "longitude": -98.4788949
+  },
+  "Alaska Airlines Arena, Seattle": {
+    "latitude": 47.6521785,
+    "longitude": -122.3021248
+  },
+  "Alaska Airlines Center, Anchorage": {
+    "latitude": 61.1885901,
+    "longitude": -149.8141768
+  },
+  "Albany GC, New Providence": {
+    "latitude": 25.0608469,
+    "longitude": -77.3067288
+  },
+  "Albertsons Stadium, Boise": {
+    "latitude": 43.6027251,
+    "longitude": -116.1967837
+  },
+  "Alex G. Spanos Center, Stockton": {
+    "latitude": 37.9766716,
+    "longitude": -121.315117
+  },
+  "Alico Arena, Fort Myers": null,
+  "Allegacy Federal Credit Union Stadium, Winston-Salem": {
+    "latitude": 36.130554,
+    "longitude": -80.2546325
+  },
+  "Allegiant Stadium, Las Vegas": {
+    "latitude": 36.0907359,
+    "longitude": -115.1833303
+  },
+  "Allen Arena, Nashville": {
+    "latitude": 36.1037647,
+    "longitude": -86.7989111
+  },
+  "Allen E. Paulson Stadium, Statesboro": {
+    "latitude": 32.4121444,
+    "longitude": -81.7833368
+  },
+  "Allen Fieldhouse, Lawrence": {
+    "latitude": 38.9543125,
+    "longitude": -95.2528214
+  },
+  "Allianz Arena, München": {
+    "latitude": 48.2187901,
+    "longitude": 11.6236227
+  },
+  "Allianz Field, Saint Paul, Minnesota": {
+    "latitude": 44.953139,
+    "longitude": -93.1646871
+  },
+  "Almaty Open, Almaty, Kazakhstan": null,
+  "Almaty, Kazakhstan": {
+    "latitude": 43.2363924,
+    "longitude": 76.9457275
+  },
+  "Alumni Gymnasium (Rider), Lawrenceville": null,
+  "Alumni Hall (Navy), Annapolis": null,
+  "Alumni Hall (RI), Providence": {
+    "latitude": 41.8457755,
+    "longitude": -71.4370273
+  },
+  "Alumni Stadium (Chestnut Hill, MA), Chestnut Hill": null,
+  "AmFirst Stadium, Jacksonville": {
+    "latitude": 33.8203687,
+    "longitude": -85.7661255
+  },
+  "Amerant Bank Arena, Sunrise": {
+    "latitude": 26.1583702,
+    "longitude": -80.3254289
+  },
+  "America First Events Center, Cedar City": {
+    "latitude": 37.6755028,
+    "longitude": -113.0728747
+  },
+  "America First Field, Sandy, Utah": {
+    "latitude": 40.5829593,
+    "longitude": -111.8932933
+  },
+  "American Airlines Center, Dallas": {
+    "latitude": 32.7904894,
+    "longitude": -96.810283
+  },
+  "American Express Stadium, Falmer": {
+    "latitude": 50.8615471,
+    "longitude": -0.0836931
+  },
+  "American Family Field, Milwaukee": {
+    "latitude": 43.0280619,
+    "longitude": -87.9712694
+  },
+  "Amherst, MA, USA": {
+    "latitude": 42.3731948,
+    "longitude": -72.5198761
+  },
+  "Amica Mutual Pavilion, Providence": {
+    "latitude": 41.8236194,
+    "longitude": -71.4180896
+  },
+  "Amon G. Carter Stadium, Fort Worth": {
+    "latitude": 32.7097507,
+    "longitude": -97.3680395
+  },
+  "Anderson Center, Dallas": {
+    "latitude": 32.8620714,
+    "longitude": -96.8112433
+  },
+  "Anfield, Liverpool": {
+    "latitude": 53.4309011,
+    "longitude": -2.9609719
+  },
+  "Angel of the Winds Arena, Everett": {
+    "latitude": 47.9785953,
+    "longitude": -122.203016
+  },
+  "Angola Ladies Open, Luanda, Angola": null,
+  "Annapolis, MD": {
+    "latitude": 38.9786401,
+    "longitude": -76.492786
+  },
+  "Appleton Arena, Canton": {
+    "latitude": 44.5863422,
+    "longitude": -75.1659883
+  },
+  "Arena CDMX, Mexico City": {
+    "latitude": 19.4246141,
+    "longitude": -99.1520014
+  },
+  "Arena-Auditorium, Laramie": {
+    "latitude": 41.3132737,
+    "longitude": -105.5692881
+  },
+  "Arrowhead Stadium, Kansas City": {
+    "latitude": 39.0489358,
+    "longitude": -94.4839993
+  },
+  "Aspmyra Stadion, Bodø/Glimt": null,
+  "Athletics-Recreation Center, Valparaiso": {
+    "latitude": 41.4642539,
+    "longitude": -87.0483415
+  },
+  "Atlanta, GA": {
+    "latitude": 33.7544657,
+    "longitude": -84.3898151
+  },
+  "Atlantic Union Bank Center, Harrisonburg": {
+    "latitude": 38.4305438,
+    "longitude": -78.8595717
+  },
+  "Audi Field, Washington, District of Columbia": {
+    "latitude": 38.8682612,
+    "longitude": -77.0126092
+  },
+  "Aue, Germany": {
+    "latitude": 50.586993,
+    "longitude": 12.6992687
+  },
+  "Austin, TX, USA": {
+    "latitude": 30.2649261,
+    "longitude": -97.7474086
+  },
+  "Austin, Texas, USA": {
+    "latitude": 30.2649261,
+    "longitude": -97.7474086
+  },
+  "Autodromo Hermanos Rodriguez, Mexico city": {
+    "latitude": 19.4051619,
+    "longitude": -99.0960636
+  },
+  "Autodromo Jose Carlos Pace, Sao paulo": {
+    "latitude": -23.7018189,
+    "longitude": -46.696924
+  },
+  "Autzen Stadium, Eugene": {
+    "latitude": 44.0582178,
+    "longitude": -123.0684379
+  },
+  "Avondale, AZ, USA": {
+    "latitude": 33.4434533,
+    "longitude": -112.3045385
+  },
+  "Avron B. Fogelman Arena in the Devlin Fieldhouse, New Orleans": null,
+  "BC Place, Vancouver": {
+    "latitude": 49.2766905,
+    "longitude": -123.1120062
+  },
+  "BMO Field, Toronto": {
+    "latitude": 43.6333414,
+    "longitude": -79.4185614
+  },
+  "BMO Stadium, Los Angeles, California": {
+    "latitude": 34.0127678,
+    "longitude": -118.2833417
+  },
+  "BNB Ningbo Open, Ningbo, China PR": null,
+  "BNP Paribas Fortis European Open, Brussels, Belgium": null,
+  "BOK Center, Tulsa": {
+    "latitude": 36.1526653,
+    "longitude": -95.9963745
+  },
+  "Baha Mar Convention Center, Nassau": null,
+  "Baku Olympic Stadium, Baku": {
+    "latitude": 40.429982,
+    "longitude": 49.919531
+  },
+  "Ball Arena, Denver": {
+    "latitude": 39.7486838,
+    "longitude": -105.007544
+  },
+  "Baltimore, MD": {
+    "latitude": 39.2908816,
+    "longitude": -76.610759
+  },
+  "Bank of America Stadium, Charlotte": {
+    "latitude": 35.225774,
+    "longitude": -80.8528276
+  },
+  "Bank of America Stadium, Charlotte, North Carolina": {
+    "latitude": 35.225774,
+    "longitude": -80.8528276
+  },
+  "Bank of Colorado Arena, Greeley": null,
+  "Banterra Center, Carbondale": {
+    "latitude": 37.7082751,
+    "longitude": -89.2187176
+  },
+  "Baptist Health Arena, Richmond": null,
+  "Barclaycard Center, Madrid": null,
+  "Barclays Center, Brooklyn": {
+    "latitude": 40.6825106,
+    "longitude": -73.9752519
+  },
+  "Bartow Arena, Birmingham": {
+    "latitude": 33.502124,
+    "longitude": -86.8092439
+  },
+  "Basel, Switzerland": {
+    "latitude": 47.5581077,
+    "longitude": 7.5878261
+  },
+  "Baton Rouge, LA": {
+    "latitude": 30.4494155,
+    "longitude": -91.1869659
+  },
+  "Baxter Arena, Omaha": {
+    "latitude": 41.2361165,
+    "longitude": -96.0130109
+  },
+  "Bayamon, Puerto Rico": {
+    "latitude": 18.3449582,
+    "longitude": -66.168374
+  },
+  "Beasley Coliseum, Pullman": {
+    "latitude": 46.735244,
+    "longitude": -117.1581126
+  },
+  "Beaver Stadium, University Park": {
+    "latitude": 40.8120742,
+    "longitude": -77.8559417
+  },
+  "Beijing, China PR": {
+    "latitude": 14.9147209,
+    "longitude": -23.5157764
+  },
+  "Belfast, Northern Ireland": {
+    "latitude": 54.596391,
+    "longitude": -5.9301829
+  },
+  "Bell Centre, Montreal": {
+    "latitude": 45.4960358,
+    "longitude": -73.5692029
+  },
+  "Ben Hill Griffin Stadium, Gainesville": {
+    "latitude": 29.6500369,
+    "longitude": -82.3487666
+  },
+  "Benchmark International Arena, Tampa": {
+    "latitude": 27.942704,
+    "longitude": -82.4518903
+  },
+  "Bender Arena, Washington": {
+    "latitude": 38.937722,
+    "longitude": -77.0898919
+  },
+  "Bentley Arena, Waltham": {
+    "latitude": 42.384787,
+    "longitude": -71.2205455
+  },
+  "Bernard G. Johnson Coliseum, Huntsville": {
+    "latitude": 30.7129191,
+    "longitude": -95.5462248
+  },
+  "Berry Events Center, Marquette": {
+    "latitude": 46.5577004,
+    "longitude": -87.3925751
+  },
+  "Betty Engelstad Sioux Center, Grand Forks": {
+    "latitude": 47.9275945,
+    "longitude": -97.0732545
+  },
+  "Big Rapids, MI, USA": {
+    "latitude": 43.698078,
+    "longitude": -85.483656
+  },
+  "Bill Snyder Family Stadium, Manhattan": {
+    "latitude": 39.2020395,
+    "longitude": -96.5937762
+  },
+  "Binghamton, NY": {
+    "latitude": 42.098698,
+    "longitude": -75.9125187
+  },
+  "Bob Carpenter Center, Newark": {
+    "latitude": 39.660439,
+    "longitude": -75.7487314
+  },
+  "Bobby Dodd Stadium, Atlanta": {
+    "latitude": 33.772476,
+    "longitude": -84.3929589
+  },
+  "Boca Raton, FL": {
+    "latitude": 26.3586885,
+    "longitude": -80.0830984
+  },
+  "Boca Raton, FL, USA": {
+    "latitude": 26.3586885,
+    "longitude": -80.0830984
+  },
+  "Bodford Arena, Greensboro": null,
+  "Bodø/Glimt, Norway": {
+    "latitude": 67.2828485,
+    "longitude": 14.4196331
+  },
+  "Bogota Savings Bank Center, Hackensack": null,
+  "Boiling Springs, NC": {
+    "latitude": 35.254292,
+    "longitude": -81.6670407
+  },
+  "Bon Secours Wellness Arena, Greenville": {
+    "latitude": 34.852706,
+    "longitude": -82.3915606
+  },
+  "Boone Pickens Stadium, Stillwater": {
+    "latitude": 36.1256965,
+    "longitude": -97.0676137
+  },
+  "Boston, MA": {
+    "latitude": 42.3588336,
+    "longitude": -71.0578303
+  },
+  "Bowling Green, KY": {
+    "latitude": 36.9929203,
+    "longitude": -86.4428677
+  },
+  "Bowling Green, KY, USA": {
+    "latitude": 36.9929203,
+    "longitude": -86.4428677
+  },
+  "Bozeman, MT": {
+    "latitude": 45.6794293,
+    "longitude": -111.044047
+  },
+  "Bramlage Coliseum, Manhattan": {
+    "latitude": 39.2003162,
+    "longitude": -96.5938455
+  },
+  "Bren Events Center, Irvine": {
+    "latitude": 33.6494575,
+    "longitude": -117.8469057
+  },
+  "Breslin Center, East Lansing": {
+    "latitude": 42.7281765,
+    "longitude": -84.4920022
+  },
+  "Bridgeforth Stadium, Harrisonburg": {
+    "latitude": 38.4351564,
+    "longitude": -78.8730534
+  },
+  "Bridgestone Arena, Nashville": {
+    "latitude": 36.1589806,
+    "longitude": -86.7783819
+  },
+  "Bridgewater Ice Arena, Bridgewater": {
+    "latitude": 41.9525704,
+    "longitude": -70.9709574
+  },
+  "Bright-Landry Hockey Center, Boston": {
+    "latitude": 42.3683656,
+    "longitude": -71.1272413
+  },
+  "Broadview Arena, Buffalo": {
+    "latitude": 43.0001529,
+    "longitude": -78.7812166
+  },
+  "Broadview Center, Albany": {
+    "latitude": 42.6821683,
+    "longitude": -73.8282597
+  },
+  "Broadview Stadium, Buffalo": null,
+  "Bronx, NY": {
+    "latitude": 40.8466508,
+    "longitude": -73.8785937
+  },
+  "Brooklyn Athletic Center, Brooklyn": null,
+  "Brooklyn, NY": {
+    "latitude": 40.6526006,
+    "longitude": -73.9497211
+  },
+  "Brooks Gymnasium, Johnson City": {
+    "latitude": 36.3026798,
+    "longitude": -82.3703221
+  },
+  "Brooks Stadium (SC), Conway": {
+    "latitude": 33.7929212,
+    "longitude": -79.0174511
+  },
+  "Brussels, Belgium": {
+    "latitude": 50.8467372,
+    "longitude": 4.352493
+  },
+  "Bryant-Denny Stadium, Tuscaloosa": {
+    "latitude": 33.2077203,
+    "longitude": -87.550453
+  },
+  "Bryce Jordan Center, University Park": {
+    "latitude": 40.808572,
+    "longitude": -77.8554679
+  },
+  "Buccaneer Fieldhouse, Charleston": null,
+  "Bud Walton Arena, Fayetteville": {
+    "latitude": 36.0615698,
+    "longitude": -94.1781075
+  },
+  "Buffalo, NY, USA": {
+    "latitude": 42.8864163,
+    "longitude": -78.8781493
+  },
+  "Buies Creek, NC": {
+    "latitude": 35.4123325,
+    "longitude": -78.7366506
+  },
+  "Burns Arena, St. George": {
+    "latitude": 37.1015093,
+    "longitude": -113.5670344
+  },
+  "Burr Gymnasium, Washington": {
+    "latitude": 38.9263126,
+    "longitude": -77.0222225
+  },
+  "CB&S Bank Arena at Flowers Hall, Florence": null,
+  "CEFCU Arena, Normal": {
+    "latitude": 40.510684,
+    "longitude": -88.9987907
+  },
+  "CEFCU Stadium, San Jose": {
+    "latitude": 37.3196895,
+    "longitude": -121.8683139
+  },
+  "CFSB Center, Murray": {
+    "latitude": 36.6226679,
+    "longitude": -88.3198817
+  },
+  "CHI Health Center Omaha, Omaha": {
+    "latitude": 41.2636669,
+    "longitude": -95.9279385
+  },
+  "CU Events Center, Boulder": {
+    "latitude": 40.004687,
+    "longitude": -105.2606067
+  },
+  "Cabo San Lucas, Mexico": {
+    "latitude": 22.8938884,
+    "longitude": -109.92006
+  },
+  "Cabot Center, Boston": {
+    "latitude": 42.3395251,
+    "longitude": -71.0897007
+  },
+  "Cadet Ice Arena, USAF Academy": null,
+  "Caesars Superdome, New Orleans": {
+    "latitude": 29.9510489,
+    "longitude": -90.0823076
+  },
+  "Cajundome, Lafayette": {
+    "latitude": 30.2220456,
+    "longitude": -92.0436609
+  },
+  "Cali, Colombia": {
+    "latitude": 3.4108435,
+    "longitude": -76.5812127
+  },
+  "California Memorial Stadium, Berkeley": {
+    "latitude": 37.8709949,
+    "longitude": -122.2507361
+  },
+  "Calihan Hall, Detroit": {
+    "latitude": 42.4143433,
+    "longitude": -83.1359254
+  },
+  "Cam Henderson Center, Huntington": {
+    "latitude": 38.4244628,
+    "longitude": -82.4251394
+  },
+  "Cambridge, MA": {
+    "latitude": 42.3656347,
+    "longitude": -71.1040018
+  },
+  "Cameron Hall, Lexington": {
+    "latitude": 37.7885154,
+    "longitude": -79.4366007
+  },
+  "Cameron Indoor Stadium, Durham": {
+    "latitude": 35.9974496,
+    "longitude": -78.9422669
+  },
+  "Camp Randall Stadium, Madison": {
+    "latitude": 43.0700531,
+    "longitude": -89.4126501
+  },
+  "Canada Life Centre, Winnipeg": {
+    "latitude": 49.8925939,
+    "longitude": -97.1437389
+  },
+  "Canadian Tire Centre, Ottawa": {
+    "latitude": 45.2969069,
+    "longitude": -75.9268973
+  },
+  "Cancun, Mexico": {
+    "latitude": 21.1527467,
+    "longitude": -86.8425761
+  },
+  "Canvas Stadium, Fort Collins": {
+    "latitude": 40.5698314,
+    "longitude": -105.0885062
+  },
+  "Capital One Arena, Washington": {
+    "latitude": 38.8981883,
+    "longitude": -77.0209378
+  },
+  "CareFirst Arena, Washington": {
+    "latitude": 38.8469919,
+    "longitude": -76.9913193
+  },
+  "Carlson Center, Fairbanks": {
+    "latitude": 64.8422561,
+    "longitude": -147.763987
+  },
+  "Carmichael Arena, Chapel Hill": null,
+  "Carnesecca Arena, Queens": null,
+  "Carter-Finley Stadium, Raleigh": {
+    "latitude": 35.8008464,
+    "longitude": -78.7196045
+  },
+  "Carver Arena, Peoria": {
+    "latitude": 40.6918613,
+    "longitude": -89.5935532
+  },
+  "Carver-Hawkeye Arena, Iowa City": {
+    "latitude": 41.6640099,
+    "longitude": -91.5545369
+  },
+  "Case Gym, Boston": null,
+  "Casey's Center, Des Moines": {
+    "latitude": 41.5925082,
+    "longitude": -93.6210723
+  },
+  "Casino Del Sol Stadium, Tucson": null,
+  "Cassell Coliseum, Blacksburg": {
+    "latitude": 37.222507,
+    "longitude": -80.4189121
+  },
+  "Centene Community Ice Center, Maryland Heights": null,
+  "Centennial Bank Stadium, Jonesboro": {
+    "latitude": 35.8488912,
+    "longitude": -90.6672973
+  },
+  "Center Parc Stadium, Atlanta": {
+    "latitude": 33.7355267,
+    "longitude": -84.3886513
+  },
+  "Chace Athletic Center, Smithfield": null,
+  "Chaifetz Arena, St. Louis": {
+    "latitude": 38.6325255,
+    "longitude": -90.2281769
+  },
+  "Chapel Hill, NC": {
+    "latitude": 35.9131542,
+    "longitude": -79.05578
+  },
+  "Charles E. Smith Center, Washington": {
+    "latitude": 38.8978142,
+    "longitude": -77.0493531
+  },
+  "Charles Koch Arena, Wichita": {
+    "latitude": 37.7218239,
+    "longitude": -97.297425
+  },
+  "Charleston, IL": {
+    "latitude": 39.4961458,
+    "longitude": -88.1761521
+  },
+  "Charleston, SC": {
+    "latitude": 32.7884363,
+    "longitude": -79.9399309
+  },
+  "Charlotte Amalie, Virgin Islands": {
+    "latitude": 18.3368505,
+    "longitude": -64.9622349
+  },
+  "Charlotte Motor Speedway Road Course, Concord": null,
+  "Charlotte, NC": {
+    "latitude": 35.2272086,
+    "longitude": -80.8430827
+  },
+  "Chartway Arena, Norfolk": {
+    "latitude": 36.8841357,
+    "longitude": -76.3013793
+  },
+  "Chase Center, San Francisco": {
+    "latitude": 37.7679001,
+    "longitude": -122.3874223
+  },
+  "Cheel Arena, Potsdam": {
+    "latitude": 44.6639972,
+    "longitude": -75.0019924
+  },
+  "Chennai Open, Chennai, India": null,
+  "Chennai, India": {
+    "latitude": 13.0800915,
+    "longitude": 80.2807978
+  },
+  "Chesapeake Employers Insurance Arena, Baltimore": {
+    "latitude": 39.2519473,
+    "longitude": -76.7070399
+  },
+  "Chestnut Hill, MA": {
+    "latitude": 42.3234553,
+    "longitude": -71.1639439
+  },
+  "Chestnut Hill, MA, USA": {
+    "latitude": 42.3234553,
+    "longitude": -71.1639439
+  },
+  "Chicago, IL": {
+    "latitude": 41.8755616,
+    "longitude": -87.6244212
+  },
+  "Chiles Center, Portland": {
+    "latitude": 45.5750984,
+    "longitude": -122.7285328
+  },
+  "China Open, Beijing, China PR": null,
+  "Christl Arena, West Point": null,
+  "Cintas Center, Cincinnati": {
+    "latitude": 39.1504378,
+    "longitude": -84.4717855
+  },
+  "Circuit of the Americas, Austin": {
+    "latitude": 30.1356307,
+    "longitude": -97.63662
+  },
+  "Citi Field, New York, New York": {
+    "latitude": 40.7570308,
+    "longitude": -73.8457626
+  },
+  "Clarence T.C. Ching Athletics Complex, Honolulu": {
+    "latitude": 21.2942909,
+    "longitude": -157.8171209
+  },
+  "Class of 1965 Arena, Hamilton": null,
+  "Clearview Arena, Moon Township": null,
+  "Clemson, SC": {
+    "latitude": 34.6850749,
+    "longitude": -82.8364111
+  },
+  "Clemson, SC, USA": {
+    "latitude": 34.6850749,
+    "longitude": -82.8364111
+  },
+  "Cleveland, OH": {
+    "latitude": 41.4996574,
+    "longitude": -81.6936772
+  },
+  "Climate Pledge Arena, Seattle": {
+    "latitude": 47.6219014,
+    "longitude": -122.3539905
+  },
+  "Clune Arena, Colorado Springs": null,
+  "Coleman Coliseum, Tuscaloosa": {
+    "latitude": 33.2027042,
+    "longitude": -87.5397128
+  },
+  "Coliseo Guillermo Angulo, Carolina": {
+    "latitude": 18.3875315,
+    "longitude": -65.9576678
+  },
+  "College Park Center, Arlington": {
+    "latitude": 32.730505,
+    "longitude": -97.108074
+  },
+  "Colonial Hall, White Sulphur Springs": null,
+  "Colonial Life Arena, Columbia": {
+    "latitude": 33.9947839,
+    "longitude": -81.0373546
+  },
+  "Colorado Springs, CO": {
+    "latitude": 38.8339578,
+    "longitude": -104.825348
+  },
+  "Comerica Center, Frisco": {
+    "latitude": 33.1005522,
+    "longitude": -96.8194322
+  },
+  "Commerce, TX": {
+    "latitude": 33.2436492,
+    "longitude": -95.9026927
+  },
+  "Community School of Naples, Naples": null,
+  "Compton Family Ice Arena, South Bend": {
+    "latitude": 41.6938006,
+    "longitude": -86.2310586
+  },
+  "Concord, NC, USA": {
+    "latitude": 35.4094178,
+    "longitude": -80.5800049
+  },
+  "Conte Forum, Chestnut Hill": null,
+  "Convocation Center (LA), New Orleans": {
+    "latitude": 29.9638,
+    "longitude": -90.109651
+  },
+  "Convocation Center (OH), Athens": {
+    "latitude": 39.323211,
+    "longitude": -82.1056777
+  },
+  "Convocation Center (VA), Hampton": {
+    "latitude": 37.0198537,
+    "longitude": -76.3311392
+  },
+  "Conway, SC": {
+    "latitude": 33.8360035,
+    "longitude": -79.0478143
+  },
+  "Corbett Sports Center, Greensboro": null,
+  "Cotterell Court, Hamilton": null,
+  "Cotton Bowl, Dallas": {
+    "latitude": 32.7796119,
+    "longitude": -96.7596025
+  },
+  "Courmayeur, Italy": {
+    "latitude": 45.8316548,
+    "longitude": 6.9461565
+  },
+  "Coventry Building Society Arena, Coventry": {
+    "latitude": 52.4481582,
+    "longitude": -1.4970174
+  },
+  "Craven Cottage, London": {
+    "latitude": 51.4749218,
+    "longitude": -0.2217448
+  },
+  "Credit Union 1 Arena, Chicago": {
+    "latitude": 41.8746993,
+    "longitude": -87.6561358
+  },
+  "Crisler Center, Ann Arbor": {
+    "latitude": 42.2650414,
+    "longitude": -83.7466711
+  },
+  "Curb Event Center Arena, Nashville": null,
+  "Curitiba Open, Curitiba, Brazil": null,
+  "Curitiba, Brazil": {
+    "latitude": -25.4295963,
+    "longitude": -49.2712724
+  },
+  "Curry Arena, Charlotte": null,
+  "D.J. Sokol Arena, Omaha": null,
+  "DATCU Stadium, Denton": {
+    "latitude": 33.2040929,
+    "longitude": -97.1593735
+  },
+  "DKR-Texas Memorial Stadium, Austin": null,
+  "Dahlberg Arena, Missoula": null,
+  "Dale E. and Sarah Ann Fowler Events Center, Riverside": null,
+  "Daskalakis Athletic Center, Philadelphia": null,
+  "Davey L. Whitney Complex, Lorman": null,
+  "David Booth Kansas Memorial Stadium, Lawrence": {
+    "latitude": 38.9630786,
+    "longitude": -95.2462865
+  },
+  "David R. Stopher Gymnasium, Thibodaux": null,
+  "David S. Mack Sports and Exhibition Complex, Hempstead": null,
+  "Davis Wade Stadium, Starkville": null,
+  "Davis, CA": {
+    "latitude": 38.5435526,
+    "longitude": -121.739005
+  },
+  "Dayton, OH": {
+    "latitude": 39.7589478,
+    "longitude": -84.1916069
+  },
+  "Daytona Beach, FL": {
+    "latitude": 29.2108147,
+    "longitude": -81.0228331
+  },
+  "De Kuip, Rotterdam": {
+    "latitude": 51.8938646,
+    "longitude": 4.5232281
+  },
+  "DeLand, FL": {
+    "latitude": 29.0281051,
+    "longitude": -81.3034183
+  },
+  "Dean E. Smith Center, Chapel Hill": null,
+  "Decathlon Arena - Stade Pierre-Mauroy, Lille": {
+    "latitude": 50.6119044,
+    "longitude": 3.130508
+  },
+  "Dee Events Center, Ogden": {
+    "latitude": 41.1823566,
+    "longitude": -111.945007
+  },
+  "Dee Glen Smith Spectrum, Logan": {
+    "latitude": 41.7476309,
+    "longitude": -111.8121027
+  },
+  "Dekalb, IL": {
+    "latitude": 41.8903447,
+    "longitude": -88.7713953
+  },
+  "Delaware Stadium, Newark": {
+    "latitude": 39.6616707,
+    "longitude": -75.7488991
+  },
+  "Delta Center, Salt Lake City": {
+    "latitude": 40.7683274,
+    "longitude": -111.9010551
+  },
+  "Desert Financial Arena, Tempe": {
+    "latitude": 33.4245079,
+    "longitude": -111.93101
+  },
+  "Destin, FL": {
+    "latitude": 30.3935337,
+    "longitude": -86.4957834
+  },
+  "Detrick Gymnasium, New Britain": null,
+  "Dick's Sporting Goods Park, Commerce City, Colorado": {
+    "latitude": 39.8059455,
+    "longitude": -104.8919219
+  },
+  "Dickies Arena, Fort Worth": {
+    "latitude": 32.7410656,
+    "longitude": -97.3684832
+  },
+  "Dignity Health Sports Park, Carson, California": {
+    "latitude": 33.8623767,
+    "longitude": -118.2629113
+  },
+  "Doak Campbell Stadium, Tallahassee": {
+    "latitude": 30.438151,
+    "longitude": -84.3043924
+  },
+  "Dodger Stadium, Los Angeles": {
+    "latitude": 34.0736255,
+    "longitude": -118.2398452
+  },
+  "Doha, Qatar": {
+    "latitude": 25.3108807,
+    "longitude": 51.5081812
+  },
+  "Don Haskins Center, El Paso": {
+    "latitude": 31.7776065,
+    "longitude": -106.5056878
+  },
+  "Donald W. Reynolds Razorback Stadium, Fayetteville": {
+    "latitude": 36.0680732,
+    "longitude": -94.1788512
+  },
+  "Dongfeng Voyah Wuhan Open, Wuhan, China PR": null,
+  "Dowdy-Ficklen Stadium, Greenville": {
+    "latitude": 35.5964639,
+    "longitude": -77.3653057
+  },
+  "Doyt L. Perry Stadium, Bowling Green": {
+    "latitude": 41.3780256,
+    "longitude": -83.6224975
+  },
+  "Draddy Gymnasium, Riverdale": null,
+  "Dunn-Oliver Acadome, Montgomery": {
+    "latitude": 32.3618436,
+    "longitude": -86.2931798
+  },
+  "Durham, NC": {
+    "latitude": 35.996653,
+    "longitude": -78.9018053
+  },
+  "Durham, NH": {
+    "latitude": 43.1214141,
+    "longitude": -70.9177186
+  },
+  "Dwyer Arena, Niagara University": {
+    "latitude": 43.1349667,
+    "longitude": -79.0345218
+  },
+  "E.A. Diddle Arena, Bowling Green": null,
+  "EECU Center, Stephenville": {
+    "latitude": 32.2131034,
+    "longitude": -98.2222741
+  },
+  "EagleBank Arena, Fairfax": null,
+  "Ed Robson Arena, Colorado Springs": {
+    "latitude": 38.8461172,
+    "longitude": -104.8219947
+  },
+  "Edinburg, TX": {
+    "latitude": 26.3013982,
+    "longitude": -98.1624501
+  },
+  "Edwardsville, IL": {
+    "latitude": 38.8114364,
+    "longitude": -89.953157
+  },
+  "El Cardonal at Diamante, Cabo San Lucas": null,
+  "Elland Road, Leeds": {
+    "latitude": 53.7640189,
+    "longitude": -1.5834829
+  },
+  "Elliott T. Bowers Stadium, Huntsville": null,
+  "Ellis T. Johnson Arena, Morehead": null,
+  "Elma Roane Fieldhouse, Memphis": null,
+  "Elridge Blake Sports and Fitness Center, Charlotte Amalie": null,
+  "Emirates Stadium, London": {
+    "latitude": 51.5550404,
+    "longitude": -0.1083997
+  },
+  "Emmitsburg, MD": {
+    "latitude": 39.7045417,
+    "longitude": -77.3269307
+  },
+  "Empower Field at Mile High, Denver": {
+    "latitude": 39.743952,
+    "longitude": -105.0192228
+  },
+  "Energizer Park, St. Louis, Missouri": {
+    "latitude": 38.6306066,
+    "longitude": -90.2105512
+  },
+  "Enterprise Center, St. Louis": {
+    "latitude": 38.6268005,
+    "longitude": -90.20262
+  },
+  "Erste Bank Open, Vienna, Austria": null,
+  "Estadio Banorte, Mexico City": {
+    "latitude": 19.3029794,
+    "longitude": -99.15047
+  },
+  "Estadio La Cartuja, Sevilla": {
+    "latitude": 37.4172398,
+    "longitude": -6.003618
+  },
+  "Estadio de la Cerámica, Villarreal": {
+    "latitude": 39.9442083,
+    "longitude": -0.1034046
+  },
+  "Estádio José Alvalade, Lisbon": {
+    "latitude": 38.7612024,
+    "longitude": -9.1607832
+  },
+  "Estádio do Dragão, Porto": {
+    "latitude": 41.1618235,
+    "longitude": -8.5837492
+  },
+  "Etihad Arena, Abu Dhabi": {
+    "latitude": 24.4603646,
+    "longitude": 54.6042249
+  },
+  "Etihad Stadium, Manchester": {
+    "latitude": 53.4831448,
+    "longitude": -2.2005273
+  },
+  "Evansville, IN": {
+    "latitude": 37.970495,
+    "longitude": -87.5715641
+  },
+  "Event Center, Huntsville": {
+    "latitude": 34.7810988,
+    "longitude": -86.5806923
+  },
+  "Events Center (Binghamton), Binghamton": null,
+  "EverBank Stadium, Jacksonville": {
+    "latitude": 30.3239811,
+    "longitude": -81.6373046
+  },
+  "Ewigleben Ice Arena, Big Rapids": null,
+  "ExtraMile Arena, Boise": {
+    "latitude": 43.6035694,
+    "longitude": -116.1989476
+  },
+  "F&M Bank Arena, Clarksville": {
+    "latitude": 36.5291708,
+    "longitude": -87.3600943
+  },
+  "F.G. Clark Activity Center, Baton Rouge": null,
+  "FAGE WTA Finals Indian Wells, Indian Wells, USA": null,
+  "FC Bayern Munich Stadium, Munich": null,
+  "Fairfax, VA": {
+    "latitude": 38.8462236,
+    "longitude": -77.3063733
+  },
+  "Fairfield, CT": {
+    "latitude": 41.1412078,
+    "longitude": -73.2637258
+  },
+  "Falcon Stadium, USAF Academy": null,
+  "Fargodome, Fargo": {
+    "latitude": 46.9030223,
+    "longitude": -96.8013419
+  },
+  "Farmville, VA": {
+    "latitude": 37.3024713,
+    "longitude": -78.3923813
+  },
+  "Farris Center, Conway": {
+    "latitude": 35.0818836,
+    "longitude": -92.4595613
+  },
+  "FedExForum, Memphis": {
+    "latitude": 35.1382327,
+    "longitude": -90.0507689
+  },
+  "Fertitta Center, Houston": {
+    "latitude": 29.7247367,
+    "longitude": -95.346961
+  },
+  "Fifth Third Arena, Cincinnati": {
+    "latitude": 39.1311038,
+    "longitude": -84.5141165
+  },
+  "Finneran Pavilion, Villanova": {
+    "latitude": 40.0340472,
+    "longitude": -75.3365756
+  },
+  "Firestone Fieldhouse, Malibu": {
+    "latitude": 34.0385447,
+    "longitude": -118.7097134
+  },
+  "First Bank & Trust Arena, Brookings": {
+    "latitude": 44.3183356,
+    "longitude": -96.7791557
+  },
+  "First Community Arena, Edwardsville": null,
+  "First Community Stadium, Houston": null,
+  "First National Bank Arena, Jonesboro": {
+    "latitude": 35.8453739,
+    "longitude": -90.6703443
+  },
+  "FirstBank Stadium, Nashville": {
+    "latitude": 36.1439196,
+    "longitude": -86.8089205
+  },
+  "Fiserv Forum, Milwaukee": {
+    "latitude": 43.0450096,
+    "longitude": -87.9174871
+  },
+  "Flagler Credit Union Stadium, Boca Raton": null,
+  "Flagstaff, AZ": {
+    "latitude": 35.1987522,
+    "longitude": -111.651822
+  },
+  "Florence, AL": {
+    "latitude": 34.79981,
+    "longitude": -87.677251
+  },
+  "Folsom Field, Boulder": {
+    "latitude": 40.0093353,
+    "longitude": -105.2660699
+  },
+  "Food City Center, Knoxville": {
+    "latitude": 36.0048923,
+    "longitude": -83.9752585
+  },
+  "Ford Center, Evansville": {
+    "latitude": 37.9721866,
+    "longitude": -87.5678291
+  },
+  "Ford Field, Detroit": {
+    "latitude": 42.3399568,
+    "longitude": -83.0456166
+  },
+  "Fort Myers, FL": {
+    "latitude": 26.640628,
+    "longitude": -81.8723084
+  },
+  "Fort Wayne, IN": {
+    "latitude": 41.0799898,
+    "longitude": -85.1386015
+  },
+  "Fortuna Arena, Prague": {
+    "latitude": 50.0675695,
+    "longitude": 14.4715052
+  },
+  "Foster Pavilion, Waco": {
+    "latitude": 31.5563786,
+    "longitude": -97.1212122
+  },
+  "Fredrick C. Hobdy Assembly Center, Grambling": null,
+  "Freedom Hall (TN), Johnson City": {
+    "latitude": 36.3244327,
+    "longitude": -82.3751979
+  },
+  "Frontwave Arena, Oceanside": {
+    "latitude": 33.2074609,
+    "longitude": -117.3147323
+  },
+  "Frost Bank Center, San Antonio": {
+    "latitude": 29.4269205,
+    "longitude": -98.4375058
+  },
+  "Fullerton, CA": {
+    "latitude": 33.8708215,
+    "longitude": -117.929416
+  },
+  "G.B. Hodge Center, Spartanburg": null,
+  "GEODIS Park, Nashville, Tennessee": {
+    "latitude": 36.130025,
+    "longitude": -86.7659442
+  },
+  "GSU Convocation Center, Atlanta": null,
+  "Gainbridge Fieldhouse, Indianapolis": {
+    "latitude": 39.7639331,
+    "longitude": -86.1555024
+  },
+  "Gainesville, FL": {
+    "latitude": 29.6519684,
+    "longitude": -82.3249846
+  },
+  "Galaxy Stadium, Lubbock": {
+    "latitude": 33.5912517,
+    "longitude": -101.8729503
+  },
+  "Galen Center, Los Angeles": {
+    "latitude": 34.020753,
+    "longitude": -118.2797965
+  },
+  "Gallagher Center, Niagara Falls": null,
+  "Gallagher-Iba Arena, Stillwater": {
+    "latitude": 36.1257346,
+    "longitude": -97.0651529
+  },
+  "Gene Polisseni Center, Rochester": {
+    "latitude": 43.0826886,
+    "longitude": -77.6746366
+  },
+  "Gentile Arena, Chicago": null,
+  "Gentry Center, Nashville": null,
+  "George Q. Cannon Activities Center, Laie": null,
+  "Gerald J. Ford Stadium, Dallas": {
+    "latitude": 32.8377899,
+    "longitude": -96.782791
+  },
+  "Gersten Pavilion, Los Angeles": {
+    "latitude": 33.9677033,
+    "longitude": -118.4155929
+  },
+  "Gervin GameAbove Center, Ypsilanti": {
+    "latitude": 42.2542969,
+    "longitude": -83.6473661
+  },
+  "Gies Memorial Stadium, Champaign": {
+    "latitude": 40.0992862,
+    "longitude": -88.2359605
+  },
+  "Gilbert Arena, Thousand Oaks": null,
+  "Gill Coliseum, Corvallis": {
+    "latitude": 44.5612668,
+    "longitude": -123.2805799
+  },
+  "Gillette Stadium, Foxborough": {
+    "latitude": 42.0908879,
+    "longitude": -71.2641731
+  },
+  "Gillette Stadium, Foxborough, Massachusetts": {
+    "latitude": 42.0908879,
+    "longitude": -71.2641731
+  },
+  "Giuseppe Sinigaglia, Como": {
+    "latitude": 45.8138295,
+    "longitude": 9.0723243
+  },
+  "Glass Bowl, Toledo": {
+    "latitude": 41.6571852,
+    "longitude": -83.6135953
+  },
+  "Global Credit Union Arena, Phoenix": null,
+  "Goggin Ice Center, Oxford": null,
+  "Golden 1 Center, Sacramento": {
+    "latitude": 38.5801405,
+    "longitude": -121.4995008
+  },
+  "Goodman Arena, Salisbury": null,
+  "Grambling, LA": {
+    "latitude": 32.5276503,
+    "longitude": -92.7140403
+  },
+  "Grand Casino Arena, Saint Paul": {
+    "latitude": 44.9447277,
+    "longitude": -93.1010971
+  },
+  "Grand Prix Auvergne-Rhône-Alpes, Lyon, France": null,
+  "Great Southern Bank Arena, Springfield": {
+    "latitude": 37.2020781,
+    "longitude": -93.2830663
+  },
+  "Greeley, CO": {
+    "latitude": 40.4233142,
+    "longitude": -104.7091322
+  },
+  "Greensboro, NC": {
+    "latitude": 36.0726355,
+    "longitude": -79.7919754
+  },
+  "Greenville, NC": {
+    "latitude": 35.613224,
+    "longitude": -77.3724593
+  },
+  "Groniger Arena, Charleston": null,
+  "Gtech Community Stadium, Brentford": {
+    "latitude": 51.490713,
+    "longitude": -0.2889802
+  },
+  "Guangzhou Open, Guangzhou, China PR": null,
+  "Guangzhou, China PR": {
+    "latitude": 23.0072568,
+    "longitude": 113.3972654
+  },
+  "Gutterson Fieldhouse, Burlington": {
+    "latitude": 44.4693164,
+    "longitude": -73.1944671
+  },
+  "H&PE Arena, Houston": null,
+  "H-E-B Center at Cedar Park, Cedar Park": {
+    "latitude": 30.5413221,
+    "longitude": -97.8205235
+  },
+  "H. A. Chapman Stadium, Tulsa": null,
+  "H.O. Clemmons Arena, Pine Bluff": null,
+  "Haas Pavilion, Berkeley": {
+    "latitude": 37.8693905,
+    "longitude": -122.2622061
+  },
+  "Hackensack, NJ": {
+    "latitude": 40.8870781,
+    "longitude": -74.0410667
+  },
+  "Halton Arena, Charlotte": null,
+  "Hamilton Gymnasium, Denver": {
+    "latitude": 39.6824183,
+    "longitude": -104.9623912
+  },
+  "Hamilton, NY": {
+    "latitude": 43.6307863,
+    "longitude": -74.4659275
+  },
+  "Hamilton, NY, USA": {
+    "latitude": 43.6307863,
+    "longitude": -74.4659275
+  },
+  "Hammel Court, North Andover": null,
+  "Hancock Whitney Stadium, Mobile": {
+    "latitude": 30.696932,
+    "longitude": -88.1925624
+  },
+  "Hanover, NH": {
+    "latitude": 43.7023545,
+    "longitude": -72.2892164
+  },
+  "Hard Rock Hotel Riviera Maya, Cancun": null,
+  "Hard Rock Stadium, Miami Gardens": {
+    "latitude": 25.9579032,
+    "longitude": -80.2388497
+  },
+  "Harold Alfond Sports Arena, Orono": null,
+  "Harold Hutton Sports Center, Orange": null,
+  "Harry W. Lawson Ice Arena, Kalamazoo": null,
+  "Hart Center Arena, Worcester": {
+    "latitude": 42.2353403,
+    "longitude": -71.8052064
+  },
+  "Hattiesburg, MS, USA": {
+    "latitude": 31.3271189,
+    "longitude": -89.2903392
+  },
+  "Hawkins Arena, Macon": {
+    "latitude": 32.8289652,
+    "longitude": -83.651787
+  },
+  "Hempstead, NY": {
+    "latitude": 40.6736812,
+    "longitude": -73.6190736
+  },
+  "Henrico Sports & Events Center, Glen Allen": {
+    "latitude": 37.6770803,
+    "longitude": -77.4532422
+  },
+  "Herb Brooks Arena, Lake Placid": {
+    "latitude": 44.2832692,
+    "longitude": -73.9856258
+  },
+  "Herb Brooks National Hockey Center, Saint Cloud": {
+    "latitude": 45.5467254,
+    "longitude": -94.1521912
+  },
+  "Highmark Stadium, Orchard Park": {
+    "latitude": 42.7730293,
+    "longitude": -78.7921925
+  },
+  "Hill Dickinson Stadium, Liverpool": {
+    "latitude": 53.4250024,
+    "longitude": -3.0027092
+  },
+  "Hill Field House, Baltimore": {
+    "latitude": 39.3422775,
+    "longitude": -76.5850612
+  },
+  "Hilliard Center, Corpus Christi": {
+    "latitude": 27.8073049,
+    "longitude": -97.3934946
+  },
+  "Hilliard Gates Sports Center, Fort Wayne": null,
+  "Hilton Coliseum, Ames": {
+    "latitude": 42.0210001,
+    "longitude": -93.6347686
+  },
+  "Hinkle Fieldhouse, Indianapolis": {
+    "latitude": 39.8435958,
+    "longitude": -86.1674277
+  },
+  "Hobey Baker Memorial Rink, Princeton": {
+    "latitude": 40.3429351,
+    "longitude": -74.6577987
+  },
+  "Holmes Convocation Center, Boone": {
+    "latitude": 36.2107135,
+    "longitude": -81.675873
+  },
+  "Homestead-Miami Speedway, Homestead": {
+    "latitude": 25.4517516,
+    "longitude": -80.4094304
+  },
+  "Honda Center, Anaheim": {
+    "latitude": 33.8078316,
+    "longitude": -117.876534
+  },
+  "Hong Kong, Hong Kong, China": {
+    "latitude": 22.2818333,
+    "longitude": 114.1582831
+  },
+  "Hooper Eblen Center, Cookeville": {
+    "latitude": 36.1784191,
+    "longitude": -85.5098221
+  },
+  "Hope Coliseum, Morgantown": null,
+  "Hornet Pavilion, Sacramento": null,
+  "Hornet Stadium, Sacramento": {
+    "latitude": 38.5556698,
+    "longitude": -121.4229535
+  },
+  "Houchens Industries-L.T. Smith Stadium, Bowling Green": null,
+  "Houghton, MI, USA": {
+    "latitude": 46.8591287,
+    "longitude": -88.7774734
+  },
+  "Houston Field House, Troy": {
+    "latitude": 42.7321286,
+    "longitude": -73.6695059
+  },
+  "Houston, TX": {
+    "latitude": 29.7589382,
+    "longitude": -95.3676974
+  },
+  "Houston, TX, USA": {
+    "latitude": 29.7589382,
+    "longitude": -95.3676974
+  },
+  "Hull, England": {
+    "latitude": 53.7623863,
+    "longitude": -0.3301214
+  },
+  "Hulman Center, Terre Haute": {
+    "latitude": 39.4685371,
+    "longitude": -87.405126
+  },
+  "Humphrey Coliseum, Starkville": null,
+  "Huntington Bank Field, Cleveland": {
+    "latitude": 41.5060559,
+    "longitude": -81.6997118
+  },
+  "Huntington Bank Stadium, Minneapolis": {
+    "latitude": 44.9765397,
+    "longitude": -93.2240767
+  },
+  "Huntsville, TX, USA": {
+    "latitude": 30.7235263,
+    "longitude": -95.5507771
+  },
+  "Huskie Stadium, Dekalb": {
+    "latitude": 41.9340747,
+    "longitude": -88.7779701
+  },
+  "Husky Stadium, Seattle": {
+    "latitude": 47.6503736,
+    "longitude": -122.301976
+  },
+  "Hyland Arena, Saint Charles": {
+    "latitude": 38.7891692,
+    "longitude": -90.5035929
+  },
+  "Hynes Athletics Center, New Rochelle": null,
+  "Hytche Center, Princess Anne": null,
+  "ICCU Arena, Moscow": null,
+  "Icardo Center, Bakersfield": {
+    "latitude": 35.3475847,
+    "longitude": -119.1025982
+  },
+  "Imperial Arena, Nassau": null,
+  "Indian Wells, USA": {
+    "latitude": 33.7217965,
+    "longitude": -116.338303
+  },
+  "Indianapolis, IN": {
+    "latitude": 39.7683331,
+    "longitude": -86.1583502
+  },
+  "InfoCision Stadium, Akron": {
+    "latitude": 41.07251,
+    "longitude": -81.5084807
+  },
+  "Ingalls Rink, New Haven": {
+    "latitude": 41.3168105,
+    "longitude": -72.9250035
+  },
+  "Insight Credit Union Arena at Edmunds Center, DeLand": null,
+  "Inter&Co Stadium, Orlando, Florida": {
+    "latitude": 28.5411041,
+    "longitude": -81.3891411
+  },
+  "Intuit Dome, Inglewood": {
+    "latitude": 33.9442586,
+    "longitude": -118.3421719
+  },
+  "Ithaca, NY": {
+    "latitude": 42.4374175,
+    "longitude": -76.5483724
+  },
+  "Itta Bena, MS": {
+    "latitude": 33.4951269,
+    "longitude": -90.3229458
+  },
+  "J. Lawrence Walkup Skydome, Flagstaff": null,
+  "JMA Wireless Dome, Syracuse": {
+    "latitude": 43.0362837,
+    "longitude": -76.1363603
+  },
+  "Jack Stephens Center, Little Rock": {
+    "latitude": 34.7284769,
+    "longitude": -92.340457
+  },
+  "Jack Trice Stadium, Ames": {
+    "latitude": 42.0140049,
+    "longitude": -93.6357593
+  },
+  "Jack and Ruth Ann Hill Convocation Center, Statesboro": null,
+  "Jacksonville, FL": {
+    "latitude": 30.3262247,
+    "longitude": -81.6579179
+  },
+  "Jadwin Gymnasium, Princeton": {
+    "latitude": 40.3434086,
+    "longitude": -74.6486474
+  },
+  "James A. Rhodes Arena, Akron": {
+    "latitude": 41.0758937,
+    "longitude": -81.508645
+  },
+  "James T. Morris Arena, Indianapolis": null,
+  "Jan Breydel Stadium, Brugge": {
+    "latitude": 51.1933461,
+    "longitude": 3.1805853
+  },
+  "Jeffery P. Hazell Athletics Center, West Haven": null,
+  "Jenny Craig Pavilion, San Diego": {
+    "latitude": 32.7744602,
+    "longitude": -117.183717
+  },
+  "Jerry Richardson Indoor Stadium, Spartanburg": {
+    "latitude": 34.9632234,
+    "longitude": -81.9329384
+  },
+  "Jerry Richardson Stadium, Charlotte": {
+    "latitude": 35.310474,
+    "longitude": -80.7400756
+  },
+  "Jersey Mike’s Arena, Piscataway": {
+    "latitude": 40.5251962,
+    "longitude": -74.441356
+  },
+  "Joan C. Edwards Stadium, Huntington": {
+    "latitude": 38.4248685,
+    "longitude": -82.4210088
+  },
+  "Joan Perry Brock Center, Farmville": null,
+  "Joe Aillet Stadium, Ruston": {
+    "latitude": 32.5320136,
+    "longitude": -92.6559397
+  },
+  "Joel & Diane Bloom Wellness and Events Center, Newark": {
+    "latitude": 40.7422974,
+    "longitude": -74.1804097
+  },
+  "John A. Alario Sr. Event Center, Westwego": {
+    "latitude": 29.9054733,
+    "longitude": -90.1627914
+  },
+  "John Glaser Arena, Philadelphia": null,
+  "John J. Lee Amphitheater, New Haven": null,
+  "John M. Belk Arena, Davidson": {
+    "latitude": 35.4992414,
+    "longitude": -80.840296
+  },
+  "John Paul Jones Arena, Charlottesville": {
+    "latitude": 38.0459828,
+    "longitude": -78.5066437
+  },
+  "John W. Pope Jr. Convocation Center, Buies Creek": null,
+  "Johnny \"Red\" Floyd Stadium, Murfreesboro": {
+    "latitude": 35.8512874,
+    "longitude": -86.3682714
+  },
+  "Jon M. Huntsman Center, Salt Lake City": {
+    "latitude": 40.7620351,
+    "longitude": -111.8387946
+  },
+  "Jones Convocation Center, Chicago": {
+    "latitude": 41.7165483,
+    "longitude": -87.6085078
+  },
+  "Jordan-Hare Stadium, Auburn": {
+    "latitude": 32.6021616,
+    "longitude": -85.4891613
+  },
+  "Joseph G. Echols Hall, Norfolk": {
+    "latitude": 36.8479811,
+    "longitude": -76.2581611
+  },
+  "KFC Yum! Center, Louisville": {
+    "latitude": 38.2576964,
+    "longitude": -85.7538599
+  },
+  "Kalamazoo, MI, USA": {
+    "latitude": 42.291707,
+    "longitude": -85.5872286
+  },
+  "Kaplan Arena, Williamsburg": {
+    "latitude": 37.2734943,
+    "longitude": -76.7197211
+  },
+  "Kaseya Center, Miami": {
+    "latitude": 25.7813595,
+    "longitude": -80.1879435
+  },
+  "Kathleen and Tom Elam Center, Martin": null,
+  "Kelly/Shorts Stadium, Mount Pleasant": {
+    "latitude": 43.5776229,
+    "longitude": -84.7710514
+  },
+  "Kenan Stadium, Chapel Hill": {
+    "latitude": 35.9069432,
+    "longitude": -79.0478199
+  },
+  "Kennedy Family Athletic Complex, Lowell": null,
+  "Kennesaw, GA": {
+    "latitude": 34.0234337,
+    "longitude": -84.6154897
+  },
+  "Kennesaw, GA, USA": {
+    "latitude": 34.0234337,
+    "longitude": -84.6154897
+  },
+  "Kent, OH, USA": {
+    "latitude": 41.1513108,
+    "longitude": -81.3578047
+  },
+  "KeyBank Center, Buffalo": {
+    "latitude": 42.8751467,
+    "longitude": -78.8766359
+  },
+  "Kia Center, Orlando": {
+    "latitude": 28.5392867,
+    "longitude": -81.3838892
+  },
+  "Kidd Brewer Stadium, Boone": {
+    "latitude": 36.2114887,
+    "longitude": -81.6855717
+  },
+  "Kimmel Arena, Asheville": {
+    "latitude": 35.6180466,
+    "longitude": -82.5688335
+  },
+  "Kingston, RI": {
+    "latitude": 41.473211,
+    "longitude": -71.5224977
+  },
+  "Kinnick Stadium, Iowa City": {
+    "latitude": 41.6586246,
+    "longitude": -91.5511915
+  },
+  "Kinoshita Group Japan Open Tennis Championships, Tokyo, Japan": null,
+  "Kinoshita Group Japan Open, Osaka, Japan": null,
+  "Kirby Sports Center, Easton": {
+    "latitude": 40.7017003,
+    "longitude": -75.209793
+  },
+  "Kissimmee, FL": {
+    "latitude": 28.2918995,
+    "longitude": -81.4075838
+  },
+  "Klotsche Center, Milwaukee": {
+    "latitude": 43.0794933,
+    "longitude": -87.8794938
+  },
+  "Knapp Center, Des Moines": {
+    "latitude": 41.6047781,
+    "longitude": -93.6522633
+  },
+  "Knights Hall, Louisville": {
+    "latitude": 38.2215512,
+    "longitude": -85.7051739
+  },
+  "Knott Arena, Emmitsburg": null,
+  "Koessler Athletic Center, Buffalo": {
+    "latitude": 42.9209345,
+    "longitude": -78.8576033
+  },
+  "Kohl Center, Madison": {
+    "latitude": 43.0694206,
+    "longitude": -89.3968776
+  },
+  "Kress Center, Green Bay": {
+    "latitude": 44.5299289,
+    "longitude": -87.9167277
+  },
+  "Kroger Field, Lexington": {
+    "latitude": 38.0227349,
+    "longitude": -84.5051192
+  },
+  "Kuala Lumpur Golf and Country Club (West Course), Kuala Lumpur": null,
+  "Kuala Lumpur, Malaysia": {
+    "latitude": 3.1516964,
+    "longitude": 101.6942371
+  },
+  "Kyle Field, College Station": {
+    "latitude": 30.6098548,
+    "longitude": -96.3413874
+  },
+  "L&N Federal Credit Union Stadium, Louisville": {
+    "latitude": 38.2060161,
+    "longitude": -85.7587734
+  },
+  "LBS Financial Credit Union Pyramid, Long Beach": {
+    "latitude": 33.7872569,
+    "longitude": -118.1143857
+  },
+  "LECOM Harborcenter, Buffalo": {
+    "latitude": 42.8763548,
+    "longitude": -78.8768126
+  },
+  "LJVM Coliseum, Winston-Salem": null,
+  "LaVell Edwards Stadium, Provo": {
+    "latitude": 40.2573194,
+    "longitude": -111.6545784
+  },
+  "Lafayette, LA, USA": {
+    "latitude": 30.2262187,
+    "longitude": -92.0178202
+  },
+  "Lahaina Civic Center, Maui": {
+    "latitude": 20.9043982,
+    "longitude": -156.6836662
+  },
+  "Laie, HI": {
+    "latitude": 21.643463,
+    "longitude": -157.9281979
+  },
+  "Lake Charles, LA": {
+    "latitude": 30.2305095,
+    "longitude": -93.2169807
+  },
+  "Lakefront Arena, New Orleans": {
+    "latitude": 30.030105,
+    "longitude": -90.0505067
+  },
+  "Lambeau Field, Green Bay": {
+    "latitude": 44.5009705,
+    "longitude": -88.0619681
+  },
+  "Landers Center, Southaven": {
+    "latitude": 34.9271019,
+    "longitude": -89.9965835
+  },
+  "Lane Stadium, Blacksburg": {
+    "latitude": 37.2198923,
+    "longitude": -80.4180039
+  },
+  "Las Vegas Street Circuit, Nevada": null,
+  "Las Vegas, NV": {
+    "latitude": 36.1674263,
+    "longitude": -115.1484131
+  },
+  "Las Vegas, NV, USA": {
+    "latitude": 36.1674263,
+    "longitude": -115.1484131
+  },
+  "Lavietes Pavilion, Cambridge": null,
+  "Lawler Arena, North Andover": {
+    "latitude": 42.6679088,
+    "longitude": -71.1200968
+  },
+  "Lawlor Events Center, Reno": {
+    "latitude": 39.5450739,
+    "longitude": -119.8183009
+  },
+  "Lawrenceville, NJ": {
+    "latitude": 40.3009876,
+    "longitude": -74.7373728
+  },
+  "LeBron James Arena, Akron": null,
+  "Leavey Center, Santa Clara": {
+    "latitude": 37.3491623,
+    "longitude": -121.9352305
+  },
+  "Lee & Penny Anderson Arena, Mendota Heights": null,
+  "Lee & Penny Anderson Arena, Saint Paul": null,
+  "Lee E. Williams Athletics and Assembly Center, Jackson": {
+    "latitude": 32.2997458,
+    "longitude": -90.2118878
+  },
+  "Leede Arena, Hanover": null,
+  "Lenovo Center, Raleigh": {
+    "latitude": 35.8033981,
+    "longitude": -78.7219166
+  },
+  "Leo D. Mahoney Arena, Fairfield": null,
+  "Levi's Stadium, Santa Clara": {
+    "latitude": 37.4029867,
+    "longitude": -121.9696489
+  },
+  "Levien Gymnasium, New York": null,
+  "Lewisburg, PA": {
+    "latitude": 40.9645337,
+    "longitude": -76.8847639
+  },
+  "Liacouras Center, Philadelphia": {
+    "latitude": 39.9798139,
+    "longitude": -75.1585825
+  },
+  "Liberty Arena (IN), Evansville": {
+    "latitude": 37.9620311,
+    "longitude": -87.6747732
+  },
+  "Liberty Arena (VA), Lynchburg": {
+    "latitude": 37.3493449,
+    "longitude": -79.1801903
+  },
+  "Liberty First Credit Union Arena, Omaha": null,
+  "Lincoln Financial Field, Philadelphia": {
+    "latitude": 39.9009099,
+    "longitude": -75.1674892
+  },
+  "LionTree Arena, San Diego": null,
+  "Lisboa Belem Open, Lisboa, Portugal": null,
+  "Lisboa, Portugal": {
+    "latitude": 38.7077507,
+    "longitude": -9.1365919
+  },
+  "Little Caesars Arena, Detroit": {
+    "latitude": 42.3409774,
+    "longitude": -83.0549545
+  },
+  "Littlejohn Coliseum, Clemson": null,
+  "Lloyd Noble Center, Norman": {
+    "latitude": 35.1870199,
+    "longitude": -97.444314
+  },
+  "Lorman, MS": {
+    "latitude": 31.8204396,
+    "longitude": -91.0501057
+  },
+  "Los Angeles Memorial Coliseum, Los Angeles": {
+    "latitude": 34.0139159,
+    "longitude": -118.2877996
+  },
+  "Losail International Circuit, Lusail": null,
+  "Lowell, MA": {
+    "latitude": 42.6414437,
+    "longitude": -71.3085329
+  },
+  "Luanda, Angola": {
+    "latitude": -8.8272699,
+    "longitude": 13.2439512
+  },
+  "Lucas Oil Stadium, Indianapolis": {
+    "latitude": 39.7590621,
+    "longitude": -86.1638376
+  },
+  "Lumen Field, Seattle": {
+    "latitude": 47.5953459,
+    "longitude": -122.3316443
+  },
+  "Lumen Field, Seattle, Washington": {
+    "latitude": 47.5953459,
+    "longitude": -122.3316443
+  },
+  "Lundholm Gymnasium, Durham": null,
+  "Lusail, Qatar": {
+    "latitude": 25.4228888,
+    "longitude": 51.5197163
+  },
+  "Lynah Rink, Ithaca": {
+    "latitude": 42.4458022,
+    "longitude": -76.4775192
+  },
+  "Lyon, France": {
+    "latitude": 45.7578137,
+    "longitude": 4.8320114
+  },
+  "M&T Bank Arena, Hamden": {
+    "latitude": 41.4139878,
+    "longitude": -72.9111709
+  },
+  "M&T Bank Center at Gampel Pavilion, Storrs": null,
+  "M&T Bank Stadium, Baltimore": {
+    "latitude": 39.2779734,
+    "longitude": -76.6226651
+  },
+  "M. M. Roberts Stadium, Hattiesburg": null,
+  "M.A.C. Center, Kent": {
+    "latitude": 46.4831028,
+    "longitude": -64.7178086
+  },
+  "MHPArena, Stuttgart": {
+    "latitude": 48.7922488,
+    "longitude": 9.2320857
+  },
+  "MVP Arena, Albany": {
+    "latitude": 42.6486276,
+    "longitude": -73.754719
+  },
+  "Mabee Center, Tulsa": {
+    "latitude": 36.04812,
+    "longitude": -95.9556507
+  },
+  "MacInnes Student Ice Arena, Houghton": null,
+  "Mackay Stadium, Reno": {
+    "latitude": 39.5468915,
+    "longitude": -119.817398
+  },
+  "Mackey Arena, West Lafayette": {
+    "latitude": 40.433335,
+    "longitude": -86.9161712
+  },
+  "Madison Square Garden, New York": {
+    "latitude": 40.7505129,
+    "longitude": -73.9935159
+  },
+  "Madrid, Spain": {
+    "latitude": 40.416782,
+    "longitude": -3.703507
+  },
+  "Magness Arena, Denver": {
+    "latitude": 39.6822661,
+    "longitude": -104.9616851
+  },
+  "Mallorca, Spain": {
+    "latitude": 39.613432,
+    "longitude": 2.8829185
+  },
+  "Malone Stadium, Monroe": {
+    "latitude": 32.5308993,
+    "longitude": -92.0660396
+  },
+  "Mankato, MN, USA": {
+    "latitude": 44.1658533,
+    "longitude": -94.0028013
+  },
+  "Maples Pavilion, Stanford": {
+    "latitude": 37.429523,
+    "longitude": -122.1605789
+  },
+  "Marina Bay Street Circuit, Singapore": {
+    "latitude": 1.2912718,
+    "longitude": 103.8642605
+  },
+  "Marriott Center, Provo": {
+    "latitude": 40.2540727,
+    "longitude": -111.6493609
+  },
+  "Martin Stadium, Pullman": {
+    "latitude": 46.7318035,
+    "longitude": -117.1603731
+  },
+  "Martin, TN": {
+    "latitude": 36.3432777,
+    "longitude": -88.8503514
+  },
+  "Martinsville Speedway, Martinsville": null,
+  "Martinsville, VA, USA": {
+    "latitude": 36.6915262,
+    "longitude": -79.8725386
+  },
+  "Martire Family Arena, Fairfield": {
+    "latitude": 41.216827,
+    "longitude": -73.2540893
+  },
+  "Maryland Heights, MO, USA": {
+    "latitude": 38.7150511,
+    "longitude": -90.435999
+  },
+  "MassMutual Center, Springfield": {
+    "latitude": 42.1019127,
+    "longitude": -72.587235
+  },
+  "Matthew Knight Arena, Eugene": {
+    "latitude": 44.0448264,
+    "longitude": -123.0663684
+  },
+  "Maverik Stadium, Logan": {
+    "latitude": 41.7519374,
+    "longitude": -111.8116703
+  },
+  "Mayo Clinic Health System Event Center, Mankato": null,
+  "McAlister Field House, Charleston": {
+    "latitude": 32.7985622,
+    "longitude": -79.9625348
+  },
+  "McArthur Center, St. Petersburg": {
+    "latitude": 27.718312,
+    "longitude": -82.6905313
+  },
+  "McCamish Pavilion, Atlanta": {
+    "latitude": 33.7806025,
+    "longitude": -84.3927616
+  },
+  "McCann Arena, Poughkeepsie": null,
+  "McCarthey Athletic Center, Spokane": {
+    "latitude": 47.6653904,
+    "longitude": -117.3991159
+  },
+  "McDermott Center, San Antonio": {
+    "latitude": 29.46808,
+    "longitude": -98.4693469
+  },
+  "McDonough Arena, Washington": {
+    "latitude": 38.9077168,
+    "longitude": -77.077429
+  },
+  "McDougald-McLendon Arena, Durham": null,
+  "McGuirk Arena, Mount Pleasant": {
+    "latitude": 43.5815664,
+    "longitude": -84.774189
+  },
+  "McKale Center at ALKEME Arena, Tucson": null,
+  "McKenzie Arena, Chattanooga": {
+    "latitude": 35.0504026,
+    "longitude": -85.3009439
+  },
+  "McLane Stadium, Waco": {
+    "latitude": 31.5582247,
+    "longitude": -97.1156821
+  },
+  "McLeod Center, Cedar Falls": {
+    "latitude": 42.5142358,
+    "longitude": -92.4673032
+  },
+  "Meehan Auditorium, Providence": {
+    "latitude": 41.831351,
+    "longitude": -71.3989522
+  },
+  "Meeks Family Fieldhouse, Evansville": null,
+  "Memorial Coliseum (IN), Fort Wayne": {
+    "latitude": 41.1154251,
+    "longitude": -85.1242024
+  },
+  "Memorial Coliseum (KY), Lexington": {
+    "latitude": 38.0394907,
+    "longitude": -84.5003865
+  },
+  "Memorial Gymnasium (TN), Nashville": {
+    "latitude": 36.1445214,
+    "longitude": -86.8072775
+  },
+  "Memorial Hall (DE), Dover": {
+    "latitude": 39.1873006,
+    "longitude": -75.542817
+  },
+  "Memorial Stadium (Bloomington, IN), Bloomington": {
+    "latitude": 39.1808943,
+    "longitude": -86.525642
+  },
+  "Memorial Stadium (Clemson, SC), Clemson": null,
+  "Memorial Stadium (Lincoln, NE), Lincoln": {
+    "latitude": 40.8207179,
+    "longitude": -96.7047562
+  },
+  "Memorial Stadium (Norman, OK), Norman": {
+    "latitude": 35.2056786,
+    "longitude": -97.4422642
+  },
+  "Memorial Stadium, Columbia": {
+    "latitude": 38.9358467,
+    "longitude": -92.3332826
+  },
+  "Memphis, TN": {
+    "latitude": 35.146026,
+    "longitude": -90.0517786
+  },
+  "Mendota Heights, MN, USA": {
+    "latitude": 44.8835768,
+    "longitude": -93.1382749
+  },
+  "Mercedes-Benz Stadium, Atlanta": {
+    "latitude": 33.7554123,
+    "longitude": -84.4008493
+  },
+  "Mercedes-Benz Stadium, Atlanta, Georgia": {
+    "latitude": 33.7554123,
+    "longitude": -84.4008493
+  },
+  "Mercyhurst Athletic Center, Erie": {
+    "latitude": 42.1039449,
+    "longitude": -80.055854
+  },
+  "Merkert Gymnasium, South Easton": {
+    "latitude": 42.0574641,
+    "longitude": -71.0788529
+  },
+  "Messa Rink at Achilles Center, Schenectady": null,
+  "MetLife Stadium, East Rutherford": {
+    "latitude": 40.8135071,
+    "longitude": -74.0743442
+  },
+  "Meta APEX, Las Vegas": null,
+  "Michael J. Hagan '85 Arena, Philadelphia": null,
+  "Michelob ULTRA Arena, Las Vegas": {
+    "latitude": 36.0906483,
+    "longitude": -115.1790209
+  },
+  "Michie Stadium, West Point": null,
+  "Michigan Stadium, Ann Arbor": {
+    "latitude": 42.2658285,
+    "longitude": -83.7478267
+  },
+  "Midco Arena, Sioux Falls": {
+    "latitude": 43.5215648,
+    "longitude": -96.7402299
+  },
+  "Milan Puskar Stadium, Morgantown": {
+    "latitude": 39.6501842,
+    "longitude": -79.9549877
+  },
+  "Millett Hall, Oxford": {
+    "latitude": 39.5172372,
+    "longitude": -84.7345539
+  },
+  "Minneapolis, MN": {
+    "latitude": 44.9772995,
+    "longitude": -93.2654692
+  },
+  "Minneapolis, MN, USA": {
+    "latitude": 44.9772995,
+    "longitude": -93.2654692
+  },
+  "Mississippi Coliseum, Jackson": {
+    "latitude": 32.3001616,
+    "longitude": -90.1720282
+  },
+  "Missoula, MT": {
+    "latitude": 46.8701049,
+    "longitude": -113.995267
+  },
+  "Mitchell Center, Mobile": {
+    "latitude": 30.692283,
+    "longitude": -88.1796877
+  },
+  "Mizzou Arena, Columbia": {
+    "latitude": 38.9324819,
+    "longitude": -92.3337338
+  },
+  "Moby Arena, Fort Collins": {
+    "latitude": 40.5756841,
+    "longitude": -105.0932166
+  },
+  "Moda Center, Portland": {
+    "latitude": 45.5315787,
+    "longitude": -122.6668337
+  },
+  "Mohegan Sun Arena, Uncasville": {
+    "latitude": 41.4911078,
+    "longitude": -72.0897434
+  },
+  "Monroe, LA": {
+    "latitude": 32.5025471,
+    "longitude": -92.116219
+  },
+  "Montagne Center, Beaumont": {
+    "latitude": 30.0440591,
+    "longitude": -94.0707212
+  },
+  "Moody Center, Austin": {
+    "latitude": 30.2809367,
+    "longitude": -97.7306522
+  },
+  "Moody Coliseum (Abilene), Abilene": {
+    "latitude": 32.4703537,
+    "longitude": -99.7092155
+  },
+  "Moody Coliseum (Dallas), Dallas": {
+    "latitude": 32.8403971,
+    "longitude": -96.7806817
+  },
+  "Moon Township, PA, USA": {
+    "latitude": 40.5061,
+    "longitude": -80.2082
+  },
+  "Moore Gymnasium (FL), Daytona Beach": null,
+  "Moraga, CA": {
+    "latitude": 37.834897,
+    "longitude": -122.12883
+  },
+  "Morehead, KY": {
+    "latitude": 38.1839705,
+    "longitude": -83.4326841
+  },
+  "Morgantown, WV": {
+    "latitude": 39.6296809,
+    "longitude": -79.9559437
+  },
+  "Mortgage Matchup Center, Phoenix": {
+    "latitude": 33.4460392,
+    "longitude": -112.0711013
+  },
+  "Moscow, ID": {
+    "latitude": 46.7323875,
+    "longitude": -117.000165
+  },
+  "Mott Athletics Center, San Luis Obispo": null,
+  "Mountain America Center, Idaho Falls": {
+    "latitude": 43.4812545,
+    "longitude": -112.0654261
+  },
+  "Mountain America Stadium, Tempe": {
+    "latitude": 33.4263095,
+    "longitude": -111.932659
+  },
+  "Mullett Arena, Tempe": {
+    "latitude": 33.426643,
+    "longitude": -111.9284887
+  },
+  "Mullins Center, Amherst": {
+    "latitude": 42.3895203,
+    "longitude": -72.5334498
+  },
+  "Munich, Germany": {
+    "latitude": 48.1371079,
+    "longitude": 11.5753822
+  },
+  "Munn Ice Arena, East Lansing": {
+    "latitude": 42.7281453,
+    "longitude": -84.4893865
+  },
+  "Murphy Center, Murfreesboro": {
+    "latitude": 35.852395,
+    "longitude": -86.3695467
+  },
+  "NIU Convocation Center, Dekalb": null,
+  "Naples, FL": {
+    "latitude": 26.1421976,
+    "longitude": -81.7942944
+  },
+  "Naples, FL, USA": {
+    "latitude": 26.1421976,
+    "longitude": -81.7942944
+  },
+  "Nashville, TN": {
+    "latitude": 36.1622767,
+    "longitude": -86.7742984
+  },
+  "Nassau, Bahamas": {
+    "latitude": 25.0782266,
+    "longitude": -77.3383438
+  },
+  "Nationwide Arena, Columbus": {
+    "latitude": 39.9691873,
+    "longitude": -83.00608
+  },
+  "Navy-Marine Corps Memorial Stadium, Annapolis": {
+    "latitude": 38.9847567,
+    "longitude": -76.5070765
+  },
+  "Nevada, USA": {
+    "latitude": 39.5158825,
+    "longitude": -116.853722
+  },
+  "Neville Arena, Auburn": {
+    "latitude": 32.6024142,
+    "longitude": -85.4919263
+  },
+  "New Britain, CT": {
+    "latitude": 41.6611881,
+    "longitude": -72.7795594
+  },
+  "New Haven, CT": {
+    "latitude": 41.3082138,
+    "longitude": -72.9250518
+  },
+  "New Orleans, LA": {
+    "latitude": 29.9574657,
+    "longitude": -90.0629493
+  },
+  "New Rochelle, NY": {
+    "latitude": 40.9115386,
+    "longitude": -73.7826363
+  },
+  "New York, NY": {
+    "latitude": 40.7127281,
+    "longitude": -74.0060152
+  },
+  "Newman Arena, Ithaca": null,
+  "Neyland Stadium, Knoxville": {
+    "latitude": 35.9550206,
+    "longitude": -83.9241185
+  },
+  "Niagara Falls, NY": {
+    "latitude": 43.084841,
+    "longitude": -79.0701786
+  },
+  "Ningbo, China PR": {
+    "latitude": 30.3439101,
+    "longitude": 121.2251147
+  },
+  "Nippert Stadium, Cincinnati": {
+    "latitude": 39.1311213,
+    "longitude": -84.5162298
+  },
+  "Nissan Stadium, Nashville": {
+    "latitude": 36.1665236,
+    "longitude": -86.7713148
+  },
+  "Norfolk, VA, USA": {
+    "latitude": 36.8493695,
+    "longitude": -76.2899539
+  },
+  "North Andover, MA": {
+    "latitude": 42.7029687,
+    "longitude": -71.1309117
+  },
+  "North Little Rock, AR": {
+    "latitude": 34.769536,
+    "longitude": -92.2670941
+  },
+  "Northridge, CA": {
+    "latitude": 34.2345615,
+    "longitude": -118.5369316
+  },
+  "Northwell Health Ice Center, East Meadow": {
+    "latitude": 40.7269495,
+    "longitude": -73.5763912
+  },
+  "Northwest Stadium, Landover": {
+    "latitude": 38.9076694,
+    "longitude": -76.864533
+  },
+  "Notre Dame Stadium, Notre Dame": {
+    "latitude": 41.6984231,
+    "longitude": -86.2339582
+  },
+  "Nu Stadium, Miami, Florida": {
+    "latitude": 25.7924491,
+    "longitude": -80.2602921
+  },
+  "Nutter Center, Dayton": null,
+  "Národny Futbalovy Stadión, Bratislava": {
+    "latitude": 48.1634912,
+    "longitude": 17.1367945
+  },
+  "OPAP Arena, Athens": {
+    "latitude": 38.0371873,
+    "longitude": 23.7409322
+  },
+  "OU Credit Union O'rena, Rochester": null,
+  "Ocean Bank Convocation Center, Miami": {
+    "latitude": 25.7569394,
+    "longitude": -80.3798026
+  },
+  "Ocean Center, Daytona Beach": {
+    "latitude": 29.2284538,
+    "longitude": -81.0111298
+  },
+  "OceanFirst Bank Center, West Long Branch": {
+    "latitude": 40.2793627,
+    "longitude": -74.0076094
+  },
+  "Ohio Stadium, Columbus": {
+    "latitude": 40.0016458,
+    "longitude": -83.0197374
+  },
+  "Old Trafford, Manchester": {
+    "latitude": 53.4631096,
+    "longitude": -2.2913865
+  },
+  "Olimpico, Roma": {
+    "latitude": 41.9379589,
+    "longitude": 12.450577
+  },
+  "Omaha, NE": {
+    "latitude": 41.2587459,
+    "longitude": -95.9383758
+  },
+  "Omitama, Japan": {
+    "latitude": 36.2389756,
+    "longitude": 140.3523684
+  },
+  "Omni Barton Creek Resort & Spa (Fazio Canyons Course), Austin": null,
+  "Orange, CA": {
+    "latitude": 33.750631,
+    "longitude": -117.8722311
+  },
+  "Orangeburg, SC": {
+    "latitude": 33.4918203,
+    "longitude": -80.8556476
+  },
+  "Orlando, FL, USA": {
+    "latitude": 28.5421218,
+    "longitude": -81.379045
+  },
+  "Orono, ME": {
+    "latitude": 44.883607,
+    "longitude": -68.672791
+  },
+  "Orono, ME, USA": {
+    "latitude": 44.883607,
+    "longitude": -68.672791
+  },
+  "Osaka, Japan": {
+    "latitude": 34.6937569,
+    "longitude": 135.5014539
+  },
+  "Our Lady of Lourdes Stadium, Lafayette": null,
+  "Oxford, MS": {
+    "latitude": 34.3663773,
+    "longitude": -89.5187664
+  },
+  "Oxford, OH, USA": {
+    "latitude": 39.5103048,
+    "longitude": -84.7420519
+  },
+  "PPG Paints Arena, Pittsburgh": {
+    "latitude": 40.4395912,
+    "longitude": -79.9895408
+  },
+  "Palazzo dello Sport, Rome": {
+    "latitude": 41.825263,
+    "longitude": 12.4665751
+  },
+  "Palm Springs, CA": {
+    "latitude": 33.8246269,
+    "longitude": -116.540303
+  },
+  "Pan American Center, Las Cruces": {
+    "latitude": 32.283999,
+    "longitude": -106.7422274
+  },
+  "Parc des Princes, Paris": {
+    "latitude": 48.8413634,
+    "longitude": 2.2530693
+  },
+  "Paris, France": {
+    "latitude": 48.8588897,
+    "longitude": 2.320041
+  },
+  "Patrick Gymnasium, Burlington": {
+    "latitude": 44.4700892,
+    "longitude": -73.1947872
+  },
+  "Paul Porter Arena, Boiling Springs": null,
+  "Pauley Pavilion, Los Angeles": {
+    "latitude": 34.0704877,
+    "longitude": -118.4467863
+  },
+  "PayPal Park, San Jose, California": {
+    "latitude": 37.3513087,
+    "longitude": -121.924672
+  },
+  "Paycom Center, Oklahoma City": {
+    "latitude": 35.4633961,
+    "longitude": -97.5150815
+  },
+  "Paycor Stadium, Cincinnati": {
+    "latitude": 39.0954645,
+    "longitude": -84.5160488
+  },
+  "Pechanga Arena, San Diego": {
+    "latitude": 32.7553042,
+    "longitude": -117.2122696
+  },
+  "Peden Stadium, Athens": {
+    "latitude": 39.3211131,
+    "longitude": -82.1030251
+  },
+  "Pegula Ice Arena, University Park": {
+    "latitude": 40.8066561,
+    "longitude": -77.8570029
+  },
+  "Pelican Golf Club, Belleair": {
+    "latitude": 27.9307193,
+    "longitude": -82.8081218
+  },
+  "Pensacola Bay Center, Pensacola": {
+    "latitude": 30.4163944,
+    "longitude": -87.2089495
+  },
+  "Pensacola, FL": {
+    "latitude": 30.421309,
+    "longitude": -87.2169149
+  },
+  "PeoplesBank Arena, Hartford": {
+    "latitude": 41.7684583,
+    "longitude": -72.6770261
+  },
+  "Petco Park, San Diego": {
+    "latitude": 32.7071874,
+    "longitude": -117.156913
+  },
+  "Pete Hanna Center, Homewood": {
+    "latitude": 33.4638315,
+    "longitude": -86.7971648
+  },
+  "Pete Maravich Assembly Center, Baton Rouge": {
+    "latitude": 30.4144753,
+    "longitude": -91.1844894
+  },
+  "Pete Mathews Coliseum, Jacksonville": {
+    "latitude": 33.8241454,
+    "longitude": -85.7734926
+  },
+  "Petersen Events Center, Pittsburgh": {
+    "latitude": 40.4440003,
+    "longitude": -79.9621193
+  },
+  "Philadelphia, PA": {
+    "latitude": 39.9527237,
+    "longitude": -75.1635262
+  },
+  "Philips Stadion, Eindhoven": {
+    "latitude": 51.4417077,
+    "longitude": 5.4674257
+  },
+  "Phoenix International Raceway, Avondale": null,
+  "Phoenix, AZ": {
+    "latitude": 33.4484367,
+    "longitude": -112.074141
+  },
+  "Physical Education Complex, Baltimore": {
+    "latitude": 39.3144112,
+    "longitude": -76.6566809
+  },
+  "Pine Beach Golf Links, Haenam-gun": {
+    "latitude": 34.6979855,
+    "longitude": 126.2642672
+  },
+  "Pine Bluff, AR": {
+    "latitude": 34.2228884,
+    "longitude": -92.004334
+  },
+  "Pinnacle Bank Arena, Lincoln": {
+    "latitude": 40.817856,
+    "longitude": -96.7125281
+  },
+  "Pitbull Stadium, Miami": {
+    "latitude": 25.7524884,
+    "longitude": -80.3778903
+  },
+  "Pittsburgh, PA": {
+    "latitude": 40.4406968,
+    "longitude": -80.0025666
+  },
+  "Pizzitola Sports Center, Providence": null,
+  "Port Royal Golf Course, Southampton Parish": {
+    "latitude": 32.2624549,
+    "longitude": -64.874448
+  },
+  "Portman Road, Ipswich": {
+    "latitude": 52.057277,
+    "longitude": 1.1458453
+  },
+  "Poughkeepsie, NY": {
+    "latitude": 41.7065539,
+    "longitude": -73.9283672
+  },
+  "Prairie View, TX": {
+    "latitude": 30.0857916,
+    "longitude": -95.9907058
+  },
+  "Prather Coliseum, Natchitoches": {
+    "latitude": 31.7439631,
+    "longitude": -93.0951189
+  },
+  "Pratt & Whitney Stadium, East Hartford": {
+    "latitude": 41.7596011,
+    "longitude": -72.6188311
+  },
+  "Premier America Credit Union Arena, Northridge": null,
+  "Princess Anne, MD": {
+    "latitude": 38.2028428,
+    "longitude": -75.6920008
+  },
+  "Princess Auto Stadium, Winnipeg": {
+    "latitude": 49.8077586,
+    "longitude": -97.1429177
+  },
+  "Progressive Field, Cleveland": {
+    "latitude": 41.4958802,
+    "longitude": -81.685345
+  },
+  "Protective Stadium, Birmingham": {
+    "latitude": 33.5275724,
+    "longitude": -86.8090626
+  },
+  "Providence Park, Portland, Oregon": {
+    "latitude": 45.5215291,
+    "longitude": -122.6918185
+  },
+  "Providence, RI": {
+    "latitude": 41.8239891,
+    "longitude": -71.4128343
+  },
+  "Provident Credit Union Event Center, San Jose": null,
+  "Prudential Center, Newark": {
+    "latitude": 40.7334302,
+    "longitude": -74.1711482
+  },
+  "Prudential Hong Kong Tennis Open, Hong Kong, Hong Kong, China": null,
+  "Purcell Pavilion, South Bend": null,
+  "Q2 Stadium, Austin, Texas": null,
+  "Qubein Center, High Point": {
+    "latitude": 35.9782697,
+    "longitude": -79.996878
+  },
+  "Queens, NY": {
+    "latitude": 40.7135078,
+    "longitude": -73.8283132
+  },
+  "Queretaro Open, Santiago de Querétaro, Mexico": null,
+  "R.W. Harrison HPER Complex, Itta Bena": null,
+  "RAMS Park, Istanbul": {
+    "latitude": 41.103369,
+    "longitude": 28.9909522
+  },
+  "Radford, VA": {
+    "latitude": 37.1343148,
+    "longitude": -80.5749169
+  },
+  "Raider Arena, Destin": null,
+  "Raiffeisen Arena (Linz), Linz": {
+    "latitude": 48.2935745,
+    "longitude": 14.2765553
+  },
+  "Ralph Engelstad Arena, Grand Forks": {
+    "latitude": 47.9277802,
+    "longitude": -97.071572
+  },
+  "Ramsey Center, Cullowhee": {
+    "latitude": 35.3036696,
+    "longitude": -83.1822673
+  },
+  "Rate Field, Chicago": {
+    "latitude": 41.829692,
+    "longitude": -87.6337919
+  },
+  "Ratner Athletics Center, Chicago": null,
+  "Raymond James Stadium, Tampa": {
+    "latitude": 27.9759793,
+    "longitude": -82.5033545
+  },
+  "Rec Hall, University Park": {
+    "latitude": 40.795443,
+    "longitude": -77.8686329
+  },
+  "Red Bull Arena, Leipzig": {
+    "latitude": 51.3457078,
+    "longitude": 12.3482361
+  },
+  "Redhawk Center, Seattle": {
+    "latitude": 47.607286,
+    "longitude": -122.3134858
+  },
+  "Reed Arena, College Station": {
+    "latitude": 30.6056832,
+    "longitude": -96.3462955
+  },
+  "Reed Green Coliseum, Hattiesburg": {
+    "latitude": 31.3309965,
+    "longitude": -89.3379338
+  },
+  "Reed Gym, Pocatello": {
+    "latitude": 42.8645296,
+    "longitude": -112.4289711
+  },
+  "Reese Court, Cheney": {
+    "latitude": 47.491366,
+    "longitude": -117.5894021
+  },
+  "Reilly Center, Saint Bonaventure": null,
+  "Reitz Arena, Baltimore": null,
+  "Reliant Stadium, Houston": {
+    "latitude": 29.6848581,
+    "longitude": -95.4108015
+  },
+  "Renaissance Coliseum, Peoria": {
+    "latitude": 40.6991524,
+    "longitude": -89.6179594
+  },
+  "Resch Center, Ashwaubenon": {
+    "latitude": 44.4994911,
+    "longitude": -88.0550423
+  },
+  "Reser Stadium, Corvallis": {
+    "latitude": 44.5595625,
+    "longitude": -123.2814752
+  },
+  "Resorts World Event Center, Las Vegas": null,
+  "Reto Win Tennis Cali Open, Cali, Colombia": null,
+  "Reynolds Center, Tulsa": {
+    "latitude": 36.1490016,
+    "longitude": -95.9421785
+  },
+  "Reynolds Coliseum, Raleigh": {
+    "latitude": 35.7835138,
+    "longitude": -78.6699065
+  },
+  "Rice-Eccles Stadium, Salt Lake City": {
+    "latitude": 40.7598165,
+    "longitude": -111.8489131
+  },
+  "Richmond, KY": {
+    "latitude": 37.7478572,
+    "longitude": -84.2946539
+  },
+  "Riverdale, NY": {
+    "latitude": 40.90056,
+    "longitude": -73.90639
+  },
+  "Riverside, CA": {
+    "latitude": 33.9732079,
+    "longitude": -117.3730926
+  },
+  "Riyadh Air Metropolitano, Madrid": {
+    "latitude": 40.4360102,
+    "longitude": -3.599699
+  },
+  "Robert W. Plaster Stadium, Springfield": {
+    "latitude": 37.1976101,
+    "longitude": -93.2798754
+  },
+  "Robins Center, Richmond": {
+    "latitude": 37.5806819,
+    "longitude": -77.538943
+  },
+  "Rochester, MI": {
+    "latitude": 42.680588,
+    "longitude": -83.1338214
+  },
+  "Rock Hill Sports & Event Center, Rock Hill": {
+    "latitude": 34.9320636,
+    "longitude": -81.0297071
+  },
+  "Rocket Arena, Cleveland": {
+    "latitude": 41.4966862,
+    "longitude": -81.6885754
+  },
+  "Rogers Arena, Vancouver": {
+    "latitude": 49.2779085,
+    "longitude": -123.1089417
+  },
+  "Rogers Place, Edmonton": {
+    "latitude": 53.5467936,
+    "longitude": -113.4977946
+  },
+  "Rolex Paris Masters, Paris, France": null,
+  "Rolex Shanghai Masters, Shanghai, China PR": null,
+  "Rose Bowl, Pasadena": {
+    "latitude": 34.1613492,
+    "longitude": -118.1676674
+  },
+  "Rose Hill Gym, Bronx": null,
+  "Ross-Ade Stadium, West Lafayette": {
+    "latitude": 40.434568,
+    "longitude": -86.9184948
+  },
+  "RoveretOpen Città della Pace, Rovereto, Italy": null,
+  "Rovereto, Italy": {
+    "latitude": 45.886548,
+    "longitude": 11.0452369
+  },
+  "Ruben Rodriguez Coliseum, Bayamon": null,
+  "Rupp Arena, Lexington": {
+    "latitude": 38.0494124,
+    "longitude": -84.5023586
+  },
+  "Ryan Field, Evanston": {
+    "latitude": 42.0668943,
+    "longitude": -87.6908017
+  },
+  "Rynearson Stadium, Ypsilanti": {
+    "latitude": 42.2558724,
+    "longitude": -83.6473747
+  },
+  "S.B. Ballard Stadium, Norfolk": null,
+  "SAP Center at San Jose, San Jose": {
+    "latitude": 37.3328604,
+    "longitude": -121.9012247
+  },
+  "SECU Arena, Towson": {
+    "latitude": 39.3873809,
+    "longitude": -76.6170993
+  },
+  "SECU Stadium, College Park": {
+    "latitude": 38.9902987,
+    "longitude": -76.9474534
+  },
+  "SHI Stadium, Piscataway": {
+    "latitude": 40.5135037,
+    "longitude": -74.4651433
+  },
+  "SRC Arena, Riverside": null,
+  "SSE Arena (NIR), Belfast": null,
+  "Sacramento, CA": {
+    "latitude": 38.5810606,
+    "longitude": -121.493895
+  },
+  "Saint Bonaventure, NY": {
+    "latitude": 42.08047,
+    "longitude": -78.4772369
+  },
+  "Saint Paul, MN": {
+    "latitude": 44.9497487,
+    "longitude": -93.0931028
+  },
+  "Saint Simons Island, GA, USA": {
+    "latitude": 31.2182863,
+    "longitude": -81.3612077
+  },
+  "Salisbury, NC": {
+    "latitude": 35.6709727,
+    "longitude": -80.4742261
+  },
+  "Samsun Open, Samsun, Türkiye": null,
+  "Samsun, Türkiye": {
+    "latitude": 41.2303557,
+    "longitude": 35.9683338
+  },
+  "San Antonio, TX": {
+    "latitude": 29.4246002,
+    "longitude": -98.4951405
+  },
+  "San Diego, CA": {
+    "latitude": 32.7157062,
+    "longitude": -117.1638284
+  },
+  "San Jose, CA": {
+    "latitude": 37.3361663,
+    "longitude": -121.890591
+  },
+  "San Luis Obispo, CA": {
+    "latitude": 35.3540209,
+    "longitude": -120.375716
+  },
+  "San Marcos, TX": {
+    "latitude": 29.8826436,
+    "longitude": -97.9405828
+  },
+  "San Siro, Milano": {
+    "latitude": 45.4782003,
+    "longitude": 9.123964
+  },
+  "Sanford Center, Bemidji": {
+    "latitude": 47.4635217,
+    "longitude": -94.8533435
+  },
+  "Sanford Coyote Sports Center, Vermillion": {
+    "latitude": 42.7900965,
+    "longitude": -96.9278775
+  },
+  "Sanford Pentagon, Sioux Falls": {
+    "latitude": 43.5916439,
+    "longitude": -96.7547673
+  },
+  "Sanford Stadium, Athens": {
+    "latitude": 33.9497855,
+    "longitude": -83.3732093
+  },
+  "Santa Barbara, CA": {
+    "latitude": 34.4221319,
+    "longitude": -119.702667
+  },
+  "Santiago Bernabéu, Madrid": {
+    "latitude": 40.4523667,
+    "longitude": -3.6907254
+  },
+  "Santiago de Querétaro, Mexico": {
+    "latitude": 20.5922997,
+    "longitude": -100.3917424
+  },
+  "Sault Sainte Marie, MI, USA": {
+    "latitude": 46.4976734,
+    "longitude": -84.3476583
+  },
+  "Savage Arena, Toledo": {
+    "latitude": 41.6601307,
+    "longitude": -83.6100354
+  },
+  "Save Mart Center, Fresno": {
+    "latitude": 36.8096852,
+    "longitude": -119.738527
+  },
+  "Schar Center, Elon": {
+    "latitude": 36.1080901,
+    "longitude": -79.5106844
+  },
+  "Scheels Center, Fargo": {
+    "latitude": 46.8830732,
+    "longitude": -96.7724471
+  },
+  "Schenectady, NY, USA": {
+    "latitude": 42.8142432,
+    "longitude": -73.9395687
+  },
+  "Scheumann Stadium, Muncie": {
+    "latitude": 40.2160071,
+    "longitude": -85.4168254
+  },
+  "Schneider Arena, Providence": {
+    "latitude": 41.8462935,
+    "longitude": -71.4335937
+  },
+  "Schollmaier Arena, Fort Worth": {
+    "latitude": 32.7088303,
+    "longitude": -97.3666973
+  },
+  "Schottenstein Center, Columbus": {
+    "latitude": 40.0076033,
+    "longitude": -83.0249567
+  },
+  "Scotiabank Arena, Toronto": {
+    "latitude": 43.6434338,
+    "longitude": -79.3790777
+  },
+  "Scotiabank Saddledome, Calgary": {
+    "latitude": 51.0374124,
+    "longitude": -114.0519642
+  },
+  "Scott Stadium, Charlottesville": {
+    "latitude": 38.0309252,
+    "longitude": -78.5136104
+  },
+  "ScottsMiracle-Gro Field, Columbus, Ohio": {
+    "latitude": 39.968362,
+    "longitude": -83.0166582
+  },
+  "Sea Island Golf Club (Seaside Course), Saint Simons Island": null,
+  "SeatGeek Stadium, Bridgeview, Illinois": {
+    "latitude": 41.7648089,
+    "longitude": -87.8061921
+  },
+  "Seawolf Sports Complex, Anchorage": {
+    "latitude": 61.1900104,
+    "longitude": -149.8279043
+  },
+  "Selhurst Park, London": {
+    "latitude": 51.3982429,
+    "longitude": -0.0852551
+  },
+  "Shanghai, China": {
+    "latitude": 31.2312707,
+    "longitude": 121.4700152
+  },
+  "Shanghai, China PR": {
+    "latitude": 31.1931965,
+    "longitude": 121.5788528
+  },
+  "Sharp Gymnasium, Houston": null,
+  "Shell Energy Stadium, Houston, Texas": {
+    "latitude": 29.7520265,
+    "longitude": -95.3523409
+  },
+  "Sheshan Golf Club, Shanghai": null,
+  "Show Me Center, Cape Girardeau": {
+    "latitude": 37.3201325,
+    "longitude": -89.5274199
+  },
+  "Siegel Center, Richmond": {
+    "latitude": 37.5528754,
+    "longitude": -77.4528272
+  },
+  "Signal Iduna Park, Aue": null,
+  "Simmons Bank Arena, North Little Rock": null,
+  "Simmons Bank Liberty Stadium, Memphis": {
+    "latitude": 35.1211305,
+    "longitude": -89.9774153
+  },
+  "Simon Skjodt Assembly Hall, Bloomington": {
+    "latitude": 39.1808741,
+    "longitude": -86.5222591
+  },
+  "Skip Chappelle Court in Memorial Gymnasium, Orono": null,
+  "Slater Family Ice Arena, Bowling Green": {
+    "latitude": 41.3790778,
+    "longitude": -83.6277335
+  },
+  "Smith-Hammond-Middleton Memorial Center, Orangeburg": null,
+  "Smithfield, RI": {
+    "latitude": 41.9220433,
+    "longitude": -71.549507
+  },
+  "Smoothie King Center, New Orleans": {
+    "latitude": 29.9490666,
+    "longitude": -90.0819634
+  },
+  "Snapdragon Stadium, San Diego": {
+    "latitude": 32.7842418,
+    "longitude": -117.1223904
+  },
+  "Snapdragon Stadium, San Diego, California": {
+    "latitude": 32.7842418,
+    "longitude": -117.1223904
+  },
+  "SoFi Stadium, Inglewood": {
+    "latitude": 33.9534074,
+    "longitude": -118.3390098
+  },
+  "Sojka Pavilion, Lewisburg": null,
+  "Soldier Field, Chicago": {
+    "latitude": 41.8624515,
+    "longitude": -87.6167151
+  },
+  "Soldier Field, Chicago, Illinois": {
+    "latitude": 41.8624515,
+    "longitude": -87.6167151
+  },
+  "South Bend, IN": {
+    "latitude": 41.6833813,
+    "longitude": -86.2500066
+  },
+  "Spartan Stadium, East Lansing": {
+    "latitude": 42.7281648,
+    "longitude": -84.4857621
+  },
+  "Spartanburg, SC": {
+    "latitude": 34.9498007,
+    "longitude": -81.9320157
+  },
+  "Spectrum Center, Charlotte": {
+    "latitude": 35.225098,
+    "longitude": -80.8391541
+  },
+  "Spiro Sports Center, Staten Island": {
+    "latitude": 40.615,
+    "longitude": -74.0958333
+  },
+  "Spokane Numerica Veterans Arena, Spokane": null,
+  "Spokane, WA": {
+    "latitude": 47.6571934,
+    "longitude": -117.42351
+  },
+  "Sporting Park, Kansas City, Kansas": {
+    "latitude": 39.1216438,
+    "longitude": -94.8233504
+  },
+  "Sports Illustrated Stadium, Harrison, New Jersey": {
+    "latitude": 40.7368897,
+    "longitude": -74.1502625
+  },
+  "Spotify Camp Nou, Barcelona": {
+    "latitude": 41.3808806,
+    "longitude": 2.1228182
+  },
+  "St. James' Park, Newcastle-upon-Tyne": {
+    "latitude": 54.9754693,
+    "longitude": -1.6218737
+  },
+  "Stabler Arena, Bethlehem": {
+    "latitude": 40.5852915,
+    "longitude": -75.3573986
+  },
+  "Stade Bollaert-Delelis, Lens": {
+    "latitude": 50.4328242,
+    "longitude": 2.8149863
+  },
+  "Stade Saputo, Montreal": {
+    "latitude": 45.5630896,
+    "longitude": -73.5526392
+  },
+  "Stade de France, Saint-Denis": {
+    "latitude": 48.9244726,
+    "longitude": 2.3601325
+  },
+  "Stadio Diego Armando Maradona, Napoli": {
+    "latitude": 40.8279773,
+    "longitude": 14.192889
+  },
+  "Stadium of Light, Sunderland": {
+    "latitude": 54.9143953,
+    "longitude": -1.3882579
+  },
+  "Stamford Bridge, London": {
+    "latitude": 51.4816869,
+    "longitude": -0.1910336
+  },
+  "Stan Sheriff Center, Honolulu": {
+    "latitude": 21.2943138,
+    "longitude": -157.8189152
+  },
+  "Stanford Stadium, Stanford": {
+    "latitude": 37.4345264,
+    "longitude": -122.1619867
+  },
+  "Starkville, MS": {
+    "latitude": 33.4638745,
+    "longitude": -88.8152074
+  },
+  "Starkville, MS, USA": {
+    "latitude": 33.4638745,
+    "longitude": -88.8152074
+  },
+  "State Farm Arena, Atlanta": {
+    "latitude": 33.7573698,
+    "longitude": -84.3963848
+  },
+  "State Farm Center, Champaign": {
+    "latitude": 40.0962914,
+    "longitude": -88.2358969
+  },
+  "State Farm Field House, Kissimmee": null,
+  "State Farm Stadium, Glendale": {
+    "latitude": 33.5270393,
+    "longitude": -112.2617088
+  },
+  "Statesboro, GA": {
+    "latitude": 32.4490141,
+    "longitude": -81.7832912
+  },
+  "Stegeman Coliseum, Athens": {
+    "latitude": 33.9427717,
+    "longitude": -83.3781357
+  },
+  "Stephen C. O'Connell Center, Gainesville": null,
+  "Stony Brook Arena, Stony Brook": null,
+  "Stony Brook, NY": {
+    "latitude": 40.908482,
+    "longitude": -73.1325471
+  },
+  "Storrs, CT": {
+    "latitude": 41.8085955,
+    "longitude": -72.2512807
+  },
+  "Strahan Arena at the University Events Center, San Marcos": null,
+  "Stroh Center, Bowling Green": {
+    "latitude": 41.3753407,
+    "longitude": -83.6263122
+  },
+  "Subaru Park, Chester, Pennsylvania": {
+    "latitude": 39.8329094,
+    "longitude": -75.3784739
+  },
+  "Sun Bowl, El Paso": {
+    "latitude": 31.7852657,
+    "longitude": -106.5062603
+  },
+  "Suncoast Credit Union Arena, Fort Myers": {
+    "latitude": 26.5480914,
+    "longitude": -81.8868503
+  },
+  "Suzhou Open, Suzhou, China PR": null,
+  "Suzhou, China PR": {
+    "latitude": 31.7553205,
+    "longitude": 120.9665273
+  },
+  "Swinney Center, Kansas City": {
+    "latitude": 39.0355454,
+    "longitude": -94.5787562
+  },
+  "Swisher Gymnasium, Jacksonville": {
+    "latitude": 30.3502514,
+    "longitude": -81.6050056
+  },
+  "Swiss Indoors Basel, Basel, Switzerland": null,
+  "Syracuse, NY": {
+    "latitude": 43.0481221,
+    "longitude": -76.1474244
+  },
+  "T-Mobile Arena, Las Vegas": {
+    "latitude": 36.102678,
+    "longitude": -115.1782239
+  },
+  "T-Mobile Center, Kansas City": {
+    "latitude": 39.0972952,
+    "longitude": -94.5799495
+  },
+  "TBD": {
+    "latitude": 21.2364995,
+    "longitude": 81.6710617
+  },
+  "TD Arena, Charleston": {
+    "latitude": 32.7854843,
+    "longitude": -79.9344361
+  },
+  "TD Garden, Boston": {
+    "latitude": 42.3662986,
+    "longitude": -71.0621622
+  },
+  "TDECU Stadium, Houston": null,
+  "TQL Stadium, Cincinnati, Ohio": {
+    "latitude": 39.1111789,
+    "longitude": -84.5222288
+  },
+  "Taffy Abel Arena, Sault Sainte Marie": null,
+  "Tahoe Blue Event Center, Stateline": {
+    "latitude": 38.9629413,
+    "longitude": -119.9382585
+  },
+  "Taiheiyo Club Minori Course, Omitama": null,
+  "Talladega Superspeedway, Talladega": {
+    "latitude": 33.5649286,
+    "longitude": -86.0665668
+  },
+  "Tallahassee, FL": {
+    "latitude": 30.4380832,
+    "longitude": -84.2809332
+  },
+  "Target Center, Minneapolis": {
+    "latitude": 44.9795917,
+    "longitude": -93.2759828
+  },
+  "Tate Rink, West Point": null,
+  "Ted Grant Court, Syracuse": null,
+  "Templeton Center, Clinton": {
+    "latitude": 34.4650836,
+    "longitude": -81.8689557
+  },
+  "The Barn by Blue Cross and Blue Shield of Minnesota, Minneapolis": null,
+  "The City Ground, Nottingham": {
+    "latitude": 52.9399387,
+    "longitude": -1.1328954
+  },
+  "The Coliseum, Carrollton": {
+    "latitude": 33.5759045,
+    "longitude": -85.103896
+  },
+  "The Dedmon Center, Radford": null,
+  "The Field House, Commerce": null,
+  "The HTC Center, Conway": null,
+  "The MKM Stadium, Hull": null,
+  "The Monument, Rapid City": {
+    "latitude": 44.0877639,
+    "longitude": -103.225399
+  },
+  "The Palestra, Philadelphia": {
+    "latitude": 39.9514018,
+    "longitude": -75.1886362
+  },
+  "The Pavilion, Las Vegas": null,
+  "The Pit, Albuquerque": {
+    "latitude": 35.0667282,
+    "longitude": -106.6321991
+  },
+  "The Reef, Jacksonville": null,
+  "The Sandy and John Black Pavilion at Ole Miss, Oxford": null,
+  "The Sobrato Center, San Francisco": {
+    "latitude": 37.7768558,
+    "longitude": -122.4495456
+  },
+  "The Super Pit, Denton": {
+    "latitude": 33.2087178,
+    "longitude": -97.1540628
+  },
+  "The Thunderdome, Santa Barbara": null,
+  "Thibodaux, LA": {
+    "latitude": 29.7957633,
+    "longitude": -90.822871
+  },
+  "Thomas & Mack Center, Las Vegas": {
+    "latitude": 36.104923,
+    "longitude": -115.1442662
+  },
+  "Thomas Assembly Center, Ruston": {
+    "latitude": 32.5320734,
+    "longitude": -92.6584855
+  },
+  "Thomas M. Ryan Center, Kingston": null,
+  "Thompson Arena, Hanover": {
+    "latitude": 43.7010426,
+    "longitude": -72.2801947
+  },
+  "Thousand Oaks, CA": {
+    "latitude": 34.1705609,
+    "longitude": -118.8375937
+  },
+  "Tiburón Golf Club (Black Course), Naples": null,
+  "Tiger Stadium (LA), Baton Rouge": {
+    "latitude": 30.4119773,
+    "longitude": -91.1838303
+  },
+  "Timmons Arena, Greenville": {
+    "latitude": 34.9180581,
+    "longitude": -82.4373229
+  },
+  "Titan Gym, Fullerton": null,
+  "Tokyo, Japan": {
+    "latitude": 35.6768601,
+    "longitude": 139.7638947
+  },
+  "Toray Pan Pacific Open Tennis, Tokyo, Japan": null,
+  "Toscano Family Ice Forum, Storrs": {
+    "latitude": 41.7990933,
+    "longitude": -72.2561534
+  },
+  "Tottenham Hotspur Stadium, London": {
+    "latitude": 51.604157,
+    "longitude": -0.0662604
+  },
+  "Townsley Law Arena, Lake Charles": null,
+  "Toyota Center (Houston), Houston": {
+    "latitude": 29.7507473,
+    "longitude": -95.3622315
+  },
+  "Toyota Stadium, Toyota Stadium": {
+    "latitude": 35.0845879,
+    "longitude": 137.1708735
+  },
+  "Trask Coliseum, Wilmington": {
+    "latitude": 34.2249506,
+    "longitude": -77.8783466
+  },
+  "Trojan Arena, Troy": {
+    "latitude": 31.802287,
+    "longitude": -85.9524336
+  },
+  "Tropicana Field, St. Petersburg": {
+    "latitude": 27.7680559,
+    "longitude": -82.6532755
+  },
+  "Truist Arena, Highland Heights": {
+    "latitude": 39.0320132,
+    "longitude": -84.4591054
+  },
+  "Truist Park, Atlanta": {
+    "latitude": 33.890738,
+    "longitude": -84.4676163
+  },
+  "Tsongas Center, Lowell": {
+    "latitude": 42.6502383,
+    "longitude": -71.3132561
+  },
+  "Tucker Center, Tallahassee": {
+    "latitude": 30.4377931,
+    "longitude": -84.2866888
+  },
+  "Tucson, AZ": {
+    "latitude": 32.2228765,
+    "longitude": -110.974847
+  },
+  "Tucson, AZ, USA": {
+    "latitude": 32.2228765,
+    "longitude": -110.974847
+  },
+  "Tudor Fieldhouse, Houston": {
+    "latitude": 29.714983,
+    "longitude": -95.4039871
+  },
+  "Tulsa, OK, USA": {
+    "latitude": 36.1563122,
+    "longitude": -95.9927516
+  },
+  "Tyson Events Center, Sioux City": {
+    "latitude": 42.4913375,
+    "longitude": -96.4071659
+  },
+  "U.S. Bank Stadium, Minneapolis": {
+    "latitude": 44.9749861,
+    "longitude": -93.2598737
+  },
+  "UBS Arena, Elmont": {
+    "latitude": 40.7116942,
+    "longitude": -73.7259229
+  },
+  "UCCU Center, Orem": {
+    "latitude": 40.2789369,
+    "longitude": -111.7184935
+  },
+  "UD Arena, Dayton": {
+    "latitude": 39.7347904,
+    "longitude": -84.2019314
+  },
+  "UFCU Stadium, San Marcos": {
+    "latitude": 29.8910593,
+    "longitude": -97.9255534
+  },
+  "UHY Center, Loudonville": {
+    "latitude": 42.7175042,
+    "longitude": -73.7487643
+  },
+  "UNF Arena, Jacksonville": null,
+  "UPMC Cooper Fieldhouse, Pittsburgh": null,
+  "UPMC Events Center, Moon Township": {
+    "latitude": 40.5202688,
+    "longitude": -80.2146739
+  },
+  "USAF Academy, CO, USA": {
+    "latitude": 38.978759,
+    "longitude": -104.8643892
+  },
+  "UTRGV Fieldhouse, Edinburg": null,
+  "UTSA Convocation Center, San Antonio": null,
+  "UW-Milwaukee Panther Arena, Milwaukee": {
+    "latitude": 43.0422882,
+    "longitude": -87.916952
+  },
+  "UWF Field House, Pensacola": null,
+  "United Center, Chicago": {
+    "latitude": 41.8806831,
+    "longitude": -87.6741851
+  },
+  "United Supermarkets Arena, Lubbock": {
+    "latitude": 33.5812506,
+    "longitude": -101.886571
+  },
+  "University Arena (MI), Kalamazoo": {
+    "latitude": 42.2833436,
+    "longitude": -85.608586
+  },
+  "University Center, Hammond": {
+    "latitude": 30.5201501,
+    "longitude": -90.4731241
+  },
+  "University Credit Union Center, Davis": null,
+  "University Credit Union Pavilion, Moraga": null,
+  "University Stadium (NM), Albuquerque": {
+    "latitude": 35.0669178,
+    "longitude": -106.6282458
+  },
+  "Valle D'Aosta Ladies Open, Courmayeur, Italy": null,
+  "Valley Children's Stadium, Fresno": {
+    "latitude": 36.8143958,
+    "longitude": -119.7580383
+  },
+  "Vanda Pharmaceuticals Mallorca Women's Championships, Mallorca, Spain": null,
+  "Vaught-Hemingway Stadium, Oxford": {
+    "latitude": 34.3619818,
+    "longitude": -89.5341523
+  },
+  "Veikkaus Arena, Helsinki": {
+    "latitude": 60.2054771,
+    "longitude": 24.9291488
+  },
+  "Venetian Arena": {
+    "latitude": 22.1476526,
+    "longitude": 113.559014
+  },
+  "Veterans Memorial Stadium (AL), Troy": {
+    "latitude": 31.7996004,
+    "longitude": -85.9519633
+  },
+  "Vidanta Vallarta, Nuevo Vallarta": {
+    "latitude": 20.6825258,
+    "longitude": -105.284769
+  },
+  "Viejas Arena, San Diego": {
+    "latitude": 32.7738109,
+    "longitude": -117.0745404
+  },
+  "Vienna, Austria": {
+    "latitude": 48.2083537,
+    "longitude": 16.3725042
+  },
+  "Viking Pavilion, Portland": {
+    "latitude": 45.5109662,
+    "longitude": -122.6868266
+  },
+  "Viking Stadion, Stavanger": {
+    "latitude": 58.9145955,
+    "longitude": 5.7309977
+  },
+  "Villa Park, Birmingham": {
+    "latitude": 52.5091264,
+    "longitude": -1.8850354
+  },
+  "Vitality Stadium, Bournemouth": {
+    "latitude": 50.7351815,
+    "longitude": -1.8383279
+  },
+  "VyStar Arena, Kennesaw": null,
+  "Waldo Stadium, Kalamazoo": {
+    "latitude": 42.2857621,
+    "longitude": -85.6011197
+  },
+  "Walens Family Field at Fifth Third Stadium, Kennesaw": null,
+  "Wallace Wade Stadium, Durham": {
+    "latitude": 35.9954458,
+    "longitude": -78.9418892
+  },
+  "Walsh Gymnasium, South Orange": {
+    "latitude": 40.7418456,
+    "longitude": -74.2449474
+  },
+  "War Memorial Stadium, Laramie": {
+    "latitude": 41.3116082,
+    "longitude": -105.5681588
+  },
+  "Warren McGuirk Alumni Stadium, Amherst": null,
+  "Watsco Center, Coral Gables": {
+    "latitude": 25.7153095,
+    "longitude": -80.2793844
+  },
+  "Welsh-Ryan Arena, Evanston": {
+    "latitude": 42.0668689,
+    "longitude": -87.6924405
+  },
+  "Wembley Stadium, London": {
+    "latitude": 51.5560695,
+    "longitude": -0.2796034
+  },
+  "West Haven, CT": {
+    "latitude": 41.2706527,
+    "longitude": -72.9470471
+  },
+  "West Point, NY": {
+    "latitude": 41.3912693,
+    "longitude": -73.9658803
+  },
+  "West Point, NY, USA": {
+    "latitude": 41.3912693,
+    "longitude": -73.9658803
+  },
+  "Western Hall, Macomb": {
+    "latitude": 40.4715145,
+    "longitude": -90.6849474
+  },
+  "White Sulphur Springs, WV": {
+    "latitude": 37.7965149,
+    "longitude": -80.2975734
+  },
+  "Whittemore Center, Durham": {
+    "latitude": 43.138345,
+    "longitude": -70.9348083
+  },
+  "William H. Pitt Center, Fairfield": null,
+  "William J. Nicks Building, Prairie View": null,
+  "William R. Johnson Coliseum, Nacogdoches": {
+    "latitude": 31.6222614,
+    "longitude": -94.6408794
+  },
+  "Williams Arena at Minges Coliseum, Greenville": null,
+  "Williams Stadium (VA), Lynchburg": {
+    "latitude": 37.3543075,
+    "longitude": -79.1749196
+  },
+  "Williams-Brice Stadium, Columbia": {
+    "latitude": 33.9731167,
+    "longitude": -81.0191564
+  },
+  "Winston-Salem, NC": {
+    "latitude": 36.0998131,
+    "longitude": -80.2440518
+  },
+  "Winthrop Coliseum, Rock Hill": {
+    "latitude": 34.9481423,
+    "longitude": -81.0149231
+  },
+  "Wintrust Arena, Chicago": {
+    "latitude": 41.8536992,
+    "longitude": -87.6213549
+  },
+  "Wolstein Center, Cleveland": {
+    "latitude": 41.4992338,
+    "longitude": -81.6766496
+  },
+  "Woodling Gymnasium, Cleveland": null,
+  "Worthen Arena, Muncie": {
+    "latitude": 40.207118,
+    "longitude": -85.40616
+  },
+  "Worthington Arena, Bozeman": null,
+  "Wuhan, China PR": {
+    "latitude": 30.6198794,
+    "longitude": 114.2573779
+  },
+  "XFINITY Center, College Park": {
+    "latitude": 38.9956239,
+    "longitude": -76.9413362
+  },
+  "Xfinity Mobile Arena, Philadelphia": {
+    "latitude": 39.9011004,
+    "longitude": -75.1720165
+  },
+  "Yager Stadium, Oxford": {
+    "latitude": 39.5194147,
+    "longitude": -84.7330855
+  },
+  "Yanitelli Center, Jersey City": {
+    "latitude": 40.7277231,
+    "longitude": -74.0731491
+  },
+  "Yankee Stadium, Bronx": {
+    "latitude": 40.8295828,
+    "longitude": -73.9265212
+  },
+  "Yas Marina Circuit, Abu dhabi": {
+    "latitude": 24.4722771,
+    "longitude": 54.6058654
+  },
+  "Yokohama Country Club, Yokohama": {
+    "latitude": 35.4231448,
+    "longitude": 139.6491193
+  },
+  "Yost Ice Arena, Ann Arbor": {
+    "latitude": 42.2675777,
+    "longitude": -83.7410248
+  },
+  "Youngstown, OH": {
+    "latitude": 41.1035786,
+    "longitude": -80.6520161
+  },
+  "Yuengling Center, Tampa": {
+    "latitude": 28.0592444,
+    "longitude": -82.4066241
+  },
+  "Yulman Stadium, New Orleans": {
+    "latitude": 29.944651,
+    "longitude": -90.1160511
+  },
+  "Zidian Family Arena at Beeghly Center, Youngstown": null,
+  "Zoeller Field at Dix Stadium, Kent": null,
+  "b1Bank Fant Coliseum, Monroe": null,
+  "crypto.com Arena, Los Angeles": {
+    "latitude": 34.0429979,
+    "longitude": -118.2671352
+  },
+  "Şükrü Saracoğlu Stadium, Istanbul": {
+    "latitude": 40.9875807,
+    "longitude": 29.0369773
+  }
+}

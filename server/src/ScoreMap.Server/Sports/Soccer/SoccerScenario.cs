@@ -10,10 +10,10 @@ internal sealed class SoccerScenario(League league) : SportScenario(league)
 {
     internal override SportPlay CreatePlay() => new MinutePlay(League, new(1.4, [(1, 1.0)], 6, null));
 
-    protected override int Capacity => 45000;
+    protected override int? Capacity => 45000;
     protected override int UsualScore => 1;
     protected override string NoteText(Random random) => Pick(random, "1st Leg", $"2nd Leg - Aggregate {random.Next(4)}-{random.Next(4)}", "Derby");
-    protected override (string Line, double Total) BettingLine(Random random, ProviderTeam favourite) => LegacyScenarioDetails.GoalOdds(random, favourite);
+    protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favourite) => LegacyScenarioDetails.GoalOdds(random, favourite);
     protected override int PlayedGames(Random random) => random.Next(3, 30);
     protected override string Record(Random random, int played, int wins)
     {

@@ -2,6 +2,7 @@ import { createElement, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
 import { Map as MapLibreMap, type StyleSpecification } from 'maplibre-gl'
+import { noRecentChanges } from '../games/recentChanges'
 import { Globe } from './Globe'
 import { type LoadingStage } from './globeMap'
 import { baseStyleUrl } from './globeStyle'
@@ -45,7 +46,7 @@ function LoadingGlobe() {
       cityLabels: cityLabelSettings,
       zoomSettings: { ...zoomSettings, minZoom: 2 },
       colours: { sportColours: {}, leagueColours: {} }, flames: false, showGameCityReach: false,
-      games: [], fromSnapshot: true, selectedGameId: null,
+      games: [], changes: noRecentChanges, selectedGameId: null,
       panel: { current: null }, onSelectGame: () => {},
       startCamera: { longitude: 0, latitude: 0, zoom: 2 },
       onCameraMove: () => {}, onStage: setStage,

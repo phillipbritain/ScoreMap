@@ -34,6 +34,8 @@ interface PlacedCard {
   drawn: string
   /** What the card was last drawn from, so it's worked out afresh only when one of them changes. */
   drawnFrom: { game: Game; color: string; flames: boolean; selected: boolean; theme: Theme } | null
+  /** The card's two rows as last drawn, top first. */
+  rows: Element[]
   /** The card's size on screen, measured when it's drawn. */
   width: number
   height: number
@@ -46,6 +48,22 @@ interface PlacedCard {
   inCardCluster: boolean
   /** In a card cluster, how many layouts ago it last looked for room (see cardLayout). */
   lookedAgo?: number
+}
+
+/**
+ * A score card on the page now that a viewer can see, for pointing at it (Click a score card). Its
+ * elements are for lighting and measuring it, not for looking inside.
+ */
+export interface ShownScoreCard {
+  gameId: string
+  /** Its game's name, as the card's own button gives it (see gameLabel). */
+  label: string
+  /** Where the card is on the page now. */
+  box: DOMRect
+  /** The card itself. */
+  element: Element
+  /** Its two rows, top first: for an arrow to end level with. */
+  rows: Element[]
 }
 
 interface PlacedCardCluster {
@@ -159,6 +177,21 @@ export class ScoreCardMarkers {
     return element ? element.getBoundingClientRect() : null
   }
 
+  /**
+   * The cards on the page now that a viewer can see, each measured now: those whose games are counted
+   * in a card cluster are left out. What's given is for pointing at a card (see ShownScoreCard).
+   */
+  shownCards(): ShownScoreCard[] {
+    const shown: ShownScoreCard[] = []
+    for (const [gameId, placed] of this.placed) {
+      const game = this.games.get(gameId)
+      const element = placed.marker.getElement().firstElementChild
+      if (!game || !element || placed.inCardCluster) continue
+      shown.push({ gameId, label: gameLabel(game), box: element.getBoundingClientRect(), element, rows: placed.rows })
+    }
+    return shown
+  }
+
   setGames(games: readonly PlacedGame[]): void {
     this.games = new Map(games.map((game) => [game.id, game]))
     this.settleAgain()
@@ -224,6 +257,7 @@ export class ScoreCardMarkers {
           marker: marker.setLngLat(lngLat).addTo(this.map),
           drawn: '',
           drawnFrom: null,
+          rows: [],
           width: 0,
           height: 0,
           offset: null,
@@ -248,7 +282,7 @@ export class ScoreCardMarkers {
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
-        drawScoreCard(cardElement, card, { color, header }, selected, this.animating.get(gameId))
+        placed.rows = drawScoreCard(cardElement, card, { color, header }, selected, this.animating.get(gameId))
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -511,7 +545,8 @@ interface CardColours {
   header: string
 }
 
-function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColours, selected: boolean, animation?: PinAnimation): void {
+/** Draws a score card into its element, giving its two rows, top first. */
+function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColours, selected: boolean, animation?: PinAnimation): Element[] {
   element.className = `score-card score-card--${statusKey(card.status)}`
   // In its game's colour, in place of its status's from the page's CSS.
   element.style.setProperty('--game-color', color)
@@ -523,8 +558,10 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   const header = document.createElement('div')
   header.className = 'score-card__header'
   header.append(span('score-card__light', ''), span('score-card__clock', card.clockLine || card.status))
-  element.replaceChildren(header, team(card.top), team(card.bottom))
+  const rows = [team(card.top), team(card.bottom)]
+  element.replaceChildren(header, ...rows)
   if (card.flames) element.append(flames())
+  return rows
 }
 
 /** How many tongues of flame rise from a hot game's card. */

@@ -33,7 +33,7 @@ async function mountTour() {
     const leagueList = useLeagues()
     const [settings, setSettings] = useState(firstVisitSettings)
     return createElement(WelcomeTourScreen, {
-      progress: 'welcome', leagueList, settings, onEvent: event, onOpenGame: vi.fn(),
+      progress: 'welcome', leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [],
       onChange: (next) => { changed(next); setSettings(next) },
     })
   }

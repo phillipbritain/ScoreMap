@@ -6,6 +6,7 @@ import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
 import { GlobeMap, type LoadingStage } from './globeMap'
+import type { ShownScoreCard } from './scoreCardMarkers'
 import type { ZoomSettings } from './zoomLevels'
 import { baseStyleUrl } from './globeStyle'
 
@@ -48,16 +49,21 @@ interface GlobeProps {
    * keyboard, while the welcome tour shows.
    */
   inert?: boolean
-  /** Takes how the rail steers the globe's camera. */
-  ref?: Ref<GlobeCamera>
+  /** Takes how the rail steers the globe's camera, and how the welcome tour finds its score cards. */
+  ref?: Ref<GlobeHandle>
 }
 
-/** The app's hold on the globe's camera: the rail's zoom buttons and Home, and the behaviour tuner (see GlobeMap). */
-export interface GlobeCamera {
+/**
+ * The app's hold on the globe (see GlobeMap): its camera, for the rail's zoom buttons and Home and the
+ * behaviour tuner, and the score cards shown, for the welcome tour to point at.
+ */
+export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
   jumpTo: (camera: Camera) => void
+  /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
+  shownScoreCards: () => ShownScoreCard[]
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
@@ -110,6 +116,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGa
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
       jumpTo: (camera) => globe.current?.jumpTo(camera),
+      shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
     [],
   )

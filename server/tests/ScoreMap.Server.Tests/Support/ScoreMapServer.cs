@@ -59,6 +59,13 @@ public sealed class ScoreMapServer(
         Path.Combine(Path.GetTempPath(), $"scoremap-scenario-venue-locations-{Guid.NewGuid():N}.json");
 
     /// <summary>
+    /// The checked-in live league venue lookups the server reads: a fresh temp path, so tests don't see
+    /// the repo's file. Empty until a test writes it.
+    /// </summary>
+    public string LeagueVenueLocationsPath { get; } =
+        Path.Combine(Path.GetTempPath(), $"scoremap-league-venue-locations-{Guid.NewGuid():N}.json");
+
+    /// <summary>
     /// The file the server saves venue photos to. A fresh temp file unless one is passed in,
     /// so a second server can be started over the first one's saved photos.
     /// </summary>
@@ -221,6 +228,7 @@ public sealed class ScoreMapServer(
         // As on App Service (infra/main.bicep): each visitor's address from the proxy's X-Forwarded-For.
         builder.UseSetting("FORWARDEDHEADERS_ENABLED", "true");
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
+        builder.UseSetting("Venues:LeagueLocationsPath", LeagueVenueLocationsPath);
         if (!useShippedWatchLinks)
             builder.UseSetting("WatchLinks:Path", WatchLinksPath);
         if (!UseShippedScenarios)
@@ -276,6 +284,7 @@ public sealed class ScoreMapServer(
             File.Delete(SavedVenuePhotosPath);
         File.Delete(VenueCorrectionsPath);
         File.Delete(ScenarioVenueLocationsPath);
+        File.Delete(LeagueVenueLocationsPath);
         File.Delete(WatchLinksPath);
         if (Directory.Exists(ScenariosFolder))
             Directory.Delete(ScenariosFolder, recursive: true);

@@ -40,4 +40,13 @@ public sealed class VenueOptions
     /// scenario-venues.json. Used before the saved lookups; a missing file means none.
     /// </summary>
     public string ScenarioLocationsPath { get; set; } = "scenario-venue-locations.json";
+
+    /// <summary>
+    /// The checked-in live league venue lookups, relative to the content root: the queries the live
+    /// leagues' venues are looked up by, mapped to their position, or to null where the place search
+    /// found nothing. Made by scripts/lookup-league-venues.cs from ESPN's scoreboards, so a cold start
+    /// places those venues at once. Used after the scenario venue lookups and before the saved
+    /// lookups; a missing file means none.
+    /// </summary>
+    public string LeagueLocationsPath { get; set; } = "league-venue-locations.json";
 }

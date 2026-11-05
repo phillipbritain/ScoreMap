@@ -26,8 +26,9 @@ public enum LocationSource
 /// <summary>
 /// Resolves where a game's pin goes (see <see cref="LocateAsync"/>). Every place-search query is
 /// asked once and its answer (misses too) saved to a file, so later runs never repeat a lookup.
-/// Queries in the checked-in scenario venue lookups (ADR-0009) are answered from those, before the
-/// saved lookups, and never reach the place search.
+/// Queries in the checked-in lookups, the scenario venues' (ADR-0009) and then the live leagues'
+/// (made by scripts/lookup-league-venues.cs), are answered from those, before the saved lookups, and
+/// never reach the place search.
 /// </summary>
 public sealed class VenueLocator
 {
@@ -38,10 +39,12 @@ public sealed class VenueLocator
     private readonly string _savedLocationsPath;
     private readonly VenueCorrections _corrections;
     private readonly string _scenarioLocationsPath;
+    private readonly string _leagueLocationsPath;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly Lock _knownLock = new();
     private Dictionary<string, Coordinates?>? _saved;
     private Dictionary<string, Coordinates>? _scenarioLocations;
+    private Dictionary<string, Coordinates?>? _leagueLocations;
 
     public VenueLocator(IPlaceSearch places, IOptions<VenueOptions> options, IHostEnvironment environment,
         ILogger<VenueLocator> logger)
@@ -50,6 +53,7 @@ public sealed class VenueLocator
         _logger = logger;
         _savedLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.SavedLocationsPath);
         _scenarioLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.ScenarioLocationsPath);
+        _leagueLocationsPath = Path.Combine(environment.ContentRootPath, options.Value.LeagueLocationsPath);
         _corrections = new VenueCorrections(Path.Combine(environment.ContentRootPath, options.Value.CorrectionsPath), logger);
     }
 
@@ -99,7 +103,11 @@ public sealed class VenueLocator
         return new(new Coordinates(0, 0), LocationSource.Nowhere);
     }
 
-    private static IEnumerable<(string Query, LocationSource Source)> Queries(ProviderVenue? venue, ProviderTeam? home)
+    /// <summary>
+    /// The place-search queries for a game's pin, in the order they're tried after the corrections and a
+    /// given position: the venue, its city, then the home team's city.
+    /// </summary>
+    public static IEnumerable<(string Query, LocationSource Source)> Queries(ProviderVenue? venue, ProviderTeam? home)
     {
         if (!string.IsNullOrWhiteSpace(venue?.Name))
             yield return (VenueQuery(venue), LocationSource.Venue);
@@ -118,8 +126,8 @@ public sealed class VenueLocator
         string.Join(", ", parts.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim()));
 
     /// <summary>
-    /// Looks a query up through the place search, or answers from the checked-in scenario venue
-    /// lookups, or from the saved lookups if it has been asked before. Every answer, misses too, is
+    /// Looks a query up through the place search, or answers from the checked-in lookups, or from the
+    /// saved lookups if it has been asked before. Every answer, misses too, is
     /// saved; failures are not.
     /// </summary>
     private async Task<Coordinates?> LookUpAsync(string query, CancellationToken cancellationToken)
@@ -163,23 +171,26 @@ public sealed class VenueLocator
         // This lock protects local data only: no search or save can hold up a cache hit.
         lock (_knownLock)
         {
-            _scenarioLocations ??= LoadScenarioLocations();
+            _scenarioLocations ??= ReadCheckedIn<Dictionary<string, Coordinates>>(_scenarioLocationsPath) ?? [];
             if (_scenarioLocations.TryGetValue(query, out var checkedIn))
             {
                 found = checkedIn;
                 return true;
             }
+            _leagueLocations ??= ReadCheckedIn<Dictionary<string, Coordinates?>>(_leagueLocationsPath) ?? [];
+            if (_leagueLocations.TryGetValue(query, out found))
+                return true;
             _saved ??= VenueCache.Read<Dictionary<string, Coordinates?>>(_savedLocationsPath, Json, _logger) ?? [];
             return _saved.TryGetValue(query, out found);
         }
     }
 
-    private Dictionary<string, Coordinates> LoadScenarioLocations()
+    private static T? ReadCheckedIn<T>(string path)
     {
-        if (!File.Exists(_scenarioLocationsPath))
-            return [];
-        using var file = File.OpenRead(_scenarioLocationsPath);
-        return JsonSerializer.Deserialize<Dictionary<string, Coordinates>>(file, Json) ?? [];
+        if (!File.Exists(path))
+            return default;
+        using var file = File.OpenRead(path);
+        return JsonSerializer.Deserialize<T>(file, Json);
     }
 
     private Task SaveAsync(Dictionary<string, Coordinates?> saved, CancellationToken cancellationToken) =>

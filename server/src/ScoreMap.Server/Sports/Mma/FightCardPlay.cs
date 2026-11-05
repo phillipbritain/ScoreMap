@@ -5,9 +5,25 @@ using ScoreMap.Server.Sports.Shared;
 
 namespace ScoreMap.Server.Sports;
 
-internal sealed partial class MmaScenario
+/// <summary>
+/// Play for a fight card, whatever its sport: its bouts are fought one at a time, a second at a time
+/// through five-minute rounds, each ending early or with the judges after its last round.
+/// </summary>
+internal sealed class FightCardPlay : GamePlay
 {
-    internal static ProviderGame AdvanceCard(ProviderGame game, ProviderBouts card, Random random)
+    internal static readonly FightCardPlay Instance = new();
+
+    internal override Played TakeOn(ProviderGame game, double sinceStart) => new(game, Math.Clamp(sinceStart, 0, 1));
+
+    internal override Played Start(ProviderGame game, double step, Random random) => Step(game, 0, step, random);
+
+    internal override Played Step(ProviderGame game, double through, double step, Random random)
+    {
+        game = game with { Status = ProviderStatus.InProgress };
+        return new(Advance(game, (ProviderBouts)game.Contest, random), Math.Min(1, through + step));
+    }
+
+    private static ProviderGame Advance(ProviderGame game, ProviderBouts card, Random random)
     {
         var bouts = card.Bouts.ToList();
         var index = bouts.FindLastIndex(b => b.Status is ProviderStatus.Scheduled or ProviderStatus.InProgress);
@@ -40,7 +56,8 @@ internal sealed partial class MmaScenario
         return game with { Contest = updated, Status = updated.Status(), Period = null, DisplayClock = null };
     }
 
-    internal static ProviderBouts ResetCard(ProviderBouts card, string replacementId) =>
+    /// <summary>The card to be fought again, as a new game with id <paramref name="replacementId"/>.</summary>
+    internal ProviderBouts Reset(ProviderBouts card, string replacementId) =>
         new(card.Bouts.Select((b, i) => b with { Id = $"{replacementId}-bout-{i + 1}", Status = ProviderStatus.Scheduled,
             Round = null, Clock = null, Method = null, First = b.First with { Winner = false },
             Second = b.Second with { Winner = false } }).ToList());

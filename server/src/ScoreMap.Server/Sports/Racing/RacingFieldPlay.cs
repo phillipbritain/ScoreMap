@@ -10,13 +10,13 @@ internal sealed class RacingFieldPlay : FieldPlay
     internal static readonly RacingFieldPlay Instance = new();
     private const int RaceLaps = 200;
 
-    internal override double Through(ProviderField field, int period, ProviderPeriodPhase phase) =>
+    protected override double Through(ProviderField field, int period, ProviderPeriodPhase phase) =>
         (period - 1) / (double)RaceLaps;
 
     internal override ProviderField Reset(ProviderField field) =>
         ProviderField.TiedByScore(field.Entries.Select(e => e with { ToPar = null, Thru = null }));
 
-    internal override (ProviderGame Game, double Through) Advance(
+    protected override (ProviderGame Game, double Through) Advance(
         ProviderGame game, ProviderField field, double before, double through, Random random)
     {
         var entries = field.Entries.ToList();

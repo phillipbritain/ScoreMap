@@ -24,13 +24,13 @@ internal abstract class SegmentPlay : SportPlay
         _scoring = scoring;
     }
 
-    public override int Regulation { get; }
+    protected override int Regulation { get; }
     protected int PeriodMinutes { get; }
-    public override bool IsPlaying(double through) => SegmentAt(through).Segment.Playing;
-    public override (ProviderTeam Home, ProviderTeam Away) Start(ProviderTeam home, ProviderTeam away) =>
+    protected bool IsPlaying(double through) => SegmentAt(through).Segment.Playing;
+    protected override (ProviderTeam Home, ProviderTeam Away) StartScores(ProviderTeam home, ProviderTeam away) =>
         (home with { Score = 0 }, away with { Score = 0 });
 
-    public override (ProviderTeam Home, ProviderTeam Away) Step(ProviderTeam home, ProviderTeam away, double through, double step, Random random)
+    protected override (ProviderTeam Home, ProviderTeam Away) StepScores(ProviderTeam home, ProviderTeam away, double through, double step, Random random)
     {
         if (!IsPlaying(through))
             return (home, away);
@@ -38,13 +38,13 @@ internal abstract class SegmentPlay : SportPlay
             away with { Score = ScoreStep(away.Score ?? 0, step, random) });
     }
 
-    public override double After(ProviderTeam home, ProviderTeam away, double through) => through;
+    protected override double After(ProviderTeam home, ProviderTeam away, double through) => through;
 
-    public override (ProviderTeam Home, ProviderTeam Away, double Through) PlayTo(
+    protected override (ProviderTeam Home, ProviderTeam Away, double Through) PlayTo(
         ProviderTeam home, ProviderTeam away, double through, Random random, bool mayFinish) =>
         (home with { Score = ScoreAt(through, random) }, away with { Score = ScoreAt(through, random) }, through);
 
-    public override (ProviderTeam Home, ProviderTeam Away) Settled(ProviderTeam home, ProviderTeam away, Random random)
+    protected override (ProviderTeam Home, ProviderTeam Away) Settled(ProviderTeam home, ProviderTeam away, Random random)
     {
         var (homeScore, awayScore) = (home.Score ?? 0, away.Score ?? 0);
         if (_scoring.Settling is not { } settle || homeScore != awayScore)
@@ -85,7 +85,7 @@ internal abstract class SegmentPlay : SportPlay
         return choices[^1].Points;
     }
 
-    public override double? Through(int period, string? clock, ProviderPeriodPhase phase)
+    protected override double? Through(int period, string? clock, ProviderPeriodPhase phase)
     {
         var before = 0.0;
         foreach (var segment in _segments)
@@ -109,7 +109,7 @@ internal abstract class SegmentPlay : SportPlay
         return (_segments[^1], 1);
     }
 
-    public override (int Period, string? Clock, ProviderPeriodPhase Phase) Position(double through)
+    protected override (int Period, string? Clock, ProviderPeriodPhase Phase) Position(double through)
     {
         var (segment, done) = SegmentAt(through);
         return (segment.Period, PositionClock(segment, done), segment.Phase);

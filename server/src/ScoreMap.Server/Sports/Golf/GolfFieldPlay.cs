@@ -9,13 +9,13 @@ internal sealed class GolfFieldPlay : FieldPlay
 {
     internal static readonly GolfFieldPlay Instance = new();
 
-    internal override double Through(ProviderField field, int period, ProviderPeriodPhase phase) =>
+    protected override double Through(ProviderField field, int period, ProviderPeriodPhase phase) =>
         (period - 1 + (phase == ProviderPeriodPhase.Break ? 0.5 : (field.Entries.FirstOrDefault()?.Thru ?? 0) / 36.0)) / 4;
 
     internal override ProviderField Reset(ProviderField field) =>
         ProviderField.TiedByScore(field.Entries.Select(e => e with { ToPar = 0, Thru = 0 }));
 
-    internal override (ProviderGame Game, double Through) Advance(
+    protected override (ProviderGame Game, double Through) Advance(
         ProviderGame game, ProviderField field, double before, double through, Random random)
     {
         var entries = field.Entries.ToList();

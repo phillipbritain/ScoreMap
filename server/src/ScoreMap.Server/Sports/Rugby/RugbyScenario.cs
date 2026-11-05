@@ -12,12 +12,10 @@ internal sealed class RugbyScenario(League league) : SportScenario(league)
     internal override SportPlay CreatePlay() => new MinutePlay(League, new(5.5, Scores, 60, null));
 
     protected override int? Capacity => 65000;
-    protected override int UsualScore => 1;
     protected override string NoteText(Random random) => Pick(random, "Round 3", "Triple Crown decider", "Grand Slam decider");
     protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favourite) =>
         ($"{favourite.Abbreviation} -{Number(Between(random, 1.5, 20.5, 1))}", Between(random, 38.5, 55.5, 1));
     internal override ProviderTeam WithRecord(ProviderTeam team) => team;
-    protected override string ScoreText(int points, Random random) => LegacyScenarioDetails.HockeyScore(points, random);
 
     internal override int Minute(ProviderGame game) => MinuteEvents.At(game, League);
 

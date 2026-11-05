@@ -13,6 +13,7 @@ public sealed class ScenarioReaderTests : IDisposable
         new() { Key = "soccer/eng.1", Name = "Premier League", Sport = Sport.Soccer },
         new() { Key = "baseball/mlb", Name = "MLB", Sport = Sport.Baseball },
         new() { Key = "cricket/8048", Name = "IPL", Sport = Sport.Cricket },
+        new() { Key = "tennis/atp", Name = "ATP", Sport = Sport.Tennis },
     ];
 
     // A slice of the venue list: venues are known by name and city, as the venue locator looks them up.
@@ -186,6 +187,37 @@ public sealed class ScenarioReaderTests : IDisposable
         var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "slow", Leagues, Venues));
 
         Assert.Contains($"slowStart is \"{slowStart}\"", error.Message);
+    }
+
+    [Theory]
+    [InlineData("ATP", "live", "\"sets\": [null]", "set 1")]
+    [InlineData("ATP", "live", "\"sets\": [{\"home\": -1, \"away\": 0}]", "set 1")]
+    [InlineData("ATP", "live", "\"sets\": [{\"home\": 3}]", "set 1")]
+    [InlineData("ATP", "live", "\"earlyEnding\": {\"reason\": \"retired\"}", "Final")]
+    [InlineData("ATP", "final", "\"earlyEnding\": {\"reason\": \"injured\"}", "reason")]
+    [InlineData("NFL", "live", "\"sets\": [{\"home\": 6, \"away\": 4}]", "tennis")]
+    public void Invalid_written_tennis_details_report_the_game_and_problem(string league, string status, string details, string problem)
+    {
+        var error = Assert.Throws<ScenarioFileException>(() => Read(Game(league: league, status: status, extra: ", " + details)));
+
+        Assert.Contains("game 1", error.Message);
+        Assert.Contains(problem, error.Message);
+    }
+
+    [Fact]
+    public void A_tennis_timeline_cannot_remove_a_won_set()
+    {
+        var game = Game(league: "ATP", status: "live", extra: """, "sets": [{ "home": 6, "away": 4, "homeWon": true }]""");
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""
+            { "games": [ {{game}} ], "timeline": { "length": "1m", "changes": [
+              { "at": "10s", "game": "sample-1", "sets": [{ "home": 0, "away": 0 }] }
+            ] } }
+            """);
+
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues));
+
+        Assert.Contains("timeline change 1", error.Message);
+        Assert.Contains("go down", error.Message);
     }
 
     private Scenario Read(params string[] games)

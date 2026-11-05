@@ -82,7 +82,7 @@ public static partial class ScenarioReader
                 games.Add(game);
             }
         }
-        var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, name, path);
+        var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, leagues, name, path);
         var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, lists) : null;
         return new Scenario(name, games, timeline, play, ReadSlowStart(file.SlowStart, name, path));
     }
@@ -128,6 +128,7 @@ public static partial class ScenarioReader
             _ => throw new InvalidDataException($"has unsupported sport {league.Sport}"),
         };
         var venue = ReadVenue(entry.Venue, venues);
+        var (sets, ending) = ReadTennis(entry.Sets, entry.EarlyEnding, status, league.Sport == Sport.Tennis);
 
         return new ScenarioGame(
             Id: id,
@@ -140,6 +141,8 @@ public static partial class ScenarioReader
             Period: entry.Period,
             Phase: phase)
         {
+            Sets = sets ?? [],
+            EarlyEnding = ending,
             Situation = ReadSituation(entry.Situation),
             Note = entry.Note,
         };
@@ -287,7 +290,40 @@ public static partial class ScenarioReader
     private sealed record GameEntry(
         string? Id, string? League, TeamEntry? Home, TeamEntry? Away, VenueEntry? Venue,
         string? StartsIn, string? Status, string? Clock, int? Period, string? Phase, SituationEntry? Situation,
-        List<EntrantEntry?>? Field, string? Note, List<BoutEntry?>? Bouts);
+        List<EntrantEntry?>? Field, string? Note, List<BoutEntry?>? Bouts, List<SetEntry?>? Sets = null, EarlyEndingEntry? EarlyEnding = null);
+
+    private sealed record SetEntry(int? Home, int? Away, int? HomeTiebreak, int? AwayTiebreak, bool? HomeWon);
+
+    /// <summary>Reads tennis facts without starting play or inventing a set for another status.</summary>
+    private static (IReadOnlyList<ProviderSet>? Sets, ProviderEarlyEnding? Ending) ReadTennis(
+        List<SetEntry?>? sets, EarlyEndingEntry? ending, ProviderStatus status, bool tennis)
+    {
+        if ((sets is not null || ending is not null) && !tennis)
+            throw new InvalidDataException("has sets or earlyEnding outside tennis");
+        if (ending is not null && status != ProviderStatus.Final)
+            throw new InvalidDataException("has earlyEnding but isn't Final");
+        var read = sets?.Select((set, i) =>
+        {
+            if (set?.Home is not { } home || set.Away is not { } away
+                || home < 0 || away < 0 || set.HomeTiebreak < 0 || set.AwayTiebreak < 0)
+                throw new InvalidDataException($"has set {i + 1} without nonnegative home and away games or tiebreak points");
+            return new ProviderSet(home, away, set.HomeTiebreak, set.AwayTiebreak, set.HomeWon);
+        }).ToList();
+        return (read, ReadEarlyEnding(ending));
+    }
+
+    private sealed record EarlyEndingEntry(string? Reason, string? Winner);
+
+    private static ProviderEarlyEnding? ReadEarlyEnding(EarlyEndingEntry? ending)
+    {
+        if (ending is null)
+            return null;
+        if (ending.Reason is null || int.TryParse(ending.Reason, out _)
+            || !Enum.TryParse<EarlyEndingReason>(ending.Reason, ignoreCase: true, out var reason)
+            || !Enum.IsDefined(reason))
+            throw new InvalidDataException("has unknown earlyEnding reason; use retired or walkover");
+        return new ProviderEarlyEnding(reason, ending.Winner);
+    }
 
     /// <summary>One bout of a fight card (see <see cref="ReadBouts"/>).</summary>
     private sealed record BoutEntry(

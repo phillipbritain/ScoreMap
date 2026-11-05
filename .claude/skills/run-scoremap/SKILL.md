@@ -81,6 +81,20 @@ Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a ne
 
 To see field games and fight cards move, pick `worldwide`: its NASCAR race counts laps and changes leaders, its PGA Tour tournament plays holes and rounds with overnight breaks, and its UFC fight card finishes bouts. For a timeline, `field` or `bouts` replaces that contest using the same format as an initial game (list entrants in position order, bouts main event first); `period`, `clock` and `status` can change alongside it.
 
+Written tennis games can give `sets` in order, the current set last, and a Final game can give `earlyEnding`:
+
+```json
+"sets": [
+  { "home": 7, "away": 6, "homeTiebreak": 7, "awayTiebreak": 4, "homeWon": true },
+  { "home": 2, "away": 3 }
+],
+"earlyEnding": { "reason": "retired", "winner": "J. Sinner" }
+```
+
+Each set needs nonnegative `home` and `away` games; tiebreak points are optional. `homeWon` is `true` for a set won by home, `false` for one won by away, and omitted for an unfinished set. The sets supply the sides' scores (sets won), current period and scoreline, whether the game stands still, follows a timeline or plays forward. A timeline change's `sets` replaces the list; leaving it out keeps the sets, and sets won cannot go down. Play keeps written sets, starting a new 0–0 set after a completed one when it takes on a Live game; Final and Disrupted games keep their sets, and Upcoming games gain none until they start.
+
+`earlyEnding` is only for Final tennis games: `reason` is `retired` or `walkover`, and optional `winner` is the advancing side's abbreviation, whatever the score. A walkover can have no sets. A timeline can set `earlyEnding` alongside `status: "final"`. With no written sets, a standing or timeline game keeps its shorthand scores and has no set scoreline; under play, the existing deterministic rule makes completed sets from those scores (seeded by game id), then starts a 0–0 set.
+
 ## Demos
 
 A **demo** (`GLOSSARY.md`, ADR-0019) is the web URL with `?demo` (any value): `npm run page -- reset "$web/?demo"`. It shows `worldwide` from its own game board, apart from the pill's scenario, which other tabs keep on: switching or pausing that changes nothing in a demo. Every demo tab shares one demo board at Normal, started afresh (clock at noon Eastern) when the first opens, and stopped a minute after the last closes. A demo has no pill, media keys, clock or Behaviour and Theme tools, uses the built-in theme and behaviour whatever drafts the tuners saved, opens on first-visit settings and the viewer's region, and saves nothing to localStorage. A label at the top says the games are made up; `Shift+S` hides it with the Feedback button. On the live site the same link opens one.

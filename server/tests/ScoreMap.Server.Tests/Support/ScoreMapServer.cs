@@ -406,13 +406,14 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
         (await GamesMatchingAsync(games => games.Any(ready))).Single(ready);
 
     /// <summary>
-    /// Waits until the board's one game has been placed, and returns it. The first snapshot waits at most
-    /// 250 ms for venue lookups (#261), so a looked-up pin can arrive in a later change. A placed venue
+    /// Waits until the client's one game has been placed, and returns it. Use for genuinely unknown
+    /// venues: their searches may outlast the 250 ms snapshot budget and arrive in a later change.
+    /// Corrections, given positions, scenario lookups and saved lookups are already in the snapshot. A placed venue
     /// has a position; one whose lookup is pending (or found nothing) has none.
     /// </summary>
     public async Task<Game> PlacedGameAsync() => Assert.Single(await PlacedGamesAsync(1));
 
-    /// <summary>Waits until the board holds <paramref name="count"/> games, all placed (see <see cref="PlacedGameAsync"/>).</summary>
+    /// <summary>Waits until the client has received <paramref name="count"/> games, all placed (see <see cref="PlacedGameAsync"/>).</summary>
     public Task<IReadOnlyList<Game>> PlacedGamesAsync(int count) =>
         GamesMatchingAsync(games => games.Count == count && games.All(g => g.Venue.Latitude is not null));
 

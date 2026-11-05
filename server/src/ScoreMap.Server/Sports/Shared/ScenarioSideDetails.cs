@@ -35,29 +35,37 @@ internal abstract partial class SportScenario
 
     protected abstract string NoteText(Random random);
 
-    internal virtual ProviderOdds? Odds(ProviderGame game)
+    internal ProviderOdds? Odds(ProviderGame game)
     {
         var random = Seeded(game.Id, "odds");
         var sides = game.Sides();
         var favourite = random.Next(2) == 0 ? sides.Home : sides.Away;
-        var (line, total) = BettingLine(random, favourite);
-        return new ProviderOdds(line, total, "DraftKings");
+        return BettingLine(random, favourite) is (var line, var total) ? new ProviderOdds(line, total, "DraftKings") : null;
     }
 
-    protected abstract (string Line, double Total) BettingLine(Random random, ProviderTeam favourite);
+    /// <summary>The favourite's line and the total, for a sport with odds; none by default.</summary>
+    protected virtual (string Line, double Total)? BettingLine(Random random, ProviderTeam favourite) => null;
 
     protected static double Between(Random random, double low, double high, double step) =>
         low + step * random.Next((int)((high - low) / step) + 1);
 
-    internal virtual int? Attendance(ProviderGame game) =>
-        (int)(Capacity * (0.6 + 0.4 * Seeded(game.Id, "crowd").NextDouble()));
-    protected abstract int Capacity { get; }
+    internal int? Attendance(ProviderGame game) =>
+        Capacity is { } capacity ? (int)(capacity * (0.6 + 0.4 * Seeded(game.Id, "crowd").NextDouble())) : null;
+
+    /// <summary>A full house, for a sport whose games have a crowd; none by default.</summary>
+    protected virtual int? Capacity => null;
 
     internal virtual (ProviderScoringPlay? LastScore, IReadOnlyList<ProviderKeyEvent> KeyEvents) Events(
         ProviderGame game, ScenarioSeen? seen, int minute) => (Scored(game, seen) ?? seen?.LastScore, []);
 
-    protected abstract int UsualScore { get; }
-    protected abstract string ScoreText(int points, Random random);
+    /// <summary>The points a game's first score usually is, for the last score's text.</summary>
+    protected virtual int UsualScore => 1;
+
+    /// <summary>
+    /// How a score of <paramref name="points"/> reads as the last score, for a sport that keeps
+    /// <see cref="Events"/>' default; none by default.
+    /// </summary>
+    protected virtual string? ScoreText(int points, Random random) => null;
     protected virtual ProviderPeriodPhase ScorePhase(ProviderGame game) => ProviderPeriodPhase.Playing;
     protected virtual string? ScoreClock(ProviderGame game) => game.DisplayClock;
 
@@ -78,7 +86,8 @@ internal abstract partial class SportScenario
         var team = homeGained > 0 ? sides.Home : sides.Away;
         var points = homeGained > 0 ? homeGained : awayGained;
         var random = Seeded(game.Id, $"{home}-{away}");
-        var text = ScoreText(points, random);
+        if (ScoreText(points, random) is not { } text)
+            return null;
         return new ProviderScoringPlay(team.Abbreviation, text, game.Period, ScoreClock(game), ScorePhase(game));
     }
 

@@ -7,7 +7,7 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import { GameNavigation } from './games/GameNavigation'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
-import { Globe, type GlobeCamera } from './globe/Globe'
+import { Globe, type GlobeHandle } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
 import type { ZoomSettings } from './globe/zoomLevels'
@@ -88,8 +88,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   // A loading screen the theme tuner holds up to be looked at, apart from the real one (local runs only).
   const [loadingPreview, setLoadingPreview] = useState<LoadingPreview>('off')
-  // The rail's hold on the globe's camera, and where the camera last settled, for the zoom buttons' limits.
-  const globeCamera = useRef<GlobeCamera>(null)
+  // The app's hold on the globe (its camera, and the score cards the welcome tour points at), and where the camera last settled, for the zoom buttons' limits.
+  const globe = useRef<GlobeHandle>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
@@ -99,7 +99,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   useEffect(() => {
     if (behaviour.zoom.startZoom === shownStartZoom.current) return
     shownStartZoom.current = behaviour.zoom.startZoom
-    globeCamera.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
+    globe.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
   }, [behaviour.zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
@@ -141,7 +141,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}
-          ref={globeCamera}
+          ref={globe}
           theme={theme}
           cityLabels={behaviour.cityLabels}
           zoomSettings={behaviour.zoom}
@@ -241,9 +241,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           // The camera can't move until the globe is ready, as on the globe itself.
           camera={loadingScreenGone ? cameraNow : null}
           zoomSettings={behaviour.zoom}
-          onZoomIn={() => globeCamera.current?.zoomIn()}
-          onZoomOut={() => globeCamera.current?.zoomOut()}
-          onHome={() => globeCamera.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
+          onZoomIn={() => globe.current?.zoomIn()}
+          onZoomOut={() => globe.current?.zoomOut()}
+          onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
           inert={touring}
         />
         {/* Over the globe and the rail, which come before it; the scenario controls and the Feedback
@@ -256,6 +256,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             settings={viewerSettings}
             onChange={setViewerSettings}
             onOpenGame={selectGame}
+            scoreCards={() => globe.current?.shownScoreCards() ?? []}
           />
         )}
         {BehaviourTuner && ThemeTuner && tuning && (

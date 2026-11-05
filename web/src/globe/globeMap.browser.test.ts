@@ -273,6 +273,43 @@ describe('score cards', () => {
   })
 })
 
+describe('shown score cards', () => {
+  it('gives each card on the page with its game, named as its button is, where it is and its two rows', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
+    globe.show([game('A', { home: '21', away: '17' })])
+    const drawn = await cardShown('A')
+
+    await vi.waitFor(() => expect(globe.shownScoreCards()).toHaveLength(1))
+    const [shown] = globe.shownScoreCards()
+    expect(shown.gameId).toBe('A')
+    expect(shown.label).toBe(drawn.getAttribute('aria-label'))
+    expect(shown.label).toContain('Buffalo Bills 17 vs Kansas City Chiefs 21')
+    expect(shown.element).toBe(drawn)
+    expect(shown.box.toJSON()).toEqual(drawn.getBoundingClientRect().toJSON())
+    expect(shown.rows.map((row) => row.textContent)).toEqual(['BUF17', 'KC21'])
+  })
+
+  it('leaves out the games counted in a card cluster, whose cards a viewer cannot see', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, smallGlobe)
+    globe.show(Array.from({ length: 40 }, (_, i) => game(`V${i}`)))
+    await cardClusterDrawn(map)
+
+    await vi.waitFor(() => expect(globe.shownScoreCards().length).toBeGreaterThan(0))
+    const shown = globe.shownScoreCards()
+    expect(shown.length).toBeLessThan(40)
+    for (const { element } of shown) expect(element.checkVisibility({ visibilityProperty: true })).toBe(true)
+  })
+
+  it('gives none zoomed out, where pins are small', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const games = [game('A')]
+    globe.show(games)
+    await pinsDrawn(map, smallPinLayer, ...games)
+
+    expect(globe.shownScoreCards()).toEqual([])
+  })
+})
+
 describe('selection', () => {
   it('selects a named score card with Enter and Space, including after a live update', async () => {
     const { globe, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })

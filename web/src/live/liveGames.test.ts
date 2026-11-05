@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Game } from '../games/game'
 import type { PageVisibility } from './asleep'
+import { changeSince, lastNumber, noRecentChanges } from '../games/recentChanges'
 import { startLiveGames, type GamesHub, type GamesHubEvents, type LiveGames } from './liveGames'
 
 const minutes = (n: number) => n * 60_000
@@ -120,22 +121,66 @@ describe('live games', () => {
 
     expect(live.state).toEqual({
       games: [game('a'), game('b')],
-      fromSnapshot: true,
+      changes: noRecentChanges,
       cutOffSince: null,
       waking: false,
     })
   })
 
-  it('applies each change to the games, which no longer stand as a snapshot brought them', async () => {
+  it('applies each change to the games, keeping what the server judged changed', async () => {
     const { live, hub } = start()
     await hub.latest.connect()
-    hub.latest.events.snapshot([game('a'), game('b')])
+    hub.latest.events.snapshot([game('a'), game('b'), game('c')])
 
     hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '7') })
+    hub.latest.events.change({ kind: 'Finished', game: game('c') })
     hub.latest.events.change({ kind: 'Removed', game: game('b') })
 
-    expect(live.state.games).toEqual([game('a', '7')])
-    expect(live.state.fromSnapshot).toBe(false)
+    expect(live.state.games).toEqual([game('a', '7'), game('c')])
+    expect(changeSince(live.state.changes, 'a', 0)).toBe('ScoreChanged')
+    expect(changeSince(live.state.changes, 'c', 0)).toBe('Finished')
+  })
+
+  it('merges changes that come one after another, before they are shown, to the most notable', async () => {
+    const { live, hub } = start()
+    await hub.latest.connect()
+    hub.latest.events.snapshot([game('a', '0'), game('b')])
+
+    hub.latest.events.change({ kind: 'Started', game: game('a', '0') })
+    hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '7') })
+    hub.latest.events.change({ kind: 'ScoreChanged', game: game('b', '3') })
+
+    expect(changeSince(live.state.changes, 'a', 0)).toBe('Started')
+    expect(changeSince(live.state.changes, 'b', 0)).toBe('ScoreChanged')
+  })
+
+  it('has no changes after a snapshot, so it animates nothing', async () => {
+    const { live, hub } = start()
+    await hub.latest.connect()
+    hub.latest.events.snapshot([game('a')])
+    hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '7') })
+
+    hub.latest.events.snapshot([game('a', '7')])
+
+    expect(live.state.changes).toEqual(noRecentChanges)
+  })
+
+  it('numbers changes on from an earlier start’s, so a globe that played them takes the next ones as new', async () => {
+    const first = start()
+    await first.hub.latest.connect()
+    first.hub.latest.events.snapshot([game('a')])
+    first.hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '7') })
+    const played = lastNumber(first.live.state.changes)
+    first.live.stop()
+
+    // Started again, as when the app remounts (or React's strict mode mounts it twice).
+    const second = start()
+    await second.hub.latest.connect()
+    second.hub.latest.events.snapshot([game('a', '7')])
+    expect(changeSince(second.live.state.changes, 'a', played)).toBeNull()
+    second.hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '14') })
+
+    expect(changeSince(second.live.state.changes, 'a', played)).toBe('ScoreChanged')
   })
 
   it('drops a change that comes before any snapshot, as it has nothing to apply to', async () => {
@@ -182,7 +227,7 @@ describe('live games', () => {
     expect(live.state.games).toEqual([game('a'), game('b')])
 
     hub.latest.events.snapshot([game('c')])
-    expect(live.state).toEqual({ games: [game('c')], fromSnapshot: true, cutOffSince: null, waking: false })
+    expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, cutOffSince: null, waking: false })
   })
 
   it('starts the connection again when it closes, as cut off', async () => {
@@ -269,14 +314,14 @@ describe('live games', () => {
       expect(hub.connections).toHaveLength(2)
       expect(live.state).toEqual({
         games: [game('a'), game('b')],
-        fromSnapshot: false,
+        changes: noRecentChanges,
         cutOffSince: 50_000,
         waking: true,
       })
 
       await hub.latest.connect()
       hub.latest.events.snapshot([game('c')])
-      expect(live.state).toEqual({ games: [game('c')], fromSnapshot: true, cutOffSince: null, waking: false })
+      expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, cutOffSince: null, waking: false })
     })
 
     it('shown again before the idle timeout, stays connected', async () => {

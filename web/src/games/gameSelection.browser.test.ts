@@ -159,3 +159,54 @@ it('selects a game from the list while its pin belongs to a cluster', async () =
     mapContainer.remove()
   }
 })
+
+const panelText = () => container.querySelector('[aria-label="Game panel"]')?.textContent ?? ''
+
+async function open(id: string) {
+  await act(async () => choice(id).click())
+}
+
+it("names a tennis match's home player first in its panel, as its score card does", async () => {
+  const match: Game = {
+    ...game('T'),
+    league: 'ATP',
+    sport: 'Tennis',
+    contest: {
+      kind: 'sides',
+      home: { abbreviation: 'SIN', fullName: 'Jannik Sinner', logoUrl: null, score: '1', rank: null, record: null },
+      away: { abbreviation: 'ALC', fullName: 'Carlos Alcaraz', logoUrl: null, score: '0', rank: null, record: null },
+    },
+  }
+  await show([match])
+  await open('T')
+
+  expect(panelText()).toContain('Jannik Sinner')
+  expect(panelText().indexOf('Jannik Sinner')).toBeLessThan(panelText().indexOf('Carlos Alcaraz'))
+})
+
+it("shows a field's whole leaderboard with Show all, and the next game selected its top 10 again", async () => {
+  // The 1st to 12th entrants as "Driver A" to "Driver L", so no name is part of another.
+  const letters = 'ABCDEFGHIJKL'
+  const race = (id: string, driver: string): Game => ({
+    ...game(id),
+    league: 'F1',
+    sport: 'Racing',
+    note: `${driver} Grand Prix`,
+    contest: {
+      kind: 'field',
+      entries: Array.from({ length: 12 }, (_, i) => ({ position: i + 1, name: `${driver} ${letters[i]}`, shortName: `${driver} ${letters[i]}`, flagUrl: null, score: null })),
+    },
+  })
+  await show([race('R1', 'Driver'), race('R2', 'Rider')])
+  await open('R1')
+  expect(panelText()).toContain('Driver J')
+  expect(panelText()).not.toContain('Driver L')
+
+  const showAll = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Show all 12')!
+  await act(async () => showAll.click())
+  expect(panelText()).toContain('Driver L')
+
+  await open('R2')
+  expect(panelText()).toContain('Rider J')
+  expect(panelText()).not.toContain('Rider L')
+})

@@ -59,6 +59,7 @@ describe('nextPopover', () => {
   it('opens one popover at a time: opening one closes the other', () => {
     expect(nextPopover('leagues', { press: 'display' })).toBe('display')
     expect(nextPopover('display', { press: 'leagues' })).toBe('leagues')
+    expect(nextPopover('leagues', { press: 'games' })).toBe('games')
   })
 
   it('closes on Escape or a click outside', () => {

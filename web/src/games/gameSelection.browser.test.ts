@@ -51,10 +51,12 @@ function game(id: string): Game {
 
 let root: Root
 let container: HTMLElement
+/** The Games popover open, as the rail shows it, beside a stand-in for the rail's Games button. */
 function Selection({ games }: { games: Game[] }) {
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(games)
   return createElement('div', null,
-    createElement(GameNavigation, { games, onSelect: selectGame, inert: false }),
+    createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
+    createElement(GameNavigation, { games, onSelect: selectGame }),
     selectedGame && createElement(GamePanel, { ref: panel, game: selectedGame,
       colour: '#d4ac63', textOnColour: '#000e28', onClose: closeGame }),
   )
@@ -67,7 +69,7 @@ async function show(games: Game[]) {
   }
   await act(async () => root.render(createElement(Selection, { games })))
 }
-const summary = () => container.querySelector<HTMLElement>('summary')!
+const search = () => container.querySelector<HTMLInputElement>('input[type="search"]')!
 const choice = (id: string) => container.querySelector<HTMLButtonElement>(`[data-game-id="${id}"]`)!
 const close = () => container.querySelector<HTMLButtonElement>('.game-panel__close')!
 
@@ -79,15 +81,15 @@ afterEach(async () => {
 
 it('opens the current game with Enter and Space and restores focus on close', async () => {
   await show([game('A'), game('B')])
-  summary().focus()
-  await userEvent.keyboard('{Enter}{Tab}')
+  expect(document.activeElement).toBe(search())
+  await userEvent.keyboard('{ArrowDown}')
   expect(document.activeElement).toBe(choice('A'))
   await userEvent.keyboard('{Enter}')
   expect(document.activeElement).toBe(close())
   expect(container.querySelector('.game-panel')).not.toBeNull()
   await userEvent.keyboard('{Escape}')
   expect(document.activeElement).toBe(choice('A'))
-  await userEvent.keyboard('{Tab}')
+  await userEvent.keyboard('{ArrowDown}')
   const updated = game('B')
   if (updated.contest.kind === 'sides') updated.contest.home.fullName = 'Updated Chiefs'
   await show([game('A'), updated])
@@ -105,24 +107,65 @@ it('opens the current game with Enter and Space and restores focus on close', as
 
 it('recovers focus when filtering/removal detaches a list control or its open panel', async () => {
   await show([game('A'), game('B')])
-  summary().focus()
-  await userEvent.keyboard('{Enter}{Tab}')
+  await userEvent.keyboard('{ArrowDown}')
   expect(document.activeElement).toBe(choice('A'))
   await show([game('B')])
-  expect(document.activeElement).toBe(summary())
-  await userEvent.keyboard('{Tab}{Enter}')
+  expect(document.activeElement).toBe(search())
+  await userEvent.keyboard('{ArrowDown}{Enter}')
   expect(document.activeElement).toBe(close())
   await show([])
   expect(container.querySelector('.game-panel')).toBeNull()
-  expect(document.activeElement).toBe(summary())
+  // The list is still open, so back to its search.
+  expect(document.activeElement).toBe(search())
   await show([game('B')])
   expect(container.querySelector('.game-panel')).toBeNull()
 })
 
+it('puts the cursor in the search on opening and narrows the list as the viewer types', async () => {
+  const bills = game('A')
+  const lions = game('B')
+  if (lions.contest.kind === 'sides') lions.contest.away.fullName = 'Detroit Lions'
+  await show([bills, lions])
+  expect(document.activeElement).toBe(search())
+
+  await userEvent.keyboard('lions')
+  expect(choice('A')).toBeNull()
+  expect(choice('B')).not.toBeNull()
+
+  await userEvent.keyboard(' raiders')
+  expect(container.querySelector('ul')!.textContent).toBe('No games match your search.')
+})
+
+it('moves through the games with the arrow keys, across leagues, and Tab leaves the list', async () => {
+  const other = { ...game('C'), league: 'NBA' }
+  await show([game('A'), game('B'), other])
+  const after = document.createElement('button')
+  after.textContent = 'After the list'
+  document.body.append(after)
+  try {
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}')
+    expect(document.activeElement).toBe(choice('C'))
+    await userEvent.keyboard('{ArrowDown}')
+    expect(document.activeElement).toBe(choice('C'))
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}')
+    expect(document.activeElement).toBe(search())
+    await userEvent.keyboard('{ArrowUp}')
+    expect(document.activeElement).toBe(search())
+    await userEvent.keyboard('{ArrowDown}{End}')
+    expect(document.activeElement).toBe(choice('C'))
+    await userEvent.keyboard('{Home}')
+    expect(document.activeElement).toBe(search())
+
+    await userEvent.keyboard('{Tab}')
+    expect(container.contains(document.activeElement)).toBe(false)
+  } finally {
+    after.remove()
+  }
+})
+
 it('keeps filter focus when a filter hides the selected game', async () => {
   await show([game('A')])
-  summary().focus()
-  await userEvent.keyboard('{Enter}{Tab}{Enter}')
+  await userEvent.keyboard('{ArrowDown}{Enter}')
   const filter = document.createElement('button')
   filter.textContent = 'Live games only'
   document.body.append(filter)
@@ -150,8 +193,7 @@ it('selects a game from the list while its pin belongs to a cluster', async () =
       expect(map.queryRenderedFeatures([[390, 290], [410, 310]], { layers: [pinClusterLayer] }).length).toBeGreaterThan(0)
     })
     await show(games)
-    summary().focus()
-    await userEvent.keyboard('{Enter}{Tab}{Tab}{Enter}')
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')
     expect(document.activeElement).toBe(close())
     expect(container.querySelector('.game-panel')!.textContent).toContain('Second game Chiefs')
   } finally {

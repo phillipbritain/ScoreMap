@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { pickerEntries, pillLabel, type ScenarioListing } from './scenarioPicker'
 import { switchScenario } from './useScenarioControls'
+import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
 
 /**
@@ -9,7 +10,8 @@ import { useClickAway } from '../menus/clickAway'
  * browser the new listing over the games hub, so each pill follows (see switchScenario).
  *
  * The open list closes on Escape and on a click away from it, but not on moving or zooming the globe
- * (see useClickAway).
+ * (see useClickAway). The arrow keys move through it, coming in from the pill (see moveByArrows); Tab
+ * leaves it rather than stepping through it.
  */
 export function ScenarioPill({
   listing,
@@ -23,6 +25,7 @@ export function ScenarioPill({
   const [switching, setSwitching] = useState(false)
   const [open, setOpen] = useState(false)
   const details = useRef<HTMLDetailsElement>(null)
+  const list = useRef<HTMLUListElement>(null)
 
   const close = () => {
     if (details.current) details.current.open = false
@@ -57,17 +60,23 @@ export function ScenarioPill({
         if (isOpen) refresh()
       }}
     >
-      <summary>
+      <summary
+        onKeyDown={(event) => {
+          // The list opens above the pill, so up comes in at the scenario nearest it.
+          if (open && list.current && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) moveByArrows(event.nativeEvent, list.current)
+        }}
+      >
         <span className="scenario-pill__label">{pillLabel(listing)}</span>
         <span className="scenario-pill__arrow" aria-hidden="true">
           <span className="scenario-pill__arrow-glyph">▾</span>
         </span>
       </summary>
-      <ul>
+      <ul ref={list} onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}>
         {pickerEntries(listing).map((entry) => (
           <li key={entry.name}>
             <button
               type="button"
+              tabIndex={-1}
               aria-current={entry.running}
               disabled={switching}
               onClick={() => switchTo(entry.name)}

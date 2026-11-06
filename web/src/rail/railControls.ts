@@ -32,10 +32,10 @@ export function toggled(settings: ViewerSettings, key: RailToggle): { settings: 
 }
 
 /**
- * The rail's popovers: Leagues (which leagues show) and Display Settings (the colours picked for them,
- * and whether hot games show flames).
+ * The rail's popovers: Leagues (which leagues show), Display Settings (the colours picked for them,
+ * and whether hot games show flames) and Games (every game shown, to find one and go to it).
  */
-export type RailPopover = 'leagues' | 'display'
+export type RailPopover = 'leagues' | 'display' | 'games'
 
 /** What opens or closes a popover: its button pressed, Escape, or a click outside the open one. */
 export type PopoverEvent = { press: RailPopover } | 'escape' | 'outside'

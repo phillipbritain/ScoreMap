@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from './game'
-import { gameLabel } from './gameLabel'
+import { gameLabel, gameMatchup, matchesSearch } from './gameLabel'
 
 const arrowhead: Game = {
   id: '401',
@@ -95,5 +95,61 @@ describe('gameLabel', () => {
 
     expect(label.indexOf('Jannik Sinner')).toBeGreaterThanOrEqual(0)
     expect(label.indexOf('Jannik Sinner')).toBeLessThan(label.indexOf('Carlos Alcaraz'))
+  })
+})
+
+describe('gameMatchup', () => {
+  it('names the two sides, top first, with no score or clock', () => {
+    expect(gameMatchup(arrowhead)).toBe('Buffalo Bills vs Kansas City Chiefs')
+  })
+
+  it('names a fight card by its event, else the bout it shows', () => {
+    const side = (name: string) => ({ name, shortName: name, flagUrl: null, record: null, winner: false })
+    const bout = { id: 'b', first: side('Jon Jones'), second: side('Stipe Miocic'), weightClass: null, scheduledRounds: 5, status: 'Live' as const, round: 2, clock: null, method: null }
+    const card: Game = { ...arrowhead, note: 'UFC 309: Jones vs. Miocic', contest: { kind: 'bouts', bouts: [bout] } }
+
+    expect(gameMatchup(card)).toBe('UFC 309: Jones vs. Miocic')
+    expect(gameMatchup({ ...card, note: null })).toBe('Jon Jones vs Stipe Miocic')
+  })
+
+  it('names a field by its event, else its venue', () => {
+    const race: Game = { ...arrowhead, note: 'Daytona 500', contest: { kind: 'field', entries: [] } }
+
+    expect(gameMatchup(race)).toBe('Daytona 500')
+    expect(gameMatchup({ ...race, note: null })).toBe('Arrowhead')
+  })
+})
+
+describe('matchesSearch', () => {
+  it('matches every game on an empty search', () => {
+    expect(matchesSearch(arrowhead, '  ')).toBe(true)
+  })
+
+  it('finds a game by a team, its abbreviation, the league or where it is, whatever the case', () => {
+    for (const query of ['chiefs', 'BUF', 'nfl', 'arrowhead', 'kansas city', 'missouri']) {
+      expect(matchesSearch(arrowhead, query), query).toBe(true)
+    }
+  })
+
+  it('needs every word to match, in any order', () => {
+    expect(matchesSearch(arrowhead, 'bills chiefs')).toBe(true)
+    expect(matchesSearch(arrowhead, 'chiefs raiders')).toBe(false)
+  })
+
+  it('ignores accents either way', () => {
+    const munich: Game = { ...arrowhead, venue: { ...arrowhead.venue, city: 'München' } }
+
+    expect(matchesSearch(munich, 'munchen')).toBe(true)
+    expect(matchesSearch({ ...arrowhead, venue: { ...arrowhead.venue, city: 'Munchen' } }, 'münchen')).toBe(true)
+  })
+
+  it('finds a field game by an entrant and a fight card by any fighter', () => {
+    const race: Game = { ...arrowhead, contest: { kind: 'field', entries: [{ position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: null, score: null }] } }
+    const side = (name: string) => ({ name, shortName: name, flagUrl: null, record: null, winner: false })
+    const bout = { id: 'b', first: side('Jon Jones'), second: side('Stipe Miocic'), weightClass: null, scheduledRounds: 5, status: 'Final' as const, round: null, clock: null, method: null }
+    const card: Game = { ...arrowhead, contest: { kind: 'bouts', bouts: [{ ...bout, status: 'Live', id: 'a', first: side('Alex Pereira'), second: side('Khalil Rountree') }, bout] } }
+
+    expect(matchesSearch(race, 'larson')).toBe(true)
+    expect(matchesSearch(card, 'miocic')).toBe(true)
   })
 })

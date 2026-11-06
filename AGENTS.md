@@ -6,7 +6,7 @@ A hobby web app showing live sports games as pins on a globe, with scores that u
 
 The app is still being shaped, so keep the process light:
 
-- **A small change** (a tweak, a fix, or a feature touching a few files) is built directly on one branch with one PR: no ticket split, integration branch or subagent worktrees. `/implement-spec` is for features with several parts.
+- **A small change** (a tweak, a fix, or a feature touching a few files) is built directly on one branch with one PR: no ticket split, integration branch or subagent worktrees. It needs no issue: where one would help, suggest it, and the user decides whether to work in place or file it for later. `/implement-spec` is for features with several parts.
 - **Tests cover behaviour** in the core logic: card layout, scenarios, polling, the ESPN feed and the game board. No test asserts a choice of look (#141); how it looks is checked by eye (`docs/style-guide.md`).
 - **While working**, keep the loop **tight**: after each edit, run types, lint and the unit tests (seconds) from `web/` as `npx tsc -b`, `npm run lint` and `npm test` (the unit project only), and the server tests (`dotnet test server/ScoreMap.slnx -c Release`) for a change in `server/`. A change to how something looks goes straight back to the user, who sees it at once in their run through Vite; take screenshots only when asked, or when a change's working can't be told any other way.
 - **Before a PR**, run the browser tests (`npm run test:browser`) once (minutes) if `web/src/globe/` or `web/scripts/page/` changed, with nothing else driving a browser and the output saved to a file: on a busy machine a long-pan test times out, so rerun just the timed-out tests by name (`npx vitest run --project browser <file> -t "<name>"`) before suspecting the change. CI runs lint, types and every test on each PR, and must pass before a merge; fix any failure before asking for one.
@@ -17,7 +17,7 @@ The app is still being shaped, so keep the process light:
 
 ### Pull requests
 
-Commit work on a branch named for the issue (a worktree's own `worktree-<issue>-…` branch counts), created from `main`: pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
+Commit work on a branch created from `main`, named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
 
 Working an issue, move its card on the project board: to **In progress** when starting work, and to **In review** when opening its pull request (the commands are in `docs/agents/issue-tracker.md`).
 

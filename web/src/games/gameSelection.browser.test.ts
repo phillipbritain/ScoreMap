@@ -188,10 +188,11 @@ it('selects a game from the list while its pin belongs to a cluster', async () =
   try {
     globe.show(games)
     const map = (globe as unknown as { map: MapLibreMap }).map
+    // As long as a globe takes to start up and draw, as the globe's own tests wait.
     await vi.waitFor(() => {
       expect(map.getLayer(pinClusterLayer)).toBeDefined()
       expect(map.queryRenderedFeatures([[390, 290], [410, 310]], { layers: [pinClusterLayer] }).length).toBeGreaterThan(0)
-    })
+    }, { timeout: 10_000 })
     await show(games)
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')
     expect(document.activeElement).toBe(close())

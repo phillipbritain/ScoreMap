@@ -1510,24 +1510,41 @@ body {
   cursor: default;
 }
 
-/* The scenario pill, the media keys and the clock (local runs only), stacked in a column at the
-   bottom left, clear of the theme and behaviour tuners at the top left and beside the game panel. The
-   pill's list opens upwards. */
+/* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of the
+   theme and behaviour tuners at the top left and beside the game panel. Three panes of glass butted
+   into one block, so they read as one set of controls: rounded only at the block's outer corners, in a
+   menu's corner, with a line at each join. The pill's list opens upwards. */
 .scenario-pills {
   /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
   --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
   align-self: flex-start;
   display: flex;
   flex-direction: column;
-  gap: calc(2 * var(--spacing));
   width: var(--scenario-column);
   pointer-events: auto;
+}
+
+.scenario-pills > :first-child {
+  border-radius: var(--menu-corner) var(--menu-corner) 0 0;
+}
+
+.scenario-pills > :last-child {
+  border-radius: 0 0 var(--menu-corner) var(--menu-corner);
+}
+
+.scenario-pills > :only-child {
+  border-radius: var(--menu-corner);
+}
+
+/* The line at a join, on the lower pane, which grows by it so its content keeps the bar's height. */
+.scenario-pills > :not(:first-child) {
+  height: calc(var(--controls-bar-height) + var(--shape-border-width-thin));
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .scenario-pill {
   position: relative;
   min-width: 0;
-  border-radius: var(--controls-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-button-font-size);
 }
@@ -1587,7 +1604,7 @@ body {
      of the pill, the media keys and the clock stacked below. */
   max-height: calc(
     100vh - (12px + 28px + 6 * var(--spacing)) -
-      (3 * var(--spacing) + 3 * var(--controls-bar-height) + 4 * var(--spacing) + 1.5 * var(--spacing))
+      (3 * var(--spacing) + 3 * var(--controls-bar-height) + 2 * var(--shape-border-width-thin) + 1.5 * var(--spacing))
   );
   overflow-y: auto;
   box-sizing: border-box;
@@ -1633,7 +1650,6 @@ body {
   justify-content: center;
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
-  border-radius: var(--controls-corner);
   color: var(--palette-text-primary);
   box-shadow: var(--controls-shadow), var(--glass-rim);
 }
@@ -1889,7 +1905,6 @@ body {
   height: var(--controls-bar-height);
   padding: 0 calc(3 * var(--spacing));
   line-height: var(--controls-bar-height);
-  border-radius: var(--controls-corner);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-body2-font-size);

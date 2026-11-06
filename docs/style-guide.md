@@ -149,7 +149,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.credit.fill`, `.text` | The photo's credit, shown on hover | `background.default`, `text.secondary` |
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues and Display Settings) and its toast | `background.paper` |
+| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues, Display Settings and Games) and its toast | `background.paper` |
 | `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.toggle.on`, `.off` | A toggle's icon on the rail ("Live only", "Show Disrupted games") when on, and when off; a popover's button takes the on colour while its popover is open | `secondary.main` (gold), `text.secondary` (grey) |

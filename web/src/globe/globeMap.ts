@@ -23,7 +23,7 @@ import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
 import { isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
-import { liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
+import { clearCentre, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { drawFlamesOnDemand, showsFlames } from './flames'
 import { pinFeatures } from './pinFeatures'
@@ -145,6 +145,8 @@ export class GlobeMap {
   /** The pins last given to the outer pin source, likewise. */
   private outerPinsKey = ''
   private selectedGameId: string | null = null
+  /** A game picked from the Games list, to be centred when it's selected rather than just lifted clear of the panel. */
+  private centreNext: string | null = null
   private clustering: PinLayout
   private destroyed = false
   private styleFailed = false
@@ -284,10 +286,13 @@ export class GlobeMap {
    * The globe stays where it is, unless the game panel (its box on the page) would cover the pin:
    * then it lifts just far enough to clear it (see liftClearOf). Selecting the game already
    * selected does nothing, so later games arriving don't move the camera. A game not on the globe
-   * (its venue not placed) is selected without moving it, and stays so once placed.
+   * (its venue not placed) is selected without moving it, and stays so once placed. A game marked by
+   * centreOn is centred instead.
    */
   select(gameId: string | null, panel: ScreenBox | null = null): void {
     if (gameId === this.selectedGameId) return
+    const centre = gameId !== null && gameId === this.centreNext
+    this.centreNext = null
     this.unsettle()
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
@@ -296,6 +301,7 @@ export class GlobeMap {
     }
     const game = gameId === null ? undefined : this.shown.get(gameId)
     if (!game) return
+    if (centre) return this.centre(game, panel)
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
     const { x, y } = this.map.project(venue)
     const lift = liftClearOf(this.pinOnPage(game, { x, y }), panel)
@@ -303,6 +309,26 @@ export class GlobeMap {
     // The venue straight up from where it is: panning by the lift would land short on the curved globe.
     const { width, height } = this.map.getContainer().getBoundingClientRect()
     this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
+  }
+
+  /**
+   * Centres a game picked from the Games list in the part of the globe the game panel leaves clear, at
+   * the zoom it's at (see clearCentre): now if it's already selected, else as it's selected next.
+   */
+  centreOn(gameId: string, panel: ScreenBox | null): void {
+    if (gameId !== this.selectedGameId) {
+      this.centreNext = gameId
+      return
+    }
+    const game = this.shown.get(gameId)
+    if (game) this.centre(game, panel)
+  }
+
+  private centre(game: PlacedGame, panel: ScreenBox | null): void {
+    const globe = this.map.getContainer().getBoundingClientRect()
+    const { x, y } = clearCentre(globe, panel)
+    const middle = { x: globe.left + globe.width / 2, y: globe.top + globe.height / 2 }
+    this.map.easeTo({ center: [game.venue.longitude, game.venue.latitude], offset: [x - middle.x, y - middle.y], duration: 600 })
   }
 
   /**

@@ -70,8 +70,6 @@ body {
    has its glass on a layer behind its content (::before), since glass on the surface itself would keep
    the glass inside from seeing past it. */
 .score-card,
-.game-navigation summary,
-.game-navigation ul,
 .game-panel,
 .rail__group::before,
 .rail__popover,
@@ -1149,6 +1147,26 @@ body {
   color: var(--rail-toggle-off);
 }
 
+/* A count on a button's corner (the Games button's games), in the on colour. */
+.rail__button { position: relative; }
+
+.rail__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  box-sizing: border-box;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--rail-toggle-on);
+  color: var(--palette-background-default);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
 .rail__icon {
   width: var(--rail-size-icon);
   height: var(--rail-size-icon);
@@ -1883,7 +1901,7 @@ body {
 }
 
 /* A tooltip (see tooltip/Tooltips.tsx): a small pane of glass above what it's for, or below where
-   there's no room, or on its left for the rail's buttons, easing in from it. Over everything but the local-run tools' own. */
+   there's no room, on its left for the rail's buttons, or on the right of the Games list for its games, easing in from it. Over everything but the local-run tools' own. */
 .tooltip {
   --frost: var(--tooltip-frost);
   --glass-tint: var(--tooltip-surface);
@@ -1913,6 +1931,10 @@ body {
 
 .tooltip[data-side='left'] {
   transform-origin: 100% 50%;
+}
+
+.tooltip[data-side='right'] {
+  transform-origin: 0 50%;
 }
 
 @keyframes tooltip-in {
@@ -2540,57 +2562,150 @@ body {
   }
 }
 
-/* Keyboard selection stays available for games in any pin or card cluster. */
+/* The Games popover (see Rail): the search, then the games scrolling under it while the popover stays
+   still. Keyboard selection stays available for games in any pin or card cluster. */
+.rail__popover--games {
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
+  max-height: min(70vh, calc(100vh - 6 * var(--spacing)));
+  overflow: hidden;
+  padding: calc(1.5 * var(--spacing));
+}
+
 .game-navigation {
-  position: absolute;
-  top: calc(14 * var(--spacing));
-  left: calc(3 * var(--spacing));
-  z-index: 3;
-  max-width: calc(100% - 24 * var(--spacing));
-  color: var(--palette-text-primary);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-body2-font-size);
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+  min-height: 0;
 }
 
-.game-navigation summary,
-.game-navigation ul {
-  --frost: var(--controls-frost);
-  --glass-tint: var(--controls-surface);
-  border: var(--shape-border-width-thin) solid var(--palette-divider);
-  border-radius: var(--controls-corner);
-  padding: calc(2 * var(--spacing));
-}
-
-.game-navigation summary { cursor: pointer; }
-
-.game-navigation ul {
-  list-style: none;
-  margin: var(--spacing) 0 0;
-  max-height: 45vh;
-  overflow: auto;
-  width: min(80vw, 80ch);
-  max-width: 100%;
+/* Its focus ring drawn inside it (see below), clear of the list under it. */
+.game-navigation__search {
+  flex: none;
   box-sizing: border-box;
-}
-
-.game-navigation button {
-  display: block;
   width: 100%;
-  border: none;
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
   border-radius: var(--menu-item-corner);
   background: none;
   color: inherit;
   font: inherit;
+}
+
+.game-navigation__search::placeholder { color: var(--palette-text-secondary); }
+
+/* A menu's scrollbar: slim, in the theme's colours. The Games list, the rail's other popovers
+   (Leagues and Display Settings) and the scenario pill's list. */
+.game-navigation ul,
+.rail__popover,
+.scenario-pill ul {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
+}
+
+/* The games, scrolling under the search. */
+.game-navigation ul {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  /* A game the arrow keys move to scrolls into view clear of the pinned league heading. */
+  scroll-padding-top: calc(2 * var(--spacing) + 1.5em);
+}
+
+/* A league's heading, pinned to the top of the list while its games scroll under it, solid so they
+   don't show through it. */
+.game-navigation__league {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--spacing) calc(2 * var(--spacing));
+  background: var(--controls-surface);
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.game-navigation__game + .game-navigation__game {
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+/* A game: the two logos, the matchup (cut short to fit, see GameNavigation) and a chevron. */
+.game-navigation button {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  width: 100%;
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
   text-align: left;
-  padding: calc(2 * var(--spacing));
   cursor: pointer;
 }
 
 .game-navigation button:hover { background: var(--palette-action-hover); }
 
+.game-navigation__logos {
+  display: inline-flex;
+  flex: none;
+  width: 32px;
+  height: 22px;
+}
+
+.game-navigation__logo {
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  padding: 2px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--palette-text-primary) 12%, var(--controls-surface));
+  box-shadow: 0 0 0 1.5px var(--controls-surface);
+  object-fit: contain;
+}
+
+.game-navigation__logo + .game-navigation__logo { margin-left: -12px; }
+
+.game-navigation__logo--none {
+  display: inline-grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.game-navigation__matchup {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-navigation__chevron {
+  flex: none;
+  color: var(--palette-text-secondary);
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+/* Focus rings drawn inside the search and the games, so they never reach over the list's edge or each other. */
+.game-navigation__search:focus-visible,
+.game-navigation button:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: calc(-1 * var(--shape-border-width-medium));
+}
+
+.game-navigation__none {
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
 .score-card:focus-visible,
-.game-navigation summary:focus-visible,
-.game-navigation button:focus-visible,
 .game-panel button:focus-visible,
 .game-panel a:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);

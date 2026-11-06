@@ -4,7 +4,6 @@ import { accentColour, gameColour, type PickedColours } from './settings/gameCol
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
-import { GameNavigation } from './games/GameNavigation'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
@@ -232,7 +231,6 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             onClose={closeGame}
           />
         )}
-        <GameNavigation games={visible} onSelect={selectGame} inert={touring || !loadingScreenGone} />
         <Rail
           leagues={leagues}
           settings={viewerSettings}
@@ -245,6 +243,12 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           onZoomOut={() => globe.current?.zoomOut()}
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
           inert={touring}
+          games={visible}
+          gamesReady={loadingScreenGone}
+          onSelectGame={(gameId) => {
+            globe.current?.centreOn(gameId)
+            selectGame(gameId)
+          }}
         />
         {/* Over the globe and the rail, which come before it; the scenario controls and the Feedback
             button are lifted above it (see .globe-area--touring), and the dev tools come after it. */}

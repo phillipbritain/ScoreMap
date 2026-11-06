@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Game } from '../games/game'
+import { GameNavigation } from '../games/GameNavigation'
 import type { Camera } from '../globe/camera'
 import type { ZoomSettings } from '../globe/zoomLevels'
+import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
@@ -28,16 +31,24 @@ interface RailProps {
   onHome: () => void
   /** Whether the rail can't be used at all, while the welcome tour shows. */
   inert?: boolean
+  /** The games shown on the globe, which the Games popover lists. */
+  games: readonly Game[]
+  /** Whether the games are in yet, so the Games button can be used (not under the loading screen). */
+  gamesReady: boolean
+  /** Opens a game picked from the Games popover. */
+  onSelectGame: (gameId: string) => void
 }
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in three groups. Zoom in, zoom
  * out and Home, which move the camera. The "Live games only" and "Show Disrupted games" toggles, whose
  * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
- * shows a short toast beside the rail saying what changed. Leagues and Display Settings, each opening a popover to the left of the rail: one at a time,
- * closed by its button, Escape or a click away from it, but not by moving or zooming the globe.
+ * shows a short toast beside the rail saying what changed. Leagues, Display Settings and Games (with
+ * its count of games on it), each opening a popover to the left of the rail: one at a time, closed by
+ * its button, Escape or a click away from it, but not by moving or zooming the globe. The arrow keys
+ * move through an open popover's controls, coming in from its button (see moveByArrows).
  */
-export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false }: RailProps) {
+export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false, games, gamesReady, onSelectGame }: RailProps) {
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
@@ -60,7 +71,15 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
   )
 
   return (
-    <div className="rail" inert={inert}>
+    <div
+      className="rail"
+      inert={inert}
+      onKeyDown={(event) => {
+        const key = event.key
+        const onItsButton = open && (event.target as Element).closest(`[data-popover-button="${open}"]`)
+        if (onItsButton && popover.current && (key === 'ArrowDown' || key === 'ArrowUp')) moveByArrows(event.nativeEvent, popover.current)
+      }}
+    >
       {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
       <div className="rail__group" data-keeps-popovers>
         <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
@@ -92,13 +111,28 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
         <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
       </div>
+      <div className="rail__group">
+        <RailButton
+          label="Games"
+          popover="games"
+          open={open}
+          disabled={!gamesReady}
+          badge={gamesReady ? games.length : undefined}
+          onClick={() => popoverEvent({ press: 'games' })}
+        />
+      </div>
       {open && (
-        <div ref={popover} id="rail-popover" className="rail__popover" role="dialog" aria-label={popoverNames[open]}>
-          {open === 'leagues' ? (
-            <Leagues leagues={leagues} settings={settings} onChange={onChange} />
-          ) : (
-            <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />
-          )}
+        <div
+          ref={popover}
+          id="rail-popover"
+          className={open === 'games' ? 'rail__popover rail__popover--games' : 'rail__popover'}
+          role="dialog"
+          aria-label={popoverNames[open]}
+          onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
+        >
+          {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
+          {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
+          {open === 'games' && <GameNavigation games={games} onSelect={onSelectGame} />}
         </div>
       )}
     </div>
@@ -107,11 +141,12 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 
 const hoverScreen = '(hover: hover)'
 
-const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings' }
+const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', games: 'Games' }
 
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A toggle is
- * pressed or not; a popover's button says whether its popover is open.
+ * pressed or not; a popover's button says whether its popover is open. A badge is a count on its
+ * corner (the Games button's games), part of its name for a screen reader.
  */
 function RailButton({
   label,
@@ -119,6 +154,7 @@ function RailButton({
   pressed,
   popover,
   open,
+  badge,
   onClick,
 }: {
   label: RailButtonName
@@ -126,13 +162,14 @@ function RailButton({
   pressed?: boolean
   popover?: RailPopover
   open?: RailPopover | null
+  badge?: number
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       className="rail__button"
-      aria-label={label}
+      aria-label={badge === undefined ? label : `${label} (${badge})`}
       data-tooltip={label}
       // On the left, so it covers none of the rail's other buttons.
       data-tooltip-side="left"
@@ -142,9 +179,12 @@ function RailButton({
       aria-expanded={popover && open === popover}
       aria-controls={popover && open === popover ? 'rail-popover' : undefined}
       data-popover-button={popover}
+      // Where keyboard focus goes back to from a game (see focusGameNavigation).
+      data-game-navigation={popover === 'games' || undefined}
       onClick={onClick}
     >
       <RailIcon className="rail__icon">{railIcon(label)}</RailIcon>
+      {badge !== undefined && <span className="rail__badge" aria-hidden="true">{badge}</span>}
     </button>
   )
 }

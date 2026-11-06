@@ -441,6 +441,41 @@ describe('selection', () => {
     expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
+  it('centres a game picked from the list above the panel, keeping the zoom', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { longitude: 30, latitude: 10 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    const panel = panelAcrossBottom()
+
+    const moved = new Promise((resolve) => map.once('moveend', resolve))
+    globe.centreOn('A', panel)
+    globe.select('A', panel)
+    await moved
+
+    const page = container.getBoundingClientRect()
+    expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
+    expect(offBy(venueOnPage(map, a).x, page.left + page.width / 2)).toBeLessThan(2)
+    expect(map.getZoom()).toBeCloseTo(2)
+  })
+
+  it('centres the game already selected when it is picked from the list again', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { longitude: 30, latitude: 10 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    globe.select('A')
+    await pause(500)
+    expect(map.getCenter().lng).toBeCloseTo(0)
+
+    const moved = new Promise((resolve) => map.once('moveend', resolve))
+    globe.centreOn('A', null)
+    await moved
+
+    expect(map.getCenter().lng).toBeCloseTo(30)
+    expect(map.getCenter().lat).toBeCloseTo(10)
+  })
+
   it('tells the app when the viewer selects a small pin', async () => {
     const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A')

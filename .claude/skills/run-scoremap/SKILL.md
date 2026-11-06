@@ -35,6 +35,7 @@ With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scor
 
 ```sh
 npm run page -- reset $web                  # back to the start view; start the session with this
+npm run page -- reset $web --toured         # the same, with the welcome tour already finished
 npm run page -- ready                       # waits for the page to be Ready
 npm run page -- camera <lng>,<lat> <zoom>   # turns the camera there and waits for the globe to be still
 npm run page -- settled                     # waits for the globe to settle after a camera move
@@ -43,6 +44,7 @@ npm run page -- screenshot <file>           # once Ready and settled
 ```
 
 1. **Start with `reset`.** The app saves the camera and settings to localStorage, so a run on the same port opens where the last one left off; a dark, empty globe is usually a saved camera over ocean. `reset` also sends the browser daemon's output to files of its own. A session started with a bare agent-browser command instead must send that command's output to a file, from Git Bash (`agent-browser open $web > /tmp/ab.txt 2>&1`): the daemon inherits its stdout, so a pipe, or PowerShell's `>`, waits forever.
+   Add `--toured` unless you're checking the welcome tour itself: a first visit shows the tour, and the rail and the Games popover can't be used under it.
 2. **Wait until it's drawn** before a measurement (`ready`): the page is Ready once the first games are on the globe and everything on it has stopped moving, and stays so. For screenshots to compare, start the scenario Paused too (see Scenarios).
 3. **Go somewhere with `camera`**, as `camera -74,40.7 6` for New York, rather than scrolling. City labels show from zoom 3, so look where the scenario has games: `crowded` over New York, London or Los Angeles.
 4. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the centre of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `npm run page -- read .game-panel`.

@@ -2,7 +2,7 @@
 // it to the start view, waits for it to be ready or settled, turns its camera, reads a value from it, screenshots it,
 // pans it for a card trace. See the run-scoremap skill and docs/agents/card-layout-replay.md.
 //
-//   npm run page -- reset <web URL>                 (in web/)
+//   npm run page -- reset <web URL> [--toured]      (in web/) --toured: with the welcome tour finished
 //   npm run page -- ready
 //   npm run page -- settled
 //   npm run page -- camera <lng>,<lat> <zoom>      turns the camera there and waits for the globe to be still
@@ -18,11 +18,12 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { agentBrowser, TimedOut } from '../agentBrowser.ts'
+import { finishedTour } from './finishedTour.ts'
 import { panArgs } from './panArgs.ts'
 import { pageCheck, type PageCheck } from './pageCheck.ts'
 import { panGlobe } from './panGlobe.ts'
 
-const usage = 'Usage: npm run page -- reset <web URL> | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
+const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
 
 const page = agentBrowser({ cwd: process.cwd(), scratch })
@@ -33,13 +34,15 @@ class Failed extends Error {}
 
 function main([command, ...args]: string[]): void {
   const panRequest = command === 'pan' ? panArgs(args) : null
-  if (command === 'reset' && args.length === 1) {
+  if (command === 'reset' && (args.length === 1 || (args.length === 2 && args[1] === '--toured'))) {
     // The app writes its saved camera back as it leaves, so storage is cleared from a page that isn't the app.
     const url = args[0].replace(/\/$/, '')
+    const toured = args.length === 2
     browser(['open', `${url}/favicon.svg`])
     evaluate('localStorage.clear()')
+    if (toured) evaluate(`localStorage.setItem(${JSON.stringify(finishedTour.key)}, ${JSON.stringify(finishedTour.value)})`)
     browser(['open', url])
-    console.log(`Reset ${url} to the start view`)
+    console.log(`Reset ${url} to the start view${toured ? ', with the welcome tour finished' : ''}`)
   } else if (command === 'ready' && args.length === 0) {
     inPage({ check: 'ready' })
     console.log('Ready')

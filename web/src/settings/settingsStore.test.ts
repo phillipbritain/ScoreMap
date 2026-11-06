@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { finishedTour } from '../../scripts/page/finishedTour.ts'
 import { settingsStore, unsavedSettingsStore, type SettingsStorage } from './settingsStore'
 import { firstVisitSettings } from './viewerSettings'
 
@@ -261,6 +262,13 @@ describe('settingsStore welcome tour progress', () => {
       expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
     },
   )
+
+  it('saves a finished tour as `npm run page -- reset --toured` sets it', () => {
+    const items = new Map<string, string>()
+    settingsStore(() => ({ getItem: () => null, setItem: (key, value) => void items.set(key, value) })).saveTourProgress('finished')
+
+    expect([...items]).toEqual([[finishedTour.key, finishedTour.value]])
+  })
 
   it('still works when the browser blocks storage, showing the tour from Welcome', () => {
     const store = settingsStore(() => {

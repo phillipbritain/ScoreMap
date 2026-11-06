@@ -29,4 +29,12 @@ describe('tooltipPlace', () => {
   it('goes above instead where there’s no room on the left', () => {
     expect(tooltipPlace({ left: 50, top: 200, width: 40, height: 20 }, tooltip, screen, 'left').side).toBe('above')
   })
+
+  it('puts it level on the right where asked, as for a game in the Games list', () => {
+    expect(tooltipPlace({ left: 12, top: 200, width: 360, height: 34 }, tooltip, screen, 'right')).toEqual({ left: 380, top: 202, side: 'right' })
+  })
+
+  it('goes above instead where there’s no room on the right', () => {
+    expect(tooltipPlace({ left: 600, top: 200, width: 150, height: 20 }, tooltip, screen, 'right').side).toBe('above')
+  })
 })

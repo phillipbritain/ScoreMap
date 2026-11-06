@@ -10,25 +10,28 @@ export interface Box {
 export const tooltipGap = 8
 
 /** Which side of what it's for a tooltip is on. */
-export type TooltipSide = 'above' | 'below' | 'left'
+export type TooltipSide = 'above' | 'below' | 'left' | 'right'
+
+/** The side asked for: above, or level on the left or the right. */
+export type TooltipPrefer = 'above' | 'left' | 'right'
 
 /**
  * Where a tooltip goes for what it's for: centred above it, or below it where there's no room above;
- * or, where asked (the rail's buttons, so it covers none of the others), level with it on its left,
- * unless there's no room there. Kept on the screen.
+ * or, where asked, level with it on its left (the rail's buttons, so it covers none of the others) or
+ * its right (a game in the Games list, clear of the list), unless there's no room there. Kept on the screen.
  */
 export function tooltipPlace(
   anchor: Box,
   tooltip: { width: number; height: number },
   screen: { width: number; height: number },
-  prefer: 'above' | 'left' = 'above',
+  prefer: TooltipPrefer = 'above',
 ): { left: number; top: number; side: TooltipSide } {
   const keep = (value: number, size: number, room: number) => Math.max(tooltipGap, Math.min(value, room - tooltipGap - size))
+  const level = () => keep(anchor.top + anchor.height / 2 - tooltip.height / 2, tooltip.height, screen.height)
   const leftOf = anchor.left - tooltipGap - tooltip.width
-  if (prefer === 'left' && leftOf >= tooltipGap) {
-    const top = keep(anchor.top + anchor.height / 2 - tooltip.height / 2, tooltip.height, screen.height)
-    return { left: leftOf, top, side: 'left' }
-  }
+  if (prefer === 'left' && leftOf >= tooltipGap) return { left: leftOf, top: level(), side: 'left' }
+  const rightOf = anchor.left + anchor.width + tooltipGap
+  if (prefer === 'right' && rightOf + tooltip.width <= screen.width - tooltipGap) return { left: rightOf, top: level(), side: 'right' }
   const above = anchor.top - tooltipGap - tooltip.height
   const side = above < tooltipGap ? 'below' : 'above'
   const top = side === 'below' ? anchor.top + anchor.height + tooltipGap : above

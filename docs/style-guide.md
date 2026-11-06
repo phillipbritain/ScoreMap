@@ -290,10 +290,10 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, the Feedback panel and its text box, a tooltip | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, the outer corners of the scenario controls (the pill, speed keys and clock, joined into one block), the Feedback panel and its text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
-| `components.Controls.corner` | A control's: the scenario pill and clock, the speed keys, league chips, "Reset colours", the rail's toast, the Feedback panel's buttons | `pill` |
+| `components.Controls.corner` | A control's: a speed key, league chips, "Reset colours", the rail's toast, the Feedback panel's buttons | `pill` |
 
 The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
 

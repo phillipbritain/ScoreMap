@@ -17,7 +17,7 @@ import { GlobeMap, type LoadingStage } from './globeMap'
 import { panelGap, smallPinReach } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
-import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, selectedPinLayer, smallPinLayer } from './pinLayers'
+import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, pinSource, selectedPinLayer, smallPinLayer } from './pinLayers'
 import { cardZoom, maxZoom, zoomSettings } from './zoomLevels'
 
 /**
@@ -314,8 +314,7 @@ describe('selection', () => {
   it('selects a named score card with Enter and Space, including after a live update', async () => {
     const { globe, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })
     globe.show([game('A')])
-    await vi.waitFor(() => expect(card('A')).not.toBeNull())
-    const button = card('A')!
+    const button = await cardShown('A')
     expect(button.tagName).toBe('BUTTON')
     expect(button.getAttribute('aria-label')).toContain('Buffalo Bills')
     expect(button.getAttribute('aria-label')).toContain('Kansas City Chiefs')
@@ -821,10 +820,19 @@ describe('loading stage', () => {
     await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
     expect(container.querySelectorAll('.score-card')).toHaveLength(2)
     expect(globe.settled()).toBe(false)
-    const drawn = vi.fn()
-    map.on('render', drawn)
-    await pause(500)
-    expect(drawn).not.toHaveBeenCalled()
+    // The map may draw a frame or two more, for card layout tiles it was still loading: when reloads
+    // of a tile overlap, MapLibre counts it loaded once the first ends, and goes idle before the
+    // last. Then it draws nothing more, as nothing asks it to.
+    await vi.waitFor(
+      async () => {
+        const drawn = vi.fn()
+        map.on('render', drawn)
+        await pause(500)
+        map.off('render', drawn)
+        expect(drawn).not.toHaveBeenCalled()
+      },
+      { timeout: 5_000 },
+    )
   })
 
   it('keeps every trail on its card through a long pan after its score cards give up settling', async () => {
@@ -937,6 +945,27 @@ describe('settling', () => {
     await pause(500)
     expect(cardsOnPage()).toEqual(settled)
     expect(globe.settled()).toBe(true)
+  })
+
+  it('settles once its pins load, however many frames the map drew while they were loading', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    // Pins slow to load, as on a slow machine, while the map draws frames for other reasons: more
+    // frames than a layout gets to settle in once it can start.
+    const loadingFrames = 90
+    let framesDrawn = 0
+    const isSourceLoaded = map.isSourceLoaded.bind(map)
+    vi.spyOn(map, 'isSourceLoaded').mockImplementation((source) => (source === pinSource && framesDrawn < loadingFrames ? false : isSourceLoaded(source)))
+    const drawAnother = () => {
+      if (++framesDrawn < loadingFrames) map.triggerRepaint()
+    }
+    map.on('render', drawAnother)
+    globe.show(crowd)
+
+    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
+    map.off('render', drawAnother)
+    expect(framesDrawn).toBeGreaterThanOrEqual(loadingFrames)
+    expect(globe.settled()).toBe(true)
+    expect(cardsOnPage()).toHaveLength(crowd.length)
   })
 
   it('is unsettled by a change of games until the change has been shown and has settled', async () => {

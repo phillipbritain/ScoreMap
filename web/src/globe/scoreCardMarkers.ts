@@ -348,11 +348,16 @@ export class ScoreCardMarkers {
    */
   private settleNextFrame(changed: boolean, pinsLoaded: boolean): void {
     this.changed = changed
+    // Pins still loading aren't the layout failing to settle: they'll draw frames of their own, and
+    // the layout gets its full count of frames once they've loaded, however long they took.
+    if (!pinsLoaded) {
+      this.changingSyncs = 0
+      return
+    }
     this.changingSyncs = changed ? this.changingSyncs + 1 : 0
     if (!changed) return
     if (this.changingSyncs <= maxSettlingFrames) this.map.triggerRepaint()
-    // Pins still loading aren't the layout failing to settle: they'll draw frames of their own.
-    else if (pinsLoaded) this.gaveUp = true
+    else this.gaveUp = true
   }
 
   /** Where the cards placed now are. */

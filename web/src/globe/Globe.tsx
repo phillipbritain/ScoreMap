@@ -62,6 +62,8 @@ export interface GlobeHandle {
   zoomOut: () => void
   flyTo: (camera: Camera) => void
   jumpTo: (camera: Camera) => void
+  /** Centres a game picked from the Games list clear of the game panel (see GlobeMap.centreOn). */
+  centreOn: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
   shownScoreCards: () => ShownScoreCard[]
 }
@@ -116,9 +118,10 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, showGa
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
       jumpTo: (camera) => globe.current?.jumpTo(camera),
+      centreOn: (gameId) => globe.current?.centreOn(gameId, panel.current?.getBoundingClientRect() ?? null),
       shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
-    [],
+    [panel],
   )
 
   useEffect(() => globe.current?.setTheme(theme), [theme])

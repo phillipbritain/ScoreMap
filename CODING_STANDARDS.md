@@ -19,3 +19,7 @@ A test of something seeded (a scenario's fill, play) checks a property the code 
 ## Placement is tested as the globe turns
 
 Score cards, trails and card clusters are laid out afresh every frame, each frame starting from the last (`previous` in `cardLayout.ts`). A rule that looks right in one still frame can still send cards jumping about while the globe pans, as #88's "move to a spot with a 40 px shorter trail" did. When a diff changes where cards are placed or when they move, check that the layout's tests still pan across a crowd frame by frame ("keeps cards anchored as the globe pans across a crowd of venues"), and that the diff hasn't loosened that test's cap to pass.
+
+## Waits on a globe starting up allow 10 s
+
+A browser test that waits for a new globe to draw (its first pins, clusters or score cards) gives the wait 10 s, as `cardShown` and `pinsDrawn` in `globeMap.browser.test.ts` do. `vi.waitFor`'s 1 s default suits only changes to a globe already drawn: a slow machine takes 1–3 s to start one, and two tests that waited the default failed there every time while passing in CI (#306).

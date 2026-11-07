@@ -35,6 +35,12 @@ interface ThemeTunerProps {
   /** The loading screen held up over the globe to be looked at, and the way to change it. */
   loadingPreview: LoadingPreview
   onLoadingPreview: (preview: LoadingPreview) => void
+  /** Whether its panel shows: opened and closed from the rail's Tuners popover. */
+  open: boolean
+  /** Told how many settings the draft changes, for the Tuners popover's count. */
+  onChangeCount: (count: number) => void
+  /** Closes its panel, from the close button in its header. */
+  onClose: () => void
 }
 
 /**
@@ -45,14 +51,14 @@ interface ThemeTunerProps {
  * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
  * the theme's JSON. The loading screen, seen only once a page, can be held up over the globe to tune.
  */
-export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadingPreview }: ThemeTunerProps) {
-  const [open, setOpen] = useState(false)
+export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadingPreview, open, onChangeCount, onClose }: ThemeTunerProps) {
   const [draft, setDraft] = useState(initial)
   const [tabIndex, setTabIndex] = useState(0)
   const [copied, setCopied] = useState<string | null>(null)
   const tabs = useMemo(() => tunerTabs(builtIn), [builtIn])
   const colours = useMemo(() => themeColours(draft), [draft])
   const changed = useMemo(() => changes(builtIn, draft), [builtIn, draft])
+  useEffect(() => onChangeCount(changed.length), [changed.length, onChangeCount])
   const result = useMemo(() => resolveTheme(draft), [draft])
 
   useEffect(() => {
@@ -77,11 +83,9 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
 
   return (
     <div className="theme-tuner theme-tuner--theme">
-      <button type="button" className="theme-tuner__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
-        Theme{changed.length > 0 && <span className="theme-tuner__badge">{changed.length}</span>}
-      </button>
       {open && (
-        <div className="theme-tuner__panel">
+        <div className="theme-tuner__panel" role="dialog" aria-label="Theme">
+          <TunerHeader name="Theme" onClose={onClose} />
           <div className="theme-tuner__tabs">
             {(['theme', 'component'] as const).map((kind) => (
               <div key={kind} className={`theme-tuner__tab-group theme-tuner__tab-group--${kind}`}>
@@ -409,5 +413,17 @@ function ColourJob({
         </span>
       )}
     </span>
+  )
+}
+
+/** A tuner panel's header: its name, and a button closing it. The behaviour tuner shares it. */
+export function TunerHeader({ name, onClose }: { name: string; onClose: () => void }) {
+  return (
+    <div className="theme-tuner__header">
+      <span className="theme-tuner__title">{name}</span>
+      <button type="button" className="theme-tuner__close" onClick={onClose} aria-label={`Close ${name}`}>
+        ×
+      </button>
+    </div>
   )
 }

@@ -138,7 +138,7 @@ Beside the palette's background, text, divider and hover:
 
 | Setting | What it colours | Dark theme |
 | --- | --- | --- |
-| `components.Controls.surface` | The scenario pill and its list, the speed keys, the scenario clock, the "No games right now." message, and the Feedback button and panel | `background.paper` |
+| `components.Controls.surface` | The "No games right now." message, and the Feedback button and panel | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
 | `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
 | `components.GamePanel.surface.top`, `.bottom` | The game panel, shading from top to bottom | `background.paper`, `background.paper` (solid) |
@@ -149,7 +149,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.credit.fill`, `.text` | The photo's credit, shown on hover | `background.default`, `text.secondary` |
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues, Display Settings and Games) and its toast | `background.paper` |
+| `components.Rail.surface` | The rail's groups of buttons, its popovers (Leagues, Display Settings and Games) and its toast; on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.toggle.on`, `.off` | A toggle's icon on the rail ("Live only", "Show Disrupted games") when on, and when off; a popover's button takes the on colour while its popover is open | `secondary.main` (gold), `text.secondary` (grey) |
@@ -229,7 +229,7 @@ A flame's shape (a main tip with a smaller lick to one side, the same on the glo
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast, the scenario controls with the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers and toast (and on local runs the top rail with the scenario controls), the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its colour lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface colour, solid.
@@ -241,10 +241,10 @@ On a score card the frost clears more than the fill: its header's tint, its stat
 | Setting | Which glass | Dark theme |
 | --- | --- | --- |
 | `components.ScoreCard.frost` | Score cards' | 0.6 |
-| `components.GamePanel.frost` | The game panel's | 0.6 |
-| `components.Rail.frost` | The rail's groups, popovers and toast | 0.6 |
-| `components.Controls.frost` | The scenario pill and its list, the speed keys, the scenario clock, the no-pins message, and the Feedback button and panel | 0.6 |
-| `components.Tooltip.frost` | Tooltips' | 0.6 |
+| `components.GamePanel.frost` | The game panel's | 0.85 |
+| `components.Rail.frost` | The rail's groups, popovers and toast, and the top rail's (local runs) | 0.85 |
+| `components.Controls.frost` | The no-pins message, and the Feedback button and panel | 0.85 |
+| `components.Tooltip.frost` | Tooltips' | 0.85 |
 
 Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: each frost is on its component's tab.
 
@@ -290,7 +290,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
 | `components.GamePanel.corner` | The game panel's | 2 (8px) |
-| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the list of scenarios, the outer corners of the scenario controls (the pill, speed keys and clock, joined into one block), the Feedback panel and its text box, a tooltip | 2 (8px) |
+| `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers, the Feedback panel and its text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: a speed key, league chips, "Reset colours", the rail's toast, the Feedback panel's buttons | `pill` |
@@ -361,7 +361,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
-| `components.Controls.size.key`, `.icon` | A speed key and its icon. The game panel sits clear of the scenario controls by the keys' size | 34, 14 |
+| `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |
 | `components.LoadingScreen.rocket.size` | The loading screen's rocket, its box across | 64 |
 
 ## Text on the globe
@@ -406,7 +406,7 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
-To try changes first, use the **theme tuner**, the "Theme" button at the top right of a local run (it's left out of a build). It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…), under a heading of their own and ruled off, as each changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The loading screen, seen once a page, can be held up over the globe from its tab (Rocket, or Slow message with the message under it), and stays up on every tab until put away (Off), since its message takes settings from Type; "Play exit" plays the fade it goes with. To see a real slow first load, pins and score cards coming in under it, use the `slow-initial-load` scenario (the `run-scoremap` skill). The Theme button counts the settings changed from the built-in theme, each tab those it shows, and a changed setting is marked, with a button to put it back. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
+To try changes first, use the **theme tuner**, Theme in the Tuners popover of a local run's top rail, at the top left (it's left out of a build); its panel keeps a plain look of its own, so a draft can't make it unreadable. It shows every setting but the theme's colours themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…), under a heading of their own and ruled off, as each changes only that part. A colour job picks one of the palette's colours, or a step from a grid of the theme's colours, light to dark, or steps lighter (▲) or darker (▼) in its colour, so it stays within the theme's colours; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The loading screen, seen once a page, can be held up over the globe from its tab (Rocket, or Slow message with the message under it), and stays up on every tab until put away (Off), since its message takes settings from Type; "Play exit" plays the fade it goes with. To see a real slow first load, pins and score cards coming in under it, use the `slow-initial-load` scenario (the `run-scoremap` skill). The Theme button counts the settings changed from the built-in theme, each tab those it shows, and a changed setting is marked, with a button to put it back. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
 
 1. **Colours first.** Choose the base colours and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Then the palette:** which steps are the primary and secondary colours, each status's colour, the background, the text, the divider and hover.

@@ -72,9 +72,14 @@ describe('applyTheme', () => {
   })
 
   it('writes each glass’s frost', () => {
-    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.frost = 0.3)))
+    const properties = propertiesOf(
+      themeWith((json) => {
+        json.components.ScoreCard.frost = 0.3
+        json.components.Rail.frost = 0.7
+      }),
+    )
     expect(properties.get('--score-card-frost')).toBe('0.3')
-    expect(properties.get('--rail-frost')).toBe('0.6')
+    expect(properties.get('--rail-frost')).toBe('0.7')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {

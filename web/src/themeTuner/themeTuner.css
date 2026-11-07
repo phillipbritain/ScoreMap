@@ -1,17 +1,25 @@
-/* The theme tuner (local runs only). A tool for trying the theme rather than part of it, so it has a
-   plain look of its own and reads none of the theme's custom properties: tuning text sizes or
-   surfaces can't make it unreadable. */
-/* The local-run tools (this and the behaviour tuner, which shares its look), their buttons side by
-   side at the top left, clear of the rail at the top right. The tools' panels hang below the buttons,
-   placed apart from them so opening one never moves the other's button: the theme's at the left, the
-   behaviour's there too, or beside the theme's when both are open. The space between them lets the
-   globe through. */
+/* The theme tuner (local runs only), and the behaviour tuner, which shares its look. Tools for trying
+   the theme rather than part of it, so they have a plain look of their own, solid and in fixed
+   colours, sizes and font, and read none of the theme's custom properties: tuning text sizes, colours
+   or surfaces can't make them unreadable.
+
+   Opened from the top rail's Tuners popover, their panels sit at the top left, below the top rail and
+   clear of the rail at the top right: the theme's at the left, the behaviour's there too, or beside
+   the theme's when both are open. The space between them lets the globe through. On a phone, a sheet
+   (see below). Placed by the theme's spacing and rail button size, to keep below the top rail. */
 .dev-tools {
-  --tuner-button: 28px;
+  /* The tools' own colours. */
+  --tuner-text: #e6e6e6;
+  --tuner-dim: #9a9a9a;
+  --tuner-surface: #1c1c1c;
+  --tuner-field: #2a2a2a;
+  --tuner-hover: #333;
+  --tuner-accent: #e0a030;
+  --tuner-line: 1px solid #444;
   position: absolute;
-  top: 12px;
-  left: 12px;
-  bottom: 12px;
+  top: calc(5 * var(--spacing) + var(--rail-size-button));
+  left: calc(3 * var(--spacing));
+  bottom: calc(3 * var(--spacing));
   z-index: 3;
   display: flex;
   align-items: flex-start;
@@ -31,7 +39,7 @@
   gap: 8px;
   max-height: 100%;
   pointer-events: auto;
-  color: #e6e6e6;
+  color: var(--tuner-text);
   font: 12px/1.4 system-ui, sans-serif;
 }
 
@@ -45,8 +53,12 @@
 .theme-tuner button {
   border: 1px solid #555;
   border-radius: 4px;
-  background: #2a2a2a;
+  background: var(--tuner-field);
   cursor: pointer;
+}
+
+.theme-tuner button:hover:enabled {
+  background: var(--tuner-hover);
 }
 
 .theme-tuner button:disabled {
@@ -54,38 +66,55 @@
   cursor: default;
 }
 
-.theme-tuner__toggle {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: var(--tuner-button);
-  padding: 0 10px;
-  background: #1c1c1c !important;
-}
-
 .theme-tuner__badge {
   padding: 0 6px;
   border-radius: 999px;
-  background: #e0a030;
-  color: #1c1c1c;
+  background: var(--tuner-accent);
+  color: var(--tuner-surface);
   font-weight: 700;
 }
 
 .theme-tuner__panel {
   position: absolute;
-  top: calc(var(--tuner-button) + 8px);
+  top: 0;
   left: 0;
   box-sizing: border-box;
-  max-height: calc(100% - var(--tuner-button) - 8px);
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   width: 380px;
   max-width: calc(100vw - 24px);
   min-height: 0;
-  border: 1px solid #444;
+  overflow: hidden;
+  border: var(--tuner-line);
   border-radius: 6px;
-  background: #1c1c1c;
+  background: var(--tuner-surface);
+  box-shadow: 0 6px 22px rgb(0 0 0 / 0.35);
+}
+
+/* Its name and close button, across its top. */
+.theme-tuner__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 12px;
+  border-bottom: var(--tuner-line);
+}
+
+.theme-tuner__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.theme-tuner button.theme-tuner__close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .dev-tools:has(.theme-tuner--theme > .theme-tuner__panel) .theme-tuner--behaviour > .theme-tuner__panel {
@@ -97,7 +126,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  border-bottom: 1px solid #444;
+  border-bottom: var(--tuner-line);
 }
 
 /* The whole theme's tabs, then the components', each under its own name. */
@@ -108,7 +137,7 @@
 }
 
 .theme-tuner__tab-group-name {
-  color: #9a9a9a;
+  color: var(--tuner-dim);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -135,10 +164,11 @@
   line-height: 15px;
 }
 
-.theme-tuner__tabs button[aria-selected='true'] {
-  border-color: #e6e6e6;
-  background: #e6e6e6;
-  color: #1c1c1c;
+.theme-tuner__tabs button[aria-selected='true'],
+.theme-tuner__tabs button[aria-selected='true']:hover {
+  border-color: var(--tuner-text);
+  background: var(--tuner-text);
+  color: var(--tuner-surface);
 }
 
 /* A component's tabs are ruled off from the whole theme's. */
@@ -154,22 +184,23 @@
   align-items: center;
   gap: 4px;
   padding: 6px 8px;
-  border-bottom: 1px solid #444;
+  border-bottom: var(--tuner-line);
 }
 
 .theme-tuner__preview-name {
   margin-right: 4px;
-  color: #9a9a9a;
+  color: var(--tuner-dim);
 }
 
 .theme-tuner__preview button {
   padding: 2px 8px;
 }
 
-.theme-tuner__preview button[aria-pressed='true'] {
-  border-color: #e6e6e6;
-  background: #e6e6e6;
-  color: #1c1c1c;
+.theme-tuner__preview button[aria-pressed='true'],
+.theme-tuner__preview button[aria-pressed='true']:hover {
+  border-color: var(--tuner-text);
+  background: var(--tuner-text);
+  color: var(--tuner-surface);
 }
 
 .theme-tuner__problems {
@@ -191,7 +222,7 @@
 
 .theme-tuner__group--top {
   padding: 8px 0 0;
-  border-top: 1px solid #333;
+  border-top: var(--tuner-line);
 }
 
 .theme-tuner__group--top:first-child {
@@ -200,7 +231,7 @@
 
 .theme-tuner__heading {
   margin-top: 4px;
-  color: #9a9a9a;
+  color: var(--tuner-dim);
   font-weight: 600;
 }
 
@@ -213,7 +244,7 @@
 }
 
 .theme-tuner__group--top > .theme-tuner__heading {
-  color: #e6e6e6;
+  color: var(--tuner-text);
 }
 
 .theme-tuner__row {
@@ -226,7 +257,7 @@
 }
 
 .theme-tuner__row--changed {
-  border-left-color: #e0a030;
+  border-left-color: var(--tuner-accent);
 }
 
 .theme-tuner__name {
@@ -260,9 +291,13 @@
 .theme-tuner__text,
 .theme-tuner select {
   min-width: 0;
-  border: 1px solid #555;
+  border: var(--tuner-line);
   border-radius: 4px;
-  background: #2a2a2a;
+  background: var(--tuner-field);
+}
+
+.theme-tuner input[type='range'] {
+  accent-color: var(--tuner-accent);
 }
 
 .theme-tuner__colour {
@@ -288,7 +323,7 @@
   flex: none;
   width: 14px;
   height: 14px;
-  border: 1px solid #777;
+  border: 1px solid var(--tuner-dim);
   border-radius: 3px;
 }
 
@@ -303,9 +338,9 @@
   flex-direction: column;
   gap: 3px;
   padding: 6px;
-  border: 1px solid #555;
+  border: var(--tuner-line);
   border-radius: 6px;
-  background: #1c1c1c;
+  background: var(--tuner-surface);
 }
 
 .theme-tuner__grid-row {
@@ -331,12 +366,12 @@
 }
 
 .theme-tuner button.theme-tuner__role[aria-pressed='true'] {
-  border-color: #e6e6e6;
+  border-color: var(--tuner-text);
 }
 
 .theme-tuner__grid-name {
   width: 56px;
-  color: #9a9a9a;
+  color: var(--tuner-dim);
 }
 
 .theme-tuner button.theme-tuner__cell {
@@ -346,12 +381,12 @@
 }
 
 .theme-tuner button.theme-tuner__cell[aria-pressed='true'] {
-  border-color: #fff;
+  border-color: var(--tuner-text);
   outline: 1px solid #000;
 }
 
 .theme-tuner__transparent[aria-pressed='true'] {
-  border-color: #e6e6e6;
+  border-color: var(--tuner-text);
 }
 
 .theme-tuner__footer {
@@ -360,12 +395,12 @@
   align-items: center;
   gap: 6px;
   padding: 8px;
-  border-top: 1px solid #444;
+  border-top: var(--tuner-line);
 }
 
 .theme-tuner__footer span {
   flex: 1;
-  color: #9a9a9a;
+  color: var(--tuner-dim);
 }
 
 .theme-tuner__footer button {
@@ -406,16 +441,30 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #9a9a9a;
+  background: var(--tuner-dim);
   transition: transform 0.15s;
 }
 
 .theme-tuner .behaviour-tuner__switch[aria-checked='true'] {
-  border-color: #e0a030;
-  background: #e0a030;
+  border-color: var(--tuner-accent);
+  background: var(--tuner-accent);
 }
 
 .behaviour-tuner__switch[aria-checked='true']::after {
-  background: #1c1c1c;
+  background: var(--tuner-surface);
   transform: translateX(10px);
+}
+
+/* On a phone: a sheet across the width left of the rail, as the rail's popovers are, so the rail
+   stays in reach, and no taller than two thirds of the screen, so the globe shows below it. With both
+   tuners open they lie in the same place, the behaviour tuner's on top. */
+@media (max-width: 640px) {
+  .theme-tuner__panel {
+    width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
+    max-height: 66vh;
+  }
+
+  .dev-tools:has(.theme-tuner--theme > .theme-tuner__panel) .theme-tuner--behaviour > .theme-tuner__panel {
+    left: 0;
+  }
 }

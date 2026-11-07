@@ -6,11 +6,15 @@ import { sidesTopFirst } from './sides'
 
 /**
  * The Games popover's list (see Rail): every filtered game, independent of the camera and of which pins
- * have joined a cluster, with a search to narrow it, which takes the cursor on opening. The games are
+ * have joined a cluster, with a search to narrow it, which takes the cursor on opening where there's a
+ * mouse (on a touch screen it waits for a tap, so the keyboard doesn't cover the list). The games are
  * grouped under their leagues, each a row of the two teams' logos and the matchup; a matchup cut short
  * shows in full in a tooltip on the list's left, clear of the rail. The arrow keys move from the search
  * down through the games and back (see moveByArrows); Tab leaves the list rather than stepping through it.
  */
+/** A screen with a mouse or trackpad, not only touch, whose search can take the cursor at once. */
+const finePointer = '(pointer: fine)'
+
 export function GameNavigation({ games, onSelect }: {
   games: readonly Game[]
   onSelect: (gameId: string) => void
@@ -18,7 +22,9 @@ export function GameNavigation({ games, onSelect }: {
   const search = useRef<HTMLInputElement>(null)
   const focusedGame = useRef<HTMLElement | null>(null)
   const [query, setQuery] = useState('')
-  useEffect(() => search.current?.focus({ preventScroll: true }), [])
+  useEffect(() => {
+    if (window.matchMedia(finePointer).matches) search.current?.focus({ preventScroll: true })
+  }, [])
   useLayoutEffect(() => {
     // A filter or a feed removal took away the focused game: back to the search.
     if (focusedGame.current && !focusedGame.current.isConnected && document.activeElement === document.body) {

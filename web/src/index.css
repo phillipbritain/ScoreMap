@@ -1107,6 +1107,14 @@ body {
   left: 0;
 }
 
+/* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width, which
+   the top rail would lie over: it hides while one is open. */
+@media (max-width: 640px) {
+  .globe-area:has(> .rail .rail__popover) > .top-rail {
+    display: none;
+  }
+}
+
 /* A group of buttons on the rail's surface, a divider between each. */
 .rail__group {
   position: relative;

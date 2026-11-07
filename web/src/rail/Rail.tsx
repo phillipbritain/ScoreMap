@@ -45,7 +45,8 @@ interface RailProps {
  * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
  * shows a short toast beside the rail saying what changed. Leagues, Display Settings and Games (with
  * its count of games on it), each opening a popover to the left of the rail: one at a time, closed by
- * its button, Escape or a click away from it, but not by moving or zooming the globe. The arrow keys
+ * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
+ * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
  */
 export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false, games, gamesReady, onSelectGame }: RailProps) {
@@ -132,7 +133,16 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         >
           {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
-          {open === 'games' && <GameNavigation games={games} onSelect={onSelectGame} />}
+          {open === 'games' && (
+            <GameNavigation
+              games={games}
+              onSelect={(gameId) => {
+                onSelectGame(gameId)
+                // On a phone the list closes, as it and the game panel would cover the whole globe.
+                if (window.matchMedia(phoneScreen).matches) setOpen(null)
+              }}
+            />
+          )}
         </div>
       )}
     </div>
@@ -140,6 +150,9 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 }
 
 const hoverScreen = '(hover: hover)'
+
+/** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px). */
+const phoneScreen = '(max-width: 640px)'
 
 const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', games: 'Games' }
 

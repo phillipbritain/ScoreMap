@@ -432,6 +432,7 @@ Some of the look is in code on purpose, as behaviour or layout rather than a the
 - a flame's drawing, and a score card's tongues of flame: how many, their heights and pace (see [Hot games' flames](#hot-games-flames));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;
 - which kinds of place are named in capitals (states and countries);
+- that a text box is at least 16px on a touch screen, so Safari on an iPhone doesn't zoom the page in on focusing it;
 - which type style, how many spacing units and which border width each thing on the page uses (the CSS), and which status is most prominent and draws on top (the status look, `web/src/globe/statusLook.ts`).
 
 No test holds the code to this list; that's for review. While a look is being tried, a value may go straight into the CSS or the TypeScript. Once it's settled, it moves into the theme (see [Adding a setting](#adding-a-setting)), unless it belongs on this list.

@@ -22,6 +22,17 @@ body {
   font-size: var(--typography-body1-font-size);
 }
 
+/* On a touch screen, text boxes (the Games search, the Feedback note) are at least 16px: Safari on an
+   iPhone zooms the page in on focusing a smaller one, and stays zoomed, pushing the rail off the
+   screen. */
+@media (pointer: coarse) {
+  .app input,
+  .app textarea,
+  .app select {
+    font-size: max(16px, var(--typography-body2-font-size));
+  }
+}
+
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
 .app {
   display: flex;

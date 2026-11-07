@@ -440,7 +440,7 @@ describe('selection', () => {
     expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
-  it('centres a game picked from the list above the panel, keeping the zoom', async () => {
+  it('centres a game picked from the list above the panel, zoomed in to its score card', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
@@ -455,7 +455,24 @@ describe('selection', () => {
     const page = container.getBoundingClientRect()
     expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
     expect(offBy(venueOnPage(map, a).x, page.left + page.width / 2)).toBeLessThan(2)
-    expect(map.getZoom()).toBeCloseTo(2)
+    expect(map.getZoom()).toBeGreaterThanOrEqual(cardZoom)
+    expect(map.getZoom()).toBeLessThan(cardZoom + 0.1)
+    await cardShown('A')
+  })
+
+  it('keeps the zoom for a game picked from the list when already zoomed in past score cards', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const a = game('A', { longitude: 3, latitude: 1 })
+    globe.show([a])
+    await cardShown('A')
+
+    const moved = new Promise((resolve) => map.once('moveend', resolve))
+    globe.centreOn('A', null)
+    globe.select('A', null)
+    await moved
+
+    expect(map.getCenter().lng).toBeCloseTo(3)
+    expect(map.getZoom()).toBeCloseTo(cardZoom + 1)
   })
 
   it('centres the game already selected when it is picked from the list again', async () => {

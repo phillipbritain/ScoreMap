@@ -455,6 +455,15 @@
   transform: translateX(10px);
 }
 
+/* On a touch screen, its boxes at 16px: Safari on an iPhone zooms the page in on focusing a smaller
+   one (see index.css). */
+@media (pointer: coarse) {
+  .theme-tuner input,
+  .theme-tuner select {
+    font-size: 16px;
+  }
+}
+
 /* On a phone: a sheet across the width left of the rail, as the rail's popovers are, so the rail
    stays in reach, and no taller than two thirds of the screen, so the globe shows below it. With both
    tuners open they lie in the same place, the behaviour tuner's on top. */

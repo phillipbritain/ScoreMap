@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { DisruptedIcon, GamesIcon, HomeIcon, LeaguesIcon, LiveIcon, PaletteIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
+import { DisruptedIcon, GamesIcon, HomeIcon, LeaguesIcon, LiveIcon, PaletteIcon, ScenarioIcon, TunersIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
 
 /**
  * The rail's buttons, top to bottom: each one's name (its label and tooltip) and its icon. The rail
@@ -16,9 +16,22 @@ export const railButtons = [
   { name: 'Games', icon: <GamesIcon /> },
 ] as const
 
-export type RailButtonName = (typeof railButtons)[number]['name']
+/**
+ * The local-run tools' buttons, last on the rail on local runs only: Scenario, opening the scenario
+ * controls, and Tuners, opening the theme and behaviour tuners. Not in railButtons, so the welcome
+ * tour, which shows the live site's rail, doesn't list them.
+ */
+export const localRunButtons = [
+  { name: 'Scenario', icon: <ScenarioIcon /> },
+  { name: 'Tuners', icon: <TunersIcon /> },
+] as const
+
+/** The name of one of the live site's rail buttons. */
+export type LiveRailButtonName = (typeof railButtons)[number]['name']
+
+export type RailButtonName = LiveRailButtonName | (typeof localRunButtons)[number]['name']
 
 /** A rail button's icon, by its name. */
 export function railIcon(name: RailButtonName): ReactNode {
-  return railButtons.find((button) => button.name === name)!.icon
+  return [...railButtons, ...localRunButtons].find((button) => button.name === name)!.icon
 }

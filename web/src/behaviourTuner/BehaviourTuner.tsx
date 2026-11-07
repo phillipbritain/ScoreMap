@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { saveBehaviour, type Behaviour, type Overlays } from './behaviour'
 // The theme tuner's plain look, so the two tools read as one.
 import '../themeTuner/themeTuner.css'
+import { TunerHeader } from '../themeTuner/ThemeTuner'
 
 /** A number the tuner can change, and where it lives in the app's settings files. */
 interface NumberSetting {
@@ -99,6 +100,12 @@ interface BehaviourTunerProps {
   onOverlays: (overlays: Overlays) => void
   /** The globe's zoom where its camera last settled, shown with the zoom settings. */
   zoomNow: number
+  /** Whether its panel shows: opened and closed from the rail's Tuners popover. */
+  open: boolean
+  /** Told how many settings the draft changes, for the Tuners popover's count. */
+  onChangeCount: (count: number) => void
+  /** Closes its panel, from the close button in its header. */
+  onClose: () => void
 }
 
 /**
@@ -107,10 +114,10 @@ interface BehaviourTunerProps {
  * browser, and its changes can be copied to put into the settings files.
  */
 export function BehaviourTuner(props: BehaviourTunerProps) {
-  const { builtIn, behaviour, onChange } = props
-  const [open, setOpen] = useState(false)
+  const { builtIn, behaviour, onChange, open, onChangeCount, onClose } = props
   const [copied, setCopied] = useState(false)
   const changed = settings.filter((setting) => setting.get(behaviour) !== setting.get(builtIn))
+  useEffect(() => onChangeCount(changed.length), [changed.length, onChangeCount])
 
   useEffect(() => saveBehaviour(window.localStorage, behaviour, builtIn), [behaviour, builtIn])
 
@@ -124,11 +131,9 @@ export function BehaviourTuner(props: BehaviourTunerProps) {
 
   return (
     <div className="theme-tuner theme-tuner--behaviour">
-      <button type="button" className="theme-tuner__toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
-        Behaviour{changed.length > 0 && <span className="theme-tuner__badge">{changed.length}</span>}
-      </button>
       {open && (
-        <div className="theme-tuner__panel">
+        <div className="theme-tuner__panel" role="dialog" aria-label="Behaviour">
+          <TunerHeader name="Behaviour" onClose={onClose} />
           <div className="theme-tuner__body">
             {[...new Set(settings.map((setting) => setting.group))].map((group) => (
               <div key={group} className="theme-tuner__group theme-tuner__group--top">

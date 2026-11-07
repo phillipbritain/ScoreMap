@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
-import { railButtons, type RailButtonName } from '../rail/railButtons'
+import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
 import { RailIcon } from '../rail/railIcons'
 import {
   isLeagueOn,
@@ -255,7 +255,7 @@ function SwitchButton({ state, className, onClick, children }: SwitchButtonProps
 }
 
 /** A few words on each of the rail's buttons, which Your controls lists beside its icon. */
-const railButtonWords: Record<RailButtonName, string> = {
+const railButtonWords: Record<LiveRailButtonName, string> = {
   'Zoom in': 'Zoom in',
   'Zoom out': 'Zoom out',
   Home: 'Home: back to your part of the world',

@@ -45,7 +45,8 @@ interface RailProps {
  * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
  * shows a short toast beside the rail saying what changed. Leagues, Display Settings and Games (with
  * its count of games on it), each opening a popover to the left of the rail: one at a time, closed by
- * its button, Escape or a click away from it, but not by moving or zooming the globe. The arrow keys
+ * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
+ * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
  */
 export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false, games, gamesReady, onSelectGame }: RailProps) {
@@ -132,7 +133,16 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         >
           {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
-          {open === 'games' && <GameNavigation games={games} onSelect={onSelectGame} />}
+          {open === 'games' && (
+            <GameNavigation
+              games={games}
+              onSelect={(gameId) => {
+                onSelectGame(gameId)
+                // On a phone the list closes, as it and the game panel would cover the whole globe.
+                if (window.matchMedia(phoneScreen).matches) setOpen(null)
+              }}
+            />
+          )}
         </div>
       )}
     </div>
@@ -141,6 +151,9 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 
 const hoverScreen = '(hover: hover)'
 
+/** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px). */
+const phoneScreen = '(max-width: 640px)'
+
 const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', games: 'Games' }
 
 /**
@@ -148,21 +161,27 @@ const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display:
  * pressed or not; a popover's button says whether its popover is open. A badge is a count on its
  * corner (the Games button's games), part of its name for a screen reader.
  */
-function RailButton({
+export function RailButton({
   label,
   disabled,
   pressed,
   popover,
   open,
   badge,
+  on,
+  tooltipSide = 'left',
   onClick,
 }: {
   label: RailButtonName
   disabled?: boolean
   pressed?: boolean
-  popover?: RailPopover
-  open?: RailPopover | null
+  popover?: string
+  open?: string | null
   badge?: number
+  /** Whether a popover's button shows on though its popover is closed (Tuners, with a tuner open). */
+  on?: boolean
+  /** Where its tooltip shows: on the left on the rail, so it covers none of the others; below on the top rail. */
+  tooltipSide?: 'left' | 'below'
   onClick: () => void
 }) {
   return (
@@ -171,13 +190,12 @@ function RailButton({
       className="rail__button"
       aria-label={badge === undefined ? label : `${label} (${badge})`}
       data-tooltip={label}
-      // On the left, so it covers none of the rail's other buttons.
-      data-tooltip-side="left"
+      data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
       aria-pressed={pressed}
-      aria-haspopup={popover && 'dialog'}
-      aria-expanded={popover && open === popover}
-      aria-controls={popover && open === popover ? 'rail-popover' : undefined}
+      aria-haspopup={popover ? 'dialog' : undefined}
+      aria-expanded={popover ? (on ?? open === popover) : undefined}
+      aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).
       data-game-navigation={popover === 'games' || undefined}

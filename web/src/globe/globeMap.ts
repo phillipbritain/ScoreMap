@@ -101,6 +101,12 @@ export interface GlobeMapOptions {
  */
 export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready' | 'styleError' | 'constructionError'
 
+/**
+ * The zoom a game picked from the Games list eases to at least: a hair past cardZoom, since an ease can
+ * land a hair short of its zoom, where the game would still be a small pin.
+ */
+const pickedGameZoom = cardZoom + 0.01
+
 /** Room left around a card cluster's games when zooming in to them. */
 const cardClusterZoomPadding = 120
 
@@ -312,8 +318,9 @@ export class GlobeMap {
   }
 
   /**
-   * Centres a game picked from the Games list in the part of the globe the game panel leaves clear, at
-   * the zoom it's at (see clearCentre): now if it's already selected, else as it's selected next.
+   * Centres a game picked from the Games list in the part of the globe the game panel leaves clear (see
+   * clearCentre), zoomed in far enough for its score card to show: now if it's already selected, else
+   * as it's selected next.
    */
   centreOn(gameId: string, panel: ScreenBox | null): void {
     if (gameId !== this.selectedGameId) {
@@ -324,11 +331,25 @@ export class GlobeMap {
     if (game) this.centre(game, panel)
   }
 
-  private centre(game: PlacedGame, panel: ScreenBox | null): void {
+  /**
+   * Eases to the game at this zoom, by default just past cardZoom or further in if it's there already, so the game
+   * has a score card. Where its card is still in a card cluster on arriving, it zooms a level further in
+   * and again, as a card cluster does (see zoomToCardCluster), until the card shows or the globe can
+   * zoom no further in. A move by the viewer along the way, or another game picked, stops it.
+   */
+  private centre(game: PlacedGame, panel: ScreenBox | null, zoom = Math.max(this.map.getZoom(), pickedGameZoom)): void {
     const globe = this.map.getContainer().getBoundingClientRect()
     const { x, y } = clearCentre(globe, panel)
     const middle = { x: globe.left + globe.width / 2, y: globe.top + globe.height / 2 }
-    this.map.easeTo({ center: [game.venue.longitude, game.venue.latitude], offset: [x - middle.x, y - middle.y], duration: 600 })
+    const center: [number, number] = [game.venue.longitude, game.venue.latitude]
+    this.map.easeTo({ center, offset: [x - middle.x, y - middle.y], zoom, duration: 600 })
+    this.map.once('idle', () => {
+      const maxZoom = this.map.getMaxZoom()
+      const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01
+      if (this.destroyed || !arrived || zoom >= maxZoom || this.selectedGameId !== game.id) return
+      const inCardCluster = this.cards.cardClusterGames().some((gameIds) => gameIds.includes(game.id))
+      if (inCardCluster) this.centre(game, panel, Math.min(maxZoom, zoom + 1))
+    })
   }
 
   /**

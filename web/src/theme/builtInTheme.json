@@ -137,7 +137,7 @@
       "disrupted": { "fill": "primary.dark", "text": "offWhite.700", "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
     },
     "GamePanel": {
-      "frost": 0.6,
+      "frost": 0.85,
       "surface": { "top": "background.paper", "bottom": "background.paper" },
       "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
       "score": { "fill": "navy.600", "text": "text.primary" },
@@ -165,7 +165,7 @@
     "Menu": { "corner": 2 },
     "MenuItem": { "corner": 1.5 },
     "Rail": {
-      "frost": 0.6,
+      "frost": 0.85,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "toggle": { "on": "secondary.main", "off": "text.secondary" },
@@ -176,7 +176,7 @@
       "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mark": 1 }
     },
     "Controls": {
-      "frost": 0.6,
+      "frost": 0.85,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "on": { "fill": "offWhite.500", "text": "navy.800" },
@@ -185,7 +185,7 @@
       "message": { "corner": 2 },
       "size": { "key": 34, "icon": 14 }
     },
-    "Tooltip": { "frost": 0.6, "surface": "background.paper" },
+    "Tooltip": { "frost": 0.85, "surface": "background.paper" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },

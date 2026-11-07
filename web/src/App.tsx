@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
 import { accentColour, gameColour, type PickedColours } from './settings/gameColour'
 import { useLeagues } from './settings/leagues'
@@ -18,6 +18,7 @@ import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { Rail } from './rail/Rail'
+import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
@@ -30,6 +31,14 @@ import { useTheme } from './theme/useTheme'
 import type { ThemeJson } from './themeTuner/themeDraft'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
+
+/** The tuners, as the rail's Tuners popover lists them. */
+const tuners = [
+  { key: 'theme', name: 'Theme' },
+  { key: 'behaviour', name: 'Behaviour' },
+] as const
+
+type Tuner = (typeof tuners)[number]['key']
 
 // The theme and behaviour tuners, on local runs only: left out of a build.
 const ThemeTuner = import.meta.env.DEV
@@ -105,6 +114,11 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const { leagues } = leagueList
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls(demo)
+  // Which tuners' panels are open (local runs only), and how many settings each one's draft changes.
+  const [tunersOpen, setTunersOpen] = useState<Record<Tuner, boolean>>({ theme: false, behaviour: false })
+  const [tunerChanges, setTunerChanges] = useState<Record<Tuner, number>>({ theme: 0, behaviour: 0 })
+  const themeChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, theme: count })), [])
+  const behaviourChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, behaviour: count })), [])
   const { setListing: setScenarioListing } = scenarios
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
@@ -184,24 +198,12 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             onGone={() => setLoadingPreview('off')}
           />
         )}
-        {/* The no-pins message, above the scenario pills and clock however they wrap. Before the
-            rail, so an open popover lies over them on a phone. */}
-        <div className={scenarios.shown ? 'bottom-stack bottom-stack--scenario' : 'bottom-stack'}>
+        {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
+        <div className="bottom-stack">
           {message && (
             <p className="no-pins" role="status">
               {message}
             </p>
-          )}
-          {scenarios.shown && scenarios.listing && (
-            <div className="scenario-pills">
-              <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
-              {scenarios.listing.canControlPlay && (
-                <>
-                  <SpeedKeys listing={scenarios.listing} setListing={setScenarioListing} />
-                  <ScenarioClock listing={scenarios.listing} />
-                </>
-              )}
-            </div>
           )}
         </div>
         {demo && <DemoLabel hidden={!scenarios.feedbackShown} />}
@@ -220,7 +222,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             })
           }
         />
-        {/* Over the bottom of the globe, after the scenario pills so it can sit clear of them. Before the
+        {/* Over the bottom of the globe, after the Feedback button so it can sit clear of it. Before the
             rail, so an open popover lies over it on a phone. */}
         {selectedGame && selectedColour && (
           <GamePanel
@@ -250,8 +252,49 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             selectGame(gameId)
           }}
         />
-        {/* Over the globe and the rail, which come before it; the scenario controls and the Feedback
-            button are lifted above it (see .globe-area--touring), and the dev tools come after it. */}
+        {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
+        <TopRail
+          scenarioControls={
+            !touring &&
+            scenarios.shown &&
+            scenarios.listing && (
+              <div className="scenario-pills">
+                <ScenarioPill listing={scenarios.listing} setListing={setScenarioListing} refresh={scenarios.refresh} />
+                {scenarios.listing.canControlPlay && (
+                  <>
+                    <SpeedKeys listing={scenarios.listing} setListing={setScenarioListing} />
+                    <ScenarioClock listing={scenarios.listing} />
+                  </>
+                )}
+              </div>
+            )
+          }
+          tuners={
+            tuning &&
+            !touring &&
+            scenarios.devToolsShown && (
+              <ul className="tuner-menu">
+                {tuners.map(({ key, name }) => (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      aria-pressed={tunersOpen[key]}
+                      data-closes-popover
+                      onClick={() => setTunersOpen((was) => ({ ...was, [key]: !was[key] }))}
+                    >
+                      {name}
+                      {tunerChanges[key] > 0 && <span className="tuner-menu__count">{tunerChanges[key]}</span>}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+          tunersOpen={tunersOpen.theme || tunersOpen.behaviour}
+          onTunersClose={() => setTunersOpen({ theme: false, behaviour: false })}
+        />
+        {/* Over the globe and the rail, which come before it; the Feedback button is lifted above it
+            (see .globe-area--touring), and the dev tools come after it. */}
         {tourStep && (
           <WelcomeTourScreen
             progress={tourStep}
@@ -273,6 +316,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
                 onTheme={setTheme}
                 loadingPreview={loadingPreview}
                 onLoadingPreview={setLoadingPreview}
+                open={tunersOpen.theme}
+                onChangeCount={themeChanges}
+                onClose={() => setTunersOpen((was) => ({ ...was, theme: false }))}
               />
               <BehaviourTuner
                 builtIn={builtInBehaviour}
@@ -281,6 +327,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
                 overlays={overlays}
                 onOverlays={setOverlays}
                 zoomNow={cameraNow.zoom}
+                open={tunersOpen.behaviour}
+                onChangeCount={behaviourChanges}
+                onClose={() => setTunersOpen((was) => ({ ...was, behaviour: false }))}
               />
             </Suspense>
           </div>

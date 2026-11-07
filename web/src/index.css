@@ -22,6 +22,17 @@ body {
   font-size: var(--typography-body1-font-size);
 }
 
+/* On a touch screen, text boxes (the Games search, the Feedback note) are at least 16px: Safari on an
+   iPhone zooms the page in on focusing a smaller one, and stays zoomed, pushing the rail off the
+   screen. */
+@media (pointer: coarse) {
+  .app input,
+  .app textarea,
+  .app select {
+    font-size: max(16px, var(--typography-body2-font-size));
+  }
+}
+
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
 .app {
   display: flex;
@@ -60,13 +71,13 @@ body {
 }
 
 /* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers and toast,
-   the scenario controls, the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
+   the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
    Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
    slight bend and lifted in colour, its edges catching the light; at 1 opaque frosted glass. The glass
    is tinted with the component's own surface colour (--glass-tint, or --glass-fill for a fill of its
    own), as solid as the frost.
 
-   A surface holding another glass surface (a rail group holds its popover, the scenario pill its list)
+   A surface holding another glass surface (a rail group holds its popover)
    has its glass on a layer behind its content (::before), since glass on the surface itself would keep
    the glass inside from seeing past it. */
 .score-card,
@@ -74,10 +85,6 @@ body {
 .rail__group::before,
 .rail__popover,
 .rail__toast,
-.scenario-pill::before,
-.scenario-pill ul,
-.speed-keys,
-.scenario-clock,
 .no-pins,
 .demo-label,
 .feedback__button,
@@ -105,13 +112,11 @@ body {
 }
 
 /* A surface whose glass is a layer behind its content. */
-.rail__group,
-.scenario-pill {
+.rail__group {
   isolation: isolate;
 }
 
-.rail__group::before,
-.scenario-pill::before {
+.rail__group::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -156,12 +161,6 @@ body {
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
   --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
-}
-
-/* Clear of the scenario controls' column at the bottom left (local runs only), on either side so it
-   stays centred. */
-.bottom-stack--scenario ~ .game-panel {
-  width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--scenario-column) + 6 * var(--spacing))));
 }
 
 /* The strip: the score block, the details and the photo, side by side. */
@@ -1067,8 +1066,6 @@ body {
 
 /* The globe with the rail and the no-pins message laid over it. */
 .globe-area {
-  /* How wide the scenario controls' column is (local runs only), which the game panel keeps clear of. */
-  --scenario-column: calc(52 * var(--spacing));
   /* How wide the Feedback button is at the bottom right, which the game panel keeps clear of too. */
   --feedback-column: var(--rail-size-button);
   position: relative;
@@ -1079,8 +1076,7 @@ body {
 }
 
 /* The rail at the top right: its groups of buttons stacked down, its popovers and toast to its left.
-   Above the scenario pills, the clock and the no-pins message along the bottom, which an open popover
-   can reach down to. */
+   Above the no-pins message along the bottom, which an open popover can reach down to. */
 .rail {
   /* Glass (see above), for the rail's groups, popovers and toast. */
   --frost: var(--rail-frost);
@@ -1093,6 +1089,41 @@ body {
   display: flex;
   flex-direction: column;
   gap: calc(2 * var(--spacing));
+}
+
+/* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
+   on the rail's glass, each popover hanging below the row at the screen's left, as the tuners' panels
+   do, whichever button opened it. */
+.top-rail {
+  --frost: var(--rail-frost);
+  --glass-tint: var(--rail-surface);
+  --glass-lens: url(#glass-lens);
+  position: absolute;
+  top: calc(3 * var(--spacing));
+  left: calc(3 * var(--spacing));
+  z-index: 2;
+}
+
+.rail__group.top-rail__group {
+  flex-direction: row;
+}
+
+.top-rail__item + .top-rail__item {
+  border-left: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.rail__popover.top-rail__popover {
+  top: calc(100% + 2 * var(--spacing));
+  right: auto;
+  left: 0;
+}
+
+/* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width, which
+   the top rail would lie over: it hides while one is open. */
+@media (max-width: 640px) {
+  .globe-area:has(> .rail .rail__popover) > .top-rail {
+    display: none;
+  }
 }
 
 /* A group of buttons on the rail's surface, a divider between each. */
@@ -1510,47 +1541,89 @@ body {
   cursor: default;
 }
 
-/* The scenario pill, the media keys and the clock (local runs only), at the bottom left, clear of the
-   theme and behaviour tuners at the top left and beside the game panel. Three panes of glass butted
-   into one block, so they read as one set of controls: rounded only at the block's outer corners, in a
-   menu's corner, with a line at each join. The pill's list opens upwards. */
+/* The Scenario popover (see TopRail, local runs only): the scenario pill, the media keys and the clock,
+   one under another on the popover's glass, with a line at each join. The pill's list opens below it,
+   pushing the keys and clock down. */
+.rail__popover--scenario {
+  /* The controls as wide as they were at the bottom left, 52 spacing units, inside the padding. On a
+     phone too, rather than the other popovers' sheet. */
+  width: calc((52 + 2 * 1.5) * var(--spacing));
+  padding: calc(1.5 * var(--spacing));
+}
+
 .scenario-pills {
   /* One height for the pill, the media keys and the clock: a speed key in the keys' padding. */
   --controls-bar-height: calc(var(--controls-size-key) + var(--spacing));
-  align-self: flex-start;
   display: flex;
   flex-direction: column;
-  width: var(--scenario-column);
-  pointer-events: auto;
 }
 
-.scenario-pills > :first-child {
-  border-radius: var(--menu-corner) var(--menu-corner) 0 0;
-}
-
-.scenario-pills > :last-child {
-  border-radius: 0 0 var(--menu-corner) var(--menu-corner);
-}
-
-.scenario-pills > :only-child {
-  border-radius: var(--menu-corner);
-}
-
-/* The line at a join, on the lower pane, which grows by it so its content keeps the bar's height. */
+/* The line at a join, on the lower part, which grows by it so its content keeps the bar's height. */
 .scenario-pills > :not(:first-child) {
   height: calc(var(--controls-bar-height) + var(--shape-border-width-thin));
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
+/* The Tuners popover (see TopRail, local runs only): the theme and behaviour
+   tuners, each a toggle opening its panel at the top left and closing the popover, lit while open,
+   with a count of the settings its draft changes. The buttons take the tuners' own plain look
+   (themeTuner/themeTuner.css): solid, in fixed colours, sizes and font, reading none of the theme, so
+   tuning it can't make them hard to see. */
+.rail__popover--tuners {
+  width: auto;
+  padding: calc(1.5 * var(--spacing));
+}
+
+.tuner-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tuner-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #e6e6e6;
+  font: 600 13px/1.4 system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tuner-menu button:hover {
+  background: #3a3a3a;
+}
+
+.tuner-menu button[aria-pressed='true'] {
+  border-color: #e6e6e6;
+  background: #e6e6e6;
+  color: #1c1c1c;
+}
+
+.tuner-menu__count {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e0a030;
+  color: #1c1c1c;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .scenario-pill {
-  position: relative;
   min-width: 0;
   color: var(--palette-text-primary);
   font-size: var(--typography-button-font-size);
-}
-
-.scenario-pill::before {
-  box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
 /* As a drop-down box: the running scenario, clipped where it's long, then the arrow at the far right,
@@ -1596,22 +1669,9 @@ body {
 }
 
 .scenario-pill ul {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 1.5 * var(--spacing));
-  min-width: 100%;
-  /* Clear of the tuners' buttons above (a local-run tool, with sizes of its own), by a wide gap, and
-     of the pill, the media keys and the clock stacked below. */
-  max-height: calc(
-    100vh - (12px + 28px + 6 * var(--spacing)) -
-      (3 * var(--spacing) + 3 * var(--controls-bar-height) + 2 * var(--shape-border-width-thin) + 1.5 * var(--spacing))
-  );
-  overflow-y: auto;
-  box-sizing: border-box;
   margin: 0;
-  padding: calc(1.5 * var(--spacing));
-  border-radius: var(--menu-corner);
-  box-shadow: var(--controls-shadow), var(--glass-rim);
+  padding: calc(1.5 * var(--spacing)) 0;
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
   list-style: none;
   white-space: nowrap;
 }
@@ -1651,7 +1711,6 @@ body {
   gap: calc(0.5 * var(--spacing));
   padding: calc(0.5 * var(--spacing));
   color: var(--palette-text-primary);
-  box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
 .speed-keys button {
@@ -1870,10 +1929,9 @@ body {
   }
 }
 
-/* Along the bottom of the globe: the no-pins message centred, and below it the scenario controls'
-   column at the left (local runs only). */
+/* Along the bottom of the globe: the no-pins message centred. */
 .bottom-stack {
-  /* Glass (see above), for the scenario controls and the no-pins message. */
+  /* Glass (see above), for the no-pins message. */
   --frost: var(--controls-frost);
   --glass-tint: var(--controls-surface);
   --glass-lens: url(#glass-lens);
@@ -1887,10 +1945,6 @@ body {
   align-items: center;
   gap: calc(2 * var(--spacing));
   pointer-events: none;
-}
-
-.bottom-stack--scenario {
-  bottom: calc(3 * var(--spacing));
 }
 
 .no-pins {
@@ -1912,7 +1966,6 @@ body {
   font-variant-numeric: tabular-nums;
   text-align: center;
   white-space: nowrap;
-  box-shadow: var(--controls-shadow), var(--glass-rim);
 }
 
 /* A tooltip (see tooltip/Tooltips.tsx): a small pane of glass above what it's for, or below where
@@ -2119,17 +2172,10 @@ body {
 }
 
 /* On wide screens the game panel narrows, on both sides so it stays centred, to leave the corner to
-   the Feedback button; and to the scenario controls' wider column, where they show. */
+   the Feedback button. */
 @media (min-width: 641px) {
   .feedback:not([hidden]) ~ .game-panel {
     width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
-  }
-
-  .bottom-stack--scenario ~ .feedback:not([hidden]) ~ .game-panel {
-    width: min(
-      var(--game-panel-size-width),
-      calc(100% - 2 * (max(var(--scenario-column), var(--feedback-column)) + 6 * var(--spacing)))
-    );
   }
 }
 
@@ -2171,8 +2217,8 @@ body {
 }
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
-   from being used, under the dev tools. The scenario controls and the Feedback button are lifted above
-   it while it shows, so they stay usable (on a phone, the Feedback button only: see below). */
+   from being used, under the dev tools. The Feedback button is lifted above it while it shows, so it
+   stays usable. */
 .welcome-tour {
   /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
   --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
@@ -2186,7 +2232,6 @@ body {
   justify-content: center;
 }
 
-.globe-area--touring > .bottom-stack,
 .globe-area--touring > .feedback {
   z-index: 3;
 }
@@ -2558,15 +2603,10 @@ body {
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
    rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
    its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
-   Feedback button too, which stays usable and never covers the step's own button. The scenario
-   controls (local runs only) stay under the tour here, as lifted they'd lie over the sheet. */
+   Feedback button too, which stays usable and never covers the step's own button. */
 @media (max-width: 640px) {
   .welcome-tour {
     align-items: flex-end;
-  }
-
-  .globe-area--touring > .bottom-stack {
-    z-index: 1;
   }
 
   .welcome-tour__panel {
@@ -2610,11 +2650,9 @@ body {
 
 .game-navigation__search::placeholder { color: var(--palette-text-secondary); }
 
-/* A menu's scrollbar: slim, in the theme's colours. The Games list, the rail's other popovers
-   (Leagues and Display Settings) and the scenario pill's list. */
+/* A menu's scrollbar: slim, in the theme's colours. The Games list and the rail's other popovers. */
 .game-navigation ul,
-.rail__popover,
-.scenario-pill ul {
+.rail__popover {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
 }

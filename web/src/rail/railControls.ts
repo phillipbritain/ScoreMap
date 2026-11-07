@@ -38,13 +38,13 @@ export function toggled(settings: ViewerSettings, key: RailToggle): { settings: 
 export type RailPopover = 'leagues' | 'display' | 'games'
 
 /** What opens or closes a popover: its button pressed, Escape, or a click outside the open one. */
-export type PopoverEvent = { press: RailPopover } | 'escape' | 'outside'
+export type PopoverEvent<P extends string = RailPopover> = { press: P } | 'escape' | 'outside'
 
 /**
  * The popover open after this, if any. One is open at a time: a popover's button opens it, closing
  * the other, or closes it if it's open already. Escape or a click outside closes it.
  */
-export function nextPopover(open: RailPopover | null, event: PopoverEvent): RailPopover | null {
+export function nextPopover<P extends string = RailPopover>(open: P | null, event: PopoverEvent<P>): P | null {
   if (typeof event === 'string') return null
   return open === event.press ? null : event.press
 }

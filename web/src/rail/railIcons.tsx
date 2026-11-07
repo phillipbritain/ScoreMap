@@ -67,3 +67,18 @@ export function PaletteIcon() {
 export function GamesIcon() {
   return <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
 }
+
+/** Scenario (local runs only): a play button in a circle (Feather's "play-circle"), for the scenario controls. */
+export function ScenarioIcon() {
+  return (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m10 8 6 4-6 4z" />
+    </>
+  )
+}
+
+/** Tuners (local runs only): three sliders (Feather's "sliders"), for the theme and behaviour tuners. */
+export function TunersIcon() {
+  return <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
+}

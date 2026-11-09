@@ -77,7 +77,7 @@ While zoomed in, a cluster where score cards' trails meet, in place of their ven
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it: its last score (who scored, and when), its betting line and its attendance.
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for its last score (who scored, and when), tennis sets, a field's leaderboard or a fight card's bouts.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:

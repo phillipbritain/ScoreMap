@@ -1,7 +1,6 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
 import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam, type PhotoCredit } from '../games/game'
-import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
@@ -28,7 +27,7 @@ interface PanelLink {
 
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css), with a band under it: the last score, the betting line and the crowd. It keeps one size
+ * (see .game-panel in index.css), with a band under it for sport-specific contest details. It keeps one size
  * whatever the game, so selecting one game after another doesn't make it jump: long text is clipped,
  * with the full text on hover where it's cut off. Re-renders with each new snapshot, so it stays current while open.
  */
@@ -255,7 +254,7 @@ const leaderboardLength = 10
 /**
  * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
  * minute), or in tennis the scoreline set by set, or for a field its leaderboard, or for a fight card its
- * bouts, the betting line and the crowd, each with its label.
+ * bouts, each with its label.
  */
 function GameBand({ game }: { game: Game }) {
   const { lastScore, scoreline, contest } = game
@@ -266,8 +265,7 @@ function GameBand({ game }: { game: Game }) {
   const [shownAllOf, setShownAllOf] = useState<string | null>(null)
   const showAll = shownAllOf === game.id
   const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
-  const odds = game.odds && oddsLine(game.odds)
-  const empty = !lastScore && !scoreline && entries.length === 0 && bouts.length === 0 && !odds && game.attendance === null
+  const empty = !lastScore && !scoreline && entries.length === 0 && bouts.length === 0
   return (
     <div className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {entries.length > 0 && (
@@ -317,25 +315,6 @@ function GameBand({ game }: { game: Game }) {
               {lastScore.team}
             </span>{' '}
             {lastScore.text}
-          </div>
-        </BandCell>
-      )}
-      {odds && (
-        <BandCell label="Odds">
-          <div className="game-panel__one-line" data-tooltip={odds} data-tooltip-when-clipped>
-            {odds}
-          </div>
-          {game.odds?.bookmaker && (
-            <div className="game-panel__muted game-panel__one-line" data-tooltip={game.odds.bookmaker} data-tooltip-when-clipped>
-              {game.odds.bookmaker}
-            </div>
-          )}
-        </BandCell>
-      )}
-      {game.attendance !== null && (
-        <BandCell label="Attendance">
-          <div className="game-panel__one-line" data-tooltip={game.attendance.toLocaleString()} data-tooltip-when-clipped>
-            {game.attendance.toLocaleString()}
           </div>
         </BandCell>
       )}

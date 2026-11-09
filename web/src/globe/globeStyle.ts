@@ -16,9 +16,16 @@ const disputedLines = 'boundary_disputed'
 export const satelliteSource = 'satellite'
 export const satelliteLayer = 'satellite'
 
+const satelliteTiles = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg'
+
+/** One tile of the satellite map's imagery, the address of its picture: Map Type shows one (see MapTypes). */
+export function satelliteTile(z: number, y: number, x: number): string {
+  return satelliteTiles.replace('{z}', String(z)).replace('{y}', String(y)).replace('{x}', String(x))
+}
+
 const satelliteSourceSpec: RasterSourceSpecification = {
   type: 'raster',
-  tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg'],
+  tiles: [satelliteTiles],
   tileSize: 256,
   // EOX's tiles go to zoom 21, but the imagery's 10 m pixels are as sharp as it gets by about 14.
   maxzoom: 14,

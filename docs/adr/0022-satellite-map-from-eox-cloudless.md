@@ -7,7 +7,7 @@ Viewers can now switch the globe from its plain navy map to a satellite map, whi
 - **MapTiler's satellite map**: a free account and a key shipped to the browser, its logo on the map, non-commercial only, and a monthly request cap after which the map stops.
 - **NASA GIBS Blue Marble**: public and keyless, but at about 500 m a pixel it blurs well before the globe's closest zoom.
 
-We chose EOX's 2024 map. ScoreMap is non-commercial (no ads, no charges), which the licence needs; while the satellite map shows, its credit, with its links, sits at the bottom left of the globe: "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)" (`MapCredit`). The browser fetches the tiles straight from EOX; the server neither proxies nor caches them.
+We chose EOX's 2024 map. ScoreMap is non-commercial (no ads, no charges), which the licence needs; while the satellite map shows, or Map Type on the rail with its picture of it is open, its credit, with its links, sits at the bottom left of the globe: "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)" (`MapCredit`). The browser fetches the tiles straight from EOX; the server neither proxies nor caches them.
 
 ## Consequences
 

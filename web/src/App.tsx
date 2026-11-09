@@ -206,7 +206,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           />
         )}
         {/* Under the bottom stack, the game panel and the rail, which may lie over it for a while. */}
-        {viewerSettings.mapType === 'satellite' && <MapCredit />}
+        <MapCredit hidden={viewerSettings.mapType !== 'satellite'} />
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
         <div className="bottom-stack">
           {message && (

@@ -151,12 +151,12 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
-| `components.Rail.open` | A rail button's icon while its popover is open, and the count on the Games button | `secondary.main` (gold) |
+| `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
-| `components.Rail.chip.outline` | A league chip's outline (and a map type's in Map Type), and "Reset colours"' | `primary.main` |
+| `components.Rail.chip.outline` | A league chip's outline, and "Reset colours"' | `primary.main` |
 | `components.Rail.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
-| `components.Rail.on.fill`, `.text` | A league chip that's on, and the map type showing in Map Type | `offWhite.500`, `navy.800` |
+| `components.Rail.on.fill`, `.text` | A league chip that's on | `offWhite.500`, `navy.800` |
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's colour) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
@@ -226,7 +226,7 @@ A flame's shape (a main tip with a smaller lick to one side, the same on the glo
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the satellite map's credit (in `text.secondary` at the bottom left of the globe), the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the satellite map's credit (in `text.secondary` at the bottom left of the globe, while the satellite map shows or Map Type, with its picture of it, is open), the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its colour lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface colour, solid.
@@ -356,6 +356,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
+| `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's surface, coastline and border colours | 64 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |

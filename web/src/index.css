@@ -1206,19 +1206,80 @@ body {
   }
 }
 
-/* The Map Type popover (see MapTypes): its two map types side by side, level with its button (Rail
-   sets its top), as narrow as they are, on a phone too. */
+/* The Map Type popover (see MapTypes): a picture of each map type side by side, its name under it,
+   level with its button (Rail sets its top), as narrow as they are, on a phone too. */
 .rail__popover--map-type {
   width: auto;
-  padding: calc(1.5 * var(--spacing));
+  padding: calc(2 * var(--spacing));
 }
 
 .map-types {
   display: flex;
-  gap: calc(1.5 * var(--spacing));
+  gap: calc(2 * var(--spacing));
 }
 
-/* A league as a pill, filled in while on; a map type too. */
+.map-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+/* The map showing: its name in the main text colour, its picture ringed in the open colour (gold). */
+.map-type[aria-pressed='true'] {
+  color: var(--palette-text-primary);
+}
+
+.map-type__picture {
+  display: block;
+  box-sizing: border-box;
+  width: var(--rail-size-map-type);
+  height: var(--rail-size-map-type);
+  border: var(--shape-border-width-thick) solid var(--palette-divider);
+  border-radius: var(--menu-item-corner);
+  object-fit: cover;
+}
+
+@media (hover: hover) {
+  .map-type:hover .map-type__picture {
+    border-color: var(--palette-text-secondary);
+  }
+}
+
+.map-type[aria-pressed='true'] .map-type__picture {
+  border-color: var(--rail-open);
+}
+
+/* The plain map drawn small, in the globe's own colours. */
+.map-type__picture--plain {
+  background: var(--globe-surface);
+}
+
+.map-type__coast {
+  fill: none;
+  stroke: var(--globe-coastlines-color);
+  stroke-width: 1.2;
+}
+
+.map-type__border {
+  fill: none;
+  stroke: var(--globe-country-borders-color);
+  stroke-width: 1;
+}
+
+.map-type__city {
+  fill: var(--palette-text-primary);
+}
+
+/* A league as a pill, filled in while on. */
 .rail-chip {
   padding: var(--spacing) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
@@ -1911,6 +1972,15 @@ body {
 
 .map-credit a {
   color: inherit;
+}
+
+.map-credit[hidden] {
+  display: none;
+}
+
+/* Shown too while Map Type is open, which has a picture of the satellite map in it. */
+.globe-area:has(.rail__popover--map-type) > .map-credit {
+  display: block;
 }
 
 /* Along the bottom of the globe: the no-pins message centred. */

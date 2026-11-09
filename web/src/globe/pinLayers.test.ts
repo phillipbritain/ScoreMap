@@ -8,6 +8,7 @@ import type { CardLayout } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
 import { pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
+import { cardZoom } from './zoomLevels'
 
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
@@ -50,7 +51,7 @@ function sizedTheme(): Theme {
 
 describe('clusters', () => {
   it("draw a pin cluster at the theme's size for how many games it holds, glow and all", () => {
-    const layers = pinClusterLayers(sizedTheme(), zoomedOutPins)
+    const layers = pinClusterLayers(sizedTheme(), zoomedOutPins(cardZoom))
     const sizes = (id: string, property: string) =>
       [3, 4, 5, 14, 15, 99].map((count) => evaluate(paintOf(layers, id)[property], { point_count: count, live: 1 }))
     expect(sizes('pin-clusters', 'circle-radius')).toEqual([10, 10, 14, 14, 20, 20])
@@ -64,7 +65,7 @@ describe('clusters', () => {
       json.components.Pin.final.glow.opacity = 0
       json.components.Cluster.glowOpacity = 0.5
     })
-    const pinClusterGlow = paintOf(pinClusterLayers(theme, zoomedOutPins), 'pin-cluster-glows')['circle-opacity']
+    const pinClusterGlow = paintOf(pinClusterLayers(theme, zoomedOutPins(cardZoom)), 'pin-cluster-glows')['circle-opacity']
     expect(evaluate(pinClusterGlow, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toBeCloseTo(0.4, 6)
     expect(evaluate(pinClusterGlow, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toBe(0)
     const cardClusterGlow = paintOf(cardLayoutLayers(theme), 'card-cluster-glows')['circle-opacity']
@@ -82,7 +83,7 @@ describe('clusters', () => {
       [paintOf(layers, disc)['circle-opacity'], paintOf(layers, disc)['circle-stroke-opacity'], paintOf(layers, count)['text-opacity']].map(
         (opacity) => evaluate(opacity, properties),
       )
-    const pinClusters = pinClusterLayers(theme, zoomedOutPins)
+    const pinClusters = pinClusterLayers(theme, zoomedOutPins(cardZoom))
     const pinCluster: [string, string] = ['pin-clusters', 'pin-cluster-counts']
     expect(faded(pinClusters, pinCluster, { point_count: 2, live: 1, upcoming: 0, final: 1 })).toEqual([1, 1, 1])
     expect(faded(pinClusters, pinCluster, { point_count: 2, live: 0, upcoming: 0, final: 2 })).toEqual([0.4, 0.4, 0.4])
@@ -104,7 +105,7 @@ describe("a game's colour", () => {
   const game = { status: 'Live', color: '#123456' }
 
   it('lights a small pin: its glow and ring in the colour', () => {
-    const paint = (id: string) => paintOf(smallPinLayers(sizedTheme(), zoomedOutPins), id)
+    const paint = (id: string) => paintOf(smallPinLayers(sizedTheme(), zoomedOutPins(cardZoom)), id)
     expect(evaluate(paint('pin-glows')['circle-color'], game)).toBe('#123456')
     expect(evaluate(paint('pins')['circle-stroke-color'], game)).toBe('#123456')
   })
@@ -115,7 +116,7 @@ describe("a game's colour", () => {
       json.components.Pin.live.core.color = '#ffcccc'
       json.components.Pin.upcoming.core.color = 'upcoming.main'
     })
-    const core = paintOf(smallPinLayers(theme, zoomedOutPins), 'pins')['circle-color']
+    const core = paintOf(smallPinLayers(theme, zoomedOutPins(cardZoom)), 'pins')['circle-color']
     expect(evaluate(core, game)).toBe('#ffcccc')
     expect(evaluate(core, { ...game, status: 'Upcoming' })).toBe('#123456')
   })
@@ -170,7 +171,7 @@ describe("a cluster's colour", () => {
   /** The colours a pin cluster and a card cluster of these games show in: glow, outline and count, each. */
   function coloursOf(games: readonly ClusteredGame[]): string[] {
     const theme = colourTheme()
-    const pinLayers = pinClusterLayers(theme, zoomedOutPins)
+    const pinLayers = pinClusterLayers(theme, zoomedOutPins(cardZoom))
     const cardLayers = cardLayoutLayers(theme)
     const pinCluster = { ...pinClusterOf(games), point_count: games.length }
     const cardCluster = cardClusterOf(games)
@@ -228,7 +229,7 @@ describe('the selected pin', () => {
     const theme = themeWith((json) => {
       json.components.Selection = { color: '#00ff00', width: 4 }
     })
-    expect(selectedPinLayerSpec(theme, 'a', zoomedOutPins).paint).toMatchObject({
+    expect(selectedPinLayerSpec(theme, 'a', zoomedOutPins(cardZoom)).paint).toMatchObject({
       'circle-radius': smallPinReach - 4,
       'circle-stroke-width': 4,
       'circle-stroke-color': '#00ff00',
@@ -240,7 +241,7 @@ describe('cluster counts', () => {
   it("are written in the theme's font and size, on pin clusters and card clusters alike", () => {
     const theme = testTheme()
     for (const layout of [
-      countLayout(pinClusterLayers(theme, zoomedOutPins), 'pin-cluster-counts'),
+      countLayout(pinClusterLayers(theme, zoomedOutPins(cardZoom)), 'pin-cluster-counts'),
       countLayout(cardLayoutLayers(theme), 'card-cluster-counts'),
     ]) {
       expect(layout).toMatchObject({ 'text-font': ['Metropolis Semi Bold'], 'text-size': 16 })

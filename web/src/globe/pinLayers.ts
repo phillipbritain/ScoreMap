@@ -10,7 +10,7 @@ import { flameImage } from './flames'
 import { fadedByHorizon } from './horizon'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
-import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
+import { clusterMaxZoom, type PinLayout } from './zoomLevels'
 
 export const pinSource = 'pins'
 export const pinClusterLayer = 'pin-clusters'
@@ -43,8 +43,10 @@ export interface PinSet {
   maxzoom?: number
 }
 
-export const zoomedOutPins: PinSet = { source: pinSource, prefix: '', maxzoom: cardZoom }
-export const outerPins: PinSet = { source: outerPinSource, prefix: 'outer-', minzoom: cardZoom }
+/** The games' own pins, shown until the zoom score cards show from (see FittedZoom). */
+export const zoomedOutPins = (cardZoom: number): PinSet => ({ source: pinSource, prefix: '', maxzoom: cardZoom })
+/** The outer games' pins, shown from the zoom score cards show from. */
+export const outerPins = (cardZoom: number): PinSet => ({ source: outerPinSource, prefix: 'outer-', minzoom: cardZoom })
 
 /** A layer in a pin set: its id, source and zooms (a pin cluster layer's without the maxzoom). */
 function inSet({ source, prefix, minzoom, maxzoom }: PinSet, id: string, { clusters = false } = {}) {

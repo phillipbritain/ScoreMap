@@ -93,6 +93,8 @@ export class ScoreCardMarkers {
   private readonly flamesOf: (game: Game) => boolean
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
+  /** The zoom score cards show from now (see FittedZoom). */
+  private readonly cardZoom: () => number
   private readonly onSelect: (gameId: string) => void
   /** Games with no room for a card, as last laid out. */
   private cardClusters: PlacedCardCluster[] = []
@@ -135,8 +137,10 @@ export class ScoreCardMarkers {
     flamesOf: (game: Game) => boolean,
     placeNames: PlaceNames,
     trails: TrailLayer,
+    cardZoom: () => number,
     onSelect: (gameId: string) => void,
   ) {
+    this.cardZoom = cardZoom
     this.map = map
     this.theme = theme
     this.colourOf = colourOf
@@ -208,7 +212,7 @@ export class ScoreCardMarkers {
     const pinsLoaded = this.map.isSourceLoaded(pinSource)
     let changed = !pinsLoaded
     const pins = pinsLoaded
-      ? pinSize(this.map.getZoom()) === 'card'
+      ? pinSize(this.map.getZoom(), this.cardZoom()) === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
       : // The source reloads after every change of games, and can't be read until it has. Live games

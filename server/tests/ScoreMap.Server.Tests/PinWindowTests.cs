@@ -1,4 +1,5 @@
 using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Games;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.ProviderGames;
 
@@ -7,10 +8,10 @@ namespace ScoreMap.Server.Tests;
 public class PinWindowTests
 {
     [Fact]
-    public async Task An_Upcoming_game_has_no_pin_earlier_than_3_hours_before_its_start()
+    public async Task An_Upcoming_game_has_no_pin_earlier_than_30_minutes_before_its_start()
     {
         await using var server = new ScoreMapServer();
-        var start = server.Clock.GetUtcNow().AddHours(3).AddMinutes(1);
+        var start = server.Clock.GetUtcNow().AddMinutes(31);
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Scheduled));
 
         await using var client = await server.ConnectClientAsync();
@@ -19,10 +20,10 @@ public class PinWindowTests
     }
 
     [Fact]
-    public async Task An_Upcoming_game_gets_its_pin_from_3_hours_before_its_start()
+    public async Task An_Upcoming_game_gets_its_pin_from_30_minutes_before_its_start()
     {
         await using var server = new ScoreMapServer();
-        var start = server.Clock.GetUtcNow().AddHours(3);
+        var start = server.Clock.GetUtcNow().AddMinutes(30);
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Scheduled));
 
         await using var client = await server.ConnectClientAsync();
@@ -50,7 +51,7 @@ public class PinWindowTests
         await using var server = new ScoreMapServer();
         var end = await SeeGameFinishAsync(server);
 
-        server.Clock.Advance(TimeSpan.FromMinutes(30));
+        server.Clock.Advance(TimeSpan.FromMinutes(3));
         await using var client = await server.ConnectClientAsync();
         var game = Assert.Single(await client.NextSnapshotAsync());
 
@@ -58,39 +59,56 @@ public class PinWindowTests
     }
 
     [Fact]
-    public async Task A_Final_game_keeps_its_pin_until_2_hours_after_it_ends()
+    public async Task A_game_seen_to_finish_is_sent_Final_before_it_loses_its_pin()
+    {
+        await using var server = new ScoreMapServer();
+        var start = server.Clock.GetUtcNow().AddHours(-3);
+        server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.InProgress));
+        await using var client = await server.ConnectClientAsync();
+        Assert.Single(await client.NextSnapshotAsync());
+
+        server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Final));
+        server.Clock.Advance(TimeSpan.FromMinutes(1));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal(GameStatus.Final, change.Game.Status);
+    }
+
+    [Fact]
+    public async Task A_Live_game_suspended_loses_its_pin_at_once()
+    {
+        await using var server = new ScoreMapServer();
+        var start = server.Clock.GetUtcNow().AddHours(-1);
+        server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.InProgress));
+        await using var client = await server.ConnectClientAsync();
+        Assert.Single(await client.NextSnapshotAsync());
+
+        server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Suspended));
+        server.Clock.Advance(TimeSpan.FromMinutes(1));
+
+        var change = await client.NextChangeAsync();
+        Assert.Equal(GameChangeKind.Removed, change.Kind);
+    }
+
+    [Fact]
+    public async Task A_Final_game_keeps_its_pin_until_5_minutes_after_it_ends()
     {
         await using var server = new ScoreMapServer();
         await SeeGameFinishAsync(server);
 
-        server.Clock.Advance(TimeSpan.FromHours(2) - TimeSpan.FromMinutes(1));
+        server.Clock.Advance(TimeSpan.FromMinutes(5) - TimeSpan.FromSeconds(1));
         await using var client = await server.ConnectClientAsync();
 
         Assert.Single(await client.NextSnapshotAsync());
     }
 
     [Fact]
-    public async Task A_Final_game_loses_its_pin_2_hours_after_it_ends()
+    public async Task A_Final_game_loses_its_pin_5_minutes_after_it_ends()
     {
         await using var server = new ScoreMapServer();
         await SeeGameFinishAsync(server);
 
-        server.Clock.Advance(TimeSpan.FromHours(2));
-        await using var client = await server.ConnectClientAsync();
-
-        Assert.Empty(await client.NextSnapshotAsync());
-    }
-
-    [Theory]
-    [InlineData(ProviderStatus.Postponed)]
-    [InlineData(ProviderStatus.Canceled)]
-    [InlineData(ProviderStatus.Suspended)]
-    public async Task A_Disrupted_game_has_no_pin_earlier_than_3_hours_before_its_planned_start(ProviderStatus disruption)
-    {
-        await using var server = new ScoreMapServer();
-        var start = server.Clock.GetUtcNow().AddHours(3).AddMinutes(1);
-        server.Feed.SetScoreboard("football/nfl", NflGame(start, disruption));
-
+        server.Clock.Advance(TimeSpan.FromMinutes(5));
         await using var client = await server.ConnectClientAsync();
 
         Assert.Empty(await client.NextSnapshotAsync());
@@ -107,41 +125,13 @@ public class PinWindowTests
     private static ProviderGame TestLeagueGame(DateTimeOffset start, ProviderStatus status) =>
         TestGames.Game("t1", "test/league", start, status, null, null, null, null);
 
-    [Theory]
-    [InlineData(ProviderStatus.Postponed)]
-    [InlineData(ProviderStatus.Canceled)]
-    public async Task A_Disrupted_game_keeps_its_pin_until_2_hours_after_its_planned_end(ProviderStatus disruption)
-    {
-        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5) + TimeSpan.FromMinutes(1);
-        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, disruption));
-
-        await using var client = await server.ConnectClientAsync();
-
-        Assert.Single(await client.NextSnapshotAsync());
-    }
-
-    [Theory]
-    [InlineData(ProviderStatus.Postponed)]
-    [InlineData(ProviderStatus.Canceled)]
-    public async Task A_Disrupted_game_loses_its_pin_2_hours_after_its_planned_end(ProviderStatus disruption)
-    {
-        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5);
-        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, disruption));
-
-        await using var client = await server.ConnectClientAsync();
-
-        Assert.Empty(await client.NextSnapshotAsync());
-    }
-
     // A game already Final the first time the server sees it (e.g. after the server slept) didn't end then:
     // its end is estimated as its planned end, or now if that is still to come.
     [Fact]
     public async Task A_game_already_Final_when_first_seen_is_estimated_to_have_ended_at_its_planned_end()
     {
         await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4);
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromMinutes(150 + 2);
         server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
 
         await using var client = await server.ConnectClientAsync();
@@ -164,63 +154,24 @@ public class PinWindowTests
     }
 
     [Fact]
-    public async Task A_game_already_Final_when_first_seen_has_no_pin_2_hours_after_its_planned_end()
+    public async Task A_game_already_Final_when_first_seen_keeps_its_pin_until_5_minutes_after_its_planned_end()
     {
         await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5);
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromMinutes(150 + 4);
         server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
 
-        await using var client = await server.ConnectClientAsync();
-
-        Assert.Empty(await client.NextSnapshotAsync());
-    }
-
-    [Fact]
-    public async Task A_game_already_suspended_when_first_seen_has_no_pin_2_hours_after_its_planned_end()
-    {
-        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        var start = server.Clock.GetUtcNow() - TimeSpan.FromHours(4.5);
-        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Suspended));
-
-        await using var client = await server.ConnectClientAsync();
-
-        Assert.Empty(await client.NextSnapshotAsync());
-    }
-
-    // ESPN reports no suspension time, so a game is suspended when the server first sees it Suspended.
-    // The game is seen in progress, then seen suspended `suspendedAfter` into play, which is the test's "now".
-    private static async Task SeeGameSuspendAsync(ScoreMapServer server, TimeSpan suspendedAfter)
-    {
-        var start = server.Clock.GetUtcNow() + TimeSpan.FromMinutes(5) - suspendedAfter;
-        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.InProgress));
-        await server.SnapshotOnceAsync();
-
-        server.Clock.Advance(TimeSpan.FromMinutes(5));
-        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Suspended));
-        await server.SnapshotOnceAsync();
-    }
-
-    [Fact]
-    public async Task A_suspended_game_keeps_its_pin_until_2_hours_after_the_suspension_even_past_its_planned_end()
-    {
-        await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        // Suspended 3 hours in, past the planned end; the original schedule's window closes 1½ hours later.
-        await SeeGameSuspendAsync(server, TimeSpan.FromHours(3));
-
-        server.Clock.Advance(TimeSpan.FromHours(2) - TimeSpan.FromMinutes(1));
         await using var client = await server.ConnectClientAsync();
 
         Assert.Single(await client.NextSnapshotAsync());
     }
 
     [Fact]
-    public async Task A_suspended_game_loses_its_pin_2_hours_after_the_suspension_even_before_its_planned_end()
+    public async Task A_game_already_Final_when_first_seen_has_no_pin_5_minutes_after_its_planned_end()
     {
         await using var server = ServerWithLeagueOfPlannedLength2AndAHalfHours();
-        // Suspended 10 minutes in; the original schedule's window stays open for over 4 hours more.
-        await SeeGameSuspendAsync(server, TimeSpan.FromMinutes(10));
+        var start = server.Clock.GetUtcNow() - TimeSpan.FromMinutes(150 + 5);
+        server.Feed.SetScoreboard("test/league", TestLeagueGame(start, ProviderStatus.Final));
 
-        server.Clock.Advance(TimeSpan.FromHours(2));
         await using var client = await server.ConnectClientAsync();
 
         Assert.Empty(await client.NextSnapshotAsync());

@@ -10,7 +10,7 @@ import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { railIcon, type RailButtonName } from './railButtons'
 import { RailIcon } from './railIcons'
-import { canZoom, nextPopover, railToggles, toggled, type PopoverEvent, type RailPopover } from './railControls'
+import { canZoom, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
   leagues: readonly League[]
@@ -40,11 +40,9 @@ interface RailProps {
 }
 
 /**
- * The rail: a column of icon buttons at the top right of the globe, in three groups. Zoom in, zoom
- * out and Home, which move the camera. The "Live games only" and "Show Disrupted games" toggles, whose
- * colour says whether each is on; on a screen with no hover for their tooltips (a phone), each press
- * shows a short toast beside the rail saying what changed. Leagues, Display Settings and Games (with
- * its count of games on it), each opening a popover to the left of the rail: one at a time, closed by
+ * The rail: a column of icon buttons at the top right of the globe, in three groups: zoom in, zoom
+ * out and Home, which move the camera; Leagues and Display Settings; and Games (with its count of
+ * games on it). Each of the last three opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
@@ -52,7 +50,6 @@ interface RailProps {
 export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false, games, gamesReady, onSelectGame }: RailProps) {
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
-  const [toast, setToast] = useState<{ text: string; id: number } | null>(null)
   const popover = useRef<HTMLDivElement>(null)
   const popoverEvent = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
 
@@ -86,27 +83,6 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
         <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
         <RailButton label="Home" disabled={!camera} onClick={onHome} />
-      </div>
-      <div className="rail__group">
-        {railToggles.map(({ key, name }) => (
-          <RailButton
-            key={key}
-            label={name}
-            pressed={settings[key]}
-            onClick={() => {
-              const next = toggled(settings, key)
-              onChange(next.settings)
-              // With hover, the tooltip names the toggle and its colour says the rest.
-              if (!window.matchMedia(hoverScreen).matches) setToast({ text: next.toast, id: (toast?.id ?? 0) + 1 })
-            }}
-          />
-        ))}
-        {toast && (
-          // Keyed, so a second press while it shows plays its fade afresh. Gone once it has faded.
-          <p key={toast.id} className="rail__toast" role="status" onAnimationEnd={() => setToast(null)}>
-            {toast.text}
-          </p>
-        )}
       </div>
       <div className="rail__group">
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
@@ -149,22 +125,19 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
   )
 }
 
-const hoverScreen = '(hover: hover)'
-
 /** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px). */
 const phoneScreen = '(max-width: 640px)'
 
 const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', games: 'Games' }
 
 /**
- * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A toggle is
- * pressed or not; a popover's button says whether its popover is open. A badge is a count on its
+ * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A popover's
+ * button says whether its popover is open. A badge is a count on its
  * corner (the Games button's games), part of its name for a screen reader.
  */
 export function RailButton({
   label,
   disabled,
-  pressed,
   popover,
   open,
   badge,
@@ -174,7 +147,6 @@ export function RailButton({
 }: {
   label: RailButtonName
   disabled?: boolean
-  pressed?: boolean
   popover?: string
   open?: string | null
   badge?: number
@@ -192,7 +164,6 @@ export function RailButton({
       data-tooltip={label}
       data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
-      aria-pressed={pressed}
       aria-haspopup={popover ? 'dialog' : undefined}
       aria-expanded={popover ? (on ?? open === popover) : undefined}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}

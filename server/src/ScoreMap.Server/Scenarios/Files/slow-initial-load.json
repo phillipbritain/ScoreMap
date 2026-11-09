@@ -10,6 +10,5 @@
     "group": "worldwide",
     "mix": { "live": 4, "upcoming": 3, "final": 2 }
   },
-  "play": true,
-  "disrupted": 0.05
+  "play": true
 }

@@ -42,8 +42,8 @@ public sealed class TennisScenarioTests : IDisposable
         }
         """;
 
-    // Play needs a fill for the games it brings on: one game beside the match, never Disrupted.
-    private const string Play = """, "fill": { "count": 1, "group": "london" }, "play": true, "disrupted": 0""";
+    // Play needs a fill for the games it brings on: one game beside the match.
+    private const string Play = """, "fill": { "count": 1, "group": "london" }, "play": true""";
 
     private static async Task<Game> ReceivedAsync(string scenario)
     {
@@ -162,7 +162,7 @@ public sealed class TennisScenarioTests : IDisposable
     public async Task An_upcoming_match_has_no_made_up_score_or_sets(bool play)
     {
         var written = SinnerAlcaraz(play).Replace("\"status\": \"live\"", "\"status\": \"upcoming\"")
-            .Replace("\"startsIn\": \"-1h\"", "\"startsIn\": \"1h\"")
+            .Replace("\"startsIn\": \"-1h\"", "\"startsIn\": \"20m\"")
             .Replace("\"score\": 1", "\"score\": null").Replace("\"score\": 0", "\"score\": null")
             .Replace(", \"period\": 2", "");
         var match = await ReceivedAsync(written);
@@ -197,9 +197,18 @@ public sealed class TennisScenarioTests : IDisposable
             .Replace("\"period\": 2", """
                 "period": 1, "sets": [ { "home": 6, "away": 4, "homeWon": true } ]
                 """);
-        var match = await ReceivedAsync(written);
+        // A suspended match isn't shown (ADR-0021), so this is the feed's: as play would take it on.
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), written);
+        var scenario = ScenarioReader.Read(_folder, "sample", [Atp, Nhl], ScenarioPlayTests.Venues, NhlTeams);
+        var clock = new FakeTimeProvider(StartedAt);
+        var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp, Nhl]);
+        clock.Advance(TimeSpan.FromMinutes(30));
 
-        Assert.Equal(new GameSet("1st", "6-4", "J. Sinner"), Assert.Single(Assert.IsType<GameScoreline>(match.Scoreline).Sets));
+        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+
+        Assert.Equal(ProviderStatus.Suspended, match.Status);
+        var set = Assert.Single(match.Sets);
+        Assert.Equal((6, 4), (set.Home, set.Away));
     }
 
     [Fact]
@@ -293,7 +302,7 @@ public sealed class TennisScenarioTests : IDisposable
         var venue = ScenarioPlayTests.Venues[0];
         var made = maker.Make("made", venue, GameStatus.Live, [], new Random(1));
         var play = new ScenarioPlay(new Scenario("sample", [made],
-            Play: new PlaySettings([Atp], [venue], maker, 0, new HashSet<string> { "made" })), StartedAt, new Random(1));
+            Play: new PlaySettings([Atp], [venue], maker)), StartedAt, new Random(1));
 
         var match = Assert.Single(play.GamesAt(StartedAt));
 

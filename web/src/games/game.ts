@@ -163,7 +163,7 @@ export interface GameBout {
   second: GameBoutSide
   weightClass: string | null
   scheduledRounds: number
-  status: GameStatus
+  status: BoutStatus
   round: number | null
   clock: string | null
   method: string | null
@@ -178,11 +178,14 @@ export interface GameBoutSide {
   winner: boolean
 }
 
-/** A game's status in ScoreMap's terms (see GLOSSARY.md). */
-export type GameStatus = 'Upcoming' | 'Live' | 'Final' | 'Disrupted'
+/**
+ * A game's status in ScoreMap's terms (see GLOSSARY.md). A game postponed, suspended or canceled
+ * isn't shown at all (ADR-0021), so the server never sends one Disrupted.
+ */
+export type GameStatus = 'Upcoming' | 'Live' | 'Final'
 
-/** Which kind of disruption made a game Disrupted. */
-export type Disruption = 'Postponed' | 'Suspended' | 'Canceled'
+/** A fight card's bout's status: a game's, or Disrupted when the bout is called off. */
+export type BoutStatus = GameStatus | 'Disrupted'
 
 export interface Game {
   id: string
@@ -193,8 +196,6 @@ export interface Game {
   status: GameStatus
   /** A Live game paused by a delay, such as a rain delay. */
   delayed: boolean
-  /** Set only when the game is Disrupted. */
-  disruption: Disruption | null
   /** ISO 8601 instant; set once the game is Final. */
   endTime: string | null
   /** Who competes and their scores (ADR-0020). */

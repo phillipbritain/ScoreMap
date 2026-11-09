@@ -300,7 +300,7 @@ const placeName = {
 }
 
 /** The game statuses, by their names in the theme: each has a colour in the palette, and its own look in some components. */
-const statuses = ['live', 'upcoming', 'final', 'disrupted'] as const
+const statuses = ['live', 'upcoming', 'final'] as const
 
 /**
  * A game status's name in the theme: its key among the palette's colours and the components' looks
@@ -479,7 +479,7 @@ const settings = {
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
-     * fades and glows (see cardStatus), and a Disrupted game's fill and text. Its glass's frost: its fill,
+     * fades and glows (see cardStatus). Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
      * outline and status light stay solid. A hot game's card (with flames on) has a fire along its top
      * edge, in fire's colours rather than its game's (its tongues' tips, middle and white-hot core), as
@@ -505,7 +505,6 @@ const settings = {
       live: cardStatus,
       upcoming: cardStatus,
       final: cardStatus,
-      disrupted: { fill: color, text: color, ...cardStatus },
     },
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
@@ -551,8 +550,8 @@ const settings = {
     /** An item's corners in a menu. */
     MenuItem: { corner },
     /**
-     * The rail, its popovers (Leagues and Display Settings) and its toast: their surface and drop shadow; a toggle
-     * button's icon that's on and one that's off; the count of a sport's leagues that are on, the hint
+     * The rail and its popovers (Leagues, Display Settings and Games): their surface and drop shadow; the
+     * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
      * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The frost
@@ -562,7 +561,7 @@ const settings = {
       frost,
       surface: color,
       shadow,
-      toggle: { on: color, off: color },
+      open: color,
       count: color,
       hint: color,
       chip: { outline: color, badge: color },

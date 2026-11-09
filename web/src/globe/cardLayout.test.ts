@@ -282,10 +282,10 @@ describe('layOutCards', () => {
       expect(shiftsOf(layIn([...games('g', 20, 200, 150, 'Final'), live])).get('z')).toEqual({ dx: 0, dy: 0 })
     })
 
-    it('shows a card cluster as its most prominent game, Disrupted only when all its games are', () => {
+    it('shows a card cluster as its most prominent game, Final only when all its games are', () => {
       const mixed = [...games('g', 20, 200, 150, 'Live'), card('f', 219, 150, 'Final')]
       expect(layIn(mixed).cardClusters.map((c) => c.status)).toEqual(['Live'])
-      expect(layIn(games('d', 20, 200, 150, 'Disrupted')).cardClusters.map((c) => c.status)).toEqual(['Disrupted'])
+      expect(layIn(games('d', 20, 200, 150, 'Final')).cardClusters.map((c) => c.status)).toEqual(['Final'])
     })
 
     describe('laid out again with room for them all', () => {

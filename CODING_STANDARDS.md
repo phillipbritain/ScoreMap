@@ -14,7 +14,7 @@ Identifiers, comments, messages and UI text name domain concepts with the terms 
 
 ## Seeded tests assert what every seed gives
 
-A test of something seeded (a scenario's fill, play) checks a property the code guarantees, such as a fill's Disrupted games going Postponed, Suspended and Canceled in turn, not one its seed happens to produce, such as which cities a fill picks. A seed-lucky test passes until an unrelated change draws one more random number, then fails far from the change that broke it, as "worldwide disrupted in every way" did when fill started drawing teams. Where a seed's particular outcome is the point, a comment beside the assertion says so.
+A test of something seeded (a scenario's fill, play) checks a property the code guarantees, such as a fill's Upcoming games all starting within the Upcoming window, not one its seed happens to produce, such as which cities a fill picks. A seed-lucky test passes until an unrelated change draws one more random number, then fails far from the change that broke it, as "worldwide disrupted in every way" did when fill started drawing teams. Where a seed's particular outcome is the point, a comment beside the assertion says so.
 
 ## Placement is tested as the globe turns
 

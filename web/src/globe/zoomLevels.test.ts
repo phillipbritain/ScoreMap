@@ -15,6 +15,7 @@ import {
   unfittedZoom,
   zoomAt,
   zoomAtEquator,
+  zoomForMapType,
   zoomSettings,
 } from './zoomLevels'
 
@@ -191,6 +192,22 @@ describe('fittedZoomSettings', () => {
 
   it('leaves a view with no size yet alone', () => {
     expect(fittedZoomSettings(zoomSettings, { width: 0, height: 0 })).toEqual(unfittedZoom)
+  })
+})
+
+describe('zoomForMapType', () => {
+  const limits = { minZoom: 2, startZoom: 4, maxZoom: 11, satelliteMaxZoom: 15, cardZoom: 3 }
+
+  it('zooms in as far as the plain map goes on the plain map', () => {
+    expect(zoomForMapType(limits, 'plain')).toEqual(limits)
+  })
+
+  it('zooms further in on the satellite map, the rest as on the plain map', () => {
+    expect(zoomForMapType(limits, 'satellite')).toEqual({ ...limits, maxZoom: 15 })
+  })
+
+  it('lets the satellite map zoom in further than the plain map', () => {
+    expect(zoomSettings.satelliteMaxZoom).toBeGreaterThan(zoomSettings.maxZoom)
   })
 })
 

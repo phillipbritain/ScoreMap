@@ -18,7 +18,7 @@ import { panelGap, smallPinReach } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, pinSource, selectedPinLayer, smallPinLayer } from './pinLayers'
-import { cardZoom, fittedZoomSettings, maxZoom, unfittedZoom } from './zoomLevels'
+import { cardZoom, fittedZoomSettings, maxZoom, unfittedZoom, zoomAt, zoomAtEquator } from './zoomLevels'
 
 /**
  * When set, every layout of the score cards nudges each card (and its trail) that many pixels the
@@ -326,6 +326,34 @@ describe('selection', () => {
     expect(onSelect.mock.calls).toEqual([['A'], ['A']])
   })
 
+  // Turning the globe keeps it the same size on screen, as MapLibre's globe does as the viewer drags it,
+  // while MapLibre's zoom rises towards the equator.
+  it('keeps score cards as the globe turns from Europe to the equator, the globe the same size', async () => {
+    const { globe, map } = openGlobe({ longitude: 10, latitude: 50, zoom: zoomAt(50, cardZoom + 0.3) })
+    expect(map.getZoom()).toBeLessThan(cardZoom)
+    globe.show([game('A', { longitude: 10, latitude: 50 }), game('B', { longitude: 10, latitude: 0 })])
+    await cardShown('A')
+
+    map.jumpTo({ center: [10, 0] })
+    expect(map.getZoom()).toBeCloseTo(cardZoom + 0.3)
+    await cardShown('B')
+  })
+
+  it('shows no score cards as the globe turns from Europe to the equator zoomed out short of them', async () => {
+    const { globe, map } = openGlobe({ longitude: 10, latitude: 50, zoom: zoomAt(50, cardZoom - 0.2) })
+    const a = game('A', { longitude: 10, latitude: 50 })
+    const b = game('B', { longitude: 10, latitude: 0 })
+    globe.show([a, b])
+    await pinsDrawn(map, smallPinLayer, a)
+
+    map.jumpTo({ center: [10, 0] })
+    await pinsDrawn(map, smallPinLayer, b)
+    await pause(300)
+    expect(card('A')).toBeNull()
+    expect(card('B')).toBeNull()
+    expect(drawnAt(map, outerSmallPinLayer, b)).toEqual([])
+  })
+
   it('moves focus to the map when a focused card is removed or becomes a small pin', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     globe.show([game('A')])
@@ -453,8 +481,29 @@ describe('selection', () => {
     const page = container.getBoundingClientRect()
     expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
     expect(offBy(venueOnPage(map, a).x, page.left + page.width / 2)).toBeLessThan(2)
-    expect(map.getZoom()).toBeGreaterThanOrEqual(cardZoom)
-    expect(map.getZoom()).toBeLessThan(cardZoom + 0.1)
+    const atEquator = zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat })
+    expect(atEquator).toBeGreaterThanOrEqual(cardZoom)
+    expect(atEquator).toBeLessThan(cardZoom + 0.1)
+    await cardShown('A')
+  })
+
+  it('centres a game far from the equator above the panel just past the card zoom, the globe sized as at the equator', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 30, zoom: 2 })
+    const a = game('A', { longitude: 10, latitude: 55 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    const panel = panelAcrossBottom()
+
+    const moved = new Promise((resolve) => map.once('moveend', resolve))
+    globe.centreOn('A', panel)
+    globe.select('A', panel)
+    await moved
+
+    // The view's centre is south of the game, where the globe is the size of the card zoom.
+    expect(map.getCenter().lat).toBeLessThan(55)
+    const atEquator = zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat })
+    expect(atEquator).toBeGreaterThanOrEqual(cardZoom)
+    expect(atEquator).toBeLessThan(cardZoom + 0.05)
     await cardShown('A')
   })
 
@@ -758,7 +807,7 @@ describe('score cards near the centre of the view', () => {
     expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
-  it('centres the globe on a pin cluster farther out the viewer selects, at the same zoom, so its games have cards', async () => {
+  it('centres the globe on a pin cluster farther out the viewer selects, the globe the same size, so its games have cards', async () => {
     // Past cardZoom, where selecting a pin cluster zoomed out would zoom out to it.
     const zoom = cardZoom + 0.2
     const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom }, wideGlobe)
@@ -772,7 +821,7 @@ describe('score cards near the centre of the view', () => {
     await cameraSettles(
       onCameraMove,
       (camera) =>
-        camera.zoom === zoom && offBy(camera.longitude, venue.longitude) < 0.5 && offBy(camera.latitude, venue.latitude) < 0.5,
+        offBy(zoomAtEquator(camera), zoom) < 0.01 && offBy(camera.longitude, venue.longitude) < 0.5 && offBy(camera.latitude, venue.latitude) < 0.5,
     )
     await cardShown('A')
     await cardShown('B')

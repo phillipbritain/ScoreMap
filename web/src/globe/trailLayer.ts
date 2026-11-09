@@ -32,6 +32,8 @@ export interface TrailLayer extends CustomLayerInterface {
   show(trails: readonly TrailOnGlobe[]): void
   /** Draws a game's trail and venue dot bolder, as the pointer is on its card, and the last game's no longer. */
   hover(gameId: string | null): void
+  /** Draws the selected game's trail and venue dot bolder, as a hovered one's, and the last one's no longer. */
+  select(gameId: string | null): void
   /** Where each trail is drawn on screen now. */
   drawn(): TrailOnScreen[]
 }
@@ -46,8 +48,8 @@ export interface TrailLayer extends CustomLayerInterface {
  *
  * Drawn as MapLibre would draw them as lines and circles (see cardLayoutLayers' trail looks, from the
  * theme `theme` gives each frame): a trail is a thin line lit in its game's colour, in a soft glow,
- * to a point ringed in it; while the pointer is on its card, the trail and dot are bolder, the dot lit
- * in a glow of its own.
+ * to a point ringed in it; while the pointer is on its card, or its game is selected, the trail and dot
+ * are bolder, the dot lit in a glow of its own.
  */
 export function trailLayer(theme: () => Theme): TrailLayer {
   let map: MapLibreMap | null = null
@@ -57,6 +59,7 @@ export function trailLayer(theme: () => Theme): TrailLayer {
   let uniforms: { viewport: WebGLUniformLocation | null; pixelRatio: WebGLUniformLocation | null } | null = null
   let trails: readonly TrailOnGlobe[] = []
   let hovered: string | null = null
+  let selected: string | null = null
 
   const onScreen = (): TrailOnScreen[] => {
     if (!map) return []
@@ -99,7 +102,7 @@ export function trailLayer(theme: () => Theme): TrailLayer {
     render(context) {
       if (!map || !program || !uniforms || trails.length === 0) return
       const pixelRatio = map.getPixelRatio()
-      const shapes = trailShapes(onScreen(), trails.map(({ color }) => color), hovered, theme().components)
+      const shapes = trailShapes(onScreen(), trails.map(({ color }) => color), [hovered, selected], theme().components)
       const triangles = vertices(shapes, pixelRatio)
       context.useProgram(program)
       context.uniform2f(uniforms.viewport, map.getCanvas().width / pixelRatio, map.getCanvas().height / pixelRatio)
@@ -123,6 +126,12 @@ export function trailLayer(theme: () => Theme): TrailLayer {
     hover(gameId) {
       if (gameId === hovered) return
       hovered = gameId
+      map?.triggerRepaint()
+    },
+
+    select(gameId) {
+      if (gameId === selected) return
+      selected = gameId
       map?.triggerRepaint()
     },
 
@@ -154,22 +163,22 @@ export type TrailShape =
 
 /**
  * What's drawn of the trails, from the bottom up as the map's trail layers were stacked: every glow,
- * then every line, then each venue's dot, its glow (while hovered) and ring beneath it, in the
- * theme's sizes and opacities, the hovered game's from its hover settings.
+ * then every line, then each venue's dot, its glow (while picked out) and ring beneath it, in the
+ * theme's sizes and opacities, those of the games picked out (hovered or selected) from the hover settings.
  */
 export function trailShapes(
   screen: readonly TrailOnScreen[],
   colors: readonly string[],
-  hovered: string | null,
+  pickedOut: readonly (string | null)[],
   { Trail: trail, Hover: hover }: Theme['components'],
 ): TrailShape[] {
   const shapes: TrailShape[] = []
-  const isHovered = (i: number) => screen[i].gameId === hovered
+  const isPickedOut = (i: number) => pickedOut.includes(screen[i].gameId)
   screen.forEach(({ from, to }, i) =>
     shapes.push({ kind: 'line', from, to, width: trail.glow.width, blur: trail.glow.blur, color: colors[i], opacity: trail.glow.opacity }),
   )
   screen.forEach(({ from, to }, i) => {
-    const look = isHovered(i) ? hover.trail : trail
+    const look = isPickedOut(i) ? hover.trail : trail
     shapes.push({ kind: 'line', from, to, width: look.width, blur: 0, color: colors[i], opacity: look.opacity })
   })
   const circle = (at: Point, radius: number, look: Partial<Extract<TrailShape, { kind: 'circle' }>>): TrailShape => ({
@@ -186,9 +195,9 @@ export function trailShapes(
   screen.forEach(({ to, dot }, i) => {
     if (!dot) return
     const color = colors[i]
-    if (isHovered(i)) shapes.push(circle(to, hover.venue.glow.radius, { color, blur: 1, opacity: hover.venue.glow.opacity }))
-    shapes.push(circle(to, trail.venue.ring.radius, { strokeWidth: isHovered(i) ? hover.trail.width : trail.venue.ring.width, stroke: color }))
-    shapes.push(circle(to, isHovered(i) ? hover.venue.radius : trail.venue.radius, { color }))
+    if (isPickedOut(i)) shapes.push(circle(to, hover.venue.glow.radius, { color, blur: 1, opacity: hover.venue.glow.opacity }))
+    shapes.push(circle(to, trail.venue.ring.radius, { strokeWidth: isPickedOut(i) ? hover.trail.width : trail.venue.ring.width, stroke: color }))
+    shapes.push(circle(to, isPickedOut(i) ? hover.venue.radius : trail.venue.radius, { color }))
   })
   return shapes
 }

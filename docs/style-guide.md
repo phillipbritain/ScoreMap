@@ -205,7 +205,7 @@ How status reaches the rest of the globe:
 
 - **Clusters** show as the most prominent status among their games (Live, then Upcoming, Final, Disrupted). A cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's colour (outline, glow and count) is the game colour its games share, or the accent (`palette.live.main`) when their colours differ; Disrupted games don't count, so a cluster is Disrupted's grey only when all its games are.
 - **Pulses** play in the game's colour, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its colour.
-- **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game.
+- **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
@@ -213,13 +213,13 @@ How status reaches the rest of the globe:
 
 With "Flames on hot games" on in Display Settings on the rail (on unless the viewer switches it off), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot.
 
-- A **score card** has a fire along its top edge, after NBA Jam's "he's on fire": tongues of flame overlapping out of a bed of fire, within the card's width and tallest in the middle, in a glow. Each tongue is in three bands (its tips, its middle and a white-hot core) and flickers frame by frame, as an arcade sprite does, each at its own pace. With reduce motion on it stands still. The flames are in **fire's colours, not the game's**, here and on the globe alike, so a hot game looks the same everywhere: the one place colour doesn't say league (ADR-0012), chosen by eye over the same fire in the game's colour, which read as pale and muddy.
+- A **score card** has a fire along its top edge, after NBA Jam's "he's on fire": tongues of flame overlapping out of a bed of fire, standing on that edge with none of it behind the see-through card, within the card's width and tallest in the middle, in a glow that fades out by the card's sides. Each tongue is in three bands (its tips, its middle and a white-hot core) and flickers frame by frame, as an arcade sprite does, each at its own pace. With reduce motion on it stands still. The flames are in **fire's colours, not the game's**, here and on the globe alike, so a hot game looks the same everywhere: the one place colour doesn't say league (ADR-0012), chosen by eye over the same fire in the game's colour, which read as pale and muddy.
 - A **small pin** has a small flame rising from its core, its base behind the core, in the same three bands.
 - A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, flames and all.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels; under a third of it is behind the card | 24 |
+| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels, all of it above the card's top edge | 24 |
 | `components.ScoreCard.flames.flicker` | How far the tongues grow and shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.18 |
 | `components.ScoreCard.flames.tips`, `.middle`, `.core` | The fire's colours: its tongues' tips, their middle and the white-hot core (with the bed of fire and the glow), and the small pins' and clusters' flames' | `#d42a12`, `#ff8a00`, `#fff3a8`, given directly as none of the theme's colours is fire's |
 | `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
@@ -254,7 +254,7 @@ Tooltips are glass too, not the browser's own, which can't be styled: anything o
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. Where the hovered game is also the selected one, selection's look (its outline) stays. Touch screens have no hover: a tap selects a card as before.
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's colour. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
 
 ## Typography
 

@@ -615,8 +615,8 @@ body {
    fade into the fill likewise. Its fill (and drop shadow) is the theme's fill opacity, so below 1 the
    map shows through behind its text, logos, scores and light, which stay as they are.
 
-   With the pointer on it, its border is bolder (a ring around it, so the card keeps its size and
-   doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
+   With the pointer on it, or while it's selected, its border is bolder (a ring around it, so the card
+   keeps its size and doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
 .score-card {
   appearance: none;
   box-sizing: content-box;
@@ -663,7 +663,8 @@ body {
   transform-origin: 50% 100%;
 }
 
-/* Only where there's a pointer to hover with: on a touch screen, a tap selects as it always has. */
+/* Only where there's a pointer to hover with: on a touch screen, a tap selects, which gives the
+   card the same look (see .score-card--selected). */
 @media (hover: hover) {
   .score-card:hover {
     --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
@@ -686,9 +687,12 @@ body {
   filter: grayscale(1);
 }
 
-/* The game whose panel is open, matching the selected small pin's ring, and not faded. */
+/* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
+   a hovered card is, its border bolder and its fill solid if the theme says so. */
 .score-card--selected {
   --status-card-fade: 0;
+  --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
+  --frost: max(var(--score-card-frost), var(--hover-card-solid));
   outline: var(--selection-width) solid var(--selection-color);
   outline-offset: calc(0.5 * var(--spacing));
 }
@@ -728,14 +732,19 @@ body {
 /* A hot game's flames, after NBA Jam's "he's on fire": one fire along the card's top edge, within its
    width, its tongues overlapping out of a bed of fire, tallest in the middle. Each tongue is in three
    bands (the theme's tips, middle and white-hot core) and flickers frame by frame, as an arcade
-   sprite does, each at its own pace, in a glow. */
+   sprite does, each at its own pace, in a glow.
+
+   It stands on the card's top edge with none of it behind the card, which is see-through glass:
+   fire behind the card would show through its header. */
 .score-card__flames {
-  /* The outer tongues' overlap reaches past the row, so the row is set in by as much. */
+  /* The outer tongues' overlap reaches past the row, so the row is set in by as much, and at least
+     by the card's corner, so the bed of fire lies along the straight of the edge. */
   --flames-overlap: calc(0.22 * var(--score-card-flames-height));
+  --flames-inset: calc(max(var(--flames-overlap), var(--score-card-corner)) + 1px);
   position: absolute;
-  right: calc(var(--flames-overlap) + 1px);
-  bottom: calc(100% - 0.3 * var(--score-card-flames-height));
-  left: calc(var(--flames-overlap) + 1px);
+  right: var(--flames-inset);
+  bottom: 100%;
+  left: var(--flames-inset);
   z-index: -1;
   display: flex;
   align-items: flex-end;
@@ -748,13 +757,13 @@ body {
   --flame-lick-mirrored: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M46 0C40 22 20 30 13 50C5 72 16 93 38 99C44 100 56 100 62 99C84 93 94 73 87 53C83 43 75 37 71 25C66 37 68 47 62 53C61 33 53 17 46 0Z'/%3E%3C/svg%3E");
 }
 
-/* The glow behind the fire, brightest at its base. */
+/* The glow behind the fire, brightest at its base, across the card's width and gone by its sides. */
 .score-card__flames::before {
   content: '';
   position: absolute;
-  inset: 15% -12% -10%;
+  inset: 15% calc(-1 * var(--flames-inset)) 0;
   background: radial-gradient(
-    ellipse 70% 65% at 50% 100%,
+    ellipse 50% 100% at 50% 100%,
     color-mix(in srgb, var(--score-card-flames-middle) 75%, transparent),
     transparent
   );
@@ -765,7 +774,7 @@ body {
 .score-card__flames::after {
   content: '';
   position: absolute;
-  inset: auto calc(2px - var(--flames-overlap)) 0;
+  inset: auto calc(max(var(--score-card-corner), 3px) - var(--flames-inset)) 0;
   z-index: 1;
   height: 38%;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;

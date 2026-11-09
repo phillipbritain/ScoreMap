@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cardRadius, furthestOutZoom, hasCard, minZoom, pinLayout } from './zoomLevels'
+import { cardRadius, fittedZoomSettings, furthestOutZoom, hasCard, minZoom, minZoomView, pinLayout, zoomSettings } from './zoomLevels'
 
 // Pins and pin clusters kept 35 pixels apart, as the built-in theme's widest pin clusters are.
 const spacing = 35
@@ -34,6 +34,39 @@ describe('furthestOutZoom', () => {
     expect(furthestOutZoom(0)).toBe(minZoom)
     expect(furthestOutZoom(60)).toBeCloseTo(minZoom - 1)
     expect(furthestOutZoom(-60)).toBeCloseTo(minZoom - 1)
+  })
+})
+
+describe('fittedZoomSettings', () => {
+  // The globe's size on screen, in pixels across, at a zoom.
+  const globeAcross = (zoom: number) => (512 * 2 ** zoom) / Math.PI
+
+  it('keeps the minimum zoom for a laptop-sized view or larger', () => {
+    expect(fittedZoomSettings(zoomSettings, { width: 1440, height: minZoomView })).toBe(zoomSettings)
+    expect(fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 })).toBe(zoomSettings)
+  })
+
+  it('lets a phone zoom further out, until the globe fills it as it fills a laptop', () => {
+    const laptop = fittedZoomSettings(zoomSettings, { width: 1440, height: minZoomView })
+    const portrait = fittedZoomSettings(zoomSettings, { width: 390, height: 844 })
+    expect(portrait.minZoom).toBeLessThan(minZoom)
+    expect(globeAcross(portrait.minZoom) / 390).toBeCloseTo(globeAcross(laptop.minZoom) / minZoomView)
+  })
+
+  it('fits a phone the same turned either way', () => {
+    expect(fittedZoomSettings(zoomSettings, { width: 844, height: 390 })).toEqual(
+      fittedZoomSettings(zoomSettings, { width: 390, height: 844 }),
+    )
+  })
+
+  it('leaves the start and furthest-in zooms as they are', () => {
+    const phone = fittedZoomSettings(zoomSettings, { width: 390, height: 844 })
+    expect(phone.startZoom).toBe(zoomSettings.startZoom)
+    expect(phone.maxZoom).toBe(zoomSettings.maxZoom)
+  })
+
+  it('leaves a view with no size yet alone', () => {
+    expect(fittedZoomSettings(zoomSettings, { width: 0, height: 0 })).toBe(zoomSettings)
   })
 })
 

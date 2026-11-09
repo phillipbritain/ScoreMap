@@ -53,18 +53,18 @@ export function LoadingScreen({ stage, slow = false, onRetry, onGone }: LoadingS
   // Gone once the fade the CSS gives a leaving loading screen has played, or at once if it gives none.
   useEffect(() => {
     if (!leaving || gone || !element.current) return
-    let cancelled = false
+    let canceled = false
     void Promise.all(element.current.getAnimations().map((animation) => animation.finished))
       .catch(() => {})
       .then(() => {
-        if (cancelled) return
+        if (canceled) return
         setGone(true)
         latestOnGone.current()
       })
     return () => {
       // Effect-local cancellation flag; this variable is never read during render.
       // oxlint-disable-next-line react/immutability
-      cancelled = true
+      canceled = true
     }
   }, [leaving, gone])
 
@@ -110,7 +110,7 @@ export function Dimmed({ ref, message, leaving = false, movable = false, label }
 
 /**
  * A little rocket flying up and to the right, bobbing as it goes, its flame flickering and speed lines
- * streaming past, in the theme's colours, with the dim showing through its window.
+ * streaming past, in the theme's colors, with the dim showing through its window.
  */
 function Rocket() {
   return (

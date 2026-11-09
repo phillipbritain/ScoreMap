@@ -29,7 +29,7 @@ public class ScenarioSwitchingTests
         """;
 
     [Fact]
-    public async Task Cancelled_old_workers_cannot_fetch_from_the_new_source()
+    public async Task Canceled_old_workers_cannot_fetch_from_the_new_source()
     {
         await using var server = new ScoreMapServer { Scenario = "first" };
         server.WriteScenario("first", OneGame("a"));

@@ -5,7 +5,7 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
-import { clusterColour, pinClusterSharedColour } from './clusterColour'
+import { clusterColor, pinClusterSharedColor } from './clusterColor'
 import { flameImage } from './flames'
 import { fadedByHorizon } from './horizon'
 import { smallPinReach } from './panelClearance'
@@ -17,7 +17,7 @@ export const pinClusterLayer = 'pin-clusters'
 export const smallPinLayer = 'pins'
 
 /**
- * The source of games far from the centre of the view at card zoom, which show as small pins rather
+ * The source of games far from the center of the view at card zoom, which show as small pins rather
  * than score cards (see hasCard), clustered among themselves. GlobeMap keeps it up to date as the
  * globe turns.
  */
@@ -77,8 +77,8 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
     // Each pin by its game, each pin cluster by its cluster_id, for fading them near the horizon (see fadeNearHorizon).
     promoteId: 'gameId',
     // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus), the
-    // colour its games share, for its colour (see clusterColour), and how many show flames.
-    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColour, [flameGamesProperty]: ['+', ['case', ['get', 'flames'], 1, 0]] },
+    // color its games share, for its color (see clusterColor), and how many show flames.
+    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColor, [flameGamesProperty]: ['+', ['case', ['get', 'flames'], 1, 0]] },
   }
 }
 
@@ -86,7 +86,7 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
 const flameGamesProperty = 'flameGames'
 
 /**
- * A flame on a cluster's top edge, in fire's colours (see flameImage), as tall as the theme's cluster
+ * A flame on a cluster's top edge, in fire's colors (see flameImage), as tall as the theme's cluster
  * flame, `offset` from the cluster's middle (see clusterFlameOffset).
  */
 export function clusterFlameLayout(theme: Theme, offset: ExpressionSpecification): SymbolLayerSpecification['layout'] {
@@ -108,7 +108,7 @@ export function clusterFlameOffset(theme: Theme, reach: number): ExpressionSpeci
 }
 
 /**
- * Pin clusters: discs outlined and lit in their games' colour (see clusterColour), with the count in
+ * Pin clusters: discs outlined and lit in their games' color (see clusterColor), with the count in
  * it too (see the theme's cluster), the disc, outline and count faded as their status's clusters are,
  * as card clusters are (see cardLayoutLayers). One holding a game that shows flames has a flame on its
  * top edge.
@@ -127,7 +127,7 @@ export function pinClusterLayers(
       filter: ['has', 'point_count'],
       paint: {
         'circle-radius': byCount(cluster.glowRadius),
-        'circle-color': clusterColour(theme),
+        'circle-color': clusterColor(theme),
         'circle-blur': 1,
         'circle-opacity': fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity)),
       },
@@ -142,7 +142,7 @@ export function pinClusterLayers(
         'circle-color': cluster.fill,
         'circle-opacity': clusterOpacity,
         'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': clusterColour(theme),
+        'circle-stroke-color': clusterColor(theme),
         'circle-stroke-opacity': clusterOpacity,
       },
     },
@@ -156,7 +156,7 @@ export function pinClusterLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': clusterColour(theme), 'text-opacity': clusterOpacity },
+      paint: { 'text-color': clusterColor(theme), 'text-opacity': clusterOpacity },
     },
     {
       ...inSet(set, 'pin-cluster-flames', { clusters: true }),
@@ -176,17 +176,17 @@ export function pinClusterLayers(
   ]
 }
 
-/** A small pin's game's colour (see gameColour). */
+/** A small pin's game's color (see gameColor). */
 const gameColor: ExpressionSpecification = ['get', 'color']
 
 /**
  * Small pins for single games, each a bright core in a soft glow (see StatusLook): every game's
- * while zoomed out, and zoomed in, those far from the centre of the view, as score cards take over
+ * while zoomed out, and zoomed in, those far from the center of the view, as score cards take over
  * near it (see scoreCardMarkers). The glows are a layer beneath the cores, so a core is never dimmed
- * by a neighbour's glow. Glow, ring and core are in the game's colour, but for a core the theme gives
- * a status of its own, apart from the status's colour (Live's paler core, say): colour stands for the
+ * by a neighbor's glow. Glow, ring and core are in the game's color, but for a core the theme gives
+ * a status of its own, apart from the status's color (Live's paler core, say): color stands for the
  * game's league, and status shows by glow and brightness (ADR-0017). A game showing flames has a
- * flame in fire's colours (see flameImage) rising from its core, its base behind the core.
+ * flame in fire's colors (see flameImage) rising from its core, its base behind the core.
  */
 export function smallPinLayers(
   theme: Theme,
@@ -238,7 +238,7 @@ export const selectedPinLayer = 'pin-selected'
 export const outerSelectedPinLayer = 'outer-pin-selected'
 
 /**
- * A ring around the selected game's small pin, in the theme's selection colour and width, reaching as
+ * A ring around the selected game's small pin, in the theme's selection color and width, reaching as
  * far as a small pin does (see panelClearance); a score card is outlined instead.
  */
 export function selectedPinLayerSpec(theme: Theme, gameId: string | null, set: PinSet): CircleLayerSpecification {

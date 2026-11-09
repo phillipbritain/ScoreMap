@@ -2,7 +2,7 @@ import type { CircleLayerSpecification, GeoJSONSourceSpecification, SymbolLayerS
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
-import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
+import { clusterColor, sharedColorProperty, sharedColorKey } from './clusterColor'
 import {
   byCount,
   clusterFlameLayout,
@@ -42,8 +42,8 @@ export const cardlessSelectedPinLayer = 'cardless-pin-selected'
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
 /**
- * A score card as it's laid out on screen, with its venue on the globe, its game's colour (see
- * gameColour) and whether it shows flames (see showsFlames).
+ * A score card as it's laid out on screen, with its venue on the globe, its game's color (see
+ * gameColor) and whether it shows flames (see showsFlames).
  */
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]
@@ -108,7 +108,7 @@ export function cardLayoutDrawing(
     if (!placement || placement.inCardCluster) continue
     const { offset, trail } = placement
     if (trail) withTrails.push(card)
-    // Centred on the card, wherever it is: at its venue, and as far from it on screen as the card, so
+    // Centered on the card, wherever it is: at its venue, and as far from it on screen as the card, so
     // it stays on the card as the globe turns.
     const foot = [offset.dx, offset.dy - card.height / 2 + cardFootprint.height / 2]
     features.push(feature({ kind: 'footprint', offset: foot }, { type: 'Point', coordinates: card.lngLat }))
@@ -134,7 +134,7 @@ export function cardLayoutDrawing(
     }
     const shared = {
       status: groupStatus(games.map((card) => card.status)),
-      [sharedColorProperty]: sharedColourKey(games),
+      [sharedColorProperty]: sharedColorKey(games),
       count: games.length,
     }
     if (mark.clustered.length === 0) {
@@ -225,8 +225,8 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
  * The venue clusters moved cards' trails end at, and card clusters, from the bottom up. Added beneath
  * the place names, so every name draws over them, and over the trails beneath them (see trailLayer).
  *
- * A venue cluster and a card cluster are each a disc outlined and lit in its games' colour (see
- * clusterColour), with the count in it, as a pin cluster is (see the theme's cluster): a venue
+ * A venue cluster and a card cluster are each a disc outlined and lit in its games' color (see
+ * clusterColor), with the count in it, as a pin cluster is (see the theme's cluster): a venue
  * cluster as wide as a pin cluster of as many games, a card cluster as one of some. A card cluster
  * holding a game that shows flames has a flame on its top edge, as a pin cluster does; a venue cluster
  * never does, as its games' cards are on screen, flames and all.
@@ -243,8 +243,8 @@ export function cardLayoutLayers(
   SymbolLayerSpecification,
 ] {
   const { Cluster: cluster } = theme.components
-  // Each cluster in its games' colour (see clusterColour).
-  const clusterPaint = clusterColour(theme)
+  // Each cluster in its games' color (see clusterColor).
+  const clusterPaint = clusterColor(theme)
   return [
     {
       id: 'venue-cluster-glows',

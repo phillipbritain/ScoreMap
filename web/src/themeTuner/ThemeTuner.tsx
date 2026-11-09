@@ -14,13 +14,13 @@ import {
   settingAt,
   shiftedJob,
   stepOfJob,
-  themeColours,
+  themeColors,
   tunerTabs,
   withSetting,
   type Json,
   type JsonObject,
   type SettingPath,
-  type ThemeColour,
+  type ThemeColor,
   type ThemeJson,
 } from './themeDraft'
 import './themeTuner.css'
@@ -45,8 +45,8 @@ interface ThemeTunerProps {
 
 /**
  * The theme tuner (local runs only): a panel for trying changes to the theme on the running app,
- * by part of the theme and of the screen. A colour picks a step of the theme's colours or one of its
- * palette's colours, or steps lighter or darker, so it stays within the theme's colours; sizes,
+ * by part of the theme and of the screen. A color picks a step of the theme's colors or one of its
+ * palette's colors, or steps lighter or darker, so it stays within the theme's colors; sizes,
  * opacities and fonts change in place. Changes show at once,
  * the globe's included. The draft is kept in this browser, and its changes can be copied to put into
  * the theme's JSON. The loading screen, seen only once a page, can be held up over the globe to tune.
@@ -56,7 +56,7 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
   const [tabIndex, setTabIndex] = useState(0)
   const [copied, setCopied] = useState<string | null>(null)
   const tabs = useMemo(() => tunerTabs(builtIn), [builtIn])
-  const colours = useMemo(() => themeColours(draft), [draft])
+  const colors = useMemo(() => themeColors(draft), [draft])
   const changed = useMemo(() => changes(builtIn, draft), [builtIn, draft])
   useEffect(() => onChangeCount(changed.length), [changed.length, onChangeCount])
   const result = useMemo(() => resolveTheme(draft), [draft])
@@ -76,7 +76,7 @@ export function ThemeTuner({ builtIn, initial, onTheme, loadingPreview, onLoadin
   const context: RowContext = {
     builtIn,
     draft,
-    colours,
+    colors,
     set: (path, value) => setDraft((current) => withSetting(current, path, value)),
   }
   const tab = tabs[tabIndex]
@@ -183,7 +183,7 @@ function LoadingPreviewControl({ preview, onChange }: { preview: LoadingPreview;
 interface RowContext {
   builtIn: ThemeJson
   draft: ThemeJson
-  colours: readonly ThemeColour[]
+  colors: readonly ThemeColor[]
   set: (path: SettingPath, value: Json) => void
 }
 
@@ -288,8 +288,8 @@ function Control({ path, value, original, context }: { path: SettingPath; value:
       </select>
     )
   }
-  // The palette's own colours name the theme's colours' steps; everything else may name the palette's.
-  return <ColourJob job={value} draft={context.draft} colours={context.colours} roles={path[0] !== 'palette'} onChange={set} />
+  // The palette's own colors name the theme's colors' steps; everything else may name the palette's.
+  return <ColorJob job={value} draft={context.draft} colors={context.colors} roles={path[0] !== 'palette'} onChange={set} />
 }
 
 function NumberInput({ value, range, onChange }: { value: number; range: { min: number; max: number; step: number }; onChange: (value: number) => void }) {
@@ -321,14 +321,14 @@ function DashInput({ value, onChange }: { value: readonly number[]; onChange: (v
   )
 }
 
-/** The colour a colour job shows as: the step it names, itself or through the palette, or the colour given directly. */
-function colourOf(job: string, draft: ThemeJson, colours: readonly ThemeColour[]): string {
+/** The color a color job shows as: the step it names, itself or through the palette, or the color given directly. */
+function colorOf(job: string, draft: ThemeJson, colors: readonly ThemeColor[]): string {
   const named = stepOfJob(job, draft)
   const direct = settingAt(draft, ['palette', ...job.split('.')])
-  return (named && colours.find((colour) => colour.name === named.colour)?.steps[named.step]) ?? (typeof direct === 'string' ? direct : job)
+  return (named && colors.find((color) => color.name === named.color)?.steps[named.step]) ?? (typeof direct === 'string' ? direct : job)
 }
 
-/** The palette's colours, by their names in a colour job ("primary.dark", "divider"). */
+/** The palette's colors, by their names in a color job ("primary.dark", "divider"). */
 function paletteJobs(draft: ThemeJson): string[] {
   const walk = (value: Json | undefined, name: string): string[] =>
     typeof value === 'string' ? [name] : isGroup(value) ? Object.entries(value).flatMap(([key, inner]) => walk(inner, name ? `${name}.${key}` : key)) : []
@@ -336,20 +336,20 @@ function paletteJobs(draft: ThemeJson): string[] {
 }
 
 /**
- * A colour job, picked from the theme's colours' steps (a grid of each colour from light to dark) or,
- * where `roles` allows, the palette's colours, or stepped lighter or darker in its colour. Transparent
+ * A color job, picked from the theme's colors' steps (a grid of each color from light to dark) or,
+ * where `roles` allows, the palette's colors, or stepped lighter or darker in its color. Transparent
  * is there for shadows and outlines.
  */
-function ColourJob({
+function ColorJob({
   job,
   draft,
-  colours,
+  colors,
   roles,
   onChange,
 }: {
   job: string
   draft: ThemeJson
-  colours: readonly ThemeColour[]
+  colors: readonly ThemeColor[]
   roles: boolean
   onChange: (job: string) => void
 }) {
@@ -360,9 +360,9 @@ function ColourJob({
     setPicking(false)
   }
   return (
-    <span className="theme-tuner__colour">
+    <span className="theme-tuner__color">
       <button type="button" className="theme-tuner__swatch-button" onClick={() => setPicking(!picking)}>
-        <span className="theme-tuner__swatch" style={{ background: colourOf(job, draft, colours) }} />
+        <span className="theme-tuner__swatch" style={{ background: colorOf(job, draft, colors) }} />
         {job}
       </button>
       <button type="button" title="Lighter" aria-label="Lighter" disabled={!named || named.step === '100'} onClick={() => onChange(shiftedJob(job, -1, draft))}>
@@ -377,13 +377,13 @@ function ColourJob({
             <span className="theme-tuner__roles">
               {paletteJobs(draft).map((option) => (
                 <button key={option} type="button" title={option} aria-pressed={option === job} className="theme-tuner__role" onClick={() => pick(option)}>
-                  <span className="theme-tuner__swatch" style={{ background: colourOf(option, draft, colours) }} />
+                  <span className="theme-tuner__swatch" style={{ background: colorOf(option, draft, colors) }} />
                   {option}
                 </button>
               ))}
             </span>
           )}
-          {colours.map(({ name, steps }) => (
+          {colors.map(({ name, steps }) => (
             <span key={name} className="theme-tuner__grid-row">
               <span className="theme-tuner__grid-name">{name}</span>
               {Object.entries(steps).map(([step, hex]) => {
@@ -416,7 +416,7 @@ function ColourJob({
   )
 }
 
-/** A tuner panel's header: its name, and a button closing it. The behaviour tuner shares it. */
+/** A tuner panel's header: its name, and a button closing it. The behavior tuner shares it. */
 export function TunerHeader({ name, onClose }: { name: string; onClose: () => void }) {
   return (
     <div className="theme-tuner__header">

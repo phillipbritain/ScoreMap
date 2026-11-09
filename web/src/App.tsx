@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { builtInBehaviour, loadBehaviour, noOverlays } from './behaviourTuner/behaviour'
-import { accentColour, gameColour, type PickedColours } from './settings/gameColour'
+import { builtInBehavior, loadBehavior, noOverlays } from './behaviorTuner/behavior'
+import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
@@ -37,17 +37,17 @@ import { tourProgressAfter } from './welcomeTour/welcomeTour'
 /** The tuners, as the rail's Tuners popover lists them. */
 const tuners = [
   { key: 'theme', name: 'Theme' },
-  { key: 'behaviour', name: 'Behaviour' },
+  { key: 'behavior', name: 'Behavior' },
 ] as const
 
 type Tuner = (typeof tuners)[number]['key']
 
-// The theme and behaviour tuners, on local runs only: left out of a build.
+// The theme and behavior tuners, on local runs only: left out of a build.
 const ThemeTuner = import.meta.env.DEV
   ? lazy(() => import('./themeTuner/ThemeTuner').then(({ ThemeTuner }) => ({ default: ThemeTuner })))
   : null
-const BehaviourTuner = import.meta.env.DEV
-  ? lazy(() => import('./behaviourTuner/BehaviourTuner').then(({ BehaviourTuner }) => ({ default: BehaviourTuner })))
+const BehaviorTuner = import.meta.env.DEV
+  ? lazy(() => import('./behaviorTuner/BehaviorTuner').then(({ BehaviorTuner }) => ({ default: BehaviorTuner })))
   : null
 
 // The width below which the page takes its phone layout, as index.css has it.
@@ -84,13 +84,13 @@ interface AppProps {
  */
 export default function App({ theme: startTheme, tuning, demo = false }: AppProps) {
   const [theme, setTheme] = useTheme(startTheme)
-  // The app's own behaviour, or on a local run (but not in a demo) the behaviour tuner's draft saved in this browser.
-  const [behaviour, setBehaviour] = useState(() =>
-    import.meta.env.DEV && !demo ? loadBehaviour(window.localStorage) : builtInBehaviour,
+  // The app's own behavior, or on a local run (but not in a demo) the behavior tuner's draft saved in this browser.
+  const [behavior, setBehavior] = useState(() =>
+    import.meta.env.DEV && !demo ? loadBehavior(window.localStorage) : builtInBehavior,
   )
   // A demo opens on first-visit settings and saves none.
   const store = demo ? demoStore : savedStore
-  // What the behaviour tuner draws on the globe to show its settings at work (local runs only).
+  // What the behavior tuner draws on the globe to show its settings at work (local runs only).
   const [overlays, setOverlays] = useState(noOverlays)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
@@ -104,33 +104,33 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
-  const fittedZoom = useFittedZoom(behaviour.zoom)
+  const fittedZoom = useFittedZoom(behavior.zoom)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
   const zoom = useMemo(() => zoomForMapType(fittedZoom, viewerSettings.mapType), [fittedZoom, viewerSettings.mapType])
   const [camera] = useState(() => openingCamera(store, zoom))
-  // A new start zoom from the behaviour tuner puts the globe at Home at once, to show it.
-  const shownStartZoom = useRef(behaviour.zoom.startZoom)
+  // A new start zoom from the behavior tuner puts the globe at Home at once, to show it.
+  const shownStartZoom = useRef(behavior.zoom.startZoom)
   useEffect(() => {
-    if (behaviour.zoom.startZoom === shownStartZoom.current) return
-    shownStartZoom.current = behaviour.zoom.startZoom
+    if (behavior.zoom.startZoom === shownStartZoom.current) return
+    shownStartZoom.current = behavior.zoom.startZoom
     globe.current?.jumpTo(homeCamera(viewerPlace(), zoom))
-  }, [behaviour.zoom, zoom])
+  }, [behavior.zoom, zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
   const { leagues } = leagueList
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls(demo)
   // Which tuners' panels are open (local runs only), and how many settings each one's draft changes.
-  const [tunersOpen, setTunersOpen] = useState<Record<Tuner, boolean>>({ theme: false, behaviour: false })
-  const [tunerChanges, setTunerChanges] = useState<Record<Tuner, number>>({ theme: 0, behaviour: 0 })
+  const [tunersOpen, setTunersOpen] = useState<Record<Tuner, boolean>>({ theme: false, behavior: false })
+  const [tunerChanges, setTunerChanges] = useState<Record<Tuner, number>>({ theme: 0, behavior: 0 })
   const themeChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, theme: count })), [])
-  const behaviourChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, behaviour: count })), [])
+  const behaviorChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, behavior: count })), [])
   const { setListing: setScenarioListing } = scenarios
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
   const { games, changes, cutOffSince, waking } = useLiveGames(
-    behaviour.asleep.idleTimeoutMinutes * 60_000,
+    behavior.asleep.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
   )
@@ -142,16 +142,16 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const touring = tourStep !== null
 
   const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
-  // Changing only when a colour does, so other settings don't recolour the globe.
-  const { sportColours, leagueColours } = viewerSettings
-  const colours = useMemo((): PickedColours => ({ sportColours, leagueColours }), [sportColours, leagueColours])
+  // Changing only when a color does, so other settings don't recolor the globe.
+  const { sportColors, leagueColors } = viewerSettings
+  const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
   // Not under the loading screen, nor during the welcome tour: only once both have gone.
   const message = loadingScreenGone && !touring ? noPinsMessage(games, visible, viewerSettings) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
-  const selectedColour = selectedGame && gameColour(colours, selectedGame, theme)
+  const selectedColor = selectedGame && gameColor(colors, selectedGame, theme)
 
   return (
     <div className="app">
@@ -162,9 +162,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           key={`globe-${globeAttempt}`}
           ref={globe}
           theme={theme}
-          cityLabels={behaviour.cityLabels}
+          cityLabels={behavior.cityLabels}
           zoomSettings={zoom}
-          colours={colours}
+          colors={colors}
           flames={viewerSettings.hotGameFlames}
           mapType={viewerSettings.mapType}
           showGameCityReach={overlays.gameCityReach}
@@ -233,12 +233,12 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
         />
         {/* Over the bottom of the globe, after the Feedback button so it can sit clear of it. Before the
             rail, so an open popover lies over it on a phone. */}
-        {selectedGame && selectedColour && (
+        {selectedGame && selectedColor && (
           <GamePanel
             ref={panel}
             game={selectedGame}
-            colour={selectedColour}
-            textOnColour={textOn(selectedColour, theme.palette.text.primary, theme.palette.background.paper)}
+            color={selectedColor}
+            textOnColor={textOn(selectedColor, theme.palette.text.primary, theme.palette.background.paper)}
             onClose={closeGame}
           />
         )}
@@ -246,7 +246,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           leagues={leagues}
           settings={viewerSettings}
           onChange={setViewerSettings}
-          accent={accentColour(theme)}
+          accent={accentColor(theme)}
           // The camera can't move until the globe is ready, as on the globe itself.
           camera={loadingScreenGone ? cameraNow : null}
           zoomSettings={zoom}
@@ -257,7 +257,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           games={visible}
           gamesReady={loadingScreenGone}
           onSelectGame={(gameId) => {
-            globe.current?.centreOn(gameId)
+            globe.current?.centerOn(gameId)
             selectGame(gameId)
           }}
         />
@@ -299,8 +299,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
               </ul>
             )
           }
-          tunersOpen={tunersOpen.theme || tunersOpen.behaviour}
-          onTunersClose={() => setTunersOpen({ theme: false, behaviour: false })}
+          tunersOpen={tunersOpen.theme || tunersOpen.behavior}
+          onTunersClose={() => setTunersOpen({ theme: false, behavior: false })}
         />
         {/* Over the globe and the rail, which come before it; the Feedback button is lifted above it
             (see .globe-area--touring), and the dev tools come after it. */}
@@ -315,7 +315,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
           />
         )}
-        {BehaviourTuner && ThemeTuner && tuning && (
+        {BehaviorTuner && ThemeTuner && tuning && (
           // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
           <div className="dev-tools" data-keeps-popovers hidden={!scenarios.devToolsShown}>
             <Suspense>
@@ -329,16 +329,16 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
                 onChangeCount={themeChanges}
                 onClose={() => setTunersOpen((was) => ({ ...was, theme: false }))}
               />
-              <BehaviourTuner
-                builtIn={builtInBehaviour}
-                behaviour={behaviour}
-                onChange={setBehaviour}
+              <BehaviorTuner
+                builtIn={builtInBehavior}
+                behavior={behavior}
+                onChange={setBehavior}
                 overlays={overlays}
                 onOverlays={setOverlays}
                 zoomNow={cameraNow.zoom}
-                open={tunersOpen.behaviour}
-                onChangeCount={behaviourChanges}
-                onClose={() => setTunersOpen((was) => ({ ...was, behaviour: false }))}
+                open={tunersOpen.behavior}
+                onChangeCount={behaviorChanges}
+                onClose={() => setTunersOpen((was) => ({ ...was, behavior: false }))}
               />
             </Suspense>
           </div>

@@ -3,16 +3,16 @@ import type { FeatureCollection, Polygon } from 'geojson'
 import { ringAround, type GlobePoint } from './geo'
 import { firstPlaceNameLayer } from './placeNames'
 
-/** Rings on the globe around the venues: a local-run tool, from the behaviour tuner. */
+/** Rings on the globe around the venues: a local-run tool, from the behavior tuner. */
 export interface ReachRings {
-  /** Rings each venue at this many kilometres, or shows none given no venues. */
+  /** Rings each venue at this many kilometers, or shows none given no venues. */
   show(venues: readonly GlobePoint[], km: number): void
   remove(): void
 }
 
 const source = 'reach-rings'
 // Red and dashed, unlike anything else on the globe, so the rings never pass for pins or borders.
-const ringColour = '#ff3b3b'
+const ringColor = '#ff3b3b'
 
 /**
  * Rings drawn around venues on a map, as outlines only, under the pins and place names: to see how far a game's city
@@ -32,7 +32,7 @@ export function addReachRings(map: MapLibreMap): ReachRings {
         id: 'reach-ring-lines',
         type: 'line',
         source,
-        paint: { 'line-color': ringColour, 'line-opacity': 0.9, 'line-width': 1.5, 'line-dasharray': [3, 2] },
+        paint: { 'line-color': ringColor, 'line-opacity': 0.9, 'line-width': 1.5, 'line-dasharray': [3, 2] },
       },
       below,
     )

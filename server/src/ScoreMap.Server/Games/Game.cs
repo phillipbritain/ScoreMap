@@ -165,16 +165,16 @@ public sealed record GameVenue(string? Name, string? City, string? Region, strin
 
 /// <summary>
 /// A photo of a venue for the top of the game panel: from outside or of the playing area, whichever
-/// its source gives. <see cref="Credit"/> is set when the photo's licence asks for attribution
+/// its source gives. <see cref="Credit"/> is set when the photo's license asks for attribution
 /// (Wikimedia Commons photos); ESPN's photos have none.
 /// </summary>
 public sealed record VenuePhoto(string Url, PhotoCredit? Credit);
 
 /// <summary>
-/// Who took a photo and under what licence, shown under it. <see cref="SourceUrl"/> is the photo's
-/// own page, where its full licence terms are.
+/// Who took a photo and under what license, shown under it. <see cref="SourceUrl"/> is the photo's
+/// own page, where its full license terms are.
 /// </summary>
-public sealed record PhotoCredit(string Author, string Licence, string? LicenceUrl, string SourceUrl);
+public sealed record PhotoCredit(string Author, string License, string? LicenseUrl, string SourceUrl);
 
 /// <summary>
 /// A channel or streaming service showing a game, the country it broadcasts to when known,

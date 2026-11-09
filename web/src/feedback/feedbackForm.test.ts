@@ -29,7 +29,7 @@ describe('lengthCounter', () => {
     expect(lengthCounter('a'.repeat(1799))).toBeNull()
   })
 
-  it('counts towards the limit near it, and past it', () => {
+  it('counts toward the limit near it, and past it', () => {
     expect(lengthCounter('a'.repeat(1800))).toEqual({ text: '1,800 / 2,000', over: false })
     expect(lengthCounter('a'.repeat(2001))).toEqual({ text: '2,001 / 2,000', over: true })
   })

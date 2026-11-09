@@ -1,4 +1,4 @@
-/* Every colour, font, size, spacing, corner, line width, letter spacing, fade and shadow here comes
+/* Every color, font, size, spacing, corner, line width, letter spacing, fade and shadow here comes
    from the theme, which is written to the page's root as custom properties, one per setting, named as
    MUI's CSS theme variables are (see theme/theme.ts' customProperties): --palette-text-primary,
    --typography-body2-font-size, --spacing, --shape-border-width-thin, --palette-live-main, and a
@@ -63,7 +63,7 @@ body {
   background-size: 240px 240px;
 }
 
-/* The globe-sized circle behind the map that carries the halo, coloured from the theme (see globe/globeGlow.ts). */
+/* The globe-sized circle behind the map that carries the halo, colored from the theme (see globe/globeGlow.ts). */
 .globe-glow {
   position: absolute;
   border-radius: 50%;
@@ -73,8 +73,8 @@ body {
 /* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers,
    the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
    Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
-   slight bend and lifted in colour, its edges catching the light; at 1 opaque frosted glass. The glass
-   is tinted with the component's own surface colour (--glass-tint, or --glass-fill for a fill of its
+   slight bend and lifted in color, its edges catching the light; at 1 opaque frosted glass. The glass
+   is tinted with the component's own surface color (--glass-tint, or --glass-fill for a fill of its
    own), as solid as the frost.
 
    A surface holding another glass surface (a rail group holds its popover)
@@ -104,7 +104,7 @@ body {
     linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
     linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
     var(--glass-fill);
-  /* Behind it, the globe blurred and lifted in colour as the frost says, and on the larger panes bent
+  /* Behind it, the globe blurred and lifted in color as the frost says, and on the larger panes bent
      by the lens (--glass-lens, see theme/GlassLens.tsx). Score cards have neither (see .score-card). */
   -webkit-backdrop-filter: blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
   backdrop-filter: var(--glass-lens, ) blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
@@ -126,7 +126,7 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   colour (--game-color, set on the panel, with --text-on-game-color for text on it). One
+   color (--game-color, set on the panel, with --text-on-game-color for text on it). One
    size whatever the game, so it never jumps from one game to the next: the score block, the details
    and the photo each have a fixed width, the band under them a fixed height, and every line of text
    is clipped to its slot. */
@@ -224,7 +224,7 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
-/* A logo sits on its plate, so a logo near the panel's colour can still be seen. With no logo, the
+/* A logo sits on its plate, so a logo near the panel's color can still be seen. With no logo, the
    space it would take is left empty, plate and all. */
 .game-panel__team img,
 .game-panel__logo {
@@ -283,7 +283,7 @@ body {
   margin-top: var(--spacing);
 }
 
-/* The progress line, and in the band each of a tennis match's sets, in the game's colour. */
+/* The progress line, and in the band each of a tennis match's sets, in the game's color. */
 .game-panel__progress,
 .game-panel__set {
   padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
@@ -348,7 +348,7 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The venue and its city link to Google Maps, kept in their own colours. */
+/* The venue and its city link to Google Maps, kept in their own colors. */
 .game-panel__maps-link {
   color: inherit;
   text-decoration: none;
@@ -565,11 +565,11 @@ body {
   }
 }
 
-/* How each status looks comes from the theme: its colour from the palette (--palette-live-main and so
+/* How each status looks comes from the theme: its color from the palette (--palette-live-main and so
    on), and how far its score cards fade and how they glow from the score card's own
-   (--score-card-live-fade). Score cards pick theirs by their status class, but for their colour, which
-   each card is given as its game's (--game-color, see gameColour), and the text on its header, picked
-   to read on the header's tint of that colour (--header-text, see headerText). */
+   (--score-card-live-fade). Score cards pick theirs by their status class, but for their color, which
+   each card is given as its game's (--game-color, see gameColor), and the text on its header, picked
+   to read on the header's tint of that color (--header-text, see headerText). */
 .score-card--live {
   --game-color: var(--palette-live-main);
   --status-card-fade: var(--score-card-live-fade);
@@ -594,7 +594,7 @@ body {
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores.
 
-   A card fades (Final, say) by colour: its game's colour (--card-color, for its outline, header,
+   A card fades (Final, say) by color: its game's color (--card-color, for its outline, header,
    light, pointer and glow) and its text are mixed into its fill by its status's fade, and its logos
    fade into the fill likewise. Its fill (and drop shadow) is the theme's fill opacity, so below 1 the
    map shows through behind its text, logos, scores and light, which stay as they are.
@@ -609,7 +609,7 @@ body {
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
   /* Glass (see above), tinted with its fill, but with the globe behind it left as it is, neither blurred
-     nor lifted in colour: blurring what's behind every card again each frame of a pan, as the globe
+     nor lifted in color: blurring what's behind every card again each frame of a pan, as the globe
      turns under them, was most of what slowed panning where cards crowd (ADR-0018). */
   --frost: var(--score-card-frost);
   --glass-tint: var(--card-surface);
@@ -1150,12 +1150,12 @@ body {
   cursor: default;
 }
 
-/* A popover's button, while its popover is open, in the theme's open colour (gold). */
+/* A popover's button, while its popover is open, in the theme's open color (gold). */
 .rail__button[aria-expanded='true'] {
   color: var(--rail-open);
 }
 
-/* A count on a button's corner (the Games button's games), in the open colour. */
+/* A count on a button's corner (the Games button's games), in the open color. */
 .rail__button { position: relative; }
 
 .rail__badge {
@@ -1233,7 +1233,7 @@ body {
   cursor: pointer;
 }
 
-/* The map showing: its name in the main text colour, its picture ringed in the open colour (gold). */
+/* The map showing: its name in the main text color, its picture ringed in the open color (gold). */
 .map-type[aria-pressed='true'] {
   color: var(--palette-text-primary);
 }
@@ -1258,7 +1258,7 @@ body {
   border-color: var(--rail-open);
 }
 
-/* The plain map drawn small, in the globe's own colours. */
+/* The plain map drawn small, in the globe's own colors. */
 .map-type__picture--plain {
   background: var(--globe-surface);
 }
@@ -1360,7 +1360,7 @@ body {
   color: var(--palette-text-secondary);
 }
 
-/* The leagues, greyed out and out of reach while Top Events decides instead. */
+/* The leagues, grayed out and out of reach while Top Events decides instead. */
 .leagues-list--off {
   opacity: var(--controls-off-opacity);
 }
@@ -1433,40 +1433,40 @@ body {
   font-weight: var(--typography-button-font-weight);
 }
 
-/* Display Settings: a sport's or league's name, then the swatch of its games' colour and its clear control. */
-.colours-row {
+/* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */
+.colors-row {
   display: flex;
   align-items: center;
   gap: calc(2 * var(--spacing));
   min-height: calc(7 * var(--spacing));
 }
 
-.colours-row__name {
+.colors-row__name {
   flex: 1;
 }
 
-.colours-row--sport .colours-row__name {
+.colors-row--sport .colors-row__name {
   font-size: var(--typography-button-font-size);
   font-weight: var(--typography-button-font-weight);
 }
 
 /* A league, set in under its sport. */
-.colours-row--league {
+.colors-row--league {
   padding-left: calc(3 * var(--spacing));
   color: var(--palette-text-secondary);
 }
 
 /* The swatch, then the clear control or room for it, so swatches line up whether picked or not. */
-.colour {
+.color {
   display: flex;
   align-items: center;
   gap: var(--spacing);
   min-width: calc(8 * var(--spacing));
 }
 
-/* The swatch, which opens its grid of colours. Hollow, a ring of the theme's colour, while no colour
-   is picked; filled with the colour once one is. */
-.colour__swatch {
+/* The swatch, which opens its grid of colors. Hollow, a ring of the theme's color, while no color
+   is picked; filled with the color once one is. */
+.color__swatch {
   box-sizing: border-box;
   width: calc(4 * var(--spacing));
   height: calc(4 * var(--spacing));
@@ -1477,32 +1477,32 @@ body {
   cursor: pointer;
 }
 
-.colour__swatch--picked {
+.color__swatch--picked {
   background: var(--swatch-color);
 }
 
-/* A league with no colour of its own: hollow and dashed in its sport's colour, as taken from it. */
-.colours-row--league .colour__swatch:not(.colour__swatch--picked) {
+/* A league with no color of its own: hollow and dashed in its sport's color, as taken from it. */
+.colors-row--league .color__swatch:not(.color__swatch--picked) {
   border-style: dashed;
 }
 
-.colour__swatch:focus-visible,
-.colour__swatch[aria-expanded='true'],
-.colour-grid__option:focus-visible,
-.colour-grid__option[aria-pressed='true'] {
+.color__swatch:focus-visible,
+.color__swatch[aria-expanded='true'],
+.color-grid__option:focus-visible,
+.color-grid__option[aria-pressed='true'] {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* The colours there are to pick, under a sport's or league's row: a row of each tone. */
-.colour-grid {
+/* The colors there are to pick, under a sport's or league's row: a row of each tone. */
+.color-grid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   gap: calc(1.5 * var(--spacing));
   padding: calc(1.5 * var(--spacing)) 0 calc(2 * var(--spacing));
 }
 
-.colour-grid__option {
+.color-grid__option {
   aspect-ratio: 1;
   padding: 0;
   border: none;
@@ -1511,11 +1511,11 @@ body {
   cursor: pointer;
 }
 
-.colour-grid__option:hover {
+.color-grid__option:hover {
   transform: scale(1.15);
 }
 
-.colour__clear {
+.color__clear {
   padding: 0 var(--spacing);
   border: none;
   background: none;
@@ -1527,7 +1527,7 @@ body {
 }
 
 /* "Flames on hot games", above the sports: its name, then its switch. */
-.colours-flames {
+.colors-flames {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1544,8 +1544,8 @@ body {
   cursor: pointer;
 }
 
-/* "Reset colours", under the sports. */
-.colours-reset {
+/* "Reset colors", under the sports. */
+.colors-reset {
   margin-top: calc(3 * var(--spacing));
   padding: var(--spacing) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
@@ -1558,7 +1558,7 @@ body {
   cursor: pointer;
 }
 
-.colours-reset:disabled {
+.colors-reset:disabled {
   opacity: var(--controls-off-opacity);
   cursor: default;
 }
@@ -1586,10 +1586,10 @@ body {
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
-/* The Tuners popover (see TopRail, local runs only): the theme and behaviour
+/* The Tuners popover (see TopRail, local runs only): the theme and behavior
    tuners, each a toggle opening its panel at the top left and closing the popover, lit while open,
    with a count of the settings its draft changes. The buttons take the tuners' own plain look
-   (themeTuner/themeTuner.css): solid, in fixed colours, sizes and font, reading none of the theme, so
+   (themeTuner/themeTuner.css): solid, in fixed colors, sizes and font, reading none of the theme, so
    tuning it can't make them hard to see. */
 .rail__popover--tuners {
   width: auto;
@@ -1983,7 +1983,7 @@ body {
   display: block;
 }
 
-/* Along the bottom of the globe: the no-pins message centred. */
+/* Along the bottom of the globe: the no-pins message centered. */
 .bottom-stack {
   /* Glass (see above), for the no-pins message. */
   --frost: var(--controls-frost);
@@ -2225,7 +2225,7 @@ body {
   }
 }
 
-/* On wide screens the game panel narrows, on both sides so it stays centred, to leave the corner to
+/* On wide screens the game panel narrows, on both sides so it stays centered, to leave the corner to
    the Feedback button. */
 @media (min-width: 641px) {
   .feedback:not([hidden]) ~ .game-panel {
@@ -2242,7 +2242,7 @@ body {
 }
 
 /* The label over the globe in a demo (ADR-0019), saying its games are made up: a small pane of the
-   controls' glass at the top, centred, which clicks pass through to the globe. */
+   controls' glass at the top, centered, which clicks pass through to the globe. */
 .demo-label {
   --frost: var(--controls-frost);
   --glass-tint: var(--controls-surface);
@@ -2627,7 +2627,7 @@ body {
   stroke-linecap: round;
 }
 
-/* Dashes flowing along the arrow towards what it points at. */
+/* Dashes flowing along the arrow toward what it points at. */
 .welcome-tour__arrow-flow {
   stroke: var(--palette-live-main);
   stroke-width: var(--welcome-tour-arrow-width);
@@ -2704,7 +2704,7 @@ body {
 
 .game-navigation__search::placeholder { color: var(--palette-text-secondary); }
 
-/* A menu's scrollbar: slim, in the theme's colours. The Games list and the rail's other popovers. */
+/* A menu's scrollbar: slim, in the theme's colors. The Games list and the rail's other popovers. */
 .game-navigation ul,
 .rail__popover {
   scrollbar-width: thin;

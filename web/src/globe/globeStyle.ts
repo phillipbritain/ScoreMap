@@ -31,7 +31,7 @@ const satelliteSourceSpec: RasterSourceSpecification = {
   maxzoom: 14,
 }
 
-/** The credit EOX's licence asks for wherever its imagery shows, with its links (see MapCredit). */
+/** The credit EOX's license asks for wherever its imagery shows, with its links (see MapCredit). */
 export const satelliteCredit = {
   name: 'EOxCloudless',
   url: 'https://cloudless.eox.at',
@@ -40,9 +40,9 @@ export const satelliteCredit = {
 } as const
 
 /**
- * The globe's look, made from the base style in the theme's colours. On the plain map, a plain globe
+ * The globe's look, made from the base style in the theme's colors. On the plain map, a plain globe
  * where only thin lines show coastlines, country borders and state lines, with place names (see
- * placeNames): land and sea are the same colour, the theme's globe surface. On the satellite map,
+ * placeNames): land and sea are the same color, the theme's globe surface. On the satellite map,
  * satellite imagery under the same borders, state lines and names, with no coastlines, which the
  * imagery shows. Everything else in the base style (roads, buildings, land cover) is dropped.
  *
@@ -71,7 +71,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
       { id: satelliteLayer, type: 'raster', source: satelliteSource, layout: { visibility: shownOn('satellite') } },
-      // Coastlines: the edges of the sea, which is the same colour as the land. Lakes and rivers
+      // Coastlines: the edges of the sea, which is the same color as the land. Lakes and rivers
       // aren't outlined; at a distance they read as clutter.
       {
         id: 'coastline',
@@ -93,7 +93,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
 
 type GlobeLine = Theme['components']['Globe']['coastlines']
 
-/** A line in the theme's colour, at its widths as the map zooms, growing evenly from one to the next. */
+/** A line in the theme's color, at its widths as the map zooms, growing evenly from one to the next. */
 function linePaint({ color, width }: GlobeLine): LineLayerSpecification['paint'] {
   const stops = zoomStops(width)
   return {

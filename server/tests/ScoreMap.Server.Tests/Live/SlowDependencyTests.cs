@@ -80,14 +80,14 @@ public class SlowDependencyTests
         await client.NextSnapshotAsync();
         var oldFetch = server.Feed.FetchToken(Nfl);
 
-        var sourceWhenCancelled = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var sourceWhenCanceled = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         var switcher = server.Services.GetRequiredService<ScenarioSwitcher>();
-        using var cancelled = oldFetch.Register(() => sourceWhenCancelled.TrySetResult(switcher.Running));
+        using var canceled = oldFetch.Register(() => sourceWhenCanceled.TrySetResult(switcher.Running));
         using var http = server.CreateClient();
 
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "next" })).EnsureSuccessStatusCode();
 
-        Assert.Equal("real", await sourceWhenCancelled.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+        Assert.Equal("real", await sourceWhenCanceled.Task.WaitAsync(TimeSpan.FromSeconds(10)));
         Assert.Equal("next", switcher.Running);
         Assert.True(oldFetch.IsCancellationRequested);
     }

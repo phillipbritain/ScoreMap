@@ -129,7 +129,7 @@ public class ScenarioVenueLocationTests : IDisposable
     }
 
     [Fact]
-    public async Task A_cancelled_run_stops_and_keeps_the_venues_already_found()
+    public async Task A_canceled_run_stops_and_keeps_the_venues_already_found()
     {
         var locationsPath = TempPath("scoremap-scenario-venue-locations");
         try

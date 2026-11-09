@@ -137,7 +137,7 @@ describe('addPlaceNames', () => {
     names.showGames([evergladesGame])
     expect(gameCities()).toEqual(['Miami'])
     const miami = 0
-    // The game within the card radius of the centre of the view (over Texas), and far out of it (over Tokyo).
+    // The game within the card radius of the center of the view (over Texas), and far out of it (over Tokyo).
     expect(names.namesACard(miami, { longitude: -99, latitude: 31 })).toBe(true)
     expect(names.namesACard(miami, { longitude: 139.7, latitude: 35.7 })).toBe(false)
     // A Big city with no game near names no card.

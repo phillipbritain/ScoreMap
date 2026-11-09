@@ -18,7 +18,7 @@ export function startCamera(saved: Camera | null, place: ViewerPlace, zoom: Zoom
 }
 
 /** [longitude, latitude] roughly at the middle of the region each common time zone covers. */
-const zoneCentres: Record<string, [number, number]> = {
+const zoneCenters: Record<string, [number, number]> = {
   'America/New_York': [-78, 39],
   'America/Detroit': [-78, 39],
   'America/Toronto': [-78, 43],
@@ -59,7 +59,7 @@ const zoneCentres: Record<string, [number, number]> = {
 }
 
 /** For time zones not listed above: the middle of the continent or ocean the zone is named after. */
-const areaCentres: Record<string, [number, number]> = {
+const areaCenters: Record<string, [number, number]> = {
   America: [-90, 30],
   Europe: [12, 50],
   Africa: [20, 5],
@@ -71,7 +71,7 @@ const areaCentres: Record<string, [number, number]> = {
 }
 
 /** For time zones that say nothing about place (such as UTC): the country in the browser's locale. */
-const countryCentres: Record<string, [number, number]> = {
+const countryCenters: Record<string, [number, number]> = {
   US: [-96, 38],
   CA: [-95, 50],
   MX: [-100, 21],
@@ -95,7 +95,7 @@ const countryCentres: Record<string, [number, number]> = {
 }
 
 /** Where to look when nothing hints at the viewer's region: the Atlantic, between the Americas and Europe. */
-const worldCentre: [number, number] = [-40, 30]
+const worldCenter: [number, number] = [-40, 30]
 
 /**
  * Home: the viewer's region from their time zone, then their locale, at the start zoom (made up for
@@ -103,9 +103,9 @@ const worldCentre: [number, number] = [-40, 30]
  * rail's Home button flies back to it.
  */
 export function homeCamera({ timeZone, locale }: ViewerPlace, zoom: ZoomSettings = zoomSettings): Camera {
-  const centre =
-    zoneCentres[timeZone] ?? areaCentres[timeZone.split('/')[0]] ?? countryCentres[countryOf(locale) ?? '']
-  const [longitude, latitude] = centre ?? worldCentre
+  const center =
+    zoneCenters[timeZone] ?? areaCenters[timeZone.split('/')[0]] ?? countryCenters[countryOf(locale) ?? '']
+  const [longitude, latitude] = center ?? worldCenter
   return { longitude, latitude, zoom: furthestOutZoom(latitude, Math.max(zoom.startZoom, zoom.minZoom)) }
 }
 

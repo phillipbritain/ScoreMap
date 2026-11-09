@@ -571,7 +571,7 @@ public class FeedbackTests
     }
 
     [Fact]
-    public async Task Feedback_GitHub_failed_to_file_does_not_count_towards_the_visitors_limit()
+    public async Task Feedback_GitHub_failed_to_file_does_not_count_toward_the_visitors_limit()
     {
         await using var server = new ScoreMapServer { FeedbackToken = "token" };
         server.GitHub.Fail(HttpStatusCode.InternalServerError);
@@ -623,7 +623,7 @@ public class FeedbackTests
     }
 
     [Fact]
-    public async Task Feedback_GitHub_failed_to_file_does_not_count_towards_the_day()
+    public async Task Feedback_GitHub_failed_to_file_does_not_count_toward_the_day()
     {
         await using var server = new ScoreMapServer { FeedbackToken = "token" };
         server.GitHub.Fail(HttpStatusCode.InternalServerError);

@@ -3,7 +3,7 @@ import { fadedOut } from './horizon'
 import type { PinAnimation } from './pinAnimation'
 
 /**
- * Plays an animation over a small pin or a cluster, in the colour of the game it's for (see gameColour). They're drawn by map layers, which can't run
+ * Plays an animation over a small pin or a cluster, in the color of the game it's for (see gameColor). They're drawn by map layers, which can't run
  * CSS animations, so a short-lived HTML marker draws expanding rings over them and then removes itself.
  * Nothing plays where the pins have faded out near the horizon or are hidden beyond it (see fadeNearHorizon).
  */

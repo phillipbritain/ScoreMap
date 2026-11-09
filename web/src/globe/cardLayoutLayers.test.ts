@@ -22,7 +22,7 @@ const sitting: CardPlacement = { offset: { dx: 0, dy: -6 }, inCardCluster: false
 const moved: CardPlacement = { offset: { dx: 120, dy: -6 }, inCardCluster: false, moved: true, trail: { x1: 170, y1: 200, x2: 100, y2: 200 } }
 const clustered: CardPlacement = { ...sitting, inCardCluster: true }
 
-// Each in a colour of its own: a's is #aaaaaa.
+// Each in a color of its own: a's is #aaaaaa.
 const a = card('a', 100, 200, [10, -20.5])
 const b = card('b', 100, 200, [10, -20.5])
 const c = card('c', 300, 400, [30, -40.5])
@@ -52,7 +52,7 @@ const features = (kind: string, cards: CardOnGlobe[] = allFour) =>
 const trails = (cards: CardOnGlobe[] = allFour) => cardLayoutDrawing(cards, layout, unproject, venueSizes).trails
 
 describe('cardLayoutDrawing', () => {
-  it("draws a card's trail from the card's edge, as far from its venue on screen as the card, to its venue, moved or not, in its game's colour, named for its game", () => {
+  it("draws a card's trail from the card's edge, as far from its venue on screen as the card, to its venue, moved or not, in its game's color, named for its game", () => {
     expect(trails([a])).toEqual([{ gameId: 'a', color: '#aaaaaa', venue: [10, -20.5], start: { dx: 0, dy: -6 }, end: [10, -20.5], dot: true }])
     expect(trails([b])).toEqual([{ gameId: 'b', color: '#bbbbbb', venue: [10, -20.5], start: { dx: 70, dy: 0 }, end: [10, -20.5], dot: true }])
   })
@@ -73,7 +73,7 @@ describe('cardLayoutDrawing', () => {
     expect(features('cardCluster')).toEqual([
       {
         type: 'Feature',
-        // c's and d's colours differ (see clusterColour).
+        // c's and d's colors differ (see clusterColor).
         properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c', flames: false },
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
@@ -121,7 +121,7 @@ describe('cardLayoutDrawing', () => {
 
   it('gives every card with room a footprint where it is, moved or not, at its venue and offset to it on screen', () => {
     expect(features('footprint').map(({ geometry, properties }) => [(geometry as Point).coordinates, properties?.offset])).toEqual([
-      // Each centred on its card, 36 px above its venue and 120 px to the side when moved, so its foot
+      // Each centered on its card, 36 px above its venue and 120 px to the side when moved, so its foot
       // is half a footprint (68) below that.
       [[10, -20.5], [0, -2]],
       [[10, -20.5], [120, -2]],
@@ -152,7 +152,7 @@ describe('cardLayoutDrawing', () => {
       expect(trailsOf(e, f, g).filter(({ dot }) => dot).map(({ color, end }) => [color, end])).toEqual([['#999999', [60, -50]]])
     })
 
-    it("have their trails meet at the venue cluster, each in its own game's colour", () => {
+    it("have their trails meet at the venue cluster, each in its own game's color", () => {
       expect(trailsOf(e, f).map(({ color, end }) => [color, end])).toEqual([
         ['#eeeeee', [50.5, -50]],
         ['#ffffff', [50.5, -50]],

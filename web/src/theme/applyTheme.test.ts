@@ -33,7 +33,7 @@ describe('applyTheme', () => {
     expect(properties.get('--selection-width')).toBe('3px')
   })
 
-  it('writes colour jobs as the colours they resolve to, through the palette or not', () => {
+  it('writes color jobs as the colors they resolve to, through the palette or not', () => {
     const properties = propertiesOf(
       themeWith((json) => {
         json.palette.primary.dark = 'navy.900'
@@ -88,7 +88,7 @@ describe('applyTheme', () => {
     expect(properties.get('--hover-card-solid')).toBe('0')
   })
 
-  it('writes a logo plate on the score card and game panel: its colour, its padding in spacing units and its corner in radii, in pixels', () => {
+  it('writes a logo plate on the score card and game panel: its color, its padding in spacing units and its corner in radii, in pixels', () => {
     const properties = propertiesOf(
       themeWith((json) => {
         json.spacing = 4
@@ -133,7 +133,7 @@ describe('applyTheme', () => {
     expect(properties.get('--rail-size-mark')).toBe('1.1em')
   })
 
-  it('writes a shadow as a CSS shadow, its colour resolved', () => {
+  it('writes a shadow as a CSS shadow, its color resolved', () => {
     const properties = propertiesOf(
       themeWith((json) => (json.components.GamePanel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
     )
@@ -145,7 +145,7 @@ describe('applyTheme', () => {
     // Widths by zoom (lines' and place names' sizes), the disputed borders' dash pattern and the halo's
     // sizes are for the globe, not the page, so aren't written.
     const written = {
-      // Four colour roles of four each, and three statuses' colours of three; the background's two, three
+      // Four color roles of four each, and three statuses' colors of three; the background's two, three
       // kinds of text, a divider and hover.
       palette: 4 * 4 + 3 * 3 + 2 + 3 + 1 + 1,
       // A font family, and nine type styles of three.
@@ -154,12 +154,12 @@ describe('applyTheme', () => {
       shape: 1 + 1 + 3,
       // A small pin's core of four and glow of two, for each of three statuses, and its flame's size.
       pin: 3 * 6 + 1,
-      // A surface, four kinds of line (their colours) and two halo colours.
+      // A surface, four kinds of line (their colors) and two halo colors.
       globe: 7,
-      // Three kinds of place name (city, state and country), each with a colour, an outline (its colour, width and blur), a
+      // Three kinds of place name (city, state and country), each with a color, an outline (its color, width and blur), a
       // font (its name, family, weight and style) and letter spacing.
       placeNames: 3 * 9,
-      // The sky's colour, three stars and two star sizes.
+      // The sky's color, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
       // font (of four) and size, its flame's size, and its opacity for each of three statuses.
@@ -172,20 +172,20 @@ describe('applyTheme', () => {
       // Two sizes and two ring widths.
       pulse: 4,
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
-      // logo plate of three and flames' five (height, flicker and three colours); for each of three statuses its fade and glow of two.
+      // logo plate of three and flames' five (height, flicker and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 3 * 3,
-      // The game panel's frost, eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
+      // The game panel's frost, eleven colors and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's frost, ten colours and shadows and seven sizes.
+      // The rail's frost, ten colors and shadows and seven sizes.
       rail: 1 + 10 + 7,
       // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's frost and surface.
       tooltip: 2,
-      // The loading screen's dim (a colour and an opacity), rocket (two colours and a size) and message.
+      // The loading screen's dim (a color and an opacity), rocket (two colors and a size) and message.
       loadingScreen: 2 + 3 + 1,
       // The welcome tour's dim opacity and arrow width.
       welcomeTour: 2,

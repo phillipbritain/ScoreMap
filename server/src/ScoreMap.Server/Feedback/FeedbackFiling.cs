@@ -13,7 +13,7 @@ public sealed record FeedbackResult(FeedbackOutcome Outcome, string? IssueUrl = 
 
 /// <summary>
 /// Owns feedback from validation through issue preparation and filing. Only filed issues count
-/// towards the allowances; a failed submission returns exactly the day and send it reserved.
+/// toward the allowances; a failed submission returns exactly the day and send it reserved.
 /// </summary>
 public sealed class FeedbackFiling(
     TimeProvider clock, IFeedbackSink sink, RunningGameBoard board, DemoBoard demo, ILogger<FeedbackFiling> logger)

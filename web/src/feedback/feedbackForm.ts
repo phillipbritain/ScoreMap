@@ -5,7 +5,7 @@ const feedbackPath = '/api/feedback'
 
 export const minLength = 10
 export const maxLength = 2000
-/** How long the text gets before the box shows a counter towards the limit. */
+/** How long the text gets before the box shows a counter toward the limit. */
 const counterFrom = 1800
 
 /**

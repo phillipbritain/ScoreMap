@@ -3,8 +3,8 @@ import type { Camera } from './camera'
 import { homeCamera, startCamera } from './startCamera'
 import { furthestOutZoom, zoomSettings } from './zoomLevels'
 
-/** Checks the camera is centred inside a box drawn around a region on a map. */
-function expectCentredIn(camera: Camera, box: { west: number; east: number; south: number; north: number }) {
+/** Checks the camera is centered inside a box drawn around a region on a map. */
+function expectCenteredIn(camera: Camera, box: { west: number; east: number; south: number; north: number }) {
   expect(camera.longitude).toBeGreaterThanOrEqual(box.west)
   expect(camera.longitude).toBeLessThanOrEqual(box.east)
   expect(camera.latitude).toBeGreaterThanOrEqual(box.south)
@@ -20,8 +20,8 @@ describe('startCamera', () => {
     expect(startCamera(left, { timeZone: 'America/New_York', locale: 'en-US' })).toEqual(left)
   })
 
-  it("centres a first visit on the viewer's region from their time zone", () => {
-    expectCentredIn(startCamera(null, { timeZone: 'America/New_York', locale: 'en-US' }), easternUs)
+  it("centers a first visit on the viewer's region from their time zone", () => {
+    expectCenteredIn(startCamera(null, { timeZone: 'America/New_York', locale: 'en-US' }), easternUs)
   })
 
   it('opens a first visit at the start zoom', () => {
@@ -30,19 +30,19 @@ describe('startCamera', () => {
   })
 
   it('finds the region for time zones on other continents', () => {
-    expectCentredIn(startCamera(null, { timeZone: 'Asia/Tokyo', locale: 'ja-JP' }), {
+    expectCenteredIn(startCamera(null, { timeZone: 'Asia/Tokyo', locale: 'ja-JP' }), {
       west: 129,
       east: 146,
       south: 30,
       north: 45,
     })
-    expectCentredIn(startCamera(null, { timeZone: 'Europe/London', locale: 'en-GB' }), {
+    expectCenteredIn(startCamera(null, { timeZone: 'Europe/London', locale: 'en-GB' }), {
       west: -8,
       east: 2,
       south: 50,
       north: 59,
     })
-    expectCentredIn(startCamera(null, { timeZone: 'Australia/Sydney', locale: 'en-AU' }), {
+    expectCenteredIn(startCamera(null, { timeZone: 'Australia/Sydney', locale: 'en-AU' }), {
       west: 140,
       east: 154,
       south: -38,
@@ -51,7 +51,7 @@ describe('startCamera', () => {
   })
 
   it("falls back to the continent in the time zone's name for less common zones", () => {
-    expectCentredIn(startCamera(null, { timeZone: 'Europe/Vilnius', locale: 'lt-LT' }), {
+    expectCenteredIn(startCamera(null, { timeZone: 'Europe/Vilnius', locale: 'lt-LT' }), {
       west: -10,
       east: 40,
       south: 36,
@@ -60,7 +60,7 @@ describe('startCamera', () => {
   })
 
   it("uses the locale's country when the time zone says nothing about place", () => {
-    expectCentredIn(startCamera(null, { timeZone: 'UTC', locale: 'en-GB' }), {
+    expectCenteredIn(startCamera(null, { timeZone: 'UTC', locale: 'en-GB' }), {
       west: -8,
       east: 2,
       south: 50,
@@ -96,7 +96,7 @@ describe('homeCamera', () => {
 
   it("is the viewer's region, at the start zoom", () => {
     const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' })
-    expectCentredIn(home, easternUs)
+    expectCenteredIn(home, easternUs)
     expect(home.zoom).toBe(furthestOutZoom(home.latitude, zoomSettings.startZoom))
   })
 })

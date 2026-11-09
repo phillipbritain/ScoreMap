@@ -394,7 +394,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         return changes;
     }
 
-    // The centres of the cities crowded packs its games into.
+    // The centers of the cities crowded packs its games into.
     private static readonly (string Name, (double Lat, double Lon) At)[] BigCities =
     [
         ("New York", (40.7128, -74.0060)), ("Los Angeles", (34.0522, -118.2437)), ("Miami", (25.7617, -80.1918)),
@@ -405,9 +405,9 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         ("Lagos", (6.5244, 3.3792)), ("Jakarta", (-6.2088, 106.8456)),
     ];
 
-    private static double KmFrom((double Lat, double Lon) centre, GameVenue venue)
+    private static double KmFrom((double Lat, double Lon) center, GameVenue venue)
     {
-        var (lat, lon) = centre;
+        var (lat, lon) = center;
         var (venueLat, venueLon) = (venue.Latitude!.Value, venue.Longitude!.Value);
         const double radiusKm = 6371;
         double Rad(double degrees) => degrees * Math.PI / 180;

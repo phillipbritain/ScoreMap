@@ -126,7 +126,7 @@ describe('Shift+S', () => {
     expect(showsScenarioControls(local, { hidden: true })).toBe(false)
   })
 
-  it('hides and shows the Behaviour and Theme tuners with them', () => {
+  it('hides and shows the Behavior and Theme tuners with them', () => {
     expect(showsDevTools({ hidden: true })).toBe(false)
     expect(showsDevTools({ hidden: false })).toBe(true)
   })

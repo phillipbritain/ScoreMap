@@ -13,8 +13,8 @@ internal sealed class HockeyScenario(League league) : SportScenario(league)
     protected override int? Capacity => 18500;
     protected override int UsualScore => 1;
     protected override string NoteText(Random random) => Pick(random, $"First Round - Game {random.Next(1, 8)}", "Outdoor Game", "Rivalry Night");
-    protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favourite) =>
-        ($"{favourite.Abbreviation} -{random.Next(110, 200)}", Between(random, 5.5, 6.5, 1));
+    protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favorite) =>
+        ($"{favorite.Abbreviation} -{random.Next(110, 200)}", Between(random, 5.5, 6.5, 1));
     protected override string Record(Random random, int played, int wins)
     {
         var overtime = random.Next((played - wins) / 3 + 1);

@@ -17,7 +17,7 @@ export interface PageVisibility {
 }
 
 /**
- * Watches the page for ScoreMap falling asleep: once it has been hidden (its window minimised, another
+ * Watches the page for ScoreMap falling asleep: once it has been hidden (its window minimized, another
  * tab in front, the screen locked) for the idle timeout, onSleep is called, and when it's shown again
  * after that, onWake. Shown again sooner, nothing happens. The countdown runs from the start if the page
  * opens hidden, as a link opened in a background tab does. It can start out asleep, as when watching

@@ -20,7 +20,7 @@ describe('panArgs', () => {
     })
   })
 
-  it('keeps the default zoom when given only the centre, and the default pan when given only the camera', () => {
+  it('keeps the default zoom when given only the center, and the default pan when given only the camera', () => {
     expect(panArgs(['trace.json', '--center', '8,51.5'])).toEqual({
       file: 'trace.json',
       pan: { camera: { center: [8, 51.5], zoom: defaultPan.camera.zoom }, steps: defaultPan.steps },

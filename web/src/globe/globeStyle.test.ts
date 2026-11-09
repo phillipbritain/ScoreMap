@@ -44,7 +44,7 @@ const liberty = base([
 
 const font = (name: string) => globeFonts.get(name)!
 
-/** A theme with a colour and font of its own for everything the globe draws, to tell them apart. */
+/** A theme with a color and font of its own for everything the globe draws, to tell them apart. */
 const theme: Theme = {
   ...builtInTheme,
   components: {
@@ -139,7 +139,7 @@ describe('globeStyle', () => {
     expect(layer('coastline')).toMatchObject({ type: 'line', 'source-layer': 'water' })
   })
 
-  it("draws coastlines, country borders, state lines and disputed borders in the theme's colours", () => {
+  it("draws coastlines, country borders, state lines and disputed borders in the theme's colors", () => {
     expect(paint('coastline')['line-color']).toBe('#000002')
     expect(paint('boundary_2')['line-color']).toBe('#000003')
     expect(paint('boundary_3')['line-color']).toBe('#000004')
@@ -175,12 +175,12 @@ describe('globeStyle', () => {
   const tokyo: ListedCity = { name: 'Tokyo', country: 'Japan', longitude: 139.75, latitude: 35.69, population: 35_676_000, capital: true }
   const osaka: ListedCity = { name: 'Osaka', country: 'Japan', longitude: 135.46, latitude: 34.75, population: 11_294_000, capital: false }
   const kobe: ListedCity = { name: 'Kobe', country: 'Japan', longitude: 135.17, latitude: 34.68, population: 1_528_000, capital: false }
-  /** A city's properties in the city name source, labelled for a game or not. */
-  /** A city's properties, labelled for a game or not, and naming a score card on screen or not. */
+  /** A city's properties in the city name source, labeled for a game or not. */
+  /** A city's properties, labeled for a game or not, and naming a score card on screen or not. */
   const properties = (city: ListedCity, game: boolean, card = false) =>
     cityNameFeatures(game ? { gameCities: [city], otherBigCities: [] } : { gameCities: [], otherBigCities: [city] }, new Set(card ? [0] : []))
       .features[0].properties
-  /** The layers that name this city, labelled for a game or not, and naming a score card on screen or not. */
+  /** The layers that name this city, labeled for a game or not, and naming a score card on screen or not. */
   const namedBy = (city: ListedCity, game: boolean, card = false) =>
     style()
       .layers.filter((l) => 'source' in l && l.source === cityNameSource)
@@ -248,7 +248,7 @@ describe('globeStyle', () => {
     expect(lines.every((l) => l.type !== 'symbol')).toBe(true)
   })
 
-  it("writes each kind of place name in the theme's colour, outline (its colour, width and blur) and font, from the map's font server", () => {
+  it("writes each kind of place name in the theme's color, outline (its color, width and blur) and font, from the map's font server", () => {
     expect(style().glyphs).toBe(glyphsUrl)
     const kinds = {
       city_names: 'city',

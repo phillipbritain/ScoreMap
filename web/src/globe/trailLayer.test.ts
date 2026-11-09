@@ -14,7 +14,7 @@ const b: TrailOnScreen = { gameId: 'b', from: { x: 300, y: 150 }, to: { x: 320, 
 const shapesOf = (...pickedOut: (string | null)[]) => trailShapes([a, b], ['#aaaaaa', '#bbbbbb'], pickedOut, theme.components)
 
 describe('trailShapes', () => {
-  it("draws each trail from its card to its venue in its game's colour, in a glow, at the theme's widths and opacities", () => {
+  it("draws each trail from its card to its venue in its game's color, in a glow, at the theme's widths and opacities", () => {
     const lines = shapesOf().filter((shape) => shape.kind === 'line')
     expect(lines).toEqual([
       { kind: 'line', from: a.from, to: a.to, width: 5, blur: 2, color: '#aaaaaa', opacity: 0.3 },

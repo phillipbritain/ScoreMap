@@ -18,7 +18,7 @@ interface RailProps {
   settings: ViewerSettings
   onChange: (settings: ViewerSettings) => void
   /**
-   * The theme's accent (see accentColour), as #rrggbb, which a sport or league with no colour picked
+   * The theme's accent (see accentColor), as #rrggbb, which a sport or league with no color picked
    * shows hollow in Display Settings.
    */
   accent: string

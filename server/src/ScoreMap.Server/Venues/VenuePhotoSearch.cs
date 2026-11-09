@@ -11,7 +11,7 @@ namespace ScoreMap.Server.Venues;
 /// Finds a venue's photo, preferring one from inside, trying in order: ESPN's own "interior" photo of
 /// the venue from its core API, then its main ("day") one, which cover most US venues; then the image Wikidata gives for the venue (property P18),
 /// found through the Wikidata item OpenStreetMap links the venue to, served by Wikimedia Commons with
-/// its author and licence. Both are asked for a photo about twice the game panel's width.
+/// its author and license. Both are asked for a photo about twice the game panel's width.
 /// </summary>
 public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSearch places) : IVenuePhotoSearch
 {

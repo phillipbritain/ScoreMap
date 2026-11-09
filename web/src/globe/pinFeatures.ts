@@ -6,7 +6,7 @@ export interface PinProperties {
   gameId: string
   /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading. */
   status: GameStatus
-  /** The game's colour (see gameColour), for the pin's ring, glow and core (see smallPinLayers). */
+  /** The game's color (see gameColor), for the pin's ring, glow and core (see smallPinLayers). */
   color: string
   /** Whether the game shows flames (see showsFlames): a flame on its small pin, and on a pin cluster it's in. */
   flames: boolean
@@ -16,13 +16,13 @@ export type PinFeature = Feature<Point, PinProperties>
 
 /**
  * Turns games into the GeoJSON the globe's pin source draws: one point per game, exactly at its
- * venue, in its colour (`colourOf`, see gameColour), marked if it shows flames (`flamesOf`, see
+ * venue, in its color (`colorOf`, see gameColor), marked if it shows flames (`flamesOf`, see
  * showsFlames). Games sharing a venue cluster while pins are small, and their score cards are moved
  * apart on screen (see cardLayout), so each stays reachable.
  */
 export function pinFeatures(
   games: readonly PlacedGame[],
-  colourOf: (game: Game) => string,
+  colorOf: (game: Game) => string,
   flamesOf: (game: Game) => boolean,
 ): FeatureCollection<Point, PinProperties> {
   const features = games.map(
@@ -30,7 +30,7 @@ export function pinFeatures(
       type: 'Feature',
       id: game.id,
       geometry: { type: 'Point', coordinates: [game.venue.longitude, game.venue.latitude] },
-      properties: { gameId: game.id, status: game.status, color: colourOf(game), flames: flamesOf(game) },
+      properties: { gameId: game.id, status: game.status, color: colorOf(game), flames: flamesOf(game) },
     }),
   )
   return { type: 'FeatureCollection', features }

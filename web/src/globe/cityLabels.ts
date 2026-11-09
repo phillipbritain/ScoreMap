@@ -21,11 +21,11 @@ export interface BigListEntry {
   country: string
 }
 
-/** What decides which cities are labelled (see docs/city-labels.md). */
+/** What decides which cities are labeled (see docs/city-labels.md). */
 export interface CityLabelSettings {
   /** A city of at least this metro population is Big. */
   bigCityPopulation: number
-  /** A game is labelled by a city at most this far from it, in kilometres. */
+  /** A game is labeled by a city at most this far from it, in kilometers. */
   gameCityKm: number
   /** Cities that are Big whatever their population. */
   bigList: readonly BigListEntry[]
@@ -39,7 +39,7 @@ export const cityList: readonly ListedCity[] = listed
 
 /** The cities to label, by why. */
 export interface CityLabels {
-  /** Cities labelled for games: Big cities with a game near, and the Small cities games need. Always drawn. */
+  /** Cities labeled for games: Big cities with a game near, and the Small cities games need. Always drawn. */
   gameCities: ListedCity[]
   /** Big cities with no game near, drawn where they have room. */
   otherBigCities: ListedCity[]
@@ -47,7 +47,7 @@ export interface CityLabels {
 
 /**
  * Which cities to label for games at these venues (see docs/city-labels.md). Every Big city is
- * labelled. Then, going down the Small cities from most populous to least, a Small city is labelled
+ * labeled. Then, going down the Small cities from most populous to least, a Small city is labeled
  * when some game within reach of it has no label within reach yet. The outcome depends only on the
  * venues, not their order.
  */
@@ -60,17 +60,17 @@ export function cityLabels(venues: readonly GlobePoint[], cities: readonly Liste
   const gameCities: ListedCity[] = []
   const otherBigCities: ListedCity[] = []
   for (const city of big) (venues.some((venue) => near(venue, city)) ? gameCities : otherBigCities).push(city)
-  let unlabelled = venues.filter((venue) => !gameCities.some((city) => near(venue, city)))
+  let unlabeled = venues.filter((venue) => !gameCities.some((city) => near(venue, city)))
   for (const city of [...cities].sort(byPopulation)) {
-    if (unlabelled.length === 0) break
-    if (big.has(city) || !unlabelled.some((venue) => near(venue, city))) continue
+    if (unlabeled.length === 0) break
+    if (big.has(city) || !unlabeled.some((venue) => near(venue, city))) continue
     gameCities.push(city)
-    unlabelled = unlabelled.filter((venue) => !near(venue, city))
+    unlabeled = unlabeled.filter((venue) => !near(venue, city))
   }
   return { gameCities, otherBigCities }
 }
 
-// Kilometres per degree of latitude, roughly: a quick check that rules out most cities before
+// Kilometers per degree of latitude, roughly: a quick check that rules out most cities before
 // working out how far apart they are.
 const kmPerDegree = 110
 

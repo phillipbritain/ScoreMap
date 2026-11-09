@@ -6,6 +6,6 @@ Venue clusters, where score cards' trails meet, are worked out by the card layou
 
 ## Consequences
 
-- MapLibre measures on a flat map, not the globe, and a cluster can settle a little closer to its neighbour than the radius, so small pins and pin clusters may still overlap slightly far from the equator or near the globe's rim.
+- MapLibre measures on a flat map, not the globe, and a cluster can settle a little closer to its neighbor than the radius, so small pins and pin clusters may still overlap slightly far from the equator or near the globe's rim.
 - Pins cluster from further apart than two small pins alone would need (35 pixels in the built-in theme, not 18).
 - Overlap among venue dots, venue clusters and card clusters is exact, as they're laid out on screen: a card cluster that would overlap any of them takes them in.

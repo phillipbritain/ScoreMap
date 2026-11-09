@@ -34,7 +34,7 @@ const zooms = [2, 3, 4, 4.5, 5.5, 7, 8.25, 11, 12.9]
 
 describe('cityNameLook', () => {
   it('predicts the size the map writes a city name at, at every zoom', () => {
-    for (const id of ['city_names', 'city_names_game']) {
+    for (const id of ['city_names', 'city_names_game', 'city_names_card']) {
       for (const zoom of zooms) {
         expect(cityNameLook(zoom, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
       }
@@ -102,6 +102,7 @@ describe('cityNameLook', () => {
     }
     expect(layout('city_names', theme)['text-font']).toEqual(['Metropolis Light'])
     expect(layout('city_names_game', theme)['text-font']).toEqual(['Metropolis Light'])
+    expect(layout('city_names_card', theme)['text-font']).toEqual(['Metropolis Light'])
     expect(cityNameLook(5, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
   })
 })
@@ -110,10 +111,12 @@ describe('addPlaceNames', () => {
   // A map with just the city name source, keeping the features last given to it.
   function mapWithCityNames() {
     let features: FeatureCollection | null = null
-    const source = { setData: (data: FeatureCollection) => (features = data) } as unknown as GeoJSONSource
+    let given = 0
+    const source = { setData: (data: FeatureCollection) => ((features = data), given++) } as unknown as GeoJSONSource
     const map = { getSource: () => source, on: () => map, off: () => map } as unknown as MapLibreMap
     const gameCities = () => features!.features.filter((f) => f.properties!.game).map((f) => f.properties!.name as string)
-    return { map, gameCities }
+    const cardCities = () => features!.features.filter((f) => f.properties!.card).map((f) => f.properties!.name as string)
+    return { map, gameCities, cardCities, given: () => given }
   }
   // Everglades City, about 100 km from Miami.
   const evergladesGame = { venue: { longitude: -81.3851, latitude: 25.8573 } } as PlacedGame
@@ -141,6 +144,28 @@ describe('addPlaceNames', () => {
     expect(names.namesACard(1, { longitude: -99, latitude: 31 })).toBe(false)
   })
 
+  it("marks a game's city as naming a score card while the card is on screen, giving the cities again only when that changes", () => {
+    const { map, gameCities, cardCities, given } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
+    // In Chicago, far from Miami.
+    const chicagoGame = { venue: { longitude: -87.6359, latitude: 41.8789 } } as PlacedGame
+    names.showGames([evergladesGame, chicagoGame])
+    expect(gameCities()).toEqual(expect.arrayContaining(['Miami', 'Chicago']))
+    expect(cardCities()).toEqual([])
+
+    names.showCards([evergladesGame.venue])
+    expect(cardCities()).toEqual(['Miami'])
+    const before = given()
+    names.showCards([evergladesGame.venue])
+    expect(given()).toBe(before)
+
+    // Its card gone into a card cluster, Chicago's showing.
+    names.showCards([chicagoGame.venue])
+    expect(cardCities()).toEqual(['Chicago'])
+    names.showCards([])
+    expect(cardCities()).toEqual([])
+  })
+
   it('names cities from the zoom score cards show from, a phone’s further out than a laptop’s', () => {
     const ranges = new Map<string, [number, number]>()
     const map = {
@@ -159,6 +184,7 @@ describe('addPlaceNames', () => {
     const phone = fittedZoomSettings(zoomSettings, { width: 390, height: 844 }).cardZoom
     names.showFrom(phone)
     expect([...ranges.values()]).toEqual([
+      [phone, 24],
       [phone, 24],
       [phone, 24],
     ])

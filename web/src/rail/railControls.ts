@@ -1,6 +1,5 @@
 import type { Camera } from '../globe/camera'
 import { furthestOutZoom, zoomSettings, type ZoomSettings } from '../globe/zoomLevels'
-import type { ViewerSettings } from '../settings/viewerSettings'
 
 /**
  * How close to a zoom limit counts as at it: MapLibre stops a hair short of a limit it eases to, and
@@ -14,21 +13,6 @@ const atLimit = 0.01
  */
 export function canZoom({ latitude, zoom }: Camera, limits: ZoomSettings = zoomSettings): { in: boolean; out: boolean } {
   return { in: zoom < limits.maxZoom - atLimit, out: zoom > furthestOutZoom(latitude, limits.minZoom) + atLimit }
-}
-
-/** The rail's two toggles, in order, by the setting each switches and its name. */
-export const railToggles = [
-  { key: 'liveOnly', name: 'Live games only' },
-  { key: 'showDisrupted', name: 'Show Disrupted games' },
-] as const
-
-export type RailToggle = (typeof railToggles)[number]['key']
-
-/** The settings with one of the rail's toggles switched, and the toast saying what changed ("Live games only: on"). */
-export function toggled(settings: ViewerSettings, key: RailToggle): { settings: ViewerSettings; toast: string } {
-  const on = !settings[key]
-  const name = railToggles.find((toggle) => toggle.key === key)!.name
-  return { settings: { ...settings, [key]: on }, toast: `${name}: ${on ? 'on' : 'off'}` }
 }
 
 /**

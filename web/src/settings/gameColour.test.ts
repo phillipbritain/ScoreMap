@@ -9,7 +9,6 @@ const theme = themeWith((json) => {
   json.palette.live.main = '#ff0000'
   json.palette.upcoming.main = '#00ff00'
   json.palette.final.main = '#0000ff'
-  json.palette.disrupted.main = '#808080'
 })
 const nflGame = (status: GameStatus) => ({ league: 'NFL', sport: 'Football', status })
 
@@ -32,12 +31,6 @@ describe('gameColour', () => {
     const settings = withSportColour(firstVisitSettings, 'Basketball', '#123456')
 
     expect(gameColour(settings, nflGame('Live'), theme)).toBe('#ff0000')
-  })
-
-  it("is always the theme's Disrupted colour for a Disrupted game", () => {
-    const settings = withSportColour(firstVisitSettings, 'Football', '#123456')
-
-    expect(gameColour(settings, nflGame('Disrupted'), theme)).toBe('#808080')
   })
 
   it("goes back to the theme's colour when the sport's colour is cleared, leaving other sports' colours", () => {
@@ -72,17 +65,16 @@ describe('gameColour', () => {
     expect(hasColours(bothCleared)).toBe(false)
   })
 
-  it("is the league's colour with no colour for its sport, and always the Disrupted colour when Disrupted", () => {
+  it("is the league's colour with no colour for its sport", () => {
     const settings = withLeagueColour(firstVisitSettings, 'NFL', '#abcdef')
 
     expect(gameColour(settings, nflGame('Final'), theme)).toBe('#abcdef')
-    expect(gameColour(settings, nflGame('Disrupted'), theme)).toBe('#808080')
     expect(hasColours(settings)).toBe(true)
   })
 
   it("puts every game back in the theme's colours on \"Reset colours\", keeping the other settings", () => {
     const picked = withSportColour(
-      withSportColour({ ...firstVisitSettings, liveOnly: true }, 'Football', '#123456'),
+      withSportColour({ ...firstVisitSettings, topEventsOnly: true }, 'Football', '#123456'),
       'Basketball',
       '#abcdef',
     )
@@ -91,6 +83,6 @@ describe('gameColour', () => {
     expect(gameColour(reset, nflGame('Live'), theme)).toBe('#ff0000')
     expect(gameColour(reset, { league: 'NBA', sport: 'Basketball', status: 'Live' }, theme)).toBe('#ff0000')
     expect(hasColours(reset)).toBe(false)
-    expect(reset.liveOnly).toBe(true)
+    expect(reset.topEventsOnly).toBe(true)
   })
 })

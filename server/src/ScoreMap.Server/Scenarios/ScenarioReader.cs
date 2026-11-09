@@ -70,11 +70,10 @@ public static partial class ScenarioReader
                 throw new ScenarioFileException(name, path, $"game {i + 1}{id} {e.Message}");
             }
         }).ToList();
-        var writtenOut = ids.ToHashSet();
-        var (plays, disruptedShare) = ReadPlayAndShare(file, name, path);
+        var plays = ReadPlays(file, name, path);
         if (file.Fill is not null)
         {
-            foreach (var game in ReadFill(file.Fill, disruptedShare, games.ToList(), name, path, lists))
+            foreach (var game in ReadFill(file.Fill, games.ToList(), name, path, lists))
             {
                 if (!ids.Add(game.Id))
                     throw new ScenarioFileException(name, path,
@@ -83,7 +82,7 @@ public static partial class ScenarioReader
             }
         }
         var timeline = file.Timeline is null ? null : ReadTimeline(file.Timeline, games, leagues, name, path);
-        var play = plays ? ReadPlay(file, disruptedShare, writtenOut, name, path, lists) : null;
+        var play = plays ? ReadPlay(file, name, path, lists) : null;
         return new Scenario(name, games, timeline, play, ReadSlowStart(file.SlowStart, name, path));
     }
 
@@ -281,7 +280,7 @@ public static partial class ScenarioReader
 
     // The file's own shape, kept apart from the model so the format can grow.
     private sealed record ScenarioFile(
-        List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, double? Disrupted, string? SlowStart);
+        List<GameEntry?>? Games, TimelineEntry? Timeline, FillEntry? Fill, JsonElement? Play, string? SlowStart);
 
     /// <summary>
     /// A game written out in full: between a home and an away team, for a race or golf tournament among a <c>field</c>, or for a

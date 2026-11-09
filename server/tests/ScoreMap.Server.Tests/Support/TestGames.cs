@@ -11,7 +11,7 @@ public static class TestGames
         Game(id, leagueKey, clock.GetUtcNow().AddHours(-1), ProviderStatus.InProgress, homeScore, awayScore, "4:12", 3);
 
     public static ProviderGame UpcomingGame(TimeProvider clock, string id, string leagueKey = Nfl) =>
-        Game(id, leagueKey, clock.GetUtcNow().AddHours(1), ProviderStatus.Scheduled, null, null, null, null);
+        Game(id, leagueKey, clock.GetUtcNow().AddMinutes(20), ProviderStatus.Scheduled, null, null, null, null);
 
     public static ProviderGame Game(string id, string leagueKey, DateTimeOffset startTime, ProviderStatus status,
         int? homeScore, int? awayScore, string? clock, int? period) => new(

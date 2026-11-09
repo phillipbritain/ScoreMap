@@ -278,7 +278,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 
     /// <summary>
     /// The scoreboard days worth asking for, today's first. ESPN's scoreboard days are US Eastern calendar
-    /// days, so a game that started yesterday evening (still Live, recently Final, or Disrupted) is only on
+    /// days, so a game that started yesterday evening (still Live or recently Final) is only on
     /// yesterday's. Tomorrow's is only asked for within <see cref="TomorrowLookahead"/> of midnight, when
     /// its first games are near enough to be Upcoming.
     /// </summary>

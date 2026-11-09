@@ -47,7 +47,6 @@ function game({ id, longitude, latitude, status }: (typeof venues)[number]): Gam
     startTime: '2026-10-04T17:00:00+00:00',
     status,
     delayed: false,
-    disruption: null,
     endTime: null,
     contest: {
       kind: 'sides',

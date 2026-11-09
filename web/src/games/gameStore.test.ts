@@ -10,7 +10,6 @@ function game(id: string, homeScore: string | null = null): Game {
     startTime: '2026-10-04T17:00:00+00:00',
     status: 'Live',
     delayed: false,
-    disruption: null,
     endTime: null,
     contest: {
       kind: 'sides',

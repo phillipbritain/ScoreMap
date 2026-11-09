@@ -60,12 +60,11 @@ const nba = { name: 'NBA', sport: 'Basketball' }
 const mls = { name: 'MLS', sport: 'Soccer' }
 const leagues = [nfl, nba, mls]
 
-/** Settings a viewer might have before choosing: some leagues off, colours picked, "Live only" on, Disrupted hidden. */
+/** Settings a viewer might have before choosing: some leagues off, colours picked, flames off. */
 const before: ViewerSettings = {
   ...firstVisitSettings,
   hiddenLeagues: ['NBA'],
-  liveOnly: true,
-  showDisrupted: false,
+  hotGameFlames: false,
   sportColours: { Football: '#123456' },
   leagueColours: { MLS: '#abcdef' },
 }
@@ -90,12 +89,11 @@ describe('what each Welcome choice does to the viewer settings', () => {
   })
 
   it.each(['topEvents', 'everything', 'myLeagues'] as const)(
-    '%s leaves colours, "Live only" and "Show Disrupted games" as they were',
+    '%s leaves Display Settings as they were',
     (choice) => {
       const after = settingsForChoice(before, choice, leagues)
 
-      expect(after.liveOnly).toBe(true)
-      expect(after.showDisrupted).toBe(false)
+      expect(after.hotGameFlames).toBe(false)
       expect(after.sportColours).toEqual({ Football: '#123456' })
       expect(after.leagueColours).toEqual({ MLS: '#abcdef' })
     },

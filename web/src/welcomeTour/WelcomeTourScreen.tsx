@@ -259,8 +259,6 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   'Zoom in': 'Zoom in',
   'Zoom out': 'Zoom out',
   Home: 'Home: back to your part of the world',
-  'Live games only': 'Live games only',
-  'Show Disrupted games': 'Show Disrupted games: postponed, suspended or canceled',
   Leagues: 'Leagues: Top Events or your own picks',
   'Display Settings': 'Display Settings: colours for each sport and league, and flames on hot games',
   Games: 'Games: find any game and go to it',

@@ -139,11 +139,9 @@ public class HotGameTests
         Assert.Equal((expected, expected), (sent.Hot, sent.ClutchTime));
     }
 
-    [Theory]
-    [InlineData(Final)]
-    [InlineData(Suspended)]
-    public async Task Never_once_the_game_is_not_live(ProviderStatus status) =>
-        Assert.False((await SentAsync(Game(Nfl, "0:00", 4, 21, 20) with { Status = status })).Hot);
+    [Fact]
+    public async Task Never_once_the_game_is_Final() =>
+        Assert.False((await SentAsync(Game(Nfl, "0:00", 4, 21, 20) with { Status = Final })).Hot);
 
     [Fact]
     public async Task A_game_that_stops_being_hot_is_sent_as_not_hot()

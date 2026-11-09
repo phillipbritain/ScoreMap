@@ -22,7 +22,6 @@ function testTheme(): Theme {
     live: ['#ff0000', 4, 20],
     upcoming: ['#00ff00', 3, 12],
     final: ['#0000ff', 2, 6],
-    disrupted: ['#808080', 1, 5],
   } as const
   for (const [status, [color, coreRadius, glowRadius]] of Object.entries(looks)) {
     json.palette[status].main = color
@@ -64,12 +63,11 @@ const everyMix: GameStatus[][] = Array.from({ length: 2 ** statusProminence.leng
 describe('the status a group of games shows as', () => {
   it('is the most prominent among them', () => {
     expect(groupStatus(['Final', 'Live', 'Upcoming'])).toBe('Live')
-    expect(groupStatus(['Disrupted', 'Upcoming'])).toBe('Upcoming')
-    expect(groupStatus(['Disrupted', 'Final'])).toBe('Final')
+    expect(groupStatus(['Final', 'Upcoming'])).toBe('Upcoming')
   })
 
-  it('is Disrupted only when all its games are', () => {
-    expect(groupStatus(['Disrupted', 'Disrupted'])).toBe('Disrupted')
+  it('is Final only when all its games are', () => {
+    expect(groupStatus(['Final', 'Final'])).toBe('Final')
   })
 
   it('is the same for a pin cluster as for a card cluster, whatever the mix', () => {
@@ -82,7 +80,7 @@ describe('the status a group of games shows as', () => {
 
 describe('byStatus', () => {
   it("picks a pin's, a trail's or a card cluster's value by its own status, from the theme", () => {
-    const radii = { Live: 4, Upcoming: 3, Final: 2, Disrupted: 1 }
+    const radii = { Live: 4, Upcoming: 3, Final: 2 }
     for (const status of statusProminence) {
       expect(evaluate(byStatus(theme, 'own', (look) => look.core.radius), { status })).toBe(radii[status])
     }
@@ -103,14 +101,12 @@ describe('the status look', () => {
   it("is each status's look, gathered from the palette, Pin, Cluster and ScoreCard", () => {
     expect(statusLook(theme, 'Live')).toMatchObject({ color: '#ff0000', glow: { radius: 20 }, clusterOpacity: 1 })
     expect(statusLook(theme, 'Upcoming')).toMatchObject({ color: '#00ff00', core: { radius: 3 } })
-    expect(statusLook(theme, 'Final')).toMatchObject({ color: '#0000ff', clusterOpacity: 0.5 })
-    expect(statusLook(theme, 'Disrupted')).toMatchObject({ color: '#808080', glow: { radius: 5 }, card: { fade: 0, glow: { radius: 2.5 } } })
+    expect(statusLook(theme, 'Final')).toMatchObject({ color: '#0000ff', clusterOpacity: 0.5, glow: { radius: 6 }, card: { fade: 0, glow: { radius: 3 } } })
   })
 
-  it('draws Live on top, then Upcoming, then Final and Disrupted alike', () => {
+  it('draws Live on top, then Upcoming, then Final', () => {
     expect(stacking.Live).toBeGreaterThan(stacking.Upcoming)
     expect(stacking.Upcoming).toBeGreaterThan(stacking.Final)
-    expect(stacking.Final).toBe(stacking.Disrupted)
   })
 
   it('draws the selected card above every other', () => {

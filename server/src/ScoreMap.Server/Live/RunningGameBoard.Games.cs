@@ -27,10 +27,9 @@ public sealed partial class RunningGameBoard
         // The ids of the games the feed last listed as its top events.
         private IReadOnlySet<string> _topEvents = new HashSet<string>();
 
-        // Providers report no end or suspension time, so a game ends (or is suspended) when the board sees
-        // it turn Final (or suspended). Keyed by game: the status it was last seen with, and for a stopped
-        // game when it stopped.
-        private readonly Dictionary<(string LeagueKey, string GameId), (ProviderStatus Status, DateTimeOffset? StoppedAt)> _sightings = new();
+        // Providers report no end time, so a game ends when the board sees it turn Final. Keyed by game:
+        // the status it was last seen with, and for a Final game when it ended.
+        private readonly Dictionary<(string LeagueKey, string GameId), (ProviderStatus Status, DateTimeOffset? EndedAt)> _sightings = new();
 
         public IReadOnlyList<League> Leagues => leagues.Value;
 
@@ -55,13 +54,12 @@ public sealed partial class RunningGameBoard
             foreach (var reported in scoreboard)
             {
                 var game = reported;
-                if (ToStatus(game.Status) is not { } status)
+                if (ToGameStatus(game.Status) is not { } status)
                     continue;
-                var stoppedAt = RecordSighting(league, game, now);
-                if (!IsInPinWindow(game, status, stoppedAt, league, now))
+                var endTime = RecordSighting(league, game, now);
+                if (!IsInPinWindow(game, status, endTime, now))
                     continue;
                 game = feed.EnrichGame(game, cancellationToken);
-                var endTime = status == GameStatus.Final ? stoppedAt : null;
                 var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var location = venues.Fallback(game.Venue, (game.Contest as ProviderSides)?.Home);
@@ -128,9 +126,16 @@ public sealed partial class RunningGameBoard
             _games.TryGetValue(league.Key, out var games) && games.Any(g => g.Status == GameStatus.Live);
 
         /// <summary>
-        /// Breaks (halftime, intermissions) arrive as in progress; delays stay Live too.
-        /// Postponed, suspended and canceled games are Disrupted.
+        /// A game's status: breaks (halftime, intermissions) arrive as in progress; delays stay Live too.
+        /// Postponed, suspended and canceled games are never shown (ADR-0021), so they have none.
         /// </summary>
+        private static GameStatus? ToGameStatus(ProviderStatus status) => status switch
+        {
+            ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled => null,
+            _ => ToStatus(status),
+        };
+
+        /// <summary>A status as a game's or a bout's; a bout postponed, suspended or canceled is Disrupted (called off).</summary>
         private static GameStatus? ToStatus(ProviderStatus status) => status switch
         {
             ProviderStatus.Scheduled => GameStatus.Upcoming,
@@ -140,35 +145,27 @@ public sealed partial class RunningGameBoard
             _ => null,
         };
 
-        private static Disruption? ToDisruption(ProviderStatus status) => status switch
-        {
-            ProviderStatus.Postponed => Disruption.Postponed,
-            ProviderStatus.Suspended => Disruption.Suspended,
-            ProviderStatus.Canceled => Disruption.Canceled,
-            _ => null,
-        };
-
         /// <summary>
-        /// For a Final or suspended game, when it stopped (its end or suspension); null for any other game.
-        /// A game the board saw turn Final or suspended stopped when the board first saw it so. A game already
-        /// stopped the first time the board sees it (say, after the server slept) stopped at an unknown time,
-        /// estimated as its planned end, or now if that is still to come.
+        /// For a Final game, when it ended; null for any other game. A game the board saw turn Final ended
+        /// when the board first saw it so. A game already Final the first time the board sees it (say, after
+        /// the server slept) ended at an unknown time, estimated as its planned end, or now if that is still
+        /// to come (ADR-0005).
         /// </summary>
         private DateTimeOffset? RecordSighting(League league, ProviderGame game, DateTimeOffset now)
         {
             var key = (league.Key, game.Id);
             var seenBefore = _sightings.TryGetValue(key, out var last);
-            if (game.Status is not (ProviderStatus.Final or ProviderStatus.Suspended))
+            if (game.Status != ProviderStatus.Final)
             {
                 _sightings[key] = (game.Status, null);
                 return null;
             }
             if (seenBefore && last.Status == game.Status)
-                return last.StoppedAt;
+                return last.EndedAt;
 
-            var stoppedAt = seenBefore ? now : Min(game.StartTime + league.PlannedLength, now);
-            _sightings[key] = (game.Status, stoppedAt);
-            return stoppedAt;
+            var endedAt = seenBefore ? now : Min(game.StartTime + league.PlannedLength, now);
+            _sightings[key] = (game.Status, endedAt);
+            return endedAt;
         }
 
         private static DateTimeOffset Min(DateTimeOffset a, DateTimeOffset b) => a < b ? a : b;
@@ -181,17 +178,10 @@ public sealed partial class RunningGameBoard
                     _sightings.Remove(key);
         }
 
-        private static bool IsInPinWindow(
-            ProviderGame game, GameStatus status, DateTimeOffset? stoppedAt, League league, DateTimeOffset now) => status switch
+        private static bool IsInPinWindow(ProviderGame game, GameStatus status, DateTimeOffset? endedAt, DateTimeOffset now) => status switch
         {
             GameStatus.Upcoming => now >= game.StartTime - UpcomingWindow,
-            GameStatus.Final => now < stoppedAt + FinalWindow,
-            // A suspended game shows until the Final window has passed since the suspension.
-            GameStatus.Disrupted when game.Status == ProviderStatus.Suspended =>
-                now >= game.StartTime - UpcomingWindow && now < stoppedAt + FinalWindow,
-            // Otherwise the original schedule's windows: from before the planned start until after the planned end.
-            GameStatus.Disrupted =>
-                now >= game.StartTime - UpcomingWindow && now < game.StartTime + league.PlannedLength + FinalWindow,
+            GameStatus.Final => now < endedAt + FinalWindow,
             _ => true,
         };
 
@@ -204,7 +194,6 @@ public sealed partial class RunningGameBoard
                 game.StartTime,
                 status,
                 game.Status == ProviderStatus.Delayed,
-                ToDisruption(game.Status),
                 endTime,
                 ToContest(game.Contest),
                 ClockLine.For(game, league),

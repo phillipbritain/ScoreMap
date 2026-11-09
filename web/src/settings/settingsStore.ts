@@ -125,18 +125,17 @@ function cameraFromSaved(saved: unknown): Camera | null {
 /**
  * Reads saved settings field by field, so settings saved by an older version of the app (or
  * damaged ones) keep what is still valid and take first-visit defaults for the rest. Settings the
- * app no longer has, such as the old "Card style", are ignored.
+ * app no longer has, such as the old "Card style" or the rail's old "Live games only" and "Show Disrupted
+ * games" switches, are ignored.
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, liveOnly, showDisrupted, sportColours, leagueColours, hotGameFlames } = fields
+  const { hiddenLeagues, topEventsOnly, sportColours, leagueColours, hotGameFlames } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     topEventsOnly: typeof topEventsOnly === 'boolean' ? topEventsOnly : firstVisitSettings.topEventsOnly,
-    liveOnly: typeof liveOnly === 'boolean' ? liveOnly : firstVisitSettings.liveOnly,
-    showDisrupted: typeof showDisrupted === 'boolean' ? showDisrupted : firstVisitSettings.showDisrupted,
     sportColours: coloursFromSaved(sportColours),
     leagueColours: coloursFromSaved(leagueColours),
     hotGameFlames: typeof hotGameFlames === 'boolean' ? hotGameFlames : firstVisitSettings.hotGameFlames,

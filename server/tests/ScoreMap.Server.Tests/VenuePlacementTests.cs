@@ -11,12 +11,12 @@ public class VenuePlacementTests
     private static ProviderGame LondonGame(string id = "401872965") => new(
         Id: id,
         LeagueKey: "football/nfl",
-        StartTime: new DateTimeOffset(2026, 10, 4, 13, 30, 0, TimeSpan.Zero),
+        StartTime: new DateTimeOffset(2026, 10, 4, 16, 30, 0, TimeSpan.Zero),
         Contest: new ProviderSides(
             new ProviderTeam("WSH", "Washington Commanders", null, 13),
             new ProviderTeam("IND", "Indianapolis Colts", null, 30)),
-        Status: ProviderStatus.Final,
-        DisplayClock: "0:00",
+        Status: ProviderStatus.InProgress,
+        DisplayClock: "4:12",
         Period: 4,
         Venue: new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"),
         Broadcasters: []);

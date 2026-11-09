@@ -24,7 +24,6 @@ function game(id: string): Game {
     startTime: '2026-10-04T17:00:00+00:00',
     status,
     delayed: false,
-    disruption: null,
     endTime: null,
     contest: {
       kind: 'sides',
@@ -167,7 +166,7 @@ it('keeps filter focus when a filter hides the selected game', async () => {
   await show([game('A')])
   await userEvent.keyboard('{ArrowDown}{Enter}')
   const filter = document.createElement('button')
-  filter.textContent = 'Live games only'
+  filter.textContent = 'A filter'
   document.body.append(filter)
   filter.focus()
   await show([])

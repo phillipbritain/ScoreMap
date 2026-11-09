@@ -75,7 +75,6 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     startTime: '2026-10-04T17:00:00+00:00',
     status,
     delayed: false,
-    disruption: null,
     endTime: null,
     contest: {
       kind: 'sides',
@@ -253,23 +252,22 @@ function between(colour: string, from: string, to: string): boolean {
 }
 
 describe('score cards', () => {
-  it('fades a Final or Disrupted game’s card by colour into its fill, not by opacity', async () => {
+  it('fades a Final game’s card by colour into its fill, not by opacity', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
-    // Far enough apart that none is moved aside.
-    globe.show([game('L'), game('F', { longitude: 6, status: 'Final' }), game('D', { longitude: -6, status: 'Disrupted' })])
-    const [live, final, disrupted] = await Promise.all(['L', 'F', 'D'].map(cardShown))
+    // Far enough apart that neither is moved aside.
+    globe.show([game('L'), game('F', { longitude: 6, status: 'Final' })])
+    const [live, final] = await Promise.all(['L', 'F'].map(cardShown))
     const { components: { ScoreCard: look }, palette } = builtInTheme
 
     // Every card's fill as opaque as its glass's frost, whatever its status.
     const fillOpacity = look.frost
-    for (const shown of [live, final, disrupted]) {
+    for (const shown of [live, final]) {
       expect(getComputedStyle(shown).opacity, shown.dataset.gameId).toBe('1')
       expect(channels(getComputedStyle(shown).backgroundColor)[3], shown.dataset.gameId).toBeCloseTo(fillOpacity, 2)
     }
     expect(channels(getComputedStyle(live).color).slice(0, 3).map(Math.round)).toEqual(hexChannels(look.text))
     expect(between(getComputedStyle(final).color, look.text, look.fill)).toBe(true)
     expect(between(getComputedStyle(final).borderTopColor, palette.final.main, look.fill)).toBe(true)
-    expect(between(getComputedStyle(disrupted).color, look.disrupted.text, look.disrupted.fill)).toBe(true)
   })
 })
 
@@ -1110,7 +1108,6 @@ describe('animations', () => {
     ['start', 'Started', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: '0' })],
     ['finish', 'Finished', 'Live', game('A', { home: '21' }), game('A', { status: 'Final', home: '21' })],
     // The server judges any game reaching Final as finishing, not only a live one.
-    ['finish', 'Finished', 'Disrupted', game('A', { status: 'Disrupted', home: '21' }), game('A', { status: 'Final', home: '21' })],
     ['finish', 'Finished', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { status: 'Final', home: null, away: null })],
   ] as const)('plays %s on a game’s score card, for %s from %s', async (animation, kind, _from, before, after) => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })

@@ -122,11 +122,10 @@ describe("a game's colour", () => {
 })
 
 describe("a cluster's colour", () => {
-  /** The built-in theme, its accent (Live's colour) and Disrupted's colour each unlike any game's below. */
+  /** The built-in theme, its accent (Live's colour) unlike any game's below. */
   function colourTheme(): Theme {
     return themeWith((json) => {
       json.palette.live.main = '#ff0000'
-      json.palette.disrupted.main = '#808080'
     })
   }
 
@@ -207,13 +206,6 @@ describe("a cluster's colour", () => {
       { status: 'Final', color: '#654321' },
     ]
     expect(coloursOf(games)).toEqual(everywhere('#ff0000'))
-  })
-
-  it("leaves out Disrupted games, showing Disrupted's colour only when all its games are", () => {
-    const disrupted: ClusteredGame = { status: 'Disrupted', color: '#808080' }
-    const someDisrupted: ClusteredGame[] = [disrupted, { status: 'Live', color: '#123456' }, disrupted, { status: 'Upcoming', color: '#123456' }]
-    expect(coloursOf(someDisrupted)).toEqual(everywhere('#123456'))
-    expect(coloursOf([disrupted, disrupted])).toEqual(everywhere('#808080'))
   })
 })
 

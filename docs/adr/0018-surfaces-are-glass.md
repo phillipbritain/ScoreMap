@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0023
+---
+
 # Surfaces over the globe are glass
 
 Every surface laid over the globe (score cards, the game panel, the rail and its popovers and toast, the scenario controls and the no-pins message) was a solid or see-through fill, so where games crowd or a popover is open the globe behind them was lost. We make them panes of glass instead, after Apple's Liquid Glass: the globe shows through, blurred as far as the glass is frosted (score cards aside, see below), lifted in color, and on the larger panes slightly bent, with edges that catch the light. A prototype tried three glass materials on the running app (clear "liquid" glass, frosted acrylic and smoked glass); the clear one won.

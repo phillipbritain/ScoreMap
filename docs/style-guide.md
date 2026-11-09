@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org) and [ADR-0018](adr/0018-surfaces-are-glass.md) (surfaces over the globe are glass). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for panels). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## What a theme is
 
@@ -230,7 +230,9 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
+Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. They use their existing theme surface colors with **frost** set to 1. The game panel is an exception, retaining its glass effect alongside score cards; pins are unchanged.
+
+The shared glass material still supports local theme experiments. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its color lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface color, solid.
@@ -243,15 +245,15 @@ On a score card the frost clears more than the fill: its header's tint, its stat
 | --- | --- | --- |
 | `components.ScoreCard.frost` | Score cards' | 0.6 |
 | `components.GamePanel.frost` | The game panel's | 0.85 |
-| `components.Rail.frost` | The rail's groups and popovers, and the top rail's (local runs) | 0.85 |
-| `components.Controls.frost` | The no-pins message, and the Feedback button and panel | 0.85 |
-| `components.Tooltip.frost` | Tooltips' | 0.85 |
+| `components.Rail.frost` | The rail's groups and popovers, the top rail's (local runs), and welcome tour panels | 1 |
+| `components.Controls.frost` | The no-pins message, demo label, and Feedback button and panel | 1 |
+| `components.Tooltip.frost` | Tooltips' | 1 |
 
 Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: each frost is on its component's tab.
 
 ### Tooltips
 
-Tooltips are glass too, not the browser's own, which can't be styled: anything on the page with a `data-tooltip` shows it in a small pane of glass (`web/src/tooltip/Tooltips.tsx`), centered above it, or below where there's no room (beside a rail button, level with it on its left, so it covers none of the others), after the pointer rests on it half a second, or at once on keyboard focus. It eases in from what it's for, or shows at once with reduce motion on, and goes on the pointer leaving, a press, Escape or a scroll. The app sets no `title`, so the browser never shows a tooltip of its own; only the local-run tools keep the browser's.
+Tooltips are drawn by the page, not the browser, whose own can't be styled: anything on the page with a `data-tooltip` shows it in a small panel (`web/src/tooltip/Tooltips.tsx`), centered above it, or below where there's no room (beside a rail button, level with it on its left, so it covers none of the others), after the pointer rests on it half a second, or at once on keyboard focus. It eases in from what it's for, or shows at once with reduce motion on, and goes on the pointer leaving, a press, Escape or a scroll. The app sets no `title`, so the browser never shows a tooltip of its own; only the local-run tools keep the browser's.
 
 ### Hover
 

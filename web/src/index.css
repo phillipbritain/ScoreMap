@@ -86,7 +86,6 @@ body {
 .rail__popover,
 .no-pins,
 .demo-label,
-.map-credit,
 .feedback__button,
 .feedback__panel,
 .welcome-tour__panel,
@@ -1949,38 +1948,6 @@ body {
     animation: none;
     opacity: 0;
   }
-}
-
-/* The satellite map's credit (see MapCredit), small at the bottom left of the globe, on the controls' glass. */
-.map-credit {
-  --frost: var(--controls-frost);
-  --glass-tint: var(--controls-surface);
-  position: absolute;
-  bottom: var(--spacing);
-  left: var(--spacing);
-  z-index: 1;
-  max-width: calc(100% - 2 * var(--spacing));
-  margin: 0;
-  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
-  border-radius: var(--menu-corner);
-  color: var(--palette-text-secondary);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-footnote-font-size);
-  font-weight: var(--typography-footnote-font-weight);
-  line-height: 1.4;
-}
-
-.map-credit a {
-  color: inherit;
-}
-
-.map-credit[hidden] {
-  display: none;
-}
-
-/* Shown too while Map Type is open, which has a picture of the satellite map in it. */
-.globe-area:has(.rail__popover--map-type) > .map-credit {
-  display: block;
 }
 
 /* Along the bottom of the globe: the no-pins message centred. */

@@ -10,6 +10,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts, glyphsUrl } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { globeStyle } from './globeStyle'
+import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
 import { cityNameFeatures, cityNameSource, firstPlaceNameLayer } from './placeNames'
 
@@ -84,6 +85,7 @@ describe('globeStyle', () => {
   it("keeps only the lines and state and country names, dropping roads, land cover, points of interest and the base style's cities, towns and villages for its own city names", () => {
     expect(style().layers.map((l) => l.id)).toEqual([
       'background',
+      'satellite',
       'coastline',
       'boundary_3',
       'boundary_2',
@@ -92,6 +94,42 @@ describe('globeStyle', () => {
       'label_state',
       'label_country_1',
       'city_names_game',
+    ])
+  })
+
+  const visibility = (mapType: 'plain' | 'satellite', id: string) =>
+    (globeStyle(liberty, theme, mapType).layers.find((l) => l.id === id)?.layout as { visibility?: string } | undefined)?.visibility
+
+  it('draws the plain map unless told otherwise, with the satellite imagery hidden', () => {
+    expect(visibility('plain', 'satellite')).toBe('none')
+    expect(visibility('plain', 'coastline')).toBe('visible')
+    expect(style()).toEqual(globeStyle(liberty, theme, 'plain'))
+  })
+
+  it("draws the satellite map as EOX's cloudless imagery over the theme's surface, with no coastlines", () => {
+    const satellite = globeStyle(liberty, theme, 'satellite')
+    expect(satellite.sources.satellite).toMatchObject({
+      type: 'raster',
+      tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg'],
+    })
+    expect(satellite.layers.find((l) => l.id === 'satellite')).toMatchObject({ type: 'raster', source: 'satellite' })
+    expect(visibility('satellite', 'satellite')).toBe('visible')
+    expect(visibility('satellite', 'coastline')).toBe('none')
+  })
+
+  it('keeps the borders, state lines and place names on the satellite map as on the plain map', () => {
+    const ids = (mapType: 'plain' | 'satellite') => globeStyle(liberty, theme, mapType).layers.map((l) => l.id)
+    expect(ids('satellite')).toEqual(ids('plain'))
+    const kept = (mapType: 'plain' | 'satellite') =>
+      globeStyle(liberty, theme, mapType).layers.filter((l) => l.id !== 'satellite' && l.id !== 'coastline')
+    expect(kept('satellite')).toEqual(kept('plain'))
+  })
+
+  it('switches map type by showing and hiding layers, as a restyle in place', () => {
+    const toSatellite = layerChanges(globeStyle(liberty, theme, 'plain').layers, globeStyle(liberty, theme, 'satellite').layers)
+    expect(toSatellite).toEqual([
+      { layer: 'satellite', kind: 'layout', property: 'visibility', value: 'visible' },
+      { layer: 'coastline', kind: 'layout', property: 'visibility', value: 'none' },
     ])
   })
 

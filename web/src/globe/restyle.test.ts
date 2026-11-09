@@ -5,10 +5,9 @@ import { themeWith } from '../theme/testTheme'
 import type { Theme } from '../theme/theme'
 import { gameLayers } from './gameLayers'
 import { layerChanges } from './restyle'
-import { cardZoom } from './zoomLevels'
 
 const layersIn = (theme: Theme): LayerSpecification[] => {
-  const { belowNames, onTop } = gameLayers(theme, null, cardZoom)
+  const { belowNames, onTop } = gameLayers(theme, null, 'small')
   return [...belowNames, ...onTop]
 }
 

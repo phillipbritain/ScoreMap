@@ -566,7 +566,7 @@ const settings = {
       hint: color,
       chip: { outline: color, badge: color },
       on: { fill: color, text: color },
-      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mark: ems },
+      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mark: ems, mapType: pixels },
     },
     /**
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their

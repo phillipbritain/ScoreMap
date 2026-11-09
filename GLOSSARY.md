@@ -81,7 +81,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colours picked for sports and leagues, and whether hot games show flames) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colours picked for sports and leagues, and whether hot games show flames), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:

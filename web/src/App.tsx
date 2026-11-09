@@ -7,10 +7,11 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
+import { MapCredit } from './globe/MapCredit'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
 import { useFittedZoom } from './globe/useFittedZoom'
-import type { ZoomSettings } from './globe/zoomLevels'
+import { zoomForMapType, type ZoomSettings } from './globe/zoomLevels'
 import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
@@ -103,7 +104,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
-  const zoom = useFittedZoom(behaviour.zoom)
+  const fittedZoom = useFittedZoom(behaviour.zoom)
+  // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
+  const zoom = useMemo(() => zoomForMapType(fittedZoom, viewerSettings.mapType), [fittedZoom, viewerSettings.mapType])
   const [camera] = useState(() => openingCamera(store, zoom))
   // A new start zoom from the behaviour tuner puts the globe at Home at once, to show it.
   const shownStartZoom = useRef(behaviour.zoom.startZoom)
@@ -163,6 +166,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           zoomSettings={zoom}
           colours={colours}
           flames={viewerSettings.hotGameFlames}
+          mapType={viewerSettings.mapType}
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
@@ -201,6 +205,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             onGone={() => setLoadingPreview('off')}
           />
         )}
+        {/* Under the bottom stack, the game panel and the rail, which may lie over it for a while. */}
+        <MapCredit hidden={viewerSettings.mapType !== 'satellite'} />
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
         <div className="bottom-stack">
           {message && (

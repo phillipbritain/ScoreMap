@@ -821,8 +821,9 @@ export class GlobeMap {
 
   /**
    * Zooms in until a card cluster splits: to fit its games, at least a level in, and again
-   * from there while some of them are still in one (until the globe can zoom no further in). A move
-   * by the viewer along the way stops it.
+   * from there while some of them still have no room for their cards, in a card cluster or alone as
+   * their small pins, to fit those and the card clusters they're in (until the globe can zoom no
+   * further in). A move by the viewer along the way stops it.
    */
   private zoomToCardCluster(gameIds: readonly string[]): void {
     const bounds = new LngLatBounds()
@@ -839,8 +840,10 @@ export class GlobeMap {
     this.map.once('idle', () => {
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
       if (!arrived || zoom >= maxZoom) return
-      const stillInCardCluster = this.cards.cardClusterGames().find((cluster) => cluster.some((id) => gameIds.includes(id)))
-      if (stillInCardCluster) this.zoomToCardCluster(stillInCardCluster)
+      const noRoom = gameIds.filter((id) => this.cards.hasNoRoom(id))
+      const clusters = this.cards.cardClusterGames().filter((cluster) => cluster.some((id) => noRoom.includes(id)))
+      const still = [...new Set([...noRoom, ...clusters.flat()])]
+      if (still.length > 0) this.zoomToCardCluster(still)
     })
   }
 

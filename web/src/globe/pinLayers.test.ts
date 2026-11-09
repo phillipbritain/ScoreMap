@@ -5,9 +5,9 @@ import { themeWith } from '../theme/testTheme'
 import type { Theme } from '../theme/theme'
 import type { GameStatus } from '../games/game'
 import type { CardLayout } from './cardLayout'
-import { cardLayoutDrawing, cardLayoutLayers } from './cardLayoutLayers'
+import { cardClusterFootprintLayerSpec, cardLayoutDrawing, cardLayoutLayers } from './cardLayoutLayers'
 import { smallPinReach } from './panelClearance'
-import { pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
+import { clusterFootprint, outerPins, pinClusterFootprintLayerSpec, pinClusterLayers, pinClusterSpacing, pinSourceSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
 import { cardZoom } from './zoomLevels'
 
 /** The built-in theme, with cluster counts in another font and size. */
@@ -98,6 +98,33 @@ describe('clusters', () => {
     expect(paint('card-clusters')['circle-radius']).toBe(14 - 2)
     expect(paint('card-clusters')['circle-stroke-width']).toBe(2)
     expect(paint('card-cluster-glows')['circle-radius']).toBe(27)
+  })
+})
+
+describe("clusters' footprints", () => {
+  // In sizedTheme, clusters reach 12, 16 and 22 pixels, outline and all.
+  const across = (layer: SymbolLayerSpecification, properties: Record<string, unknown>) =>
+    (evaluate(layer.layout!['icon-size'], properties) as number) * clusterFootprint.size
+
+  it('cover a pin cluster, disc and outline, with a pixel to spare each side, for how many games it holds', () => {
+    for (const set of [zoomedOutPins(cardZoom), outerPins(cardZoom)]) {
+      const layer = pinClusterFootprintLayerSpec(sizedTheme(), set)
+      expect([3, 5, 15].map((count) => across(layer, { point_count: count }))).toEqual([26, 34, 46])
+    }
+  })
+
+  it('cover a venue cluster as a pin cluster of as many games, and a card cluster as one of some', () => {
+    const layer = cardClusterFootprintLayerSpec(sizedTheme())
+    expect([2, 5, 15].map((count) => across(layer, { kind: 'venueCluster', count }))).toEqual([26, 34, 46])
+    expect(across(layer, { kind: 'cardCluster', count: 30 })).toBe(30)
+  })
+
+  it('are placed whatever else is there, to keep names off every cluster, and draw nothing', () => {
+    for (const layer of [pinClusterFootprintLayerSpec(sizedTheme(), outerPins(cardZoom)), cardClusterFootprintLayerSpec(sizedTheme())]) {
+      expect(layer.layout!['icon-allow-overlap']).toBe(true)
+      expect(layer.layout!['icon-ignore-placement']).toBeUndefined()
+      expect(layer.paint!['icon-opacity']).toBe(0)
+    }
   })
 })
 

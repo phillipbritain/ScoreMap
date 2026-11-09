@@ -39,6 +39,7 @@ import {
   outerPinSource,
   outerSelectedPinLayer,
   outerSmallPinLayer,
+  clusterFootprint,
   pinClusterSpacing,
   pinFootprint,
   pinClusterLayer,
@@ -51,7 +52,7 @@ import {
 import { pulse } from './pinPulse'
 import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
-import { addPlaceNames, cityNameSource, firstPlaceNameLayer, type PlaceNames } from './placeNames'
+import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import { clusterMaxZoom, hasCard, pinLayout, pinSize, unfittedZoom, type FittedZoom, type PinLayout } from './zoomLevels'
@@ -576,11 +577,13 @@ export class GlobeMap {
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
     const { image, size } = pinFootprint(this.theme)
     addBlankImage(map, image, size, size)
+    addBlankImage(map, clusterFootprint.image, clusterFootprint.size, clusterFootprint.size)
     const layers = gameLayers(this.theme, this.selectedGameId, this.cardZoom)
     const belowNames = firstPlaceNameLayer(map.getStyle())
     for (const layer of layers.belowNames) map.addLayer(layer, belowNames)
     // Beneath the venue clusters and card clusters, as their trails end at them.
     map.addLayer(this.trails, overTrails)
+    for (const layer of layers.belowGameNames) map.addLayer(layer, gameCityNameLayer)
     for (const layer of layers.onTop) map.addLayer(layer)
   }
 
@@ -820,11 +823,11 @@ const noColours: PickedColours = { sportColours: {}, leagueColours: {} }
 
 /** Every layer the globe adds for the games in a theme, as gameLayers makes them. */
 function gameLayersIn(theme: Theme, selectedGameId: string | null, cardZoom: number): LayerSpecification[] {
-  const { belowNames, onTop } = gameLayers(theme, selectedGameId, cardZoom)
-  return [...belowNames, ...onTop]
+  const { belowNames, belowGameNames, onTop } = gameLayers(theme, selectedGameId, cardZoom)
+  return [...belowNames, ...belowGameNames, ...onTop]
 }
 
-/** A fully transparent image, for the pins' invisible footprints. */
+/** A fully transparent image, for the pins', cards' and clusters' invisible footprints. */
 function addBlankImage(map: MapLibreMap, name: string, width: number, height: number): void {
   map.addImage(name, { width, height, data: new Uint8Array(width * height * 4) })
 }

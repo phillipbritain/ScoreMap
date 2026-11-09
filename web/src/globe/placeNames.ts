@@ -99,12 +99,18 @@ function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): La
 const cityNameLayerIds = { big: 'city_names', game: 'city_names_game' } as const
 
 /**
+ * The layer naming the games' cities, the last place names placed before: the cards' and small pins'
+ * footprints go just beneath it (see GameLayers).
+ */
+export const gameCityNameLayer = cityNameLayerIds.game
+
+/**
  * The layers naming the cities in the city name source (see addPlaceNames), from the card zoom (a
  * laptop's in the style, moved to the view's by addPlaceNames), with the score cards, all in the
  * theme's city look, national capitals included, with no dot: just the name, around where the city is. The games'
- * cities are always written below where they are, whatever else is there, and cards are laid out around them. Big cities
- * with no game near are written where they have room, most populous first, giving way to cards and
- * other names.
+ * cities are always written, below where they are unless a cluster is there (see GameLayers), and cards are laid out
+ * around them. Big cities with no game near are written where they have room, most populous first, giving way to
+ * clusters, cards and other names.
  */
 function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerSpecification[] } {
   const layer = (game: boolean): LayerSpecification => {
@@ -126,8 +132,10 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
     if (named.type === 'symbol') named.paint = { ...named.paint, 'text-opacity': fadedByHorizon() }
     const placed = cityNamePlacement(named)
     if (!game || placed.type !== 'symbol') return placed
-    // Always below the dot, where cards are laid out around it, and written whatever else is there.
-    return { ...placed, layout: { ...placed.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true } }
+    // Always written: below the dot, where cards are laid out around it, unless a cluster's there (or
+    // another game's city's name), then on another side that's free; below it after all if none is.
+    // Cards' and small pins' footprints are placed after these names, so they never move them.
+    return { ...placed, layout: { ...placed.layout, 'text-allow-overlap': true } }
   }
   return { big: [layer(false)], game: [layer(true)] }
 }

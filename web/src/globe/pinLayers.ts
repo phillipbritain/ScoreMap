@@ -291,12 +291,52 @@ export function clusterReach(theme: Theme, count: number): number {
  * smallPinWidth), with a pixel's margin each side. Circle layers take no part in label placement, so
  * these give place names something to avoid: a name that would fall under a pin moves to another side
  * of its dot (see placeNames' city names), or is left out if no side is free. Score cards have theirs
- * too (see cardLayoutLayers' cardFootprint). Pin clusters have none: a name too close to fit beside
- * one would be lost, so it's written across the pin cluster instead (place names draw above the
- * pins). Footprints draw nothing.
+ * too (see cardLayoutLayers' cardFootprint), and clusters theirs (see clusterFootprintLayout).
+ * Footprints draw nothing.
  */
 export function pinFootprint(theme: Theme): { image: string; size: number } {
   return { image: pinFootprintImage, size: smallPinWidth(theme) + 2 }
+}
+
+/**
+ * The image of a cluster's footprint, scaled to each cluster's size (see clusterFootprintLayout): one
+ * size whatever the theme, so it needn't change with it.
+ */
+export const clusterFootprint = { image: 'cluster-footprint', size: 32 }
+
+/**
+ * An invisible stand-in for a cluster, disc and outline with a pixel's margin each side, `diameter`
+ * across (an expression by the cluster's count, in pixels, see clusterFootprintSizes), placed whatever
+ * else is there. On top of every name, so city names keep clear of clusters, keeping their circles and
+ * counts readable: a city's name moves to another side of its dot, or is left out if no side is free,
+ * but a game's city is still named below its dot if no side is free (see placeNames' city names).
+ */
+export function clusterFootprintLayout(diameter: ExpressionSpecification): SymbolLayerSpecification['layout'] {
+  return {
+    'icon-image': clusterFootprint.image,
+    'icon-size': ['/', diameter, clusterFootprint.size],
+    'icon-allow-overlap': true,
+  }
+}
+
+/** How far across a cluster's footprint is for clusters that reach this far (see clusterFootprintLayout). */
+export const clusterFootprintAcross = (reach: number): number => 2 * reach + 2
+
+/** How far across each size of pin cluster's footprint is (see clusterFootprintLayout). */
+export function clusterFootprintSizes(theme: Theme): Theme['components']['Cluster']['radius'] {
+  const across = (count: number) => clusterFootprintAcross(clusterReach(theme, count))
+  return { few: across(1), some: across(clusterCounts.some), many: across(clusterCounts.many) }
+}
+
+/** Each pin cluster in a pin set (see clusterFootprintLayout). */
+export function pinClusterFootprintLayerSpec(theme: Theme, set: PinSet): SymbolLayerSpecification {
+  return {
+    ...inSet(set, 'pin-cluster-footprints', { clusters: true }),
+    type: 'symbol',
+    filter: ['has', 'point_count'],
+    layout: clusterFootprintLayout(byCount(clusterFootprintSizes(theme))),
+    paint: { 'icon-opacity': 0 },
+  }
 }
 
 const pinFootprintImage = 'pin-footprint'

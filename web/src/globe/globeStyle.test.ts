@@ -182,9 +182,10 @@ describe('globeStyle', () => {
     }
   })
 
-  it("always writes a game's city below its dot, whatever else is there", () => {
+  it("always writes a game's city, below its dot by preference, moving to another side when a cluster is there", () => {
+    // With overlap allowed, MapLibre tries each side clear of what's placed before falling back to the first.
     for (const id of ['city_names_game']) {
-      expect(layout(id)['text-variable-anchor'], id).toEqual(['top'])
+      expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
       expect(layout(id)['text-allow-overlap'], id).toBe(true)
     }
   })

@@ -3,7 +3,7 @@ import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
-import { byCount, clusterFlameLayout, clusterFlameOffset } from './pinLayers'
+import { byCount, clusterFlameLayout, clusterFlameOffset, clusterFootprintAcross, clusterFootprintLayout, clusterFootprintSizes } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 import type { TrailOnGlobe } from './trailLayer'
 
@@ -305,4 +305,25 @@ export const cardFootprintLayerSpec: SymbolLayerSpecification = {
     'icon-allow-overlap': true,
   },
   paint: { 'icon-opacity': 0 },
+}
+
+/**
+ * An invisible stand-in for each venue cluster and card cluster, as a pin cluster has (see pinLayers'
+ * clusterFootprintLayout): a venue cluster as wide as a pin cluster of as many games, a card cluster
+ * as one of some, outline and all.
+ */
+export function cardClusterFootprintLayerSpec(theme: Theme): SymbolLayerSpecification {
+  return {
+    id: 'card-cluster-footprints',
+    type: 'symbol',
+    source: cardLayoutSource,
+    filter: ['in', ['get', 'kind'], ['literal', ['venueCluster', 'cardCluster']]],
+    layout: clusterFootprintLayout([
+      'case',
+      kindIs('cardCluster'),
+      clusterFootprintAcross(theme.components.Cluster.radius.some),
+      byCount(clusterFootprintSizes(theme), 'count'),
+    ]),
+    paint: { 'icon-opacity': 0 },
+  }
 }

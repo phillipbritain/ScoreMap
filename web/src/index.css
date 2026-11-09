@@ -209,11 +209,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The sport before the league, on a phone only (it has its own column in the details otherwise). */
-.game-panel__league-sport {
-  display: none;
-}
-
 .game-panel__label {
   margin-bottom: calc(0.5 * var(--spacing));
   font-size: var(--typography-footnote-font-size);
@@ -303,19 +298,19 @@ body {
   transform: skewX(-14deg);
 }
 
-/* The sport, as wide as its name, then venue, start (or end) and watch links: the venue wider than
-   the other two, as its name and place run longer than a time or a channel. */
+/* The sport, as wide as its name, then venue and watch links: the venue wider, as its name and place
+   run longer than a channel. */
 .game-panel__details {
   flex: 1;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: max-content minmax(0, 1.5fr) minmax(0, 1fr);
   gap: calc(4 * var(--spacing));
   min-width: 0;
   padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
 }
 
-/* Two lines at most for a venue or time, and room for two even when it takes one. */
+/* Two lines at most for a sport or venue, and room for two even when it takes one. */
 .game-panel__value {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -330,7 +325,7 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* One line under a venue or time, kept even when empty. */
+/* One line under a venue, kept even when empty. */
 .game-panel__details > div > .game-panel__muted {
   min-height: 1lh;
   overflow: hidden;
@@ -555,13 +550,9 @@ body {
   }
 
   .game-panel__details {
-    grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     gap: calc(2 * var(--spacing));
     padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
-  }
-
-  .game-panel__league-sport {
-    display: inline;
   }
 
   .game-panel__sport {

@@ -327,6 +327,9 @@ export function clusterFootprintLayout(diameter: ExpressionSpecification): Symbo
   }
 }
 
+/** How far the widest cluster reaches from its middle, outline and all. */
+export const widestClusterReach = (theme: Theme): number => clusterReach(theme, clusterCounts.many)
+
 /** How far across a cluster's footprint is for clusters that reach this far (see clusterFootprintLayout). */
 export const clusterFootprintAcross = (reach: number): number => 2 * reach + 2
 

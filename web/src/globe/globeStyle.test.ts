@@ -12,7 +12,7 @@ import type { Theme } from '../theme/theme'
 import { globeStyle } from './globeStyle'
 import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
-import { cityNameFeatures, cityNameSource, firstPlaceNameLayer } from './placeNames'
+import { cityNameFeatures, cityNameSource, clusterClearOffset, firstPlaceNameLayer } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -213,17 +213,24 @@ describe('globeStyle', () => {
     }
   })
 
-  it('puts Big city names below their dot by preference, moving to another side when a card is there', () => {
+  // Below, above, left of and right of the dot, an em away, then each again further out, clear of a cluster on the dot.
+  const far = clusterClearOffset(theme)
+  const positions = [
+    ...['top', [0, 1], 'bottom', [0, -1], 'left', [1, 0], 'right', [-1, 0]],
+    ...['top', [0, far], 'bottom', [0, -far], 'left', [far, 0], 'right', [-far, 0]],
+  ]
+
+  it('puts Big city names below their dot by preference, moving to another side, then further out, when a card or cluster is there', () => {
     for (const id of ['city_names']) {
-      expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
+      expect(layout(id)['text-variable-anchor-offset'], id).toEqual(['literal', positions])
       expect(layout(id)['text-allow-overlap'], id).toBeUndefined()
     }
   })
 
-  it("always writes a game's city, below its dot by preference, moving to another side when a cluster is there", () => {
-    // With overlap allowed, MapLibre tries each side clear of what's placed before falling back to the first.
+  it("always writes a game's city, below its dot by preference, moving to another side, then further out, when a cluster is there", () => {
+    // With overlap allowed, MapLibre tries each place clear of what's placed before falling back to the first.
     for (const id of ['city_names_game']) {
-      expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
+      expect(layout(id)['text-variable-anchor-offset'], id).toEqual(['literal', positions])
       expect(layout(id)['text-allow-overlap'], id).toBe(true)
     }
   })

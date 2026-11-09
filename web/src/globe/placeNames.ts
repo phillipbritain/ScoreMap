@@ -15,6 +15,7 @@ import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type Lis
 import { cityNameBox, type ScreenBox } from './cityNameBox'
 import { kmApart, type GlobePoint } from './geo'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
+import { widestClusterReach } from './pinLayers'
 import { cardZoom, hasCard } from './zoomLevels'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
@@ -130,30 +131,55 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
     // Faded out near the horizon (see fadeNearHorizon), where they'd crowd into a pile: all but a
     // game's city naming a game with a score card (see PlaceNames.namesACard).
     if (named.type === 'symbol') named.paint = { ...named.paint, 'text-opacity': fadedByHorizon() }
-    const placed = cityNamePlacement(named)
+    const placed = cityNamePlacement(named, theme)
     if (!game || placed.type !== 'symbol') return placed
     // Always written: below the dot, where cards are laid out around it, unless a cluster's there (or
-    // another game's city's name), then on another side that's free; below it after all if none is.
+    // another game's city's name), then on another side that's free, or further out clear of the
+    // cluster; below it after all if none is.
     // Cards' and small pins' footprints are placed after these names, so they never move them.
     return { ...placed, layout: { ...placed.layout, 'text-allow-overlap': true } }
   }
   return { big: [layer(false)], game: [layer(true)] }
 }
 
-/** Where a city's name goes around its dot. */
-function cityNamePlacement(layer: LayerSpecification): LayerSpecification {
+/** Where a city's name goes around its dot (see cityNamePositions). */
+function cityNamePlacement(layer: LayerSpecification, theme: Theme): LayerSpecification {
   if (layer.type !== 'symbol') return layer
-  return {
-    ...layer,
-    layout: {
-      ...layer.layout,
-      // Below the city's dot by preference, clear of its own game's score card above the venue; if
-      // another card covers that spot, the name moves to another side (see cardLayoutLayers' cardFootprint).
-      'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-      // Far enough from the dot (in ems) to clear a game's score card's trail.
-      'text-radial-offset': cityNameOffset,
-    },
-  }
+  return { ...layer, layout: { ...layer.layout, 'text-variable-anchor-offset': cityNamePositions(theme) } }
+}
+
+/** The sides of its dot a city's name may go, in the order tried: below, above, left of it, right of it. */
+const cityNameSides = [
+  ['top', [0, 1]],
+  ['bottom', [0, -1]],
+  ['left', [1, 0]],
+  ['right', [-1, 0]],
+] as const
+
+/**
+ * Where a city's name may go around its dot, as MapLibre's anchors and offsets (in ems), in the order
+ * tried: below the dot by preference, clear of its own game's score card above the venue; if a card or
+ * cluster covers that spot (see cardLayoutLayers' cardFootprint and pinLayers' clusterFootprintLayout),
+ * another side; and if a cluster sits on the dot itself, covering every near side, each side again
+ * further out, clear of the widest cluster at the smallest size names are written in (see
+ * clusterClearOffset).
+ */
+export function cityNamePositions(theme: Theme): ['literal', (string | number[])[]] {
+  const far = clusterClearOffset(theme)
+  const at = (offset: number) =>
+    cityNameSides.flatMap(([anchor, [x, y]]) => [anchor, [x * offset, y * offset]])
+  return ['literal', [...at(cityNameOffset), ...at(far)]]
+}
+
+/**
+ * How far a city's name sits from its dot, in ems, to clear a cluster on it: as far as the widest
+ * cluster reaches, outline and all, past its footprint's pixel, with room for the name's outline, at
+ * the smallest size city names are written in.
+ */
+export function clusterClearOffset(theme: Theme): number {
+  const smallest = Math.min(...zoomStops(theme.components.PlaceNames.city.size).map(([, size]) => size))
+  const clear = widestClusterReach(theme) + 1 + theme.components.PlaceNames.city.outline.width
+  return Math.ceil((clear / smallest) * 100) / 100
 }
 
 // How far a city's name sits from its dot, in ems: clear of a score card's trail. City names show

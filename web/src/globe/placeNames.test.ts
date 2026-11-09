@@ -7,7 +7,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
-import { addPlaceNames, cityNameLook, placeNameLayers } from './placeNames'
+import { addPlaceNames, cityNameLook, clusterClearOffset, placeNameLayers } from './placeNames'
 import { cardZoom, fittedZoomSettings, zoomSettings } from './zoomLevels'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
@@ -44,9 +44,20 @@ describe('cityNameLook', () => {
   it("predicts how far below its dot the map writes a city's name, at every zoom", () => {
     for (const zoom of zooms) {
       const look = cityNameLook(zoom, builtInTheme)
-      const ems = atZoom(layout('city_names')['text-radial-offset'], zoom)
+      // The first place tried: below the dot, this many ems down.
+      const [, [firstAnchor, [, ems]]] = layout('city_names')['text-variable-anchor-offset'] as ['literal', [string, number[]]]
+      expect(firstAnchor).toBe('top')
       expect(look.offset, `at ${zoom}`).toBeCloseTo(ems * look.size, 6)
     }
+  })
+
+  it('moves a name far enough from its dot to clear the widest cluster on it, at the smallest size names are written', () => {
+    // The widest cluster reaches 17.5 pixels (16 and an outline of 1.5), its footprint a pixel further, and a
+    // city name's outline 2 more: 20.5 pixels, at the built-in theme's smallest city size, 12 pixels.
+    const smallest = cityNameLook(0, builtInTheme).size
+    expect(smallest).toBe(12)
+    expect(clusterClearOffset(builtInTheme) * smallest).toBeGreaterThanOrEqual(20.5)
+    expect(clusterClearOffset(builtInTheme) * smallest).toBeLessThan(20.5 + 0.12)
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {

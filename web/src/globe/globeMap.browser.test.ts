@@ -18,7 +18,7 @@ import { panelGap, smallPinReach } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, pinSource, selectedPinLayer, smallPinLayer } from './pinLayers'
-import { cardZoom, maxZoom, zoomSettings } from './zoomLevels'
+import { cardZoom, fittedZoomSettings, maxZoom, unfittedZoom } from './zoomLevels'
 
 /**
  * When set, every layout of the score cards nudges each card (and its trail) that many pixels the
@@ -117,7 +117,7 @@ afterEach(() => {
 
 // The app's zoom limits, but zooming out to 2, the whole globe: the tests look at small pins and
 // pin clusters well out from cardZoom, wherever the app's furthest out is set.
-const testZoom = { ...zoomSettings, minZoom: Math.min(zoomSettings.minZoom, 2) }
+const testZoom = { ...unfittedZoom, minZoom: Math.min(unfittedZoom.minZoom, 2) }
 
 /** Opens a globe on the page, 800 × 600 unless given a size, looking at the given place. */
 function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
@@ -712,6 +712,26 @@ describe('score cards near the centre of the view', () => {
     expect(drawnAt(map, outerPinClusterLayer, outer[0]).map((f) => f.properties.point_count)).toContain(2)
     expect(card('OUTER1')).toBeNull()
     expect(card('OUTER2')).toBeNull()
+  })
+
+  it('shows score cards from further out once fitted to a phone, and small pins there again once fitted back', async () => {
+    // Between a phone's card zoom and a laptop's.
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2.5 }, wideGlobe)
+    const inner = game('INNER', { longitude: 20 })
+    const outer = game('OUTER', outerVenue)
+    globe.show([inner, outer])
+    await pinsDrawn(map, smallPinLayer, inner)
+    expect(card('INNER')).toBeNull()
+
+    const phone = fittedZoomSettings(testZoom, { width: 390, height: 844 })
+    globe.setZoomLimits({ ...phone, minZoom: testZoom.minZoom })
+    await cardShown('INNER')
+    await pinsDrawn(map, outerSmallPinLayer, outer)
+    expect(card('OUTER')).toBeNull()
+
+    globe.setZoomLimits(testZoom)
+    await vi.waitFor(() => expect(card('INNER')).toBeNull(), { timeout: 10_000 })
+    await pinsDrawn(map, smallPinLayer, inner, outer)
   })
 
   it('gives a game a card once the globe turns its venue within the card radius', async () => {

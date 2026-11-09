@@ -82,11 +82,15 @@ const fadeStep = 0.02
 
 /**
  * Fades the features of these GeoJSON sources as they near the horizon, frame by frame (see
- * horizonFade), through a feature state their layers' opacities read (see fadedByHorizon). Each
- * feature, a pin cluster included, needs an id. A feature in tiles new this frame shows whole for
- * the frame. Returns a function that stops it.
+ * horizonFade), through a feature state their layers' opacities read (see fadedByHorizon), but for
+ * those `whole` says to show whole in this view. Each feature, a pin cluster included, needs an id.
+ * A feature in tiles new this frame shows whole for the frame. Returns a function that stops it.
  */
-export function fadeNearHorizon(map: MapLibreMap, sources: readonly string[]): () => void {
+export function fadeNearHorizon(
+  map: MapLibreMap,
+  sources: readonly string[],
+  whole: (source: string, id: string | number, view: GlobeView) => boolean = () => false,
+): () => void {
   // The fade last set on each feature, by source.
   const set = new Map<string, Map<string | number, number>>(sources.map((source) => [source, new Map()]))
   const fade = () => {
@@ -98,7 +102,7 @@ export function fadeNearHorizon(map: MapLibreMap, sources: readonly string[]): (
         const id = feature.id
         if (id === undefined || feature.geometry.type !== 'Point') continue
         const [longitude, latitude] = feature.geometry.coordinates
-        const now = horizonFade(view, { longitude, latitude })
+        const now = whole(source, id, view) ? 1 : horizonFade(view, { longitude, latitude })
         const before = was.get(id)
         if (before !== undefined && (before === now || (Math.abs(before - now) < fadeStep && now !== 0 && now !== 1))) continue
         was.set(id, now)

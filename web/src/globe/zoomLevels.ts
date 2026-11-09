@@ -17,7 +17,11 @@ export interface PinLayout {
   clusterRadius: number
 }
 
-/** Zoom at which pins switch from small markers to score cards (about one country on screen). */
+/**
+ * Zoom at which pins switch from small markers to score cards (about one country on screen), in a
+ * view the size of a laptop's browser window: a smaller one, such as a phone's, switches further out
+ * (see fittedZoomSettings).
+ */
 export const cardZoom = 3
 
 /**
@@ -60,18 +64,33 @@ export const { minZoom, maxZoom } = zoomSettings
  */
 export const minZoomView = 800
 
+/** Zoom settings fitted to a view (see fittedZoomSettings), with the zoom score cards show from. */
+export interface FittedZoom extends ZoomSettings {
+  /** Where pins switch from small markers to score cards: cardZoom, fitted to the view as minZoom is. */
+  cardZoom: number
+}
+
+/** The app's zoom settings as they are, for a laptop-sized view or larger. */
+export const unfittedZoom: FittedZoom = { ...zoomSettings, cardZoom }
+
 /**
- * The zoom settings for a view this size. A zoom is a scale in pixels, so the globe at minZoom is
- * the same number of pixels across in any view, and would fill a phone far more than a laptop. A view
+ * The zoom settings for a view this size. A zoom is a scale in pixels, so the globe at a zoom is the
+ * same number of pixels across in any view, and would fill a phone far more than a laptop. A view
  * whose shorter side is under minZoomView zooms out further, in proportion, so the globe zoomed fully
- * out fills it as it fills a laptop's. A larger view keeps minZoom, so it still shows small pins
- * (see cardZoom). The start zoom stays as it is: it's never further out than minZoom anyway.
+ * out fills it as it fills a laptop's. Score cards show from further out alike, and the start zoom
+ * (and Home) is as far out alike: each comes at the same size of globe on screen as on a laptop.
+ * The furthest in stays as it is: a city on a phone. A larger view keeps the settings as they are.
  */
-export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): ZoomSettings {
+export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): FittedZoom {
   const shorter = Math.min(view.width, view.height)
   // A view with no size yet (a hidden page) has nothing to fit.
-  if (!(shorter > 0) || shorter >= minZoomView) return settings
-  return { ...settings, minZoom: settings.minZoom + Math.log2(shorter / minZoomView) }
+  const fit = shorter > 0 && shorter < minZoomView ? Math.log2(shorter / minZoomView) : 0
+  return {
+    ...settings,
+    minZoom: settings.minZoom + fit,
+    startZoom: settings.startZoom + fit,
+    cardZoom: cardZoom + fit,
+  }
 }
 
 /** The zoom MapLibre allows furthest out with the view centred at this latitude, given the furthest out at the equator. */
@@ -80,14 +99,14 @@ export function furthestOutZoom(latitude: number, furthestOut = minZoom): number
 }
 
 /**
- * Highest zoom at which the pin source clusters. Small pins stop showing well before it, at cardZoom,
- * and score cards aren't in pin clusters, so this only needs to be past cardZoom.
+ * Highest zoom at which the pin source clusters. Small pins stop showing well before it, at the card
+ * zoom, and score cards aren't in pin clusters, so this only needs to be past it.
  */
 export const clusterMaxZoom = maxZoom - 1
 
-/** Small pins or score cards, by the zoom. */
-export function pinSize(zoom: number): PinSize {
-  return zoom >= cardZoom ? 'card' : 'small'
+/** Small pins or score cards, by the zoom and the zoom cards show from (see FittedZoom). */
+export function pinSize(zoom: number, cardsFrom: number): PinSize {
+  return zoom >= cardsFrom ? 'card' : 'small'
 }
 
 // The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
@@ -102,8 +121,8 @@ const zoomStep = 0.25
  * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins
  * clustering only as close as they'd be on screen now.
  */
-export function pinLayout(zoom: number, spacing: number): PinLayout {
-  const size = pinSize(zoom)
+export function pinLayout(zoom: number, spacing: number, cardsFrom: number): PinLayout {
+  const size = pinSize(zoom, cardsFrom)
   const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
   return { size, clusterRadius: Math.round(spacing / 2 ** pastWholeLevel) }
 }

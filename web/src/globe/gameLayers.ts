@@ -14,17 +14,22 @@ export interface GameLayers {
   onTop: LayerSpecification[]
 }
 
-/** The trails are drawn by the trail layer (see trailLayer), which GlobeMap adds among these. */
-export function gameLayers(theme: Theme, selectedGameId: string | null): GameLayers {
+/**
+ * The trails are drawn by the trail layer (see trailLayer), which GlobeMap adds among these. Small
+ * pins give way to score cards at `cardZoom` (see FittedZoom).
+ */
+export function gameLayers(theme: Theme, selectedGameId: string | null, cardZoom: number): GameLayers {
+  const zoomedOut = zoomedOutPins(cardZoom)
+  const outer = outerPins(cardZoom)
   return {
     belowNames: [
-      ...[zoomedOutPins, outerPins].flatMap((set) => [
+      ...[zoomedOut, outer].flatMap((set) => [
         ...pinClusterLayers(theme, set),
         ...smallPinLayers(theme, set),
         selectedPinLayerSpec(theme, selectedGameId, set),
       ]),
       ...cardLayoutLayers(theme),
     ],
-    onTop: [cardFootprintLayerSpec, pinFootprintLayerSpec(zoomedOutPins), pinFootprintLayerSpec(outerPins)],
+    onTop: [cardFootprintLayerSpec, pinFootprintLayerSpec(zoomedOut), pinFootprintLayerSpec(outer)],
   }
 }

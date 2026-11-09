@@ -8,6 +8,7 @@ import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
 import { addPlaceNames, cityNameLook, placeNameLayers } from './placeNames'
+import { cardZoom, fittedZoomSettings, zoomSettings } from './zoomLevels'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -114,5 +115,42 @@ describe('addPlaceNames', () => {
 
     names.setSettings({ ...cityLabelSettings, gameCityKm: 150 })
     expect(gameCities()).toEqual(['Miami'])
+  })
+
+  it('keeps a game’s city whole near the horizon while a game it names has a score card', () => {
+    const { map, gameCities } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
+    names.showGames([evergladesGame])
+    expect(gameCities()).toEqual(['Miami'])
+    const miami = 0
+    // The game within the card radius of the centre of the view (over Texas), and far out of it (over Tokyo).
+    expect(names.namesACard(miami, { longitude: -99, latitude: 31 })).toBe(true)
+    expect(names.namesACard(miami, { longitude: 139.7, latitude: 35.7 })).toBe(false)
+    // A Big city with no game near names no card.
+    expect(names.namesACard(1, { longitude: -99, latitude: 31 })).toBe(false)
+  })
+
+  it('names cities from the zoom score cards show from, a phone’s further out than a laptop’s', () => {
+    const ranges = new Map<string, [number, number]>()
+    const map = {
+      getSource: () => undefined,
+      getLayer: () => ({}),
+      setLayerZoomRange: (id: string, min: number, max: number) => ranges.set(id, [min, max]),
+      getZoom: () => 2.5,
+      on: () => map,
+      off: () => map,
+    } as unknown as MapLibreMap
+    // The style names them from a laptop's.
+    expect(placeNameLayers(base, builtInTheme).find((l) => l.id === 'city_names')?.minzoom).toBe(cardZoom)
+    const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings, cardZoom)
+    expect(names.nameBoxes()).toEqual([])
+
+    const phone = fittedZoomSettings(zoomSettings, { width: 390, height: 844 }).cardZoom
+    names.showFrom(phone)
+    expect([...ranges.values()]).toEqual([
+      [phone, 24],
+      [phone, 24],
+    ])
+    expect(phone).toBeLessThan(2.5)
   })
 })

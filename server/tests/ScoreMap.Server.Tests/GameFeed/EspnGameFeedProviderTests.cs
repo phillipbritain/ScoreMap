@@ -751,13 +751,13 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
-    public async Task Cancelling_optional_summary_work_leaves_basic_scores_available()
+    public async Task Canceling_optional_summary_work_leaves_basic_scores_available()
     {
         using var cancel = new CancellationTokenSource();
         var handler = BasketballServing(() => BasketballScoreboard(99, 98), () =>
         {
             cancel.Cancel();
-            throw new TaskCanceledException("Cancelled", null, cancel.Token);
+            throw new TaskCanceledException("Canceled", null, cancel.Token);
         });
         var provider = ProviderOver(handler);
 

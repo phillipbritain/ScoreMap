@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-/** A rail icon's drawing, stroked in its text colour on a 24-unit square. */
+/** A rail icon's drawing, stroked in its text color on a 24-unit square. */
 export function RailIcon({ className, children }: { className: string; children: ReactNode }) {
   return (
     <svg
@@ -70,7 +70,7 @@ export function ScenarioIcon() {
   )
 }
 
-/** Tuners (local runs only): three sliders (Feather's "sliders"), for the theme and behaviour tuners. */
+/** Tuners (local runs only): three sliders (Feather's "sliders"), for the theme and behavior tuners. */
 export function TunersIcon() {
   return <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
 }

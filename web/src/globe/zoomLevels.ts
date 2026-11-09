@@ -3,7 +3,7 @@ import type { MapType } from '../settings/viewerSettings'
 import limits from './zoomSettings.json'
 
 /**
- * Small pins when zoomed out; score cards once a country fills the screen, for games near the centre
+ * Small pins when zoomed out; score cards once a country fills the screen, for games near the center
  * of the view (see hasCard).
  */
 export type PinSize = 'small' | 'card'
@@ -26,17 +26,17 @@ export interface PinLayout {
 export const cardZoom = 3
 
 /**
- * How far from the centre of the view a game's venue can be, in degrees of arc, and still have a score
+ * How far from the center of the view a game's venue can be, in degrees of arc, and still have a score
  * card. Farther games show as small pins, so cards don't crowd the globe's rim.
  */
 export const cardRadius = 40
 
-/** Whether a game has a score card at card zoom: its venue is within cardRadius of the view's centre. */
-export function hasCard(centre: GlobePoint, venue: GlobePoint): boolean {
-  return degreesApart(centre, venue) <= cardRadius
+/** Whether a game has a score card at card zoom: its venue is within cardRadius of the view's center. */
+export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
+  return degreesApart(center, venue) <= cardRadius
 }
 
-/** How far out and in the globe zooms, and where it starts (on a local run, the behaviour tuner can change them). */
+/** How far out and in the globe zooms, and where it starts (on a local run, the behavior tuner can change them). */
 export interface ZoomSettings {
   /**
    * The furthest out: just short of cardZoom, so small pins and their clusters still show.
@@ -50,10 +50,10 @@ export interface ZoomSettings {
    * Never further out than minZoom.
    */
   startZoom: number
-  /** The furthest in on the plain map: a city, some ten kilometres across. */
+  /** The furthest in on the plain map: a city, some ten kilometers across. */
   maxZoom: number
   /**
-   * The furthest in on the satellite map, which has more to see close in: a neighbourhood. Past about
+   * The furthest in on the satellite map, which has more to see close in: a neighborhood. Past about
    * 14 the imagery's pixels (10 m) only grow.
    */
   satelliteMaxZoom: number
@@ -108,7 +108,7 @@ export function zoomForMapType<Z extends ZoomSettings>(settings: Z, mapType: Map
 }
 
 /**
- * MapLibre's zoom with the view centred at this latitude for a zoom measured at the equator: the same
+ * MapLibre's zoom with the view centered at this latitude for a zoom measured at the equator: the same
  * size of globe on screen. Its globe grows away from the equator at the same zoom (by one over the
  * cosine of the latitude), so the zoom there is lower for the same globe. Every zoom the app sets,
  * such as cardZoom and minZoom, is measured at the equator, so it stands for one size of globe
@@ -119,7 +119,7 @@ export function zoomAt(latitude: number, atEquator: number): number {
 }
 
 /**
- * MapLibre's zoom with the view centred at this latitude, measured at the equator (see zoomAt): the same
+ * MapLibre's zoom with the view centered at this latitude, measured at the equator (see zoomAt): the same
  * whatever the latitude for the same size of globe on screen, so turning the globe leaves it as it is.
  * MapLibre calls it the normalized zoom.
  */
@@ -127,39 +127,39 @@ export function zoomAtEquator({ zoom, latitude }: GlobeCamera): number {
   return zoom - zoomAt(latitude, 0)
 }
 
-/** MapLibre's zoom, and the latitude the view is centred at. */
+/** MapLibre's zoom, and the latitude the view is centered at. */
 export interface GlobeCamera {
   zoom: number
   latitude: number
 }
 
 /**
- * The latitude the view's centre lands at when the globe is turned so a place at `latitude` sits
+ * The latitude the view's center lands at when the globe is turned so a place at `latitude` sits
  * `below` pixels under the middle of the view (above it, if negative), the globe the size of the zoom
  * `atEquator` (see zoomAt), in a view `height` pixels tall seen through MapLibre's camera with a
  * vertical field of view of `fov` degrees. MapLibre's camera looks straight down at the middle of the
  * view, from as far above the globe's surface as a view this tall needs for its field of view; the
  * place is where the camera's ray through its point meets the globe. On a phone, with the game panel
- * up, the centre can be some forty degrees from the game.
+ * up, the center can be some forty degrees from the game.
  */
-export function centreLatitude(latitude: number, below: number, atEquator: number, { height, fov }: { height: number; fov: number }): number {
+export function centerLatitude(latitude: number, below: number, atEquator: number, { height, fov }: { height: number; fov: number }): number {
   // The globe's radius in pixels: as big at a zoom measured at the equator wherever it's turned.
   const radius = (tileSize * 2 ** atEquator) / (2 * Math.PI)
   const cameraHeight = 0.5 / Math.tan((fov * Math.PI) / 360) * height
   const ray = Math.atan(Math.abs(below) / cameraHeight)
-  // The angle at the globe's centre between the middle of the view and the place.
+  // The angle at the globe's center between the middle of the view and the place.
   const apart = Math.asin(Math.min(1, ((cameraHeight + radius) * Math.sin(ray)) / radius)) - ray
-  const centre = latitude + Math.sign(below) * ((apart * 180) / Math.PI)
-  return Math.max(-maxLatitude, Math.min(maxLatitude, centre))
+  const center = latitude + Math.sign(below) * ((apart * 180) / Math.PI)
+  return Math.max(-maxLatitude, Math.min(maxLatitude, center))
 }
 
 /** MapLibre's tiles' size in pixels, which sets how big the globe is at a zoom. */
 const tileSize = 512
 
-/** The furthest from the equator MapLibre centres the view. */
+/** The furthest from the equator MapLibre centers the view. */
 const maxLatitude = 85.051129
 
-/** The zoom MapLibre allows furthest out with the view centred at this latitude, given the furthest out at the equator. */
+/** The zoom MapLibre allows furthest out with the view centered at this latitude, given the furthest out at the equator. */
 export function furthestOutZoom(latitude: number, furthestOut = minZoom): number {
   return zoomAt(latitude, furthestOut)
 }
@@ -199,7 +199,7 @@ const zoomStep = 0.25
  * spacing, which keeps small pins and pin clusters from overlapping (see pinClusterSpacing).
  * MapLibre clusters pins at whole zoom levels only, and shows zoom 3's clusters all the way to 3.99,
  * where pins are nearly twice as far apart on screen. So the radius is shrunk by how far past the
- * whole level the zoom is (rounded down to a step, erring towards clustering) to keep pins
+ * whole level the zoom is (rounded down to a step, erring toward clustering) to keep pins
  * clustering only as close as they'd be on screen now.
  */
 export function pinLayout(camera: GlobeCamera, spacing: number, cardsFrom: number): PinLayout {

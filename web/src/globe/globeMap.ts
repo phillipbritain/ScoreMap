@@ -14,7 +14,7 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noRecentChanges, type RecentChanges } from '../games/recentChanges'
-import { gameColour, type PickedColours } from '../settings/gameColour'
+import { gameColor, type PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
@@ -25,7 +25,7 @@ import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
 import { fadeNearHorizon, fadedOut, isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
-import { clearCentre, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
+import { clearCenter, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { drawFlamesOnDemand, showsFlames } from './flames'
 import { pinFeatures } from './pinFeatures'
@@ -60,7 +60,7 @@ import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, 
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import {
-  centreLatitude,
+  centerLatitude,
   clusterMaxZoom,
   hasCard,
   cityNamesFrom,
@@ -91,10 +91,10 @@ export interface GlobeMapOptions {
    * place names, pins and score cards. It changes with setTheme.
    */
   theme: Theme
-  /** What decides which cities are labelled, to start with: the app's own unless given. It changes with setCityLabelSettings. */
+  /** What decides which cities are labeled, to start with: the app's own unless given. It changes with setCityLabelSettings. */
   cityLabels?: CityLabelSettings
-  /** The colours the viewer picked for games, to start with: none unless given. They change with setColours. */
-  colours?: PickedColours
+  /** The colors the viewer picked for games, to start with: none unless given. They change with setColors. */
+  colors?: PickedColors
   /** Whether hot games show flames (see showsFlames), to start with: not unless given. It changes with setFlames. */
   flames?: boolean
   /**
@@ -139,16 +139,16 @@ const cardClusterZoomPadding = 120
 
 /**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
- * pin clusters; zoomed in, each pin near the centre of the view becomes a score card, and cards with
+ * pin clusters; zoomed in, each pin near the center of the view becomes a score card, and cards with
  * no room form card clusters, while the pins farther out stay small and form pin clusters among
- * themselves (see hasCard). Selecting a cluster zooms in until it splits, or centres the globe on
+ * themselves (see hasCard). Selecting a cluster zooms in until it splits, or centers the globe on
  * one farther out.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
   private theme: Theme
-  /** The colours the viewer picked for games (see gameColour). */
-  private colours: PickedColours
+  /** The colors the viewer picked for games (see gameColor). */
+  private colors: PickedColors
   /** Whether hot games show flames (see showsFlames). */
   private flames: boolean
   /** The map type the globe's style is made in (see globeStyle). */
@@ -182,8 +182,8 @@ export class GlobeMap {
   /** The pins last given to the outer pin source, likewise. */
   private outerPinsKey = ''
   private selectedGameId: string | null = null
-  /** A game picked from the Games list, to be centred when it's selected rather than just lifted clear of the panel. */
-  private centreNext: string | null = null
+  /** A game picked from the Games list, to be centered when it's selected rather than just lifted clear of the panel. */
+  private centerNext: string | null = null
   private clustering: PinLayout
   /** The furthest in the globe zooms (see FittedZoom), which changes with setZoomLimits. */
   private maxZoom: number
@@ -202,9 +202,9 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colours = noColours, flames = false, mapType = 'plain', zoomSettings = unfittedZoom, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, flames = false, mapType = 'plain', zoomSettings = unfittedZoom, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
-    this.colours = colours
+    this.colors = colors
     this.flames = flames
     this.mapType = mapType
     this.onSelect = onSelect
@@ -257,10 +257,10 @@ export class GlobeMap {
       this.stopHorizonFade = fadeNearHorizon(
         map,
         [cityNameSource, pinSource, outerPinSource],
-        (source, id, { centre }) => source === cityNameSource && this.names.namesACard(id, centre),
+        (source, id, { center }) => source === cityNameSource && this.names.namesACard(id, center),
       )
       this.trails = trailLayer(currentTheme)
-      this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.flamesOf, this.names, this.trails, () => this.cardZoom, (gameId) =>
+      this.cards = new ScoreCardMarkers(map, currentTheme, this.colorOf, this.flamesOf, this.names, this.trails, () => this.cardZoom, (gameId) =>
         this.onSelect(gameId),
       )
       drawFlamesOnDemand(map)
@@ -282,7 +282,7 @@ export class GlobeMap {
       map.on('idle', this.goneIdle)
       map.on('click', pinClusterLayer, this.zoomToPinCluster)
       map.on('click', smallPinLayer, this.selectPin)
-      map.on('click', outerPinClusterLayer, this.centreOnOuterPinCluster)
+      map.on('click', outerPinClusterLayer, this.centerOnOuterPinCluster)
       map.on('click', outerSmallPinLayer, this.selectPin)
       map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
       map.on('click', cardlessSmallPinLayer, this.selectPin)
@@ -342,12 +342,12 @@ export class GlobeMap {
    * then it lifts just far enough to clear it (see liftClearOf). Selecting the game already
    * selected does nothing, so later games arriving don't move the camera. A game not on the globe
    * (its venue not placed) is selected without moving it, and stays so once placed. A game marked by
-   * centreOn is centred instead.
+   * centerOn is centered instead.
    */
   select(gameId: string | null, panel: ScreenBox | null = null): void {
     if (gameId === this.selectedGameId) return
-    const centre = gameId !== null && gameId === this.centreNext
-    this.centreNext = null
+    const center = gameId !== null && gameId === this.centerNext
+    this.centerNext = null
     this.unsettle()
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
@@ -356,7 +356,7 @@ export class GlobeMap {
     }
     const game = gameId === null ? undefined : this.shown.get(gameId)
     if (!game) return
-    if (centre) return this.centre(game, panel)
+    if (center) return this.center(game, panel)
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
     const { x, y } = this.map.project(venue)
     const lift = liftClearOf(this.pinOnPage(game, { x, y }), panel)
@@ -367,17 +367,17 @@ export class GlobeMap {
   }
 
   /**
-   * Centres a game picked from the Games list in the part of the globe the game panel leaves clear (see
-   * clearCentre), zoomed in far enough for its score card to show: now if it's already selected, else
+   * Centers a game picked from the Games list in the part of the globe the game panel leaves clear (see
+   * clearCenter), zoomed in far enough for its score card to show: now if it's already selected, else
    * as it's selected next.
    */
-  centreOn(gameId: string, panel: ScreenBox | null): void {
+  centerOn(gameId: string, panel: ScreenBox | null): void {
     if (gameId !== this.selectedGameId) {
-      this.centreNext = gameId
+      this.centerNext = gameId
       return
     }
     const game = this.shown.get(gameId)
-    if (game) this.centre(game, panel)
+    if (game) this.center(game, panel)
   }
 
   /**
@@ -386,13 +386,13 @@ export class GlobeMap {
    * and again, as a card cluster does (see zoomToCardCluster), until the card shows or the globe can
    * zoom no further in. A move by the viewer along the way, or another game picked, stops it.
    */
-  private centre(
+  private center(
     game: PlacedGame,
     panel: ScreenBox | null,
     atEquator = Math.max(zoomAtEquator(this.camera()), this.cardZoom + pickedGamePastCardZoom),
   ): void {
     const globe = this.map.getContainer().getBoundingClientRect()
-    const { x, y } = clearCentre(globe, panel)
+    const { x, y } = clearCenter(globe, panel)
     const middle = { x: globe.left + globe.width / 2, y: globe.top + globe.height / 2 }
     const offset: [number, number] = [x - middle.x, y - middle.y]
     const center = new LngLat(game.venue.longitude, game.venue.latitude)
@@ -402,21 +402,21 @@ export class GlobeMap {
       const maxZoom = this.map.getMaxZoom()
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01
       if (this.destroyed || !arrived || zoom >= maxZoom || this.selectedGameId !== game.id) return
-      if (this.cards.hasNoRoom(game.id)) this.centre(game, panel, atEquator + 1)
+      if (this.cards.hasNoRoom(game.id)) this.center(game, panel, atEquator + 1)
     })
   }
 
   /**
    * MapLibre's zoom (no further in than it allows) for a zoom measured at the equator, with the globe
    * turned so `lngLat` is `offset` pixels from the middle of the view, as easeTo turns it: the view's
-   * centre is then off `lngLat`, and its latitude sets the zoom (see centreLatitude and zoomAt).
+   * center is then off `lngLat`, and its latitude sets the zoom (see centerLatitude and zoomAt).
    */
   private zoomPlacing(lngLat: LngLat, [, below]: [number, number], atEquator: number): number {
     const view = { height: this.map.getContainer().clientHeight, fov: this.map.getVerticalFieldOfView() }
-    return Math.min(this.map.getMaxZoom(), zoomAt(centreLatitude(lngLat.lat, below, atEquator, view), atEquator))
+    return Math.min(this.map.getMaxZoom(), zoomAt(centerLatitude(lngLat.lat, below, atEquator, view), atEquator))
   }
 
-  /** MapLibre's zoom, and the latitude the view is centred at. */
+  /** MapLibre's zoom, and the latitude the view is centered at. */
   private camera(): GlobeCamera {
     return { zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }
   }
@@ -449,7 +449,7 @@ export class GlobeMap {
     }
     this.recluster()
     this.glow.place()
-    // The pins carry their games' colours, which may be the theme's.
+    // The pins carry their games' colors, which may be the theme's.
     this.showPins()
     this.cards.restyle()
   }
@@ -473,17 +473,17 @@ export class GlobeMap {
     return layerChanges(globeStyle(this.base, theme, mapType).layers, globeStyle(this.base, this.theme, this.mapType).layers)
   }
 
-  /** Shows each game in these colours from now on (see gameColour): its pin, score card, trail and pulses. */
-  setColours(colours: PickedColours): void {
-    if (colours === this.colours) return
-    this.colours = colours
+  /** Shows each game in these colors from now on (see gameColor): its pin, score card, trail and pulses. */
+  setColors(colors: PickedColors): void {
+    if (colors === this.colors) return
+    this.colors = colors
     this.unsettle()
     this.showPins()
     this.cards.restyle()
   }
 
-  /** A game's colour, in the colours and theme the globe has now. */
-  private readonly colourOf = (game: Game): string => gameColour(this.colours, game, this.theme)
+  /** A game's color, in the colors and theme the globe has now. */
+  private readonly colorOf = (game: Game): string => gameColor(this.colors, game, this.theme)
 
   /** Shows flames on hot games from now on, or no longer (see showsFlames): on their score cards, small pins and clusters. */
   setFlames(on: boolean): void {
@@ -497,11 +497,11 @@ export class GlobeMap {
   /** Whether a game shows flames now. */
   private readonly flamesOf = (game: Game): boolean => showsFlames(this.flames, game)
 
-  /** Gives the pin sources the games shown, each in its colour and with its flames, when they've changed. */
+  /** Gives the pin sources the games shown, each in its color and with its flames, when they've changed. */
   private showPins(): void {
     // Most changes are to a Live game's clock or score, which pins don't show. Reloading the pin
     // source for them would only hold back placing cards (see ScoreCardMarkers.sync).
-    const pins = pinFeatures([...this.shown.values()], this.colourOf, this.flamesOf)
+    const pins = pinFeatures([...this.shown.values()], this.colorOf, this.flamesOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey !== this.pinsKey) {
       this.pinsKey = pinsKey
@@ -510,7 +510,7 @@ export class GlobeMap {
     this.showOuterPins()
   }
 
-  /** Labels cities by these settings from now on (on a local run, from the behaviour tuner). */
+  /** Labels cities by these settings from now on (on a local run, from the behavior tuner). */
   setCityLabelSettings(settings: CityLabelSettings): void {
     if (settings === this.cityLabels) return
     this.cityLabels = settings
@@ -521,7 +521,7 @@ export class GlobeMap {
 
   /**
    * Zooms no further out or in than these from now on, and shows score cards from their card zoom (on
-   * a local run, from the behaviour tuner; and as the window is resized, see fittedZoomSettings).
+   * a local run, from the behavior tuner; and as the window is resized, see fittedZoomSettings).
    */
   setZoomLimits({ minZoom, maxZoom, cardZoom }: FittedZoom): void {
     this.map.setMinZoom(minZoom)
@@ -541,7 +541,7 @@ export class GlobeMap {
     this.showOuterPins()
   }
 
-  /** Rings each game at the reach its city label may be within, or stops (on a local run, from the behaviour tuner). */
+  /** Rings each game at the reach its city label may be within, or stops (on a local run, from the behavior tuner). */
   showGameCityReach(shown: boolean): void {
     if (shown === this.reachShown) return
     this.reachShown = shown
@@ -615,7 +615,7 @@ export class GlobeMap {
     this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
 
-  /** Puts the camera there at once, with no flight (the behaviour tuner showing the start zoom). */
+  /** Puts the camera there at once, with no flight (the behavior tuner showing the start zoom). */
   jumpTo(camera: Camera): void {
     this.map.jumpTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
@@ -646,10 +646,10 @@ export class GlobeMap {
     const map = this.map
     map.setProjection({ type: 'globe' })
     this.clustering = this.pinLayoutNow()
-    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colourOf, this.flamesOf), this.clustering))
+    map.addSource(pinSource, pinSourceSpec(pinFeatures([...this.shown.values()], this.colorOf, this.flamesOf), this.clustering))
     map.addSource(
       outerPinSource,
-      pinSourceSpec(pinFeatures([], this.colourOf, this.flamesOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
+      pinSourceSpec(pinFeatures([], this.colorOf, this.flamesOf), { size: 'small', clusterRadius: this.clustering.clusterRadius }),
     )
     this.outerPinsKey = ''
     this.showOuterPins()
@@ -722,7 +722,7 @@ export class GlobeMap {
             ({ venue }) => !hasCard({ longitude, latitude }, venue) && !isBehindGlobe(map, [venue.longitude, venue.latitude]),
           )
         : []
-    const pins = pinFeatures(outer, this.colourOf, this.flamesOf)
+    const pins = pinFeatures(outer, this.colorOf, this.flamesOf)
     const pinsKey = JSON.stringify(pins)
     if (pinsKey === this.outerPinsKey) return
     this.outerPinsKey = pinsKey
@@ -790,10 +790,10 @@ export class GlobeMap {
   // their games split. Selecting an outer pin cluster brings its games' cards instead.
 
   /**
-   * Centres the globe on an outer pin cluster, with the globe the same size, so its games have score
+   * Centers the globe on an outer pin cluster, with the globe the same size, so its games have score
    * cards: at the same zoom measured at the equator, and no further out than the card zoom.
    */
-  private readonly centreOnOuterPinCluster = (event: MapLayerMouseEvent) => {
+  private readonly centerOnOuterPinCluster = (event: MapLayerMouseEvent) => {
     const cluster = event.features?.[0]
     if (!cluster || this.fadedOutAt(event)) return
     const center = (cluster.geometry as Point).coordinates as [number, number]
@@ -852,7 +852,7 @@ export class GlobeMap {
 
   /**
    * Plays an animation where a game shows on the globe: its score card, its small pin (zoomed out, or
-   * far from the centre of the view), or the pin cluster it's in. Games not on the map (off screen)
+   * far from the center of the view), or the pin cluster it's in. Games not on the map (off screen)
    * don't animate.
    */
   private async animate(game: PlacedGame, animation: PinAnimation): Promise<void> {
@@ -871,7 +871,7 @@ export class GlobeMap {
 
     if (target.kind === 'pin') {
       if (card) this.cards.animate(game.id, animation)
-      else pulse(map, this.colourOf(game), target.lngLat, animation, 'pin')
+      else pulse(map, this.colorOf(game), target.lngLat, animation, 'pin')
       return
     }
 
@@ -880,7 +880,7 @@ export class GlobeMap {
       const leaves = await source.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])
       if (this.destroyed) return
       if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
-        pulse(map, this.colourOf(game), lngLat, animation, 'cluster')
+        pulse(map, this.colorOf(game), lngLat, animation, 'cluster')
         return
       }
     }
@@ -916,8 +916,8 @@ export class GlobeMap {
   }
 }
 
-/** No colours picked: every game in the theme's colours. */
-const noColours: PickedColours = { sportColours: {}, leagueColours: {} }
+/** No colors picked: every game in the theme's colors. */
+const noColors: PickedColors = { sportColors: {}, leagueColors: {} }
 
 /** Every layer the globe adds for the games in a theme, as gameLayers makes them, for the pins showing. */
 function gameLayersIn(theme: Theme, selectedGameId: string | null, size: PinSize): LayerSpecification[] {

@@ -207,7 +207,7 @@ public static partial class ScenarioReader
 
     /// <summary>
     /// A written-out game's venue, which must be in the venue list (known by name and city, as the
-    /// venue locator looks it up), so a misspelt one can't quietly go to Nominatim. A venue made up on
+    /// venue locator looks it up), so a misspelled one can't quietly go to Nominatim. A venue made up on
     /// purpose says so with <c>"notInVenueList": true</c>. Parts of a listed venue left out are taken
     /// from the list; parts written must agree with it.
     /// </summary>

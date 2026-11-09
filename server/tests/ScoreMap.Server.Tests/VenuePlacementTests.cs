@@ -153,7 +153,7 @@ public class VenuePlacementTests
     }
 
     [Fact]
-    public async Task A_venue_the_search_cannot_find_falls_back_to_its_city_centre()
+    public async Task A_venue_the_search_cannot_find_falls_back_to_its_city_center()
     {
         await using var server = new ScoreMapServer();
         server.Places.Add("London, England", new Coordinates(51.5074, -0.1278));

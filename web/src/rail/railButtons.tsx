@@ -17,7 +17,7 @@ export const railButtons = [
 
 /**
  * The local-run tools' buttons, last on the rail on local runs only: Scenario, opening the scenario
- * controls, and Tuners, opening the theme and behaviour tuners. Not in railButtons, so the welcome
+ * controls, and Tuners, opening the theme and behavior tuners. Not in railButtons, so the welcome
  * tour, which shows the live site's rail, doesn't list them.
  */
 export const localRunButtons = [

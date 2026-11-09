@@ -10,9 +10,9 @@ export interface GlobeGlow {
 }
 
 /**
- * A soft, even halo around the globe in the theme's colours: an inner glow close to its edge and a
- * wider, fainter outer one. MapLibre's own atmosphere is lit from one side and its colour can't be
- * set, so this draws a circle the size of the globe, in the globe's surface colour, behind the map
+ * A soft, even halo around the globe in the theme's colors: an inner glow close to its edge and a
+ * wider, fainter outer one. MapLibre's own atmosphere is lit from one side and its color can't be
+ * set, so this draws a circle the size of the globe, in the globe's surface color, behind the map
  * canvas and gives it the glow, in the theme `theme` gives each time it's placed.
  */
 export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
@@ -22,7 +22,7 @@ export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
   // Before the canvas, so the globe draws over it and only the halo shows.
   container.insertBefore(glow, container.firstChild)
 
-  // The globe's size on screen changes only with the zoom, the latitude the view is centred on, the
+  // The globe's size on screen changes only with the zoom, the latitude the view is centered on, the
   // map's size and its projection (see idle, below), so it's worked out again only when one of them
   // changes: not as a pan along a parallel goes.
   let measured = { key: '', radius: 0 }
@@ -36,7 +36,7 @@ export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
   const place = () => {
     const globe = theme().components.Globe
     const radius = radiusNow()
-    const centre = map.project(map.getCenter())
+    const center = map.project(map.getCenter())
     // Each glow grows with the globe on screen, up to the theme's most.
     const size = ({ share, max }: { share: number; max: number }) => Math.min(radius * share, max)
     const shadow = ({ color, blur, spread }: Theme['components']['Globe']['halo']['inner']) => `0 0 ${size(blur)}px ${size(spread)}px ${color}`
@@ -44,8 +44,8 @@ export function addGlobeGlow(map: MapLibreMap, theme: () => Theme): GlobeGlow {
       backgroundColor: globe.surface,
       width: `${2 * radius}px`,
       height: `${2 * radius}px`,
-      left: `${centre.x - radius}px`,
-      top: `${centre.y - radius}px`,
+      left: `${center.x - radius}px`,
+      top: `${center.y - radius}px`,
       boxShadow: `${shadow(globe.halo.inner)}, ${shadow(globe.halo.outer)}`,
     })
   }
@@ -71,14 +71,14 @@ const coarseStep = 6
 
 /**
  * The globe's radius on screen, in pixels. MapLibre doesn't expose it, so this projects points along
- * great circles out from the centre: the farthest any of them lands from the centre is the globe's edge.
+ * great circles out from the center: the farthest any of them lands from the center is the globe's edge.
  */
 function onScreenRadius(map: MapLibreMap): number {
-  const centre = map.getCenter()
-  const origin = map.project(centre)
-  const lat1 = centre.lat * radians
-  const lng1 = centre.lng * radians
-  // How far from the centre on screen the point this many degrees out along a bearing lands.
+  const center = map.getCenter()
+  const origin = map.project(center)
+  const lat1 = center.lat * radians
+  const lng1 = center.lng * radians
+  // How far from the center on screen the point this many degrees out along a bearing lands.
   const along = (b: number, degrees: number) => {
     const d = degrees * radians
     // Kept within ±1: on a pole, rounding can land it just past, where asin gives NaN.

@@ -19,7 +19,7 @@ interface LeaguesProps {
  * The rail's Leagues popover: a "Top Events | My leagues" switch, as on ESPN's front page, then, for
  * My leagues, an "All leagues" chip to switch every league at once, then leagues
  * grouped under their sport, each a chip to switch on or off, and each sport's name switching all of
- * its leagues. On Top Events the leagues stay in view, greyed out, as they'll be when switched back.
+ * its leagues. On Top Events the leagues stay in view, grayed out, as they'll be when switched back.
  */
 export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length

@@ -5,7 +5,7 @@ import { statusKey, type Theme } from '../theme/theme'
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer and Final fades,
  * alike on small pins, score cards, pin clusters and card clusters. Each
- * status's look comes from the theme, gathered here from where it sits there: its colour from the
+ * status's look comes from the theme, gathered here from where it sits there: its color from the
  * palette, the small pin's core and glow from the Pin component, a cluster's opacity from Cluster and a
  * score card's fade and glow from ScoreCard. What isn't look stays here: which status draws on top, the
  * order of prominence, and how a cluster picks its status. Map layers read the look through style

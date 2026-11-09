@@ -6,7 +6,7 @@ export const trailLayerId = 'trails'
 /** A moved card's trail, as the card layout gives it (see cardLayoutLayers' cardLayoutDrawing). */
 export interface TrailOnGlobe {
   gameId: string
-  /** Its game's colour (see gameColour). */
+  /** Its game's color (see gameColor). */
   color: string
   /** The card's venue, which the card sits a fixed way from on screen. */
   venue: [number, number]
@@ -47,7 +47,7 @@ export interface TrailLayer extends CustomLayerInterface {
  * again every frame of a pan, too slow for it.
  *
  * Drawn as MapLibre would draw them as lines and circles (see cardLayoutLayers' trail looks, from the
- * theme `theme` gives each frame): a trail is a thin line lit in its game's colour, in a soft glow,
+ * theme `theme` gives each frame): a trail is a thin line lit in its game's color, in a soft glow,
  * to a point ringed in it; while the pointer is on its card, or its game is selected, the trail and dot
  * are bolder, the dot lit in a glow of its own.
  */
@@ -139,8 +139,8 @@ export function trailLayer(theme: () => Theme): TrailLayer {
   }
 }
 
-// Each vertex: where it is on screen (2), where it is in its shape (2), its fill colour (4, premultiplied),
-// its stroke colour (4, premultiplied), and its shape (4: kind, then the kind's sizes).
+// Each vertex: where it is on screen (2), where it is in its shape (2), its fill color (4, premultiplied),
+// its stroke color (4, premultiplied), and its shape (4: kind, then the kind's sizes).
 const attributes: [string, number][] = [
   ['a_pos', 2],
   ['a_local', 2],
@@ -250,7 +250,7 @@ const premultiplied = ([r, g, b, a]: Rgba, opacity: number): Rgba => {
   return [r * alpha, g * alpha, b * alpha, alpha]
 }
 
-/** A CSS colour as red, green, blue and alpha from 0 to 1, read back from a canvas, which knows every CSS colour. */
+/** A CSS color as red, green, blue and alpha from 0 to 1, read back from a canvas, which knows every CSS color. */
 function rgba(color: string): Rgba {
   const known = parsed.get(color)
   if (known) return known

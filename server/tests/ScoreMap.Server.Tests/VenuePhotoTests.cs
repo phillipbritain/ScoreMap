@@ -114,6 +114,34 @@ public class VenuePhotoTests
     }
 
     [Fact]
+    public async Task Photo_credits_saved_with_the_British_licence_spelling_keep_their_license_without_searching_again()
+    {
+        // A file as saved before the switch to American spelling: version 2, its credit's "licence" and "licenceUrl".
+        var savedPhotos = Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(savedPhotos, """
+            {"version":2,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead.jpg",
+              "credit":{"author":"A. Photographer","licence":"CC BY-SA 4.0","licenceUrl":"https://licenses.test/by-sa","sourceUrl":"https://photos.test/page"}}}}
+            """);
+        try
+        {
+            await using var server = new ScoreMapServer(savedVenuePhotosPath: savedPhotos);
+            server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+
+            var game = Assert.Single(await server.SnapshotOnceAsync());
+
+            Assert.Equal(
+                new VenuePhoto("https://photos.test/arrowhead.jpg",
+                    new PhotoCredit("A. Photographer", "CC BY-SA 4.0", "https://licenses.test/by-sa", "https://photos.test/page")),
+                game.Venue.Photo);
+            Assert.Empty(server.Photos.Searches);
+        }
+        finally
+        {
+            File.Delete(savedPhotos);
+        }
+    }
+
+    [Fact]
     public async Task A_venue_without_a_photo_is_remembered_too()
     {
         // Both runs share a file the test owns, as a server deletes a saved-photos file it made itself.

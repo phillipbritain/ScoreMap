@@ -12,17 +12,17 @@ export function showsFlames(on: boolean, game: { hot: boolean }): boolean {
 /** How wide a flame is, as a share of how tall. */
 const flameWidth = 0.7
 
-/** A flame's colours: its tips, its middle and its white-hot core (the theme's score card fire's). */
-interface FireColours {
+/** A flame's colors: its tips, its middle and its white-hot core (the theme's score card fire's). */
+interface FireColors {
   tips: string
   middle: string
   core: string
 }
 
 /**
- * The map's image of a flame `size` pixels tall in the theme's fire colours, as a score card's fire is:
+ * The map's image of a flame `size` pixels tall in the theme's fire colors, as a score card's fire is:
  * its id, which the map draws the first time a layer asks for it (see drawFlamesOnDemand). The id
- * carries the colours, so a change of theme asks for a new image.
+ * carries the colors, so a change of theme asks for a new image.
  */
 export function flameImage(theme: Theme, size: number): string {
   const { tips, middle, core } = theme.components.ScoreCard.flames
@@ -48,7 +48,7 @@ export function drawFlamesOnDemand(map: MapLibreMap): void {
  * core, one inside another; see index.css): drawn at the screen's pixel ratio, so it's sharp. Null if
  * the browser can't draw it.
  */
-function drawFlame(size: number, { tips, middle, core }: FireColours, pixelRatio: number): ImageData | null {
+function drawFlame(size: number, { tips, middle, core }: FireColors, pixelRatio: number): ImageData | null {
   const height = Math.max(1, Math.round(size * pixelRatio))
   const width = Math.max(1, Math.round(height * flameWidth))
   const canvas = document.createElement('canvas')
@@ -66,7 +66,7 @@ function drawFlame(size: number, { tips, middle, core }: FireColours, pixelRatio
     context.translate(left, top)
     context.scale(scaleX, scaleY)
     const fill = context.createLinearGradient(0, 100, 0, 0)
-    for (const [at, colour] of stops) fill.addColorStop(at, colour)
+    for (const [at, color] of stops) fill.addColorStop(at, color)
     context.fillStyle = fill
     context.fill(tongue)
     context.restore()

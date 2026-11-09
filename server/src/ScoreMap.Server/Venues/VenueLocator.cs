@@ -15,7 +15,7 @@ public enum LocationSource
     Given,
     /// <summary>The venue, looked up by name and city.</summary>
     Venue,
-    /// <summary>The centre of the venue's city.</summary>
+    /// <summary>The center of the venue's city.</summary>
     VenueCity,
     /// <summary>The home team's city, for a game with no usable venue.</summary>
     HomeTeamCity,
@@ -80,7 +80,7 @@ public sealed class VenueLocator
     /// <summary>
     /// Where a game's pin goes, trying in order: the corrections file, the position given with the venue,
     /// the venue looked up by name and city (ESPN supplies no coordinates, ADR-0001), the venue's city
-    /// centre, and the home team's city
+    /// center, and the home team's city
     /// (<paramref name="home"/>, null in a game with no home side).
     /// Always answers; when every step fails the position is 0,0 and <see cref="VenueLocation.FoundBy"/>
     /// says so.

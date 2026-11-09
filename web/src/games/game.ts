@@ -35,16 +35,16 @@ export interface GameVenue {
 /** A photo of a venue, for the top of the game panel. */
 export interface VenuePhoto {
   url: string
-  /** Set when the photo's licence asks for attribution (Wikimedia Commons photos). */
+  /** Set when the photo's license asks for attribution (Wikimedia Commons photos). */
   credit: PhotoCredit | null
 }
 
-/** Who took a photo and under what licence. */
+/** Who took a photo and under what license. */
 export interface PhotoCredit {
   author: string
-  licence: string
-  licenceUrl: string | null
-  /** The photo's own page, with its full licence terms. */
+  license: string
+  licenseUrl: string | null
+  /** The photo's own page, with its full license terms. */
   sourceUrl: string
 }
 
@@ -64,7 +64,7 @@ export interface StreamLink {
   url: string
 }
 
-/** The betting line: the favourite and its spread as the bookmaker writes it ("SEA -2.5"), and the total points it expects. */
+/** The betting line: the favorite and its spread as the bookmaker writes it ("SEA -2.5"), and the total points it expects. */
 export interface GameOdds {
   line: string | null
   overUnder: number | null

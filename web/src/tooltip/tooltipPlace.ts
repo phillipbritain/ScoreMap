@@ -16,7 +16,7 @@ export type TooltipSide = 'above' | 'below' | 'left' | 'right'
 export type TooltipPrefer = 'above' | 'left' | 'right'
 
 /**
- * Where a tooltip goes for what it's for: centred above it, or below it where there's no room above;
+ * Where a tooltip goes for what it's for: centered above it, or below it where there's no room above;
  * or, where asked, level with it on its left (the rail's buttons, so it covers none of the others) or
  * its right (a game in the Games list, clear of the list), unless there's no room there. Kept on the screen.
  */

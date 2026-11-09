@@ -1,6 +1,6 @@
 # Coding standards
 
-Judgement calls a reviewer applies to a diff. Mechanical rules are enforced by tooling instead, so leave them to it: the web app's `npm run lint` and `tsc -b`, and the convention tests in `server/tests/ScoreMap.Server.Tests/Conventions/` (e.g. cancellation is judged by the token, never by exception type).
+Judgment calls a reviewer applies to a diff. Mechanical rules are enforced by tooling instead, so leave them to it: the web app's `npm run lint` and `tsc -b`, and the convention tests in `server/tests/ScoreMap.Server.Tests/Conventions/` (e.g. cancellation is judged by the token, never by exception type).
 
 ## Fakes fail the way the real thing does
 
@@ -10,7 +10,7 @@ When a diff adds a call to an outside service, or a fake for one, check that its
 
 ## Names and comments use the glossary's terms
 
-Identifiers, comments, messages and UI text name domain concepts with the terms in `GLOSSARY.md`. Flag any term the glossary lists under _Avoid_ for the concept meant: "game clock" for the scenario clock, "pace" or "rate" for the speed. It's a judgement call, since many _Avoid_ words are everyday ones that are fine in other senses (a game's "location" in a geometry helper, an "event" in the DOM).
+Identifiers, comments, messages and UI text name domain concepts with the terms in `GLOSSARY.md`. Flag any term the glossary lists under _Avoid_ for the concept meant: "game clock" for the scenario clock, "pace" or "rate" for the speed. It's a judgment call, since many _Avoid_ words are everyday ones that are fine in other senses (a game's "location" in a geometry helper, an "event" in the DOM).
 
 ## Seeded tests assert what every seed gives
 

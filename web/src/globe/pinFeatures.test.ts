@@ -3,7 +3,7 @@ import type { Game } from '../games/game'
 import type { PlacedGame } from '../games/placedGames'
 import { pinFeatures } from './pinFeatures'
 
-/** Every game in one colour. */
+/** Every game in one color. */
 const inRed = () => '#ff0000'
 
 /** No game showing flames. */
@@ -75,12 +75,12 @@ describe('pinFeatures', () => {
     expect(second.geometry.coordinates).toEqual([-94.4839, 39.0489])
   })
 
-  it("colours each pin in its game's colour", () => {
-    const colourOf = (game: Game) => (game.id === '401' ? '#123456' : '#654321')
+  it("colors each pin in its game's color", () => {
+    const colorOf = (game: Game) => (game.id === '401' ? '#123456' : '#654321')
 
-    const colours = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colourOf, noFlames).features.map((pin) => pin.properties.color)
+    const colors = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colorOf, noFlames).features.map((pin) => pin.properties.color)
 
-    expect(colours).toEqual(['#123456', '#654321'])
+    expect(colors).toEqual(['#123456', '#654321'])
   })
 
   it('marks the pins of the games showing flames', () => {

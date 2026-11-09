@@ -31,7 +31,7 @@ describe('withSetting', () => {
 })
 
 describe('shiftedJob', () => {
-  it('steps a colour job darker or lighter in its palette colour', () => {
+  it('steps a color job darker or lighter in its palette color', () => {
     expect(shiftedJob('navy.500', 1)).toBe('navy.600')
     expect(shiftedJob('navy.500', -2)).toBe('navy.300')
   })
@@ -41,13 +41,13 @@ describe('shiftedJob', () => {
     expect(shiftedJob('gold.100', -1)).toBe('gold.100')
   })
 
-  it('steps one of the palette’s colours from the step it names, leaving the palette', () => {
+  it('steps one of the palette’s colors from the step it names, leaving the palette', () => {
     const json = withSetting(builtIn, ['palette', 'primary', 'dark'], 'navy.700')
     expect(shiftedJob('primary.dark', 1, json)).toBe('navy.800')
     expect(shiftedJob('primary.dark', -1, json)).toBe('navy.600')
   })
 
-  it('leaves a colour given directly as it is', () => {
+  it('leaves a color given directly as it is', () => {
     expect(shiftedJob('transparent', 1)).toBe('transparent')
     expect(shiftedJob('#123456', -1)).toBe('#123456')
   })
@@ -68,7 +68,7 @@ describe('changes', () => {
 })
 
 describe('tunerTabs', () => {
-  it('shows every setting but the colours themselves under some tab', () => {
+  it('shows every setting but the colors themselves under some tab', () => {
     const paths = tunerTabs(builtIn).flatMap((tab) => tab.paths)
     const leavesOf = (value: unknown, path: SettingPath): SettingPath[] =>
       typeof value === 'object' && value !== null && !Array.isArray(value)

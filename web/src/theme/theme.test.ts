@@ -13,7 +13,7 @@ function resolved(json: unknown): Theme {
   return result.theme
 }
 
-/** A step of the theme's colours, with these colours too, as a colour job naming it resolves to. */
+/** A step of the theme's colors, with these colors too, as a color job naming it resolves to. */
 function step(colors: unknown, name: string): string {
   const json = themeJson()
   json.colors = { ...json.colors, ...(colors as object) }
@@ -22,8 +22,8 @@ function step(colors: unknown, name: string): string {
 }
 
 /**
- * A colour's lightness, chroma and hue (in degrees) in OKLCH, measured here independently of the
- * theme's own maths (Björn Ottosson's OKLab, from linear sRGB). Checked against known values below.
+ * A color's lightness, chroma and hue (in degrees) in OKLCH, measured here independently of the
+ * theme's own math (Björn Ottosson's OKLab, from linear sRGB). Checked against known values below.
  */
 function oklch(hex: string): { l: number; c: number; h: number } {
   const [r, g, b] = [1, 3, 5]
@@ -41,7 +41,7 @@ function oklch(hex: string): { l: number; c: number; h: number } {
 }
 
 describe('oklch, the tests’ measure', () => {
-  it('measures known colours as the CSS Color 4 spec gives them', () => {
+  it('measures known colors as the CSS Color 4 spec gives them', () => {
     const red = oklch('#ff0000')
     expect(red.l).toBeCloseTo(0.628, 3)
     expect(red.c).toBeCloseTo(0.2577, 3)
@@ -53,7 +53,7 @@ describe('oklch, the tests’ measure', () => {
 const steps = ['100', '200', '300', '400', '500', '600', '700', '800', '900']
 
 describe('resolveTheme', () => {
-  it("works out a colour's steps, lighter one way and darker the other, keeping its hue", () => {
+  it("works out a color's steps, lighter one way and darker the other, keeping its hue", () => {
     const navy = { navy: { base: '#2b4d7d' } }
     expect(step(navy, 'navy.500')).toBe('#2b4d7d')
     const looks = steps.map((name) => oklch(step(navy, `navy.${name}`)))
@@ -71,13 +71,13 @@ describe('resolveTheme', () => {
     }
   })
 
-  it('resolves a colour job from a step name, in any of the theme’s colours', () => {
+  it('resolves a color job from a step name, in any of the theme’s colors', () => {
     const colors = { navy: { base: '#2b4d7d' }, gold: { base: '#d4ac63' } }
     expect(step(colors, 'gold.500')).toBe('#d4ac63')
     expect(step(colors, 'navy.500')).toBe('#2b4d7d')
   })
 
-  it('resolves a colour job outside the palette from one of the palette’s colours, as the palette has it', () => {
+  it('resolves a color job outside the palette from one of the palette’s colors, as the palette has it', () => {
     const json = themeJson()
     json.palette.primary.dark = 'navy.800'
     json.palette.divider = '#123456'
@@ -91,20 +91,20 @@ describe('resolveTheme', () => {
     expect(theme.components.Pin.live.core.color).toBe(theme.palette.background.paper)
   })
 
-  it('rejects a palette colour naming another of the palette’s, or a colour named as one of the palette’s are, but only there', () => {
+  it('rejects a palette color naming another of the palette’s, or a color named as one of the palette’s are, but only there', () => {
     const json = themeJson()
     json.colors.primary = { base: '#2b4d7d' }
     json.palette.secondary.main = 'primary.main'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'colors.primary is named as one of the palette’s colours are, so a colour job naming it would be unclear',
-        'palette.secondary.main names "primary.main", a colour the theme doesn’t have',
+        'colors.primary is named as one of the palette’s colors are, so a color job naming it would be unclear',
+        'palette.secondary.main names "primary.main", a color the theme doesn’t have',
       ],
     })
   })
 
-  it('resolves a colour job from a colour given directly', () => {
+  it('resolves a color job from a color given directly', () => {
     const json = themeJson()
     json.components.Globe.surface = '#123456'
     json.components.Globe.coastlines.color = 'rgba(255, 255, 255, 0.7)'
@@ -113,13 +113,13 @@ describe('resolveTheme', () => {
     expect(theme.components.Globe.coastlines.color).toBe('rgba(255, 255, 255, 0.7)')
   })
 
-  it('takes transparent as a colour given directly, for a shadow or glow that isn’t there', () => {
+  it('takes transparent as a color given directly, for a shadow or glow that isn’t there', () => {
     const json = themeJson()
     json.components.GamePanel.shadow.color = 'transparent'
     expect(resolved(json).components.GamePanel.shadow.color).toBe('transparent')
   })
 
-  it('takes a colour given directly in any form both CSS and MapLibre read', () => {
+  it('takes a color given directly in any form both CSS and MapLibre read', () => {
     const forms = ['#abc', '#abcd', '#a1b2c3', '#A1B2C3D4', 'rgb(1, 2, 3)', 'rgba(1, 2, 3, 0.5)', 'rgb(10% 20% 30% / 50%)', 'hsl(210 40% 30%)', 'hsla(210deg, 40%, 30%, .5)']
     for (const form of forms) {
       const json = themeJson()
@@ -128,7 +128,7 @@ describe('resolveTheme', () => {
     }
   })
 
-  it('rejects a colour given directly that isn’t well formed', () => {
+  it('rejects a color given directly that isn’t well formed', () => {
     const json = themeJson()
     json.components.Globe.surface = '#12'
     json.components.Globe.halo.inner.color = 'foo('
@@ -136,11 +136,11 @@ describe('resolveTheme', () => {
     json.components.ScoreCard.fill = '#12345'
     json.components.ScoreCard.text = 'rgb(1, 2%, 3)'
     json.palette.divider = 7
-    const why = 'not a colour CSS and MapLibre both read (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent)'
+    const why = 'not a color CSS and MapLibre both read (#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent)'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'palette.divider is 7, not a colour job: a colour’s step such as "navy.700", or a colour',
+        'palette.divider is 7, not a color job: a color’s step such as "navy.700", or a color',
         `components.Globe.surface is "#12", ${why}`,
         `components.Globe.halo.inner.color is "foo(", ${why}`,
         `components.Globe.halo.outer.color is "rgb(1, 2)", ${why}`,
@@ -162,18 +162,18 @@ describe('resolveTheme', () => {
       ok: false,
       problems: ['components is "dark", not a group of settings'],
     })
-    const colourless = resolveTheme({ ...themeJson(), colors: null })
-    expect(!colourless.ok && colourless.problems[0]).toBe('colors is null, not colours by name')
+    const colorless = resolveTheme({ ...themeJson(), colors: null })
+    expect(!colorless.ok && colorless.problems[0]).toBe('colors is null, not colors by name')
   })
 
-  it('rejects one of the theme’s colours or a group of settings that isn’t an object', () => {
+  it('rejects one of the theme’s colors or a group of settings that isn’t an object', () => {
     const json = themeJson()
     json.colors.teal = '#008080'
     json.components.Globe.halo = '#ffffff'
     json.palette.text = null
     const result = resolveTheme(json)
     expect(!result.ok && result.problems).toEqual([
-      'colors.teal is "#008080", not a colour with a base',
+      'colors.teal is "#008080", not a color with a base',
       'palette.text is null, not a group of settings',
       'components.Globe.halo is "#ffffff", not a group of settings',
     ])
@@ -191,8 +191,8 @@ describe('resolveTheme', () => {
       ok: false,
       problems: [
         'mode isn’t part of a theme: a theme has colors, palette, typography, spacing, shape, components',
-        'colors.navy.shade isn’t part of a colour: it has a base and steps',
-        'palette.divider names "navy.950", a colour the theme doesn’t have',
+        'colors.navy.shade isn’t part of a color: it has a base and steps',
+        'palette.divider names "navy.950", a color the theme doesn’t have',
         'typography.h1 isn’t a setting a theme has',
         'components.Globe.surfce isn’t a setting a theme has',
         'components.GamePanel.shadow.spread isn’t a setting a theme has',
@@ -206,7 +206,7 @@ describe('resolveTheme', () => {
     expect(resolveTheme(json)).toEqual({ ok: false, problems: ['components.PlaceNames.capital isn’t a setting a theme has'] })
   })
 
-  it('rejects a colour job naming a colour the theme doesn’t have', () => {
+  it('rejects a color job naming a color the theme doesn’t have', () => {
     const json = themeJson()
     json.colors.navy = { base: '#2b4d7d' }
     json.components.Globe.surface = 'navy.950'
@@ -215,9 +215,9 @@ describe('resolveTheme', () => {
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'components.Globe.surface names "navy.950", a colour the theme doesn’t have',
-        'components.Globe.halo.inner.color names "teal.500", a colour the theme doesn’t have',
-        'components.Globe.halo.outer.color names "primary.darker", a colour the theme doesn’t have',
+        'components.Globe.surface names "navy.950", a color the theme doesn’t have',
+        'components.Globe.halo.inner.color names "teal.500", a color the theme doesn’t have',
+        'components.Globe.halo.outer.color names "primary.darker", a color the theme doesn’t have',
       ],
     })
   })
@@ -254,15 +254,15 @@ describe('resolveTheme', () => {
     ])
   })
 
-  it('rejects one of the theme’s colours that isn’t a #rrggbb colour, or a hand-set step it doesn’t have', () => {
+  it('rejects one of the theme’s colors that isn’t a #rrggbb color, or a hand-set step it doesn’t have', () => {
     const json = themeJson()
     json.colors.teal = { base: 'teal' }
     json.colors.sand = { base: '#d4ac63', steps: { '950': '#000000', '800': 'dark' } }
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
-        'colors.teal.base is "teal", not a #rrggbb colour',
-        'colors.sand.steps.800 is "dark", not a #rrggbb colour',
+        'colors.teal.base is "teal", not a #rrggbb color',
+        'colors.sand.steps.800 is "dark", not a #rrggbb color',
         'colors.sand.steps.950 isn’t a step: steps are 100 to 900',
       ],
     })
@@ -285,7 +285,7 @@ describe('resolveTheme', () => {
     })
   })
 
-  it('rejects a shadow without its colour or with an offset that isn’t a number', () => {
+  it('rejects a shadow without its color or with an offset that isn’t a number', () => {
     const json = themeJson()
     json.components.GamePanel.shadow = { x: 0, y: '8px', blur: 30 }
     expect(resolveTheme(json)).toEqual({

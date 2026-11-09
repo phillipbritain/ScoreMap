@@ -260,7 +260,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   'Zoom out': 'Zoom out',
   Home: 'Home: back to your part of the world',
   Leagues: 'Leagues: Top Events or your own picks',
-  'Display Settings': 'Display Settings: colours for each sport and league, and flames on hot games',
+  'Display Settings': 'Display Settings: colors for each sport and league, and flames on hot games',
   'Map Type': 'Map Type: the plain map or satellite imagery',
   Games: 'Games: find any game and go to it',
 }
@@ -375,7 +375,7 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () 
   return toTry
 }
 
-/** A score card drawn as the globe draws a Live one, labelled as an example. */
+/** A score card drawn as the globe draws a Live one, labeled as an example. */
 function ExampleScoreCard() {
   return (
     <figure className="welcome-tour__example" aria-label="An example score card">
@@ -410,7 +410,7 @@ interface TourPanelProps {
   ref?: Ref<HTMLElement>
 }
 
-/** A step's panel: glass, centred (a bottom sheet on a phone), labelled by its heading. */
+/** A step's panel: glass, centered (a bottom sheet on a phone), labeled by its heading. */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
   return (

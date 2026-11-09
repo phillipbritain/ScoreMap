@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   cardRadius,
   cardZoom,
-  centreLatitude,
+  centerLatitude,
   fittedZoomSettings,
   furthestOutZoom,
   hasCard,
@@ -22,7 +22,7 @@ import {
 // Pins and pin clusters kept 35 pixels apart, as the built-in theme's widest pin clusters are.
 const spacing = 35
 
-/** MapLibre's camera at this zoom, centred on the equator. */
+/** MapLibre's camera at this zoom, centered on the equator. */
 const atEquator = (zoom: number) => ({ zoom, latitude: 0 })
 
 describe('pinLayout', () => {
@@ -44,14 +44,14 @@ describe('pinLayout', () => {
   it("shrinks the radius past a whole zoom level, where MapLibre still shows that level's clusters", () => {
     // Halfway to the next level, pins are about 1.4 times as far apart on screen as when clustered.
     expect(pinLayout(atEquator(2.5), spacing, cardZoom).clusterRadius).toBe(Math.round(35 / Math.SQRT2))
-    // In steps, rounded down, so it errs towards clustering and doesn't change every frame.
+    // In steps, rounded down, so it errs toward clustering and doesn't change every frame.
     expect(pinLayout(atEquator(2.6), spacing, cardZoom).clusterRadius).toBe(pinLayout(atEquator(2.5), spacing, cardZoom).clusterRadius)
     expect(pinLayout(atEquator(2.99), spacing, cardZoom).clusterRadius).toBeGreaterThan(35 / 2)
   })
 })
 
 describe('pinSize', () => {
-  // MapLibre's globe's radius on screen, in pixels, at a zoom with the view centred at a latitude:
+  // MapLibre's globe's radius on screen, in pixels, at a zoom with the view centered at a latitude:
   // bigger away from the equator at the same zoom.
   const globeRadius = ({ zoom, latitude }: { zoom: number; latitude: number }) =>
     (512 * 2 ** zoom) / (2 * Math.PI) / Math.cos((latitude * Math.PI) / 180)
@@ -113,36 +113,36 @@ describe('cityNamesFrom', () => {
   })
 })
 
-describe('centreLatitude', () => {
+describe('centerLatitude', () => {
   const laptop = { height: 800, fov: 36.87 }
 
   it('is the place’s own latitude with the place in the middle of the view', () => {
-    expect(centreLatitude(50, 0, cardZoom, laptop)).toBe(50)
+    expect(centerLatitude(50, 0, cardZoom, laptop)).toBe(50)
   })
 
   it('lies south of a place lifted above the middle of the view, and north of one dropped below it', () => {
-    expect(centreLatitude(50, -200, cardZoom, laptop)).toBeLessThan(50)
-    expect(centreLatitude(50, 200, cardZoom, laptop)).toBeGreaterThan(50)
-    expect(50 - centreLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(centreLatitude(50, 200, cardZoom, laptop) - 50)
+    expect(centerLatitude(50, -200, cardZoom, laptop)).toBeLessThan(50)
+    expect(centerLatitude(50, 200, cardZoom, laptop)).toBeGreaterThan(50)
+    expect(50 - centerLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(centerLatitude(50, 200, cardZoom, laptop) - 50)
   })
 
-  it('moves by about the globe’s degrees per pixel for a small lift, and by more towards the globe’s rim', () => {
+  it('moves by about the globe’s degrees per pixel for a small lift, and by more toward the globe’s rim', () => {
     const degreesPerPixel = 360 / (512 * 2 ** cardZoom)
-    expect(50 - centreLatitude(50, -1, cardZoom, laptop)).toBeCloseTo(degreesPerPixel, 4)
-    expect(50 - centreLatitude(50, -300, cardZoom, laptop)).toBeGreaterThan(300 * degreesPerPixel)
+    expect(50 - centerLatitude(50, -1, cardZoom, laptop)).toBeCloseTo(degreesPerPixel, 4)
+    expect(50 - centerLatitude(50, -300, cardZoom, laptop)).toBeGreaterThan(300 * degreesPerPixel)
   })
 
   it('moves by as many degrees at any latitude, for the same size of globe', () => {
-    expect(50 - centreLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(10 - centreLatitude(10, -200, cardZoom, laptop))
+    expect(50 - centerLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(10 - centerLatitude(10, -200, cardZoom, laptop))
   })
 
-  it('stays within the latitudes MapLibre centres the view at', () => {
-    expect(centreLatitude(-80, -400, 2, laptop)).toBeGreaterThanOrEqual(-85.06)
+  it('stays within the latitudes MapLibre centers the view at', () => {
+    expect(centerLatitude(-80, -400, 2, laptop)).toBeGreaterThanOrEqual(-85.06)
   })
 })
 
 describe('furthestOutZoom', () => {
-  it('is the minimum zoom at the equator, and lower towards the poles for the same size of globe on screen', () => {
+  it('is the minimum zoom at the equator, and lower toward the poles for the same size of globe on screen', () => {
     expect(furthestOutZoom(0)).toBe(minZoom)
     expect(furthestOutZoom(60)).toBeCloseTo(minZoom - 1)
     expect(furthestOutZoom(-60)).toBeCloseTo(minZoom - 1)
@@ -214,7 +214,7 @@ describe('zoomForMapType', () => {
 describe('hasCard', () => {
   const kansas = { longitude: -97, latitude: 39 }
 
-  it('gives a card to a game within the card radius of the centre of the view', () => {
+  it('gives a card to a game within the card radius of the center of the view', () => {
     expect(hasCard(kansas, kansas)).toBe(true)
     expect(hasCard(kansas, { longitude: -74, latitude: 40.7 })).toBe(true) // New York
     expect(hasCard(kansas, { longitude: -122.3, latitude: 47.6 })).toBe(true) // Seattle

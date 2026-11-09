@@ -1,6 +1,6 @@
 import type { CityNameLook } from './placeNames'
 
-/** A box on screen, in pixels, by its centre. */
+/** A box on screen, in pixels, by its center. */
 export interface ScreenBox {
   x: number
   y: number
@@ -12,7 +12,7 @@ export interface ScreenBox {
 export type MeasureText = (text: string, font: string, size: number) => number
 
 /**
- * Where a game city's name is written: centred below its dot at `dot` (see placeNames' game city
+ * Where a game city's name is written: centered below its dot at `dot` (see placeNames' game city
  * names), wrapped as the map wraps it. `measure` gives a line's width in the name's font. The look's
  * clearance (the name's outline and a little more) is included, since the box is for keeping cards
  * clear of the name.

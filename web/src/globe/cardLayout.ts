@@ -46,7 +46,7 @@ export interface Segment {
 
 /** Where one card goes. */
 export interface CardPlacement {
-  /** Where the card's bottom centre sits, from its venue: the venue gap above it, or moved aside. */
+  /** Where the card's bottom center sits, from its venue: the venue gap above it, or moved aside. */
   offset: ScreenOffset
   /** True when there's no room for the card and its game is counted in a card cluster instead. */
   inCardCluster: boolean
@@ -165,20 +165,20 @@ function lookedAgoOf(placement: CardPlacement | undefined): number | undefined {
   return placement?.inCardCluster ? (placement.lookedAgo ?? 0) : undefined
 }
 
-/** A card's trail: from where a line from the card's centre to its venue leaves the card. */
+/** A card's trail: from where a line from the card's center to its venue leaves the card. */
 function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
-  const centreX = box.x + dx
-  const centreY = box.y + dy
-  const toVenueX = box.venueX - centreX
-  const toVenueY = box.venueY - centreY
+  const centerX = box.x + dx
+  const centerY = box.y + dy
+  const toVenueX = box.venueX - centerX
+  const toVenueY = box.venueY - centerY
   const edge = Math.min(1, box.width / 2 / Math.abs(toVenueX), box.height / 2 / Math.abs(toVenueY))
-  return { x1: centreX + toVenueX * edge, y1: centreY + toVenueY * edge, x2: box.venueX, y2: box.venueY }
+  return { x1: centerX + toVenueX * edge, y1: centerY + toVenueY * edge, x2: box.venueX, y2: box.venueY }
 }
 
 /** One score card where it would sit undisturbed, in screen pixels. */
 interface CardBox {
   gameId: string
-  /** The card's centre, the venue gap above its venue. */
+  /** The card's center, the venue gap above its venue. */
   x: number
   y: number
   width: number
@@ -321,7 +321,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     : undefined
   const lookedAgo = new Map<string, number>()
   const placed: CardBox[] = []
-  // From each card's centre to its venue: the part outside the card is its trail.
+  // From each card's center to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
   const shifts = new Map<string, ScreenOffset>()
   const cardClusters: Omit<CardCluster, 'status'>[] = []
@@ -330,7 +330,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
-    // What the card keeps clear of, each as a box its centre stays out of, `halfWidth` and `halfHeight`
+    // What the card keeps clear of, each as a box its center stays out of, `halfWidth` and `halfHeight`
     // wider either way than the card: cards placed, venues and names near. Each is given to `see` in
     // turn, until it says to stop. Most cards try a spot or two, so nothing is made for them.
     type KeepOut = (x: number, y: number, halfWidth: number, halfHeight: number) => boolean
@@ -363,10 +363,10 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       }
       return false
     }
-    // Whether a card centred at (x, y) is inside a box the card keeps out of, by more than `slack` pixels.
+    // Whether a card centered at (x, y) is inside a box the card keeps out of, by more than `slack` pixels.
     const inside = (x: number, y: number, slack: number) => (boxX: number, boxY: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - boxX) < (card.width + 2 * halfWidth) / 2 - slack && Math.abs(y - boxY) < (card.height + 2 * halfHeight) / 2 - slack
-    // Whether a card centred at x (or y) is on screen, by `slack` pixels.
+    // Whether a card centered at x (or y) is on screen, by `slack` pixels.
     const onScreenAcross = (x: number, slack: number) => x - card.width / 2 >= -slack && x + card.width / 2 <= screen.width + slack
     const onScreenDown = (y: number, slack: number) => y - card.height / 2 >= -slack && y + card.height / 2 <= screen.height + slack
 
@@ -389,7 +389,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     const markTakenSpots = () => {
       takenSpots.fill(0)
       heldSpots.fill(0)
-      // Taken where a card centred there is inside the box, by the same sums as inside.
+      // Taken where a card centered there is inside the box, by the same sums as inside.
       const mark = (spots: Uint8Array) => (boxX: number, boxY: number, halfWidth: number, halfHeight: number) => {
         const halfAcross = (card.width + 2 * halfWidth) / 2
         const halfDown = (card.height + 2 * halfHeight) / 2
@@ -505,17 +505,17 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
 
 /** One way across the screen: where a card is along it, how far it was moved, and how big it is. */
 interface Axis {
-  centre: 'x' | 'y'
+  center: 'x' | 'y'
   shift: 'dx' | 'dy'
   size: 'width' | 'height'
 }
-const horizontal: Axis = { centre: 'x', shift: 'dx', size: 'width' }
-const vertical: Axis = { centre: 'y', shift: 'dy', size: 'height' }
+const horizontal: Axis = { center: 'x', shift: 'dx', size: 'width' }
+const vertical: Axis = { center: 'y', shift: 'dy', size: 'height' }
 
 /**
  * Brings the moved cards the globe has turned off screen since last time back on, by where they were
  * then, pushing the moved cards in their way along with them. A crowd of cards reaching to the edge
- * of the screen is packed against it, so as the globe turns the crowd towards that edge, the card
+ * of the screen is packed against it, so as the globe turns the crowd toward that edge, the card
  * there would otherwise find every spot near it taken, and leave for the room opening up on the far
  * side of the crowd. A card is pushed no further than a jump, and a push stops at a card sitting over
  * its venue or at the other edge of the screen, leaving the card to find room as it would. A card
@@ -533,19 +533,19 @@ function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
     const across = along === horizontal ? vertical : horizontal
     const direction = Math.sign(distance)
     const pushes = new Map([[pushed.gameId, distance]])
-    const centreAfterPush = (card: CardBox, axis: Axis) =>
-      card[axis.centre] + was.get(card.gameId)![axis.shift] + (axis === along ? (pushes.get(card.gameId) ?? 0) : 0)
+    const centerAfterPush = (card: CardBox, axis: Axis) =>
+      card[axis.center] + was.get(card.gameId)![axis.shift] + (axis === along ? (pushes.get(card.gameId) ?? 0) : 0)
     const queue = [pushed]
     for (const card of queue) {
-      const centre = centreAfterPush(card, along)
-      if (centre - card[along.size] / 2 < 0 || centre + card[along.size] / 2 > screen[along.size]) return
+      const center = centerAfterPush(card, along)
+      if (center - card[along.size] / 2 < 0 || center + card[along.size] / 2 > screen[along.size]) return
       for (const other of cards) {
         if (other === card || !was.has(other.gameId)) continue
         // Cards beside each other across the push, give or take the drift, aren't in each other's way.
         const besideBy = (card[across.size] + other[across.size]) / 2 + gap - drift
-        if (Math.abs(centreAfterPush(other, across) - centreAfterPush(card, across)) >= besideBy) continue
+        if (Math.abs(centerAfterPush(other, across) - centerAfterPush(card, across)) >= besideBy) continue
         // How far the other card is ahead of this one, in the push's direction, and must be.
-        const ahead = (centreAfterPush(other, along) - centre) * direction
+        const ahead = (centerAfterPush(other, along) - center) * direction
         const needed = (card[along.size] + other[along.size]) / 2 + gap
         if (ahead < 0 || ahead >= needed) continue
         if (!isMoved(was.get(other.gameId))) return
@@ -567,10 +567,10 @@ function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
     for (const card of order) {
       const at = was.get(card.gameId)
       if (!isMoved(at)) continue
-      const centre = card[along.centre] + at[along.shift]
+      const center = card[along.center] + at[along.shift]
       const half = card[along.size] / 2
       // How far it takes to bring the card back on screen, off one edge or the other.
-      const backOn = Math.max(0, half - centre) || Math.min(0, screen[along.size] - half - centre)
+      const backOn = Math.max(0, half - center) || Math.min(0, screen[along.size] - half - center)
       if (backOn !== 0 && Math.abs(backOn) <= cardJump) push(card, along, backOn)
     }
   }
@@ -582,7 +582,7 @@ function isMoved(shift: ScreenOffset | undefined): shift is ScreenOffset {
   return shift !== undefined && (shift.dx !== 0 || shift.dy !== 0)
 }
 
-/** Whether a line passes through a box, given by its centre and half its size. */
+/** Whether a line passes through a box, given by its center and half its size. */
 function crosses({ x1, y1, x2, y2 }: Segment, x: number, y: number, halfWidth: number, halfHeight: number): boolean {
   // Narrow down the part of the line within the box one axis at a time.
   let from = 0

@@ -245,7 +245,7 @@ public class TennisTests
     }
 
     [Fact]
-    public async Task A_match_whose_tournament_is_not_found_is_pinned_at_its_city_centre()
+    public async Task A_match_whose_tournament_is_not_found_is_pinned_at_its_city_center()
     {
         await using var server = new ScoreMapServer();
         server.Places.Add("Shanghai, China PR", new Coordinates(31.23, 121.47));

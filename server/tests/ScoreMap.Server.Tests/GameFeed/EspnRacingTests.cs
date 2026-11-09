@@ -94,7 +94,7 @@ public sealed class EspnRacingTests : IDisposable
     }
 
     [Fact]
-    public async Task Cancelling_while_a_venue_is_asked_for_cancels_the_fetch()
+    public async Task Canceling_while_a_venue_is_asked_for_cancels_the_fetch()
     {
         using var cancel = new CancellationTokenSource();
         var handler = new StubHttpHandler(request =>
@@ -102,7 +102,7 @@ public sealed class EspnRacingTests : IDisposable
             if (request.RequestUri!.Host != "sports.core.api.espn.com")
                 return Fixture("nascar-final.json");
             cancel.Cancel();
-            throw new TaskCanceledException("Cancelled", null, cancel.Token);
+            throw new TaskCanceledException("Canceled", null, cancel.Token);
         });
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => ProviderOver(handler).FetchScoreboardAsync(Nascar, cancel.Token));

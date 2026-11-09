@@ -30,7 +30,7 @@ const venues = Array.from({ length: 50 }, (_, i) => {
   const angle = i * 2.39996
   return { id: `G${String(i).padStart(2, '0')}`, longitude: r * Math.cos(angle), latitude: r * Math.sin(angle), status: statuses[i % 3] }
 })
-// Where the camera's centre goes, a frame at a time: west 0.25° a frame, as a drag pans it, to −3°.
+// Where the camera's center goes, a frame at a time: west 0.25° a frame, as a drag pans it, to −3°.
 const pan = Array.from({ length: 68 }, (_, i): [number, number] => [start.longitude - 0.25 * (i + 1), start.latitude])
 
 const plainStyle: StyleSpecification = {

@@ -17,12 +17,12 @@ export function isBehindGlobe(map: MapLibreMap, lngLat: LngLatLike): boolean {
 }
 
 /**
- * Where the viewer looks at the globe from: the point at the centre of the view, and how far the
- * camera is from the globe's centre, in globe radii. The globe is never tilted, so the camera is
- * straight above the centre of the view.
+ * Where the viewer looks at the globe from: the point at the center of the view, and how far the
+ * camera is from the globe's center, in globe radii. The globe is never tilted, so the camera is
+ * straight above the center of the view.
  */
 export interface GlobeView {
-  centre: GlobePoint
+  center: GlobePoint
   cameraDistance: number
 }
 
@@ -31,9 +31,9 @@ export function globeView(map: MapLibreMap): GlobeView {
   const { lng: longitude, lat: latitude } = map.getCenter()
   const transform = map._camera.transform
   // MapLibre's globe radius in pixels (its getGlobeRadiusPixels), and the camera that far and the
-  // centre-of-view distance from the globe's centre.
+  // center-of-view distance from the globe's center.
   const radius = transform.worldSize / (2 * Math.PI) / Math.cos(Math.min(Math.abs(latitude), 85) * radians)
-  return { centre: { longitude, latitude }, cameraDistance: 1 + transform.cameraToCenterDistance / radius }
+  return { center: { longitude, latitude }, cameraDistance: 1 + transform.cameraToCenterDistance / radius }
 }
 
 /**
@@ -41,17 +41,17 @@ export function globeView(map: MapLibreMap): GlobeView {
  * viewer: 1 facing them square on, falling to 0 at the horizon and below it beyond. It's the cosine
  * of the angle between the ground there and the line to the camera.
  */
-export function foreshortening({ centre, cameraDistance: d }: GlobeView, point: GlobePoint): number {
-  const toCentre = Math.cos(degreesApart(centre, point) * radians)
-  return (d * toCentre - 1) / Math.sqrt(d * d - 2 * d * toCentre + 1)
+export function foreshortening({ center, cameraDistance: d }: GlobeView, point: GlobePoint): number {
+  const toCenter = Math.cos(degreesApart(center, point) * radians)
+  return (d * toCenter - 1) / Math.sqrt(d * d - 2 * d * toCenter + 1)
 }
 
 /**
  * Between what foreshortening (see foreshortening) place names, small pins and pin clusters fade
- * out towards the horizon: shown whole down to `shown`, gone from `gone`. Squashed further, they'd
+ * out toward the horizon: shown whole down to `shown`, gone from `gone`. Squashed further, they'd
  * crowd into an unreadable pile along the globe's edge. Looking straight down at zoom 3 that's from
- * about 40° to 50° from the centre of the view, as far as score cards reach (see cardRadius) and a
- * little past it; zoomed in, where less of the globe shows, it comes nearer the centre.
+ * about 40° to 50° from the center of the view, as far as score cards reach (see cardRadius) and a
+ * little past it; zoomed in, where less of the globe shows, it comes nearer the center.
  */
 export const horizonFadeBand = { shown: 0.6, gone: 0.4 } as const
 

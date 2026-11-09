@@ -5,10 +5,10 @@ import { isHexColor, paletteSteps, stepNames, type StepName } from './palette'
 /** What resolving a theme reads from, and where it notes each problem it finds. */
 interface Resolving {
   /**
-   * Every colour a colour job can name: each step of the theme's colours ("navy.700") and, outside
-   * the palette, each of the palette's colours ("primary.dark").
+   * Every color a color job can name: each step of the theme's colors ("navy.700") and, outside
+   * the palette, each of the palette's colors ("primary.dark").
    */
-  colours: ReadonlyMap<string, string | undefined>
+  colors: ReadonlyMap<string, string | undefined>
   /** The theme's JSON, where a size reads the type style, spacing unit or corner radius it's a number of. */
   json: Readonly<Record<string, unknown>>
   problems: string[]
@@ -25,34 +25,34 @@ interface Setting<T> {
 }
 
 /**
- * A colour job: a step of the theme's colours by name ("navy.700"), outside the palette one of the
- * palette's colours ("primary.dark"), or a colour given directly ("#0b1526").
+ * A color job: a step of the theme's colors by name ("navy.700"), outside the palette one of the
+ * palette's colors ("primary.dark"), or a color given directly ("#0b1526").
  */
 const color: Setting<string> = {
-  resolve(value, path, { colours, problems }) {
+  resolve(value, path, { colors, problems }) {
     if (typeof value !== 'string') {
-      problems.push(`${path} is ${shown(value)}, not a colour job: a colour’s step such as "navy.700", or a colour`)
+      problems.push(`${path} is ${shown(value)}, not a color job: a color’s step such as "navy.700", or a color`)
       return undefined
     }
     if (directColor.test(value)) return value
     if (looksDirect(value)) {
-      problems.push(`${path} is "${value}", not a colour CSS and MapLibre both read (${directColorForms})`)
+      problems.push(`${path} is "${value}", not a color CSS and MapLibre both read (${directColorForms})`)
       return undefined
     }
-    // One of the palette's colours with a problem of its own has it reported there.
-    if (!colours.has(value)) problems.push(`${path} names "${value}", a colour the theme doesn’t have`)
-    return colours.get(value)
+    // One of the palette's colors with a problem of its own has it reported there.
+    if (!colors.has(value)) problems.push(`${path} names "${value}", a color the theme doesn’t have`)
+    return colors.get(value)
   },
 }
 
 const number = String.raw`\d*\.?\d+`
 const percent = `${number}%`
-/** A colour function's three arguments and optional alpha, comma-separated or space-separated with "/ alpha". */
+/** A color function's three arguments and optional alpha, comma-separated or space-separated with "/ alpha". */
 const colorArguments = (a: string, b: string, c: string) =>
   String.raw`\(\s*(?:${a}\s*,\s*${b}\s*,\s*${c}(?:\s*,\s*${number}%?)?|${a}\s+${b}\s+${c}(?:\s*\/\s*${number}%?)?)\s*\)`
 
 /**
- * A colour given directly, in a form both CSS and MapLibre read: #rgb, #rgba, #rrggbb or #rrggbbaa;
+ * A color given directly, in a form both CSS and MapLibre read: #rgb, #rgba, #rrggbb or #rrggbbaa;
  * rgb(…) or rgba(…), its channels all numbers or all percentages; hsl(…) or hsla(…); or transparent.
  */
 const directColor = new RegExp(
@@ -69,7 +69,7 @@ const directColor = new RegExp(
 )
 const directColorForms = '#rgb, #rgba, #rrggbb, #rrggbbaa, rgb(…), rgba(…), hsl(…), hsla(…) or transparent'
 
-/** Whether a colour job means to give a colour directly, rather than name a step: a step has neither "#" nor "(". */
+/** Whether a color job means to give a color directly, rather than name a step: a step has neither "#" nor "(". */
 const looksDirect = (job: string) => /^#|\(/.test(job)
 
 /** A value as a problem quotes it. */
@@ -153,7 +153,7 @@ interface Shadow {
 
 /**
  * A shadow, or a glow, cast by a panel or control: how far it falls across and down, how far it
- * blurs, and its colour. Written to CSS as one shadow ("0px 8px 30px #000000"), for a box-shadow or a
+ * blurs, and its color. Written to CSS as one shadow ("0px 8px 30px #000000"), for a box-shadow or a
  * drop-shadow.
  */
 const shadow: Setting<Shadow> = {
@@ -277,17 +277,17 @@ export function zoomStops(sizes: Readonly<Record<string, number>>): [number, num
     .sort(([a], [b]) => a - b)
 }
 
-/** A line on the globe: its colour, and its width in pixels as the map zooms. */
+/** A line on the globe: its color, and its width in pixels as the map zooms. */
 const globeLine = { color, width: byZoom(pixels, 'a width') }
 
 /**
- * One of the halo's glows around the globe: its colour, and how far it blurs and spreads, each
+ * One of the halo's glows around the globe: its color, and how far it blurs and spreads, each
  * growing with the globe on screen up to a most.
  */
 const haloGlow = { color, blur: withGlobe, spread: withGlobe }
 
 /**
- * A kind of place's name on the globe: its colour, the outline around its letters (its colour, and
+ * A kind of place's name on the globe: its color, the outline around its letters (its color, and
  * how wide and blurred it is), its font, its size as the map zooms (each a type style's size), and how
  * far apart its letters are spaced, in ems (state and country names are in capitals, which want more).
  */
@@ -299,11 +299,11 @@ const placeName = {
   letterSpacing: tracking,
 }
 
-/** The game statuses, by their names in the theme: each has a colour in the palette, and its own look in some components. */
+/** The game statuses, by their names in the theme: each has a color in the palette, and its own look in some components. */
 const statuses = ['live', 'upcoming', 'final'] as const
 
 /**
- * A game status's name in the theme: its key among the palette's colours and the components' looks
+ * A game status's name in the theme: its key among the palette's colors and the components' looks
  * by status, and so in the custom properties the page's CSS reads (--palette-live-main) and the score
  * cards' status classes (score-card--live). "live" for Live.
  */
@@ -316,46 +316,46 @@ function byStatus<S extends object>(look: S): Record<(typeof statuses)[number], 
 
 /**
  * How a score card fades and glows for a status: how far it fades, and how far and how strongly it
- * glows in its game's colour (a radius of 0 is no glow). A card stays solid as it fades: its game's
- * colour, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way, leaving
+ * glows in its game's color (a radius of 0 is no glow). A card stays solid as it fades: its game's
+ * color, text and logos are mixed this far into its fill (0 is not at all, 1 is all the way, leaving
  * a blank card).
  */
 const cardStatus = { fade: numberFrom(0, 1, 'a fade from 0 to 1'), glow: { radius: pixels, opacity } }
 
 /**
- * A colour's role in the palette, as MUI's palette has them: its main shade, a lighter and a darker
- * one, and the colour of text written on its main shade.
+ * A color's role in the palette, as MUI's palette has them: its main shade, a lighter and a darker
+ * one, and the color of text written on its main shade.
  */
-const colourRole = { main: color, light: color, dark: color, contrastText: color }
+const colorRole = { main: color, light: color, dark: color, contrastText: color }
 
-/** A game status's colour in the palette: its main shade, and a lighter and a darker one. */
-const statusColour = { main: color, light: color, dark: color }
+/** A game status's color in the palette: its main shade, and a lighter and a darker one. */
+const statusColor = { main: color, light: color, dark: color }
 
 /**
- * The palette, shaped as MUI's is: what each colour is for, each naming a step of the theme's colours
- * ("navy.500") or giving a colour directly. A colour job outside the palette can name one of these
+ * The palette, shaped as MUI's is: what each color is for, each naming a step of the theme's colors
+ * ("navy.500") or giving a color directly. A color job outside the palette can name one of these
  * ("primary.dark", "text.secondary", "divider") as well as a step.
  */
 /**
- * The plate a team's logo sits on, so that a logo near the colour of what's behind it can still be
- * seen: its colour, how far it reaches past the logo (in spacing units) and its corners.
+ * The plate a team's logo sits on, so that a logo near the color of what's behind it can still be
+ * seen: its color, how far it reaches past the logo (in spacing units) and its corners.
  */
 const logoPlate = { fill: color, padding: spaces, corner }
 
 const palette = {
-  primary: colourRole,
-  secondary: colourRole,
-  error: colourRole,
-  warning: colourRole,
+  primary: colorRole,
+  secondary: colorRole,
+  error: colorRole,
+  warning: colorRole,
   /**
-   * Each game status's colour, as MUI's palette takes colours of a theme's own: the colour a game
-   * shows in, by its status, unless the viewer picked one for its sport or league (see gameColour): a
+   * Each game status's color, as MUI's palette takes colors of a theme's own: the color a game
+   * shows in, by its status, unless the viewer picked one for its sport or league (see gameColor): a
    * small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a
    * cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line.
-   * Text written on it is the theme's main text or paper surface, whichever reads better on the colour
+   * Text written on it is the theme's main text or paper surface, whichever reads better on the color
    * (see palette's textOn), so a status has no contrastText of its own.
    */
-  ...byStatus(statusColour),
+  ...byStatus(statusColor),
   /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
   background: { default: color, paper: color },
   /**
@@ -370,7 +370,7 @@ const palette = {
   action: { hover: color },
 }
 
-/** Every setting a theme has but its colours, by where it sits in the theme. */
+/** Every setting a theme has but its colors, by where it sits in the theme. */
 const settings = {
   palette,
   /**
@@ -411,13 +411,13 @@ const settings = {
     /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
     Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
     /**
-     * A game's small pin, by its status: its bright core (its colour, radius, opacity, and the width of
-     * the ring of the game's colour around it) and the soft glow around that, in the game's colour (its
-     * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose colour
-     * is just its status's palette colour is in the game's colour; any other (Live's paler core, say)
+     * A game's small pin, by its status: its bright core (its color, radius, opacity, and the width of
+     * the ring of the game's color around it) and the soft glow around that, in the game's color (its
+     * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose color
+     * is just its status's palette color is in the game's color; any other (Live's paler core, say)
      * stays as given, so status still shows by brightness. Small pins gather into pin clusters by the
      * widest glow. A hot game's (with flames on) has a flame this tall rising from its core, in fire's
-     * colours (the score card fire's, ScoreCard.flames).
+     * colors (the score card fire's, ScoreCard.flames).
      */
     Pin: {
       ...byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
@@ -425,7 +425,7 @@ const settings = {
     },
     /**
      * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its games'
-     * colour (the theme's accent where they differ), in a glow as strong as this much of its status's small pins' glow, so a cluster of a
+     * color (the theme's accent where they differ), in a glow as strong as this much of its status's small pins' glow, so a cluster of a
      * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
      * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
      * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
@@ -443,8 +443,8 @@ const settings = {
       ...byStatus({ opacity }),
     },
     /**
-     * A moved score card's trail back to its venue: a line this wide and opaque in its game's colour
-     * (below 1, the map shows through it), in a soft glow, to a dot ringed in that colour.
+     * A moved score card's trail back to its venue: a line this wide and opaque in its game's color
+     * (below 1, the map shows through it), in a soft glow, to a dot ringed in that color.
      */
     Trail: {
       width: pixels,
@@ -452,13 +452,13 @@ const settings = {
       glow: { width: pixels, blur: pixels, opacity },
       venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
     },
-    /** The selected game's small pin ring and score card outline: their colour and width. */
+    /** The selected game's small pin ring and score card outline: their color and width. */
     Selection: { color, width: pixels },
     /**
      * A score card the pointer is on, and its game on the globe, picked out: the card's border this
      * wide, and solid whatever the cards' fill opacity, or not; its trail this wide and opaque (in place
      * of the trail's own opacity); and the venue dot its trail ends at this
-     * big, in a glow of its game's colour this wide and strong. Its card doesn't move. Where the game
+     * big, in a glow of its game's color this wide and strong. Its card doesn't move. Where the game
      * is also the selected one, selection's look wins where they differ.
      */
     Hover: {
@@ -473,16 +473,16 @@ const settings = {
     Pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
     /**
      * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's
-     * tinted with its game's colour, 0 not at all and 1 the colour itself, its text then the card's text
+     * tinted with its game's color, 0 not at all and 1 the color itself, its text then the card's text
      * or fill, whichever reads better on the tint, and how far apart its letters are spaced, in ems) and
-     * its corners. Its outline, header line, light and glow are its game's colour. Its size: its narrowest, a team's
+     * its corners. Its outline, header line, light and glow are its game's color. Its size: its narrowest, a team's
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
      * its status light, and how far it keeps clear of the letters of a city named for its game (the
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
      * fades and glows (see cardStatus). Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
      * outline and status light stay solid. A hot game's card (with flames on) has a fire along its top
-     * edge, in fire's colours rather than its game's (its tongues' tips, middle and white-hot core), as
+     * edge, in fire's colors rather than its game's (its tongues' tips, middle and white-hot core), as
      * tall as `flames.height` at the most, growing and shrinking by `flames.flicker` of that as it
      * flickers (0 not at all, 1 all the way).
      */
@@ -509,8 +509,8 @@ const settings = {
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
      * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-     * button and the panel's drop shadow. Its top edge is the game's colour, and it glows in that
-     * colour, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
+     * button and the panel's drop shadow. Its top edge is the game's color, and it glows in that
+     * color, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
      * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
      * width at most, its height, and its height on a phone, where the details go below the score block;
      * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
@@ -587,7 +587,7 @@ const settings = {
     /** A tooltip: its surface, tinting its glass, and the frost of its glass. */
     Tooltip: { frost, surface: color },
     /**
-     * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its colour,
+     * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed
      * lines, its flame, and how big its box is across), and the text of the message under the rocket
      * when loading is slow.
@@ -608,7 +608,7 @@ export type Theme = Resolved<typeof settings>
 
 export type ThemeResult = { ok: true; theme: Theme } | { ok: false; problems: string[] }
 
-/** The parts of a theme's JSON: its colours, and its settings. */
+/** The parts of a theme's JSON: its colors, and its settings. */
 const parts = ['colors', ...Object.keys(settings)]
 
 /** Reads a theme from its parsed JSON. */
@@ -618,12 +618,12 @@ export function resolveTheme(json: unknown): ThemeResult {
   for (const key of Object.keys(json)) {
     if (!parts.includes(key)) problems.push(`${key} isn’t part of a theme: a theme has ${parts.join(', ')}`)
   }
-  // The palette names the colours' steps; everything else may name its colours too.
-  const steps = stepsOfColours(json.colors, problems)
-  const resolvedPalette = resolveAll(palette, json.palette, 'palette', { colours: steps, json, problems })
-  const colours = new Map<string, string | undefined>([...steps, ...paletteColours(resolvedPalette)])
+  // The palette names the colors' steps; everything else may name its colors too.
+  const steps = stepsOfColors(json.colors, problems)
+  const resolvedPalette = resolveAll(palette, json.palette, 'palette', { colors: steps, json, problems })
+  const colors = new Map<string, string | undefined>([...steps, ...paletteColors(resolvedPalette)])
   const { palette: _, ...rest } = settings
-  const resolving: Resolving = { colours, json, problems }
+  const resolving: Resolving = { colors, json, problems }
   const theme = {
     palette: resolvedPalette,
     ...Object.fromEntries(Object.entries(rest).map(([key, schema]) => [key, resolveAll(schema, json[key], key, resolving)])),
@@ -632,10 +632,10 @@ export function resolveTheme(json: unknown): ThemeResult {
 }
 
 /**
- * Each of the palette's colours, by its name in a colour job ("primary.dark", "divider"), and what it
+ * Each of the palette's colors, by its name in a color job ("primary.dark", "divider"), and what it
  * resolved to: nothing, where it has a problem.
  */
-function paletteColours(resolved: unknown): [string, string | undefined][] {
+function paletteColors(resolved: unknown): [string, string | undefined][] {
   const found: [string, string | undefined][] = []
   const walk = (schema: object, value: unknown, name: string) => {
     if (isSetting(schema)) found.push([name, typeof value === 'string' ? value : undefined])
@@ -649,32 +649,32 @@ function paletteColours(resolved: unknown): [string, string | undefined][] {
 const isObject = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-/** Every step of the theme's colours, by its name in a colour job; a colour with problems has none. */
-function stepsOfColours(colors: unknown, problems: string[]): Map<string, string> {
+/** Every step of the theme's colors, by its name in a color job; a color with problems has none. */
+function stepsOfColors(colors: unknown, problems: string[]): Map<string, string> {
   const byStep = new Map<string, string>()
   if (colors === undefined) problems.push('colors is missing')
-  else if (!isObject(colors)) problems.push(`colors is ${shown(colors)}, not colours by name`)
-  for (const [name, colour] of Object.entries(isObject(colors) ? colors : {})) {
+  else if (!isObject(colors)) problems.push(`colors is ${shown(colors)}, not colors by name`)
+  for (const [name, color] of Object.entries(isObject(colors) ? colors : {})) {
     const path = `colors.${name}`
     if (Object.hasOwn(palette, name)) {
-      problems.push(`${path} is named as one of the palette’s colours are, so a colour job naming it would be unclear`)
+      problems.push(`${path} is named as one of the palette’s colors are, so a color job naming it would be unclear`)
       continue
     }
-    if (!isObject(colour)) {
-      problems.push(`${path} is ${shown(colour)}, not a colour with a base`)
+    if (!isObject(color)) {
+      problems.push(`${path} is ${shown(color)}, not a color with a base`)
       continue
     }
-    const { base, steps = {}, ...unknown } = colour
-    for (const key of Object.keys(unknown)) problems.push(`${path}.${key} isn’t part of a colour: it has a base and steps`)
-    // A colour that can't be worked out has no steps; one with only an unknown part still does.
+    const { base, steps = {}, ...unknown } = color
+    for (const key of Object.keys(unknown)) problems.push(`${path}.${key} isn’t part of a color: it has a base and steps`)
+    // A color that can't be worked out has no steps; one with only an unknown part still does.
     const before = problems.length
-    if (!isHexColor(base)) problems.push(`${path}.base is ${shown(base)}, not a #rrggbb colour`)
+    if (!isHexColor(base)) problems.push(`${path}.base is ${shown(base)}, not a #rrggbb color`)
     if (!isObject(steps)) problems.push(`${path}.steps is ${shown(steps)}, not steps by name`)
     const handSet = isObject(steps) ? steps : {}
     for (const [step, value] of Object.entries(handSet)) {
       if (!(stepNames as readonly string[]).includes(step)) {
         problems.push(`${path}.steps.${step} isn’t a step: steps are ${stepNames[0]} to ${stepNames.at(-1)}`)
-      } else if (!isHexColor(value)) problems.push(`${path}.steps.${step} is ${shown(value)}, not a #rrggbb colour`)
+      } else if (!isHexColor(value)) problems.push(`${path}.steps.${step} is ${shown(value)}, not a #rrggbb color`)
     }
     if (problems.length > before) continue
     const worked = paletteSteps(base as string, handSet as Partial<Record<StepName, string>>)
@@ -689,7 +689,7 @@ function isSetting(schema: unknown): schema is Setting<unknown> {
 
 /**
  * Resolves a setting, or a group of them: each setting the group has, and a problem for each it
- * doesn't, so a misspelt setting shows as itself rather than as the real one missing.
+ * doesn't, so a misspelled setting shows as itself rather than as the real one missing.
  */
 function resolveAll(schema: object, value: unknown, path: string, resolving: Resolving): unknown {
   if (value === undefined) {

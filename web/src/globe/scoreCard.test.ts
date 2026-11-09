@@ -218,17 +218,17 @@ describe('scoreCard for a fight card', () => {
 })
 
 describe("a score card's header text", () => {
-  // A dark card with light text, its header strongly tinted with the game's colour.
+  // A dark card with light text, its header strongly tinted with the game's color.
   const theme = themeWith((json) => {
     Object.assign(json.components.ScoreCard, { fill: '#101828', text: '#eeeeee' })
     json.components.ScoreCard.header.tint = 0.8
   })
 
-  it("is the card's text on a header tinted with a dark colour", () => {
+  it("is the card's text on a header tinted with a dark color", () => {
     expect(headerText('#123456', theme)).toBe('#eeeeee')
   })
 
-  it("is the card's fill on a header tinted with a pale colour, so it stays readable", () => {
+  it("is the card's fill on a header tinted with a pale color, so it stays readable", () => {
     expect(headerText('#fff8c0', theme)).toBe('#101828')
     expect(headerText('#ffff00', theme)).toBe('#101828')
   })

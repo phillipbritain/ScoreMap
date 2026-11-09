@@ -5,7 +5,7 @@ const screen = { width: 800, height: 600 }
 const tooltip = { width: 100, height: 30 }
 
 describe('tooltipPlace', () => {
-  it('centres a tooltip above what it’s for', () => {
+  it('centers a tooltip above what it’s for', () => {
     expect(tooltipPlace({ left: 300, top: 200, width: 40, height: 20 }, tooltip, screen)).toEqual({ left: 270, top: 162, side: 'above' })
   })
 

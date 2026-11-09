@@ -38,7 +38,7 @@ export interface ScenarioControls {
   refresh: () => void
   /** Whether the scenario pill, the media keys and the clock show. */
   shown: boolean
-  /** Whether the dev tools (the Behaviour and Theme buttons and their panels) show: Shift+S hides them too. */
+  /** Whether the dev tools (the Behavior and Theme buttons and their panels) show: Shift+S hides them too. */
   devToolsShown: boolean
   /** Whether the Feedback button and its panel show: Shift+S hides them too, on the live site as well. */
   feedbackShown: boolean

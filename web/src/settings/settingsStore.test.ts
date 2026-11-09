@@ -22,8 +22,8 @@ describe('settingsStore', () => {
     const chosen = {
       hiddenLeagues: ['NBA', 'MLS'],
       topEventsOnly: true,
-      sportColours: { Football: '#123456', Soccer: '#abcdef' },
-      leagueColours: { NFL: '#fedcba' },
+      sportColors: { Football: '#123456', Soccer: '#abcdef' },
+      leagueColors: { NFL: '#fedcba' },
       hotGameFlames: false,
       mapType: 'satellite' as const,
     }
@@ -112,59 +112,84 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: false,
-      sportColours: {},
-      leagueColours: {},
+      sportColors: {},
+      leagueColors: {},
       hotGameFlames: true,
       mapType: 'plain',
     })
   })
 
-  it('loads settings saved before colours could be picked with no colours', () => {
+  it('loads settings saved before colors could be picked with no colors', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], topEventsOnly: true }))
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: true,
-      sportColours: {},
-      leagueColours: {},
+      sportColors: {},
+      leagueColors: {},
       hotGameFlames: true,
       mapType: 'plain',
     })
   })
 
-  it('keeps each saved colour it understands and drops the rest', () => {
+  it('keeps each saved color it understands and drops the rest', () => {
     const storage = memoryStorage()
     storage.setItem(
       'scoremap.settings',
-      JSON.stringify({ sportColours: { Football: '#123456', Soccer: 'red', Hockey: 7, Baseball: '#12345' } }),
+      JSON.stringify({ sportColors: { Football: '#123456', Soccer: 'red', Hockey: 7, Baseball: '#12345' } }),
     )
 
-    expect(settingsStore(() => storage).load().sportColours).toEqual({ Football: '#123456' })
+    expect(settingsStore(() => storage).load().sportColors).toEqual({ Football: '#123456' })
   })
 
-  it('loads settings saved before leagues could be coloured with no league colours, keeping sport colours', () => {
+  it('loads settings saved before leagues could be colored with no league colors, keeping sport colors', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ sportColours: { Football: '#123456' } }))
+    storage.setItem('scoremap.settings', JSON.stringify({ sportColors: { Football: '#123456' } }))
 
     const loaded = settingsStore(() => storage).load()
 
-    expect(loaded.sportColours).toEqual({ Football: '#123456' })
-    expect(loaded.leagueColours).toEqual({})
+    expect(loaded.sportColors).toEqual({ Football: '#123456' })
+    expect(loaded.leagueColors).toEqual({})
   })
 
-  it('keeps each saved league colour it understands and drops the rest', () => {
+  it('keeps each saved league color it understands and drops the rest', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ leagueColours: { NFL: '#abcdef', NBA: 'blue', MLS: 3 } }))
+    storage.setItem('scoremap.settings', JSON.stringify({ leagueColors: { NFL: '#abcdef', NBA: 'blue', MLS: 3 } }))
 
-    expect(settingsStore(() => storage).load().leagueColours).toEqual({ NFL: '#abcdef' })
+    expect(settingsStore(() => storage).load().leagueColors).toEqual({ NFL: '#abcdef' })
   })
 
-  it.each([['red'], [['#123456']], [null]])('loads no colours when what was saved for them is %j', (sportColours) => {
+  it('loads colors saved under their old British names, sportColours and leagueColours', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ sportColours }))
+    storage.setItem(
+      'scoremap.settings',
+      JSON.stringify({ sportColours: { Football: '#123456' }, leagueColours: { NFL: '#abcdef', NBA: 'blue' } }),
+    )
 
-    expect(settingsStore(() => storage).load().sportColours).toEqual({})
+    const loaded = settingsStore(() => storage).load()
+
+    expect(loaded.sportColors).toEqual({ Football: '#123456' })
+    expect(loaded.leagueColors).toEqual({ NFL: '#abcdef' })
+  })
+
+  it('saves colors loaded from their old names under the new ones', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ sportColours: { Football: '#123456' } }))
+    const store = settingsStore(() => storage)
+
+    store.save(store.load())
+
+    const saved = JSON.parse(storage.getItem('scoremap.settings') ?? '{}') as Record<string, unknown>
+    expect(saved.sportColors).toEqual({ Football: '#123456' })
+    expect(saved).not.toHaveProperty('sportColours')
+  })
+
+  it.each([['red'], [['#123456']], [null]])('loads no colors when what was saved for them is %j', (sportColors) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ sportColors }))
+
+    expect(settingsStore(() => storage).load().sportColors).toEqual({})
   })
 
   it.each(['hud', 'led', 'broadcast', 'tactical', 'neon', 'white'])(
@@ -179,8 +204,8 @@ describe('settingsStore', () => {
       expect(settingsStore(() => storage).load()).toEqual({
         hiddenLeagues: ['NBA', 'MLS'],
         topEventsOnly: true,
-        sportColours: {},
-        leagueColours: {},
+        sportColors: {},
+        leagueColors: {},
         hotGameFlames: true,
         mapType: 'plain',
       })

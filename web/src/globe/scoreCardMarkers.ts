@@ -83,7 +83,7 @@ export class ScoreCardMarkers {
   private readonly animating = new Map<string, PinAnimation>()
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
-  private readonly colourOf: (game: Game) => string
+  private readonly colorOf: (game: Game) => string
   private readonly flamesOf: (game: Game) => boolean
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
@@ -120,8 +120,8 @@ export class ScoreCardMarkers {
   private mapSize: { width: number; height: number } | null = null
 
   /**
-   * `theme` gives the theme as it is now, for how far above its venue a card sits; `colourOf` gives a
-   * game's colour as it is now (see gameColour), for its card, its trail and its pulses over card
+   * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
+   * game's color as it is now (see gameColor), for its card, its trail and its pulses over card
    * clusters; `flamesOf` whether a game shows flames now (see showsFlames), on its card and a card
    * cluster it's in; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
    * trails; `onSelect` is called with a game's id when its card is selected.
@@ -129,7 +129,7 @@ export class ScoreCardMarkers {
   constructor(
     map: MapLibreMap,
     theme: () => Theme,
-    colourOf: (game: Game) => string,
+    colorOf: (game: Game) => string,
     flamesOf: (game: Game) => boolean,
     placeNames: PlaceNames,
     trails: TrailLayer,
@@ -139,7 +139,7 @@ export class ScoreCardMarkers {
     this.cardZoom = cardZoom
     this.map = map
     this.theme = theme
-    this.colourOf = colourOf
+    this.colorOf = colorOf
     this.flamesOf = flamesOf
     this.placeNames = placeNames
     this.trails = trails
@@ -158,8 +158,8 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it, or of the games' colours or flames:
-   * each card redrawn in its game's colour, measured afresh, as its text, spacing and sizes may have changed,
+   * After a change of theme, with the page's CSS already in it, or of the games' colors or flames:
+   * each card redrawn in its game's color, measured afresh, as its text, spacing and sizes may have changed,
    * and laid out again.
    */
   restyle(): void {
@@ -201,7 +201,7 @@ export class ScoreCardMarkers {
 
   /**
    * Places, updates and removes cards to match what the pin source shows at the current zoom, on the
-   * side of the globe facing the viewer, for games near the centre of the view (see hasCard).
+   * side of the globe facing the viewer, for games near the center of the view (see hasCard).
    */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
@@ -229,7 +229,7 @@ export class ScoreCardMarkers {
       const game = this.games.get(gameId)
       if (!game) continue
       keep.add(gameId)
-      const color = this.colourOf(game)
+      const color = this.colorOf(game)
       const flames = this.flamesOf(game)
       const selected = gameId === this.selectedGameId
       const theme = this.theme()
@@ -386,7 +386,7 @@ export class ScoreCardMarkers {
         width,
         height,
         lngLat: lngLat.toArray(),
-        color: this.colourOf(game),
+        color: this.colorOf(game),
         flames: this.flamesOf(game),
       }
     })
@@ -516,12 +516,12 @@ export class ScoreCardMarkers {
       : undefined
     const game = this.games.get(gameId)
     if (cardCluster && game) {
-      pulse(this.map, this.colourOf(game), cardCluster.lngLat, animation, 'cluster')
+      pulse(this.map, this.colorOf(game), cardCluster.lngLat, animation, 'cluster')
       return true
     }
     const placed = this.placed.get(gameId)
     if (this.smallPins.includes(gameId) && game && placed) {
-      pulse(this.map, this.colourOf(game), placed.marker.getLngLat().toArray(), animation, 'pin')
+      pulse(this.map, this.colorOf(game), placed.marker.getLngLat().toArray(), animation, 'pin')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
@@ -569,16 +569,16 @@ export class ScoreCardMarkers {
 
 const animationClass = (animation: PinAnimation) => `score-card--animate-${animation}`
 
-/** A score card's colours: its game's (see gameColour), and its header's text, readable on its tint (see headerText). */
-interface CardColours {
+/** A score card's colors: its game's (see gameColor), and its header's text, readable on its tint (see headerText). */
+interface CardColors {
   color: string
   header: string
 }
 
 /** Draws a score card into its element, giving its two rows, top first. */
-function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColours, selected: boolean, animation?: PinAnimation): Element[] {
+function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColors, selected: boolean, animation?: PinAnimation): Element[] {
   element.className = `score-card score-card--${statusKey(card.status)}`
-  // In its game's colour, in place of its status's from the page's CSS.
+  // In its game's color, in place of its status's from the page's CSS.
   element.style.setProperty('--game-color', color)
   element.style.setProperty('--header-text', headerColor)
   element.classList.toggle('score-card--selected', selected)

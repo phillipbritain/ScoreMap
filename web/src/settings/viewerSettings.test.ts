@@ -77,7 +77,7 @@ describe('map type switch', () => {
   })
 
   it('switches to satellite and back, keeping the other settings', () => {
-    const settings = { ...firstVisitSettings, hotGameFlames: false, hiddenLeagues: ['NBA'] }
+    const settings = { ...firstVisitSettings, hiddenLeagues: ['NBA'] }
     const satellite = withMapType(settings, 'satellite')
 
     expect(satellite).toEqual({ ...settings, mapType: 'satellite' })
@@ -89,11 +89,11 @@ describe('all-leagues switch', () => {
   const leagues = [nfl, ncaaf, nba, mls, epl]
 
   it('switches every league off, keeping the other settings', () => {
-    const settings = { ...firstVisitSettings, hotGameFlames: false }
+    const settings = { ...firstVisitSettings, topEventsOnly: true }
     const off = withAllLeagues(settings, leagues, false)
 
     expect(leagues.filter((league) => isLeagueOn(off, league.name))).toEqual([])
-    expect(off.hotGameFlames).toBe(false)
+    expect(off.topEventsOnly).toBe(true)
   })
 
   it('switches every league back on, including ones switched off one by one', () => {

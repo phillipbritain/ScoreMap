@@ -84,7 +84,6 @@ export class ScoreCardMarkers {
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
   private readonly colorOf: (game: Game) => string
-  private readonly flamesOf: (game: Game) => boolean
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
   /** The zoom score cards show from now (see FittedZoom). */
@@ -122,15 +121,13 @@ export class ScoreCardMarkers {
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
    * game's color as it is now (see gameColor), for its card, its trail and its pulses over card
-   * clusters; `flamesOf` whether a game shows flames now (see showsFlames), on its card and a card
-   * cluster it's in; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
+   * clusters; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
    * trails; `onSelect` is called with a game's id when its card is selected.
    */
   constructor(
     map: MapLibreMap,
     theme: () => Theme,
     colorOf: (game: Game) => string,
-    flamesOf: (game: Game) => boolean,
     placeNames: PlaceNames,
     trails: TrailLayer,
     cardZoom: () => number,
@@ -140,7 +137,6 @@ export class ScoreCardMarkers {
     this.map = map
     this.theme = theme
     this.colorOf = colorOf
-    this.flamesOf = flamesOf
     this.placeNames = placeNames
     this.trails = trails
     this.onSelect = onSelect
@@ -158,7 +154,7 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it, or of the games' colors or flames:
+   * After a change of theme, with the page's CSS already in it, or of the games' colors:
    * each card redrawn in its game's color, measured afresh, as its text, spacing and sizes may have changed,
    * and laid out again.
    */
@@ -230,7 +226,7 @@ export class ScoreCardMarkers {
       if (!game) continue
       keep.add(gameId)
       const color = this.colorOf(game)
-      const flames = this.flamesOf(game)
+      const flames = game.hot
       const selected = gameId === this.selectedGameId
       const theme = this.theme()
       let placed = this.placed.get(gameId)
@@ -274,7 +270,7 @@ export class ScoreCardMarkers {
       const from = placed.drawnFrom
       if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme) continue
       placed.drawnFrom = { game, color, flames, selected, theme }
-      const card = scoreCard(game, flames)
+      const card = scoreCard(game)
       placed.marker.getElement().firstElementChild!.setAttribute('aria-label', gameLabel(game))
       const header = headerText(color, theme)
       const drawn = JSON.stringify({ card, color, header, selected })
@@ -387,7 +383,7 @@ export class ScoreCardMarkers {
         height,
         lngLat: lngLat.toArray(),
         color: this.colorOf(game),
-        flames: this.flamesOf(game),
+        flames: game.hot,
       }
     })
     // Where the cards were last frame, so they stay put while they still have room.

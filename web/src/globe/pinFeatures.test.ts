@@ -6,9 +6,6 @@ import { pinFeatures } from './pinFeatures'
 /** Every game in one color. */
 const inRed = () => '#ff0000'
 
-/** No game showing flames. */
-const noFlames = () => false
-
 const arrowhead: PlacedGame = {
   id: '401',
   league: 'NFL',
@@ -51,7 +48,7 @@ const arrowhead: PlacedGame = {
 
 describe('pinFeatures', () => {
   it('places one pin per game at its venue, longitude first', () => {
-    const collection = pinFeatures([arrowhead], inRed, noFlames)
+    const collection = pinFeatures([arrowhead], inRed)
 
     expect(collection).toEqual({
       type: 'FeatureCollection',
@@ -67,7 +64,7 @@ describe('pinFeatures', () => {
   })
 
   it('gives games at the same venue pins of their own, both exactly at the venue', () => {
-    const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, noFlames).features
+    const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed).features
 
     expect(first.properties.gameId).toBe('401')
     expect(second.properties.gameId).toBe('402')
@@ -78,16 +75,8 @@ describe('pinFeatures', () => {
   it("colors each pin in its game's color", () => {
     const colorOf = (game: Game) => (game.id === '401' ? '#123456' : '#654321')
 
-    const colors = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colorOf, noFlames).features.map((pin) => pin.properties.color)
+    const colors = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colorOf).features.map((pin) => pin.properties.color)
 
     expect(colors).toEqual(['#123456', '#654321'])
-  })
-
-  it('marks the pins of the games showing flames', () => {
-    const flamesOf = (game: Game) => game.id === '402'
-
-    const hot = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, flamesOf).features.map((pin) => pin.properties.flames)
-
-    expect(hot).toEqual([false, true])
   })
 })

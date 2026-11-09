@@ -1,14 +1,6 @@
 import type { Map as MapLibreMap, StyleImageInterface } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 
-/**
- * Whether a game shows flames: a hot game (see GLOSSARY.md), while the viewer has them on ("Flames on
- * hot games" in Display Settings). Its score card, small pin, and any pin cluster or card cluster it's in, show them.
- */
-export function showsFlames(on: boolean, game: { hot: boolean }): boolean {
-  return on && game.hot
-}
-
 type FireOutline = Theme['components']['Pin']['flame']
 type FireColors = Pick<Theme['components']['ScoreCard']['flames'], 'tips' | 'middle' | 'core'>
 

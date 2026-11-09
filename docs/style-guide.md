@@ -226,7 +226,7 @@ A flame's shape (a main tip with a smaller lick to one side, the same on the glo
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the satellite map's credit (in `text.secondary` at the bottom left of the globe, while the satellite map shows or Map Type, with its picture of it, is open), the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its color lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface color, solid.
@@ -267,7 +267,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `button` | Buttons: sport names in Leagues and Display Settings, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
-| `footnote` | The smallest: the photo's credit, the satellite map's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
+| `footnote` | The smallest: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
 `footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
 

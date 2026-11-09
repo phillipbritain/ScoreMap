@@ -41,12 +41,20 @@ export interface PinSet {
    * read from (see ScoreCardMarkers.sync).
    */
   maxzoom?: number
+  /** Which of the source's features are small pins, if not all that aren't pin clusters. */
+  only?: ExpressionSpecification
 }
 
 /** The games' own pins, shown until the zoom score cards show from (see FittedZoom). */
 export const zoomedOutPins = (cardZoom: number): PinSet => ({ source: pinSource, prefix: '', maxzoom: cardZoom })
 /** The outer games' pins, shown from the zoom score cards show from. */
 export const outerPins = (cardZoom: number): PinSet => ({ source: outerPinSource, prefix: 'outer-', minzoom: cardZoom })
+
+/** The set's small pins: its features that aren't pin clusters, as many as it says. */
+function smallPinsOf({ only }: PinSet): ExpressionSpecification {
+  const single: ExpressionSpecification = ['!', ['has', 'point_count']]
+  return only ? ['all', single, only] : single
+}
 
 /** A layer in a pin set: its id, source and zooms (a pin cluster layer's without the maxzoom). */
 function inSet({ source, prefix, minzoom, maxzoom }: PinSet, id: string, { clusters = false } = {}) {
@@ -188,7 +196,7 @@ export function smallPinLayers(
     {
       ...inSet(set, 'pin-glows'),
       type: 'circle',
-      filter: ['!', ['has', 'point_count']],
+      filter: smallPinsOf(set),
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
         'circle-color': gameColor,
@@ -199,7 +207,7 @@ export function smallPinLayers(
     {
       ...inSet(set, 'pin-flames'),
       type: 'symbol',
-      filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'flames'], true]],
+      filter: ['all', smallPinsOf(set), ['==', ['get', 'flames'], true]],
       layout: {
         'icon-image': flameImage(theme, theme.components.Pin.flame.size),
         // Its base at the middle of the core.
@@ -212,7 +220,7 @@ export function smallPinLayers(
     {
       ...inSet(set, smallPinLayer),
       type: 'circle',
-      filter: ['!', ['has', 'point_count']],
+      filter: smallPinsOf(set),
       layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
@@ -346,7 +354,7 @@ export function pinFootprintLayerSpec(set: PinSet): SymbolLayerSpecification {
   return {
     ...inSet(set, 'pin-footprints'),
     type: 'symbol',
-    filter: ['!', ['has', 'point_count']],
+    filter: smallPinsOf(set),
     layout: { 'icon-image': pinFootprintImage, 'icon-allow-overlap': true },
     paint: { 'icon-opacity': 0 },
   }

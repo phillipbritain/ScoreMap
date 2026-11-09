@@ -1453,24 +1453,6 @@ body {
   cursor: pointer;
 }
 
-/* "Flames on hot games", above the sports: its name, then its switch. */
-.colors-flames {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(2 * var(--spacing));
-  width: 100%;
-  margin-bottom: calc(3 * var(--spacing));
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--palette-text-primary);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
-  cursor: pointer;
-}
-
 /* "Reset colors", under the sports. */
 .colors-reset {
   margin-top: calc(3 * var(--spacing));
@@ -2337,7 +2319,7 @@ body {
   width: 100%;
 }
 
-/* A switch, its knob at the right when on: the welcome tour's, and "Flames on hot games" in Display Settings. */
+/* A switch, its knob at the right when on: the welcome tour's. */
 .switch {
   position: relative;
   flex: none;

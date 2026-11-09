@@ -22,8 +22,7 @@ interface DisplaySettingsProps {
 }
 
 /**
- * The rail's Display Settings popover: "Flames on hot games", switching flames on hot games (see
- * GLOSSARY.md) on and off, then each sport, then its leagues, by name, with a swatch of its games'
+ * The rail's Display Settings popover: each sport, then its leagues, by name, with a swatch of its games'
  * color, which opens a grid of the colors there are to pick (see pickableColors) under its row, and
  * a control to clear it; a league with no color of its own shows its sport's, marked as taken from
  * the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -65,17 +64,6 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
   }
   return (
     <>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={settings.hotGameFlames}
-        className="colors-flames"
-        data-tooltip="Flames on games coming down to the wire"
-        onClick={() => onChange({ ...settings, hotGameFlames: !settings.hotGameFlames })}
-      >
-        Flames on hot games
-        <span className={`switch switch--${settings.hotGameFlames ? 'on' : 'off'}`} aria-hidden="true" />
-      </button>
       {leaguesBySport(leagues).map((group) => {
         const sportColor = settings.sportColors[group.sport] ?? null
         // What a league with no color of its own shows in: its sport's, else the theme's.

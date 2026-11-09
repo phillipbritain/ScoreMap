@@ -1315,39 +1315,7 @@ describe('glow', () => {
 })
 
 describe('flames', () => {
-  /** What the map has drawn in a flame layer near a game's venue: fire surrounds its pin or cluster. */
-  function flamesNear(map: MapLibreMap, layer: string, { venue }: PlacedGame) {
-    if (!map.getLayer(layer)) return []
-    const { x, y } = map.project([venue.longitude, venue.latitude])
-    return map.queryRenderedFeatures(
-      [
-        [x - 30, y - 30],
-        [x + 30, y + 30],
-      ],
-      { layers: [layer] },
-    )
-  }
-
   const hot = (id: string, at: GameAt) => ({ ...game(id, at), hot: true })
-
-  it('shows on a hot game’s small pin and a pin cluster holding one, only while they are on', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
-    const alone = hot('A', { longitude: 30 })
-    const calm = game('B', { longitude: -30 })
-    // Close enough to share a pin cluster.
-    const clustered = [hot('C', { latitude: 30 }), game('D', { longitude: 0.1, latitude: 30 })]
-    globe.setFlames(true)
-    globe.show([alone, calm, ...clustered])
-    await pinsDrawn(map, pinClusterLayer, ...clustered)
-
-    await vi.waitFor(() => expect(flamesNear(map, 'pin-flames', alone)).not.toEqual([]), { timeout: 10_000 })
-    await vi.waitFor(() => expect(flamesNear(map, 'pin-cluster-flames', clustered[0])).not.toEqual([]), { timeout: 10_000 })
-    expect(flamesNear(map, 'pin-flames', calm)).toEqual([])
-
-    globe.setFlames(false)
-    await vi.waitFor(() => expect(flamesNear(map, 'pin-flames', alone)).toEqual([]), { timeout: 10_000 })
-    expect(flamesNear(map, 'pin-cluster-flames', clustered[0])).toEqual([])
-  })
 
   it('animates a used fire image in place, and stops and resumes with reduce motion', async () => {
     await commands.reduceMotion(false)
@@ -1355,7 +1323,6 @@ describe('flames', () => {
       const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
       const alone = hot('A', {})
       const id = flameImage(builtInTheme, builtInTheme.components.Pin.flame, 5)
-      globe.setFlames(true)
       globe.show([alone])
       await vi.waitFor(() => expect(map.hasImage(id)).toBe(true), { timeout: 10_000 })
       const pixels = () => Array.from(map.getImage(id).data.data)
@@ -1378,20 +1345,6 @@ describe('flames', () => {
     }
   })
 
-  it('shows on a hot game’s score card, only while they are on', async () => {
-    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
-    globe.show([hot('A', {}), game('B', { longitude: 2 })])
-    const a = await cardShown('A')
-    expect(a.querySelector('.score-card__flames')).toBeNull()
-
-    globe.setFlames(true)
-    await vi.waitFor(() => expect(card('A')!.querySelector('.score-card__flames')).not.toBeNull())
-    expect(card('B')!.querySelector('.score-card__flames')).toBeNull()
-
-    globe.setFlames(false)
-    await vi.waitFor(() => expect(card('A')!.querySelector('.score-card__flames')).toBeNull())
-  })
-
   it('shows on a card cluster holding a hot game', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, smallGlobe)
     // As in zooming in to a card cluster: far too close for their cards to fit.
@@ -1399,7 +1352,6 @@ describe('flames', () => {
       ...game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
       hot: true,
     }))
-    globe.setFlames(true)
     globe.show(games)
     const { x, y } = await cardClusterDrawn(map)
 

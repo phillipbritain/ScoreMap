@@ -30,11 +30,11 @@ export interface ScoreCard {
   bottom: ScoreCardRow
   /** Blank when there is nothing to show, such as before an Upcoming game starts. */
   clockLine: string
-  /** Flames rising from its top edge, when its game shows them (see showsFlames). */
+  /** Flames around its edge when its game is hot. */
   flames: boolean
 }
 
-export function scoreCard(game: Game, flames: boolean): ScoreCard {
+export function scoreCard(game: Game): ScoreCard {
   const [top, bottom] = cardRows(game)
   return {
     gameId: game.id,
@@ -44,7 +44,7 @@ export function scoreCard(game: Game, flames: boolean): ScoreCard {
     clockLine: game.contest.kind === 'bouts' && game.status === 'Upcoming'
       ? new Date(game.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
       : progressLine(game, 'short') ?? '',
-    flames,
+    flames: game.hot,
   }
 }
 

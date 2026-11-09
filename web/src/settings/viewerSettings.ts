@@ -20,8 +20,6 @@ export interface ViewerSettings {
    * a viewer can color a sport and set one of its leagues apart. A league with none takes its sport's.
    */
   leagueColors: Readonly<Record<string, string>>
-  /** "Flames on hot games" in Display Settings, on unless switched off: hot games (see GLOSSARY.md) show flames on their score cards, small pins and clusters. */
-  hotGameFlames: boolean
   /** What the globe is drawn as (see MapType): the plain map unless the viewer switched to satellite. */
   mapType: MapType
 }
@@ -38,13 +36,12 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on, Top Events off, no colors picked, flames on hot games and the plain map. */
+/** Every league on, Top Events off, no colors picked and the plain map. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
   sportColors: {},
   leagueColors: {},
-  hotGameFlames: true,
   mapType: 'plain',
 }
 

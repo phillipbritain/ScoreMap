@@ -20,8 +20,6 @@ interface GlobeProps {
   zoomSettings: FittedZoom
   /** The colors the viewer picked for games. A change recolors them in place (see GlobeMap.setColors). */
   colors: PickedColors
-  /** Whether hot games show flames. A change shows or clears them in place (see GlobeMap.setFlames). */
-  flames: boolean
   /** What the globe is drawn as (see globeStyle). A change restyles it in place (see GlobeMap.setMapType). */
   mapType: MapType
   /** Whether each game is ringed at the reach its city label may be within (a local-run tool). */
@@ -72,14 +70,14 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, flames, mapType, showGameCityReach, games, changes, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGameCityReach, games, changes, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType])
 
   useEffect(() => {
     if (!container.current) return
@@ -91,7 +89,6 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, flames, mapType
         cityLabels: latest.current.cityLabels,
         zoomSettings: latest.current.zoomSettings,
         colors: latest.current.colors,
-        flames: latest.current.flames,
         mapType: latest.current.mapType,
         startCamera: latest.current.startCamera,
         onSelect: (gameId) => latest.current.onSelectGame(gameId),
@@ -132,7 +129,6 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, flames, mapType
   useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColors(colors), [colors])
-  useEffect(() => globe.current?.setFlames(flames), [flames])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of

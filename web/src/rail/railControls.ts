@@ -16,8 +16,8 @@ export function canZoom({ latitude, zoom }: Camera, limits: ZoomSettings = zoomS
 }
 
 /**
- * The rail's popovers: Leagues (which leagues show), Display Settings (the colors picked for them,
- * and whether hot games show flames), Map Type (the plain map or the satellite
+ * The rail's popovers: Leagues (which leagues show), Display Settings (the colors picked
+ * for sports and leagues), Map Type (the plain map or the satellite
  * map) and Games (every game shown, to find one and go to it).
  */
 export type RailPopover = 'leagues' | 'display' | 'mapType' | 'games'

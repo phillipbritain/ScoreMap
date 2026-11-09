@@ -82,7 +82,7 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
   }
 }
 
-/** How many of a pin cluster's games show flames (see showsFlames), which the pin source counts. */
+/** How many of a pin cluster's games are hot, which the pin source counts. */
 const flameGamesProperty = 'flameGames'
 
 /**

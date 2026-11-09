@@ -43,7 +43,7 @@ export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson
 
 /**
  * A score card as it's laid out on screen, with its venue on the globe, its game's color (see
- * gameColor) and whether it shows flames (see showsFlames).
+ * gameColor) and whether it is hot.
  */
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]

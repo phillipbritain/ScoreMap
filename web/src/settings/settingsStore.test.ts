@@ -24,7 +24,6 @@ describe('settingsStore', () => {
       topEventsOnly: true,
       sportColors: { Football: '#123456', Soccer: '#abcdef' },
       leagueColors: { NFL: '#fedcba' },
-      hotGameFlames: false,
       mapType: 'satellite' as const,
     }
 
@@ -84,11 +83,22 @@ describe('settingsStore', () => {
     expect(JSON.parse(storage.getItem('scoremap.settings')!)).not.toHaveProperty('showDisrupted')
   })
 
-  it('shows flames on hot games to a viewer whose settings were saved before that setting existed', () => {
+  it('ignores a saved hot-game flames switch and stops persisting it, keeping other preferences', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
+    const chosen = {
+      ...firstVisitSettings,
+      hiddenLeagues: ['NBA'],
+      topEventsOnly: true,
+      sportColors: { Football: '#123456' },
+      leagueColors: { NFL: '#fedcba' },
+      mapType: 'satellite' as const,
+    }
+    storage.setItem('scoremap.settings', JSON.stringify({ ...chosen, hotGameFlames: false }))
+    const store = settingsStore(() => storage)
 
-    expect(settingsStore(() => storage).load().hotGameFlames).toBe(true)
+    expect(store.load()).toEqual(chosen)
+    store.save(store.load())
+    expect(JSON.parse(storage.getItem('scoremap.settings')!)).toEqual(chosen)
   })
 
   it('shows the plain map to a viewer whose settings were saved before there was a satellite map', () => {
@@ -107,14 +117,13 @@ describe('settingsStore', () => {
 
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], topEventsOnly: 'yes', hotGameFlames: 0 }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], topEventsOnly: 'yes' }))
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: false,
       sportColors: {},
       leagueColors: {},
-      hotGameFlames: true,
       mapType: 'plain',
     })
   })
@@ -128,7 +137,6 @@ describe('settingsStore', () => {
       topEventsOnly: true,
       sportColors: {},
       leagueColors: {},
-      hotGameFlames: true,
       mapType: 'plain',
     })
   })
@@ -206,7 +214,6 @@ describe('settingsStore', () => {
         topEventsOnly: true,
         sportColors: {},
         leagueColors: {},
-        hotGameFlames: true,
         mapType: 'plain',
       })
     },

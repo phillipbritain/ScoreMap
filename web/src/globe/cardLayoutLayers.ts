@@ -32,24 +32,40 @@ export interface CardOnGlobe extends ScreenCard {
   flames: boolean
 }
 
-/** How far a trail's venue dot reaches, and a venue cluster of this many games, ring or outline and all. */
+/**
+ * How far, on screen, a trail's venue dot reaches, a venue cluster of this many games, and a card
+ * cluster, ring or outline and all.
+ */
 export interface VenueSizes {
   dot: number
   cluster: (count: number) => number
-}
-
-/** What the map draws of a card layout: its features for the card layout source, and the moved cards' trails. */
-export interface CardLayoutDrawing {
-  source: FeatureCollection
-  trails: TrailOnGlobe[]
+  cardCluster: number
 }
 
 /**
- * The venue clusters, card clusters and footprints of a card layout, as features for the map, and the
- * moved cards' trails (see trailLayer). The layout is worked out on screen, so its positions are
- * turned back into places on the globe with `unproject`; venues are given as they are, and footprints
- * at them, offset on screen. Moved cards whose venue dots would overlap on screen share a venue
- * cluster instead, their trails meeting at it (see venueMarks).
+ * A card cluster as drawn: its games, those with no room first, then any whose trails meet at it
+ * (see cardLayoutDrawing), and where on the globe it's drawn.
+ */
+export interface DrawnCardCluster {
+  gameIds: string[]
+  lngLat: [number, number]
+}
+
+/** What the map draws of a card layout: its features for the card layout source, the cards' trails, and the card clusters. */
+export interface CardLayoutDrawing {
+  source: FeatureCollection
+  trails: TrailOnGlobe[]
+  cardClusters: DrawnCardCluster[]
+}
+
+/**
+ * The venue clusters, card clusters and footprints of a card layout, as features for the map, the
+ * cards' trails (see trailLayer), and the card clusters as drawn. The layout is worked out on screen,
+ * so its positions are turned back into places on the globe with `unproject`; venues are given as they
+ * are, and footprints at them, offset on screen. Venue dots, venue clusters and card clusters that
+ * would overlap on screen become one cluster instead (see gatherMarks): a card cluster if any of its
+ * games has no room, counting every game in it, the trails of those whose cards are on screen meeting
+ * at it; otherwise a venue cluster, the trails meeting at it.
  */
 export function cardLayoutDrawing(
   cards: readonly CardOnGlobe[],
@@ -59,79 +75,85 @@ export function cardLayoutDrawing(
 ): CardLayoutDrawing {
   const features: Feature[] = []
   const trails: TrailOnGlobe[] = []
+  const cardClusters: DrawnCardCluster[] = []
   const byGame = new Map(cards.map((card) => [card.gameId, card]))
-  const moved: CardOnGlobe[] = []
+  const withTrails: CardOnGlobe[] = []
   for (const card of cards) {
     const placement = layout.cards.get(card.gameId)
     if (!placement || placement.inCardCluster) continue
     const { offset, trail } = placement
-    if (trail) moved.push(card)
+    if (trail) withTrails.push(card)
     // Centred on the card, wherever it is: at its venue, and as far from it on screen as the card, so
     // it stays on the card as the globe turns.
     const foot = [offset.dx, offset.dy - card.height / 2 + cardFootprint.height / 2]
     features.push(feature({ kind: 'footprint', offset: foot }, { type: 'Point', coordinates: card.lngLat }))
   }
-  for (const mark of venueMarks(moved, venueSizes)) {
-    const lngLat = mark.cards.length === 1 ? mark.cards[0].lngLat : unproject(mark.x, mark.y)
-    const dot = mark.cards.length === 1
+  const noRoom = layout.cardClusters
+    .map(({ gameIds }) => gameIds.flatMap((id) => byGame.get(id) ?? []))
+    .filter((games) => games.length > 0)
+  for (const mark of gatherMarks(withTrails, noRoom, venueSizes)) {
+    const games = [...mark.clustered, ...mark.cards]
+    const lngLat = mark.at ?? unproject(mark.x, mark.y)
+    const dot = games.length === 1 && mark.clustered.length === 0
     for (const card of mark.cards) {
       const { trail } = layout.cards.get(card.gameId)!
       const start = { dx: trail!.x1 - card.venueX, dy: trail!.y1 - card.venueY }
       trails.push({ gameId: card.gameId, color: card.color, venue: card.lngLat, start, end: lngLat, dot })
     }
     if (dot) continue
+    const shared = {
+      status: groupStatus(games.map((card) => card.status)),
+      [sharedColorProperty]: sharedColourKey(games),
+      count: games.length,
+    }
+    if (mark.clustered.length === 0) {
+      features.push(feature({ kind: 'venueCluster', ...shared }, { type: 'Point', coordinates: lngLat }))
+      continue
+    }
+    cardClusters.push({ gameIds: games.map((card) => card.gameId), lngLat })
     features.push(
       feature(
-        {
-          kind: 'venueCluster',
-          status: groupStatus(mark.cards.map((card) => card.status)),
-          [sharedColorProperty]: sharedColourKey(mark.cards),
-          count: mark.cards.length,
-        },
+        // Flames for a game with no room: one whose card is on screen shows its own.
+        { kind: 'cardCluster', ...shared, firstGameId: games[0].gameId, flames: mark.clustered.some((card) => card.flames) },
         { type: 'Point', coordinates: lngLat },
       ),
     )
   }
-  for (const { gameIds, status } of layout.cardClusters) {
-    const first = byGame.get(gameIds[0])
-    if (!first) continue
-    const clustered = gameIds.flatMap((id) => byGame.get(id) ?? [])
-    features.push(
-      feature(
-        {
-          kind: 'cardCluster',
-          status,
-          [sharedColorProperty]: sharedColourKey(clustered),
-          count: gameIds.length,
-          firstGameId: gameIds[0],
-          flames: clustered.some((card) => card.flames),
-        },
-        { type: 'Point', coordinates: first.lngLat },
-      ),
-    )
-  }
-  return { source: { type: 'FeatureCollection', features }, trails }
-}
-
-/** Where moved cards' trails end on screen: a venue dot for one card, or a venue cluster for more. */
-interface VenueMark {
-  cards: CardOnGlobe[]
-  x: number
-  y: number
+  return { source: { type: 'FeatureCollection', features }, trails, cardClusters }
 }
 
 /**
- * Gathers moved cards' venues so their marks don't overlap: the two marks that overlap most become a
- * venue cluster in the middle of their venues on screen (a venue cluster is wider than a dot, and the
- * more games it holds the wider), and again until none overlap; of two that overlap as much, the
- * first. How far apart each pair is is worked out once, and again only for the mark just made: a
- * crowd of cards can make many venue clusters a frame.
+ * Where cards' trails end on screen, or a card cluster: a venue dot for one card, a venue cluster for
+ * more, and a card cluster once it holds a game with no room.
  */
-function venueMarks(cards: readonly CardOnGlobe[], sizes: VenueSizes): VenueMark[] {
-  // In the cards' order; a mark gathered into another leaves an empty place.
-  const marks: (VenueMark | null)[] = cards.map((card) => ({ cards: [card], x: card.venueX, y: card.venueY }))
+interface Mark {
+  /** The games whose cards are on screen, their trails ending here. */
+  cards: CardOnGlobe[]
+  /** The games with no room for a card. */
+  clustered: CardOnGlobe[]
+  x: number
+  y: number
+  /** Where it is on the globe, while it's a venue dot or a card cluster as the layout made it: the venue it's at. */
+  at?: [number, number]
+}
+
+/**
+ * Gathers cards' venue dots and card clusters so no two overlap: the two marks that overlap most become
+ * one in the middle of their games' venues on screen (a venue cluster is wider than a dot, and the
+ * more games it holds the wider; a card cluster is as wide as one of some), and again until none
+ * overlap; of two that overlap as much, the first. How far apart each pair is is worked out once, and
+ * again only for the mark just made: a crowd of cards can make many clusters a frame.
+ */
+function gatherMarks(cards: readonly CardOnGlobe[], noRoom: readonly CardOnGlobe[][], sizes: VenueSizes): Mark[] {
+  // The cards' venues, then the card clusters, each at its first game's venue (see CardCluster), in
+  // order; a mark gathered into another leaves an empty place.
+  const marks: (Mark | null)[] = [
+    ...cards.map((card): Mark => ({ cards: [card], clustered: [], x: card.venueX, y: card.venueY, at: card.lngLat })),
+    ...noRoom.map((games): Mark => ({ cards: [], clustered: games, x: games[0].venueX, y: games[0].venueY, at: games[0].lngLat })),
+  ]
   const count = marks.length
-  const reach = ({ cards }: VenueMark) => (cards.length === 1 ? sizes.dot : sizes.cluster(cards.length))
+  const reach = ({ cards, clustered }: Mark) =>
+    clustered.length > 0 ? sizes.cardCluster : cards.length === 1 ? sizes.dot : sizes.cluster(cards.length)
   // How far apart two marks are, edge to edge, the first before the second: they overlap below 0.
   const gaps = new Float64Array(count * count)
   const gapBetween = (i: number, j: number) => {
@@ -149,9 +171,12 @@ function venueMarks(cards: readonly CardOnGlobe[], sizes: VenueSizes): VenueMark
       }
     }
     if (!most) return marks.filter((mark) => mark !== null)
-    const merged = [...marks[most.i]!.cards, ...marks[most.j]!.cards]
-    const middle = (of: (card: CardOnGlobe) => number) => merged.reduce((sum, card) => sum + of(card), 0) / merged.length
-    marks[most.i] = { cards: merged, x: middle((card) => card.venueX), y: middle((card) => card.venueY) }
+    const [a, b] = [marks[most.i]!, marks[most.j]!]
+    const cards = [...a.cards, ...b.cards]
+    const clustered = [...a.clustered, ...b.clustered]
+    const games = [...cards, ...clustered]
+    const middle = (of: (card: CardOnGlobe) => number) => games.reduce((sum, card) => sum + of(card), 0) / games.length
+    marks[most.i] = { cards, clustered, x: middle((card) => card.venueX), y: middle((card) => card.venueY) }
     marks[most.j] = null
     for (let k = 0; k < count; k++) {
       if (k === most.i || !marks[k]) continue

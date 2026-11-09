@@ -38,10 +38,11 @@ const layout: CardLayout = {
   cardClusters: [{ gameIds: ['c', 'd'], status: 'Final', x: 300, y: 400 }],
 }
 
-// A venue dot reaches 6 pixels from its venue, ring and all; a venue cluster of a few games 12, of more 15.
-const venueSizes: VenueSizes = { dot: 6, cluster: (count) => (count < 5 ? 12 : 15) }
+// A venue dot reaches 6 pixels from its venue, ring and all; a venue cluster of a few games 12, of
+// more 15; a card cluster 15.
+const venueSizes: VenueSizes = { dot: 6, cluster: (count) => (count < 5 ? 12 : 15), cardCluster: 15 }
 
-const allFour = [a, b, { ...c, status: 'Final' as const }, d]
+const allFour = [a, b, { ...c, status: 'Final' as const }, { ...d, status: 'Final' as const }]
 
 /** The features of this kind for these cards, laid out as `layout` has them: all four unless given. */
 const features = (kind: string, cards: CardOnGlobe[] = allFour) =>
@@ -80,7 +81,7 @@ describe('cardLayoutDrawing', () => {
   })
 
   it('shows flames on a card cluster holding a game showing flames, but never on a venue cluster', () => {
-    const flaming = [{ ...a, flames: true }, b, { ...c, status: 'Final' as const }, { ...d, flames: true }]
+    const flaming = [{ ...a, flames: true }, b, { ...c, status: 'Final' as const }, { ...d, status: 'Final' as const, flames: true }]
 
     expect(features('cardCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([true])
     expect(features('venueCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([undefined])
@@ -131,6 +132,73 @@ describe('cardLayoutDrawing', () => {
       // venue cluster reaches 12.
       expect(marks('venueCluster', e, f, h).map(([, count]) => count)).toEqual([3])
       expect(trailsOf(e, f, h).filter(({ dot }) => dot)).toEqual([])
+    })
+  })
+  describe('a card cluster that venue dots or another card cluster would overlap', () => {
+    const onScreen: CardPlacement = { ...moved, trail: { x1: 0, y1: 0, x2: 0, y2: 0 } }
+    // A card cluster of p and q, at their venue; r's and s's cards on screen, their venues 10 pixels
+    // either side of it, where their venue cluster would sit on the card cluster; t's well clear.
+    const p = card('p', 500, 500, [50, -50])
+    const q = { ...card('q', 500, 500, [50, -50]), flames: true }
+    const r = { ...card('r', 490, 500, [49, -50]), status: 'Upcoming' as const }
+    const s = { ...card('s', 510, 500, [51, -50]), status: 'Final' as const }
+    const t = card('t', 700, 500, [70, -50])
+    const crowded: CardLayout = {
+      cards: new Map([
+        ['p', clustered],
+        ['q', clustered],
+        ['r', onScreen],
+        ['s', onScreen],
+        ['t', onScreen],
+      ]),
+      cardClusters: [{ gameIds: ['p', 'q'], status: 'Live', x: 500, y: 500 }],
+    }
+    const drawing = (cards: CardOnGlobe[] = [p, q, r, s, t]) => cardLayoutDrawing(cards, crowded, unproject, venueSizes)
+    const drawn = (kind: string, cards?: CardOnGlobe[]) =>
+      drawing(cards).source.features.filter((feature) => feature.properties?.kind === kind)
+
+    it('becomes one card cluster in the middle of all their venues, counting every game, and no venue cluster', () => {
+      expect(drawn('venueCluster')).toEqual([])
+      expect(drawn('cardCluster').map(({ properties, geometry }) => [properties?.count, properties?.firstGameId, (geometry as Point).coordinates])).toEqual([
+        [4, 'p', [50, -50]],
+      ])
+    })
+
+    it('shows as the most prominent status among all its games, with flames only for a game with no room', () => {
+      expect(drawn('cardCluster').map(({ properties }) => [properties?.status, properties?.flames])).toEqual([['Live', true]])
+      const onlyOnScreenHot = [p, { ...q, flames: false }, { ...r, flames: true }, s, t]
+      expect(drawn('cardCluster', onlyOnScreenHot).map(({ properties }) => properties?.flames)).toEqual([false])
+    })
+
+    it('has the trails of its games with cards on screen meet at it, and leaves a venue dot clear of it alone', () => {
+      expect(drawing().trails.map(({ gameId, end, dot }) => [gameId, end, dot])).toEqual([
+        ['r', [50, -50], false],
+        ['s', [50, -50], false],
+        ['t', [70, -50], true],
+      ])
+    })
+
+    it('gives all its games, those with no room first, for selecting it to zoom to', () => {
+      expect(drawing().cardClusters).toEqual([{ gameIds: ['p', 'q', 'r', 's'], lngLat: [50, -50] }])
+    })
+
+    it("stays at its first game's venue while nothing overlaps it", () => {
+      expect(drawing([p, q, t]).cardClusters).toEqual([{ gameIds: ['p', 'q'], lngLat: [50, -50] }])
+    })
+
+    it('gathers another card cluster it would overlap into one', () => {
+      const u = card('u', 520, 500, [52, -50])
+      const twoClusters: CardLayout = {
+        cards: new Map([
+          ['p', clustered],
+          ['u', clustered],
+        ]),
+        cardClusters: [
+          { gameIds: ['p'], status: 'Live', x: 500, y: 500 },
+          { gameIds: ['u'], status: 'Live', x: 520, y: 500 },
+        ],
+      }
+      expect(cardLayoutDrawing([p, u], twoClusters, unproject, venueSizes).cardClusters).toEqual([{ gameIds: ['p', 'u'], lngLat: [51, -50] }])
     })
   })
 })

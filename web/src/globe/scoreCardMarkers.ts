@@ -7,7 +7,7 @@ import type { PlacedGame } from '../games/placedGames'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
-import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe } from './cardLayoutLayers'
+import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { clusterReach, pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
@@ -66,12 +66,6 @@ export interface ShownScoreCard {
   rows: Element[]
 }
 
-interface PlacedCardCluster {
-  gameIds: string[]
-  /** The first game's venue, where the card cluster is drawn. */
-  lngLat: [number, number]
-}
-
 /**
  * Zoomed in, shows each pin as an HTML score card (logos, abbreviations, score, clock line). Cards
  * that would overlap are moved apart with a trail back to their venue; where there's no room for
@@ -96,8 +90,8 @@ export class ScoreCardMarkers {
   /** The zoom score cards show from now (see FittedZoom). */
   private readonly cardZoom: () => number
   private readonly onSelect: (gameId: string) => void
-  /** Games with no room for a card, as last laid out. */
-  private cardClusters: PlacedCardCluster[] = []
+  /** The card clusters as last laid out (see cardLayoutDrawing). */
+  private cardClusters: DrawnCardCluster[] = []
   /**
    * The layout last given to the map (see drawLayout), so it's given again only when it changes: its
    * features with the points worked out on screen left blank, and where on the globe those points were put.
@@ -431,9 +425,7 @@ export class ScoreCardMarkers {
         moved = true
       }
     }
-    const lngLats = new Map(cards.map((card) => [card.gameId, card.lngLat]))
-    this.cardClusters = layout.cardClusters.map(({ gameIds }) => ({ gameIds, lngLat: lngLats.get(gameIds[0])! }))
-    this.drawLayout(cards, layout, scene.moving)
+    this.cardClusters = this.drawLayout(cards, layout, scene.moving)
     return moved
   }
 
@@ -444,14 +436,17 @@ export class ScoreCardMarkers {
    * move on screen with it: they're given again only when the layout changes, or the globe turning
    * has carried a point worked out on screen (a venue cluster's, between its venues) or a footprint
    * off where it should be. Giving them again sends them to MapLibre's worker to be made into tiles,
-   * too slow for every frame of a pan.
+   * too slow for every frame of a pan. Gives back the card clusters as drawn.
    */
-  private drawLayout(cards: readonly CardOnGlobe[], layout: CardLayout, moving: boolean): void {
-    const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
-    if (!source) return
+  private drawLayout(cards: readonly CardOnGlobe[], layout: CardLayout, moving: boolean): DrawnCardCluster[] {
     const theme = this.theme()
     const { ring } = theme.components.Trail.venue
-    const venueSizes = { dot: ring.radius + ring.width, cluster: (count: number) => clusterReach(theme, count) }
+    const venueSizes = {
+      dot: ring.radius + ring.width,
+      cluster: (count: number) => clusterReach(theme, count),
+      // As wide as a pin cluster of some games, outline and all (see cardLayoutLayers).
+      cardCluster: theme.components.Cluster.radius.some,
+    }
     // Each point worked out on screen, by the place on the globe it was turned into.
     const onScreen = new Map<[number, number], [number, number]>()
     const unproject = (x: number, y: number) => {
@@ -459,7 +454,9 @@ export class ScoreCardMarkers {
       onScreen.set(lngLat, [x, y])
       return lngLat
     }
-    const { source: features, trails } = cardLayoutDrawing(cards, layout, unproject, venueSizes)
+    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, layout, unproject, venueSizes)
+    const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
+    if (!source) return cardClusters
     this.trails.show(trails)
     // The features with those points and the footprints' offsets left out, which are compared by how far they've come.
     const footprints: number[][] = []
@@ -479,9 +476,10 @@ export class ScoreCardMarkers {
         return Math.hypot(at.x - x, at.y - y) <= max.point
       }) &&
       footprints.every(([dx, dy], i) => Math.hypot(dx - drawn.footprints[i][0], dy - drawn.footprints[i][1]) <= max.footprint)
-    if (held) return
+    if (held) return cardClusters
     void source.setData(features)
     this.layoutDrawn = { shape, lngLats: [...onScreen.keys()], footprints }
+    return cardClusters
   }
 
   /** The games in each card cluster on screen now. */
@@ -499,7 +497,10 @@ export class ScoreCardMarkers {
    * card. False when the game has neither on screen.
    */
   animate(gameId: string, animation: PinAnimation): boolean {
-    const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
+    // A game whose card is on screen animates its card, though its trail meets at a card cluster.
+    const cardCluster = this.placed.get(gameId)?.inCardCluster
+      ? this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
+      : undefined
     const game = this.games.get(gameId)
     if (cardCluster && game) {
       pulse(this.map, this.colourOf(game), cardCluster.lngLat, animation, 'cluster')

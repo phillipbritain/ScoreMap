@@ -8,6 +8,7 @@ name: ci
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, edited]
 
 # A newer push to the same pull request replaces a check still running on the old one.
 concurrency:
@@ -25,12 +26,23 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
           cache-dependency-path: web/package-lock.json
+
+      # Check new commits, including old history brought back by a merge, before it reaches main.
+      - name: Check commit attribution
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node --test ../scripts/check-commit-attribution.test.mjs
+          node ../scripts/check-commit-attribution.mjs "$BASE_SHA" "$HEAD_SHA"
 
       - run: npm ci
       - run: npm run lint

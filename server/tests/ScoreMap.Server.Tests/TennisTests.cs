@@ -198,13 +198,14 @@ public class TennisTests
     }
 
     [Fact]
-    public async Task A_suspended_match_is_Disrupted()
+    public async Task A_suspended_match_is_not_shown()
     {
         await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Atp, Match(server, Suspended, 2, [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(2, 2)]));
 
-        var game = await ReceivedAsync(server, Match(server, Suspended, 2, [new ProviderSet(6, 4, HomeWon: true), new ProviderSet(2, 2)]));
+        await using var client = await server.ConnectClientAsync();
 
-        Assert.Equal((GameStatus.Disrupted, Disruption.Suspended), (game.Status, game.Disruption));
+        Assert.Empty(await client.NextSnapshotAsync());
     }
 
     [Fact]

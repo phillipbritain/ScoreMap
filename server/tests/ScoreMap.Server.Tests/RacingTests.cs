@@ -57,7 +57,7 @@ public class RacingTests
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard(Nascar,
             Race(server, Final, 189, "Kyle Larson", "William Byron"),
-            Race(server, Scheduled, null) with { Id = "202611010020", StartTime = server.Clock.GetUtcNow().AddHours(1) });
+            Race(server, Scheduled, null) with { Id = "202611010020", StartTime = server.Clock.GetUtcNow().AddMinutes(20) });
         await using var client = await server.ConnectClientAsync();
 
         var games = await client.NextSnapshotAsync();

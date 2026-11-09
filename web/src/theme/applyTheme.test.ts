@@ -145,15 +145,15 @@ describe('applyTheme', () => {
     // Widths by zoom (lines' and place names' sizes), the disputed borders' dash pattern and the halo's
     // sizes are for the globe, not the page, so aren't written.
     const written = {
-      // Four colour roles of four each, and four statuses' colours of three; the background's two, three
+      // Four colour roles of four each, and three statuses' colours of three; the background's two, three
       // kinds of text, a divider and hover.
-      palette: 4 * 4 + 4 * 3 + 2 + 3 + 1 + 1,
+      palette: 4 * 4 + 3 * 3 + 2 + 3 + 1 + 1,
       // A font family, and nine type styles of three.
       typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // A small pin's core of four and glow of two, for each of four statuses, and its flame's size.
-      pin: 4 * 6 + 1,
+      // A small pin's core of four and glow of two, for each of three statuses, and its flame's size.
+      pin: 3 * 6 + 1,
       // A surface, four kinds of line (their colours) and two halo colours.
       globe: 7,
       // Three kinds of place name (city, state and country), each with a colour, an outline (its colour, width and blur), a
@@ -162,8 +162,8 @@ describe('applyTheme', () => {
       // The sky's colour, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
-      // font (of four) and size, its flame's size, and its opacity for each of four statuses.
-      cluster: 9 + 5 + 1 + 4,
+      // font (of four) and size, its flame's size, and its opacity for each of three statuses.
+      cluster: 9 + 5 + 1 + 3,
       // A trail's width and opacity, its glow's three and its venue's three.
       trail: 8,
       selection: 2,
@@ -172,16 +172,15 @@ describe('applyTheme', () => {
       // Two sizes and two ring widths.
       pulse: 4,
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
-      // logo plate of three and flames' five (height, flicker and three colours); for each of four statuses its fade and glow of two, and a Disrupted card's
-      // fill and text.
-      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 4 * 3 + 2,
+      // logo plate of three and flames' five (height, flicker and three colours); for each of three statuses its fade and glow of two.
+      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 3 * 3,
       // The game panel's frost, eleven colours and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's frost, eleven colours and shadows and six sizes.
-      rail: 1 + 11 + 6,
+      // The rail's frost, ten colours and shadows and six sizes.
+      rail: 1 + 10 + 6,
       // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's frost and surface.

@@ -143,7 +143,7 @@ public sealed class ScenarioPlayTests : IDisposable
     public void A_final_game_drops_out_after_a_short_while_and_a_new_game_takes_its_place_at_a_venue_from_the_group()
     {
         // At 1×, so the feed is every second of scenario time.
-        var feed = Watched(Read("""{ "fill": { "count": 5, "group": "london" }, "play": true, "disrupted": 0 }"""), TimeSpan.FromHours(3), speed: 1);
+        var feed = Watched(Read("""{ "fill": { "count": 5, "group": "london" }, "play": true }"""), TimeSpan.FromHours(3), speed: 1);
 
         var firstFinal = feed.FindIndex(games => games.Any(game => game.Status == ProviderStatus.Final));
         Assert.True(firstFinal > 0, "a game finished");
@@ -196,7 +196,7 @@ public sealed class ScenarioPlayTests : IDisposable
     public void With_every_team_playing_a_finished_games_teams_are_free_for_the_game_that_replaces_it()
     {
         // 100 games, as many as the teams have room for, so each new game needs the teams of the one it replaces.
-        var feed = Watched(Read("""{ "fill": { "count": 100, "group": "worldwide" }, "play": true, "disrupted": 0 }"""), TimeSpan.FromMinutes(30));
+        var feed = Watched(Read("""{ "fill": { "count": 100, "group": "worldwide" }, "play": true }"""), TimeSpan.FromMinutes(30));
 
         Assert.All(feed, games => Assert.Equal(100, games.Count));
         Assert.True(feed.SelectMany(games => games).Select(game => game.Id).Distinct().Count() > 130, "new games came on");
@@ -218,8 +218,7 @@ public sealed class ScenarioPlayTests : IDisposable
                            "away": { "name": "Made Up Away", "abbreviation": "MUA", "score": 97 },
                            "venue": { "name": "Stadium 100", "city": "City 100" }, "startsIn": "-2h", "status": "final" } ],
               "fill": { "count": 120, "group": "worldwide" },
-              "play": true,
-              "disrupted": 0
+              "play": true
             }
             """), TimeSpan.FromMinutes(5), speed: 1);
 
@@ -230,7 +229,7 @@ public sealed class ScenarioPlayTests : IDisposable
     [Fact]
     public void The_number_of_live_games_stays_roughly_steady_over_10_minutes()
     {
-        var feed = Watched(Read(SixtyLiveGames.Replace("\"play\": true", "\"play\": true, \"disrupted\": 0")), TimeSpan.FromMinutes(10));
+        var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(10));
 
         var finished = feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Final).Select(game => game.Id).Distinct();
         Assert.True(finished.Count() >= 10, $"only {finished.Count()} games finished");
@@ -271,8 +270,7 @@ public sealed class ScenarioPlayTests : IDisposable
                 }
               ],
               "fill": { "count": 1, "group": "london" },
-              "play": true,
-              "disrupted": 0
+              "play": true
             }
             """);
 
@@ -284,7 +282,7 @@ public sealed class ScenarioPlayTests : IDisposable
     [Fact]
     public void An_upcoming_game_goes_live_at_its_start_from_nil_nil()
     {
-        var scenario = Read("""{ "fill": { "count": 3, "group": "london", "mix": { "upcoming": 1 } }, "play": true, "disrupted": 0 }""");
+        var scenario = Read("""{ "fill": { "count": 3, "group": "london", "mix": { "upcoming": 1 } }, "play": true }""");
         var play = new ScenarioPlay(scenario, StartedAt, new Random(7));
         var game = scenario.Games[0];
 
@@ -343,8 +341,7 @@ public sealed class ScenarioPlayTests : IDisposable
                   "venue": { "name": "Stadium 50", "city": "City 50" }, "startsIn": "-1h5m", "status": "live", "clock": "{{clock}}", "period": {{period}} }
               ],
               "fill": { "count": 1, "group": "london" },
-              "play": true,
-              "disrupted": 0
+              "play": true
             }
             """);
 
@@ -366,8 +363,7 @@ public sealed class ScenarioPlayTests : IDisposable
                   "venue": { "name": "Stadium 50", "city": "City 50" }, "startsIn": "-1h40m", "status": "live", "period": 6 }
               ],
               "fill": { "count": 1, "group": "london" },
-              "play": true,
-              "disrupted": 0
+              "play": true
             }
             """, [softballLeague]);
 
@@ -384,126 +380,26 @@ public sealed class ScenarioPlayTests : IDisposable
     }
 
     [Fact]
-    public void The_fill_starts_the_disrupted_share_of_its_games_disrupted()
+    public void Play_never_disrupts_a_game()
     {
-        var scenario = Read("""{ "fill": { "count": 40, "group": "worldwide", "mix": { "live": 1, "upcoming": 1 } }, "play": true, "disrupted": 0.1 }""");
+        var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(30));
 
-        Assert.Equal(4, scenario.Games.Count(game => IsDisrupted(game.Status)));
+        Assert.All(feed.SelectMany(games => games), game =>
+            Assert.DoesNotContain(game.Status, new[] { ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled }));
     }
 
     [Fact]
-    public void Left_out_the_disrupted_share_is_5_percent()
-    {
-        var scenario = Read(SixtyLiveGames);
-
-        Assert.Equal(0.05, scenario.Play!.DisruptedShare);
-        Assert.Equal(3, scenario.Games.Count(game => IsDisrupted(game.Status)));
-    }
-
-    // 100 games, half Upcoming and half Live, with a tenth of them Disrupted.
-    private const string Disrupting = """
-        { "fill": { "count": 100, "group": "worldwide", "mix": { "live": 1, "upcoming": 1 } }, "play": true, "disrupted": 0.1 }
-        """;
-
-    [Fact]
-    public void Play_steers_the_disrupted_games_towards_their_share_of_the_games_showing()
-    {
-        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(30));
-
-        var disrupted = feed.Select(games => games.Count(game => IsDisrupted(game.Status))).ToList();
-        Assert.All(disrupted, count => Assert.InRange(count, 5, 13));
-        Assert.InRange(disrupted.Average(), 9, 11);
-        var disruptedInPlay = feed.SelectMany(games => games).Where(game => IsDisrupted(game.Status)).Select(game => game.Id).Distinct()
-            .Except(feed[0].Where(game => IsDisrupted(game.Status)).Select(game => game.Id));
-        Assert.NotEmpty(disruptedInPlay);
-    }
-
-    [Fact]
-    public void Upcoming_games_are_postponed_or_canceled_and_live_games_suspended_keeping_their_score_and_period()
-    {
-        // At 1×, so the feed before a disruption is every game as it was disrupted.
-        // This seeded run deliberately samples all three disruption kinds to check their transitions.
-        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(90), speed: 1);
-
-        var disruptions = feed.Zip(feed.Skip(1))
-            .SelectMany(pair => pair.Second
-                .Where(game => IsDisrupted(game.Status))
-                .Select(game => (Before: pair.First.SingleOrDefault(before => before.Id == game.Id), After: game))
-                .Where(change => change.Before is not null && !IsDisrupted(change.Before.Status)))
-            .ToList();
-        Assert.Equal([ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled],
-            disruptions.Select(change => change.After.Status).Distinct().Order());
-        Assert.All(disruptions, change =>
-        {
-            if (change.After.Status == ProviderStatus.Suspended)
-            {
-                Assert.Equal(ProviderStatus.InProgress, change.Before!.Status);
-                Assert.Equal((change.Before.Sides().Home.Score, change.Before.Sides().Away.Score, change.Before.Period),
-                    (change.After.Sides().Home.Score, change.After.Sides().Away.Score, change.After.Period));
-            }
-            else
-                Assert.Equal(ProviderStatus.Scheduled, change.Before!.Status);
-        });
-        Assert.All(feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Canceled),
-            game => Assert.Equal((null, null), (game.Sides().Home.Score, game.Sides().Away.Score)));
-        Assert.All(feed.SelectMany(games => games).Where(game => game.Status == ProviderStatus.Suspended),
-            game => Assert.NotNull(game.Period));
-    }
-
-    [Fact]
-    public void Play_never_disrupts_a_game_the_scenario_writes_out()
-    {
-        // Half the games Disrupted, so play disrupts something nearly every step.
-        var scenario = Read("""
-            {
-              "games": [
-                { "id": "written-live", "league": "NBA", "home": { "name": "Knicks", "abbreviation": "NY" }, "away": { "name": "Celtics", "abbreviation": "BOS" },
-                  "venue": { "name": "Stadium 50", "city": "City 50" }, "startsIn": "-30m", "status": "live" },
-                { "id": "written-upcoming", "league": "NHL", "home": { "name": "Leafs", "abbreviation": "TOR" }, "away": { "name": "Canadiens", "abbreviation": "MTL" },
-                  "venue": { "name": "Stadium 51", "city": "City 51" }, "startsIn": "20m", "status": "upcoming" }
-              ],
-              "fill": { "count": 10, "group": "london", "mix": { "live": 1, "upcoming": 1 } },
-              "play": true,
-              "disrupted": 0.5
-            }
-            """);
-
-        var feed = Watched(scenario, TimeSpan.FromMinutes(3));
-
-        Assert.All(feed.SelectMany(games => games).Where(game => game.Id.StartsWith("written-")),
-            game => Assert.False(IsDisrupted(game.Status), $"{game.Id} was {game.Status}"));
-        Assert.True(feed.SelectMany(games => games).Count(game => IsDisrupted(game.Status)) > 0, "play disrupted other games");
-    }
-
-    [Fact]
-    public void A_disrupted_game_stays_for_thirty_minutes_then_a_new_game_takes_its_place()
+    public void Games_that_start_Final_drop_out_over_a_minute_rather_than_all_at_once()
     {
         // At 1×, so the feed is every second of scenario time.
-        var feed = Watched(Read(Disrupting), TimeSpan.FromMinutes(35), speed: 1);
+        var scenario = Read("""{ "fill": { "count": 40, "group": "worldwide", "mix": { "final": 1 } }, "play": true }""");
 
-        var startedDisrupted = feed[0].Where(game => IsDisrupted(game.Status)).Select(game => game.Id).ToHashSet();
-        var disruptedAt = feed.FindIndex(games => games.Any(game => IsDisrupted(game.Status) && !startedDisrupted.Contains(game.Id)));
-        Assert.True(disruptedAt > 0, "play disrupted a game");
-        var disrupted = feed[disruptedAt].First(game => IsDisrupted(game.Status) && !startedDisrupted.Contains(game.Id)).Id;
-        var goneAt = feed.FindIndex(games => games.All(game => game.Id != disrupted));
-        Assert.Equal(TimeSpan.FromMinutes(30), TimeSpan.FromSeconds(goneAt - disruptedAt));
-        Assert.Single(feed[goneAt], game => feed[goneAt - 1].All(before => before.Id != game.Id));
-        Assert.All(feed, games => Assert.Equal(100, games.Count));
-    }
-
-    [Fact]
-    public void Games_that_start_stopped_drop_out_over_their_retention_time_rather_than_all_at_once()
-    {
-        // At 1×, so the feed is every second of scenario time.
-        var scenario = Read("""{ "fill": { "count": 40, "group": "worldwide", "mix": { "final": 1 } }, "play": true, "disrupted": 0.25 }""");
-
-        var feed = Watched(scenario, ScenarioPlay.DisruptedDropsOutAfter, speed: 1);
+        var feed = Watched(scenario, ScenarioPlay.DropsOutAfter, speed: 1);
 
         var goneAt = feed[0].Select(game =>
         {
             var gone = feed.FindIndex(games => games.All(g => g.Id != game.Id));
-            var retention = IsDisrupted(game.Status) ? TimeSpan.FromMinutes(30) : TimeSpan.FromMinutes(1);
-            Assert.InRange(gone, 1, (int)retention.TotalSeconds);
+            Assert.InRange(gone, 1, (int)ScenarioPlay.DropsOutAfter.TotalSeconds);
             return gone;
         }).ToList();
         Assert.True(goneAt.Distinct().Count() >= 20, $"the 40 games dropped out at only {goneAt.Distinct().Count()} different times");
@@ -515,12 +411,6 @@ public sealed class ScenarioPlayTests : IDisposable
     [InlineData("""{ "games": [], "play": true }""", "play needs a fill")]
     [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": true, "timeline": { "length": "1m", "changes": [] } }""",
         "can't have a timeline as well")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "disrupted": 0.1 }""", "disrupted", "without play")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": false, "disrupted": 0.1 }""", "disrupted", "without play")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": true, "disrupted": -0.1 }""", "disrupted is -0.1", "between 0 and 1")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london" }, "play": true, "disrupted": 5 }""", "disrupted is 5", "between 0 and 1")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 1, "disrupted": 1 } }, "play": true }""",
-        "mix", "disrupted", "\"disrupted\" beside \"play\"")]
     public void Play_that_cant_be_used_says_why(string json, params string[] messageParts)
     {
         var error = Assert.Throws<ScenarioFileException>(() => Read(json));
@@ -544,9 +434,6 @@ public sealed class ScenarioPlayTests : IDisposable
             .Select(s => play.GamesAt(StartedAt + TimeSpan.FromSeconds(s) * speed))
             .ToList();
     }
-
-    private static bool IsDisrupted(ProviderStatus status) =>
-        status is ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled;
 
     private static int Points(ProviderGame game) => (game.Sides().Home.Score ?? 0) + (game.Sides().Away.Score ?? 0);
 

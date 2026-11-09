@@ -194,7 +194,7 @@ public class StreamFinderTests
     [InlineData(ScoreMap.Server.GameFeed.ProviderStatus.Postponed)]
     [InlineData(ScoreMap.Server.GameFeed.ProviderStatus.Suspended)]
     [InlineData(ScoreMap.Server.GameFeed.ProviderStatus.Canceled)]
-    public async Task A_Disrupted_game_is_not_searched(ScoreMap.Server.GameFeed.ProviderStatus disruption)
+    public async Task A_postponed_suspended_or_canceled_game_is_neither_shown_nor_searched(ScoreMap.Server.GameFeed.ProviderStatus disruption)
     {
         await using var server = new ScoreMapServer();
         server.AddStreamSite("Streams One", "https://streams-one.test/search?q={query}", Anchor);
@@ -202,7 +202,7 @@ public class StreamFinderTests
         server.Feed.SetScoreboard(Nfl, Game("401", Nfl, server.Clock.GetUtcNow().AddHours(-1),
             disruption, null, null, null, null));
         await using var client = await server.ConnectClientAsync();
-        Assert.Empty(Assert.Single(await client.NextSnapshotAsync()).StreamLinks);
+        Assert.Empty(await client.NextSnapshotAsync());
 
         await server.StreamSearchesFinishedAsync();
         Assert.Empty(server.StreamSites.Requests);

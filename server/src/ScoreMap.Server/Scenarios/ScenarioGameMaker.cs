@@ -13,20 +13,15 @@ namespace ScoreMap.Server.Scenarios;
 /// </summary>
 public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTeamList teams)
 {
-    private static readonly ProviderStatus[] Disruptions = [ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled];
-
     /// <summary>
     /// A game with id <paramref name="id"/> at <paramref name="venue"/> in <paramref name="status"/>,
     /// with its start relative to the scenario's (or loop's) start, between two teams of a league that
     /// aren't among <paramref name="playing"/> (each team in a game showing).
-    /// A Disrupted game is <paramref name="disruption"/> (Postponed, Suspended or Canceled; see
-    /// <see cref="DisruptionInTurn"/>), or one at random if left out. Every choice comes from <paramref name="random"/>, so a seeded one makes the
-    /// same game each time.
+    /// Every choice comes from <paramref name="random"/>, so a seeded one makes the same game each time.
     /// </summary>
     /// <exception cref="NotEnoughTeamsException">No league has two teams free to play.</exception>
     public ScenarioGame Make(
-        string id, ScenarioVenue venue, GameStatus status, IEnumerable<PlayingTeam> playing, Random random,
-        ProviderStatus? disruption = null)
+        string id, ScenarioVenue venue, GameStatus status, IEnumerable<PlayingTeam> playing, Random random)
     {
         var taken = playing.ToHashSet();
         var leaguesWithAGameFree = leagues
@@ -54,10 +49,10 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
         var sport = ScenarioSports.For(league).CreatePlay();
         return status switch
         {
-            GameStatus.Upcoming => game with { StartsIn = Minutes(random.Next(5, 171)) },
+            // Within the Upcoming window, so it has its pin from the start.
+            GameStatus.Upcoming => game with { StartsIn = Minutes(random.Next(5, 31)) },
             GameStatus.Live => UnderWay(game, league, sport, random),
             GameStatus.Final => Finished(game, league, sport, random),
-            GameStatus.Disrupted => Disrupted(game, league, sport, disruption ?? Disruptions[random.Next(Disruptions.Length)], random),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "No such status"),
         };
     }
@@ -75,26 +70,15 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     }
 
     /// <summary>
-    /// Final: started a whole game and up to an hour more ago, with a whole game's score (never level in
-    /// a sport without draws). The board takes a game first seen Final to have ended at its planned end
-    /// and shows it for two hours after, so it keeps its pin a while.
+    /// Final: started a whole game and up to 3 minutes more ago, with a whole game's score (never level
+    /// in a sport without draws). The board takes a game first seen Final to have ended at its planned end
+    /// and shows it for the Final window after (5 minutes), so it keeps its pin a couple of minutes at least.
     /// </summary>
     private static ScenarioGame Finished(ScenarioGame game, League league, SidesPlay sport, Random random)
     {
-        var startsIn = -(league.PlannedLength + Minutes(random.Next(5, 61)));
+        var startsIn = -(league.PlannedLength + Minutes(random.Next(0, 4)));
         var made = sport.Final(game.Sides.Home, game.Sides.Away, random);
         return Standing(game, made) with { StartsIn = startsIn, Status = ProviderStatus.Final };
-    }
-
-    /// <summary>
-    /// Disrupted: suspended part way through with its score so far, or postponed or canceled around
-    /// its planned start with no score.
-    /// </summary>
-    private static ScenarioGame Disrupted(ScenarioGame game, League league, SidesPlay sport, ProviderStatus status, Random random)
-    {
-        return status == ProviderStatus.Suspended
-            ? UnderWay(game, league, sport, random) with { Status = status }
-            : game with { StartsIn = Minutes(random.Next(-30, 121)), Status = status };
     }
 
     private static ScenarioGame Standing(ScenarioGame game, MadeUp made) => game with
@@ -104,12 +88,6 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
         Clock = made.Clock,
         Phase = made.Phase,
     };
-
-    /// <summary>
-    /// The way the <paramref name="n"/>th (from 0) of a batch of Disrupted games is disrupted: Postponed,
-    /// Suspended and Canceled in turn, so a few Disrupted games show every kind.
-    /// </summary>
-    public static ProviderStatus DisruptionInTurn(int n) => Disruptions[n % Disruptions.Length];
 
     private static TimeSpan Minutes(int minutes) => TimeSpan.FromMinutes(minutes);
 

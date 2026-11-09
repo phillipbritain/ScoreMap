@@ -14,7 +14,7 @@ public sealed class ScenarioContestPlayTests
         var game = new ScenarioGame("sample", league.Key, TimeSpan.Zero, contest,
             new ProviderVenue("Venue", "City", null, "USA"), ProviderStatus.InProgress, null, period, phase);
         var settings = new PlaySettings([league], [], new ScenarioGameMaker([league], new ScenarioTeamList(
-            new Dictionary<string, IReadOnlyList<ScenarioTeam>>())), 0, new HashSet<string> { game.Id });
+            new Dictionary<string, IReadOnlyList<ScenarioTeam>>())));
         return new ScenarioPlay(new Scenario("sample", [game], Play: settings), Start, new Random(1));
     }
 

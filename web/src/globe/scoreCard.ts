@@ -51,13 +51,13 @@ export function scoreCard(game: Game, flames: boolean): ScoreCard {
 /**
  * The colour of the text on a score card's header, which is tinted with its game's colour (see
  * gameColour) over the card's fill: whichever of the card's text and its fill stands out from the
- * tint more (see textOn), so the clock line stays readable whatever colour the viewer picks. A
- * Disrupted card's own text and fill. The card's text where the theme gives its colours other than
- * as #rrggbb, as the tint can't then be worked out.
+ * tint more (see textOn), so the clock line stays readable whatever colour the viewer picks. The
+ * card's text where the theme gives its colours other than as #rrggbb, as the tint can't then be
+ * worked out.
  */
-export function headerText(colour: string, status: GameStatus, theme: Theme): string {
+export function headerText(colour: string, theme: Theme): string {
   const card = theme.components.ScoreCard
-  const { fill, text } = status === 'Disrupted' ? card.disrupted : card
+  const { fill, text } = card
   if (![colour, fill].every(isHexColor)) return text
   return textOn(mixColours(fill, colour, card.header.tint), text, fill)
 }

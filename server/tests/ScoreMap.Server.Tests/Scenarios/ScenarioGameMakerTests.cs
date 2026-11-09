@@ -98,8 +98,9 @@ public sealed class ScenarioGameMakerTests
         foreach (var (game, league) in Make(leagueKey, GameStatus.Final))
         {
             Assert.Equal(ProviderStatus.Final, game.Status);
-            // The board takes a game first seen Final to have ended at its planned end, and shows it for 2 h after.
-            Assert.InRange(game.StartsIn, -(league.PlannedLength + RunningGameBoard.FinalWindow) + TimeSpan.FromMinutes(30), -league.PlannedLength);
+            // The board takes a game first seen Final to have ended at its planned end, and shows it for the
+            // Final window after: it has 2 minutes of that left at least.
+            Assert.InRange(game.StartsIn, -(league.PlannedLength + RunningGameBoard.FinalWindow) + TimeSpan.FromMinutes(2), -league.PlannedLength);
             Assert.InRange(game.Sides.Away.Score!.Value, 0, MostPoints[league.Sport]);
             if (YetToBat(game.Sides.Home, game, league))
                 Assert.Null(game.Sides.Home.Score);
@@ -119,35 +120,6 @@ public sealed class ScenarioGameMakerTests
             return;
 
         Assert.All(games, made => Assert.NotEqual(made.Game.Sides.Home.Score, made.Game.Sides.Away.Score));
-    }
-
-    [Theory]
-    [MemberData(nameof(LeagueKeys))]
-    public void A_disrupted_game_is_postponed_suspended_or_canceled_and_inside_its_pin_window(string leagueKey)
-    {
-        var games = Make(leagueKey, GameStatus.Disrupted).ToList();
-
-        Assert.Equal(
-            [ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled],
-            games.Select(made => made.Game.Status).Distinct().Order());
-        foreach (var (game, league) in games)
-        {
-            if (game.Status == ProviderStatus.Suspended)
-            {
-                // Stopped part way through, with the score it had.
-                Assert.InRange(game.StartsIn, -league.PlannedLength, -TimeSpan.FromMinutes(1));
-                Assert.NotNull(game.Sides.Away.Score);
-                Assert.Equal(YetToBat(game.Sides.Home, game, league), game.Sides.Home.Score is null);
-                Assert.NotNull(game.Period);
-            }
-            else
-            {
-                // Shown from 3 h before the planned start until 2 h after the planned end.
-                Assert.InRange(game.StartsIn, -(league.PlannedLength + RunningGameBoard.FinalWindow) + TimeSpan.FromMinutes(30), RunningGameBoard.UpcomingWindow);
-                Assert.Null(game.Sides.Home.Score);
-                Assert.Null(game.Sides.Away.Score);
-            }
-        }
     }
 
     [Fact]

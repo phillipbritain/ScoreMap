@@ -8,12 +8,12 @@ export type ProgressLineForm = 'short' | 'full'
 
 /**
  * Where a game stands, in one line. The server's clock line already carries the period in the
- * sport's style ("Q3 4:12", "Final/OT", "FT"), so this adds only the delay, the kind of disruption
- * and fallbacks. Short: "Q3 4:12", "Delayed", "Final", "Postponed", or null. Full: also
+ * sport's style ("Q3 4:12", "Final/OT", "FT"), so this adds only the delay and fallbacks. Short:
+ * "Q3 4:12", "Delayed", "Final", or null. Full: also
  * "Q3 4:12 · Delayed", "Live", "Upcoming".
  */
 export function progressLine(
-  { status, delayed, disruption, clock }: Pick<Game, 'status' | 'delayed' | 'disruption' | 'clock'>,
+  { status, delayed, clock }: Pick<Game, 'status' | 'delayed' | 'clock'>,
   form: ProgressLineForm,
 ): string | null {
   const statusName = form === 'full' ? status : null
@@ -23,8 +23,6 @@ export function progressLine(
       return form === 'full' && clock ? `${clock} · Delayed` : 'Delayed'
     case 'Final':
       return clock ?? 'Final'
-    case 'Disrupted':
-      return disruption ?? statusName
     case 'Upcoming':
       return statusName
   }

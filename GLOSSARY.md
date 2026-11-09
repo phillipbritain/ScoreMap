@@ -81,8 +81,9 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), the "Live games only" and "Show Disrupted games" switches, Leagues (which leagues show), Display Settings (the colours picked for sports and leagues, and whether hot games show flames) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colours picked for sports and leagues, and whether hot games show flames) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
+
 **Welcome tour**:
 What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen (on a phone, a bottom sheet): Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one, or an example card when none is in view). It can't be closed, only finished, and it carries on where it was left. Once finished it doesn't come back; a demo shows it every time.
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
@@ -93,7 +94,7 @@ _Avoid_: Last play (that's any play, scoring or not), scoring summary
 
 **Situation**:
 Where play stands in a Live game right now: in football the down and distance and who has the ball, in baseball the count, outs and runners, and in every sport the feed covers the last play.
-_Avoid_: Game state, status (a game's status is Upcoming, Live, Final or Disrupted)
+_Avoid_: Game state, status (a game's status is Upcoming, Live or Final)
 
 **Key events**:
 Soccer's goals and cards, or rugby's tries, conversions, penalty and drop goals and cards, in the order they came, each with its team, player and minute.
@@ -168,7 +169,7 @@ What a colour in a theme is for, such as the globe's surface, Live's colour or m
 _Avoid_: Token, semantic colour
 
 **Game colour**:
-The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's. A Disrupted game is always the theme's Disrupted grey.
+The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's.
 _Avoid_: Status colour (for a game's colour), team colour
 
 **Type style**:
@@ -185,8 +186,10 @@ _Avoid_: Transparency, opacity (for glass), blur
 
 ### Game status
 
+ScoreMap is mostly about games happening now (ADR-0021): a game gets a pin only from shortly before it starts until shortly after it finishes, and not at all while Disrupted.
+
 **Upcoming**:
-A game that hasn't started yet but starts soon enough to get a pin.
+A game that hasn't started yet but starts within 30 minutes, so it gets a pin.
 _Avoid_: Scheduled, pre-game
 
 **Live**:
@@ -194,11 +197,11 @@ A game that has started and not yet finished, including breaks such as halftime,
 _Avoid_: In progress, active, ongoing
 
 **Disrupted**:
-A game that was postponed, suspended or canceled, so it won't be played or finished as scheduled. Its pin appears greyed out.
+A game that was postponed, suspended or canceled, so it won't be played or finished as scheduled. It isn't shown: no pin, and not in the Games list. A bout on a fight card that won't be fought is Disrupted too, its line reading "Called off", and its fight card still shows.
 _Avoid_: Called off, halted, inactive
 
 **Final**:
-A game that has finished and recently enough to still get a pin.
+A game that finished within the last 5 minutes, so it still gets a pin, showing its final score.
 _Avoid_: Finished, completed, over, ended
 
 ### Local runs
@@ -216,7 +219,7 @@ The time a scenario's games are on. It reads noon Eastern on 4 August 2026 when 
 _Avoid_: Game clock (the clock within a game, such as 67'), fake time, virtual time
 
 **Play**:
-A scenario's games playing like real games, at random: Live games score and finish, Upcoming games start, some games are disrupted, and new games take the place of old ones. A scenario has play or a timeline, not both; with neither, its games stand still.
+A scenario's games playing like real games, at random: Live games score and finish, Upcoming games start, and new games take the place of old ones. A scenario has play or a timeline, not both; with neither, its games stand still.
 _Avoid_: Simulation, random play, live play
 
 **Timeline**:

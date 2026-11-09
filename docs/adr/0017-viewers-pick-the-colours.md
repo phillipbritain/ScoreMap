@@ -11,4 +11,4 @@ A game's colour comes from one function of the viewer's picked colours, the game
 - Colour still says nothing about status: a picked colour is the same for a Live, Upcoming or Final game, which glow and fade as before.
 - Text written on a game's colour (the game panel's progress line) is the theme's light text or its dark surface, whichever stands out from the colour more, and on a score card's header, tinted with it, the card's text or its fill, rather than the palette's `contrastText`, so it reads on any colour. A status's colour has no `contrastText`.
 - Small pins carry their colour in the pin source, rather than the layers working it out from status, so a change of colour or theme reloads the pins.
-- Pin clusters, card clusters and venue clusters show the colour their games share, or the theme's accent (Live's colour) when their colours differ, Disrupted games left out (#177).
+- Pin clusters, card clusters and venue clusters show the colour their games share, or the theme's accent (Live's colour) when their colours differ (#177).

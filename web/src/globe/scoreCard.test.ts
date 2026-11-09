@@ -10,7 +10,6 @@ const arrowhead: Game = {
   startTime: '2026-10-04T17:00:00+00:00',
   status: 'Live',
   delayed: false,
-  disruption: null,
   endTime: null,
   contest: {
     kind: 'sides',
@@ -84,12 +83,6 @@ describe('scoreCard', () => {
 
   it("shows a Final game's final line in its sport's style", () => {
     expect(scoreCard({ ...arrowhead, status: 'Final', clock: 'Final/OT' }, false).clockLine).toBe('Final/OT')
-  })
-
-  it('shows which kind of disruption in place of the clock for a Disrupted game', () => {
-    const suspended: Game = { ...arrowhead, status: 'Disrupted', disruption: 'Suspended', clock: null }
-
-    expect(scoreCard(suspended, false)).toMatchObject({ status: 'Disrupted', clockLine: 'Suspended' })
   })
 
   describe('for a race', () => {
@@ -229,20 +222,14 @@ describe("a score card's header text", () => {
   const theme = themeWith((json) => {
     Object.assign(json.components.ScoreCard, { fill: '#101828', text: '#eeeeee' })
     json.components.ScoreCard.header.tint = 0.8
-    Object.assign(json.components.ScoreCard.disrupted, { fill: '#202020', text: '#909090' })
   })
 
   it("is the card's text on a header tinted with a dark colour", () => {
-    expect(headerText('#123456', 'Live', theme)).toBe('#eeeeee')
+    expect(headerText('#123456', theme)).toBe('#eeeeee')
   })
 
   it("is the card's fill on a header tinted with a pale colour, so it stays readable", () => {
-    expect(headerText('#fff8c0', 'Live', theme)).toBe('#101828')
-    expect(headerText('#ffff00', 'Final', theme)).toBe('#101828')
-  })
-
-  it("is a Disrupted card's own text or fill", () => {
-    expect(headerText('#123456', 'Disrupted', theme)).toBe('#909090')
-    expect(headerText('#ffffff', 'Disrupted', theme)).toBe('#202020')
+    expect(headerText('#fff8c0', theme)).toBe('#101828')
+    expect(headerText('#ffff00', theme)).toBe('#101828')
   })
 })

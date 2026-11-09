@@ -280,7 +280,7 @@ export class ScoreCardMarkers {
       placed.drawnFrom = { game, color, flames, selected, theme }
       const card = scoreCard(game, flames)
       placed.marker.getElement().firstElementChild!.setAttribute('aria-label', gameLabel(game))
-      const header = headerText(color, card.status, theme)
+      const header = headerText(color, theme)
       const drawn = JSON.stringify({ card, color, header, selected })
       if (placed.drawn !== drawn) {
         const element = placed.marker.getElement()

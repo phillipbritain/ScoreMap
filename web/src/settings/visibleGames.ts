@@ -7,12 +7,7 @@ import type { ViewerSettings } from './viewerSettings'
  */
 export function visibleGames(games: readonly Game[], settings: ViewerSettings): Game[] {
   const hidden = new Set(settings.hiddenLeagues)
-  return games.filter(
-    (game) =>
-      (settings.topEventsOnly ? game.topEvent : !hidden.has(game.league)) &&
-      (!settings.liveOnly || game.status === 'Live') &&
-      (settings.showDisrupted || game.status !== 'Disrupted'),
-  )
+  return games.filter((game) => (settings.topEventsOnly ? game.topEvent : !hidden.has(game.league)))
 }
 
 /**

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { GameBout, GameBouts, GameStatus } from './game'
+import type { BoutStatus, GameBout, GameBouts } from './game'
 import { boutLine, shownBout } from './bouts'
 
 const side = (name: string, winner = false) => ({ name, shortName: name, flagUrl: null, record: null, winner })
 
-const bout = (id: string, status: GameStatus, more: Partial<GameBout> = {}): GameBout => ({
+const bout = (id: string, status: BoutStatus, more: Partial<GameBout> = {}): GameBout => ({
   id,
   first: side(`${id} first`),
   second: side(`${id} second`),

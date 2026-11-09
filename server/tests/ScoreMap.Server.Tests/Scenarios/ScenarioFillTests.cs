@@ -79,7 +79,6 @@ public sealed class ScenarioFillTests : IDisposable
         var statuses = scenario.Games.Select(g => Status(g.Status)).ToList();
         Assert.Equal(4, statuses.Count);
         Assert.All([GameStatus.Live, GameStatus.Upcoming, GameStatus.Final], status => Assert.Contains(status, statuses));
-        Assert.DoesNotContain(GameStatus.Disrupted, statuses);
     }
 
     [Fact]
@@ -91,18 +90,9 @@ public sealed class ScenarioFillTests : IDisposable
     }
 
     [Fact]
-    public void A_fills_disrupted_games_are_postponed_suspended_and_canceled_in_turn()
-    {
-        var scenario = Read("""{ "fill": { "count": 8, "group": "worldwide" }, "play": true, "disrupted": 0.375 }""");
-
-        var disruptions = scenario.Games.Select(g => g.Status).Where(s => Status(s) == GameStatus.Disrupted).Order();
-        Assert.Equal([ProviderStatus.Postponed, ProviderStatus.Suspended, ProviderStatus.Canceled], disruptions);
-    }
-
-    [Fact]
     public void The_same_scenario_file_makes_the_same_games_each_time()
     {
-        const string json = """{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 2, "upcoming": 1, "final": 1 } }, "play": true, "disrupted": 0.25 }""";
+        const string json = """{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 2, "upcoming": 1, "final": 1 } }, "play": true }""";
 
         var first = Read(json);
         var second = Read(json);
@@ -142,7 +132,7 @@ public sealed class ScenarioFillTests : IDisposable
     [InlineData("""{ "fill": { "count": 2 } }""", "fill has no group")]
     [InlineData("""{ "fill": { "count": 0, "group": "london" } }""", "count 0")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "playing": 1 } } }""", "unknown status \"playing\"", "upcoming, live, final")]
-    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 1, "disrupted": 1 } } }""", "mix", "disrupted", "\"disrupted\" beside \"play\"")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 1, "disrupted": 1 } } }""", "unknown status \"disrupted\"", "upcoming, live, final")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": -1, "final": 2 } } }""", "share -1")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 0 } } }""", "no games to any status")]
     public void A_fill_that_cant_be_made_says_why(string json, params string[] messageParts)
@@ -228,7 +218,6 @@ public sealed class ScenarioFillTests : IDisposable
         ProviderStatus.Scheduled => GameStatus.Upcoming,
         ProviderStatus.InProgress => GameStatus.Live,
         ProviderStatus.Final => GameStatus.Final,
-        ProviderStatus.Postponed or ProviderStatus.Suspended or ProviderStatus.Canceled => GameStatus.Disrupted,
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Filled games are never this"),
     };
 

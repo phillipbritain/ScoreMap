@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { firstVisitSettings } from '../settings/viewerSettings'
 import { furthestOutZoom, maxZoom, minZoom } from '../globe/zoomLevels'
-import { canZoom, nextPopover, toggled } from './railControls'
+import { canZoom, nextPopover } from './railControls'
 
 describe('canZoom', () => {
   it('zooms either way between the limits', () => {
@@ -30,20 +29,6 @@ describe('canZoom', () => {
   it('counts a zoom a hair off a limit as at it', () => {
     expect(canZoom({ longitude: 0, latitude: 0, zoom: maxZoom - 0.001 }).in).toBe(false)
     expect(canZoom({ longitude: 0, latitude: 0, zoom: furthestOutZoom(0) + 0.001 }).out).toBe(false)
-  })
-})
-
-describe('toggled', () => {
-  it('switches Live games only, and says so', () => {
-    const { settings, toast } = toggled(firstVisitSettings, 'liveOnly')
-    expect(settings).toEqual({ ...firstVisitSettings, liveOnly: true })
-    expect(toast).toBe('Live games only: on')
-  })
-
-  it('switches Show Disrupted games, and says so', () => {
-    const { settings, toast } = toggled(firstVisitSettings, 'showDisrupted')
-    expect(settings).toEqual({ ...firstVisitSettings, showDisrupted: false })
-    expect(toast).toBe('Show Disrupted games: off')
   })
 })
 

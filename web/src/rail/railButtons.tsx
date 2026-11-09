@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { DisruptedIcon, GamesIcon, HomeIcon, LeaguesIcon, LiveIcon, PaletteIcon, ScenarioIcon, TunersIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
+import { GamesIcon, HomeIcon, LeaguesIcon, PaletteIcon, ScenarioIcon, TunersIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
 
 /**
  * The rail's buttons, top to bottom: each one's name (its label and tooltip) and its icon. The rail
@@ -9,8 +9,6 @@ export const railButtons = [
   { name: 'Zoom in', icon: <ZoomInIcon /> },
   { name: 'Zoom out', icon: <ZoomOutIcon /> },
   { name: 'Home', icon: <HomeIcon /> },
-  { name: 'Live games only', icon: <LiveIcon /> },
-  { name: 'Show Disrupted games', icon: <DisruptedIcon /> },
   { name: 'Leagues', icon: <LeaguesIcon /> },
   { name: 'Display Settings', icon: <PaletteIcon /> },
   { name: 'Games', icon: <GamesIcon /> },

@@ -14,7 +14,6 @@
     "live": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
     "upcoming": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
     "final": { "main": "gold.500", "light": "gold.300", "dark": "gold.700" },
-    "disrupted": { "main": "offWhite.700", "light": "offWhite.600", "dark": "offWhite.800" },
     "background": { "default": "navy.900", "paper": "navy.800" },
     "text": { "primary": "offWhite.500", "secondary": "offWhite.600", "link": "offWhite.500" },
     "divider": "navy.600",
@@ -89,10 +88,6 @@
         "core": { "color": "final.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
         "glow": { "radius": 0, "opacity": 0 }
       },
-      "disrupted": {
-        "core": { "color": "disrupted.main", "radius": 2.5, "opacity": 0.7, "ring": 0 },
-        "glow": { "radius": 0, "opacity": 0 }
-      },
       "flame": { "size": 11 }
     },
     "Cluster": {
@@ -105,8 +100,7 @@
       "flame": { "size": 12 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },
-      "final": { "opacity": 0.55 },
-      "disrupted": { "opacity": 0.6 }
+      "final": { "opacity": 0.55 }
     },
     "Trail": {
       "width": 1.25,
@@ -133,8 +127,7 @@
       "flames": { "height": 24, "flicker": 0.18, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
-      "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } },
-      "disrupted": { "fill": "primary.dark", "text": "offWhite.700", "fade": 0.3, "glow": { "radius": 0, "opacity": 0 } }
+      "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
     },
     "GamePanel": {
       "frost": 0.85,
@@ -168,7 +161,7 @@
       "frost": 0.85,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
-      "toggle": { "on": "secondary.main", "off": "text.secondary" },
+      "open": "secondary.main",
       "count": "text.secondary",
       "hint": "text.secondary",
       "chip": { "outline": "primary.main", "badge": "primary.dark" },

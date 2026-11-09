@@ -11,7 +11,7 @@ public class GameStatusTests
     public async Task A_scheduled_game_is_Upcoming()
     {
         await using var server = new ScoreMapServer();
-        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddHours(1), ProviderStatus.Scheduled));
+        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddMinutes(20), ProviderStatus.Scheduled));
 
         await using var client = await server.ConnectClientAsync();
         var game = Assert.Single(await client.NextSnapshotAsync());
@@ -47,36 +47,19 @@ public class GameStatusTests
         Assert.True(game.Delayed);
     }
 
+    // Disrupted games aren't shown (ADR-0021): not on the globe, nor in the Games list.
     [Theory]
-    [InlineData(ProviderStatus.Postponed, Disruption.Postponed)]
-    [InlineData(ProviderStatus.Suspended, Disruption.Suspended)]
-    [InlineData(ProviderStatus.Canceled, Disruption.Canceled)]
-    public async Task A_disrupted_game_is_Disrupted_and_says_which_kind(ProviderStatus providerStatus, Disruption expected)
+    [InlineData(ProviderStatus.Postponed)]
+    [InlineData(ProviderStatus.Suspended)]
+    [InlineData(ProviderStatus.Canceled)]
+    public async Task A_postponed_suspended_or_canceled_game_is_not_shown(ProviderStatus providerStatus)
     {
         await using var server = new ScoreMapServer();
-        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddHours(1), providerStatus));
+        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddMinutes(-10), providerStatus));
 
         await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
 
-        Assert.Equal(GameStatus.Disrupted, game.Status);
-        Assert.Equal(expected, game.Disruption);
-    }
-
-    [Theory]
-    [InlineData(ProviderStatus.Scheduled)]
-    [InlineData(ProviderStatus.InProgress)]
-    [InlineData(ProviderStatus.Delayed)]
-    [InlineData(ProviderStatus.Final)]
-    public async Task A_game_that_is_not_disrupted_has_no_disruption(ProviderStatus providerStatus)
-    {
-        await using var server = new ScoreMapServer();
-        server.Feed.SetScoreboard("football/nfl", NflGame(server.Clock.GetUtcNow().AddHours(-1), providerStatus));
-
-        await using var client = await server.ConnectClientAsync();
-        var game = Assert.Single(await client.NextSnapshotAsync());
-
-        Assert.Null(game.Disruption);
+        Assert.Empty(await client.NextSnapshotAsync());
     }
 
     [Fact]

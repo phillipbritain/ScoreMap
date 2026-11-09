@@ -10,10 +10,6 @@ export interface ViewerSettings {
    * whichever leagues are switched off. Off, the league switches decide ("My leagues").
    */
   topEventsOnly: boolean
-  /** Hides Upcoming and Final pins. */
-  liveOnly: boolean
-  /** "Show Disrupted games": shows postponed, suspended and canceled games. */
-  showDisrupted: boolean
   /**
    * The colour the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
    * in it (see gameColour). A sport with none takes the theme's colours.
@@ -28,12 +24,10 @@ export interface ViewerSettings {
   hotGameFlames: boolean
 }
 
-/** Every league on, Top Events off, "Live only" off, Disrupted games shown, no colours picked and flames on hot games. */
+/** Every league on, Top Events off, no colours picked and flames on hot games. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
-  liveOnly: false,
-  showDisrupted: true,
   sportColours: {},
   leagueColours: {},
   hotGameFlames: true,

@@ -95,7 +95,7 @@ public class FightCardTests
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard(Ufc, Card(server, Scheduled, MainEvent(Scheduled), CoMainEvent(Scheduled)) with
         {
-            StartTime = server.Clock.GetUtcNow().AddHours(1),
+            StartTime = server.Clock.GetUtcNow().AddMinutes(20),
         });
         await using var client = await server.ConnectClientAsync();
 

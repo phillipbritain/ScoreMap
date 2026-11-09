@@ -16,11 +16,11 @@ namespace ScoreMap.Server.Live;
 /// </summary>
 public sealed partial class RunningGameBoard : BackgroundService
 {
-    /// <summary>An Upcoming game gets its pin this long before its start.</summary>
-    public static readonly TimeSpan UpcomingWindow = TimeSpan.FromHours(3);
+    /// <summary>An Upcoming game gets its pin this long before its start (ADR-0021).</summary>
+    public static readonly TimeSpan UpcomingWindow = TimeSpan.FromMinutes(30);
 
-    /// <summary>A Final game keeps its pin this long after its end.</summary>
-    public static readonly TimeSpan FinalWindow = TimeSpan.FromHours(2);
+    /// <summary>A Final game keeps its pin this long after its end (ADR-0021).</summary>
+    public static readonly TimeSpan FinalWindow = TimeSpan.FromMinutes(5);
 
     private readonly BoardState _board;
     private readonly BrowserConnections _connections;

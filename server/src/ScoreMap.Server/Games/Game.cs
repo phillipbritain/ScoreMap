@@ -18,7 +18,6 @@ public sealed record Game(
     DateTimeOffset StartTime,
     GameStatus Status,
     bool Delayed,
-    Disruption? Disruption,
     DateTimeOffset? EndTime,
     GameContest Contest,
     string? Clock,

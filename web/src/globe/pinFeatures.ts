@@ -4,7 +4,7 @@ import type { PlacedGame } from '../games/placedGames'
 
 export interface PinProperties {
   gameId: string
-  /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading, Disrupted greyed out. */
+  /** Drives the pin's style: Live most prominent, Upcoming dimmer, Final fading. */
   status: GameStatus
   /** The game's colour (see gameColour), for the pin's ring, glow and core (see smallPinLayers). */
   color: string

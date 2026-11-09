@@ -13,7 +13,7 @@ function memoryStorage(): SettingsStorage {
 }
 
 describe('settingsStore', () => {
-  it('gives a first-time visitor every league on, "Live only" off and Disrupted games shown', () => {
+  it('gives a first-time visitor every league on', () => {
     expect(settingsStore(() => memoryStorage()).load()).toEqual(firstVisitSettings)
   })
 
@@ -22,8 +22,6 @@ describe('settingsStore', () => {
     const chosen = {
       hiddenLeagues: ['NBA', 'MLS'],
       topEventsOnly: true,
-      liveOnly: true,
-      showDisrupted: false,
       sportColours: { Football: '#123456', Soccer: '#abcdef' },
       leagueColours: { NFL: '#fedcba' },
       hotGameFlames: false,
@@ -40,7 +38,7 @@ describe('settingsStore', () => {
       throw new DOMException('The operation is insecure.', 'SecurityError')
     })
 
-    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], topEventsOnly: true })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -55,7 +53,7 @@ describe('settingsStore', () => {
     }
     const store = settingsStore(() => broken)
 
-    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], liveOnly: true })).not.toThrow()
+    expect(() => store.save({ ...firstVisitSettings, hiddenLeagues: ['NBA'], topEventsOnly: true })).not.toThrow()
     expect(store.load()).toEqual(firstVisitSettings)
   })
 
@@ -68,34 +66,37 @@ describe('settingsStore', () => {
 
   it('has Top Events off for a viewer whose settings were saved before that setting existed', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
 
     expect(settingsStore(() => storage).load().topEventsOnly).toBe(false)
   })
 
-  it('shows Disrupted games to a viewer whose settings were saved before that setting existed', () => {
+  it('ignores the "Live games only" and "Show Disrupted games" switches an older visit saved, and saves them no more', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: false }))
+    const store = settingsStore(() => storage)
 
-    expect(settingsStore(() => storage).load().showDisrupted).toBe(true)
+    const loaded = store.load()
+    expect(loaded).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+    store.save(loaded)
+    expect(JSON.parse(storage.getItem('scoremap.settings')!)).not.toHaveProperty('liveOnly')
+    expect(JSON.parse(storage.getItem('scoremap.settings')!)).not.toHaveProperty('showDisrupted')
   })
 
   it('shows flames on hot games to a viewer whose settings were saved before that setting existed', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
 
     expect(settingsStore(() => storage).load().hotGameFlames).toBe(true)
   })
 
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], liveOnly: 'yes', showDisrupted: 0 }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], topEventsOnly: 'yes', hotGameFlames: 0 }))
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: false,
-      liveOnly: false,
-      showDisrupted: true,
       sportColours: {},
       leagueColours: {},
       hotGameFlames: true,
@@ -104,13 +105,11 @@ describe('settingsStore', () => {
 
   it('loads settings saved before colours could be picked with no colours', () => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], liveOnly: true, showDisrupted: false }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], topEventsOnly: true }))
 
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
-      topEventsOnly: false,
-      liveOnly: true,
-      showDisrupted: false,
+      topEventsOnly: true,
       sportColours: {},
       leagueColours: {},
       hotGameFlames: true,
@@ -157,14 +156,12 @@ describe('settingsStore', () => {
       const storage = memoryStorage()
       storage.setItem(
         'scoremap.settings',
-        JSON.stringify({ hiddenLeagues: ['NBA', 'MLS'], liveOnly: true, showDisrupted: false, cardStyle }),
+        JSON.stringify({ hiddenLeagues: ['NBA', 'MLS'], topEventsOnly: true, cardStyle }),
       )
 
       expect(settingsStore(() => storage).load()).toEqual({
         hiddenLeagues: ['NBA', 'MLS'],
-        topEventsOnly: false,
-        liveOnly: true,
-        showDisrupted: false,
+        topEventsOnly: true,
         sportColours: {},
         leagueColours: {},
         hotGameFlames: true,
@@ -190,10 +187,10 @@ describe('settingsStore camera', () => {
   it('keeps the camera apart from the other settings', () => {
     const storage = memoryStorage()
     const store = settingsStore(() => storage)
-    store.save({ ...firstVisitSettings, liveOnly: true })
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
     store.saveCamera({ longitude: 10, latitude: 50, zoom: 3 })
 
-    expect(store.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+    expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
   })
 
   it('ignores a damaged saved camera', () => {
@@ -227,7 +224,7 @@ describe('settingsStore welcome tour progress', () => {
 
   it('counts a viewer with settings saved before the tour existed as finished', () => {
     const storage = memoryStorage()
-    settingsStore(() => storage).save({ ...firstVisitSettings, liveOnly: true })
+    settingsStore(() => storage).save({ ...firstVisitSettings, topEventsOnly: true })
 
     expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
   })
@@ -247,10 +244,10 @@ describe('settingsStore welcome tour progress', () => {
   it('keeps the progress apart from the other settings', () => {
     const storage = memoryStorage()
     const store = settingsStore(() => storage)
-    store.save({ ...firstVisitSettings, liveOnly: true })
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
     store.saveTourProgress('controls')
 
-    expect(store.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+    expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
   })
 
   it.each(['{not json', JSON.stringify('halfway'), JSON.stringify(3)])(
@@ -284,7 +281,7 @@ describe('unsavedSettingsStore', () => {
   it("opens on first-visit settings and the viewer's region, and saves neither the settings nor the camera", () => {
     const storage = memoryStorage()
     const saved = settingsStore(() => storage)
-    saved.save({ ...firstVisitSettings, liveOnly: true })
+    saved.save({ ...firstVisitSettings, topEventsOnly: true })
     saved.saveCamera({ longitude: 10, latitude: 20, zoom: 3 })
     const store = unsavedSettingsStore()
 
@@ -293,7 +290,7 @@ describe('unsavedSettingsStore', () => {
 
     expect(store.load()).toEqual(firstVisitSettings)
     expect(store.loadCamera()).toBeNull()
-    expect(saved.load()).toEqual({ ...firstVisitSettings, liveOnly: true })
+    expect(saved.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
     expect(saved.loadCamera()).toEqual({ longitude: 10, latitude: 20, zoom: 3 })
   })
 

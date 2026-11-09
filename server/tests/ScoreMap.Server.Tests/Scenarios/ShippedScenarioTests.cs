@@ -21,7 +21,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     [Theory]
     [InlineData("crowded")]
     [InlineData("worldwide")]
-    public async Task Live_games_usually_finish_with_regular_finals_and_a_visible_disrupted_share(string name)
+    public async Task Live_games_usually_finish_with_regular_finals(string name)
     {
         using var server = new ScoreMapServer { UseShippedScenarios = true };
         var scenario = server.Services.GetRequiredService<ScenarioLibrary>().Read(name);
@@ -39,8 +39,6 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         var initialFinals = initial.Where(g => g.Status == ProviderStatus.Final).Select(g => g.Id).ToHashSet();
         var live = new HashSet<string>();
         var finals = new HashSet<string>();
-        var suspended = new HashSet<string>();
-        var disruptedShares = new List<double>();
         TimeSpan? firstFinish = null;
         // The shipped seed is intentional: this guards the owner's repeatable 90-minute run (#253).
         for (var seconds = 0; seconds <= 90 * 60; seconds += 4)
@@ -49,20 +47,17 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
                 clock.Advance(TimeSpan.FromSeconds(4));
             var games = await Snapshot();
             Assert.Equal(initial.Count, games.Count);
+            // Disrupted games aren't shown (ADR-0021), so play disrupts none.
+            Assert.DoesNotContain(games, g => g.Status is ProviderStatus.Suspended or ProviderStatus.Postponed or ProviderStatus.Canceled);
             live.UnionWith(games.Where(g => g.Status == ProviderStatus.InProgress).Select(g => g.Id));
             finals.UnionWith(games.Where(g => g.Status == ProviderStatus.Final && !initialFinals.Contains(g.Id)).Select(g => g.Id));
-            suspended.UnionWith(games.Where(g => g.Status == ProviderStatus.Suspended && live.Contains(g.Id)).Select(g => g.Id));
             if (finals.Count > 0)
                 firstFinish ??= TimeSpan.FromSeconds(seconds);
-            disruptedShares.Add(games.Count(g => g.Status is ProviderStatus.Suspended or ProviderStatus.Postponed or ProviderStatus.Canceled) / (double)games.Count);
         }
-        output.WriteLine($"{name}: first {firstFinish}, Finals {finals.Count}, suspensions {suspended.Count}, disrupted {disruptedShares.Average():P2}");
+        output.WriteLine($"{name}: first {firstFinish}, Finals {finals.Count}");
         Assert.NotNull(firstFinish);
         Assert.True(firstFinish <= TimeSpan.FromMinutes(10), $"first finish at {firstFinish}");
         Assert.True(finals.Count >= 18, $"only {finals.Count} new Finals");
-        var liveFinals = finals.Count(live.Contains);
-        Assert.True(liveFinals > suspended.Count, $"{liveFinals} Live games finished; {suspended.Count} were suspended");
-        Assert.InRange(disruptedShares.Average(), scenario.Play!.DisruptedShare * 0.8, scenario.Play.DisruptedShare * 1.2);
     }
 
     [Fact]
@@ -118,7 +113,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Worldwide_shows_about_150_games_in_every_status()
+    public async Task Worldwide_shows_about_150_games_Upcoming_Live_and_Final()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
@@ -126,20 +121,8 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         var snapshot = await client.GamesMatchingAsync(games => games.Count >= 140);
 
         Assert.InRange(snapshot.Count, 140, 160);
-        Assert.Equal(Enum.GetValues<GameStatus>().ToHashSet(), snapshot.Select(g => g.Status).ToHashSet());
+        Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
         Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 20, "games in at least 20 countries");
-    }
-
-    [Fact]
-    public async Task Worldwide_starts_about_5_percent_of_its_games_disrupted_in_every_way()
-    {
-        await using var server = new ScoreMapServer { UseShippedScenarios = true };
-
-        await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 140);
-
-        Assert.InRange(snapshot.Count(g => g.Status == GameStatus.Disrupted), 6, 10);
-        Assert.Equal(Enum.GetValues<Disruption>().ToHashSet(), snapshot.Select(g => g.Disruption).OfType<Disruption>().ToHashSet());
     }
 
     [Fact]
@@ -247,7 +230,7 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
     [Theory]
     [InlineData("worldwide")]
     [InlineData("crowded")]
-    public async Task Games_start_finish_get_disrupted_and_drop_out_for_new_ones(string name)
+    public async Task Games_start_finish_and_drop_out_for_new_ones(string name)
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true, ScenarioSpeed = Speed.Faster.Name };
         await using var client = await StartAsync(server, name);
@@ -259,7 +242,6 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         {
             ("a game starting", c => c.Kind == GameChangeKind.Started),
             ("a game finishing", c => c.Kind == GameChangeKind.Finished),
-            ("a game disrupted", c => c.Kind == GameChangeKind.Updated && c.Game.Status == GameStatus.Disrupted),
             ("a game dropping out", c => c.Kind == GameChangeKind.Removed),
             ("a new game", c => c.Kind == GameChangeKind.Added),
         })

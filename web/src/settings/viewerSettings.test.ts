@@ -38,10 +38,10 @@ describe('league switch', () => {
     expect(isLeagueOn(withLeague(off, 'NFL', true), 'NFL')).toBe(true)
   })
 
-  it('leaves "Live only" alone', () => {
-    const settings = { ...firstVisitSettings, liveOnly: true }
+  it('leaves "Top Events" alone', () => {
+    const settings = { ...firstVisitSettings, topEventsOnly: true }
 
-    expect(withLeague(settings, 'NFL', false).liveOnly).toBe(true)
+    expect(withLeague(settings, 'NFL', false).topEventsOnly).toBe(true)
   })
 })
 
@@ -74,11 +74,11 @@ describe('all-leagues switch', () => {
   const leagues = [nfl, ncaaf, nba, mls, epl]
 
   it('switches every league off, keeping the other settings', () => {
-    const settings = { ...firstVisitSettings, liveOnly: true }
+    const settings = { ...firstVisitSettings, hotGameFlames: false }
     const off = withAllLeagues(settings, leagues, false)
 
     expect(leagues.filter((league) => isLeagueOn(off, league.name))).toEqual([])
-    expect(off.liveOnly).toBe(true)
+    expect(off.hotGameFlames).toBe(false)
   })
 
   it('switches every league back on, including ones switched off one by one', () => {

@@ -70,7 +70,7 @@ body {
   pointer-events: none;
 }
 
-/* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers and toast,
+/* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers,
    the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
    Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
    slight bend and lifted in colour, its edges catching the light; at 1 opaque frosted glass. The glass
@@ -84,7 +84,6 @@ body {
 .game-panel,
 .rail__group::before,
 .rail__popover,
-.rail__toast,
 .no-pins,
 .demo-label,
 .feedback__button,
@@ -600,13 +599,6 @@ body {
   --status-card-glow-opacity: var(--score-card-final-glow-opacity);
 }
 
-.score-card--disrupted {
-  --game-color: var(--palette-disrupted-main);
-  --status-card-fade: var(--score-card-disrupted-fade);
-  --status-card-glow-radius: var(--score-card-disrupted-glow-radius);
-  --status-card-glow-opacity: var(--score-card-disrupted-glow-opacity);
-}
-
 /* Zoomed-in pin, as an instrument readout: a glowing status outline, a header strip with a status
    light and the clock line (or the status), then both teams' logos, abbreviations and scores.
 
@@ -675,16 +667,6 @@ body {
 /* No room for this card: its game is counted in a card cluster instead, which the map draws. */
 [data-in-card-cluster] {
   visibility: hidden;
-}
-
-/* Greyed out: the game isn't being played as scheduled. */
-.score-card.score-card--disrupted {
-  --card-surface: var(--score-card-disrupted-fill);
-  --card-ink: var(--score-card-disrupted-text);
-}
-
-.score-card--disrupted .score-card__logo {
-  filter: grayscale(1);
 }
 
 /* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
@@ -1084,10 +1066,10 @@ body {
   min-height: 0;
 }
 
-/* The rail at the top right: its groups of buttons stacked down, its popovers and toast to its left.
+/* The rail at the top right: its groups of buttons stacked down, its popovers to its left.
    Above the no-pins message along the bottom, which an open popover can reach down to. */
 .rail {
-  /* Glass (see above), for the rail's groups, popovers and toast. */
+  /* Glass (see above), for the rail's groups and popovers. */
   --frost: var(--rail-frost);
   --glass-tint: var(--rail-surface);
   --glass-lens: url(#glass-lens);
@@ -1176,18 +1158,12 @@ body {
   cursor: default;
 }
 
-/* A toggle: in the theme's on colour (gold) when on, and its off colour (grey) when off. A popover's
-   button, while its popover is open, takes the on colour too. */
-.rail__button[aria-pressed='true'],
+/* A popover's button, while its popover is open, in the theme's open colour (gold). */
 .rail__button[aria-expanded='true'] {
-  color: var(--rail-toggle-on);
+  color: var(--rail-open);
 }
 
-.rail__button[aria-pressed='false'] {
-  color: var(--rail-toggle-off);
-}
-
-/* A count on a button's corner (the Games button's games), in the on colour. */
+/* A count on a button's corner (the Games button's games), in the open colour. */
 .rail__button { position: relative; }
 
 .rail__badge {
@@ -1198,7 +1174,7 @@ body {
   min-width: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--rail-toggle-on);
+  background: var(--rail-open);
   color: var(--palette-background-default);
   font-size: 11px;
   font-weight: 700;
@@ -1210,34 +1186,6 @@ body {
 .rail__icon {
   width: var(--rail-size-icon);
   height: var(--rail-size-icon);
-}
-
-/* What a toggle just changed ("Live games only: on"), beside the toggles, fading away by itself. */
-.rail__toast {
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 2 * var(--spacing));
-  margin: 0;
-  padding: var(--spacing) calc(3 * var(--spacing));
-  border-radius: var(--controls-corner);
-  box-shadow: var(--rail-shadow), var(--glass-rim);
-  color: var(--palette-text-primary);
-  font-size: var(--typography-body2-font-size);
-  white-space: nowrap;
-  transform: translateY(-50%);
-  pointer-events: none;
-  animation: rail-toast 1.8s ease-in forwards;
-}
-
-@keyframes rail-toast {
-  0%,
-  75% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
 }
 
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
@@ -2332,7 +2280,7 @@ body {
   grid-column: 1;
   width: 1.3em;
   height: 1.3em;
-  color: var(--rail-toggle-on);
+  color: var(--rail-open);
 }
 
 @media (hover: hover) {

@@ -58,7 +58,10 @@ export interface CardPlacement {
   lookedAgo?: number
 }
 
-/** Games with no room for a card, shown as one count at the first one's venue. */
+/**
+ * Games with no room for a card, shown as one count at the first one's venue, or gathered with the
+ * clusters and venue dots it would overlap (see cardLayoutLayers' cardLayoutDrawing).
+ */
 export interface CardCluster {
   gameIds: string[]
   /** The status the count shows as (see groupStatus). */

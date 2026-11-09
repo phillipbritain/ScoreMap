@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Game } from '../games/game'
 import { GameNavigation } from '../games/GameNavigation'
 import type { Camera } from '../globe/camera'
 import type { ZoomSettings } from '../globe/zoomLevels'
 import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
-import { withMapTypeSwitched, type League, type ViewerSettings } from '../settings/viewerSettings'
+import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
+import { MapTypes } from './MapTypes'
 import { railIcon, type RailButtonName } from './railButtons'
 import { RailIcon } from './railIcons'
 import { canZoom, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
@@ -41,9 +42,8 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in three groups: zoom in, zoom
- * out and Home, which move the camera; Leagues, Display Settings and Satellite map, which switches the
- * globe between the plain map and the satellite map, showing pressed on satellite; and Games (with
- * its count of games on it). Leagues, Display Settings and Games each open a popover to the left of the rail: one at a time, closed by
+ * out and Home, which move the camera; Leagues, Display Settings and Map Type; and Games (with its
+ * count of games on it). Each of the last four opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
@@ -52,6 +52,14 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const popover = useRef<HTMLDivElement>(null)
+  const rail = useRef<HTMLDivElement>(null)
+  // Map Type's popover sits level with its button, its two choices beside it, rather than with the rail's top.
+  const [mapTypeTop, setMapTypeTop] = useState(0)
+  useLayoutEffect(() => {
+    const button = rail.current?.querySelector('[data-popover-button="mapType"]')
+    if (open !== 'mapType' || !button || !rail.current) return
+    setMapTypeTop(button.getBoundingClientRect().top - rail.current.getBoundingClientRect().top)
+  }, [open])
   const popoverEvent = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
 
   useEffect(() => {
@@ -71,6 +79,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 
   return (
     <div
+      ref={rail}
       className="rail"
       inert={inert}
       onKeyDown={(event) => {
@@ -88,11 +97,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
       <div className="rail__group">
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
         <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
-        <RailButton
-          label="Satellite map"
-          pressed={settings.mapType === 'satellite'}
-          onClick={() => onChange(withMapTypeSwitched(settings))}
-        />
+        <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
       </div>
       <div className="rail__group">
         <RailButton
@@ -108,12 +113,14 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         <div
           ref={popover}
           id="rail-popover"
-          className={open === 'games' ? 'rail__popover rail__popover--games' : 'rail__popover'}
+          className={open === 'games' || open === 'mapType' ? `rail__popover rail__popover--${open === 'games' ? 'games' : 'map-type'}` : 'rail__popover'}
+          style={open === 'mapType' ? { top: mapTypeTop } : undefined}
           role="dialog"
           aria-label={popoverNames[open]}
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
         >
           {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
+          {open === 'mapType' && <MapTypes settings={settings} onChange={onChange} onPicked={() => setOpen(null)} />}
           {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
           {open === 'games' && (
             <GameNavigation
@@ -134,7 +141,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
 /** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px). */
 const phoneScreen = '(max-width: 640px)'
 
-const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', games: 'Games' }
+const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', mapType: 'Map Type', games: 'Games' }
 
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A popover's
@@ -148,7 +155,6 @@ export function RailButton({
   open,
   badge,
   on,
-  pressed,
   tooltipSide = 'left',
   onClick,
 }: {
@@ -159,8 +165,6 @@ export function RailButton({
   badge?: number
   /** Whether a popover's button shows on though its popover is closed (Tuners, with a tuner open). */
   on?: boolean
-  /** Whether a button that switches something on and off (Satellite map) shows pressed: undefined for any other. */
-  pressed?: boolean
   /** Where its tooltip shows: on the left on the rail, so it covers none of the others; below on the top rail. */
   tooltipSide?: 'left' | 'below'
   onClick: () => void
@@ -175,7 +179,6 @@ export function RailButton({
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
       aria-expanded={popover ? (on ?? open === popover) : undefined}
-      aria-pressed={pressed}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).

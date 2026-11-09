@@ -5,7 +5,7 @@ import {
   leaguesBySport,
   sportSwitch,
   withAllLeagues,
-  withMapTypeSwitched,
+  withMapType,
   withLeague,
   withSport,
 } from './viewerSettings'
@@ -78,10 +78,10 @@ describe('map type switch', () => {
 
   it('switches to satellite and back, keeping the other settings', () => {
     const settings = { ...firstVisitSettings, hotGameFlames: false, hiddenLeagues: ['NBA'] }
-    const satellite = withMapTypeSwitched(settings)
+    const satellite = withMapType(settings, 'satellite')
 
     expect(satellite).toEqual({ ...settings, mapType: 'satellite' })
-    expect(withMapTypeSwitched(satellite)).toEqual(settings)
+    expect(withMapType(satellite, 'plain')).toEqual(settings)
   })
 })
 

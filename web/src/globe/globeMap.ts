@@ -167,6 +167,8 @@ export class GlobeMap {
   /** A game picked from the Games list, to be centred when it's selected rather than just lifted clear of the panel. */
   private centreNext: string | null = null
   private clustering: PinLayout
+  /** The furthest in the globe zooms (see FittedZoom), which changes with setZoomLimits. */
+  private maxZoom: number
   /** The zoom score cards show from (see FittedZoom), which changes with setZoomLimits. */
   private cardZoom: number
   private destroyed = false
@@ -192,6 +194,7 @@ export class GlobeMap {
     this.onStage = onStage
     this.cityLabels = cityLabels
     this.cardZoom = zoomSettings.cardZoom
+    this.maxZoom = zoomSettings.maxZoom
     const map = new MapLibreMap({
       container,
       center: [startCamera.longitude, startCamera.latitude],
@@ -476,7 +479,14 @@ export class GlobeMap {
    */
   setZoomLimits({ minZoom, maxZoom, cardZoom }: FittedZoom): void {
     this.map.setMinZoom(minZoom)
-    this.map.setMaxZoom(maxZoom)
+    this.maxZoom = maxZoom
+    // Zoomed in past the new limit (on the satellite map, switching back to the plain map's): eases
+    // out to it, then holds there. MapLibre would jump there at once.
+    if (this.map.getZoom() > maxZoom) {
+      // The ease first: it ends any move going, whose end isn't this ease's.
+      this.map.easeTo({ zoom: maxZoom })
+      this.map.once('moveend', () => this.map.setMaxZoom(this.maxZoom))
+    } else this.map.setMaxZoom(maxZoom)
     if (cardZoom === this.cardZoom) return
     this.cardZoom = cardZoom
     this.unsettle()

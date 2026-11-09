@@ -48,9 +48,12 @@ export const firstVisitSettings: ViewerSettings = {
   mapType: 'plain',
 }
 
-/** The settings with the map switched between plain and satellite: the rail's map type button and "Satellite map" in Display Settings. */
-export function withMapTypeSwitched(settings: ViewerSettings): ViewerSettings {
-  return { ...settings, mapType: settings.mapType === 'satellite' ? 'plain' : 'satellite' }
+/** Each map type's name, as Map Type on the rail lists it. */
+export const mapTypeNames: Record<MapType, string> = { plain: 'Plain', satellite: 'Satellite' }
+
+/** The settings with the globe drawn as this map type: from Map Type on the rail, or "Satellite map" in Display Settings. */
+export function withMapType(settings: ViewerSettings, mapType: MapType): ViewerSettings {
+  return { ...settings, mapType }
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {

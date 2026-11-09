@@ -261,7 +261,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   Home: 'Home: back to your part of the world',
   Leagues: 'Leagues: Top Events or your own picks',
   'Display Settings': 'Display Settings: colours for each sport and league, flames on hot games and the satellite map',
-  'Satellite map': 'Satellite map: switch the globe to satellite imagery and back',
+  'Map Type': 'Map Type: the plain map or satellite imagery',
   Games: 'Games: find any game and go to it',
 }
 

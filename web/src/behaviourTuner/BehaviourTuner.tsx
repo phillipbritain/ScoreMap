@@ -65,12 +65,24 @@ const settings: readonly NumberSetting[] = [
   {
     group: 'Zoom',
     name: 'Furthest in',
-    description: 'The highest zoom the globe goes to. At 11 the view is a city some ten kilometres across; each step in halves that.',
+    description: 'The highest zoom the plain map goes to. At 11 the view is a city some ten kilometres across; each step in halves that.',
     file: 'web/src/globe/zoomSettings.json',
     key: 'maxZoom',
     range: { min: 5, max: 22, step: 0.5 },
     get: (behaviour) => behaviour.zoom.maxZoom,
     set: (behaviour, maxZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, maxZoom } }),
+  },
+  {
+    group: 'Zoom',
+    name: 'Furthest in (satellite)',
+    description:
+      'The highest zoom the satellite map goes to. Past about 14 its imagery only blurs, its pixels being 10 m. ' +
+      'Switching back to the plain map zooms out to its own furthest in.',
+    file: 'web/src/globe/zoomSettings.json',
+    key: 'satelliteMaxZoom',
+    range: { min: 5, max: 18, step: 0.5 },
+    get: (behaviour) => behaviour.zoom.satelliteMaxZoom,
+    set: (behaviour, satelliteMaxZoom) => ({ ...behaviour, zoom: { ...behaviour.zoom, satelliteMaxZoom } }),
   },
   {
     group: 'Asleep',

@@ -4,7 +4,7 @@ import {
   hasColours,
   leaguesBySport,
   withLeagueColour,
-  withMapTypeSwitched,
+  withMapType,
   withSportColour,
   withoutColours,
   type League,
@@ -24,7 +24,7 @@ interface DisplaySettingsProps {
 
 /**
  * The rail's Display Settings popover: "Satellite map", switching the globe between the plain map
- * and the satellite map, as the rail's Satellite map button does; "Flames on hot games", switching
+ * and the satellite map, as Map Type on the rail does; "Flames on hot games", switching
  * flames on hot games (see GLOSSARY.md) on and off; then each sport, then its leagues, by name, with a swatch of its games'
  * colour, which opens a grid of the colours there are to pick (see pickableColours) under its row, and
  * a control to clear it; a league with no colour of its own shows its sport's, marked as taken from
@@ -74,7 +74,7 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
         aria-checked={satellite}
         className="display-switch"
         data-tooltip="The globe as satellite imagery, with its borders and place names"
-        onClick={() => onChange(withMapTypeSwitched(settings))}
+        onClick={() => onChange(withMapType(settings, satellite ? 'plain' : 'satellite'))}
       >
         Satellite map
         <span className={`switch switch--${satellite ? 'on' : 'off'}`} aria-hidden="true" />

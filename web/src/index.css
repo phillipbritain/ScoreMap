@@ -1150,10 +1150,8 @@ body {
   cursor: default;
 }
 
-/* A popover's button, while its popover is open, and a switching button while on (Satellite map), in
-   the theme's open colour (gold). */
-.rail__button[aria-expanded='true'],
-.rail__button[aria-pressed='true'] {
+/* A popover's button, while its popover is open, in the theme's open colour (gold). */
+.rail__button[aria-expanded='true'] {
   color: var(--rail-open);
 }
 
@@ -1208,7 +1206,19 @@ body {
   }
 }
 
-/* A league as a pill, filled in while on. */
+/* The Map Type popover (see MapTypes): its two map types side by side, level with its button (Rail
+   sets its top), as narrow as they are, on a phone too. */
+.rail__popover--map-type {
+  width: auto;
+  padding: calc(1.5 * var(--spacing));
+}
+
+.map-types {
+  display: flex;
+  gap: calc(1.5 * var(--spacing));
+}
+
+/* A league as a pill, filled in while on; a map type too. */
 .rail-chip {
   padding: var(--spacing) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);

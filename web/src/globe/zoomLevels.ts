@@ -1,4 +1,5 @@
 import { degreesApart, type GlobePoint } from './geo'
+import type { MapType } from '../settings/viewerSettings'
 import limits from './zoomSettings.json'
 
 /**
@@ -49,8 +50,13 @@ export interface ZoomSettings {
    * Never further out than minZoom.
    */
   startZoom: number
-  /** The furthest in: a city, some ten kilometres across. */
+  /** The furthest in on the plain map: a city, some ten kilometres across. */
   maxZoom: number
+  /**
+   * The furthest in on the satellite map, which has more to see close in: a neighbourhood. Past about
+   * 14 the imagery's pixels (10 m) only grow.
+   */
+  satelliteMaxZoom: number
 }
 
 /** The app's zoom settings, from zoomSettings.json. */
@@ -91,6 +97,14 @@ export function fittedZoomSettings(settings: ZoomSettings, view: { width: number
     startZoom: settings.startZoom + fit,
     cardZoom: cardZoom + fit,
   }
+}
+
+/**
+ * The zoom settings for a map type: the furthest in is the satellite map's on satellite
+ * (satelliteMaxZoom), else the plain map's (maxZoom), and the rest are the same on both.
+ */
+export function zoomForMapType<Z extends ZoomSettings>(settings: Z, mapType: MapType): Z {
+  return mapType === 'satellite' ? { ...settings, maxZoom: settings.satelliteMaxZoom } : settings
 }
 
 /** The zoom MapLibre allows furthest out with the view centred at this latitude, given the furthest out at the equator. */

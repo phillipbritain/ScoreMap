@@ -151,18 +151,18 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
-| `components.Rail.open` | A rail button's icon while its popover is open or, for Satellite map, while it's on, and the count on the Games button | `secondary.main` (gold) |
+| `components.Rail.open` | A rail button's icon while its popover is open, and the count on the Games button | `secondary.main` (gold) |
 | `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
-| `components.Rail.chip.outline` | A league chip's outline, and "Reset colours"' | `primary.main` |
+| `components.Rail.chip.outline` | A league chip's outline (and a map type's in Map Type), and "Reset colours"' | `primary.main` |
 | `components.Rail.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
-| `components.Rail.on.fill`, `.text` | A league chip that's on | `offWhite.500`, `navy.800` |
+| `components.Rail.on.fill`, `.text` | A league chip that's on, and the map type showing in Map Type | `offWhite.500`, `navy.800` |
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's colour) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
 | `components.LoadingScreen.message` | The message under the loading screen's rocket when loading is slow | `text.primary` |
 
-"On" is off-white everywhere (a league chip, a lit speed key, the selection), so chosen looks the same across the app; a rail button whose popover is open, or Satellite map while on, is gold.
+"On" is off-white everywhere (a league chip, a lit speed key, the selection), so chosen looks the same across the app; a rail button whose popover is open is gold.
 
 ## How a game's status shows
 

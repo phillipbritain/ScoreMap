@@ -31,14 +31,6 @@ const satelliteSourceSpec: RasterSourceSpecification = {
   maxzoom: 14,
 }
 
-/** The credit EOX's licence asks for wherever its imagery shows, with its links (see MapCredit). */
-export const satelliteCredit = {
-  name: 'EOxCloudless',
-  url: 'https://cloudless.eox.at',
-  by: 'EOX IT Services GmbH',
-  data: 'Contains modified Copernicus Sentinel data 2024',
-} as const
-
 /**
  * The globe's look, made from the base style in the theme's colours. On the plain map, a plain globe
  * where only thin lines show coastlines, country borders and state lines, with place names (see

@@ -7,7 +7,6 @@ import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
-import { MapCredit } from './globe/MapCredit'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
 import { useFittedZoom } from './globe/useFittedZoom'
@@ -205,8 +204,6 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             onGone={() => setLoadingPreview('off')}
           />
         )}
-        {/* Under the bottom stack, the game panel and the rail, which may lie over it for a while. */}
-        <MapCredit hidden={viewerSettings.mapType !== 'satellite'} />
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
         <div className="bottom-stack">
           {message && (

@@ -69,9 +69,7 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     }}>
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={`${game.sport} · ${league}`} data-tooltip-when-clipped>
-            {/* The sport goes here on a phone, where the details have no room for its column. */}
-            <span className="game-panel__league-sport">{game.sport} · </span>
+          <div className="game-panel__league" data-tooltip={league} data-tooltip-when-clipped>
             {league}
           </div>
           {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)}

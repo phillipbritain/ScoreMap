@@ -210,11 +210,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The sport before the league, on a phone only (it has its own column in the details otherwise). */
-.game-panel__league-sport {
-  display: none;
-}
-
 .game-panel__label {
   margin-bottom: calc(0.5 * var(--spacing));
   font-size: var(--typography-footnote-font-size);
@@ -559,10 +554,6 @@ body {
     grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
     gap: calc(2 * var(--spacing));
     padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
-  }
-
-  .game-panel__league-sport {
-    display: inline;
   }
 
   .game-panel__sport {

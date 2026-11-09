@@ -149,9 +149,10 @@ export class ScoreCardMarkers {
     map.on('resize', this.resized)
   }
 
-  /** Highlights the selected game's card, if it has one. */
+  /** Highlights the selected game's card and its trail, if it has them. */
   setSelected(gameId: string | null): void {
     this.selectedGameId = gameId
+    this.trails.select(gameId)
     this.settleAgain()
     this.sync()
   }

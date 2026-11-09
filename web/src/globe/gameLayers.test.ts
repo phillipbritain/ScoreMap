@@ -5,8 +5,8 @@ import { outerSmallPinLayer, smallPinLayer } from './pinLayers'
 import type { PinSize } from './zoomLevels'
 
 const layersFor = (size: PinSize) => {
-  const { belowNames, onTop } = gameLayers(builtInTheme, null, size)
-  return [...belowNames, ...onTop]
+  const { belowNames, belowGameNames, onTop } = gameLayers(builtInTheme, null, size)
+  return [...belowNames, ...belowGameNames, ...onTop]
 }
 const visibility = (size: PinSize, id: string) => layersFor(size).find((layer) => layer.id === id)?.layout?.visibility
 

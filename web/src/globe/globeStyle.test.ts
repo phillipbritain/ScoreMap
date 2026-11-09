@@ -12,7 +12,7 @@ import type { Theme } from '../theme/theme'
 import { globeStyle } from './globeStyle'
 import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
-import { cityNameFeatures, cityNameSource, firstPlaceNameLayer } from './placeNames'
+import { cityNameFeatures, cityNameSource, clusterClearOffset, firstPlaceNameLayer } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -94,6 +94,7 @@ describe('globeStyle', () => {
       'label_state',
       'label_country_1',
       'city_names_game',
+      'city_names_card',
     ])
   })
 
@@ -175,30 +176,34 @@ describe('globeStyle', () => {
   const osaka: ListedCity = { name: 'Osaka', country: 'Japan', longitude: 135.46, latitude: 34.75, population: 11_294_000, capital: false }
   const kobe: ListedCity = { name: 'Kobe', country: 'Japan', longitude: 135.17, latitude: 34.68, population: 1_528_000, capital: false }
   /** A city's properties in the city name source, labelled for a game or not. */
-  const properties = (city: ListedCity, game: boolean) =>
-    cityNameFeatures(game ? { gameCities: [city], otherBigCities: [] } : { gameCities: [], otherBigCities: [city] }).features[0].properties
-  /** The layers that name this city, labelled for a game or not. */
-  const namedBy = (city: ListedCity, game: boolean) =>
+  /** A city's properties, labelled for a game or not, and naming a score card on screen or not. */
+  const properties = (city: ListedCity, game: boolean, card = false) =>
+    cityNameFeatures(game ? { gameCities: [city], otherBigCities: [] } : { gameCities: [], otherBigCities: [city] }, new Set(card ? [0] : []))
+      .features[0].properties
+  /** The layers that name this city, labelled for a game or not, and naming a score card on screen or not. */
+  const namedBy = (city: ListedCity, game: boolean, card = false) =>
     style()
       .layers.filter((l) => 'source' in l && l.source === cityNameSource)
       .filter((l) =>
         featureFilter((l as { filter: FilterSpecification }).filter, 'f').filter({ zoom: 5 }, {
           type: 1,
-          properties: properties(city, game),
+          properties: properties(city, game, card),
         } as never),
       )
       .map((l) => l.id)
 
-  it("names each city from the city list in one layer, by whether it's a game's, a national capital like any other", () => {
+  it("names each city from the city list in one layer, by whether it's a game's and names a score card on screen, a national capital like any other", () => {
     expect(style().sources[cityNameSource]).toMatchObject({ type: 'geojson' })
     expect(namedBy(osaka, false)).toEqual(['city_names'])
     expect(namedBy(tokyo, false)).toEqual(['city_names'])
     expect(namedBy(kobe, true)).toEqual(['city_names_game'])
     expect(namedBy(tokyo, true)).toEqual(['city_names_game'])
+    expect(namedBy(kobe, true, true)).toEqual(['city_names_card'])
+    expect(namedBy(tokyo, true, true)).toEqual(['city_names_card'])
   })
 
   it('names cities from zoom 3', () => {
-    for (const id of ['city_names', 'city_names_game']) {
+    for (const id of ['city_names', 'city_names_game', 'city_names_card']) {
       expect(layer(id)?.minzoom, id).toBe(3)
       expect(layout(id)['text-field'], id).toEqual(['get', 'name'])
     }
@@ -213,16 +218,24 @@ describe('globeStyle', () => {
     }
   })
 
-  it('puts Big city names below their dot by preference, moving to another side when a card is there', () => {
-    for (const id of ['city_names']) {
-      expect(layout(id)['text-variable-anchor'], id).toEqual(['top', 'bottom', 'left', 'right'])
+  // Below, above, left of and right of the dot, an em away, then each again further out, clear of a cluster on the dot.
+  const far = clusterClearOffset(theme)
+  const positions = [
+    ...['top', [0, 1], 'bottom', [0, -1], 'left', [1, 0], 'right', [-1, 0]],
+    ...['top', [0, far], 'bottom', [0, -far], 'left', [far, 0], 'right', [-far, 0]],
+  ]
+
+  it("puts Big cities' and card-less games' cities' names below their dot by preference, moving to another side, then further out, or giving way, when a card, cluster or name is there", () => {
+    for (const id of ['city_names', 'city_names_game']) {
+      expect(layout(id)['text-variable-anchor-offset'], id).toEqual(['literal', positions])
       expect(layout(id)['text-allow-overlap'], id).toBeUndefined()
     }
   })
 
-  it("always writes a game's city below its dot, whatever else is there", () => {
-    for (const id of ['city_names_game']) {
-      expect(layout(id)['text-variable-anchor'], id).toEqual(['top'])
+  it("always writes the city of a score card on screen, below its dot by preference, moving to another side, then further out, when a cluster is there", () => {
+    // With overlap allowed, MapLibre tries each place clear of what's placed before falling back to the first.
+    for (const id of ['city_names_card']) {
+      expect(layout(id)['text-variable-anchor-offset'], id).toEqual(['literal', positions])
       expect(layout(id)['text-allow-overlap'], id).toBe(true)
     }
   })
@@ -240,6 +253,7 @@ describe('globeStyle', () => {
     const kinds = {
       city_names: 'city',
       city_names_game: 'city',
+      city_names_card: 'city',
       label_state: 'state',
       label_country_1: 'country',
     } as const
@@ -255,12 +269,13 @@ describe('globeStyle', () => {
 
   it('writes state and country names in capitals, city names as they are', () => {
     for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
-    for (const id of ['city_names', 'city_names_game']) expect(layout(id)['text-transform'], id).toBe('none')
+    for (const id of ['city_names', 'city_names_game', 'city_names_card']) expect(layout(id)['text-transform'], id).toBe('none')
   })
 
   it("spaces each kind of place's name out as far as the theme says", () => {
     expect(layout('city_names')['text-letter-spacing']).toBe(0.03)
     expect(layout('city_names_game')['text-letter-spacing']).toBe(0.03)
+    expect(layout('city_names_card')['text-letter-spacing']).toBe(0.03)
     expect(layout('label_state')['text-letter-spacing']).toBe(0.3)
     expect(layout('label_country_1')['text-letter-spacing']).toBe(0.2)
   })

@@ -3,22 +3,33 @@ import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
-import { byCount, clusterFlameLayout, clusterFlameOffset } from './pinLayers'
+import { byCount, clusterFlameLayout, clusterFlameOffset, type PinSet } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 import type { TrailOnGlobe } from './trailLayer'
 
 /**
  * What the score cards' layout adds to the map (see cardLayout): the venue clusters moved cards'
- * trails end at, card clusters, and the cards' footprints; the trails themselves and their venue dots
+ * trails end at, card clusters, the small pins of lone games with no room for a card, and the cards' footprints; the trails themselves and their venue dots
  * are the trail layer's (see trailLayer). They're drawn by the map rather than the page, so the place
  * names can draw over them (ADR-0010): the trails and clusters are layers beneath the names. The
  * score cards themselves are page elements above the map.
  */
 export const cardLayoutSource = 'card-layout'
+
+const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
 export const cardClusterLayer = 'card-clusters'
 
 /** The first of the card layout's layers, which the trail layer goes beneath (see GlobeMap). */
 export const overTrails = 'venue-cluster-glows'
+
+/**
+ * The small pins of lone games with no room for a score card, which no other cluster or venue dot
+ * would overlap (see cardLayoutDrawing), among the card layout's features: drawn and selected as any
+ * small pin is (see pinLayers).
+ */
+export const cardlessPins: PinSet = { source: cardLayoutSource, prefix: 'cardless-', only: kindIs('smallPin') }
+export const cardlessSmallPinLayer = 'cardless-pins'
+export const cardlessSelectedPinLayer = 'cardless-pin-selected'
 
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
@@ -51,11 +62,15 @@ export interface DrawnCardCluster {
   lngLat: [number, number]
 }
 
-/** What the map draws of a card layout: its features for the card layout source, the cards' trails, and the card clusters. */
+/**
+ * What the map draws of a card layout: its features for the card layout source, the cards' trails,
+ * the card clusters, and the games with no room shown as their small pins.
+ */
 export interface CardLayoutDrawing {
   source: FeatureCollection
   trails: TrailOnGlobe[]
   cardClusters: DrawnCardCluster[]
+  smallPins: string[]
 }
 
 /**
@@ -65,7 +80,8 @@ export interface CardLayoutDrawing {
  * are, and footprints at them, offset on screen. Venue dots, venue clusters and card clusters that
  * would overlap on screen become one cluster instead (see gatherMarks): a card cluster if any of its
  * games has no room, counting every game in it, the trails of those whose cards are on screen meeting
- * at it; otherwise a venue cluster, the trails meeting at it.
+ * at it; otherwise a venue cluster, the trails meeting at it. A cluster is never of one game: a game
+ * with no room that nothing gathers in shows as its small pin, at its venue.
  */
 export function cardLayoutDrawing(
   cards: readonly CardOnGlobe[],
@@ -76,6 +92,7 @@ export function cardLayoutDrawing(
   const features: Feature[] = []
   const trails: TrailOnGlobe[] = []
   const cardClusters: DrawnCardCluster[] = []
+  const smallPins: string[] = []
   const byGame = new Map(cards.map((card) => [card.gameId, card]))
   const withTrails: CardOnGlobe[] = []
   for (const card of cards) {
@@ -101,6 +118,12 @@ export function cardLayoutDrawing(
       trails.push({ gameId: card.gameId, color: card.color, venue: card.lngLat, start, end: lngLat, dot })
     }
     if (dot) continue
+    if (games.length === 1) {
+      const [{ gameId, status, color, flames, lngLat: venue }] = games
+      smallPins.push(gameId)
+      features.push(feature({ kind: 'smallPin', gameId, status, color, flames }, { type: 'Point', coordinates: venue }))
+      continue
+    }
     const shared = {
       status: groupStatus(games.map((card) => card.status)),
       [sharedColorProperty]: sharedColourKey(games),
@@ -119,7 +142,7 @@ export function cardLayoutDrawing(
       ),
     )
   }
-  return { source: { type: 'FeatureCollection', features }, trails, cardClusters }
+  return { source: { type: 'FeatureCollection', features }, trails, cardClusters, smallPins }
 }
 
 /**
@@ -189,8 +212,6 @@ function gatherMarks(cards: readonly CardOnGlobe[], noRoom: readonly CardOnGlobe
 function feature(properties: Feature['properties'], geometry: Feature['geometry']): Feature {
   return { type: 'Feature', properties, geometry }
 }
-
-const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
 
 /**
  * The venue clusters moved cards' trails end at, and card clusters, from the bottom up. Added beneath

@@ -80,6 +80,38 @@ describe('cardLayoutDrawing', () => {
     ])
   })
 
+  describe('a game with no room for its card, alone', () => {
+    const lone = { ...c, flames: true }
+    const alone: CardLayout = {
+      cards: new Map([
+        ['c', clustered],
+        ['a', moved],
+      ]),
+      cardClusters: [{ gameIds: ['c'], status: 'Live', x: 300, y: 400 }],
+    }
+
+    it('is never a card cluster of one, but its small pin at its venue, named for its game', () => {
+      const drawing = cardLayoutDrawing([lone], alone, unproject, venueSizes)
+      expect(drawing.cardClusters).toEqual([])
+      expect(drawing.smallPins).toEqual(['c'])
+      expect(drawing.source.features).toEqual([
+        {
+          type: 'Feature',
+          properties: { kind: 'smallPin', gameId: 'c', status: 'Live', color: '#cccccc', flames: true },
+          geometry: { type: 'Point', coordinates: [30, -40.5] },
+        } satisfies Feature<Point>,
+      ])
+    })
+
+    it("is a card cluster of two when another game's venue dot would overlap it, and no small pin", () => {
+      const near = card('a', 305, 400, [30.5, -40])
+      const drawing = cardLayoutDrawing([lone, near], alone, unproject, venueSizes)
+      expect(drawing.cardClusters.map(({ gameIds }) => gameIds)).toEqual([['c', 'a']])
+      expect(drawing.smallPins).toEqual([])
+      expect(drawing.source.features.filter((feature) => feature.properties?.kind === 'smallPin')).toEqual([])
+    })
+  })
+
   it('shows flames on a card cluster holding a game showing flames, but never on a venue cluster', () => {
     const flaming = [{ ...a, flames: true }, b, { ...c, status: 'Final' as const }, { ...d, status: 'Final' as const, flames: true }]
 

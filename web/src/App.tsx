@@ -9,6 +9,7 @@ import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
+import { useFittedZoom } from './globe/useFittedZoom'
 import type { ZoomSettings } from './globe/zoomLevels'
 import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
@@ -101,14 +102,16 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   const [viewerSettings, setViewerSettings] = useState(store.load)
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
-  const [camera] = useState(() => openingCamera(store, behaviour.zoom))
+  // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
+  const zoom = useFittedZoom(behaviour.zoom)
+  const [camera] = useState(() => openingCamera(store, zoom))
   // A new start zoom from the behaviour tuner puts the globe at Home at once, to show it.
   const shownStartZoom = useRef(behaviour.zoom.startZoom)
   useEffect(() => {
     if (behaviour.zoom.startZoom === shownStartZoom.current) return
     shownStartZoom.current = behaviour.zoom.startZoom
-    globe.current?.jumpTo(homeCamera(viewerPlace(), behaviour.zoom))
-  }, [behaviour.zoom])
+    globe.current?.jumpTo(homeCamera(viewerPlace(), zoom))
+  }, [behaviour.zoom, zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
   const { leagues } = leagueList
@@ -157,7 +160,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           ref={globe}
           theme={theme}
           cityLabels={behaviour.cityLabels}
-          zoomSettings={behaviour.zoom}
+          zoomSettings={zoom}
           colours={colours}
           flames={viewerSettings.hotGameFlames}
           showGameCityReach={overlays.gameCityReach}
@@ -240,10 +243,10 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           accent={accentColour(theme)}
           // The camera can't move until the globe is ready, as on the globe itself.
           camera={loadingScreenGone ? cameraNow : null}
-          zoomSettings={behaviour.zoom}
+          zoomSettings={zoom}
           onZoomIn={() => globe.current?.zoomIn()}
           onZoomOut={() => globe.current?.zoomOut()}
-          onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), behaviour.zoom))}
+          onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
           inert={touring}
           games={visible}
           gamesReady={loadingScreenGone}

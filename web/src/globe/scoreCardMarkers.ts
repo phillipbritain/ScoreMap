@@ -212,7 +212,7 @@ export class ScoreCardMarkers {
     const pinsLoaded = this.map.isSourceLoaded(pinSource)
     let changed = !pinsLoaded
     const pins = pinsLoaded
-      ? pinSize(this.map.getZoom(), this.cardZoom()) === 'card'
+      ? pinSize({ zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }, this.cardZoom()) === 'card'
         ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
         : []
       : // The source reloads after every change of games, and can't be read until it has. Live games

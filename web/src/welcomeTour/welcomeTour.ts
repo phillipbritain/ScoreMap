@@ -63,7 +63,7 @@ export const cardPickMargin = 16
 /**
  * The score card Click a score card points at: of the cards wholly on the screen that the panel
  * leaves clear by a margin, the one nearest the middle of the screen; or none, for the example card.
- * The panel is its box on screen (a centred panel, or a phone's bottom sheet).
+ * The panel is its box on screen (a centered panel, or a phone's bottom sheet).
  */
 export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox, screen: ScreenBox): string | null {
   const middle = middleOf(screen)

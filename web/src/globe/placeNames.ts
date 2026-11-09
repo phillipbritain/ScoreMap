@@ -67,7 +67,7 @@ const zoomed = (...stops: number[]): DataDrivenPropertyValueSpecification<number
 type PlaceKind = keyof Theme['components']['PlaceNames']
 
 /**
- * States and countries in capitals; city names as they are. Their colours, outlines, fonts, sizes and
+ * States and countries in capitals; city names as they are. Their colors, outlines, fonts, sizes and
  * letter spacing come from the theme.
  */
 const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
@@ -253,10 +253,10 @@ export interface PlaceNames {
   showFrom(zoom: number): void
   /**
    * Whether the city name source's feature with this id is a game's city with a game in reach that
-   * has a score card, looking at `centre` (see hasCard): a card is always shown with its city's name,
+   * has a score card, looking at `center` (see hasCard): a card is always shown with its city's name,
    * so the name doesn't fade near the horizon while the card shows.
    */
-  namesACard(id: string | number, centre: GlobePoint): boolean
+  namesACard(id: string | number, center: GlobePoint): boolean
   /**
    * Always writes the names of the games' cities with a score card on screen, at these venues; the
    * other games' cities give way where there's no room, to clusters and other names (see
@@ -273,7 +273,7 @@ export interface PlaceNames {
 
 /**
  * Keeps the city names on a map up to date with the games shown: the Big cities, and the cities
- * labelled for the games (see cityLabels) by `settings` until they're changed, from the zoom `from`
+ * labeled for the games (see cityLabels) by `settings` until they're changed, from the zoom `from`
  * until that's changed. The names' boxes are worked out in the theme `theme` gives at the time.
  */
 export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings, from = cardZoom): PlaceNames {
@@ -332,8 +332,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       if (now.size === carded.size && [...now].every((id) => carded.has(id))) return
       showLabels()
     },
-    namesACard(id, centre) {
-      return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(centre, venue)) ?? false)
+    namesACard(id, center) {
+      return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(center, venue)) ?? false)
     },
     showFrom(zoom) {
       from = zoom
@@ -354,11 +354,11 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   }
 }
 
-// How close a card's venue is to a game's venue to be the same, in kilometres.
+// How close a card's venue is to a game's venue to be the same, in kilometers.
 const sameVenueKm = 0.01
 
 /**
- * The labelled cities as the city name source's features, marking the games' cities, and those with
+ * The labeled cities as the city name source's features, marking the games' cities, and those with
  * these ids (see showCards) as naming a score card on screen.
  */
 export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels, carded: ReadonlySet<number> = new Set()): FeatureCollection<Point> {

@@ -128,17 +128,17 @@ describe("clusters' footprints", () => {
   })
 })
 
-describe("a game's colour", () => {
+describe("a game's color", () => {
   const game = { status: 'Live', color: '#123456' }
 
-  it('lights a small pin: its glow and ring in the colour', () => {
+  it('lights a small pin: its glow and ring in the color', () => {
     const paint = (id: string) => paintOf(smallPinLayers(sizedTheme(), zoomedOutPins(cardZoom)), id)
     expect(evaluate(paint('pin-glows')['circle-color'], game)).toBe('#123456')
     expect(evaluate(paint('pins')['circle-stroke-color'], game)).toBe('#123456')
   })
 
-  it("lights a small pin's core in the colour, but where the theme gives its status a bright core of its own", () => {
-    // A Live pin's core paler than Live's colour; an Upcoming pin's core just Upcoming's colour.
+  it("lights a small pin's core in the color, but where the theme gives its status a bright core of its own", () => {
+    // A Live pin's core paler than Live's color; an Upcoming pin's core just Upcoming's color.
     const theme = themeWith((json) => {
       json.components.Pin.live.core.color = '#ffcccc'
       json.components.Pin.upcoming.core.color = 'upcoming.main'
@@ -149,9 +149,9 @@ describe("a game's colour", () => {
   })
 })
 
-describe("a cluster's colour", () => {
-  /** The built-in theme, its accent (Live's colour) unlike any game's below. */
-  function colourTheme(): Theme {
+describe("a cluster's color", () => {
+  /** The built-in theme, its accent (Live's color) unlike any game's below. */
+  function colorTheme(): Theme {
     return themeWith((json) => {
       json.palette.live.main = '#ff0000'
     })
@@ -195,9 +195,9 @@ describe("a cluster's colour", () => {
     return features.find((feature) => feature.properties?.kind === 'cardCluster')!.properties!
   }
 
-  /** The colours a pin cluster and a card cluster of these games show in: glow, outline and count, each. */
-  function coloursOf(games: readonly ClusteredGame[]): string[] {
-    const theme = colourTheme()
+  /** The colors a pin cluster and a card cluster of these games show in: glow, outline and count, each. */
+  function colorsOf(games: readonly ClusteredGame[]): string[] {
+    const theme = colorTheme()
     const pinLayers = pinClusterLayers(theme, zoomedOutPins(cardZoom))
     const cardLayers = cardLayoutLayers(theme)
     const pinCluster = { ...pinClusterOf(games), point_count: games.length }
@@ -216,24 +216,24 @@ describe("a cluster's colour", () => {
     ]
   }
 
-  const everywhere = (colour: string) => Array(6).fill(colour)
+  const everywhere = (color: string) => Array(6).fill(color)
 
-  it('is the colour its games share, on pin clusters and card clusters alike', () => {
+  it('is the color its games share, on pin clusters and card clusters alike', () => {
     const games: ClusteredGame[] = [
       { status: 'Live', color: '#123456' },
       { status: 'Final', color: '#123456' },
       { status: 'Upcoming', color: '#123456' },
     ]
-    expect(coloursOf(games)).toEqual(everywhere('#123456'))
+    expect(colorsOf(games)).toEqual(everywhere('#123456'))
   })
 
-  it("is the theme's accent when its games' colours differ", () => {
+  it("is the theme's accent when its games' colors differ", () => {
     const games: ClusteredGame[] = [
       { status: 'Live', color: '#123456' },
       { status: 'Live', color: '#123456' },
       { status: 'Final', color: '#654321' },
     ]
-    expect(coloursOf(games)).toEqual(everywhere('#ff0000'))
+    expect(colorsOf(games)).toEqual(everywhere('#ff0000'))
   })
 })
 
@@ -252,7 +252,7 @@ describe('pinClusterSpacing', () => {
 })
 
 describe('the selected pin', () => {
-  it("is ringed in the theme's selection colour and width, out to as far as a small pin reaches", () => {
+  it("is ringed in the theme's selection color and width, out to as far as a small pin reaches", () => {
     const theme = themeWith((json) => {
       json.components.Selection = { color: '#00ff00', width: 4 }
     })

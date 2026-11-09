@@ -47,7 +47,7 @@ export function showsScenarioControls(listing: ScenarioListing | null, controls:
 }
 
 /**
- * Whether the dev tools (the Behaviour and Theme buttons, and their open panels) show on a local run:
+ * Whether the dev tools (the Behavior and Theme buttons, and their open panels) show on a local run:
  * unless Shift+S has hidden them along with the scenario controls.
  */
 export function showsDevTools(controls: { hidden: boolean }): boolean {

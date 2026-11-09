@@ -9,7 +9,7 @@ describe('cityNameBox', () => {
   // Wide enough for the longest word below, "Santísima", to fit on a line.
   const look = { ...cityNameLook(4, builtInTheme), maxWidth: 100 }
 
-  it('sits centred below the dot, past the offset, with room for the outline', () => {
+  it('sits centered below the dot, past the offset, with room for the outline', () => {
     const box = cityNameBox('Tampa', { x: 100, y: 200 }, look, measure)
     expect(box.x).toBe(100)
     expect(box.width).toBeGreaterThan(50)

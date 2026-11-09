@@ -69,7 +69,7 @@ public sealed partial class RunningGameBoard : BackgroundService
     public bool IsWatching(string connectionId) => _connections.IsConnected(connectionId);
     public void Leave(string connectionId) => _connections.Disconnected(connectionId);
 
-    /// <summary>Starts a scenario (or real games) afresh, cancelling the old generation first.</summary>
+    /// <summary>Starts a scenario (or real games) afresh, canceling the old generation first.</summary>
     public async Task StartAfreshAsync(string name, Speed? speed, CancellationToken cancellationToken)
     {
         var switcher = _switcher ?? throw new InvalidOperationException("This board has no scenario controls");

@@ -9,7 +9,7 @@ namespace ScoreMap.Server.Sports.Shared;
 internal static class LegacyScenarioDetails
 {
     internal static string QualifierNote(Random random) => Pick(random, "Qualifier 1", "Eliminator", "Final");
-    internal static (string, double) GoalOdds(Random random, ProviderTeam favourite) =>
-        ($"{favourite.Abbreviation} -{random.Next(105, 260)}", 2.5 + random.Next(2));
+    internal static (string, double) GoalOdds(Random random, ProviderTeam favorite) =>
+        ($"{favorite.Abbreviation} -{random.Next(105, 260)}", 2.5 + random.Next(2));
     internal static string HockeyScore(int points, Random random) => $"{Player(random)} Goal ({random.Next(1, 30)}) {Pick(random, "Wrist Shot", "Snap Shot", "Slap Shot", "Backhand", "Tip-In")}, assists: {Player(random)}";
 }

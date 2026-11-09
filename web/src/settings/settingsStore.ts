@@ -126,25 +126,28 @@ function cameraFromSaved(saved: unknown): Camera | null {
  * Reads saved settings field by field, so settings saved by an older version of the app (or
  * damaged ones) keep what is still valid and take first-visit defaults for the rest. Settings the
  * app no longer has, such as the old "Card style" or the rail's old "Live games only" and "Show Disrupted
- * games" switches, are ignored.
+ * games" switches, are ignored. Colors saved under their old British names (sportColours,
+ * leagueColours) load as the new ones, so a returning viewer keeps their picks.
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, sportColours, leagueColours, hotGameFlames, mapType } = fields
+  const { hiddenLeagues, topEventsOnly, hotGameFlames, mapType } = fields
+  const sportColors = fields.sportColors ?? fields.sportColours
+  const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     topEventsOnly: typeof topEventsOnly === 'boolean' ? topEventsOnly : firstVisitSettings.topEventsOnly,
-    sportColours: coloursFromSaved(sportColours),
-    leagueColours: coloursFromSaved(leagueColours),
+    sportColors: colorsFromSaved(sportColors),
+    leagueColors: colorsFromSaved(leagueColors),
     hotGameFlames: typeof hotGameFlames === 'boolean' ? hotGameFlames : firstVisitSettings.hotGameFlames,
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
   }
 }
 
-/** Saved colours by name, keeping each that is a #rrggbb colour. */
-function coloursFromSaved(saved: unknown): Record<string, string> {
+/** Saved colors by name, keeping each that is a #rrggbb color. */
+function colorsFromSaved(saved: unknown): Record<string, string> {
   if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return {}
   return Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => isHexColor(entry[1])))
 }

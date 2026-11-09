@@ -1,6 +1,6 @@
 /**
  * A draft of the theme's JSON being tuned in the theme tuner (see ThemeTuner): reading and changing
- * its settings, stepping a colour job lighter or darker through its colour's steps, and listing what
+ * its settings, stepping a color job lighter or darker through its color's steps, and listing what
  * differs from the built-in theme. Local runs only.
  */
 import { paletteSteps, stepNames, type StepName } from '../theme/palette'
@@ -8,7 +8,7 @@ import { paletteSteps, stepNames, type StepName } from '../theme/palette'
 export type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json }
 export type JsonObject = { readonly [key: string]: Json }
 
-/** A theme's JSON: its colours, palette, typography, spacing, shape and components. */
+/** A theme's JSON: its colors, palette, typography, spacing, shape and components. */
 export type ThemeJson = JsonObject
 
 /** Where a setting sits in a theme, key by key: ["components", "Trail", "glow", "width"]. */
@@ -30,18 +30,18 @@ export function withSetting(json: ThemeJson, path: SettingPath, value: Json): Th
   return set(json, path) as JsonObject
 }
 
-/** One of the theme's colours: its steps, lightest first, as colours. */
-export interface ThemeColour {
+/** One of the theme's colors: its steps, lightest first, as colors. */
+export interface ThemeColor {
   name: string
   steps: Record<StepName, string>
 }
 
-export function themeColours(json: ThemeJson): ThemeColour[] {
-  return Object.entries(isObject(json.colors) ? json.colors : {}).flatMap(([name, colour]) => {
-    if (!isObject(colour) || typeof colour.base !== 'string') return []
-    const handSet = isObject(colour.steps) ? (colour.steps as Partial<Record<StepName, string>>) : {}
+export function themeColors(json: ThemeJson): ThemeColor[] {
+  return Object.entries(isObject(json.colors) ? json.colors : {}).flatMap(([name, color]) => {
+    if (!isObject(color) || typeof color.base !== 'string') return []
+    const handSet = isObject(color.steps) ? (color.steps as Partial<Record<StepName, string>>) : {}
     try {
-      return [{ name, steps: paletteSteps(colour.base, handSet) }]
+      return [{ name, steps: paletteSteps(color.base, handSet) }]
     } catch {
       return []
     }
@@ -51,26 +51,26 @@ export function themeColours(json: ThemeJson): ThemeColour[] {
 const stepJob = /^([A-Za-z]\w*)\.(\d00)$/
 
 /**
- * A colour job naming a colour's step ("navy.700"), or one of the palette's colours ("primary.dark")
- * naming one in the theme, as that colour and step; null for a colour given directly.
+ * A color job naming a color's step ("navy.700"), or one of the palette's colors ("primary.dark")
+ * naming one in the theme, as that color and step; null for a color given directly.
  */
-export function stepOfJob(job: string, json?: ThemeJson): { colour: string; step: StepName } | null {
+export function stepOfJob(job: string, json?: ThemeJson): { color: string; step: StepName } | null {
   const role = json && settingAt(json, ['palette', ...job.split('.')])
   if (typeof role === 'string') return stepOfJob(role)
   const match = stepJob.exec(job)
-  return match && (stepNames as readonly string[]).includes(match[2]) ? { colour: match[1], step: match[2] as StepName } : null
+  return match && (stepNames as readonly string[]).includes(match[2]) ? { color: match[1], step: match[2] as StepName } : null
 }
 
 /**
- * The colour job `by` steps darker (or lighter, if negative) in the same colour, stopping at its
- * lightest and darkest; one of the palette's colours steps from the step it names in the theme. A
- * colour given directly stays as it is.
+ * The color job `by` steps darker (or lighter, if negative) in the same color, stopping at its
+ * lightest and darkest; one of the palette's colors steps from the step it names in the theme. A
+ * color given directly stays as it is.
  */
 export function shiftedJob(job: string, by: number, json?: ThemeJson): string {
   const named = stepOfJob(job, json)
   if (!named) return job
   const i = Math.min(stepNames.length - 1, Math.max(0, stepNames.indexOf(named.step) + by))
-  return `${named.colour}.${stepNames[i]}`
+  return `${named.color}.${stepNames[i]}`
 }
 
 /** One setting the draft has changed from the built-in theme. */
@@ -151,7 +151,7 @@ export function componentName(key: string): string {
 /**
  * The tuner's tabs: first the parts of the whole theme (the palette, the typography, spacing and
  * shape), then a tab for each component, named as it is. Other has whatever those
- * don't, so every setting but the theme's colours themselves can be tuned; it's left out when there's
+ * don't, so every setting but the theme's colors themselves can be tuned; it's left out when there's
  * nothing in it.
  */
 export function tunerTabs(json: ThemeJson): TunerTab[] {
@@ -170,7 +170,7 @@ export function tunerTabs(json: ThemeJson): TunerTab[] {
     if (!isObject(value) || !shown.some((tabPath) => startsWith(tabPath, path))) return [path]
     return Object.entries(value).flatMap(([key, inner]) => rest(inner, [...path, key]))
   }
-  // The colours themselves aren't tuned here: a colour job picks one of their steps.
+  // The colors themselves aren't tuned here: a color job picks one of their steps.
   const others = Object.entries(json)
     .filter(([key]) => key !== 'colors')
     .flatMap(([key, value]) => rest(value, [key]))

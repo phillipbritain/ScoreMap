@@ -11,15 +11,15 @@ export interface ViewerSettings {
    */
   topEventsOnly: boolean
   /**
-   * The colour the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
-   * in it (see gameColour). A sport with none takes the theme's colours.
+   * The color the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
+   * in it (see gameColor). A sport with none takes the theme's colors.
    */
-  sportColours: Readonly<Record<string, string>>
+  sportColors: Readonly<Record<string, string>>
   /**
-   * The colour the viewer picked for each league, by name, as #rrggbb. It wins over its sport's, so
-   * a viewer can colour a sport and set one of its leagues apart. A league with none takes its sport's.
+   * The color the viewer picked for each league, by name, as #rrggbb. It wins over its sport's, so
+   * a viewer can color a sport and set one of its leagues apart. A league with none takes its sport's.
    */
-  leagueColours: Readonly<Record<string, string>>
+  leagueColors: Readonly<Record<string, string>>
   /** "Flames on hot games" in Display Settings, on unless switched off: hot games (see GLOSSARY.md) show flames on their score cards, small pins and clusters. */
   hotGameFlames: boolean
   /** What the globe is drawn as (see MapType): the plain map unless the viewer switched to satellite. */
@@ -27,7 +27,7 @@ export interface ViewerSettings {
 }
 
 /**
- * The globe's map types: the plain map of borders and place names in the theme's colours, or
+ * The globe's map types: the plain map of borders and place names in the theme's colors, or
  * satellite imagery under the same borders and names (ADR-0022).
  */
 export const mapTypes = ['plain', 'satellite'] as const
@@ -38,12 +38,12 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on, Top Events off, no colours picked, flames on hot games and the plain map. */
+/** Every league on, Top Events off, no colors picked, flames on hot games and the plain map. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
-  sportColours: {},
-  leagueColours: {},
+  sportColors: {},
+  leagueColors: {},
   hotGameFlames: true,
   mapType: 'plain',
 }
@@ -90,26 +90,26 @@ export function withAllLeagues(settings: ViewerSettings, leagues: readonly Leagu
   )
 }
 
-/** The settings with a sport's colour picked, or cleared (null) so its games take the theme's colours again. */
-export function withSportColour(settings: ViewerSettings, sport: string, colour: string | null): ViewerSettings {
-  const { [sport]: _cleared, ...others } = settings.sportColours
-  return { ...settings, sportColours: colour === null ? others : { ...others, [sport]: colour } }
+/** The settings with a sport's color picked, or cleared (null) so its games take the theme's colors again. */
+export function withSportColor(settings: ViewerSettings, sport: string, color: string | null): ViewerSettings {
+  const { [sport]: _cleared, ...others } = settings.sportColors
+  return { ...settings, sportColors: color === null ? others : { ...others, [sport]: color } }
 }
 
-/** The settings with a league's colour picked, or cleared (null) so its games take its sport's colour again. */
-export function withLeagueColour(settings: ViewerSettings, league: string, colour: string | null): ViewerSettings {
-  const { [league]: _cleared, ...others } = settings.leagueColours
-  return { ...settings, leagueColours: colour === null ? others : { ...others, [league]: colour } }
+/** The settings with a league's color picked, or cleared (null) so its games take its sport's color again. */
+export function withLeagueColor(settings: ViewerSettings, league: string, color: string | null): ViewerSettings {
+  const { [league]: _cleared, ...others } = settings.leagueColors
+  return { ...settings, leagueColors: color === null ? others : { ...others, [league]: color } }
 }
 
-/** "Reset colours": the settings with every sport's and league's colour cleared. */
-export function withoutColours(settings: ViewerSettings): ViewerSettings {
-  return { ...settings, sportColours: {}, leagueColours: {} }
+/** "Reset colors": the settings with every sport's and league's color cleared. */
+export function withoutColors(settings: ViewerSettings): ViewerSettings {
+  return { ...settings, sportColors: {}, leagueColors: {} }
 }
 
-/** Whether the viewer has picked any colour, so there's something for "Reset colours" to clear. */
-export function hasColours(settings: ViewerSettings): boolean {
-  return Object.keys(settings.sportColours).length > 0 || Object.keys(settings.leagueColours).length > 0
+/** Whether the viewer has picked any color, so there's something for "Reset colors" to clear. */
+export function hasColors(settings: ViewerSettings): boolean {
+  return Object.keys(settings.sportColors).length > 0 || Object.keys(settings.leagueColors).length > 0
 }
 
 function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: boolean): ViewerSettings {

@@ -231,20 +231,20 @@ function panelAcrossBottom() {
 /** How many pixels apart two positions on screen are. */
 const offBy = (a: number, b: number) => Math.abs(a - b)
 
-/** A computed CSS colour's red, green, blue (0 to 255) and alpha (0 to 1), as rgb(…) or color(srgb …). */
-function channels(colour: string): [number, number, number, number] {
-  const srgb = /^color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)$/.exec(colour)
+/** A computed CSS color's red, green, blue (0 to 255) and alpha (0 to 1), as rgb(…) or color(srgb …). */
+function channels(color: string): [number, number, number, number] {
+  const srgb = /^color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)$/.exec(color)
   if (srgb) return [Number(srgb[1]) * 255, Number(srgb[2]) * 255, Number(srgb[3]) * 255, Number(srgb[4] ?? 1)]
-  const rgb = /^rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)$/.exec(colour)
+  const rgb = /^rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)$/.exec(color)
   if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3]), Number(rgb[4] ?? 1)]
-  throw new Error(`Not a computed colour: ${colour}`)
+  throw new Error(`Not a computed color: ${color}`)
 }
 
 const hexChannels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
 
-/** Whether a colour lies between two others, strictly, in each channel that differs (to within rounding). */
-function between(colour: string, from: string, to: string): boolean {
-  const [a, b, c] = [channels(colour), hexChannels(from), hexChannels(to)]
+/** Whether a color lies between two others, strictly, in each channel that differs (to within rounding). */
+function between(color: string, from: string, to: string): boolean {
+  const [a, b, c] = [channels(color), hexChannels(from), hexChannels(to)]
   const channelsBetween = [0, 1, 2].every((i) =>
     b[i] === c[i] ? Math.abs(a[i] - b[i]) < 1 : a[i] > Math.min(b[i], c[i]) + 0.5 && a[i] < Math.max(b[i], c[i]) - 0.5,
   )
@@ -252,7 +252,7 @@ function between(colour: string, from: string, to: string): boolean {
 }
 
 describe('score cards', () => {
-  it('fades a Final game’s card by colour into its fill, not by opacity', async () => {
+  it('fades a Final game’s card by color into its fill, not by opacity', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     // Far enough apart that neither is moved aside.
     globe.show([game('L'), game('F', { longitude: 6, status: 'Final' })])
@@ -327,7 +327,7 @@ describe('selection', () => {
   })
 
   // Turning the globe keeps it the same size on screen, as MapLibre's globe does as the viewer drags it,
-  // while MapLibre's zoom rises towards the equator.
+  // while MapLibre's zoom rises toward the equator.
   it('keeps score cards as the globe turns from Europe to the equator, the globe the same size', async () => {
     const { globe, map } = openGlobe({ longitude: 10, latitude: 50, zoom: zoomAt(50, cardZoom + 0.3) })
     expect(map.getZoom()).toBeLessThan(cardZoom)
@@ -402,7 +402,7 @@ describe('selection', () => {
     expect(container.querySelector('.score-card--selected')).toBeNull()
   })
 
-  it('leaves a score card moved aside for its neighbours where it is when it is selected', async () => {
+  it('leaves a score card moved aside for its neighbors where it is when it is selected', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
     // Close enough that some cards are moved aside, not so close that any is in a card cluster.
     globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
@@ -466,7 +466,7 @@ describe('selection', () => {
     expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
-  it('centres a game picked from the list above the panel, zoomed in to its score card', async () => {
+  it('centers a game picked from the list above the panel, zoomed in to its score card', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
@@ -474,7 +474,7 @@ describe('selection', () => {
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centreOn('A', panel)
+    globe.centerOn('A', panel)
     globe.select('A', panel)
     await moved
 
@@ -487,7 +487,7 @@ describe('selection', () => {
     await cardShown('A')
   })
 
-  it('centres a game far from the equator above the panel just past the card zoom, the globe sized as at the equator', async () => {
+  it('centers a game far from the equator above the panel just past the card zoom, the globe sized as at the equator', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 30, zoom: 2 })
     const a = game('A', { longitude: 10, latitude: 55 })
     globe.show([a])
@@ -495,11 +495,11 @@ describe('selection', () => {
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centreOn('A', panel)
+    globe.centerOn('A', panel)
     globe.select('A', panel)
     await moved
 
-    // The view's centre is south of the game, where the globe is the size of the card zoom.
+    // The view's center is south of the game, where the globe is the size of the card zoom.
     expect(map.getCenter().lat).toBeLessThan(55)
     const atEquator = zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat })
     expect(atEquator).toBeGreaterThanOrEqual(cardZoom)
@@ -514,7 +514,7 @@ describe('selection', () => {
     await cardShown('A')
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centreOn('A', null)
+    globe.centerOn('A', null)
     globe.select('A', null)
     await moved
 
@@ -522,7 +522,7 @@ describe('selection', () => {
     expect(map.getZoom()).toBeCloseTo(cardZoom + 1)
   })
 
-  it('centres the game already selected when it is picked from the list again', async () => {
+  it('centers the game already selected when it is picked from the list again', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
@@ -532,7 +532,7 @@ describe('selection', () => {
     expect(map.getCenter().lng).toBeCloseTo(0)
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centreOn('A', null)
+    globe.centerOn('A', null)
     await moved
 
     expect(map.getCenter().lng).toBeCloseTo(30)
@@ -722,11 +722,11 @@ describe('score cards', () => {
   })
 })
 
-// Big enough to show the whole globe at cardZoom, about 440 pixels from its centre to its rim, so
+// Big enough to show the whole globe at cardZoom, about 440 pixels from its center to its rim, so
 // games past the card radius are on screen.
 const wideGlobe = { width: 1000, height: 740 }
 
-describe('score cards near the centre of the view', () => {
+describe('score cards near the center of the view', () => {
   // About 44° from 0°, 0°: past the card radius, on screen in a wide globe.
   const outerVenue = { longitude: 38, latitude: 25 }
 
@@ -736,7 +736,7 @@ describe('score cards near the centre of the view', () => {
     return x > 0 && x < wideGlobe.width && y > 0 && y < wideGlobe.height
   }
 
-  it('shows a game near the centre as a score card, and one farther out as a small pin', async () => {
+  it('shows a game near the center as a score card, and one farther out as a small pin', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
     const outer = game('OUTER', outerVenue)
     globe.show([game('INNER', { longitude: 20 }), outer])
@@ -747,7 +747,7 @@ describe('score cards near the centre of the view', () => {
     expect(card('OUTER')).toBeNull()
   })
 
-  it('clusters the pins farther out among themselves, leaving the games near the centre their cards', async () => {
+  it('clusters the pins farther out among themselves, leaving the games near the center their cards', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
     // Just inside the card radius, a few degrees from the outer games.
     const inner = game('INNER', { longitude: 34, latitude: 22 })
@@ -807,7 +807,7 @@ describe('score cards near the centre of the view', () => {
     expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
-  it('centres the globe on a pin cluster farther out the viewer selects, the globe the same size, so its games have cards', async () => {
+  it('centers the globe on a pin cluster farther out the viewer selects, the globe the same size, so its games have cards', async () => {
     // Past cardZoom, where selecting a pin cluster zoomed out would zoom out to it.
     const zoom = cardZoom + 0.2
     const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom }, wideGlobe)
@@ -1390,7 +1390,7 @@ describe('flames', () => {
 })
 
 describe('changing theme', () => {
-  /** A game this many pixels east of the centre of the view. */
+  /** A game this many pixels east of the center of the view. */
   const gameEastBy = (map: MapLibreMap, id: string, pixels: number) => {
     const { width, height } = map.getContainer().getBoundingClientRect()
     const { lng, lat } = map.unproject([width / 2 + pixels, height / 2])

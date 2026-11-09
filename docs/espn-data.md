@@ -49,7 +49,7 @@ Per game (`competitions[]`):
 - `highlights`: video clips, where ESPN has them.
 - `series`: a playoff series' standing ("SEA wins series 3-2", with each side's wins), or a two-legged soccer tie's aggregate score.
 - `neutralSite`, `conferenceCompetition`, and the venue's `indoor`.
-- The rest of `odds[0]`: `moneyline`, `spread`, `homeTeamOdds` and `awayTeamOdds` (favourite or underdog, and whether at the open). ESPN drops the odds once a game is over.
+- The rest of `odds[0]`: `moneyline`, `spread`, `homeTeamOdds` and `awayTeamOdds` (favorite or underdog, and whether at the open). ESPN drops the odds once a game is over.
 - `situation` beyond what ScoreMap reads, only while a game is under way: in baseball the `batter` and `pitcher`, each with a summary of their game so far ("0.0 IP, 0 ER, 0 H, 0 BB"); with every sport's `lastPlay`, its type, the players in it and (basketball) each team's chance of winning. Football's is said to have red-zone and timeout fields; no live football response has been checked yet.
 - `altGameNote`, `wasSuspended`, `format` (the regulation periods).
 

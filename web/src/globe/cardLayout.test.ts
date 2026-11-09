@@ -10,7 +10,7 @@ const scene: CardScene = { width: 1000, height: 800, venueGap }
 const mx = 500
 const my = 400
 
-// A card 106 by 60 that would sit centred at (x, y), its venue the venue gap below it as score cards sit.
+// A card 106 by 60 that would sit centered at (x, y), its venue the venue gap below it as score cards sit.
 const card = (gameId: string, x: number, y: number, status: GameStatus = 'Live'): ScreenCard => ({
   gameId,
   status,
@@ -23,7 +23,7 @@ const card = (gameId: string, x: number, y: number, status: GameStatus = 'Live')
 const games = (prefix: string, count: number, x: number, y: number, status: GameStatus) =>
   Array.from({ length: count }, (_, i) => card(`${prefix}${String(i).padStart(2, '0')}`, x + i, y, status))
 
-/** A card where it ends up on screen, by its centre. */
+/** A card where it ends up on screen, by its center. */
 interface Box extends ScreenBox {
   gameId: string
   venueX: number
@@ -352,7 +352,7 @@ describe('layOutCards', () => {
       expect(anyOverlap(boxesOf([live, upcoming], layout))).toBe(false)
     })
 
-    it('keeps a moved card where it was as the globe turns its neighbour a pixel closer', () => {
+    it('keeps a moved card where it was as the globe turns its neighbor a pixel closer', () => {
       // b moved down the venue gap below its venue; as the globe turns, b's venue edges a pixel higher than a's.
       const b = { dx: 0, dy: 92 }
       expect(shiftsOf(lay([card('a', mx, my), card('b', mx + 1, my)])).get('b')).toEqual(b)

@@ -53,7 +53,7 @@ The marker for one game on the globe, placed at the game's venue. A game whose v
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-While zoomed in, the panel a pin near the centre of the view shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress. When cards would overlap, some are moved aside, their trails following them. Farther out, pins stay small, so cards don't crowd the globe's rim.
+While zoomed in, the panel a pin near the center of the view shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress. When cards would overlap, some are moved aside, their trails following them. Farther out, pins stay small, so cards don't crowd the globe's rim.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
@@ -61,11 +61,11 @@ The line from a score card to its game's venue, ending at a ringed venue dot.
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
-Games shown as one marker with a count because there's no room to show them apart: a pin cluster, a card cluster or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the centre of a zoomed-in view turns the globe to it instead, and its games get score cards.
+Games shown as one marker with a count because there's no room to show them apart: a pin cluster, a card cluster or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the center of a zoomed-in view turns the globe to it instead, and its games get score cards.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Pin cluster**:
-A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap: while zoomed out, or zoomed in, far from the centre of the view. Pin clusters that would overlap combine into a larger one. MapLibre clusters them (ADR-0016).
+A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap: while zoomed out, or zoomed in, far from the center of the view. Pin clusters that would overlap combine into a larger one. MapLibre clusters them (ADR-0016).
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
@@ -81,7 +81,7 @@ The detailed view of one game, opened by selecting its pin, shown as a strip acr
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colours picked for sports and leagues, and whether hot games show flames), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colors picked for sports and leagues, and whether hot games show flames), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:
@@ -143,7 +143,7 @@ The moment, once each time ScoreMap is opened, that the first games are on the g
 _Avoid_: Loaded, settled, done
 
 **Asleep**:
-ScoreMap once its page has been hidden (its window minimised, another tab in front, or the screen locked) for longer than the idle timeout. It stops getting games, so with nobody else watching nothing is fetched, and a demo starts over. It wakes when the page is shown again: the globe is dimmed with a note until the current games arrive.
+ScoreMap once its page has been hidden (its window minimized, another tab in front, or the screen locked) for longer than the idle timeout. It stops getting games, so with nobody else watching nothing is fetched, and a demo starts over. It wakes when the page is shown again: the globe is dimmed with a note until the current games arrive.
 _Avoid_: Paused (that's a speed), idle, standby, timed out
 
 **Idle timeout**:
@@ -153,31 +153,31 @@ _Avoid_: Pause time, session timeout
 ### Look
 
 **Theme**:
-The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded, shaped as a Material UI theme is: its colours, a palette, typography, spacing and shape, each status's look, and each part's own look under its components. ScoreMap has one, built in.
+The whole of how ScoreMap looks, the globe included, as one JSON file checked when it's loaded, shaped as a Material UI theme is: its colors, a palette, typography, spacing and shape, each status's look, and each part's own look under its components. ScoreMap has one, built in.
 _Avoid_: Skin, style (the globe's map style is MapLibre's), card style
 
-**Theme colours**:
-A theme's named base colours (`colors`), each worked out into steps from light (100) to dark (900), its base colour at 500, such as `navy.700`.
-_Avoid_: Colour scheme, swatches, tokens
+**Theme colors**:
+A theme's named base colors (`colors`), each worked out into steps from light (100) to dark (900), its base color at 500, such as `navy.700`.
+_Avoid_: Color scheme, swatches, tokens
 
 **Palette**:
-What a theme's main colours are for, as MUI's palette has them: primary, secondary, error and warning, and a colour for each game status (each a main shade, a lighter and a darker one, and the text on it), the background, text, the divider and hover. Each names a step of the theme colours. The rest of how a status looks is each component's own: a pin's, a cluster's, a score card's.
-_Avoid_: Colour scheme, tokens
+What a theme's main colors are for, as MUI's palette has them: primary, secondary, error and warning, and a color for each game status (each a main shade, a lighter and a darker one, and the text on it), the background, text, the divider and hover. Each names a step of the theme colors. The rest of how a status looks is each component's own: a pin's, a cluster's, a score card's.
+_Avoid_: Color scheme, tokens
 
-**Colour job**:
-What a colour in a theme is for, such as the globe's surface, Live's colour or main text, rather than which colour it is. It names a step of the theme colours, such as `navy.700`, or one of the palette's colours, such as `primary.dark`, or gives a colour directly. A game's status shows by its glow and brightness; its colour stands for its league or sport (see Game colour).
-_Avoid_: Token, semantic colour
+**Color job**:
+What a color in a theme is for, such as the globe's surface, Live's color or main text, rather than which color it is. It names a step of the theme colors, such as `navy.700`, or one of the palette's colors, such as `primary.dark`, or gives a color directly. A game's status shows by its glow and brightness; its color stands for its league or sport (see Game color).
+_Avoid_: Token, semantic color
 
-**Game colour**:
-The colour a game shows in on its pin, score card, trail and pulses and in the game panel: the colour the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's colour for its status. A league with no colour of its own, including one added to the server later, takes its sport's.
-_Avoid_: Status colour (for a game's colour), team colour
+**Game color**:
+The color a game shows in on its pin, score card, trail and pulses and in the game panel: the color the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's color for its status. A league with no color of its own, including one added to the server later, takes its sport's.
+_Avoid_: Status color (for a game's color), team color
 
 **Type style**:
 One of a theme's kinds of text, named as MUI's typography variants are (`body2`, `button`, `caption`…): a weight, a size and a letter spacing, in the theme's one font family. Each kind of text on the page is one, and text on the globe takes one's size.
 _Avoid_: Variant, text size, font role
 
 **Glass**:
-What every surface over the globe is made of (score cards, the game panel, the rail, the scenario controls, tooltips): a pane the globe shows through, tinted with the surface's colour, its edges catching the light (ADR-0018).
+What every surface over the globe is made of (score cards, the game panel, the rail, the scenario controls, tooltips): a pane the globe shows through, tinted with the surface's color, its edges catching the light (ADR-0018).
 _Avoid_: Background, see-through fill
 
 **Frost**:

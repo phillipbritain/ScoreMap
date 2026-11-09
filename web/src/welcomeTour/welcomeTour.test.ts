@@ -60,13 +60,13 @@ const nba = { name: 'NBA', sport: 'Basketball' }
 const mls = { name: 'MLS', sport: 'Soccer' }
 const leagues = [nfl, nba, mls]
 
-/** Settings a viewer might have before choosing: some leagues off, colours picked, flames off. */
+/** Settings a viewer might have before choosing: some leagues off, colors picked, flames off. */
 const before: ViewerSettings = {
   ...firstVisitSettings,
   hiddenLeagues: ['NBA'],
   hotGameFlames: false,
-  sportColours: { Football: '#123456' },
-  leagueColours: { MLS: '#abcdef' },
+  sportColors: { Football: '#123456' },
+  leagueColors: { MLS: '#abcdef' },
 }
 
 describe('what each Welcome choice does to the viewer settings', () => {
@@ -94,8 +94,8 @@ describe('what each Welcome choice does to the viewer settings', () => {
       const after = settingsForChoice(before, choice, leagues)
 
       expect(after.hotGameFlames).toBe(false)
-      expect(after.sportColours).toEqual({ Football: '#123456' })
-      expect(after.leagueColours).toEqual({ MLS: '#abcdef' })
+      expect(after.sportColors).toEqual({ Football: '#123456' })
+      expect(after.leagueColors).toEqual({ MLS: '#abcdef' })
     },
   )
 

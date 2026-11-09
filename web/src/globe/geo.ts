@@ -7,7 +7,7 @@ export interface GlobePoint {
 /** Degrees to radians. */
 export const radians = Math.PI / 180
 
-/** The angle between two points, seen from the globe's centre, in degrees. */
+/** The angle between two points, seen from the globe's center, in degrees. */
 export function degreesApart(a: GlobePoint, b: GlobePoint): number {
   // The haversine formula, which stays accurate for points close together.
   const dLat = (b.latitude - a.latitude) * radians
@@ -17,23 +17,23 @@ export function degreesApart(a: GlobePoint, b: GlobePoint): number {
   return (2 * Math.asin(Math.min(1, Math.sqrt(h)))) / radians
 }
 
-/** The distance between two points along the ground, in kilometres. */
+/** The distance between two points along the ground, in kilometers. */
 export function kmApart(a: GlobePoint, b: GlobePoint): number {
   return degreesApart(a, b) * radians * earthRadiusKm
 }
 const earthRadiusKm = 6371
 
-/** The ring of points this many kilometres from `centre` along the ground, closed, `steps` points round. */
-export function ringAround(centre: GlobePoint, km: number, steps = 64): GlobePoint[] {
+/** The ring of points this many kilometers from `center` along the ground, closed, `steps` points round. */
+export function ringAround(center: GlobePoint, km: number, steps = 64): GlobePoint[] {
   const angle = km / earthRadiusKm
-  const lat = centre.latitude * radians
+  const lat = center.latitude * radians
   const ring: GlobePoint[] = []
   for (let i = 0; i <= steps; i++) {
     const bearing = ((i % steps) / steps) * 2 * Math.PI
     const toLat = Math.asin(Math.sin(lat) * Math.cos(angle) + Math.cos(lat) * Math.sin(angle) * Math.cos(bearing))
     const dLon = Math.atan2(Math.sin(bearing) * Math.sin(angle) * Math.cos(lat), Math.cos(angle) - Math.sin(lat) * Math.sin(toLat))
     // Not wrapped to ±180°, so a ring across the antimeridian stays one piece.
-    ring.push({ longitude: centre.longitude + dLon / radians, latitude: toLat / radians })
+    ring.push({ longitude: center.longitude + dLon / radians, latitude: toLat / radians })
   }
   return ring
 }

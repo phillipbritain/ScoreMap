@@ -67,7 +67,7 @@ export interface LiveGamesOptions {
 
 export interface LiveGames {
   readonly state: LiveGamesState
-  /** A new idle timeout, from the behaviour tuner (local runs only): it counts from now if the page is hidden. */
+  /** A new idle timeout, from the behavior tuner (local runs only): it counts from now if the page is hidden. */
   setIdleTimeout: (ms: number) => void
   /** Disconnects and stops watching the page. */
   stop: () => void
@@ -110,7 +110,7 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
       {
         snapshot: live((games) => update({ games, changes: noRecentChanges, cutOffSince: null, waking: false })),
         // The snapshot always comes first; a change before it has nothing to apply to.
-        // The server's own judgement of what changed is kept for the globe to animate (see GlobeMap.show).
+        // The server's own judgment of what changed is kept for the globe to animate (see GlobeMap.show).
         change: live((change) => {
           if (state.games) update({ games: applyChange(state.games, change), changes: recordChange(state.changes, change) })
         }),

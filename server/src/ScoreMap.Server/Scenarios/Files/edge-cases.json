@@ -2,7 +2,7 @@
 // - A venue that can't be found: "Imaginary Fields Arena" is made up, and deliberately not in the
 //   venue list or its lookups, so its pin falls back to its city (Reykjavík). It is the one
 //   scenario venue looked up through Nominatim at runtime. "notInVenueList" says it is made up on
-//   purpose; any other venue missing from the list stops startup, so a misspelt one can't slip by.
+//   purpose; any other venue missing from the list stops startup, so a misspelled one can't slip by.
 // - A tied score, long team names, missing logos and three-digit scores.
 // - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.

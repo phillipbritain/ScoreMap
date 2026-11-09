@@ -10,10 +10,10 @@ import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
-  /** The game's colour (see gameColour), for the panel's top edge, glow and progress line. */
-  colour: string
-  /** The colour of text on the game's colour, readable on it (see textOn). */
-  textOnColour: string
+  /** The game's color (see gameColor), for the panel's top edge, glow and progress line. */
+  color: string
+  /** The color of text on the game's color, readable on it (see textOn). */
+  textOnColor: string
   onClose: () => void
   /** The panel's element, so the globe can keep the selected pin clear of it. */
   ref?: Ref<HTMLElement>
@@ -32,7 +32,7 @@ interface PanelLink {
  * whatever the game, so selecting one game after another doesn't make it jump: long text is clipped,
  * with the full text on hover where it's cut off. Re-renders with each new snapshot, so it stays current while open.
  */
-export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, color, textOnColor, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -50,11 +50,11 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   // A photo that fails to load is left out, with its credit, rather than shown broken.
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
-  // Lit in the game's colour, as its score card is.
-  const colourStyle = { '--game-color': colour, '--text-on-game-color': textOnColour } as CSSProperties
+  // Lit in the game's color, as its score card is.
+  const colorStyle = { '--game-color': color, '--text-on-game-color': textOnColor } as CSSProperties
 
   return (
-    <aside ref={ref} className="game-panel" style={colourStyle} aria-label="Game panel" onKeyDown={(event) => {
+    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" onKeyDown={(event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose()
@@ -127,22 +127,22 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
 }
 
 /**
- * The credit a Wikimedia Commons photo's licence asks for: its author, linking to the photo's page,
- * and its licence. Shown over the photo on hover.
+ * The credit a Wikimedia Commons photo's license asks for: its author, linking to the photo's page,
+ * and its license. Shown over the photo on hover.
  */
 function Credit({ credit }: { credit: PhotoCredit }) {
   return (
-    <figcaption className="game-panel__credit" data-tooltip={`Photo: ${credit.author}, ${credit.licence}, via Wikimedia Commons`} data-tooltip-when-clipped>
+    <figcaption className="game-panel__credit" data-tooltip={`Photo: ${credit.author}, ${credit.license}, via Wikimedia Commons`} data-tooltip-when-clipped>
       <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
         {credit.author}
       </a>
       {' · '}
-      {credit.licenceUrl ? (
-        <a href={credit.licenceUrl} target="_blank" rel="noopener noreferrer">
-          {credit.licence}
+      {credit.licenseUrl ? (
+        <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">
+          {credit.license}
         </a>
       ) : (
-        credit.licence
+        credit.license
       )}
     </figcaption>
   )

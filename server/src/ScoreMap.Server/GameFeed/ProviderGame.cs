@@ -215,7 +215,7 @@ public sealed record Coordinates(double Latitude, double Longitude);
 public sealed record ProviderBroadcaster(string Name, string? Country);
 
 /// <summary>
-/// The betting line: <see cref="Line"/> as the bookmaker writes it (the favourite and its spread,
+/// The betting line: <see cref="Line"/> as the bookmaker writes it (the favorite and its spread,
 /// "SEA -2.5", or "EVEN"), the total points it expects (<see cref="OverUnder"/>), and the bookmaker.
 /// </summary>
 public sealed record ProviderOdds(string? Line, double? OverUnder, string? Bookmaker);

@@ -23,11 +23,11 @@ export function liftClearOf(pin: ScreenBox, panel: ScreenBox | null): number {
 }
 
 /**
- * Where on the page a game picked from the Games list is centred: the middle of the globe (its box on the
+ * Where on the page a game picked from the Games list is centered: the middle of the globe (its box on the
  * page) above the game panel, a strip across its bottom; or of the whole globe with no panel, or one that
  * leaves no room above it.
  */
-export function clearCentre(globe: ScreenBox, panel: ScreenBox | null): { x: number; y: number } {
+export function clearCenter(globe: ScreenBox, panel: ScreenBox | null): { x: number; y: number } {
   const x = (globe.left + globe.right) / 2
   if (!panel || panel.top <= globe.top || panel.top >= globe.bottom) return { x, y: (globe.top + globe.bottom) / 2 }
   return { x, y: (globe.top + panel.top) / 2 }

@@ -53,7 +53,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private readonly HashSet<string> _holding = [];
     private readonly Dictionary<string, (FakeTimeProvider Clock, TimeSpan Takes)> _slow = new();
     private readonly Dictionary<string, TaskCompletionSource> _gates = new();
-    private readonly TaskCompletionSource _heldFetchCancelled = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _heldFetchCanceled = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private IReadOnlySet<string> _topEvents = new HashSet<string>();
     private bool _topEventsFailing;
@@ -131,7 +131,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
 
     /// <summary>
     /// Makes fetches of the league hang until whoever asked cancels them, as a slow source would
-    /// leave a snapshot waiting. See <see cref="HeldFetchCancelledAsync"/>.
+    /// leave a snapshot waiting. See <see cref="HeldFetchCanceledAsync"/>.
     /// </summary>
     public void Hold(string leagueKey)
     {
@@ -172,8 +172,8 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         }
     }
 
-    /// <summary>Waits (in real time, briefly) until a held fetch has been cancelled.</summary>
-    public Task HeldFetchCancelledAsync() => _heldFetchCancelled.Task.WaitAsync(TimeSpan.FromSeconds(10));
+    /// <summary>Waits (in real time, briefly) until a held fetch has been canceled.</summary>
+    public Task HeldFetchCanceledAsync() => _heldFetchCanceled.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
     /// <summary>How many times the league's scoreboard has been fetched.</summary>
     public int Fetches(string leagueKey)
@@ -219,7 +219,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
             if (_failing.Contains(leagueKey))
                 return Task.FromException<IReadOnlyList<ProviderGame>>(new HttpRequestException("feed is down"));
             if (_holding.Contains(leagueKey))
-                return HangUntilCancelledAsync(cancellationToken);
+                return HangUntilCanceledAsync(cancellationToken);
             if (_timingOut.Contains(leagueKey))
                 return Task.FromException<IReadOnlyList<ProviderGame>>(new TaskCanceledException(
                     "The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
@@ -241,7 +241,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     private IReadOnlyList<ProviderGame> Scoreboard(string leagueKey) =>
         _scoreboards.TryGetValue(leagueKey, out var games) ? games : [];
 
-    private async Task<IReadOnlyList<ProviderGame>> HangUntilCancelledAsync(CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ProviderGame>> HangUntilCanceledAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -250,7 +250,7 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
         }
         finally
         {
-            _heldFetchCancelled.TrySetResult();
+            _heldFetchCanceled.TrySetResult();
         }
     }
 }

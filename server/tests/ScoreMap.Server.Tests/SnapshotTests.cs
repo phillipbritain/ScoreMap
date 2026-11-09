@@ -179,8 +179,8 @@ public class SnapshotTests
         await server.Feed.WaitForFetchesAsync(TestGames.Nfl, 1);
 
         await client.DisposeAsync();
-        await server.Feed.HeldFetchCancelledAsync();
-        // The hub deals with the cancelled snapshot straight after; give an error the moment it would take to be logged.
+        await server.Feed.HeldFetchCanceledAsync();
+        // The hub deals with the canceled snapshot straight after; give an error the moment it would take to be logged.
         await Task.Delay(500);
 
         Assert.Empty(server.Logs.Errors);

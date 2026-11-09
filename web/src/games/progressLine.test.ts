@@ -47,7 +47,7 @@ describe('progressLine in short, for pins and score cards', () => {
     expect(progressLine({ ...live, status: 'Final', clock: null }, 'short')).toBe('Final')
   })
 
-  it('leaves the status to the pin colour when there is nothing more to say', () => {
+  it('leaves the status to the pin color when there is nothing more to say', () => {
     expect(progressLine({ ...live, status: 'Upcoming', clock: null }, 'short')).toBeNull()
     expect(progressLine({ ...live, clock: null }, 'short')).toBeNull()
   })

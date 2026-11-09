@@ -20,9 +20,13 @@ public sealed class VenuePhotos
     /// <summary>
     /// The saved-photos file's version, raised whenever the search changes which photo it prefers, so
     /// answers found the old way are dropped and each venue is searched for again: 1 preferred ESPN's
-    /// outside ("day") photo, 2 its inside ("interior") one.
+    /// outside ("day") photo, 2 its inside ("interior") one; 3 finds the same photos as 2 but spells a
+    /// credit's license the American way, so a file of version 2 is read as 3 rather than dropped.
     /// </summary>
-    private const int SavedFileVersion = 2;
+    private const int SavedFileVersion = 3;
+
+    /// <summary>The version before a credit's license was spelled the American way ("licence", "licenceUrl").</summary>
+    private const int BritishSpellingVersion = 2;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 
@@ -125,11 +129,17 @@ public sealed class VenuePhotos
     /// <summary>
     /// The saved answers, or none when there's no file or it's of an older <see cref="SavedFileVersion"/>
     /// (a file from before it was saved is a bare map of answers, read as having none), so every venue is searched for again.
+    /// A file of <see cref="BritishSpellingVersion"/> keeps its answers, its credits read from their old names.
     /// </summary>
     private Dictionary<string, VenuePhoto?> Load()
     {
         var saved = VenueCache.Read<SavedPhotos>(_savedPhotosPath, Json, _logger);
-        return saved is { Version: SavedFileVersion, Photos: { } photos } ? photos : new Dictionary<string, VenuePhoto?>();
+        if (saved is { Version: SavedFileVersion, Photos: { } photos })
+            return photos;
+        if (saved is { Version: BritishSpellingVersion }
+            && VenueCache.Read<BritishSpellingPhotos>(_savedPhotosPath, Json, _logger) is { Photos: { } british })
+            return british.ToDictionary(entry => entry.Key, entry => entry.Value?.ToPhoto());
+        return new Dictionary<string, VenuePhoto?>();
     }
 
     /// <summary>Saves through a temp file, so a crash mid-write never leaves a half-written file. Searches run one at a time, so saves do too.</summary>
@@ -138,4 +148,15 @@ public sealed class VenuePhotos
 
     /// <summary>The saved-photos file: its version (see <see cref="SavedFileVersion"/>), and the answers by venue.</summary>
     private sealed record SavedPhotos(int Version, Dictionary<string, VenuePhoto?>? Photos);
+
+    /// <summary>A saved-photos file of <see cref="BritishSpellingVersion"/>, its credits' license under its British names.</summary>
+    private sealed record BritishSpellingPhotos(Dictionary<string, BritishSpellingPhoto?>? Photos);
+
+    private sealed record BritishSpellingPhoto(string Url, BritishSpellingCredit? Credit)
+    {
+        public VenuePhoto ToPhoto() =>
+            new(Url, Credit is { } credit ? new PhotoCredit(credit.Author, credit.Licence, credit.LicenceUrl, credit.SourceUrl) : null);
+    }
+
+    private sealed record BritishSpellingCredit(string Author, string Licence, string? LicenceUrl, string SourceUrl);
 }

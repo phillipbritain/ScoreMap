@@ -1,7 +1,7 @@
 import { useEffect, useImperativeHandle, useRef, type Ref, type RefObject } from 'react'
 import type { Game } from '../games/game'
 import type { RecentChanges } from '../games/recentChanges'
-import type { PickedColours } from '../settings/gameColour'
+import type { PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
@@ -14,12 +14,12 @@ import { baseStyleUrl } from './globeStyle'
 interface GlobeProps {
   /** The look of the globe and everything on it. A change restyles the globe in place (see GlobeMap.setTheme). */
   theme: Theme
-  /** What decides which cities are labelled. A change relabels them in place (see GlobeMap.setCityLabelSettings). */
+  /** What decides which cities are labeled. A change relabels them in place (see GlobeMap.setCityLabelSettings). */
   cityLabels: CityLabelSettings
   /** How far out and in the globe zooms. A change applies at once (see GlobeMap.setZoomLimits). */
   zoomSettings: FittedZoom
-  /** The colours the viewer picked for games. A change recolours them in place (see GlobeMap.setColours). */
-  colours: PickedColours
+  /** The colors the viewer picked for games. A change recolors them in place (see GlobeMap.setColors). */
+  colors: PickedColors
   /** Whether hot games show flames. A change shows or clears them in place (see GlobeMap.setFlames). */
   flames: boolean
   /** What the globe is drawn as (see globeStyle). A change restyles it in place (see GlobeMap.setMapType). */
@@ -58,28 +58,28 @@ interface GlobeProps {
 
 /**
  * The app's hold on the globe (see GlobeMap): its camera, for the rail's zoom buttons and Home and the
- * behaviour tuner, and the score cards shown, for the welcome tour to point at.
+ * behavior tuner, and the score cards shown, for the welcome tour to point at.
  */
 export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
   jumpTo: (camera: Camera) => void
-  /** Centres a game picked from the Games list clear of the game panel (see GlobeMap.centreOn). */
-  centreOn: (gameId: string) => void
+  /** Centers a game picked from the Games list clear of the game panel (see GlobeMap.centerOn). */
+  centerOn: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
   shownScoreCards: () => ShownScoreCard[]
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colours, flames, mapType, showGameCityReach, games, changes, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, flames, mapType, showGameCityReach, games, changes, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames, mapType })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames, mapType }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colours, flames, mapType])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, flames, mapType])
 
   useEffect(() => {
     if (!container.current) return
@@ -90,7 +90,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, mapTyp
         theme: latest.current.theme,
         cityLabels: latest.current.cityLabels,
         zoomSettings: latest.current.zoomSettings,
-        colours: latest.current.colours,
+        colors: latest.current.colors,
         flames: latest.current.flames,
         mapType: latest.current.mapType,
         startCamera: latest.current.startCamera,
@@ -122,7 +122,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, mapTyp
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
       jumpTo: (camera) => globe.current?.jumpTo(camera),
-      centreOn: (gameId) => globe.current?.centreOn(gameId, panel.current?.getBoundingClientRect() ?? null),
+      centerOn: (gameId) => globe.current?.centerOn(gameId, panel.current?.getBoundingClientRect() ?? null),
       shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
     [panel],
@@ -131,7 +131,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colours, flames, mapTyp
   useEffect(() => globe.current?.setTheme(theme), [theme])
   useEffect(() => globe.current?.setCityLabelSettings(cityLabels), [cityLabels])
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
-  useEffect(() => globe.current?.setColours(colours), [colours])
+  useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setFlames(flames), [flames])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])

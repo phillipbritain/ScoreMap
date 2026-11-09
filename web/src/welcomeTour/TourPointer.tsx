@@ -33,7 +33,7 @@ interface Boxes {
 /**
  * A welcome tour step's spotlight and arrow: what the step is about is left undimmed (the dim behind
  * the panel clears while this shows, the spotlight dimming all but it), and a flowing arrow in the
- * theme's Live colour runs from the panel's edge to it. Neither catches a press; the lit target can
+ * theme's Live color runs from the panel's edge to it. Neither catches a press; the lit target can
  * be given its own button over it (Click a score card's card). Drawn in the tour's layer, which it fills.
  */
 export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: TourPointerProps) {

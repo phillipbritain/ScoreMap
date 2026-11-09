@@ -3,22 +3,33 @@ import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColour, sharedColorProperty, sharedColourKey } from './clusterColour'
-import { byCount, clusterFlameLayout, clusterFlameOffset } from './pinLayers'
+import { byCount, clusterFlameLayout, clusterFlameOffset, type PinSet } from './pinLayers'
 import { byStatus, groupStatus } from './statusLook'
 import type { TrailOnGlobe } from './trailLayer'
 
 /**
  * What the score cards' layout adds to the map (see cardLayout): the venue clusters moved cards'
- * trails end at, card clusters, and the cards' footprints; the trails themselves and their venue dots
+ * trails end at, card clusters, the small pins of lone games with no room for a card, and the cards' footprints; the trails themselves and their venue dots
  * are the trail layer's (see trailLayer). They're drawn by the map rather than the page, so the place
  * names can draw over them (ADR-0010): the trails and clusters are layers beneath the names. The
  * score cards themselves are page elements above the map.
  */
 export const cardLayoutSource = 'card-layout'
+
+const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
 export const cardClusterLayer = 'card-clusters'
 
 /** The first of the card layout's layers, which the trail layer goes beneath (see GlobeMap). */
 export const overTrails = 'venue-cluster-glows'
+
+/**
+ * The small pins of lone games with no room for a score card, nor another game near with none to
+ * share a card cluster with (see CardLayout.smallPins), among the card layout's features: drawn and
+ * selected as any small pin is (see pinLayers).
+ */
+export const cardlessPins: PinSet = { source: cardLayoutSource, prefix: 'cardless-', only: kindIs('smallPin') }
+export const cardlessSmallPinLayer = 'cardless-pins'
+export const cardlessSelectedPinLayer = 'cardless-pin-selected'
 
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
@@ -45,7 +56,7 @@ export interface CardLayoutDrawing {
 }
 
 /**
- * The venue clusters, card clusters and footprints of a card layout, as features for the map, and the
+ * The venue clusters, card clusters, small pins and footprints of a card layout, as features for the map, and the
  * moved cards' trails (see trailLayer). The layout is worked out on screen, so its positions are
  * turned back into places on the globe with `unproject`; venues are given as they are, and footprints
  * at them, offset on screen. Moved cards whose venue dots would overlap on screen share a venue
@@ -110,6 +121,12 @@ export function cardLayoutDrawing(
       ),
     )
   }
+  for (const gameId of layout.smallPins) {
+    const card = byGame.get(gameId)
+    if (!card) continue
+    const { status, color, flames, lngLat } = card
+    features.push(feature({ kind: 'smallPin', gameId, status, color, flames }, { type: 'Point', coordinates: lngLat }))
+  }
   return { source: { type: 'FeatureCollection', features }, trails }
 }
 
@@ -164,8 +181,6 @@ function venueMarks(cards: readonly CardOnGlobe[], sizes: VenueSizes): VenueMark
 function feature(properties: Feature['properties'], geometry: Feature['geometry']): Feature {
   return { type: 'Feature', properties, geometry }
 }
-
-const kindIs = (kind: string): ['==', ['get', string], string] => ['==', ['get', 'kind'], kind]
 
 /**
  * The venue clusters moved cards' trails end at, and card clusters, from the bottom up. Added beneath

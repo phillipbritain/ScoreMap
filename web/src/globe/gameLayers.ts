@@ -1,12 +1,12 @@
 import type { LayerSpecification } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
-import { cardFootprintLayerSpec, cardLayoutLayers } from './cardLayoutLayers'
+import { cardFootprintLayerSpec, cardLayoutLayers, cardlessPins } from './cardLayoutLayers'
 import { outerPins, pinClusterLayers, pinFootprintLayerSpec, selectedPinLayerSpec, smallPinLayers, zoomedOutPins } from './pinLayers'
 
 /** The layers the globe adds over its map style for the games, each from the bottom up. */
 export interface GameLayers {
   /**
-   * Pins, the selected pin's ring (zoomed out, and the outer games' at card zoom), and the card layout's trails and card clusters: beneath the place
+   * Pins, the selected pin's ring (zoomed out, the outer games' at card zoom, and lone games' with no room for a card), and the card layout's trails and card clusters: beneath the place
    * names, so a pin never hides a city's name and names draw over trails (ADR-0010).
    */
   belowNames: LayerSpecification[]
@@ -29,7 +29,9 @@ export function gameLayers(theme: Theme, selectedGameId: string | null, cardZoom
         selectedPinLayerSpec(theme, selectedGameId, set),
       ]),
       ...cardLayoutLayers(theme),
+      ...smallPinLayers(theme, cardlessPins),
+      selectedPinLayerSpec(theme, selectedGameId, cardlessPins),
     ],
-    onTop: [cardFootprintLayerSpec, pinFootprintLayerSpec(zoomedOut), pinFootprintLayerSpec(outer)],
+    onTop: [cardFootprintLayerSpec, ...[zoomedOut, outer, cardlessPins].map(pinFootprintLayerSpec)],
   }
 }

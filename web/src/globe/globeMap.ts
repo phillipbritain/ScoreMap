@@ -30,6 +30,8 @@ import { pinFeatures } from './pinFeatures'
 import {
   cardClusterLayer,
   cardFootprint,
+  cardlessSelectedPinLayer,
+  cardlessSmallPinLayer,
   cardLayoutSource,
   cardLayoutSourceSpec,
   overTrails,
@@ -252,7 +254,8 @@ export class GlobeMap {
       map.on('click', outerPinClusterLayer, this.centreOnOuterPinCluster)
       map.on('click', outerSmallPinLayer, this.selectPin)
       map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
-      for (const layer of [pinClusterLayer, smallPinLayer, outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer]) {
+      map.on('click', cardlessSmallPinLayer, this.selectPin)
+      for (const layer of [pinClusterLayer, smallPinLayer, outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer, cardlessSmallPinLayer]) {
         map.on('mouseenter', layer, this.pointAt)
         map.on('mouseleave', layer, this.stopPointing)
       }
@@ -317,7 +320,7 @@ export class GlobeMap {
     this.unsettle()
     this.selectedGameId = gameId
     this.cards.setSelected(gameId)
-    for (const layer of [selectedPinLayer, outerSelectedPinLayer]) {
+    for (const layer of [selectedPinLayer, outerSelectedPinLayer, cardlessSelectedPinLayer]) {
       if (this.map.getLayer(layer)) this.map.setFilter(layer, selectedPin(gameId))
     }
     const game = gameId === null ? undefined : this.shown.get(gameId)
@@ -348,7 +351,7 @@ export class GlobeMap {
 
   /**
    * Eases to the game at this zoom, by default just past the card zoom or further in if it's there already, so the game
-   * has a score card. Where its card is still in a card cluster on arriving, it zooms a level further in
+   * has a score card. Where it still has no room for its card on arriving (in a card cluster or alone as its small pin), it zooms a level further in
    * and again, as a card cluster does (see zoomToCardCluster), until the card shows or the globe can
    * zoom no further in. A move by the viewer along the way, or another game picked, stops it.
    */
@@ -362,8 +365,7 @@ export class GlobeMap {
       const maxZoom = this.map.getMaxZoom()
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01
       if (this.destroyed || !arrived || zoom >= maxZoom || this.selectedGameId !== game.id) return
-      const inCardCluster = this.cards.cardClusterGames().some((gameIds) => gameIds.includes(game.id))
-      if (inCardCluster) this.centre(game, panel, Math.min(maxZoom, zoom + 1))
+      if (this.cards.hasNoRoom(game.id)) this.centre(game, panel, Math.min(maxZoom, zoom + 1))
     })
   }
 

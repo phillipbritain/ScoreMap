@@ -96,8 +96,10 @@ export class ScoreCardMarkers {
   /** The zoom score cards show from now (see FittedZoom). */
   private readonly cardZoom: () => number
   private readonly onSelect: (gameId: string) => void
-  /** Games with no room for a card, as last laid out. */
+  /** Games with no room for a card, as last laid out, in card clusters. */
   private cardClusters: PlacedCardCluster[] = []
+  /** Games with no room for a card, as last laid out, alone and so shown as their small pins (see CardLayout.smallPins). */
+  private smallPins: string[] = []
   /**
    * The layout last given to the map (see drawLayout), so it's given again only when it changes: its
    * features with the points worked out on screen left blank, and where on the globe those points were put.
@@ -433,6 +435,7 @@ export class ScoreCardMarkers {
     }
     const lngLats = new Map(cards.map((card) => [card.gameId, card.lngLat]))
     this.cardClusters = layout.cardClusters.map(({ gameIds }) => ({ gameIds, lngLat: lngLats.get(gameIds[0])! }))
+    this.smallPins = layout.smallPins
     this.drawLayout(cards, layout, scene.moving)
     return moved
   }
@@ -489,20 +492,30 @@ export class ScoreCardMarkers {
     return this.cardClusters.map((cardCluster) => cardCluster.gameIds)
   }
 
+  /** Whether this game has no room for its card now: it's in a card cluster, or shows as its small pin. */
+  hasNoRoom(gameId: string): boolean {
+    return this.smallPins.includes(gameId) || this.cardClusters.some(({ gameIds }) => gameIds.includes(gameId))
+  }
+
   /** The games in the card cluster on screen now that's drawn at this game's venue, the first in it. */
   cardClusterOf(firstGameId: string): string[] | undefined {
     return this.cardClusters.find(({ gameIds }) => gameIds[0] === firstGameId)?.gameIds
   }
 
   /**
-   * Plays an animation on a game's card, or over the count it's in when there's no room for its
-   * card. False when the game has neither on screen.
+   * Plays an animation on a game's card, or when there's no room for its card, over the count it's
+   * in or its small pin. False when the game has none of them on screen.
    */
   animate(gameId: string, animation: PinAnimation): boolean {
     const cardCluster = this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
     const game = this.games.get(gameId)
     if (cardCluster && game) {
       pulse(this.map, this.colourOf(game), cardCluster.lngLat, animation, 'cluster')
+      return true
+    }
+    const placed = this.placed.get(gameId)
+    if (this.smallPins.includes(gameId) && game && placed) {
+      pulse(this.map, this.colourOf(game), placed.marker.getLngLat().toArray(), animation, 'pin')
       return true
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
@@ -542,6 +555,7 @@ export class ScoreCardMarkers {
       marker.remove()
     }
     this.cardClusters = []
+    this.smallPins = []
     this.placed.clear()
     this.animating.clear()
   }

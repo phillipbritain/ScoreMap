@@ -69,7 +69,7 @@ A cluster of small pins close enough that they, or the pin clusters they'd be in
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
-While zoomed in, a cluster of games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are.
+While zoomed in, a cluster of two or more games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are. A game with no room for its card and no such game near to share one with shows as its small pin instead.
 _Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Venue cluster**:

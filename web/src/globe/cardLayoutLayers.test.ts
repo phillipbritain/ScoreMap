@@ -36,6 +36,7 @@ const layout: CardLayout = {
     ['d', clustered],
   ]),
   cardClusters: [{ gameIds: ['c', 'd'], status: 'Final', x: 300, y: 400 }],
+  smallPins: [],
 }
 
 // A venue dot reaches 6 pixels from its venue, ring and all; a venue cluster of a few games 12, of more 15.
@@ -79,6 +80,19 @@ describe('cardLayoutDrawing', () => {
     ])
   })
 
+  it('draws a lone game with no room for its card as its small pin at its venue, named for its game, and no card cluster', () => {
+    const lone = { ...c, flames: true }
+    const alone: CardLayout = { cards: new Map([['c', clustered]]), cardClusters: [], smallPins: ['c'] }
+    const drawn = cardLayoutDrawing([lone], alone, unproject, venueSizes).source.features
+    expect(drawn).toEqual([
+      {
+        type: 'Feature',
+        properties: { kind: 'smallPin', gameId: 'c', status: 'Live', color: '#cccccc', flames: true },
+        geometry: { type: 'Point', coordinates: [30, -40.5] },
+      } satisfies Feature<Point>,
+    ])
+  })
+
   it('shows flames on a card cluster holding a game showing flames, but never on a venue cluster', () => {
     const flaming = [{ ...a, flames: true }, b, { ...c, status: 'Final' as const }, { ...d, flames: true }]
 
@@ -104,6 +118,7 @@ describe('cardLayoutDrawing', () => {
     const movedAway = (...cards: CardOnGlobe[]): CardLayout => ({
       cards: new Map(cards.map(({ gameId }) => [gameId, { ...moved, trail }])),
       cardClusters: [],
+      smallPins: [],
     })
     const drawn = (kind: string, ...cards: CardOnGlobe[]) =>
       cardLayoutDrawing(cards, movedAway(...cards), unproject, venueSizes).source.features.filter(

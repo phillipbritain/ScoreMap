@@ -163,6 +163,7 @@ describe("a cluster's colour", () => {
     const layout: CardLayout = {
       cards: new Map(cards.map(({ gameId }) => [gameId, { offset: { dx: 0, dy: -6 }, inCardCluster: true, moved: false, trail: null }])),
       cardClusters: [{ gameIds: cards.map(({ gameId }) => gameId), status: 'Live', x: 0, y: 0 }],
+      smallPins: [],
     }
     const { features } = cardLayoutDrawing(cards, layout, (x, y) => [x, y], { dot: 6, cluster: () => 12 }).source
     return features.find((feature) => feature.properties?.kind === 'cardCluster')!.properties!

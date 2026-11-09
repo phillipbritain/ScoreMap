@@ -277,6 +277,21 @@ describe('layOutCards', () => {
       expect([cardClusters[0].x, cardClusters[0].y]).toEqual([first.venueX, first.venueY])
     })
 
+    it("never makes a card cluster of one game: a lone game with no room shows as its small pin", () => {
+      // Every spot on screen is under a name, so no card has room.
+      const everywhere: ScreenBox = { x: mx, y: my, width: 4000, height: 4000 }
+      const apart = [card('a', mx, my), card('b', mx + 300, my)]
+      const alone = lay(apart, [everywhere])
+      expect(alone.cardClusters).toEqual([])
+      expect(alone.smallPins).toEqual(['a', 'b'])
+      for (const { gameId } of apart) expect(alone.cards.get(gameId)).toMatchObject({ inCardCluster: true, trail: null })
+
+      // Two near each other share a card cluster instead, and neither shows as a small pin.
+      const near = lay([card('a', mx, my), card('b', mx + 10, my), card('c', mx + 300, my)], [everywhere])
+      expect(near.cardClusters.map(({ gameIds }) => gameIds)).toEqual([['a', 'b']])
+      expect(near.smallPins).toEqual(['c'])
+    })
+
     it('gives Live games room first, so the games most worth following keep their cards', () => {
       const live = card('z', 210, 150, 'Live')
       expect(shiftsOf(layIn([...games('g', 20, 200, 150, 'Final'), live])).get('z')).toEqual({ dx: 0, dy: 0 })

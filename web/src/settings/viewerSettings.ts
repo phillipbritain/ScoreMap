@@ -22,15 +22,38 @@ export interface ViewerSettings {
   leagueColours: Readonly<Record<string, string>>
   /** "Flames on hot games" in Display Settings, on unless switched off: hot games (see GLOSSARY.md) show flames on their score cards, small pins and clusters. */
   hotGameFlames: boolean
+  /** What the globe is drawn as (see MapType): the plain map unless the viewer switched to satellite. */
+  mapType: MapType
 }
 
-/** Every league on, Top Events off, no colours picked and flames on hot games. */
+/**
+ * The globe's map types: the plain map of borders and place names in the theme's colours, or
+ * satellite imagery under the same borders and names (ADR-0022).
+ */
+export const mapTypes = ['plain', 'satellite'] as const
+
+export type MapType = (typeof mapTypes)[number]
+
+export function isMapType(value: unknown): value is MapType {
+  return mapTypes.includes(value as MapType)
+}
+
+/** Every league on, Top Events off, no colours picked, flames on hot games and the plain map. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
   sportColours: {},
   leagueColours: {},
   hotGameFlames: true,
+  mapType: 'plain',
+}
+
+/** Each map type's name, as Map Type on the rail lists it. */
+export const mapTypeNames: Record<MapType, string> = { plain: 'Plain', satellite: 'Satellite' }
+
+/** The settings with the globe drawn as this map type, picked in Map Type on the rail. */
+export function withMapType(settings: ViewerSettings, mapType: MapType): ViewerSettings {
+  return { ...settings, mapType }
 }
 
 export function isLeagueOn(settings: ViewerSettings, league: string): boolean {

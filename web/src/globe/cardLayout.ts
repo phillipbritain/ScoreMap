@@ -48,10 +48,7 @@ export interface Segment {
 export interface CardPlacement {
   /** Where the card's bottom centre sits, from its venue: the venue gap above it, or moved aside. */
   offset: ScreenOffset
-  /**
-   * True when there's no room for the card: its game is counted in a card cluster instead, or, with
-   * no other game near to share one, shows as its small pin (see CardLayout.smallPins).
-   */
+  /** True when there's no room for the card and its game is counted in a card cluster instead. */
   inCardCluster: boolean
   /** Whether the card was moved aside from above its venue to make room. */
   moved: boolean
@@ -61,7 +58,10 @@ export interface CardPlacement {
   lookedAgo?: number
 }
 
-/** Two or more games with no room for a card, shown as one count at the first one's venue. */
+/**
+ * Games with no room for a card, shown as one count at the first one's venue, or gathered with the
+ * clusters and venue dots it would overlap (see cardLayoutLayers' cardLayoutDrawing).
+ */
 export interface CardCluster {
   gameIds: string[]
   /** The status the count shows as (see groupStatus). */
@@ -74,11 +74,6 @@ export interface CardLayout {
   /** Where every card goes, by game. */
   cards: Map<string, CardPlacement>
   cardClusters: CardCluster[]
-  /**
-   * Games with no room for a card and no other game near with none, so no card cluster to join: a
-   * cluster of one would be no cluster at all, so each shows as its small pin at its venue.
-   */
-  smallPins: string[]
 }
 
 /**
@@ -87,7 +82,7 @@ export interface CardLayout {
  * screen and as near its venue as it can be but never nearer than the gap, its trail following it (see
  * arrange). Cards get room by status,
  * most prominent first, whichever is selected, so selecting a card never moves it; a card with no
- * room within reach joins a card cluster, or shows as its small pin when it would be alone in one. Cards whose venues are well off screen stay where they'd
+ * room within reach joins a card cluster. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
  * card stays where it was while that still has room, moving only back over its venue, a card the
  * globe turns off screen pushes the cards in its way along rather than leave them, and a card looking
@@ -147,10 +142,7 @@ export function layOutCards(
   }
   return {
     cards: placements,
-    cardClusters: cardClusters
-      .filter(({ gameIds }) => gameIds.length > 1)
-      .map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
-    smallPins: cardClusters.flatMap(({ gameIds }) => (gameIds.length === 1 ? gameIds : [])),
+    cardClusters: cardClusters.map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
   }
 }
 

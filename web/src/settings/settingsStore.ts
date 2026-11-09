@@ -1,7 +1,7 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
 import { isTourProgress, type TourProgress } from '../welcomeTour/welcomeTour'
-import { firstVisitSettings, type ViewerSettings } from './viewerSettings'
+import { firstVisitSettings, isMapType, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
 export type SettingsStorage = Pick<Storage, 'getItem' | 'setItem'>
@@ -130,7 +130,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, sportColours, leagueColours, hotGameFlames } = fields
+  const { hiddenLeagues, topEventsOnly, sportColours, leagueColours, hotGameFlames, mapType } = fields
   return {
     hiddenLeagues: Array.isArray(hiddenLeagues)
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
@@ -139,6 +139,7 @@ function fromSaved(saved: unknown): ViewerSettings {
     sportColours: coloursFromSaved(sportColours),
     leagueColours: coloursFromSaved(leagueColours),
     hotGameFlames: typeof hotGameFlames === 'boolean' ? hotGameFlames : firstVisitSettings.hotGameFlames,
+    mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
   }
 }
 

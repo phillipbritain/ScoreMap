@@ -100,7 +100,7 @@ const cityNameLayerIds = { big: 'city_names', game: 'city_names_game' } as const
 
 /**
  * The layers naming the cities in the city name source (see addPlaceNames), from the card zoom (a
- * laptop's in the style, moved to the view's by addPlaceNames), with the score cards, all in the
+ * laptop's in the style, switched by addPlaceNames as score cards show: see cityNamesFrom), with the score cards, all in the
  * theme's city look, national capitals included, with no dot: just the name, around where the city is. The games'
  * cities are always written below where they are, whatever else is there, and cards are laid out around them. Big cities
  * with no game near are written where they have room, most populous first, giving way to cards and
@@ -275,7 +275,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     },
     nameBoxes() {
       const zoom = map.getZoom()
-      if (zoom < from) return []
+      // As MapLibre does, a minimum of 0 is none: its zoom goes below 0 near the poles.
+      if (from > 0 && zoom < from) return []
       const look = cityNameLook(zoom, theme())
       return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))

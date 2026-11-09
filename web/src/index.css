@@ -1526,8 +1526,8 @@ body {
   cursor: pointer;
 }
 
-/* "Satellite map" and "Flames on hot games", above the sports: each its name, then its switch. */
-.display-switch {
+/* "Flames on hot games", above the sports: its name, then its switch. */
+.colours-flames {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2442,7 +2442,7 @@ body {
   width: 100%;
 }
 
-/* A switch, its knob at the right when on: the welcome tour's, and "Satellite map" and "Flames on hot games" in Display Settings. */
+/* A switch, its knob at the right when on: the welcome tour's, and "Flames on hot games" in Display Settings. */
 .switch {
   position: relative;
   flex: none;

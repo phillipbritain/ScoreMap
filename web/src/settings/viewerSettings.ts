@@ -51,7 +51,7 @@ export const firstVisitSettings: ViewerSettings = {
 /** Each map type's name, as Map Type on the rail lists it. */
 export const mapTypeNames: Record<MapType, string> = { plain: 'Plain', satellite: 'Satellite' }
 
-/** The settings with the globe drawn as this map type: from Map Type on the rail, or "Satellite map" in Display Settings. */
+/** The settings with the globe drawn as this map type, picked in Map Type on the rail. */
 export function withMapType(settings: ViewerSettings, mapType: MapType): ViewerSettings {
   return { ...settings, mapType }
 }

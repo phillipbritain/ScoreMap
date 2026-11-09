@@ -11,7 +11,7 @@ We chose EOX's 2024 map. ScoreMap is non-commercial (no ads, no charges), which 
 
 ## Consequences
 
-- The satellite map is a viewer setting (`mapType`, saved with the rest, the plain map unless switched), picked in Map Type on the rail (Plain or Satellite) or with the "Satellite map" switch in Display Settings, not a theme: the theme still colours the borders, place names, halo and everything over the globe on either map.
+- The satellite map is a viewer setting (`mapType`, saved with the rest, the plain map unless switched), picked in Map Type on the rail (Plain or Satellite), not a theme: the theme still colours the borders, place names, halo and everything over the globe on either map.
 - On the satellite map the imagery takes the place of the plain map's surface; the borders, state lines and place names stay, and the coastlines go, as the imagery shows the coast. The halo and starry background stay; MapLibre's own atmosphere and any night side stay off, as on the plain map. Pins, score cards, trails and clusters look as on the plain map.
 - The satellite map zooms further in than the plain map (`satelliteMaxZoom` in `web/src/globe/zoomSettings.json`, 13 to the plain map's 11, set by eye), as its imagery has more to see close in; past about 14 its 10 m pixels only grow. Switching back to the plain map zoomed in past its limit eases out to it.
 - Both map types' layers are always in the globe's style (`globeStyle`), the other type's hidden, so switching is a restyle in place, as a theme change is, and the plain map fetches no imagery. A newer year's mosaic is a change of the year in the tile address and the credit.

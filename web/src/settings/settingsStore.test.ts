@@ -25,6 +25,7 @@ describe('settingsStore', () => {
       sportColours: { Football: '#123456', Soccer: '#abcdef' },
       leagueColours: { NFL: '#fedcba' },
       hotGameFlames: false,
+      mapType: 'satellite' as const,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -90,6 +91,20 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load().hotGameFlames).toBe(true)
   })
 
+  it('shows the plain map to a viewer whose settings were saved before there was a satellite map', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
+
+    expect(settingsStore(() => storage).load().mapType).toBe('plain')
+  })
+
+  it.each([['terrain'], [true], [null]])('shows the plain map for a saved map type it doesn\'t know (%j)', (mapType) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], mapType }))
+
+    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+  })
+
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], topEventsOnly: 'yes', hotGameFlames: 0 }))
@@ -100,6 +115,7 @@ describe('settingsStore', () => {
       sportColours: {},
       leagueColours: {},
       hotGameFlames: true,
+      mapType: 'plain',
     })
   })
 
@@ -113,6 +129,7 @@ describe('settingsStore', () => {
       sportColours: {},
       leagueColours: {},
       hotGameFlames: true,
+      mapType: 'plain',
     })
   })
 
@@ -165,6 +182,7 @@ describe('settingsStore', () => {
         sportColours: {},
         leagueColours: {},
         hotGameFlames: true,
+        mapType: 'plain',
       })
     },
   )

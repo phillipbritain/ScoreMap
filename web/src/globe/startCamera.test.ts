@@ -85,12 +85,12 @@ describe('homeCamera', () => {
   })
 
   it('opens at the start zoom, made up for the latitude as the furthest out is', () => {
-    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 2, startZoom: 4, maxZoom: 13 })
+    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 2, startZoom: 4, maxZoom: 13, satelliteMaxZoom: 15 })
     expect(home.zoom).toBe(furthestOutZoom(home.latitude, 4))
   })
 
   it('never starts further out than the furthest out', () => {
-    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 3, startZoom: 1, maxZoom: 13 })
+    const home = homeCamera({ timeZone: 'America/New_York', locale: 'en-US' }, { minZoom: 3, startZoom: 1, maxZoom: 13, satelliteMaxZoom: 15 })
     expect(home.zoom).toBe(furthestOutZoom(home.latitude, 3))
   })
 

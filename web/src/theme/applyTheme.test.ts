@@ -179,8 +179,8 @@ describe('applyTheme', () => {
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's frost, ten colours and shadows and six sizes.
-      rail: 1 + 10 + 6,
+      // The rail's frost, ten colours and shadows and seven sizes.
+      rail: 1 + 10 + 7,
       // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's frost and surface.

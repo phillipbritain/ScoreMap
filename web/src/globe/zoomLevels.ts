@@ -36,7 +36,8 @@ export interface ZoomSettings {
   /**
    * The furthest out: just short of cardZoom, so small pins and their clusters still show.
    * MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the globe
-   * stays the same size on screen (see furthestOutZoom).
+   * stays the same size on screen (see furthestOutZoom). It's for a view the size of a laptop's
+   * browser window: a smaller one, such as a phone's, can zoom further out (see fittedZoomSettings).
    */
   minZoom: number
   /**
@@ -52,6 +53,26 @@ export interface ZoomSettings {
 export const zoomSettings: ZoomSettings = limits
 
 export const { minZoom, maxZoom } = zoomSettings
+
+/**
+ * The shorter side of the view, in pixels, that minZoom is set for: a laptop's browser window, where
+ * the globe zoomed fully out is a little taller than the view.
+ */
+export const minZoomView = 800
+
+/**
+ * The zoom settings for a view this size. A zoom is a scale in pixels, so the globe at minZoom is
+ * the same number of pixels across in any view, and would fill a phone far more than a laptop. A view
+ * whose shorter side is under minZoomView zooms out further, in proportion, so the globe zoomed fully
+ * out fills it as it fills a laptop's. A larger view keeps minZoom, so it still shows small pins
+ * (see cardZoom). The start zoom stays as it is: it's never further out than minZoom anyway.
+ */
+export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): ZoomSettings {
+  const shorter = Math.min(view.width, view.height)
+  // A view with no size yet (a hidden page) has nothing to fit.
+  if (!(shorter > 0) || shorter >= minZoomView) return settings
+  return { ...settings, minZoom: settings.minZoom + Math.log2(shorter / minZoomView) }
+}
 
 /** The zoom MapLibre allows furthest out with the view centred at this latitude, given the furthest out at the equator. */
 export function furthestOutZoom(latitude: number, furthestOut = minZoom): number {

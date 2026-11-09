@@ -1,4 +1,4 @@
-import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { Map as MapLibreMap, StyleImageInterface } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 
 /**
@@ -9,76 +9,106 @@ export function showsFlames(on: boolean, game: { hot: boolean }): boolean {
   return on && game.hot
 }
 
-/** How wide a flame is, as a share of how tall. */
-const flameWidth = 0.7
+type FireOutline = Theme['components']['Pin']['flame']
+type FireColors = Pick<Theme['components']['ScoreCard']['flames'], 'tips' | 'middle' | 'core'>
 
-/** A flame's colors: its tips, its middle and its white-hot core (the theme's score card fire's). */
-interface FireColors {
-  tips: string
-  middle: string
-  core: string
-}
+// A gentle crawl, selected as prototype option 14: 96 frames, 80 ms apart, one turn in 7.68 s.
+const frameMs = 80
+const frames = 96
 
 /**
- * The map's image of a flame `size` pixels tall in the theme's fire colors, as a score card's fire is:
- * its id, which the map draws the first time a layer asks for it (see drawFlamesOnDemand). The id
- * carries the colors, so a change of theme asks for a new image.
+ * Fire wrapping a pin or cluster reaching this far, including its outline. The image id carries its
+ * geometry and colors, so changing the theme asks for a new image. Animation updates its pixels,
+ * keeping a single image per size and color rather than filling the atlas with animation frames.
  */
-export function flameImage(theme: Theme, size: number): string {
+export function flameImage(theme: Theme, { size, width, opacity, glowOpacity }: FireOutline, reach: number): string {
   const { tips, middle, core } = theme.components.ScoreCard.flames
-  return ['flame', size, tips, middle, core].join('|')
+  return ['flame', reach, size, width, opacity, glowOpacity, tips, middle, core].join('|')
 }
 
-/**
- * Draws each flame image a layer asks for (see flameImage) that the map hasn't got yet, as the map's
- * resolver of missing images: the only images the globe draws as they're wanted.
- */
+/** Draws fire images as the map needs them; used images schedule their next animation frame. */
 export function drawFlamesOnDemand(map: MapLibreMap): void {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const repaint = () => map.triggerRepaint()
+  reducedMotion.addEventListener('change', repaint)
+  map.on('remove', () => reducedMotion.removeEventListener('change', repaint))
   map.setMissingStyleImageResolver((id) => {
-    const [kind, size, tips, middle, core] = id.split('|')
+    const [kind, reach, size, width, opacity, glowOpacity, tips, middle, core] = id.split('|')
     if (kind !== 'flame' || map.hasImage(id)) return
     const pixelRatio = window.devicePixelRatio || 1
-    const image = drawFlame(Number(size), { tips, middle, core }, pixelRatio)
+    const image = fireImage(Number(reach), {
+      size: Number(size), width: Number(width), opacity: Number(opacity), glowOpacity: Number(glowOpacity),
+    }, { tips, middle, core }, pixelRatio, reducedMotion, repaint)
     if (image) map.addImage(id, image, { pixelRatio })
   })
 }
 
-/**
- * A flame `size` pixels tall, in three bands as a score card's tongue of fire is (its tips, middle and
- * core, one inside another; see index.css): drawn at the screen's pixel ratio, so it's sharp. Null if
- * the browser can't draw it.
- */
-function drawFlame(size: number, { tips, middle, core }: FireColors, pixelRatio: number): ImageData | null {
-  const height = Math.max(1, Math.round(size * pixelRatio))
-  const width = Math.max(1, Math.round(height * flameWidth))
+/** A thin, slowly turning fire outline and a steady glow, centered behind the pin or cluster. */
+function fireImage(reach: number, outline: FireOutline, { tips, middle, core }: FireColors, pixelRatio: number, reducedMotion: MediaQueryList, repaint: () => void): StyleImageInterface | null {
+  const half = Math.ceil(reach + Math.max(outline.size * 2.5, outline.width) + 2)
+  const side = Math.max(1, Math.round(2 * half * pixelRatio))
   const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
+  canvas.width = side
+  canvas.height = side
   const context = canvas.getContext('2d')
   if (!context) return null
-  // A flame in a box 100 across and 100 down: a main tip, a smaller lick to its left, a round base. The
-  // score cards' tongues are the same shape (see index.css).
-  const tongue = new Path2D('M54 0C60 22 80 30 87 50C95 72 84 93 62 99C56 100 44 100 38 99C16 93 6 73 13 53C17 43 25 37 29 25C34 37 32 47 38 53C39 33 47 17 54 0Z')
-  context.scale(width / 100, height / 100)
-  // Each band a smaller flame at the base of the one before, filled bottom to top.
-  const band = (left: number, top: number, scaleX: number, scaleY: number, stops: [number, string][]) => {
+
+  const draw = (frame: number) => {
+    context.clearRect(0, 0, side, side)
     context.save()
-    context.translate(left, top)
-    context.scale(scaleX, scaleY)
-    const fill = context.createLinearGradient(0, 100, 0, 0)
-    for (const [at, color] of stops) fill.addColorStop(at, color)
-    context.fillStyle = fill
-    context.fill(tongue)
+    context.scale(pixelRatio, pixelRatio)
+    context.translate(half, half)
+    const radius = reach + outline.size
+    if (outline.size > 0) {
+      const glow = context.createRadialGradient(0, 0, reach * 0.6, 0, 0, radius)
+      glow.addColorStop(0, middle)
+      glow.addColorStop(1, 'transparent')
+      context.globalAlpha = outline.glowOpacity
+      context.fillStyle = glow
+      context.beginPath()
+      context.arc(0, 0, radius, 0, 2 * Math.PI)
+      context.fill()
+    }
+    if (outline.width > 0) {
+      const ring = context.createConicGradient(frame / frames * 2 * Math.PI, 0, 0)
+      ring.addColorStop(0, core)
+      ring.addColorStop(0.2, tips)
+      ring.addColorStop(0.55, middle)
+      ring.addColorStop(0.7, tips)
+      ring.addColorStop(1, core)
+      context.strokeStyle = ring
+      context.globalAlpha = outline.opacity
+      context.lineWidth = outline.width
+      context.beginPath()
+      context.arc(0, 0, reach, 0, 2 * Math.PI)
+      context.stroke()
+    }
     context.restore()
+    return context.getImageData(0, 0, side, side).data
   }
-  band(0, 0, 1, 1, [
-    [0.3, middle],
-    [0.75, tips],
-  ])
-  band(14, 25, 0.72, 0.75, [
-    [0.15, core],
-    [0.7, middle],
-  ])
-  band(30, 58, 0.4, 0.42, [[0, core]])
-  return context.getImageData(0, 0, width, height)
+
+  let previous = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const image: StyleImageInterface = {
+    width: side,
+    height: side,
+    data: draw(0),
+    render() {
+      // Only images actually used in the current view reach render. Once hidden, an image's last
+      // scheduled repaint runs and nothing schedules another. Reduced motion needs no timer.
+      if (!reducedMotion.matches && timer === undefined) {
+        timer = setTimeout(() => { timer = undefined; repaint() }, frameMs)
+      }
+      const frame = reducedMotion.matches ? 0 : Math.floor(performance.now() / frameMs) % frames
+      if (frame === previous) return false
+      previous = frame
+      image.data = draw(frame)
+      return true
+    },
+    onRemove() {
+      clearTimeout(timer)
+      timer = undefined
+    },
+  }
+  return image
 }

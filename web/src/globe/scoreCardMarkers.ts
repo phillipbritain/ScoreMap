@@ -594,15 +594,11 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   return rows
 }
 
-/** How many tongues of flame rise from a hot game's card. */
-const flameTongues = 7
-
-/** The flames rising from a score card's top edge: tongues the CSS shapes, sizes and flickers. */
+/** The fire outline around a hot game's card, shaped and animated by the CSS. */
 function flames(): HTMLElement {
-  const row = span('score-card__flames', '')
-  row.setAttribute('aria-hidden', 'true')
-  row.append(...Array.from({ length: flameTongues }, () => span('score-card__flame', '')))
-  return row
+  const outline = span('score-card__flames', '')
+  outline.setAttribute('aria-hidden', 'true')
+  return outline
 }
 
 function logo({ logoUrl }: ScoreCardRow): HTMLImageElement {

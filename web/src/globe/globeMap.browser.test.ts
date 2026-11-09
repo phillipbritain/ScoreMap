@@ -1,7 +1,7 @@
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { userEvent } from 'vitest/browser'
+import { commands, userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { GameChangeKind } from '../games/gameChange'
@@ -14,6 +14,7 @@ import type { Camera } from './camera'
 import { cardJump } from './cardJump'
 import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
+import { flameImage } from './flames'
 import { panelGap, smallPinReach } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
@@ -1314,7 +1315,7 @@ describe('glow', () => {
 })
 
 describe('flames', () => {
-  /** What the map has drawn in a flame layer near a game's venue: a flame stands above its pin or cluster. */
+  /** What the map has drawn in a flame layer near a game's venue: fire surrounds its pin or cluster. */
   function flamesNear(map: MapLibreMap, layer: string, { venue }: PlacedGame) {
     if (!map.getLayer(layer)) return []
     const { x, y } = map.project([venue.longitude, venue.latitude])
@@ -1346,6 +1347,35 @@ describe('flames', () => {
     globe.setFlames(false)
     await vi.waitFor(() => expect(flamesNear(map, 'pin-flames', alone)).toEqual([]), { timeout: 10_000 })
     expect(flamesNear(map, 'pin-cluster-flames', clustered[0])).toEqual([])
+  })
+
+  it('animates a used fire image in place, and stops and resumes with reduce motion', async () => {
+    await commands.reduceMotion(false)
+    try {
+      const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+      const alone = hot('A', {})
+      const id = flameImage(builtInTheme, builtInTheme.components.Pin.flame, 5)
+      globe.setFlames(true)
+      globe.show([alone])
+      await vi.waitFor(() => expect(map.hasImage(id)).toBe(true), { timeout: 10_000 })
+      const pixels = () => Array.from(map.getImage(id).data.data)
+      const first = pixels()
+      await vi.waitFor(() => expect(pixels()).not.toEqual(first))
+      const image = map.getImage(id).userImage
+
+      await commands.reduceMotion(true)
+      // Let the media-change repaint settle before checking that the pixels stay still.
+      await new Promise((resolve) => setTimeout(resolve, 160))
+      const still = pixels()
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      expect(pixels()).toEqual(still)
+
+      await commands.reduceMotion(false)
+      await vi.waitFor(() => expect(pixels()).not.toEqual(still))
+      expect(map.getImage(id).userImage).toBe(image)
+    } finally {
+      await commands.reduceMotion(false)
+    }
   })
 
   it('shows on a hot game’s score card, only while they are on', async () => {

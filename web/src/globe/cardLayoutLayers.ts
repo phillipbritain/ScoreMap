@@ -6,7 +6,7 @@ import { clusterColor, sharedColorProperty, sharedColorKey } from './clusterColo
 import {
   byCount,
   clusterFlameLayout,
-  clusterFlameOffset,
+  clusterFlameImage,
   clusterFootprintAcross,
   clusterFootprintLayout,
   clusterFootprintSizes,
@@ -238,8 +238,8 @@ export function cardLayoutLayers(
   CircleLayerSpecification,
   SymbolLayerSpecification,
   CircleLayerSpecification,
-  CircleLayerSpecification,
   SymbolLayerSpecification,
+  CircleLayerSpecification,
   SymbolLayerSpecification,
 ] {
   const { Cluster: cluster } = theme.components
@@ -298,6 +298,14 @@ export function cardLayoutLayers(
       },
     },
     {
+      id: 'card-cluster-flames',
+      type: 'symbol',
+      source: cardLayoutSource,
+      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'flames'], true]],
+      layout: clusterFlameLayout(clusterFlameImage(theme, cluster.radius.some)),
+      paint: { 'icon-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+    },
+    {
       id: cardClusterLayer,
       type: 'circle',
       source: cardLayoutSource,
@@ -324,14 +332,6 @@ export function cardLayoutLayers(
         'text-allow-overlap': true,
       },
       paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
-    },
-    {
-      id: 'card-cluster-flames',
-      type: 'symbol',
-      source: cardLayoutSource,
-      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'flames'], true]],
-      layout: clusterFlameLayout(theme, clusterFlameOffset(theme, cluster.radius.some)),
-      paint: { 'icon-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
     },
   ]
 }

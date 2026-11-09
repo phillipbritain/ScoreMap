@@ -4,6 +4,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { themeWith } from '../theme/testTheme'
 import type { Theme } from '../theme/theme'
 import { gameLayers } from './gameLayers'
+import { flameImage } from './flames'
 import { layerChanges } from './restyle'
 
 const layersIn = (theme: Theme): LayerSpecification[] => {
@@ -18,17 +19,16 @@ describe('layerChanges', () => {
 
   it('sets just the properties a change of theme changes, on each layer that has them', () => {
     const wider = themeWith((json) => (json.components.Cluster.outlineWidth = 3))
-    // A third of the way up a flame 12 tall below the top of a pin cluster of a few, some and many, 3 wider.
-    const flameOffsets = ['step', ['get', 'point_count'], ['literal', [0, -10]], 5, ['literal', [0, -12]], 15, ['literal', [0, -15]]]
+    // Surrounding fire images resize with the cluster outline.
+    const flameImages = ['step', ['get', 'point_count'], flameImage(wider, wider.components.Cluster.flame, 14), 5, flameImage(wider, wider.components.Cluster.flame, 16), 15, flameImage(wider, wider.components.Cluster.flame, 19)]
     // Pin and venue clusters' footprints as far across as they reach (14, 16 and 19), with a pixel each side, over the footprint image's 32.
     const footprintSizes = (count: string) => ['step', ['get', count], 30, 5, 34, 15, 40]
     const footprintSize = (across: unknown) => ({ kind: 'layout', property: 'icon-size', value: ['/', across, 32] })
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
+      { layer: 'pin-cluster-flames', kind: 'layout', property: 'icon-image', value: flameImages },
       { layer: 'pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
-      // A hot pin cluster's flame stands on its outline.
-      { layer: 'pin-cluster-flames', kind: 'layout', property: 'icon-offset', value: flameOffsets },
+      { layer: 'outer-pin-cluster-flames', kind: 'layout', property: 'icon-image', value: flameImages },
       { layer: 'outer-pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
-      { layer: 'outer-pin-cluster-flames', kind: 'layout', property: 'icon-offset', value: flameOffsets },
       { layer: 'venue-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
       // A card cluster's outline is inside its size.
       { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 10 },

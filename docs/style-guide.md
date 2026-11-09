@@ -208,21 +208,25 @@ How status reaches the rest of the globe:
 
 ### Hot games' flames
 
-With "Flames on hot games" on in Display Settings on the rail (on unless the viewer switches it off), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows flames, gone as soon as it stops being hot.
+With "Flames on hot games" on in Display Settings on the rail (on unless the viewer switches it off), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows fire around its whole edge, gone as soon as it stops being hot. The chosen look is E for cards and option 14, Gentle crawl, for pins and clusters, from the local throwaway branch `prototype-flame-looks`.
 
-- A **score card** has a fire along its top edge, after NBA Jam's "he's on fire": tongues of flame overlapping out of a bed of fire, standing on that edge with none of it behind the see-through card, within the card's width and tallest in the middle, in a glow that fades out by the card's sides. Each tongue is in three bands (its tips, its middle and a white-hot core) and flickers frame by frame, as an arcade sprite does, each at its own pace. With reduce motion on it stands still. The flames are in **fire's colors, not the game's**, here and on the globe alike, so a hot game looks the same everywhere: the one place color doesn't say league (ADR-0012), chosen by eye over the same fire in the game's color, which read as pale and muddy.
-- A **small pin** has a small flame rising from its core, its base behind the core, in the same three bands.
-- A **pin cluster** or **card cluster** holding a hot game has a small flame on its top edge, rising from its outline, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, flames and all.
+- A **score card** has a glowing fire outline around all four sides, with warm highlights crawling around it once every 2.4 seconds and a lightly flickering glow. The card's box is cut out of the effect, so no fire shows through its glass. There are no floating embers.
+- A **small pin** has a thin fire outline around its core and ring, with a steady soft glow. Its highlight turns slowly, once every 7.68 seconds.
+- A **pin cluster** or **card cluster** holding a hot game has the same slowly moving outline around its disc, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, fire and all.
+
+The fire is in **fire's colors**, wherever it shows, so hot games look the same across leagues: the one place color doesn't say league (ADR-0012). With reduce motion on, every fire outline and glow stays visible and still; changing that setting while the app runs stops or resumes the motion.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.ScoreCard.flames.height` | How tall a score card's tallest tongue of flame is, in pixels, all of it above the card's top edge | 24 |
-| `components.ScoreCard.flames.flicker` | How far the tongues grow and shrink as they flicker, as a share of their height, 0 (not at all) to 1 | 0.18 |
-| `components.ScoreCard.flames.tips`, `.middle`, `.core` | The fire's colors: its tongues' tips, their middle and the white-hot core (with the bed of fire and the glow), and the small pins' and clusters' flames' | `#d42a12`, `#ff8a00`, `#fff3a8`, given directly as none of the theme's colors is fire's |
-| `components.Pin.flame.size` | How tall a small pin's flame is, in pixels | 11 |
-| `components.Cluster.flame.size` | How tall a pin cluster's or card cluster's flame is, in pixels | 12 |
+| `components.ScoreCard.flames.width` | Width of the fire outline outside the card's edge, in pixels | 3 |
+| `components.ScoreCard.flames.glow.radius`, `.spread`, `.opacity` | The surrounding glow's blur and outward reach, spread (pixels), and strength. A tighter glow of the tips' color follows the outline | 14.4, 4.32, 0.75 |
+| `components.ScoreCard.flames.tips`, `.middle`, `.core` | Shared fire colors: red, orange and white-hot highlights, on cards, pins and clusters | `#d42a12`, `#ff8a00`, `#fff3a8`, given directly as none of the theme's colors is fire's |
+| `components.Pin.flame.size` | How far a small pin's fire glow reaches beyond its core and ring, in pixels | 6.6 |
+| `components.Cluster.flame.size` | How far a pin or card cluster's fire glow reaches beyond its outline, in pixels | 7.2 |
+| `components.Pin.flame.width`, `.opacity`, `.glowOpacity` | Small pins' fire outline width (pixels), its opacity and its glow's opacity | 1.5, 0.9, 0.4 |
+| `components.Cluster.flame.width`, `.opacity`, `.glowOpacity` | The same settings for pin and card clusters | 1.5, 0.9, 0.4 |
 
-A flame's shape (a main tip with a smaller lick to one side, the same on the globe, `web/src/globe/flames.ts`, and as the score card tongues' mask, in the CSS), how many tongues a card has, their heights and overlap, and how fast they flicker stay in code.
+The gradients' shapes, the card glow's tighter band and flicker, and animation timing stay in code. The globe updates the pixels of each used fire image in place; it keeps one image per size and color, and stops scheduling animation when the image is no longer used.
 
 ### Glass
 

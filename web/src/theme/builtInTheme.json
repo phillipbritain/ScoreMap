@@ -88,7 +88,7 @@
         "core": { "color": "final.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
         "glow": { "radius": 0, "opacity": 0 }
       },
-      "flame": { "size": 11 }
+      "flame": { "size": 6.6, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 }
     },
     "Cluster": {
       "fill": "primary.dark",
@@ -97,7 +97,7 @@
       "outlineWidth": 1.5,
       "glowOpacity": 0.6,
       "count": { "font": "Open Sans Bold", "size": "caption" },
-      "flame": { "size": 12 },
+      "flame": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },
       "final": { "opacity": 0.55 }
@@ -124,7 +124,7 @@
       "corner": 1.5,
       "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "light": 6, "nameClearance": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 0.5, "corner": 0.5 } },
-      "flames": { "height": 24, "flicker": 0.18, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
+      "flames": { "width": 3, "glow": { "radius": 14.4, "spread": 4.32, "opacity": 0.75 }, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }

@@ -152,8 +152,8 @@ describe('applyTheme', () => {
       typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // A small pin's core of four and glow of two, for each of three statuses, and its flame's size.
-      pin: 3 * 6 + 1,
+      // A small pin's core of four and glow of two, for each of three statuses, and its fire outline's size, width and two opacities.
+      pin: 3 * 6 + 4,
       // A surface, four kinds of line (their colors) and two halo colors.
       globe: 7,
       // Three kinds of place name (city, state and country), each with a color, an outline (its color, width and blur), a
@@ -162,8 +162,8 @@ describe('applyTheme', () => {
       // The sky's color, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
-      // font (of four) and size, its flame's size, and its opacity for each of three statuses.
-      cluster: 9 + 5 + 1 + 3,
+      // font (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
+      cluster: 9 + 5 + 4 + 3,
       // A trail's width and opacity, its glow's three and its venue's three.
       trail: 8,
       selection: 2,
@@ -172,8 +172,8 @@ describe('applyTheme', () => {
       // Two sizes and two ring widths.
       pulse: 4,
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
-      // logo plate of three and flames' five (height, flicker and three colors); for each of three statuses its fade and glow of two.
-      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 5 + 3 * 3,
+      // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
+      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 7 + 3 * 3,
       // The game panel's frost, eleven colors and shadows, glow of three, corner, cut corner's two, nine sizes
       // and logo plate of three.
       gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,

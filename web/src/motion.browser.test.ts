@@ -37,7 +37,7 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 }
 
 const liveLight = () => element('score-card score-card--live', 'score-card__light')
-const flame = () => element('score-card score-card--live', 'score-card__flames', 'score-card__flame')
+const flame = () => element('score-card score-card--live', 'score-card__flames')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start', 'finish'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
@@ -49,9 +49,9 @@ describe('with reduce motion off', () => {
     expect(opacities).toContain('0.3')
   })
 
-  it('flickers a hot game’s flames', () => {
-    const transforms = keyframesOf(flame()).map((keyframe) => keyframe.transform)
-    expect(transforms.filter((transform) => transform !== undefined).length).toBeGreaterThan(0)
+  it('animates a hot game’s fire outline and glow', () => {
+    const fire = flame()
+    expect(fire.getAnimations({ subtree: true }).length).toBeGreaterThan(0)
   })
 
   it.each(pinAnimations)('grows a pin’s %s ring', (animation) => {
@@ -93,7 +93,7 @@ describe('with reduce motion on', () => {
   it('keeps a hot game’s flames, standing still', () => {
     const still = flame()
 
-    expect(still.getAnimations()).toEqual([])
+    expect(still.getAnimations({ subtree: true })).toEqual([])
     expect(getComputedStyle(still).display).not.toBe('none')
   })
 

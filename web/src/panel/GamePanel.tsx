@@ -1,7 +1,6 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
 import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam, type PhotoCredit } from '../games/game'
-import { dualTime } from './dualTime'
 import { oddsLine } from './gameDetails'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
@@ -43,12 +42,6 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
   const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
   const { contest } = game
-  // A note on the game (a playoff round, say) goes beside its league.
-  const league = game.note ? `${game.league} · ${game.note}` : game.league
-  // A Final game shows when it ended; any other, when it starts.
-  const endTime = game.status === 'Final' ? game.endTime : null
-  const time = dualTime(endTime ?? game.startTime, venue.timeZone)
-  const localTime = time.venue ? `${time.venue} local` : ''
   const links: PanelLink[] = [
     ...watchLinks(game.broadcasters, viewerCountry(navigator.languages)).map((link) => ({ ...link, unofficial: false })),
     // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
@@ -69,10 +62,8 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
     }}>
       <div className="game-panel__main">
         <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={`${game.sport} · ${league}`} data-tooltip-when-clipped>
-            {/* The sport goes here on a phone, where the details have no room for its column. */}
-            <span className="game-panel__league-sport">{game.sport} · </span>
-            {league}
+          <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+            {game.league}
           </div>
           {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)}
           {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
@@ -98,15 +89,6 @@ export function GamePanel({ game, colour, textOnColour, onClose, ref }: GamePane
             </div>
             <div className="game-panel__muted" data-tooltip={placeLine} data-tooltip-when-clipped>
               {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
-            </div>
-          </div>
-          <div>
-            <div className="game-panel__label">{endTime ? 'Ended' : 'Start'}</div>
-            <div className="game-panel__value" data-tooltip={time.viewer} data-tooltip-when-clipped>
-              {time.viewer}
-            </div>
-            <div className="game-panel__muted" data-tooltip={localTime} data-tooltip-when-clipped>
-              {localTime}
             </div>
           </div>
           <div>

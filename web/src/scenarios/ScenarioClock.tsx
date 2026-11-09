@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { clockTime } from '../panel/dualTime'
+import { clockTime } from './clockTime'
 import { clockReading, untilNextSecond, type ScenarioListing } from './scenarioPicker'
 
 /**

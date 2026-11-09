@@ -11,7 +11,7 @@ const theme = themeWith((json) => {
 // a ends at a dot of its own; b at a venue cluster.
 const a: TrailOnScreen = { gameId: 'a', from: { x: 100, y: 150 }, to: { x: 100, y: 200 }, dot: true }
 const b: TrailOnScreen = { gameId: 'b', from: { x: 300, y: 150 }, to: { x: 320, y: 200 }, dot: false }
-const shapesOf = (hovered: string | null = null) => trailShapes([a, b], ['#aaaaaa', '#bbbbbb'], hovered, theme.components)
+const shapesOf = (...pickedOut: (string | null)[]) => trailShapes([a, b], ['#aaaaaa', '#bbbbbb'], pickedOut, theme.components)
 
 describe('trailShapes', () => {
   it("draws each trail from its card to its venue in its game's colour, in a glow, at the theme's widths and opacities", () => {
@@ -44,5 +44,14 @@ describe('trailShapes', () => {
       { kind: 'circle', at: a.to, radius: 6, strokeWidth: 3, blur: 0, color: 'transparent', opacity: 1, stroke: '#aaaaaa' },
       { kind: 'circle', at: a.to, radius: 4, strokeWidth: 0, blur: 0, color: '#aaaaaa', opacity: 1, stroke: 'transparent' },
     ])
+  })
+
+  it("draws a selected card's trail as a hovered one's, alongside another game's under the pointer", () => {
+    const boldLines = (shapes: TrailShape[]) =>
+      shapes.filter((shape): shape is Extract<TrailShape, { kind: 'line' }> => shape.kind === 'line' && shape.blur === 0).map(({ width }) => width)
+    // Hovered a, selected b: both bold. Nothing hovered, b selected: only b.
+    expect(boldLines(shapesOf('a', 'b'))).toEqual([3, 3])
+    expect(boldLines(shapesOf(null, 'b'))).toEqual([1.5, 3])
+    expect(boldLines(shapesOf(null, null))).toEqual([1.5, 1.5])
   })
 })

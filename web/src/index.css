@@ -615,8 +615,8 @@ body {
    fade into the fill likewise. Its fill (and drop shadow) is the theme's fill opacity, so below 1 the
    map shows through behind its text, logos, scores and light, which stay as they are.
 
-   With the pointer on it, its border is bolder (a ring around it, so the card keeps its size and
-   doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
+   With the pointer on it, or while it's selected, its border is bolder (a ring around it, so the card
+   keeps its size and doesn't move) and, if the theme says so, its fill turns solid (see components.Hover). */
 .score-card {
   appearance: none;
   box-sizing: content-box;
@@ -663,7 +663,8 @@ body {
   transform-origin: 50% 100%;
 }
 
-/* Only where there's a pointer to hover with: on a touch screen, a tap selects as it always has. */
+/* Only where there's a pointer to hover with: on a touch screen, a tap selects, which gives the
+   card the same look (see .score-card--selected). */
 @media (hover: hover) {
   .score-card:hover {
     --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
@@ -686,9 +687,12 @@ body {
   filter: grayscale(1);
 }
 
-/* The game whose panel is open, matching the selected small pin's ring, and not faded. */
+/* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
+   a hovered card is, its border bolder and its fill solid if the theme says so. */
 .score-card--selected {
   --status-card-fade: 0;
+  --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
+  --frost: max(var(--score-card-frost), var(--hover-card-solid));
   outline: var(--selection-width) solid var(--selection-color);
   outline-offset: calc(0.5 * var(--spacing));
 }

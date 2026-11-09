@@ -14,7 +14,7 @@ import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
 import { cityNameBox, type ScreenBox } from './cityNameBox'
 import type { GlobePoint } from './geo'
-import { isBehindGlobe } from './horizon'
+import { fadedByHorizon, isBehindGlobe } from './horizon'
 import { cardZoom } from './zoomLevels'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
@@ -122,7 +122,10 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
         ...(game ? {} : { 'symbol-sort-key': ['-', ['get', 'population']] }),
       },
     }
-    const placed = cityNamePlacement(placeName(city, 'city', theme))
+    const named = placeName(city, 'city', theme)
+    // Faded out near the horizon (see fadeNearHorizon), where they'd crowd into a pile.
+    if (named.type === 'symbol') named.paint = { ...named.paint, 'text-opacity': fadedByHorizon() }
+    const placed = cityNamePlacement(named)
     if (!game || placed.type !== 'symbol') return placed
     // Always below the dot, where cards are laid out around it, and written whatever else is there.
     return { ...placed, layout: { ...placed.layout, 'text-variable-anchor': ['top'], 'text-allow-overlap': true } }
@@ -258,14 +261,18 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
 
 /** The labelled cities as the city name source's features, marking the games' cities. */
 export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels): FeatureCollection<Point> {
-  const feature = (city: ListedCity, game: boolean): Feature<Point> => ({
+  // Each with an id, for fading it near the horizon (see fadeNearHorizon).
+  const feature = (city: ListedCity, game: boolean, id: number): Feature<Point> => ({
     type: 'Feature',
+    id,
     geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
     properties: { name: city.name, population: city.population, game },
   })
   return {
     type: 'FeatureCollection',
-    features: [...gameCities.map((city) => feature(city, true)), ...otherBigCities.map((city) => feature(city, false))],
+    features: [...gameCities.map((city) => ({ city, game: true })), ...otherBigCities.map((city) => ({ city, game: false }))].map(
+      ({ city, game }, id) => feature(city, game, id),
+    ),
   }
 }
 

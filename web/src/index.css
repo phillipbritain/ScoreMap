@@ -86,7 +86,8 @@ body {
 .rail__popover,
 .no-pins,
 .demo-label,
-.map-credit,
+.map-credit__button,
+.map-credit__text,
 .feedback__button,
 .feedback__panel,
 .welcome-tour__panel,
@@ -1951,15 +1952,78 @@ body {
   }
 }
 
-/* The satellite map's credit (see MapCredit), small at the bottom left of the globe, on the controls' glass. */
+/* The satellite map's credit (see MapCredit): a small round info button at the bottom left of the globe,
+   and the credit opening to the right of it, both on the controls' glass. Under the game panel and the
+   rail, which may lie over it. */
 .map-credit {
   --frost: var(--controls-frost);
   --glass-tint: var(--controls-surface);
   position: absolute;
-  bottom: var(--spacing);
-  left: var(--spacing);
+  bottom: calc(3 * var(--spacing));
+  left: calc(3 * var(--spacing));
   z-index: 1;
-  max-width: calc(100% - 2 * var(--spacing));
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing);
+  /* Clear of the Feedback button at the bottom right. */
+  max-width: calc(100% - 9 * var(--spacing) - var(--feedback-column));
+}
+
+.map-credit[hidden] {
+  display: none;
+}
+
+/* Shown too while Map Type is open, which has a picture of the satellite map in it. */
+.globe-area:has(.rail__popover--map-type) > .map-credit {
+  display: flex;
+}
+
+.map-credit__button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: var(--palette-text-secondary);
+  cursor: pointer;
+}
+
+/* A bigger target for a finger, the button drawn the same size. */
+@media (pointer: coarse) {
+  .map-credit__button {
+    position: relative;
+  }
+
+  .map-credit__button::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+  }
+}
+
+@media (hover: hover) {
+  .map-credit__button:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
+/* While open, in the theme's open colour (gold), as the rail's buttons are. */
+.map-credit__button[aria-expanded='true'] {
+  color: var(--rail-open);
+}
+
+.map-credit__icon {
+  width: 14px;
+  height: 14px;
+}
+
+.map-credit__text {
+  min-width: 0;
   margin: 0;
   padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
   border-radius: var(--menu-corner);
@@ -1970,17 +2034,12 @@ body {
   line-height: 1.4;
 }
 
-.map-credit a {
-  color: inherit;
-}
-
-.map-credit[hidden] {
+.map-credit__text[hidden] {
   display: none;
 }
 
-/* Shown too while Map Type is open, which has a picture of the satellite map in it. */
-.globe-area:has(.rail__popover--map-type) > .map-credit {
-  display: block;
+.map-credit__text a {
+  color: inherit;
 }
 
 /* Along the bottom of the globe: the no-pins message centred. */

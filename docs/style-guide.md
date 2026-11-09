@@ -226,7 +226,7 @@ A flame's shape (a main tip with a smaller lick to one side, the same on the glo
 
 ### Glass
 
-Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the satellite map's credit (in `text.secondary` at the bottom left of the globe, while the satellite map shows or Map Type, with its picture of it, is open), the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
+Every surface over the globe is a pane of glass the globe shows through, so coastlines, borders and place names under it can still be seen where games crowd or a popover is open (ADR-0018): score cards, the game panel, the rail with its popovers (and on local runs the top rail with the scenario controls), the no-pins message, the satellite map's credit (a small round info button in `text.secondary`, gold while open, at the bottom left of the globe while the satellite map shows or Map Type, with its picture of it, is open, and the credit it opens beside it in `text.secondary`), the Feedback button and panel, and tooltips. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its colour lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface colour, solid.

@@ -130,7 +130,7 @@
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
     },
     "GamePanel": {
-      "frost": 1,
+      "frost": 0.85,
       "surface": { "top": "background.paper", "bottom": "background.paper" },
       "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
       "score": { "fill": "navy.600", "text": "text.primary" },

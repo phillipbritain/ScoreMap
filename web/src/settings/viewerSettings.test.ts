@@ -5,6 +5,7 @@ import {
   leaguesBySport,
   sportSwitch,
   withAllLeagues,
+  withMapTypeSwitched,
   withLeague,
   withSport,
 } from './viewerSettings'
@@ -67,6 +68,20 @@ describe('whole-sport switch', () => {
     const mixed = withLeague(firstVisitSettings, 'MLS', false)
 
     expect(sportSwitch(withSport(mixed, soccer, true), soccer)).toBe('on')
+  })
+})
+
+describe('map type switch', () => {
+  it('starts on the plain map', () => {
+    expect(firstVisitSettings.mapType).toBe('plain')
+  })
+
+  it('switches to satellite and back, keeping the other settings', () => {
+    const settings = { ...firstVisitSettings, hotGameFlames: false, hiddenLeagues: ['NBA'] }
+    const satellite = withMapTypeSwitched(settings)
+
+    expect(satellite).toEqual({ ...settings, mapType: 'satellite' })
+    expect(withMapTypeSwitched(satellite)).toEqual(settings)
   })
 })
 

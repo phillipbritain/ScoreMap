@@ -5,7 +5,7 @@ import type { Camera } from '../globe/camera'
 import type { ZoomSettings } from '../globe/zoomLevels'
 import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
-import type { League, ViewerSettings } from '../settings/viewerSettings'
+import { withMapTypeSwitched, type League, type ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { railIcon, type RailButtonName } from './railButtons'
@@ -41,8 +41,9 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in three groups: zoom in, zoom
- * out and Home, which move the camera; Leagues and Display Settings; and Games (with its count of
- * games on it). Each of the last three opens a popover to the left of the rail: one at a time, closed by
+ * out and Home, which move the camera; Leagues, Display Settings and Satellite map, which switches the
+ * globe between the plain map and the satellite map, showing pressed on satellite; and Games (with
+ * its count of games on it). Leagues, Display Settings and Games each open a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
@@ -87,6 +88,11 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
       <div className="rail__group">
         <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
         <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
+        <RailButton
+          label="Satellite map"
+          pressed={settings.mapType === 'satellite'}
+          onClick={() => onChange(withMapTypeSwitched(settings))}
+        />
       </div>
       <div className="rail__group">
         <RailButton
@@ -142,6 +148,7 @@ export function RailButton({
   open,
   badge,
   on,
+  pressed,
   tooltipSide = 'left',
   onClick,
 }: {
@@ -152,6 +159,8 @@ export function RailButton({
   badge?: number
   /** Whether a popover's button shows on though its popover is closed (Tuners, with a tuner open). */
   on?: boolean
+  /** Whether a button that switches something on and off (Satellite map) shows pressed: undefined for any other. */
+  pressed?: boolean
   /** Where its tooltip shows: on the left on the rail, so it covers none of the others; below on the top rail. */
   tooltipSide?: 'left' | 'below'
   onClick: () => void
@@ -166,6 +175,7 @@ export function RailButton({
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
       aria-expanded={popover ? (on ?? open === popover) : undefined}
+      aria-pressed={pressed}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).

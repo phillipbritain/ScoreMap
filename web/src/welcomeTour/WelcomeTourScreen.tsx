@@ -260,7 +260,8 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   'Zoom out': 'Zoom out',
   Home: 'Home: back to your part of the world',
   Leagues: 'Leagues: Top Events or your own picks',
-  'Display Settings': 'Display Settings: colours for each sport and league, and flames on hot games',
+  'Display Settings': 'Display Settings: colours for each sport and league, flames on hot games and the satellite map',
+  'Satellite map': 'Satellite map: switch the globe to satellite imagery and back',
   Games: 'Games: find any game and go to it',
 }
 

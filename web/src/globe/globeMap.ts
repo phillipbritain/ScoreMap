@@ -14,6 +14,7 @@ import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noRecentChanges, type RecentChanges } from '../games/recentChanges'
 import { gameColour, type PickedColours } from '../settings/gameColour'
+import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import type { Camera } from './camera'
@@ -50,7 +51,7 @@ import {
 } from './pinLayers'
 import { pulse } from './pinPulse'
 import { addReachRings, type ReachRings } from './reachRings'
-import { applyLayerChanges, layerChanges } from './restyle'
+import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
@@ -78,6 +79,11 @@ export interface GlobeMapOptions {
   colours?: PickedColours
   /** Whether hot games show flames (see showsFlames), to start with: not unless given. It changes with setFlames. */
   flames?: boolean
+  /**
+   * The map type to start with (see globeStyle), when made over from a base style: the plain map
+   * unless given. It changes with setMapType.
+   */
+  mapType?: MapType
   /**
    * How far out and in the globe zooms, and from where score cards show, to start with: the app's own
    * for a laptop unless given. They change with setZoomLimits.
@@ -127,6 +133,8 @@ export class GlobeMap {
   private colours: PickedColours
   /** Whether hot games show flames (see showsFlames). */
   private flames: boolean
+  /** The map type the globe's style is made in (see globeStyle). */
+  private mapType: MapType
   /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
   private base: StyleSpecification | null = null
   private readonly cards: ScoreCardMarkers
@@ -174,10 +182,11 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colours = noColours, flames = false, zoomSettings = unfittedZoom, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colours = noColours, flames = false, mapType = 'plain', zoomSettings = unfittedZoom, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colours = colours
     this.flames = flames
+    this.mapType = mapType
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
     this.onStage = onStage
@@ -207,10 +216,11 @@ export class GlobeMap {
       // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
       map.keyboard.disable()
       traceLayouts(map, { stage: () => this.stage(), settled: () => this.settled() })
-      // Made over in the theme as it is when the base style loads, which setTheme may have changed by then.
+      // Made over in the theme and map type as they are when the base style loads, which setTheme and
+      // setMapType may have changed by then.
       const transformStyle = (_previous: unknown, base: StyleSpecification) => {
         this.base = base
-        return globeStyle(base, this.theme)
+        return globeStyle(base, this.theme, this.mapType)
       }
       map.on('error', this.initialStyleError)
       if ('url' in style) map.setStyle(style.url, { transformStyle })
@@ -380,7 +390,7 @@ export class GlobeMap {
     this.unsettle()
     const map = this.map
     applyLayerChanges(map, [
-      ...(this.base ? layerChanges(globeStyle(this.base, was).layers, globeStyle(this.base, theme).layers) : []),
+      ...this.mapStyleChanges(was, this.mapType),
       ...layerChanges(gameLayersIn(was, this.selectedGameId, this.cardZoom), gameLayersIn(theme, this.selectedGameId, this.cardZoom)),
     ])
     const footprint = pinFootprint(theme)
@@ -393,6 +403,25 @@ export class GlobeMap {
     // The pins carry their games' colours, which may be the theme's.
     this.showPins()
     this.cards.restyle()
+  }
+
+  /**
+   * Draws the globe as this map type from now on (see globeStyle), in place, as setTheme restyles it:
+   * the plain map's and the satellite map's layers are shown or hidden. Pins, score cards and place
+   * names are left as they are.
+   */
+  setMapType(mapType: MapType): void {
+    if (mapType === this.mapType) return
+    const was = this.mapType
+    this.mapType = mapType
+    this.unsettle()
+    applyLayerChanges(this.map, this.mapStyleChanges(this.theme, was))
+  }
+
+  /** What to set on the map style's layers to restyle them to the theme and map type the globe has now, from these. */
+  private mapStyleChanges(theme: Theme, mapType: MapType): LayerChange[] {
+    if (!this.base) return []
+    return layerChanges(globeStyle(this.base, theme, mapType).layers, globeStyle(this.base, this.theme, this.mapType).layers)
   }
 
   /** Shows each game in these colours from now on (see gameColour): its pin, score card, trail and pulses. */

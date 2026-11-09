@@ -7,6 +7,7 @@ import type {
 import type { Theme } from '../theme/theme'
 import { clusterColour, pinClusterSharedColour } from './clusterColour'
 import { flameImage } from './flames'
+import { fadedByHorizon } from './horizon'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
 import { cardZoom, clusterMaxZoom, type PinLayout } from './zoomLevels'
@@ -26,7 +27,8 @@ export const outerSmallPinLayer = 'outer-pins'
 
 /**
  * A set of small pins and pin clusters: the games' own while zoomed out, or the outer games' at card
- * zoom. Each has its own source and layers, drawn alike.
+ * zoom. Each has its own source and layers, drawn alike, and fades out near the horizon (see
+ * fadeNearHorizon).
  */
 export interface PinSet {
   source: string
@@ -62,6 +64,8 @@ export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, 
     cluster: size === 'small',
     clusterRadius,
     clusterMaxZoom,
+    // Each pin by its game, each pin cluster by its cluster_id, for fading them near the horizon (see fadeNearHorizon).
+    promoteId: 'gameId',
     // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus), the
     // colour its games share, for its colour (see clusterColour), and how many show flames.
     clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColour, [flameGamesProperty]: ['+', ['case', ['get', 'flames'], 1, 0]] },
@@ -104,7 +108,8 @@ export function pinClusterLayers(
   set: PinSet,
 ): [CircleLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification, SymbolLayerSpecification] {
   const cluster = theme.components.Cluster
-  const clusterOpacity = byStatus(theme, 'pinCluster', (look) => look.clusterOpacity)
+  // Faded out near the horizon (see fadeNearHorizon), as small pins are.
+  const clusterOpacity = fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.clusterOpacity))
   return [
     {
       ...inSet(set, 'pin-cluster-glows', { clusters: true }),
@@ -114,7 +119,7 @@ export function pinClusterLayers(
         'circle-radius': byCount(cluster.glowRadius),
         'circle-color': clusterColour(theme),
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity),
+        'circle-opacity': fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity)),
       },
     },
     {
@@ -186,7 +191,7 @@ export function smallPinLayers(
         'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
         'circle-color': gameColor,
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity),
+        'circle-opacity': fadedByHorizon(byStatus(theme, 'own', (look) => look.glow.opacity)),
       },
     },
     {
@@ -200,6 +205,7 @@ export function smallPinLayers(
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
       },
+      paint: { 'icon-opacity': fadedByHorizon() },
     },
     {
       ...inSet(set, smallPinLayer),
@@ -209,9 +215,10 @@ export function smallPinLayers(
       paint: {
         'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
         'circle-color': byStatus(theme, 'own', (look) => (look.core.color === look.color ? gameColor : look.core.color)),
-        'circle-opacity': byStatus(theme, 'own', (look) => look.core.opacity),
+        'circle-opacity': fadedByHorizon(byStatus(theme, 'own', (look) => look.core.opacity)),
         'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
         'circle-stroke-color': gameColor,
+        'circle-stroke-opacity': fadedByHorizon(),
       },
     },
   ]
@@ -234,6 +241,7 @@ export function selectedPinLayerSpec(theme: Theme, gameId: string | null, set: P
       'circle-color': 'transparent',
       'circle-stroke-width': theme.components.Selection.width,
       'circle-stroke-color': theme.components.Selection.color,
+      'circle-stroke-opacity': fadedByHorizon(),
     },
   }
 }

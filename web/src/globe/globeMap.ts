@@ -21,7 +21,7 @@ import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
-import { isBehindGlobe } from './horizon'
+import { fadeNearHorizon, fadedOut, isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { clearCentre, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
@@ -51,7 +51,7 @@ import {
 import { pulse } from './pinPulse'
 import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges } from './restyle'
-import { addPlaceNames, firstPlaceNameLayer, type PlaceNames } from './placeNames'
+import { addPlaceNames, cityNameSource, firstPlaceNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import { cardZoom, clusterMaxZoom, hasCard, pinLayout, pinSize, zoomSettings as builtInZoomSettings, type PinLayout, type ZoomSettings } from './zoomLevels'
@@ -136,6 +136,8 @@ export class GlobeMap {
   /** Whether each game's city label reach is ringed on the globe (see showGameCityReach). */
   private reachShown = false
   private readonly glow: GlobeGlow
+  /** Stops fading place names and pins near the horizon (see fadeNearHorizon). */
+  private readonly stopHorizonFade: () => void
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
   private readonly onStage: (stage: LoadingStage) => void
@@ -212,6 +214,8 @@ export class GlobeMap {
       // Before the pins' layers are added on style load, so they're drawn under the pins.
       this.reachRings = addReachRings(map)
       this.names = addPlaceNames(map, currentTheme, cityLabels)
+      // City names, small pins and pin clusters fade out as they near the horizon, which they'd crowd.
+      this.stopHorizonFade = fadeNearHorizon(map, [cityNameSource, pinSource, outerPinSource])
       this.trails = trailLayer(currentTheme)
       this.cards = new ScoreCardMarkers(map, currentTheme, this.colourOf, this.flamesOf, this.names, this.trails, (gameId) =>
         this.onSelect(gameId),
@@ -520,6 +524,7 @@ export class GlobeMap {
     this.cards?.clear()
     this.glow?.remove()
     this.names?.remove()
+    this.stopHorizonFade?.()
     this.reachRings?.remove()
     this.map.remove()
   }
@@ -640,11 +645,24 @@ export class GlobeMap {
   }
 
   private readonly selectPin = (event: MapLayerMouseEvent) => {
+    if (this.fadedOutAt(event)) return
     const gameId: unknown = event.features?.[0]?.properties?.gameId
     if (typeof gameId === 'string') this.onSelect(gameId)
   }
 
-  private readonly pointAt = () => (this.map.getCanvas().style.cursor = 'pointer')
+  private readonly pointAt = (event: MapLayerMouseEvent) => {
+    if (!this.fadedOutAt(event)) this.map.getCanvas().style.cursor = 'pointer'
+  }
+
+  /**
+   * Whether the small pin or pin cluster an event is on has faded out near the horizon (see
+   * fadeNearHorizon): it still takes clicks, so they're ignored. Its games are reached by turning the
+   * globe until it shows.
+   */
+  private fadedOutAt(event: MapLayerMouseEvent): boolean {
+    const geometry = event.features?.[0]?.geometry
+    return geometry?.type === 'Point' && fadedOut(this.map, geometry.coordinates as [number, number])
+  }
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
   // Selecting a pin cluster, and selecting a card cluster, both zoom in until
@@ -657,7 +675,7 @@ export class GlobeMap {
    */
   private readonly centreOnOuterPinCluster = (event: MapLayerMouseEvent) => {
     const cluster = event.features?.[0]
-    if (!cluster) return
+    if (!cluster || this.fadedOutAt(event)) return
     const center = (cluster.geometry as Point).coordinates as [number, number]
     this.map.easeTo({ center, zoom: Math.max(this.map.getZoom(), cardZoom) })
   }
@@ -670,7 +688,7 @@ export class GlobeMap {
   private readonly zoomToPinCluster = async (event: MapLayerMouseEvent) => {
     const cluster = event.features?.[0]
     const source = this.map.getSource<GeoJSONSource>(pinSource)
-    if (!cluster || !source) return
+    if (!cluster || !source || this.fadedOutAt(event)) return
     const zoom = Math.min(await source.getClusterExpansionZoom(cluster.properties.cluster_id), cardZoom)
     if (this.destroyed) return
     this.map.easeTo({ center: (cluster.geometry as Point).coordinates as [number, number], zoom })

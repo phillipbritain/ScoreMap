@@ -513,8 +513,9 @@ const settings = {
      * button and the panel's drop shadow. Its top edge is the game's color, and it glows in that
      * color, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
      * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
-     * width at most, its height, and its height on a phone, where the details go below the score block;
-     * the score block's width and how far its right edge slants; the venue photo's width; a team's logo;
+     * width at most, its minimum height, and its minimum height on a phone, where the details go below
+     * the score block; the score block's maximum width and how far its right edge slants; the venue
+     * photo's maximum width; a team's logo;
      * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
      * logoPlate). It sits clear of the scenario
      * controls by their keys' size. Its glass's frost: its surface, score block, score boxes and logo

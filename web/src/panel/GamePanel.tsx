@@ -27,9 +27,9 @@ interface PanelLink {
 
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css), with a band under it for sport-specific contest details. It keeps one size
- * whatever the game, so selecting one game after another doesn't make it jump: long text is clipped,
- * with the full text on hover where it's cut off. Re-renders with each new snapshot, so it stays current while open.
+ * (see .game-panel in index.css), with a band under it for sport-specific contest details. Team and
+ * player names wrap in place; the panel grows to fit them and scrolls on short screens. Other clipped
+ * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
  */
 export function GamePanel({ game, color, textOnColor, onClose, ref }: GamePanelProps) {
   const { venue } = game

@@ -18,7 +18,9 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen, type LoadingPreview } from './loading/LoadingScreen'
-import { GamePanel } from './panel/GamePanel'
+// PROTOTYPE (throwaway): game panel variants, see panel/prototype/README.md.
+import { PanelVariant, PanelVariantSwitcher } from './panel/prototype/PanelVariants'
+import { useVariant } from './panel/prototype/variantList'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -151,6 +153,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
+  const [panelVariant, setPanelVariant] = useVariant()
   const selectedColor = selectedGame && gameColor(colors, selectedGame, theme)
 
   return (
@@ -231,8 +234,9 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
         {/* Over the bottom of the globe, after the Feedback button so it can sit clear of it. Before the
             rail, so an open popover lies over it on a phone. */}
         {selectedGame && selectedColor && (
-          <GamePanel
-            ref={panel}
+          <PanelVariant
+            index={panelVariant}
+            panelRef={panel}
             game={selectedGame}
             scorer={scorerOf(justHappened, selectedGame.id)}
             color={selectedColor}
@@ -240,6 +244,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             onClose={closeGame}
           />
         )}
+        <PanelVariantSwitcher index={panelVariant} onChange={setPanelVariant} />
         <Rail
           leagues={leagues}
           settings={viewerSettings}

@@ -1,0 +1,1007 @@
+/* PROTOTYPE (throwaway): game panel layout variants (see ./README.md). Values go straight in here while the
+   look is tried, as the style guide allows; nothing here is settled or meant for main. */
+
+/* Room at the bottom for the prototype switcher, so it doesn't sit over the panel being judged. */
+.globe-area {
+  --pp-reserve: 40px;
+}
+
+.globe-area .game-panel {
+  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
+}
+
+/* ---------- The switcher ---------- */
+.pp-switcher {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ff3df5;
+  color: #1a0019;
+  font: 700 12px/1 system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px #0008;
+  transform: translateX(-50%);
+}
+
+.pp-switcher button {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #1a0019;
+  color: #ff3df5;
+  font: 700 16px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.pp-switcher__tag {
+  opacity: 0.6;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+/* ---------- Shared bits ---------- */
+.pp {
+  --frost: var(--game-panel-frost);
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border-radius: var(--game-panel-corner);
+  background: color-mix(in srgb, var(--game-panel-surface-top) 92%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 22%, transparent),
+    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  line-height: 1.3;
+}
+
+.pp h3 {
+  margin: 0 0 4px;
+}
+
+.pp-label {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.pp-muted {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: 400;
+}
+
+.pp-strong {
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp a {
+  color: var(--palette-text-link);
+}
+
+.pp a.pp-plain-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pp a.pp-plain-link:hover {
+  text-decoration: underline;
+}
+
+.pp .pp-close {
+  position: static;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.pp-mark,
+.pp-flag {
+  box-sizing: content-box;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 2px;
+  border-radius: 4px;
+  object-fit: contain;
+  background: var(--game-panel-logo-plate-fill);
+}
+
+.pp-mark--none,
+.pp-flag--none {
+  background: none;
+}
+
+.pp-flag {
+  width: 16px;
+  height: 12px;
+  padding: 1px;
+  vertical-align: middle;
+}
+
+.pp-text-button {
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--game-color);
+  font: inherit;
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.pp-board {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-board td {
+  padding: 1px 4px;
+  white-space: nowrap;
+}
+
+.pp-board tr:nth-child(odd) {
+  background: color-mix(in srgb, var(--palette-text-primary) 5%, transparent);
+}
+
+.pp-board__pos {
+  width: 2.5em;
+  color: var(--palette-text-secondary);
+  text-align: right;
+}
+
+.pp-board__flag {
+  width: 20px;
+}
+
+.pp-board__name {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.pp-board__score {
+  font-weight: var(--typography-button-font-weight);
+  text-align: right;
+}
+
+.pp-bouts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pp-bouts li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px;
+}
+
+.pp-bouts__current {
+  border-left: 3px solid var(--game-color);
+  background: color-mix(in srgb, var(--game-color) 12%, transparent);
+}
+
+.pp-bouts__line {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.pp-sets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pp-set {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3em;
+  padding: 2px 6px;
+  border: 1px solid var(--palette-divider);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-set__name {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-footnote-font-size);
+  text-transform: uppercase;
+}
+
+.pp-set__score {
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-last {
+  margin-top: 4px;
+}
+
+.pp-watch {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pp-watch li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The phone layout hides the Feedback button while a panel is open, as it does for the real panel. */
+@media (max-width: 640px) {
+  .feedback:has(~ .pp) {
+    display: none;
+  }
+}
+
+/* ---------- A: Score bug ---------- */
+.pp-a {
+  left: 50%;
+  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  max-width: calc(100% - 6 * var(--spacing));
+  max-height: calc(100% - 6 * var(--spacing) - var(--pp-reserve));
+  border-top: 3px solid var(--game-color);
+  transform: translateX(-50%);
+}
+
+.pp-a--open {
+  width: min(760px, calc(100% - 6 * var(--spacing)));
+}
+
+.pp-a__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 6px 8px 6px 12px;
+}
+
+.pp-a__league {
+  max-width: 10em;
+  overflow: hidden;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-a__score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pp-a__side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+
+.pp-a__abbr {
+  overflow: hidden;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-a__value {
+  min-width: 1.6em;
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.pp-a__dash {
+  color: var(--palette-text-secondary);
+}
+
+.pp-a__progress {
+  padding: 2px 8px;
+  background: var(--game-color);
+  color: var(--text-on-game-color);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: skewX(-14deg);
+}
+
+.pp-a__more {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--palette-divider);
+  border-radius: 999px;
+  background: none;
+  color: var(--palette-text-primary);
+  font: inherit;
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pp-a__drawer {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px 20px;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--palette-divider);
+}
+
+.pp-a__section--board {
+  grid-row: span 3;
+}
+
+.pp-a__full-name {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .pp-a,
+  .pp-a--open {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+
+  /* Two lines: league, progress and buttons; then the score across the width. */
+  .pp-a__bar {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+  }
+
+  .pp-a__league {
+    order: 1;
+    max-width: 40%;
+  }
+
+  .pp-a__progress {
+    order: 2;
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pp-a__more {
+    order: 3;
+  }
+
+  .pp-a .pp-close {
+    order: 4;
+  }
+
+  .pp-a__score {
+    order: 5;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .pp-a__score:not(.pp-a__score--sides) {
+    justify-content: space-between;
+  }
+
+  .pp-a__drawer {
+    grid-template-columns: 1fr;
+    max-height: 55vh;
+  }
+
+  .pp-a__section--board {
+    grid-row: auto;
+  }
+}
+
+/* ---------- B: Side sheet / peek ---------- */
+.pp-b {
+  top: 64px;
+  left: 12px;
+  bottom: calc(12px + var(--pp-reserve));
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  overflow-y: auto;
+  border-left: 3px solid var(--game-color);
+}
+
+.pp-b__handle {
+  display: none;
+}
+
+.pp-b__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 10px 4px 14px;
+}
+
+.pp-b__score {
+  display: grid;
+  gap: 6px;
+  padding: 4px 14px;
+}
+
+.pp-b__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 4px;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.pp-b__name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pp-b__value {
+  min-width: 2.2em;
+  padding: 2px 4px;
+  background: var(--game-panel-score-fill);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.pp-b__league {
+  flex: 1;
+  min-width: 0;
+}
+
+.pp-b__progress {
+  max-width: 50%;
+  overflow: hidden;
+  padding: 2px 8px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--game-color);
+  color: var(--text-on-game-color);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  text-transform: uppercase;
+}
+
+.pp-b__rest {
+  display: grid;
+  gap: 14px;
+  padding: 12px 14px 14px;
+}
+
+.pp-b__photo {
+  width: 100%;
+  height: 120px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .pp-b {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: var(--pp-reserve);
+    width: auto;
+    max-height: 132px;
+    overflow: hidden;
+    border-left: none;
+    border-top: 3px solid var(--game-color);
+    border-radius: 14px 14px 0 0;
+    transition: max-height 0.25s ease;
+  }
+
+  .pp-b--expanded {
+    max-height: 78vh;
+    overflow-y: auto;
+  }
+
+  .pp-b__handle {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 100%;
+    padding: 6px 0 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+
+  .pp-b__handle span {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--palette-text-secondary);
+  }
+
+  .pp-b__header {
+    padding-top: 2px;
+  }
+
+  /* Peeking: one line each, so the two rows always fit. */
+  .pp-b:not(.pp-b--expanded) .pp-b__name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .pp-b:not(.pp-b--expanded) .pp-b__record {
+    display: none;
+  }
+
+}
+
+/* ---------- C: Ticker ---------- */
+.pp-c {
+  left: 50%;
+  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
+  display: flex;
+  align-items: stretch;
+  width: min(1200px, calc(100% - 6 * var(--spacing)));
+  height: 84px;
+  overflow: hidden;
+  border-bottom: 3px solid var(--game-color);
+  transform: translateX(-50%);
+}
+
+.pp-c__bug {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 300px;
+  flex-shrink: 0;
+  padding: 4px 18px 4px 10px;
+  background: var(--game-panel-score-block-top);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.pp-c__league {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-c__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.pp-c .pp-mark {
+  width: 18px;
+  height: 18px;
+}
+
+.pp-c__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-c__value {
+  min-width: 2em;
+  font-size: var(--typography-subtitle1-font-size);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.pp-c__rail {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
+}
+
+.pp-c__chip {
+  flex-shrink: 0;
+  max-width: 260px;
+  padding: 4px 10px;
+  border: 1px solid var(--palette-divider);
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  scroll-snap-align: start;
+}
+
+.pp-c__chip--text {
+  max-width: 320px;
+  border-radius: 8px;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.pp-c__chip--color {
+  border-color: var(--game-color);
+  background: var(--game-color);
+  color: var(--text-on-game-color);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  text-transform: uppercase;
+}
+
+.pp-c__chip--on {
+  border-color: var(--game-color);
+}
+
+.pp-c > .pp-close {
+  align-self: center;
+  margin-right: 8px;
+}
+
+@media (max-width: 640px) {
+  .pp-c {
+    left: 0;
+    right: 0;
+    bottom: var(--pp-reserve);
+    flex-direction: column;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    transform: none;
+  }
+
+  .pp-c__bug {
+    width: auto;
+    padding: 6px 44px 6px 10px;
+    clip-path: none;
+  }
+
+  .pp-c__rail {
+    flex: none;
+    height: 44px;
+  }
+
+  .pp-c > .pp-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+  }
+}
+
+/* ---------- D: Tabs ---------- */
+.pp-d {
+  left: 50%;
+  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  width: min(820px, calc(100% - 6 * var(--spacing)));
+  height: 168px;
+  overflow: hidden;
+  border-top: 3px solid var(--game-color);
+  transform: translateX(-50%);
+}
+
+.pp-d__score {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--game-panel-score-block-top) 85%, transparent);
+}
+
+.pp-d__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pp-d__progress {
+  overflow: hidden;
+  color: var(--game-color);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-d__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.pp-d__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-d__record {
+  flex-shrink: 0;
+}
+
+.pp-d__value {
+  min-width: 2.2em;
+  background: var(--game-panel-score-fill);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.pp-d__tabs-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.pp-d__tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px 0;
+  border-bottom: 1px solid var(--palette-divider);
+}
+
+.pp-d__tab {
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--palette-text-secondary);
+  font: inherit;
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pp-d__tab[aria-selected='true'] {
+  border-bottom-color: var(--game-color);
+  color: var(--palette-text-primary);
+}
+
+.pp-d__tabs .pp-close {
+  margin-left: auto;
+}
+
+.pp-d__content {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 12px;
+  overflow-y: auto;
+}
+
+.pp-d__venue {
+  display: flex;
+  gap: 12px;
+}
+
+.pp-d__venue img {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  .pp-d {
+    left: 0;
+    right: 0;
+    bottom: var(--pp-reserve);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: auto;
+    height: 200px;
+    border-radius: 14px 14px 0 0;
+    transform: none;
+  }
+
+  .pp-d__score {
+    padding: 8px 12px;
+  }
+
+  .pp-d__tabs {
+    overflow-x: auto;
+  }
+
+  .pp-d__venue img {
+    width: 96px;
+    height: 64px;
+  }
+}
+
+/* ---------- E: Floating card ---------- */
+.pp-e {
+  left: 12px;
+  bottom: calc(12px + var(--pp-reserve));
+  width: 340px;
+  max-height: calc(100% - 80px - var(--pp-reserve));
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.pp-e__card,
+.pp-e__drawer {
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-panel-surface-top) 92%, transparent);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 22%, transparent),
+    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+}
+
+.pp-e__card {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-left: 4px solid var(--game-color);
+}
+
+.pp-e__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pp-e__league {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-e__progress {
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--game-color);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-e__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.pp-e .pp-mark {
+  width: 18px;
+  height: 18px;
+}
+
+.pp-e__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pp-e__value {
+  font-size: var(--typography-subtitle1-font-size);
+  font-variant-numeric: tabular-nums;
+}
+
+.pp-e__chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pp-e__chip {
+  flex-shrink: 0;
+  max-width: 50%;
+  padding: 3px 10px;
+  overflow: hidden;
+  border: 1px solid var(--palette-divider);
+  border-radius: 999px;
+  background: none;
+  color: var(--palette-text-primary);
+  font: inherit;
+  font-size: var(--typography-caption-font-size);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.pp-e__chip[aria-pressed='true'] {
+  border-color: var(--game-color);
+  background: color-mix(in srgb, var(--game-color) 18%, transparent);
+}
+
+.pp-e__drawer {
+  min-height: 0;
+  padding: 8px 10px;
+  overflow-y: auto;
+}
+
+.pp-e__photo {
+  width: 100%;
+  height: 96px;
+  margin-top: 6px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+@media (max-width: 640px) {
+  /* At the top, under the local-run top rail and left of the rail; the drawer drops below the card. */
+  .pp-e {
+    top: 56px;
+    bottom: auto;
+    left: 8px;
+    width: calc(100% - 36px - 28px);
+    max-height: calc(100% - 64px - var(--pp-reserve));
+    flex-direction: column;
+  }
+}

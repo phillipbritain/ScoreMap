@@ -10,7 +10,7 @@ namespace ScoreMap.Server.Tests.Sports;
 
 /// <summary>
 /// A tennis match written into a scenario looks like a live one: its progress and scoreline come from
-/// its sets, with no game clock, and it has none of another sport's made-up record, odds, crowd or last score.
+/// its sets, with no game clock, and it has none of another sport's made-up record or last score.
 /// </summary>
 public sealed class TennisScenarioTests : IDisposable
 {
@@ -56,13 +56,11 @@ public sealed class TennisScenarioTests : IDisposable
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task A_written_match_has_no_made_up_record_odds_crowd_or_last_score(bool play)
+    public async Task A_written_match_has_no_made_up_record_or_last_score(bool play)
     {
         var match = await ReceivedAsync(SinnerAlcaraz(play));
 
         Assert.Equal((null, null), (match.Sides().Home.Record, match.Sides().Away.Record));
-        Assert.Null(match.Odds);
-        Assert.Null(match.Attendance);
         Assert.Null(match.LastScore);
         Assert.Empty(match.KeyEvents);
     }

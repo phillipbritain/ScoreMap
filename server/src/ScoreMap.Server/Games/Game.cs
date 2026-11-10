@@ -34,11 +34,6 @@ public sealed record Game(
     /// </summary>
     public string? Note { get; init; }
 
-    /// <summary>How many came to watch, once the feed reports it.</summary>
-    public int? Attendance { get; init; }
-
-    public GameOdds? Odds { get; init; }
-
     /// <summary>Where play stands right now; only while the game is Live.</summary>
     public GameSituation? Situation { get; init; }
 
@@ -181,12 +176,6 @@ public sealed record PhotoCredit(string Author, string License, string? LicenseU
 /// and its official watch link when the owner has listed one.
 /// </summary>
 public sealed record GameBroadcaster(string Name, string? Country, string? WatchUrl);
-
-/// <summary>
-/// The betting line: <see cref="Line"/> as the bookmaker writes it ("SEA -2.5", "EVEN"), the total
-/// points it expects (<see cref="OverUnder"/>), and the bookmaker.
-/// </summary>
-public sealed record GameOdds(string? Line, double? OverUnder, string? Bookmaker);
 
 /// <summary>
 /// Where play stands in a Live game, each part null (or false) where it doesn't apply: the last play

@@ -90,8 +90,6 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     broadcasters: [],
     streamLinks: [],
     note: null,
-    attendance: null,
-    odds: null,
     situation: null,
     lastScore: null,
     keyEvents: [],

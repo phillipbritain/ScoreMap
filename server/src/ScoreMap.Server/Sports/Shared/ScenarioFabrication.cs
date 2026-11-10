@@ -1,4 +1,3 @@
-using System.Globalization;
 using ScoreMap.Server.Scenarios;
 
 namespace ScoreMap.Server.Sports.Shared;
@@ -23,8 +22,6 @@ internal static class ScenarioFabrication
     internal static string Pick(Random random, params string[] choices) => choices[random.Next(choices.Length)];
 
     internal static Random Seeded(string a, string b) => new(Scenario.StableSeed($"{a}\u0001{b}"));
-
-    internal static string Number(double value) => value.ToString(CultureInfo.InvariantCulture);
 
     internal static string Ordinal(int n) => n switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => $"{n}th" };
 }

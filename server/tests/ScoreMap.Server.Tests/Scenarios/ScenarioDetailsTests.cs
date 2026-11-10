@@ -45,7 +45,7 @@ public sealed class ScenarioDetailsTests : IDisposable
         game.KeyEvents.Count(e => e.Kind is KeyEventKind.Goal or KeyEventKind.PenaltyGoal or KeyEventKind.OwnGoal);
 
     [Fact]
-    public void Every_team_but_crickets_and_rugbys_has_a_record_and_every_game_but_crickets_a_betting_line()
+    public void Every_team_but_crickets_and_rugbys_has_a_record()
     {
         var games = Every(Watched(TimeSpan.Zero)).ToList();
 
@@ -54,11 +54,10 @@ public sealed class ScenarioDetailsTests : IDisposable
             Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Home.Record);
             Assert.Matches(@"^\d+-\d+(-\d+)?$", g.Game.Sides().Away.Record);
         });
-        Assert.All(games.Where(g => g.League.Sport != Sport.Cricket), g => Assert.NotNull(g.Game.Odds?.Line));
         Assert.All(games.Where(g => g.League.Sport == Sport.Rugby), g =>
             Assert.Equal((null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record)));
         Assert.All(games.Where(g => g.League.Sport == Sport.Cricket), g =>
-            Assert.Equal((null, null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record, g.Game.Odds)));
+            Assert.Equal((null, null), (g.Game.Sides().Home.Record, g.Game.Sides().Away.Record)));
     }
 
     [Fact]
@@ -72,13 +71,11 @@ public sealed class ScenarioDetailsTests : IDisposable
     }
 
     [Fact]
-    public void Only_college_teams_are_ranked_and_only_started_games_have_a_crowd()
+    public void Only_college_teams_are_ranked()
     {
         var games = Every(Watched(TimeSpan.Zero)).Select(g => g.Game).ToList();
 
         Assert.All(games.Where(g => !g.LeagueKey.Contains("college")), g => Assert.Equal((null, null), (g.Sides().Home.Rank, g.Sides().Away.Rank)));
-        Assert.All(games.Where(g => g.Status == ProviderStatus.Scheduled), g => Assert.Null(g.Attendance));
-        Assert.All(games.Where(g => g.Status is ProviderStatus.InProgress or ProviderStatus.Final), g => Assert.NotNull(g.Attendance));
     }
 
     [Fact]
@@ -164,13 +161,12 @@ public sealed class ScenarioDetailsTests : IDisposable
     }
 
     [Fact]
-    public void Cricket_has_a_crowd_once_started_but_no_odds_or_last_score_or_key_events()
+    public void Cricket_scores_once_started_but_has_no_last_score_or_key_events()
     {
         var cricket = Every(Watched(TimeSpan.FromMinutes(5))).Where(g => g.League.Sport == Sport.Cricket).ToList();
         var started = cricket.Where(g => g.Game.Status is ProviderStatus.InProgress or ProviderStatus.Final).ToList();
 
         Assert.Contains(started, g => g.Game.Sides().Home.Score > 0 || g.Game.Sides().Away.Score > 0);
-        Assert.All(started, g => Assert.InRange(g.Game.Attendance ?? 0, 1, 33000));
-        Assert.All(cricket, g => Assert.Equal((null, null, 0), (g.Game.Odds, g.Game.LastScore, g.Game.KeyEvents.Count)));
+        Assert.All(cricket, g => Assert.Equal((null, 0), (g.Game.LastScore, g.Game.KeyEvents.Count)));
     }
 }

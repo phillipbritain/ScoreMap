@@ -18,7 +18,7 @@ F1 suits ScoreMap. The server only polls ESPN while a browser is connected, so a
 
 ## One-time setup
 
-You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. The plan, the web app and the identity GitHub Actions deploys as are described in `infra/main.bicep`. The app gets .NET 10 on Linux, WebSockets on, ARR affinity (sticky sessions) on for SignalR, HTTPS only, and container logs kept for 3 days. The app name and plan size are set in `infra/main.bicepparam`. The app name must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
+You need the Azure CLI (`winget install Microsoft.AzureCLI`) and an Azure subscription. The plan, the web app and the identity GitHub Actions deploys as are described in `infra/main.bicep`. The app gets .NET 11 on Linux, WebSockets on, ARR affinity (sticky sessions) on for SignalR, HTTPS only, and container logs kept for 3 days. The app name and plan size are set in `infra/main.bicepparam`. The app name must be unique across Azure because it becomes `<app-name>.azurewebsites.net`. Run these in PowerShell:
 
 ```powershell
 $rg = 'scoremap-rg'

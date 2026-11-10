@@ -48,7 +48,7 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
     // ever runs on more than one.
     clientAffinityEnabled: true
     siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|10.0'
+      linuxFxVersion: 'DOTNETCORE|11.0'
       appCommandLine: 'dotnet ScoreMap.Server.dll'
       webSocketsEnabled: true
       // Always On isn't available on F1. ScoreMap is fine sleeping when idle (ADR-0007).

@@ -9,7 +9,7 @@ import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardLayoutDrawing, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
-import { clusterReach, pinSource } from './pinLayers'
+import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
@@ -447,7 +447,8 @@ export class ScoreCardMarkers {
     const { ring } = theme.components.Trail.venue
     const venueSizes = {
       dot: ring.radius + ring.width,
-      cluster: (count: number) => clusterReach(theme, count),
+      // A venue cluster is drawn as a venue dot is (see cardLayoutLayers).
+      cluster: () => ring.radius + ring.width,
       // As wide as a pin cluster of some games, outline and all (see cardLayoutLayers).
       cardCluster: theme.components.Cluster.radius.some,
     }

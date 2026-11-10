@@ -1391,7 +1391,7 @@ describe('changing theme', () => {
 
     globe.setTheme(themeWith((json) => ((json.components.Cluster.outlineWidth = 6), (json.components.Pin.live.core.color = '#ff0000'))))
 
-    expect(map.getPaintProperty('venue-clusters', 'circle-stroke-width')).toBe(6)
+    expect(map.getPaintProperty('card-clusters', 'circle-stroke-width')).toBe(6)
     expect(JSON.stringify(map.getPaintProperty(smallPinLayer, 'circle-color'))).toContain('#ff0000')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     expect(drawnAt(map, smallPinLayer, a)).not.toEqual([])

@@ -420,7 +420,7 @@
 
   .pp-a__drawer {
     grid-template-columns: 1fr;
-    max-height: 55vh;
+    max-height: calc(100vh - 400px - var(--pp-reserve));
   }
 
   .pp-a__section--board {
@@ -454,6 +454,7 @@
 
 .pp-b__score {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   padding: 4px 14px;
 }
@@ -529,8 +530,9 @@
     transition: max-height 0.25s ease;
   }
 
+  /* Up to just under the rail's buttons, so they stay in reach. */
   .pp-b--expanded {
-    max-height: 78vh;
+    max-height: calc(100% - 300px - var(--pp-reserve));
     overflow-y: auto;
   }
 
@@ -894,6 +896,7 @@
 
 .pp-e__card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   padding: 8px 10px;
   border-left: 4px solid var(--game-color);
@@ -953,15 +956,14 @@
 
 .pp-e__chips {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px 6px;
   margin-top: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .pp-e__chip {
-  flex-shrink: 0;
-  max-width: 50%;
+  min-width: 0;
+  max-width: 100%;
   padding: 3px 10px;
   overflow: hidden;
   border: 1px solid var(--palette-divider);

@@ -11,8 +11,8 @@ Five variants of the game panel plus today's panel, on the existing app (no new 
 | Key | Name | Desktop | Phone |
 | --- | --- | --- | --- |
 | `current` | Today's panel | Bottom strip | Bottom sheet |
-| `A` | Score bug | A one-line pill (league, abbreviations and scores, progress, More) at the bottom center; More opens a drawer above it | Two lines (~76px); More opens a drawer up to 55% of the screen |
-| `B` | Side sheet / peek | A tall 340px column docked at the left, everything stacked and scrolling | A bottom sheet peeking at ~132px (handle, league, progress, two rows); tap the handle to pull it up to 78% |
+| `A` | Score bug | A one-line pill (league, abbreviations and scores, progress, More) at the bottom center; More opens a drawer above it | Two lines (~76px); More opens a drawer, stopping short of the rail's buttons |
+| `B` | Side sheet / peek | A tall 340px column docked at the left, everything stacked and scrolling | A bottom sheet peeking at ~132px (handle, league, progress, two rows); tap the handle to pull it up to just under the rail's buttons |
 | `C` | Ticker | A fixed 84px lower third: score bug at the left, everything else as chips that scroll sideways (the mouse wheel scrolls them) | ~110px: score bug on top, a swipeable chip row under it |
 | `D` | Tabs | A fixed 168px card: score at the left, tabs (board, venue, watch) at the right | A fixed 200px sheet: score on top, tabs under it |
 | `E` | Floating card | A small card in the bottom left corner; chips open the board, venue or watch above it | A small card at the top of the screen; chips drop the details under it, leaving the bottom of the screen to the globe |

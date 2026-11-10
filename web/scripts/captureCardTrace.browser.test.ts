@@ -74,7 +74,7 @@ it('captures a pan across a scene for the card layout replay', async ({ skip }) 
   const container = document.createElement('div')
   container.style.cssText = `position: relative; width: ${size.width}px; height: ${size.height}px`
   document.body.append(container)
-  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera: start, onSelect: () => {}, onCameraMove: () => {} })
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, startCamera: start, onSelect: () => {}, onCameraMove: () => {}, onStage: () => {} })
   const map = (globe as unknown as { map: MapLibreMap }).map
   try {
     globe.show(venues.map(game))

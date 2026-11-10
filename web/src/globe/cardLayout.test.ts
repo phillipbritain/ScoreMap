@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { layOutCards, type CardLayout, type CardScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { cardLayout, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
+import { gatheringRulesBroken } from './gatheringRules'
 
 const venueGap = 16
 const scene: CardScene = { width: 1000, height: 800, venueGap }
@@ -33,7 +34,7 @@ interface Box extends ScreenBox {
 const lay = (cards: ScreenCard[], names: ScreenBox[] = []) => layOutCards(cards, { ...scene, names })
 
 /** How far each card that has room is moved from where it would sit. */
-function shiftsOf({ cards }: CardLayout): Map<string, ScreenOffset> {
+function shiftsOf({ cards }: CardPlacements): Map<string, ScreenOffset> {
   const shifts = new Map<string, ScreenOffset>()
   for (const [gameId, { offset, inCardCluster }] of cards) {
     if (!inCardCluster) shifts.set(gameId, { dx: offset.dx, dy: offset.dy + venueGap })
@@ -43,7 +44,7 @@ function shiftsOf({ cards }: CardLayout): Map<string, ScreenOffset> {
 
 const spreadCards = (cards: ScreenCard[]) => shiftsOf(lay(cards))
 
-function boxesOf(cards: ScreenCard[], layout: CardLayout): Box[] {
+function boxesOf(cards: ScreenCard[], layout: CardPlacements): Box[] {
   return cards.map((c) => {
     const { offset } = layout.cards.get(c.gameId)!
     return { ...c, x: c.venueX + offset.dx, y: c.venueY + offset.dy - c.height / 2 }
@@ -292,7 +293,7 @@ describe('layOutCards', () => {
       // Twenty games at nearly one spot, laid out on the small screen, then on a big one.
       const many = games('g', 20, 200, 150, 'Live')
       const first = layIn(many)
-      const clustered = (layout: CardLayout) => [...layout.cards].filter(([, { inCardCluster }]) => inCardCluster).map(([gameId]) => gameId)
+      const clustered = (layout: CardPlacements) => [...layout.cards].filter(([, { inCardCluster }]) => inCardCluster).map(([gameId]) => gameId)
 
       it('gives every card in a card cluster room at once, with the camera still', () => {
         expect(clustered(first).length).toBeGreaterThan(2)
@@ -422,7 +423,7 @@ describe('layOutCards', () => {
         })
       // How often a card with its venue on screen leaps further than a jump from where it was.
       let jumps = 0
-      let previous: CardLayout['cards'] = new Map()
+      let previous: CardPlacements['cards'] = new Map()
       for (let frame = 0; frame < 100; frame++) {
         const cards = crowd(frame)
         const layout = layOutCards(cards, scene, previous)
@@ -445,5 +446,173 @@ describe('layOutCards', () => {
     const { cards, cardClusters } = lay([card('a', -500, 100), card('b', -500, 100), card('c', 400, 1200)])
     for (const placement of cards.values()) expect(placement).toMatchObject({ offset: { dx: 0, dy: -venueGap }, moved: false })
     expect(cardClusters).toEqual([])
+  })
+})
+
+describe('cardLayout', () => {
+  // A venue dot reaches 6 pixels from its venue, ring and all; a venue cluster 12; a card cluster 15.
+  const venueSizes = { dot: 6, venueCluster: 12, cardCluster: 15 }
+  const big: LayoutScene = { ...scene, venueSizes }
+  // A card 106 by 60 for a game at this venue.
+  const at = (gameId: string, venueX: number, venueY: number, status: GameStatus = 'Live'): ScreenCard => ({
+    gameId,
+    status,
+    venueX,
+    venueY,
+    width: 106,
+    height: 60,
+  })
+  // A name over the whole screen, so no game has room for its card.
+  const noRoomAnywhere: LayoutScene = { ...big, names: [{ x: 500, y: 400, width: 3000, height: 3000 }] }
+  // A strip with room for one card, sitting above a venue at (65, 90).
+  const strip: LayoutScene = { width: 130, height: 100, venueGap, venueSizes }
+
+  const laidOut = (cards: ScreenCard[], with_: LayoutScene) => {
+    const layout = cardLayout()
+    layout.layOut(cards, with_)
+    return layout
+  }
+  const kinds = (layout: ReturnType<typeof cardLayout>) => layout.gatherings().map(({ kind, trails, noRoom, at }) => ({ kind, trails, noRoom, at }))
+
+  describe('gathering', () => {
+    it("gives a lone game with no room that nothing gathers in as its small pin, at its venue, and no card cluster", () => {
+      const layout = laidOut([at('a', 65, 90), at('c', 160, 90)], strip)
+      expect(layout.shows('c')).toEqual({ as: 'smallPin' })
+      expect(layout.cardClusters()).toEqual([])
+      expect(kinds(layout)).toEqual([
+        { kind: 'venueDot', trails: ['a'], noRoom: [], at: { venueOf: 'a' } },
+        { kind: 'smallPin', trails: [], noRoom: ['c'], at: { venueOf: 'c' } },
+      ])
+    })
+
+    it("makes a card cluster of two of a game with no room and another game's venue dot it would overlap, the trail meeting at it", () => {
+      const layout = laidOut([at('a', 65, 90), at('c', 70, 90)], strip)
+      expect(layout.shows('c')).toEqual({ as: 'inCardCluster', cardCluster: ['c', 'a'] })
+      expect(layout.shows('a')).toMatchObject({ as: 'card', cardCluster: ['c', 'a'] })
+      expect(layout.cardClusters()).toEqual([['c', 'a']])
+      expect(kinds(layout)).toEqual([{ kind: 'cardCluster', trails: ['a'], noRoom: ['c'], at: { x: 67.5, y: 90 } }])
+    })
+
+    it("counts games with no room near each other in one card cluster at the first one's venue, while nothing overlaps it", () => {
+      const layout = laidOut([at('p', 500, 400), at('q', 500, 400)], noRoomAnywhere)
+      expect(layout.cardClusters()).toEqual([['p', 'q']])
+      expect(kinds(layout)).toEqual([{ kind: 'cardCluster', trails: [], noRoom: ['p', 'q'], at: { venueOf: 'p' } }])
+    })
+
+    it('gathers card clusters that would overlap into one, in the middle of their venues', () => {
+      // 45 px apart: too far for one count (see cardClusterRadius), but two card clusters 25 px wide overlap.
+      const layout = laidOut([at('p', 500, 400), at('u', 545, 400)], { ...noRoomAnywhere, venueSizes: { ...venueSizes, cardCluster: 25 } })
+      expect(kinds(layout)).toEqual([{ kind: 'cardCluster', trails: [], noRoom: ['p', 'u'], at: { x: 522.5, y: 400 } }])
+    })
+
+    it('has the trails of cards at one venue meet at a venue cluster there, with no dots of their own', () => {
+      const layout = laidOut([at('a', 500, 400), at('b', 500, 400)], big)
+      expect(kinds(layout)).toEqual([{ kind: 'venueCluster', trails: ['a', 'b'], noRoom: [], at: { x: 500, y: 400 } }])
+      expect(layout.shows('b')).toMatchObject({ as: 'card', moved: true })
+    })
+
+    it('gathers venue dots that would overlap into a venue cluster in the middle of their venues, leaving a dot clear of them alone', () => {
+      const layout = laidOut([at('e', 500, 400, 'Upcoming'), at('f', 510, 400), at('g', 600, 400)], big)
+      expect(kinds(layout)).toEqual([
+        { kind: 'venueCluster', trails: ['e', 'f'], noRoom: [], at: { x: 505, y: 400 } },
+        { kind: 'venueDot', trails: ['g'], noRoom: [], at: { venueOf: 'g' } },
+      ])
+    })
+
+    it('gathers into a venue cluster a dot it would overlap, though the dot is clear of each dot in it', () => {
+      // h is 12 pixels from f, just clear of its dot, but 17 from the middle of e and f, where the
+      // venue cluster reaches 12.
+      const layout = laidOut([at('e', 500, 400), at('f', 510, 400), at('h', 522, 400)], big)
+      expect(kinds(layout).map(({ kind, trails }) => [kind, trails])).toEqual([['venueCluster', ['e', 'f', 'h']]])
+    })
+
+    describe('a card cluster that venue dots would overlap', () => {
+      // Room for two cards: r's above its venue, s's moved aside. p and q, less prominent, have none,
+      // their card cluster between r's and s's venues.
+      const crowd = [at('p', 200, 90, 'Final'), at('q', 200, 90, 'Final'), at('r', 190, 90), at('s', 210, 90)]
+      const layout = laidOut(crowd, { width: 300, height: 100, venueGap, venueSizes })
+
+      it('becomes one card cluster in the middle of all their venues, counting every game, those with no room first', () => {
+        expect(kinds(layout)).toEqual([{ kind: 'cardCluster', trails: ['r', 's'], noRoom: ['p', 'q'], at: { x: 200, y: 90 } }])
+        expect(layout.cardClusters()).toEqual([['p', 'q', 'r', 's']])
+      })
+
+      it('shows the games with cards as their cards, their trails meeting at it, and the rest in it', () => {
+        expect(['p', 'q', 'r', 's'].map((id) => layout.shows(id))).toEqual([
+          { as: 'inCardCluster', cardCluster: ['p', 'q', 'r', 's'] },
+          { as: 'inCardCluster', cardCluster: ['p', 'q', 'r', 's'] },
+          expect.objectContaining({ as: 'card', moved: false, cardCluster: ['p', 'q', 'r', 's'] }),
+          expect.objectContaining({ as: 'card', moved: true, cardCluster: ['p', 'q', 'r', 's'] }),
+        ])
+      })
+    })
+  })
+
+  it("doesn't lay out a game it isn't given, nor one given last frame but not this", () => {
+    const layout = laidOut([at('a', 500, 400), at('b', 500, 400)], big)
+    expect(layout.shows('z')).toEqual({ as: 'notLaidOut' })
+    expect(layout.layOut([at('a', 500, 400)], big)).toBe(true)
+    expect(layout.shows('b')).toEqual({ as: 'notLaidOut' })
+    expect(kinds(layout)).toEqual([{ kind: 'venueDot', trails: ['a'], noRoom: [], at: { venueOf: 'a' } }])
+  })
+
+  describe('frame after frame', () => {
+    it('keeps cards where they were as the globe turns their venues a pixel, and says nothing changed', () => {
+      const layout = cardLayout()
+      expect(layout.layOut([at('a', 500, 400), at('b', 500, 400)], big)).toBe(true)
+      const b = layout.shows('b')
+      expect(layout.layOut([at('a', 501, 400), at('b', 501, 400)], { ...big, moving: true })).toBe(false)
+      expect(layout.shows('b')).toMatchObject({ as: 'card', offset: (b as { offset: ScreenOffset }).offset })
+    })
+
+    it('says a frame changed when a game moves between a card cluster and its small pin, though no card moves', () => {
+      const layout = cardLayout()
+      layout.layOut([at('a', 65, 90), at('c', 70, 90)], strip)
+      expect(layout.layOut([at('a', 65, 90), at('c', 70, 90)], strip)).toBe(false)
+      expect(layout.layOut([at('a', 65, 90), at('c', 160, 90)], strip)).toBe(true)
+      expect(layout.shows('c')).toEqual({ as: 'smallPin' })
+    })
+
+    it('gives the games in card clusters turns at looking for room while the camera moves, one a frame, and the rest once it stops', () => {
+      const many = games('g', 20, 200, 150, 'Live')
+      const layout = cardLayout()
+      layout.layOut(many, { width: 400, height: 300, venueGap, venueSizes })
+      const noRoom = () => many.filter(({ gameId }) => layout.shows(gameId).as !== 'card').length
+      const first = noRoom()
+      expect(first).toBeGreaterThan(2)
+      layout.layOut(many, { ...big, moving: true })
+      expect(noRoom()).toBe(first - 1)
+      layout.layOut(many, { ...big, moving: true })
+      expect(noRoom()).toBe(first - 2)
+      layout.layOut(many, big)
+      expect(noRoom()).toBe(0)
+    })
+
+    it('shows every game once, never as a card cluster of one, its trail ending where it should, as the globe pans across a crowd', () => {
+      // Forty venues packed in a spiral, panned across a small screen 4 px a frame, as in layOutCards'
+      // test of anchoring, then still.
+      const statuses: GameStatus[] = ['Live', 'Upcoming', 'Final']
+      // Beside it, two games at one venue.
+      const crowd = (frame: number): ScreenCard[] => [
+        ...Array.from({ length: 40 }, (_, i) => {
+          const r = 14 * Math.sqrt(i) * (1 + frame / 1000)
+          const angle = i * 2.39996
+          return at(`g${String(i).padStart(2, '0')}`, 500 - 4 * frame + r * Math.cos(angle), 200 + r * Math.sin(angle), statuses[i % 3])
+        }),
+        at('v1', 450 - 4 * frame, 360),
+        at('v2', 450 - 4 * frame, 360),
+      ]
+      const small: LayoutScene = { width: 500, height: 400, venueGap, venueSizes }
+      const layout = cardLayout()
+      const seen = new Set<string>()
+      for (let frame = 0; frame < 80; frame++) {
+        const cards = crowd(Math.min(frame, 70))
+        layout.layOut(cards, { ...small, moving: frame < 70 })
+        expect([...gatheringRulesBroken(layout, cards)], `frame ${frame}`).toEqual([])
+        for (const { kind } of layout.gatherings()) seen.add(kind)
+      }
+      // Every way of gathering came up along the way.
+      expect([...seen].sort()).toEqual(['cardCluster', 'smallPin', 'venueCluster', 'venueDot'])
+    })
   })
 })

@@ -1,11 +1,11 @@
 import type { Map as MapLibreMap } from 'maplibre-gl'
-import type { CardScene, ScreenCard } from './cardLayout'
+import type { LayoutScene, ScreenCard } from './cardLayout'
 import type { LoadingStage } from './globeMap'
 
-/** What the score cards were laid out from, one frame of it. */
+/** What the card layout was given, one frame of it: its whole input, so a replay lays it out the same way. */
 export interface LaidOutFrame {
   cards: ScreenCard[]
-  scene: CardScene
+  scene: LayoutScene
 }
 
 /** What the globe tells scripts of how far it has loaded. */

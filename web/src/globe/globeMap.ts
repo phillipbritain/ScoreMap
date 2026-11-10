@@ -59,6 +59,7 @@ import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
+import type { Showing } from './cardLayout'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import {
   centerLatitude,
@@ -398,7 +399,7 @@ export class GlobeMap {
       const maxZoom = this.map.getMaxZoom()
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01
       if (this.destroyed || !arrived || zoom >= maxZoom || this.selectedGameId !== game.id) return
-      if (this.cards.hasNoRoom(game.id)) this.center(game, panel, atEquator + 1)
+      if (hasNoRoom(this.cards.shows(game.id))) this.center(game, panel, atEquator + 1)
     })
   }
 
@@ -802,8 +803,8 @@ export class GlobeMap {
 
   private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
     const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
-    const gameIds = typeof firstGameId === 'string' ? this.cards.cardClusterOf(firstGameId) : undefined
-    if (gameIds) this.zoomToCardCluster(gameIds)
+    const showing = typeof firstGameId === 'string' ? this.cards.shows(firstGameId) : undefined
+    if (showing?.as === 'inCardCluster') this.zoomToCardCluster(showing.cardCluster)
   }
 
   /**
@@ -827,8 +828,8 @@ export class GlobeMap {
     this.map.once('idle', () => {
       const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
       if (!arrived || zoom >= maxZoom) return
-      const noRoom = gameIds.filter((id) => this.cards.hasNoRoom(id))
-      const clusters = this.cards.cardClusterGames().filter((cluster) => cluster.some((id) => noRoom.includes(id)))
+      const noRoom = gameIds.filter((id) => hasNoRoom(this.cards.shows(id)))
+      const clusters = this.cards.cardClusters().filter((cluster) => cluster.some((id) => noRoom.includes(id)))
       const still = [...new Set([...noRoom, ...clusters.flat()])]
       if (still.length > 0) this.zoomToCardCluster(still)
     })
@@ -912,4 +913,9 @@ function gameLayersIn(theme: Theme, selectedGameId: string | null, size: PinSize
 /** A fully transparent image, for the pins', cards' and clusters' invisible footprints. */
 function addBlankImage(map: MapLibreMap, name: string, width: number, height: number): void {
   map.addImage(name, { width, height, data: new Uint8Array(width * height * 4) })
+}
+
+/** Whether a game has no room for its card: it's counted in a card cluster, or shows as its small pin. */
+function hasNoRoom(showing: Showing): boolean {
+  return showing.as === 'inCardCluster' || showing.as === 'smallPin'
 }

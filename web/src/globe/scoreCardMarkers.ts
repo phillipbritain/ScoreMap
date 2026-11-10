@@ -8,8 +8,8 @@ import { sidesTopFirst } from '../games/sides'
 import { noRecentScorers, spotlightElapsed, type RecentScorers, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
-import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
-import { cardLayoutDrawing, cardLayoutSource, type CardLayoutDrawing, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
+import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type ScreenOffset, type Showing, type VenueSizes } from './cardLayout'
+import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
@@ -46,10 +46,8 @@ interface PlacedCard {
    * cardLayout). Null until it's first laid out.
    */
   offset: ScreenOffset | null
-  /** True while there's no room for the card and its game is counted in a card cluster instead. */
+  /** True while there's no room for the card: its game is counted in a card cluster, or shows as its small pin. */
   inCardCluster: boolean
-  /** In a card cluster, how many layouts ago it last looked for room (see cardLayout). */
-  lookedAgo?: number
 }
 
 /**
@@ -92,10 +90,10 @@ export class ScoreCardMarkers {
   /** The zoom score cards show from now (see FittedZoom). */
   private readonly cardZoom: () => number
   private readonly onSelect: (gameId: string) => void
-  /** The card clusters as last laid out (see cardLayoutDrawing). */
-  private cardClusters: DrawnCardCluster[] = []
-  /** The games with no room for a card that nothing gathers in, as last laid out, shown as their small pins (see cardLayoutDrawing). */
-  private smallPins: string[] = []
+  /** Where each card goes, and how each game shows, as last laid out (see cardLayout). */
+  private layout: CardLayout = cardLayout()
+  /** The card clusters as last drawn, for pulses over them (see cardLayoutDrawing). */
+  private cardClustersDrawn: DrawnCardCluster[] = []
   /**
    * The layout last given to the map (see drawLayout), so it's given again only when it changes: its
    * features with the points worked out on screen left blank, and where on the globe those points were put.
@@ -370,74 +368,60 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * Moves cards that would overlap apart, each with a trail back to its venue, and counts the games
-   * there's no room for (see cardLayout). True if any card moved, or went into or out of a card cluster.
+   * Lays out the cards (see cardLayout) and puts each where the layout has it: moved aside with a trail
+   * back to its venue, or hidden while there's no room for it. True if the layout differs from the
+   * frame before.
    */
   private layOut(gameIds: ReadonlySet<string>): boolean {
     // In game order, as the pins come in any order: the layout lands the same way whatever order they
     // come in, and so then do its trails, so the layout isn't given to the map again for their order alone.
-    const cards = [...gameIds].sort().map((gameId): CardOnGlobe => {
+    const cards = [...gameIds].sort().map((gameId): ScreenCard => {
       const { marker, width, height } = this.placed.get(gameId)!
-      const lngLat = marker.getLngLat()
-      const venue = this.map.project(lngLat)
-      const game = this.games.get(gameId)!
-      return {
-        gameId,
-        status: game.status,
-        venueX: venue.x,
-        venueY: venue.y,
-        width,
-        height,
-        lngLat: lngLat.toArray(),
-        color: this.colorOf(game),
-        flames: game.hot,
-      }
+      const venue = this.map.project(marker.getLngLat())
+      return { gameId, status: this.games.get(gameId)!.status, venueX: venue.x, venueY: venue.y, width, height }
     })
-    // Where the cards were last frame, so they stay put while they still have room.
-    const previous = new Map<string, CardPlacement>()
-    for (const gameId of gameIds) {
-      const { offset, inCardCluster, lookedAgo } = this.placed.get(gameId)!
-      if (offset) previous.set(gameId, { offset, inCardCluster, moved: false, trail: null, lookedAgo })
-    }
     this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
-    const scene = {
+    const theme = this.theme()
+    const scene: LayoutScene = {
       ...this.mapSize,
-      venueGap: this.theme().components.ScoreCard.size.venueGap,
+      venueGap: theme.components.ScoreCard.size.venueGap,
       names: this.placeNames.nameBoxes(),
       moving: this.moving,
+      venueSizes: venueSizes(theme),
     }
     this.moving = false
-    traceLayout({ cards: cards.map(({ lngLat: _lngLat, color: _color, flames: _flames, ...card }) => card), scene })
-    const layout = layOutCards(cards, scene, previous)
+    traceLayout({ cards, scene })
+    const changed = this.layout.layOut(cards, scene)
 
-    let moved = false
-    for (const [gameId, placed] of this.placed) {
-      const placement = layout.cards.get(gameId)
-      if (!placement) continue
-      const { offset, inCardCluster, moved: movedAside, lookedAgo } = placement
-      placed.lookedAgo = lookedAgo
+    // Hidden at the venue gap above its venue while there's no room for it.
+    const noRoom = { dx: 0, dy: -scene.venueGap }
+    for (const gameId of gameIds) {
+      const placed = this.placed.get(gameId)!
+      const showing = this.layout.shows(gameId)
+      const offset = showing.as === 'card' ? showing.offset : noRoom
       if (offset.dx !== placed.offset?.dx || offset.dy !== placed.offset?.dy) {
         placed.offset = offset
         placed.marker.setOffset([offset.dx, offset.dy])
-        placed.marker.getElement().toggleAttribute('data-moved', movedAside)
-        moved = true
+        placed.marker.getElement().toggleAttribute('data-moved', showing.as === 'card' && showing.moved)
       }
+      const inCardCluster = showing.as !== 'card'
       if (inCardCluster !== placed.inCardCluster) {
         placed.inCardCluster = inCardCluster
         // Hidden rather than removed, so the card keeps its size for laying out the next frame.
         if (inCardCluster) this.releaseFocus(placed.marker.getElement())
         placed.marker.getElement().toggleAttribute('data-in-card-cluster', inCardCluster)
-        moved = true
       }
     }
-    const drawn = this.drawLayout(cards, layout, scene.moving)
+    const onGlobe = cards.map((card): CardOnGlobe => {
+      const game = this.games.get(card.gameId)!
+      return { ...card, lngLat: this.placed.get(card.gameId)!.marker.getLngLat().toArray(), color: this.colorOf(game), flames: game.hot }
+    })
+    this.cardClustersDrawn = this.drawLayout(onGlobe, scene.moving === true)
     // A card on screen is always shown with its city's name; a game in a cluster gives its name way.
     this.placeNames.showCards(
-      cards.filter(({ gameId }) => layout.cards.get(gameId)?.inCardCluster === false).map(({ lngLat: [longitude, latitude] }) => ({ longitude, latitude })),
+      onGlobe.filter(({ gameId }) => this.layout.shows(gameId).as === 'card').map(({ lngLat: [longitude, latitude] }) => ({ longitude, latitude })),
     )
-    this.cardClusters = drawn.cardClusters
-    this.smallPins = drawn.smallPins
-    return moved
+    return changed
   }
 
   /**
@@ -447,18 +431,9 @@ export class ScoreCardMarkers {
    * move on screen with it: they're given again only when the layout changes, or the globe turning
    * has carried a point worked out on screen (a venue cluster's, between its venues) or a footprint
    * off where it should be. Giving them again sends them to MapLibre's worker to be made into tiles,
-   * too slow for every frame of a pan. Gives back the card clusters as drawn, and the games shown as small pins.
+   * too slow for every frame of a pan. Gives back the card clusters as drawn.
    */
-  private drawLayout(cards: readonly CardOnGlobe[], layout: CardLayout, moving: boolean): Pick<CardLayoutDrawing, 'cardClusters' | 'smallPins'> {
-    const theme = this.theme()
-    const { ring } = theme.components.Trail.venue
-    const venueSizes = {
-      dot: ring.radius + ring.width,
-      // A venue cluster is drawn as a venue dot is (see cardLayoutLayers).
-      cluster: () => ring.radius + ring.width,
-      // As wide as a pin cluster of some games, outline and all (see cardLayoutLayers).
-      cardCluster: theme.components.Cluster.radius.some,
-    }
+  private drawLayout(cards: readonly CardOnGlobe[], moving: boolean): DrawnCardCluster[] {
     // Each point worked out on screen, by the place on the globe it was turned into.
     const onScreen = new Map<[number, number], [number, number]>()
     const unproject = (x: number, y: number) => {
@@ -466,9 +441,9 @@ export class ScoreCardMarkers {
       onScreen.set(lngLat, [x, y])
       return lngLat
     }
-    const { source: features, trails, cardClusters, smallPins } = cardLayoutDrawing(cards, layout, unproject, venueSizes)
+    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, this.layout, unproject)
     const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
-    if (!source) return { cardClusters, smallPins }
+    if (!source) return cardClusters
     this.trails.show(trails)
     // The features with those points and the footprints' offsets left out, which are compared by how far they've come.
     const footprints: number[][] = []
@@ -488,25 +463,20 @@ export class ScoreCardMarkers {
         return Math.hypot(at.x - x, at.y - y) <= max.point
       }) &&
       footprints.every(([dx, dy], i) => Math.hypot(dx - drawn.footprints[i][0], dy - drawn.footprints[i][1]) <= max.footprint)
-    if (held) return { cardClusters, smallPins }
+    if (held) return cardClusters
     void source.setData(features)
     this.layoutDrawn = { shape, lngLats: [...onScreen.keys()], footprints }
-    return { cardClusters, smallPins }
+    return cardClusters
   }
 
-  /** The games in each card cluster on screen now. */
-  cardClusterGames(): string[][] {
-    return this.cardClusters.map((cardCluster) => cardCluster.gameIds)
+  /** How a game shows on screen now, zoomed in (see cardLayout). */
+  shows(gameId: string): Showing {
+    return this.layout.shows(gameId)
   }
 
-  /** Whether this game has no room for its card now: it's counted in a card cluster, or shows as its small pin. */
-  hasNoRoom(gameId: string): boolean {
-    return this.placed.get(gameId)?.inCardCluster ?? false
-  }
-
-  /** The games in the card cluster on screen now that's drawn at this game's venue, the first in it. */
-  cardClusterOf(firstGameId: string): string[] | undefined {
-    return this.cardClusters.find(({ gameIds }) => gameIds[0] === firstGameId)?.gameIds
+  /** The games in each card cluster on screen now, those with no room first. */
+  cardClusters(): readonly (readonly string[])[] {
+    return this.layout.cardClusters()
   }
 
   /**
@@ -515,16 +485,15 @@ export class ScoreCardMarkers {
    */
   animate(gameId: string, animation: PinAnimation): boolean {
     // A game whose card is on screen animates its card, though its trail meets at a card cluster.
-    const cardCluster = this.placed.get(gameId)?.inCardCluster
-      ? this.cardClusters.find(({ gameIds }) => gameIds.includes(gameId))
-      : undefined
+    const showing = this.layout.shows(gameId)
     const game = this.games.get(gameId)
-    if (cardCluster && game) {
-      pulse(this.map, this.colorOf(game), cardCluster.lngLat, animation, 'cluster')
-      return true
-    }
     const placed = this.placed.get(gameId)
-    if (this.smallPins.includes(gameId) && game && placed) {
+    if (showing.as === 'inCardCluster' && game) {
+      const drawn = this.cardClustersDrawn.find(({ gameIds }) => gameIds[0] === showing.cardCluster[0])
+      if (drawn) pulse(this.map, this.colorOf(game), drawn.lngLat, animation, 'cluster')
+      return drawn !== undefined
+    }
+    if (showing.as === 'smallPin' && game && placed) {
       pulse(this.map, this.colorOf(game), placed.marker.getLngLat().toArray(), animation, 'pin')
       return true
     }
@@ -564,10 +533,22 @@ export class ScoreCardMarkers {
       this.releaseFocus(marker.getElement())
       marker.remove()
     }
-    this.cardClusters = []
-    this.smallPins = []
+    this.layout = cardLayout()
+    this.cardClustersDrawn = []
     this.placed.clear()
     this.animating.clear()
+  }
+}
+
+/** How far what the card layout gathers into reaches on screen (see VenueSizes), as cardLayoutLayers draws it. */
+function venueSizes(theme: Theme): VenueSizes {
+  const { ring } = theme.components.Trail.venue
+  return {
+    dot: ring.radius + ring.width,
+    // A venue cluster is drawn as a venue dot is (see cardLayoutLayers).
+    venueCluster: ring.radius + ring.width,
+    // As wide as a pin cluster of some games, outline and all (see cardLayoutLayers).
+    cardCluster: theme.components.Cluster.radius.some,
   }
 }
 

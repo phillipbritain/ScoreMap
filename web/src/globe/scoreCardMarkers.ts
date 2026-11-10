@@ -15,6 +15,8 @@ import type { PinAnimation } from './pinAnimation'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
+// PROTOTYPE (throwaway): score-change variants, see blipPrototype.ts.
+import { blipVariant, registerFireAll, venueRing } from './blipPrototype'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import type { GlobeSettling } from './globeSettling'
@@ -136,6 +138,9 @@ export class ScoreCardMarkers {
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
     map.on('move', this.cameraMoved)
     map.on('resize', this.resized)
+    // PROTOTYPE (throwaway): the bar's button fires a score change on every game shown on screen.
+    if (import.meta.env.DEV)
+      registerFireAll(() => [...this.games.keys()].filter((gameId) => this.animate(gameId, 'score')).length)
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -449,6 +454,11 @@ export class ScoreCardMarkers {
     }
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
     if (!element) return false
+    // PROTOTYPE (throwaway): the `venue` variant leaves the card alone and rings its venue dot.
+    if (animation === 'score' && blipVariant() === 'venue' && game && placed) {
+      venueRing(this.map, this.colorOf(game), placed.marker.getLngLat().toArray())
+      return true
+    }
     const playing = this.animating.get(gameId)
     if (playing) element.classList.remove(animationClass(playing))
     // Reading layout between removing and adding the class restarts an animation already playing.

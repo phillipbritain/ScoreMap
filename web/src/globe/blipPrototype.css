@@ -1,0 +1,278 @@
+/* PROTOTYPE (throwaway, not for main): calmer score-change variants, see blipPrototype.ts.
+   html[data-blip-calm] is set for every variant but `current`: it first strips today's bounce and
+   score flash (keeping the scorer's spotlight), then each variant adds its own look. Each card-level
+   animation lasts as long as its variant, as ScoreCardMarkers removes the class on its animationend. */
+
+html[data-blip-calm] .score-card--animate-score {
+  animation: blip-proto-hold 1.4s linear;
+}
+
+html[data-blip-calm] .score-card--animate-score .score-card__score {
+  animation: none;
+}
+
+html[data-blip-calm] .score-card--animate-score .score-card__team--scored .score-card__score {
+  animation: scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms);
+}
+
+/* Nothing visible: only there so the card's animationend comes. */
+@keyframes blip-proto-hold {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes blip-proto-ink {
+  0%,
+  40% {
+    color: var(--card-color);
+  }
+}
+
+/* --- small: today's bounce, a fifth the size and a third the time, one beat ---------------------- */
+html[data-blip-proto='small'] .score-card--animate-score {
+  animation: blip-proto-small 0.5s ease-out;
+}
+
+html[data-blip-proto='small'] .score-card--animate-score .score-card__score {
+  animation: blip-proto-ink 0.8s ease-out;
+}
+
+@keyframes blip-proto-small {
+  35% {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 0 2px var(--card-color),
+      0 0 8px 2px var(--card-color);
+  }
+}
+
+/* --- glow: nothing moves; the card's edge lights and fades, the score takes the game's color ------ */
+html[data-blip-proto='glow'] .score-card--animate-score {
+  animation: blip-proto-glow 1.6s ease-out;
+}
+
+html[data-blip-proto='glow'] .score-card--animate-score .score-card__score {
+  animation: blip-proto-ink 1.6s ease-out;
+}
+
+@keyframes blip-proto-glow {
+  0%,
+  20% {
+    box-shadow:
+      0 0 0 2px var(--card-color),
+      0 0 14px 4px var(--card-color);
+  }
+}
+
+/* --- roll: the card stays put; only the new number ticks up into place --------------------------- */
+html[data-blip-proto='roll'] .score-card--animate-score {
+  animation: blip-proto-hold 0.9s linear;
+}
+
+html[data-blip-proto='roll'] .score-card--animate-score .score-card__score {
+  display: inline-block;
+}
+
+/* The side that scored rolls; a card with no scorer known (a lead change, the bar's button) rolls both. */
+html[data-blip-proto='roll'] .score-card--animate-score .score-card__team--scored .score-card__score,
+html[data-blip-proto='roll'] .score-card--animate-score:not(:has(.score-card__team--scored)) .score-card__score {
+  animation:
+    blip-proto-roll 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    blip-proto-ink 0.9s ease-out,
+    scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms);
+}
+
+@keyframes blip-proto-roll {
+  from {
+    transform: translateY(0.7em);
+    opacity: 0;
+  }
+}
+
+/* --- underline: a line in the game's color draws under the new score, then fades ----------------- */
+html[data-blip-proto='underline'] .score-card--animate-score {
+  animation: blip-proto-hold 2.2s linear;
+}
+
+html[data-blip-proto='underline'] .score-card--animate-score .score-card__score {
+  position: relative;
+}
+
+html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score::after,
+html[data-blip-proto='underline']
+  .score-card--animate-score:not(:has(.score-card__team--scored))
+  .score-card__score::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--card-color);
+  transform-origin: right;
+  opacity: 0;
+  animation: blip-proto-underline 2.2s ease-out;
+}
+
+@keyframes blip-proto-underline {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  15%,
+  60% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* --- dot: a small dot in the game's color sits on the card's corner for a few seconds ------------ */
+html[data-blip-proto='dot'] .score-card--animate-score {
+  animation: blip-proto-hold 4s linear;
+}
+
+html[data-blip-proto='dot'] .score-card--animate-score::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--game-color);
+  box-shadow:
+    0 0 0 2px var(--score-card-fill),
+    0 0 6px 1px var(--game-color);
+  opacity: 0;
+  pointer-events: none;
+  animation: blip-proto-dot 4s ease-out;
+}
+
+@keyframes blip-proto-dot {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  8%,
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* --- venue: the card isn't touched (see blipPrototype.ts); one soft ring leaves its venue dot ----- */
+.blip-proto-venue-ring {
+  box-sizing: border-box;
+  width: var(--pulse-size-pin);
+  height: var(--pulse-size-pin);
+  border: var(--pulse-ring-calm) solid var(--pulse-color);
+  border-radius: 50%;
+  opacity: 0;
+  animation: blip-proto-venue 1.4s ease-out;
+}
+
+@keyframes blip-proto-venue {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Reduce motion: nothing moves or grows; what's left is color, fading. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-blip-proto='small'] .score-card--animate-score {
+    animation: blip-proto-glow 0.8s ease-out;
+  }
+
+  html[data-blip-proto='roll'] .score-card--animate-score .score-card__team--scored .score-card__score,
+  html[data-blip-proto='roll'] .score-card--animate-score:not(:has(.score-card__team--scored)) .score-card__score {
+    animation:
+      blip-proto-ink 0.9s ease-out,
+      scorer-spotlight-text 3s step-end var(--scorer-spotlight-delay, 0ms);
+  }
+
+  html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score::after,
+  html[data-blip-proto='underline']
+    .score-card--animate-score:not(:has(.score-card__team--scored))
+    .score-card__score::after {
+    transform: none;
+    animation-name: blip-proto-fade;
+  }
+
+  html[data-blip-proto='dot'] .score-card--animate-score::after {
+    animation-name: blip-proto-fade;
+  }
+
+  .blip-proto-venue-ring {
+    animation: pin-pulse-still 2s ease-in-out;
+  }
+}
+
+@keyframes blip-proto-fade {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- the floating bar --------------------------------------------------------------------------- */
+.blip-proto-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font: 13px/1.2 system-ui, sans-serif;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 50%);
+  outline: 2px dashed #ff2d95;
+}
+
+.blip-proto-bar button {
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #333;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.blip-proto-bar button:hover {
+  background: #555;
+}
+
+.blip-proto-bar__label {
+  min-width: 190px;
+  text-align: center;
+}
+
+.blip-proto-bar__fire {
+  background: #ff2d95 !important;
+}

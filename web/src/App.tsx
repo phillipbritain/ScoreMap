@@ -50,6 +50,11 @@ const BehaviorTuner = import.meta.env.DEV
   ? lazy(() => import('./behaviorTuner/BehaviorTuner').then(({ BehaviorTuner }) => ({ default: BehaviorTuner })))
   : null
 
+// PROTOTYPE (throwaway): the score-change variants' bar, on local runs only (see globe/blipPrototype.ts).
+const BlipPrototypeBar = import.meta.env.DEV
+  ? lazy(() => import('./globe/BlipPrototypeBar').then(({ BlipPrototypeBar }) => ({ default: BlipPrototypeBar })))
+  : null
+
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
 
@@ -157,6 +162,11 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
     <div className="app">
       <GlassLens />
       <Tooltips />
+      {BlipPrototypeBar && (
+        <Suspense fallback={null}>
+          <BlipPrototypeBar />
+        </Suspense>
+      )}
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

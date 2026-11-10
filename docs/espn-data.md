@@ -16,7 +16,7 @@ Summary lookups run in the background, at most four at once across all leagues, 
 
 ## What ScoreMap reads
 
-From the **scoreboard**, for each game: its id, start, status (`status.type`), clock, period, the period's phase, its venue's name, city, state and country, the broadcasters (`geoBroadcasts`, else `broadcasts`), and its notes' headlines (`competitions[].notes`). For each team: abbreviation, name, logo, score (cricket's score text as its innings), its overall record (`records`, type `total`; in rugby that's the side's form, "LWWWW", which isn't read) and its poll ranking (`curatedRank.current`, 1–25; ESPN puts unranked teams at 99). Also the attendance, the first betting line (`odds[0]`: `details`, `overUnder`, `provider.name`), a Live game's `situation` (`lastPlay.text`, `downDistanceText`, `possession`, `balls`, `strikes`, `outs`, `onFirst`, `onSecond`, `onThird`), and soccer's goals and cards (`competitions[].details`, the scorer from `athletesInvolved`). Rugby's details name each by `type.text` instead ("try", "conversion", "penalty goal", "drop goal", "yellow card", and "player substituted" and "substitute on", which aren't read).
+From the **scoreboard**, for each game: its id, start, status (`status.type`), clock, period, the period's phase, its venue's name, city, state and country, the broadcasters (`geoBroadcasts`, else `broadcasts`), and its notes' headlines (`competitions[].notes`). For each team: abbreviation, name, logo, score (cricket's score text as its innings), its overall record (`records`, type `total`; in rugby that's the side's form, "LWWWW", which isn't read) and its poll ranking (`curatedRank.current`, 1–25; ESPN puts unranked teams at 99). Also a Live game's `situation` (`lastPlay.text`, `downDistanceText`, `possession`, `balls`, `strikes`, `outs`, `onFirst`, `onSecond`, `onThird`), and soccer's goals and cards (`competitions[].details`, the scorer from `athletesInvolved`). Rugby's details name each by `type.text` instead ("try", "conversion", "penalty goal", "drop goal", "yellow card", and "player substituted" and "substitute on", which aren't read).
 
 In **tennis** (`tennis/atp`, `tennis/wta`) each event is a tournament, its matches the competitions under its `groupings`. Only main-draw singles matches are read: groupings `mens-singles` and `womens-singles`, leaving out rounds whose `round.displayName` starts "Qualifying" and matches with a side still "TBD". Each is a game with the competition's id (Top Events list it as `competitionId`). For each player: `athlete.shortName`, `displayName` and `flag.href`; each set's games from `linescores` (`value`, `tiebreak`, and `winner` for a set won); and `winner` for who advanced after a retirement (`STATUS_RETIRED`) or walkover (`STATUS_WALKOVER`). The venue is the event's `name` (the tournament) in the competition's `venue.fullName` (its city, "Shanghai, China PR"), with `venue.court`, and the note is the tournament and `round.displayName` in shorthand ("QF", "R1"). `format.regulation.periods` isn't read: it says 5 even at best-of-3 tournaments. Each day's tennis scoreboard lists the whole of each tournament under way.
 
@@ -49,7 +49,8 @@ Per game (`competitions[]`):
 - `highlights`: video clips, where ESPN has them.
 - `series`: a playoff series' standing ("SEA wins series 3-2", with each side's wins), or a two-legged soccer tie's aggregate score.
 - `neutralSite`, `conferenceCompetition`, and the venue's `indoor`.
-- The rest of `odds[0]`: `moneyline`, `spread`, `homeTeamOdds` and `awayTeamOdds` (favorite or underdog, and whether at the open). ESPN drops the odds once a game is over.
+- `attendance`: the crowd count, which ScoreMap does not read.
+- `odds`: betting data, which ScoreMap does not read, including `details`, `overUnder`, `provider.name`, `moneyline`, `spread`, `homeTeamOdds` and `awayTeamOdds` (favorite or underdog, and whether at the open). ESPN drops the odds once a game is over.
 - `situation` beyond what ScoreMap reads, only while a game is under way: in baseball the `batter` and `pitcher`, each with a summary of their game so far ("0.0 IP, 0 ER, 0 H, 0 BB"); with every sport's `lastPlay`, its type, the players in it and (basketball) each team's chance of winning. Football's is said to have red-zone and timeout fields; no live football response has been checked yet.
 - `altGameNote`, `wasSuspended`, `format` (the regulation periods).
 
@@ -62,18 +63,18 @@ Anything taken from here only refreshes when the score changes. Fresher would me
 - `winprobability`: each team's chance of winning after every play (basketball: about 470 entries a game).
 - `drives` (football): each drive, its plays and its result.
 - `plays`: every play, with shot coordinates in basketball.
-- `gameInfo`: the attendance, the officials, the venue (with its photos, and whether it's grass), and the weather at outdoor football games.
+- `gameInfo`: the attendance, the officials, the venue (with its photos, and whether it's grass), and the weather at outdoor football games. ScoreMap does not read these fields.
 - `standings`: the league's or division's standings.
 - `injuries`: each team's injury report.
 - `seasonseries`: how the two teams' games this season have gone.
 - `news`, `article`, `videos`: ESPN's coverage of the game.
-- `pickcenter`, `againstTheSpread`, `odds`: more betting data, from several bookmakers.
+- `pickcenter`, `againstTheSpread`, `odds`: betting data from several bookmakers, which ScoreMap does not read.
 
 Soccer, rugby, cricket and tennis games never get a summary request. Soccer's summary has its key events (`keyEvents`), lineups and match stats; cricket's has scorecards.
 
 ### Not offered
 
-ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scoreboard is the only one that has a venue's `capacity`, which ScoreMap doesn't read.
+ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scoreboard is the only one that has a venue's `capacity`, which ScoreMap doesn't read, as with attendance and odds.
 
 ### NCAA men's hockey
 

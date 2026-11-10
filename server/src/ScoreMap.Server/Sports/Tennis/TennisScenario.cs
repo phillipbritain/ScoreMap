@@ -9,7 +9,7 @@ namespace ScoreMap.Server.Sports;
 /// <summary>
 /// Tennis in a scenario looks as it does live: play moves a match on set by set itself
 /// (<see cref="TennisMatchPlay"/>), so its progress line and scoreline come from its sets; a player has
-/// no record, a match no odds, crowd or last score (nobody's play scores a game or set), and its note
+/// no record, a match no last score (nobody's play scores a game or set), and its note
 /// is a round of the draw in tennis's shorthand.
 /// </summary>
 internal sealed class TennisScenario(League league) : SportScenario(league)

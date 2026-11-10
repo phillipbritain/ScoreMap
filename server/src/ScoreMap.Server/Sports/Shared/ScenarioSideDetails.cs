@@ -35,26 +35,6 @@ internal abstract partial class SportScenario
 
     protected abstract string NoteText(Random random);
 
-    internal ProviderOdds? Odds(ProviderGame game)
-    {
-        var random = Seeded(game.Id, "odds");
-        var sides = game.Sides();
-        var favorite = random.Next(2) == 0 ? sides.Home : sides.Away;
-        return BettingLine(random, favorite) is (var line, var total) ? new ProviderOdds(line, total, "DraftKings") : null;
-    }
-
-    /// <summary>The favorite's line and the total, for a sport with odds; none by default.</summary>
-    protected virtual (string Line, double Total)? BettingLine(Random random, ProviderTeam favorite) => null;
-
-    protected static double Between(Random random, double low, double high, double step) =>
-        low + step * random.Next((int)((high - low) / step) + 1);
-
-    internal int? Attendance(ProviderGame game) =>
-        Capacity is { } capacity ? (int)(capacity * (0.6 + 0.4 * Seeded(game.Id, "crowd").NextDouble())) : null;
-
-    /// <summary>A full house, for a sport whose games have a crowd; none by default.</summary>
-    protected virtual int? Capacity => null;
-
     internal virtual (ProviderScoringPlay? LastScore, IReadOnlyList<ProviderKeyEvent> KeyEvents) Events(
         ProviderGame game, ScenarioSeen? seen, int minute) => (Scored(game, seen) ?? seen?.LastScore, []);
 

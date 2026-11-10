@@ -37,8 +37,6 @@ const arrowhead: PlacedGame = {
   broadcasters: [{ name: 'CBS', country: 'US', watchUrl: null }],
   streamLinks: [],
   note: null,
-  attendance: null,
-  odds: null,
   situation: null,
   lastScore: null,
   keyEvents: [],

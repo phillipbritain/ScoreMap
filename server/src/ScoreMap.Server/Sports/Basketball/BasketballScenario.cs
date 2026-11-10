@@ -8,15 +8,10 @@ namespace ScoreMap.Server.Sports;
 
 internal sealed class BasketballScenario(League league) : SportScenario(league)
 {
-    private readonly BasketballScenarioFormat _format = BasketballScenarioFormat.For(league);
+    internal override SportPlay CreatePlay() => new CountdownPlay(League, BasketballScenarioFormat.For(League));
 
-    internal override SportPlay CreatePlay() => new CountdownPlay(League, _format.Scoring);
-
-    protected override int? Capacity => 18500;
     protected override int UsualScore => 2;
     protected override string NoteText(Random random) => Pick(random, "Play-In Tournament", $"Conference Semifinals - Game {random.Next(1, 8)}", "Cup Knockout Round");
-    protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favorite) =>
-        ($"{favorite.Abbreviation} -{Number(Between(random, 1, _format.SpreadMax, 0.5))}", Between(random, _format.TotalMin, _format.TotalMax, 1));
 
     protected override string ScoreText(int points, Random random) => points switch
     {

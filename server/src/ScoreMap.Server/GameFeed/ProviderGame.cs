@@ -26,11 +26,6 @@ public sealed record ProviderGame(
     /// </summary>
     public string? Note { get; init; }
 
-    /// <summary>How many came to watch, once the provider reports it.</summary>
-    public int? Attendance { get; init; }
-
-    public ProviderOdds? Odds { get; init; }
-
     /// <summary>Where play stands right now; the provider only gives it while the game is under way.</summary>
     public ProviderSituation? Situation { get; init; }
 
@@ -213,12 +208,6 @@ public sealed record ProviderVenue(string? Name, string? City, string? Region, s
 public sealed record Coordinates(double Latitude, double Longitude);
 
 public sealed record ProviderBroadcaster(string Name, string? Country);
-
-/// <summary>
-/// The betting line: <see cref="Line"/> as the bookmaker writes it (the favorite and its spread,
-/// "SEA -2.5", or "EVEN"), the total points it expects (<see cref="OverUnder"/>), and the bookmaker.
-/// </summary>
-public sealed record ProviderOdds(string? Line, double? OverUnder, string? Bookmaker);
 
 /// <summary>
 /// Where play stands right now, in the terms of the game's sport, each part null when it doesn't apply:

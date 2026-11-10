@@ -205,8 +205,6 @@ public sealed partial class RunningGameBoard
                 StreamLinks: [])
             {
                 Note = game.Note,
-                Attendance = game.Attendance,
-                Odds = game.Odds is { } odds ? new GameOdds(odds.Line, odds.OverUnder, odds.Bookmaker) : null,
                 Situation = status == GameStatus.Live && game.Situation is { } s
                     ? new GameSituation(s.LastPlay, s.DownAndDistance, s.Possession, s.Balls, s.Strikes, s.Outs, s.OnFirst, s.OnSecond, s.OnThird)
                     : null,

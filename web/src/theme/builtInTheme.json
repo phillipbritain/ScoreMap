@@ -29,8 +29,7 @@
     "button": { "fontWeight": 600, "fontSize": 14, "letterSpacing": 0 },
     "caption": { "fontWeight": 400, "fontSize": 12, "letterSpacing": 0 },
     "overline": { "fontWeight": 700, "fontSize": 12, "letterSpacing": 0.14 },
-    "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 },
-    "micro": { "fontWeight": 700, "fontSize": 8, "letterSpacing": 0 }
+    "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 }
   },
   "spacing": 4,
   "shape": {
@@ -109,8 +108,7 @@
       "glow": { "width": 4, "blur": 3, "opacity": 0.25 },
       "venue": {
         "radius": 2,
-        "ring": { "radius": 5, "width": 1 },
-        "count": { "font": "Open Sans Bold", "size": "micro" }
+        "ring": { "radius": 5, "width": 1 }
       }
     },
     "Selection": { "color": "offWhite.500", "width": 2 },

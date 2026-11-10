@@ -185,9 +185,9 @@ const fontFamily: Setting<string> = {
 
 /**
  * The theme's type styles, by name, as MUI names its typography variants (plus footnote, smaller than
- * a caption, and micro, smaller again, for the tiniest text on the globe).
+ * a caption).
  */
-const typeStyles = ['h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline', 'footnote', 'micro'] as const
+const typeStyles = ['h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline', 'footnote'] as const
 
 /**
  * A type style: its weight, its size in pixels, and how far apart its letters are spaced, in ems.
@@ -450,14 +450,13 @@ const settings = {
     /**
      * A moved score card's trail back to its venue: a line this wide and opaque in its game's color
      * (below 1, the map shows through it), in a soft glow, to a dot ringed in that color. A venue
-     * cluster is the same ringed dot, in its games' color, with its count beside it in a font the
-     * map's font server has (ADR-0006), at a type style's size.
+     * cluster is the same ringed dot, in its games' color.
      */
     Trail: {
       width: pixels,
       opacity,
       glow: { width: pixels, blur: pixels, opacity },
-      venue: { radius: pixels, ring: { radius: pixels, width: pixels }, count: { font: globeFont, size: textSize } },
+      venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
     },
     /** The selected game's small pin ring and score card outline: their color and width. */
     Selection: { color, width: pixels },

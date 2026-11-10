@@ -76,6 +76,10 @@ _Avoid_: Crowd, cluster (when it matters that it's cards)
 While zoomed in, a cluster where score cards' trails meet, in place of their venue dots, which would overlap. Its games' cards are already on screen, so selecting it does nothing.
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
+**Card layout**:
+While zoomed in, where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out each frame from the last so cards don't jump about.
+_Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
+
 **Game panel**:
 The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for its last score (who scored, and when), tennis sets, a field's leaderboard or a fight card's bouts.
 _Avoid_: Popup, detail page, modal

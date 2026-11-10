@@ -5,7 +5,7 @@ import { commands, userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
 import type { GameChangeKind } from '../games/gameChange'
-import { noRecentChanges, recordChange, type RecentChanges } from '../games/recentChanges'
+import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
 import type { PlacedGame } from '../games/placedGames'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
@@ -1184,8 +1184,8 @@ describe('place names', () => {
 
 describe('animations', () => {
   /** What the server said changed in these games, as the live connection keeps it. */
-  const changed = (kind: GameChangeKind, ...games: Game[]): RecentChanges =>
-    games.reduce((changes, g) => recordChange(changes, { kind, game: g }), noRecentChanges)
+  const changed = (kind: GameChangeKind, ...games: Game[]): JustHappened =>
+    games.reduce((changes, g) => recordJustHappened(changes, undefined, { kind, game: g }, 0), noneJustHappened)
 
   /** Every pin pulse that starts from now, kept even after it has played and removed itself. */
   const watchPulses = () => {

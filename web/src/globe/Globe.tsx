@@ -1,7 +1,6 @@
-import { noRecentScorers, type RecentScorers } from '../games/scorers'
 import { useEffect, useImperativeHandle, useRef, type Ref, type RefObject } from 'react'
 import type { Game } from '../games/game'
-import type { RecentChanges } from '../games/recentChanges'
+import type { JustHappened } from '../games/justHappened'
 import type { PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
@@ -28,12 +27,11 @@ interface GlobeProps {
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
   /**
-   * What the server said changed in the games since its last snapshot, for the globe to animate, each
-   * change once (see GlobeMap.show).
+   * What just happened in the games since the server's last snapshot: what it said changed, for the
+   * globe to animate, each change once (see GlobeMap.show), and the side that last scored in each, lit
+   * up on its score card for a moment.
    */
-  changes: RecentChanges
-  /** The side that last scored in each game, lit up on its score card for a moment (see RecentScorers). */
-  scorers?: RecentScorers
+  justHappened: JustHappened
   /**
    * The game whose panel is open: its pin is highlighted, and the globe lifts it clear of the panel
    * if the panel would cover it.
@@ -73,7 +71,7 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGameCityReach, games, changes, scorers = noRecentScorers, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGameCityReach, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType })
@@ -136,7 +134,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGa
   useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.
-  useEffect(() => globe.current?.show(games, changes, scorers), [games, changes, scorers])
+  useEffect(() => globe.current?.show(games, justHappened), [games, justHappened])
   useEffect(
     () => globe.current?.select(selectedGameId, panel.current?.getBoundingClientRect() ?? null),
     [selectedGameId, panel],

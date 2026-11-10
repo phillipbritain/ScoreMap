@@ -10,7 +10,7 @@ import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
-  /** The side that last scored, lit up for a moment (see RecentScorers); none since the last snapshot. */
+  /** The side that last scored, lit up for a moment (see justHappened.ts); none since the last snapshot. */
   scorer?: Scorer
   /** The game's color (see gameColor), for the panel's top edge, glow and progress line. */
   color: string

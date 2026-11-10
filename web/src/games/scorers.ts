@@ -1,23 +1,17 @@
 import type { Game } from './game'
-import type { GameChange } from './gameChange'
 
 /** One of a two-sided game's sides. */
 export type Side = 'home' | 'away'
 
-/** The side that last scored in a game, and when (the clock liveGames reads: performance.now() in the app). */
+/**
+ * The side that last scored in a game, and when (the clock liveGames reads: performance.now() in the
+ * app): what the score card and the game panel light up for a moment (see spotlightMs), kept for each
+ * game since the last snapshot in what just happened (see justHappened.ts).
+ */
 export interface Scorer {
   side: Side
   at: number
 }
-
-/**
- * The side that last scored in each game since the last snapshot, by game id: what the score card
- * and the game panel light up for a moment (see spotlightMs). A snapshot brings none, as it brings no
- * changes: what scored while ScoreMap was away didn't just happen.
- */
-export type RecentScorers = ReadonlyMap<string, Scorer>
-
-export const noRecentScorers: RecentScorers = new Map()
 
 /** How long a scorer stays lit, from when it scored. */
 export const spotlightMs = 3_000
@@ -41,22 +35,6 @@ const rose = (before: string | null, after: string | null): boolean => {
   const was = Number(before ?? 0)
   const is = Number(after)
   return after !== null && Number.isFinite(was) && Number.isFinite(is) && is > was
-}
-
-/**
- * These scorers with one more change from the server, given the game as it was before the change:
- * a side that scored becomes the game's scorer, from now. A game removed has none.
- */
-export function recordScorer(recent: RecentScorers, before: Game | undefined, { kind, game }: GameChange, now: number): RecentScorers {
-  if (kind === 'Removed') {
-    if (!recent.has(game.id)) return recent
-    const left = new Map(recent)
-    left.delete(game.id)
-    return left
-  }
-  const side = before && scoringSide(before, game)
-  if (!side) return recent
-  return new Map(recent).set(game.id, { side, at: now })
 }
 
 /**

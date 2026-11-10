@@ -5,7 +5,8 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { PlacedGame } from '../games/placedGames'
 import { sidesTopFirst } from '../games/sides'
-import { noRecentScorers, spotlightElapsed, type RecentScorers, type Scorer } from '../games/scorers'
+import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
+import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type ScreenOffset, type Showing, type VenueSizes } from './cardLayout'
@@ -74,7 +75,7 @@ export interface ShownScoreCard {
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
   private games = new Map<string, PlacedGame>()
-  private scorers: RecentScorers = noRecentScorers
+  private justHappened: JustHappened = noneJustHappened
   private selectedGameId: string | null = null
   /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
   private hoveredGameId: string | null = null
@@ -181,10 +182,10 @@ export class ScoreCardMarkers {
     return shown
   }
 
-  /** Shows these games, lighting up the side that just scored in each (see RecentScorers). */
-  setGames(games: readonly PlacedGame[], scorers: RecentScorers = noRecentScorers): void {
+  /** Shows these games, lighting up the side that just scored in each (see justHappened.ts). */
+  setGames(games: readonly PlacedGame[], justHappened: JustHappened = noneJustHappened): void {
     this.games = new Map(games.map((game) => [game.id, game]))
-    this.scorers = scorers
+    this.justHappened = justHappened
     this.settling.settleAfresh()
     this.sync()
   }
@@ -223,7 +224,7 @@ export class ScoreCardMarkers {
       const flames = game.hot
       const selected = gameId === this.selectedGameId
       const theme = this.theme()
-      const scorer = this.scorers.get(gameId)
+      const scorer = scorerOf(this.justHappened, gameId)
       let placed = this.placed.get(gameId)
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.

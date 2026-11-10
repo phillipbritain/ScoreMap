@@ -1,8 +1,7 @@
 import type { Game } from '../games/game'
 import type { GameChange } from '../games/gameChange'
 import { applyChange } from '../games/gameStore'
-import { noRecentChanges, recordChange, type RecentChanges } from '../games/recentChanges'
-import { noRecentScorers, recordScorer, type RecentScorers } from '../games/scorers'
+import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
 import type { ScenarioListing } from '../scenarios/scenarioPicker'
 import { watchForSleep, type PageVisibility } from './asleep'
 
@@ -33,12 +32,11 @@ export interface LiveGamesState {
   /** Null until the first snapshot arrives. */
   games: Game[] | null
   /**
-   * What changed in the games since the last snapshot, as the server judged it, for the globe to animate.
-   * A snapshot brings none, so the globe shows it without pulses.
+   * What just happened in the games since the last snapshot: the changes the server judged notable, for
+   * the globe to animate, and the side that last scored in each, for its score card and game panel to
+   * light up. A snapshot brings none, so the globe shows it without pulses.
    */
-  changes: RecentChanges
-  /** The side that last scored in each game since the last snapshot, for its score card and game panel to light up. */
-  scorers: RecentScorers
+  justHappened: JustHappened
   /** When ScoreMap was cut off from the server (the clock's time), until the next snapshot; null while connected. */
   cutOffSince: number | null
   /** Whether ScoreMap is waking up (see GLOSSARY.md "Asleep"): from when it's shown again until the next snapshot. */
@@ -52,8 +50,7 @@ const backoffMs = (attempt: number) => Math.min(maxRetryDelayMs, 1000 * 2 ** att
 
 export const noLiveGames: LiveGamesState = {
   games: null,
-  changes: noRecentChanges,
-  scorers: noRecentScorers,
+  justHappened: noneJustHappened,
   cutOffSince: null,
   waking: false,
 }
@@ -65,7 +62,7 @@ export interface LiveGamesOptions {
   demo: boolean
   hub: GamesHub
   onScenarioChanged: (listing: ScenarioListing) => void
-  /** The clock cutOffSince and the scorers read: performance.now() in the app. */
+  /** The clock cutOffSince and what just happened read: performance.now() in the app. */
   now?: () => number
 }
 
@@ -112,7 +109,7 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
 
     const connection = hub(
       {
-        snapshot: live((games) => update({ games, changes: noRecentChanges, scorers: noRecentScorers, cutOffSince: null, waking: false })),
+        snapshot: live((games) => update({ games, justHappened: noneJustHappened, cutOffSince: null, waking: false })),
         // The snapshot always comes first; a change before it has nothing to apply to.
         // The server's own judgment of what changed is kept for the globe to animate (see GlobeMap.show).
         change: live((change) => {
@@ -120,8 +117,7 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
           const before = state.games.find((game) => game.id === change.game.id)
           update({
             games: applyChange(state.games, change),
-            changes: recordChange(state.changes, change),
-            scorers: recordScorer(state.scorers, before, change, now()),
+            justHappened: recordJustHappened(state.justHappened, before, change, now()),
           })
         }),
         // A switch or a change of speed made in any browser: every pill and clock follows.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Game, GameContest } from './game'
-import { noRecentScorers, recordScorer, scoringSide, spotlightElapsed, spotlightMs } from './scorers'
+import { scoringSide, spotlightElapsed, spotlightMs } from './scorers'
 
 const sides = (home: string | null, away: string | null) =>
   ({ id: 'a', contest: { kind: 'sides', home: { score: home }, away: { score: away } } }) as Game
@@ -28,34 +28,6 @@ describe('scoring side', () => {
     const field = { id: 'a', contest: { kind: 'field', entries: [] } as unknown as GameContest } as Game
 
     expect(scoringSide(field, field)).toBeNull()
-  })
-})
-
-describe('recent scorers', () => {
-  it('keeps the side that scored, and when', () => {
-    const recent = recordScorer(noRecentScorers, sides('0', '0'), { kind: 'ScoreChanged', game: sides('0', '1') }, 500)
-
-    expect(recent.get('a')).toEqual({ side: 'away', at: 500 })
-  })
-
-  it('takes the latest score over an earlier one', () => {
-    const first = recordScorer(noRecentScorers, sides('0', '0'), { kind: 'ScoreChanged', game: sides('0', '1') }, 500)
-    const recent = recordScorer(first, sides('0', '1'), { kind: 'Finished', game: sides('1', '1') }, 900)
-
-    expect(recent.get('a')).toEqual({ side: 'home', at: 900 })
-  })
-
-  it('keeps the last scorer through a change with no score in it', () => {
-    const scored = recordScorer(noRecentScorers, sides('0', '0'), { kind: 'ScoreChanged', game: sides('0', '1') }, 500)
-
-    expect(recordScorer(scored, sides('0', '1'), { kind: 'Updated', game: sides('0', '1') }, 900)).toBe(scored)
-  })
-
-  it('has no scorer for a game it had not seen, or one removed', () => {
-    expect(recordScorer(noRecentScorers, undefined, { kind: 'Added', game: sides('2', '0') }, 500)).toBe(noRecentScorers)
-
-    const scored = recordScorer(noRecentScorers, sides('0', '0'), { kind: 'ScoreChanged', game: sides('0', '1') }, 500)
-    expect(recordScorer(scored, undefined, { kind: 'Removed', game: sides('0', '1') }, 900).has('a')).toBe(false)
   })
 })
 

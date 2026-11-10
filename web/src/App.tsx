@@ -128,7 +128,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
-  const { games, changes, cutOffSince, waking } = useLiveGames(
+  const { games, changes, scorers, cutOffSince, waking } = useLiveGames(
     behavior.asleep.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
@@ -169,6 +169,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
           changes={changes}
+          scorers={scorers}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
           onSelectGame={selectGame}
@@ -233,6 +234,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           <GamePanel
             ref={panel}
             game={selectedGame}
+            scorer={scorers.get(selectedGame.id)}
             color={selectedColor}
             textOnColor={textOn(selectedColor, theme.palette.text.primary, theme.palette.background.paper)}
             onClose={closeGame}

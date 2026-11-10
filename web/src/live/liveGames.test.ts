@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Game } from '../games/game'
 import type { PageVisibility } from './asleep'
 import { changeSince, lastNumber, noRecentChanges } from '../games/recentChanges'
+import { noRecentScorers } from '../games/scorers'
 import { startLiveGames, type GamesHub, type GamesHubEvents, type LiveGames } from './liveGames'
 
 const minutes = (n: number) => n * 60_000
 const idleTimeout = minutes(5)
 
-const game = (id: string, score = '0') => ({ id, score }) as unknown as Game
+const game = (id: string, score = '0') => ({ id, contest: { kind: 'sides', home: { score }, away: { score: '0' } } }) as unknown as Game
 
 /** A page whose visibility the test sets, telling its listeners as the browser does. */
 function fakePage() {
@@ -122,6 +123,7 @@ describe('live games', () => {
     expect(live.state).toEqual({
       games: [game('a'), game('b')],
       changes: noRecentChanges,
+      scorers: noRecentScorers,
       cutOffSince: null,
       waking: false,
     })
@@ -203,6 +205,21 @@ describe('live games', () => {
     expect(live.state.games).toEqual([])
   })
 
+  it('keeps the side that scored in each game, from when it scored, until the next snapshot', async () => {
+    const { live, hub } = start()
+    await hub.latest.connect()
+    hub.latest.events.snapshot([game('a'), game('b')])
+
+    clock = 4_000
+    hub.latest.events.change({ kind: 'ScoreChanged', game: game('a', '3') })
+    hub.latest.events.change({ kind: 'Updated', game: game('b') })
+
+    expect(live.state.scorers).toEqual(new Map([['a', { side: 'home', at: 4_000 }]]))
+
+    hub.latest.events.snapshot([game('a', '3')])
+    expect(live.state.scorers).toBe(noRecentScorers)
+  })
+
   it('watches the demo’s games in a demo, and passes on scenario changes', async () => {
     const { hub, scenarios } = start({ demo: true })
     expect(hub.latest.demo).toBe(true)
@@ -227,7 +244,7 @@ describe('live games', () => {
     expect(live.state.games).toEqual([game('a'), game('b')])
 
     hub.latest.events.snapshot([game('c')])
-    expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, cutOffSince: null, waking: false })
+    expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, scorers: noRecentScorers, cutOffSince: null, waking: false })
   })
 
   it('starts the connection again when it closes, as cut off', async () => {
@@ -315,13 +332,14 @@ describe('live games', () => {
       expect(live.state).toEqual({
         games: [game('a'), game('b')],
         changes: noRecentChanges,
+        scorers: noRecentScorers,
         cutOffSince: 50_000,
         waking: true,
       })
 
       await hub.latest.connect()
       hub.latest.events.snapshot([game('c')])
-      expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, cutOffSince: null, waking: false })
+      expect(live.state).toEqual({ games: [game('c')], changes: noRecentChanges, scorers: noRecentScorers, cutOffSince: null, waking: false })
     })
 
     it('shown again before the idle timeout, stays connected', async () => {

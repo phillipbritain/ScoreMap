@@ -943,6 +943,50 @@ body {
   }
 }
 
+/* The side that just scored, lit in its game's color on its score card's row and in the game panel
+   (see games/scorers.ts): steady, then fading out. 3s is spotlightMs; the delay, set where the row is
+   drawn, starts a row drawn partway through as far in as the spotlight already is. */
+.score-card__team--scored,
+.game-panel__team--scored {
+  border-radius: var(--shape-border-radius);
+  animation: scorer-spotlight 3s ease-in var(--scorer-spotlight-delay, 0ms);
+}
+
+.score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
+.game-panel__team--scored :is(.game-panel__team-name, .game-panel__team-score) {
+  animation: scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms);
+}
+
+/* A scorer's score flashes too, when its card animates the score change. */
+.score-card--animate-score .score-card__team--scored .score-card__score {
+  animation:
+    scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms),
+    score-card-score-flash 1.4s ease-out;
+}
+
+@keyframes scorer-spotlight {
+  0%,
+  65% {
+    background: color-mix(in srgb, var(--game-color) 20%, transparent);
+    box-shadow: inset 0 0 12px color-mix(in srgb, var(--game-color) 20%, transparent);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 0 0 12px transparent;
+  }
+}
+
+@keyframes scorer-spotlight-text {
+  0%,
+  65% {
+    color: color-mix(in oklch, var(--game-color) 25%, var(--palette-text-primary));
+    text-shadow: 0 0 9px var(--game-color);
+  }
+  100% {
+    text-shadow: 0 0 9px transparent;
+  }
+}
+
 /* Changes still show, without the bouncing, and nothing moves or blinks: a Live score card's status
    light stays lit (Live is told by its glow and brightness alone), a hot game's flames stand still,
    every pin's ring fades in place and a hovered card changes at once. */
@@ -963,6 +1007,13 @@ body {
 
   .score-card--live .score-card__light {
     animation: none;
+  }
+
+  .score-card__team--scored,
+  .game-panel__team--scored,
+  .score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
+  .game-panel__team--scored :is(.game-panel__team-name, .game-panel__team-score) {
+    animation-timing-function: step-end;
   }
 
   .pin-pulse--score,

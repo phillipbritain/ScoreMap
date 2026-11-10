@@ -13,6 +13,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
+import { noRecentScorers, type RecentScorers } from '../games/scorers'
 import { changeSince, lastNumber, noRecentChanges, type RecentChanges } from '../games/recentChanges'
 import { gameColor, type PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
@@ -309,7 +310,7 @@ export class GlobeMap {
    * A game whose venue isn't placed (its lookup pending, or found nothing) is left off the globe
    * altogether: no pin, card, name or ring. Once placed, it comes into view at its venue.
    */
-  show(games: readonly Game[] | null, changes: RecentChanges = noRecentChanges): void {
+  show(games: readonly Game[] | null, changes: RecentChanges = noRecentChanges, scorers: RecentScorers = noRecentScorers): void {
     if (!games) return
     this.hasGames = true
     this.tellStage()
@@ -321,7 +322,7 @@ export class GlobeMap {
     // Names first: cards are laid out around them.
     this.names.showGames(placed)
     if (this.reachShown) this.showReachRings()
-    this.cards.setGames(placed)
+    this.cards.setGames(placed, scorers)
     const played = this.changesPlayed
     this.changesPlayed = Math.max(played, lastNumber(changes))
     for (const game of placed) {

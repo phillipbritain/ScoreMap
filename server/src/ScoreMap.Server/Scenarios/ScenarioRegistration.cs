@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ScoreMap.Server.GameFeed;
+using ScoreMap.Server.Live;
 
 namespace ScoreMap.Server.Scenarios;
 
@@ -29,6 +30,11 @@ public static class ScenarioRegistration
         services.Add(Keyed(realGames, ScenarioSwitcher.RealGamesKey));
         services.AddSingleton(sp => ActivatorUtilities.CreateInstance<ScenarioSwitcher>(sp, startWith, speed));
         services.Replace(ServiceDescriptor.Singleton<IGameFeedProvider>(sp => sp.GetRequiredService<ScenarioSwitcher>()));
+        services.Replace(ServiceDescriptor.Singleton<BoardSource>(sp =>
+        {
+            var switcher = sp.GetRequiredService<ScenarioSwitcher>();
+            return new BoardSource(switcher, switcher.BoardClock, switcher.Polling, switcher);
+        }));
         return builder;
     }
 

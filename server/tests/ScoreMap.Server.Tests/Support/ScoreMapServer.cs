@@ -3,11 +3,13 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.Feedback;
 using ScoreMap.Server.GameFeed;
@@ -273,6 +275,14 @@ public sealed class ScoreMapServer(
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });
+    }
+
+    /// <summary>Builds a board over the fake feed and clock, with controllable delivery.</summary>
+    public RunningGameBoard CreateBoard(IHubContext<GamesHub> delivery)
+    {
+        var source = new BoardSource(FeedProvider ?? Feed, Clock,
+            Services.GetRequiredService<IOptions<PollingOptions>>().Value, Controls: null);
+        return ActivatorUtilities.CreateInstance<RunningGameBoard>(Services, source, delivery);
     }
 
     public override async ValueTask DisposeAsync()

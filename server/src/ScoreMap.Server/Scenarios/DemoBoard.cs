@@ -100,8 +100,9 @@ public sealed class DemoBoard(
     {
         var clock = new ScenarioClock(realTime, Speed.Normal);
         var feed = library.Start(library.Read(Scenario), clock);
+        var source = new BoardSource(feed, clock, ScenarioSwitcher.ScenarioPolling(Speed.Normal), Controls: null);
         // A fresh group prevents late delivery from a stopped run reaching the next one's viewers.
-        var board = RunningGameBoard.CreateDemo(services, feed, clock, $"demo-{++_runs}");
+        var board = RunningGameBoard.CreateDemo(services, source, $"demo-{++_runs}");
         _ = board.StartAsync(CancellationToken.None);
         logger.LogInformation("Started the demo board");
         return board;

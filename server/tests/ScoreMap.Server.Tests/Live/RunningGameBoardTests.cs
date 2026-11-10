@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
@@ -18,7 +19,7 @@ public class RunningGameBoardTests
         await using var server = new ScoreMapServer();
         server.Feed.Hold(Nfl);
         var delivery = new JoinDelivery { FailGroupAdd = true, FailGroupRemove = cleanupFails };
-        using var board = ActivatorUtilities.CreateInstance<RunningGameBoard>(server.Services, delivery);
+        using var board = server.CreateBoard(delivery);
         var joining = board.JoinAsync("viewer", CancellationToken.None);
         await server.Feed.WaitForFetchesAsync(Nfl, 1);
         var fetch = server.Feed.FetchToken(Nfl);
@@ -38,7 +39,7 @@ public class RunningGameBoardTests
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "game"));
         var delivery = new JoinDelivery { HoldGroupAdd = true };
-        using var board = ActivatorUtilities.CreateInstance<RunningGameBoard>(server.Services, delivery);
+        using var board = server.CreateBoard(delivery);
         var joining = board.JoinAsync("viewer", CancellationToken.None);
         try
         {
@@ -57,6 +58,56 @@ public class RunningGameBoardTests
             delivery.Release.TrySetResult();
             await board.StopAsync(CancellationToken.None);
         }
+    }
+
+    [Fact]
+    public async Task A_board_without_controls_refuses_to_switch_scenarios()
+    {
+        await using var server = new ScoreMapServer { Environment = "Production" };
+        var board = server.Services.GetRequiredService<RunningGameBoard>();
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            board.StartAfreshAsync("missing", null, CancellationToken.None));
+
+        Assert.Equal("This board has no scenario controls", error.Message);
+    }
+
+    [Fact]
+    public async Task A_board_without_controls_refuses_to_change_speed()
+    {
+        await using var server = new ScoreMapServer { Environment = "Production" };
+        var board = server.Services.GetRequiredService<RunningGameBoard>();
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            board.ChangeSpeedAsync(Speed.Normal, CancellationToken.None));
+
+        Assert.Equal("This board has no scenario controls", error.Message);
+    }
+
+    [Fact]
+    public async Task A_board_without_controls_has_no_slow_start()
+    {
+        await using var server = new ScoreMapServer { Environment = "Production" };
+        var board = server.Services.GetRequiredService<RunningGameBoard>();
+
+        Assert.Equal(TimeSpan.Zero, board.SlowStart);
+    }
+
+    [Fact]
+    public async Task Slow_start_follows_the_running_scenario_and_is_zero_on_real_games()
+    {
+        await using var server = new ScoreMapServer { Scenario = "slow" };
+        server.WriteScenario("slow", """{ "slowStart": "12s", "games": [] }""");
+        server.WriteScenario("quick", """{ "games": [] }""");
+        var board = server.Services.GetRequiredService<RunningGameBoard>();
+
+        Assert.Equal(TimeSpan.FromSeconds(12), board.SlowStart);
+        await board.StartAfreshAsync("quick", null, CancellationToken.None);
+        Assert.Equal(TimeSpan.Zero, board.SlowStart);
+        await board.StartAfreshAsync("slow", null, CancellationToken.None);
+        Assert.Equal(TimeSpan.FromSeconds(12), board.SlowStart);
+        await board.StartAfreshAsync("real", null, CancellationToken.None);
+        Assert.Equal(TimeSpan.Zero, board.SlowStart);
     }
 
     // A transport adapter at the module's SignalR seam, so failed/partial delivery is controllable.

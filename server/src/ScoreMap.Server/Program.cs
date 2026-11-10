@@ -100,6 +100,9 @@ builder.Services.TryAddSingleton<IStreamLinkSource, NoStreamLinks>();
 
 // The running board owns shared games, viewers and ordered live delivery.
 builder.Services.Configure<PollingOptions>(builder.Configuration.GetSection("Polling"));
+builder.Services.AddSingleton(sp => new BoardSource(
+    sp.GetRequiredService<IGameFeedProvider>(), sp.GetRequiredService<TimeProvider>(),
+    sp.GetRequiredService<IOptions<PollingOptions>>().Value, Controls: null));
 builder.Services.AddSingleton<RunningGameBoard>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<RunningGameBoard>());
 // Demos (ADR-0019): the worldwide scenario on a game board of its own, for whoever opens one.

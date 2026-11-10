@@ -3,7 +3,7 @@ import { themeWith } from '../theme/testTheme'
 import { trailShapes, type TrailOnScreen, type TrailShape } from './trailLayer'
 
 const theme = themeWith((json) => {
-  json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { radius: 3, ring: { radius: 6, width: 1.5 } } }
+  json.components.Trail = { width: 1.5, opacity: 0.8, glow: { width: 5, blur: 2, opacity: 0.3 }, venue: { ...json.components.Trail.venue, radius: 3, ring: { radius: 6, width: 1.5 } } }
   json.components.Hover.trail = { width: 3, opacity: 0.95 }
   json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
 })

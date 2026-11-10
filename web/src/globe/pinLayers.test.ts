@@ -113,9 +113,10 @@ describe("clusters' footprints", () => {
     }
   })
 
-  it('cover a venue cluster as a pin cluster of as many games, and a card cluster as one of some', () => {
+  it("cover a venue cluster's ring and a two-digit count beside it, whatever its count, and a card cluster as a pin cluster of some games", () => {
     const layer = cardClusterFootprintLayerSpec(sizedTheme())
-    expect([2, 5, 15].map((count) => across(layer, { kind: 'venueCluster', count }))).toEqual([26, 34, 46])
+    // Its ring reaches 6, then 1.5 to its 8-pixel count and two digits of about 4.8 each: 17.1, with a pixel each side.
+    for (const count of [2, 5, 15]) expect(across(layer, { kind: 'venueCluster', count })).toBeCloseTo(36.2)
     expect(across(layer, { kind: 'cardCluster', count: 30 })).toBe(30)
   })
 

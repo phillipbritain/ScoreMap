@@ -63,11 +63,11 @@ public class NominatimPlaceSearchTests
         var second = search.SearchAsync("second", CancellationToken.None);
 
         _clock.Advance(TimeSpan.FromSeconds(1.9));
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         Assert.Single(handler.Requests);
 
         _clock.Advance(TimeSpan.FromSeconds(0.1));
-        await second.WaitAsync(TimeSpan.FromSeconds(5));
+        await second.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(2, handler.Requests.Count);
     }
 
@@ -108,11 +108,11 @@ public class NominatimPlaceSearchTests
         var second = search.FindWikidataIdAsync("second", CancellationToken.None);
 
         _clock.Advance(TimeSpan.FromSeconds(1.9));
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         Assert.Single(handler.Requests);
 
         _clock.Advance(TimeSpan.FromSeconds(0.1));
-        await second.WaitAsync(TimeSpan.FromSeconds(5));
+        await second.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(2, handler.Requests.Count);
     }
 }

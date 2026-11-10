@@ -181,7 +181,7 @@ public class SnapshotTests
         await client.DisposeAsync();
         await server.Feed.HeldFetchCanceledAsync();
         // The hub deals with the canceled snapshot straight after; give an error the moment it would take to be logged.
-        await Task.Delay(500);
+        await Task.Delay(500, TestContext.Current.CancellationToken);
 
         Assert.Empty(server.Logs.Errors);
     }

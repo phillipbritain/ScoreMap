@@ -70,7 +70,7 @@ public class FeedbackTests
         }
         finally
         {
-            filing.TrySetCanceled();
+            filing.TrySetCanceled(TestContext.Current.CancellationToken);
         }
     }
 
@@ -104,8 +104,8 @@ public class FeedbackTests
         }
         finally
         {
-            firstFiling.TrySetCanceled();
-            secondFiling.TrySetCanceled();
+            firstFiling.TrySetCanceled(TestContext.Current.CancellationToken);
+            secondFiling.TrySetCanceled(TestContext.Current.CancellationToken);
         }
     }
 
@@ -272,7 +272,7 @@ public class FeedbackTests
                 server.Clock.Advance(TimeSpan.FromSeconds(15));
                 await client.GameMatchingAsync(g => g.Id == gameId && g.Sides().Home.Score == (14 + i).ToString());
             }
-        });
+        }, TestContext.Current.CancellationToken);
         var reader = Task.Run(async () =>
         {
             await start.Task;
@@ -282,15 +282,15 @@ public class FeedbackTests
                 Assert.Equal(games.Count == 1 ? [gameId] : new[] { gameId, "extra-1", "extra-2" }, games.Select(g => g.Id));
                 await Task.Yield();
             }
-        });
+        }, TestContext.Current.CancellationToken);
         var submission = SendAsync(app, "Feedback during league updates", new { demo, gameId });
         try
         {
-            await sink.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await sink.Entered.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.Contains($"Open game:** NFL, {(demo ? "scenario" : "ESPN")} game {gameId}", sink.Issue!.Body);
             start.SetResult();
             // Reads and actual feed-to-browser updates finish while the external filing is pending.
-            await Task.WhenAll(writer, reader).WaitAsync(TimeSpan.FromSeconds(10));
+            await Task.WhenAll(writer, reader).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.False(submission.IsCompleted);
         }
         finally
@@ -443,7 +443,7 @@ public class FeedbackTests
         await using var server = new ScoreMapServer { FeedbackToken = "token" };
         // Every configured league, unless the case lists some.
         using var http = server.CreateClient();
-        var all = (await http.GetFromJsonAsync<List<LeagueName>>("/api/leagues"))!.Select(l => l.Name).ToArray();
+        var all = (await http.GetFromJsonAsync<List<LeagueName>>("/api/leagues", TestContext.Current.CancellationToken))!.Select(l => l.Name).ToArray();
 
         await SendAsync(server, "Which leagues am I seeing?", new
         {

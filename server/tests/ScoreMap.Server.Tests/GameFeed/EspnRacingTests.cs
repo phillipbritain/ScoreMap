@@ -112,7 +112,7 @@ public sealed class EspnRacingTests : IDisposable
     public async Task A_saved_venues_file_that_cant_be_read_is_started_afresh_and_venues_asked_for_again()
     {
         Directory.CreateDirectory(_folder);
-        await File.WriteAllTextAsync(SavedVenuesPath, "{ not JSON");
+        await File.WriteAllTextAsync(SavedVenuesPath, "{ not JSON", TestContext.Current.CancellationToken);
 
         var game = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
 

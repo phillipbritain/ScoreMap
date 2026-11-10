@@ -54,7 +54,7 @@ public class ScenarioSwitchingTests
         server.WriteScenario("second", OneGame("b"));
         using var http = server.CreateClient();
 
-        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios");
+        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken);
 
         Assert.NotNull(listing);
         Assert.Equal("first", listing.Running);
@@ -73,10 +73,10 @@ public class ScenarioSwitchingTests
         await using var other = await server.ConnectClientAsync();
         await other.NextSnapshotAsync();
 
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" });
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        Assert.Equal("second", (await response.Content.ReadFromJsonAsync<ScenarioListing>())?.Running);
+        Assert.Equal("second", (await response.Content.ReadFromJsonAsync<ScenarioListing>(TestContext.Current.CancellationToken))?.Running);
         foreach (var browser in new[] { client, other })
         {
             var changes = new[] { await browser.NextChangeAsync(), await browser.NextChangeAsync() };
@@ -84,7 +84,7 @@ public class ScenarioSwitchingTests
                 new[] { (GameChangeKind.Removed, "a"), (GameChangeKind.Added, "b") },
                 changes.Select(c => (c.Kind, c.Game.Id)));
         }
-        Assert.Equal("second", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        Assert.Equal("second", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.Running);
     }
 
     [Fact]
@@ -99,11 +99,11 @@ public class ScenarioSwitchingTests
         await using var other = await server.ConnectClientAsync();
         await other.NextSnapshotAsync();
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         Assert.Equal("second", (await client.NextScenarioChangeAsync()).Running);
         Assert.Equal("second", (await other.NextScenarioChangeAsync()).Running);
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         Assert.Equal("real", (await other.NextScenarioChangeAsync()).Running);
     }
 
@@ -118,20 +118,20 @@ public class ScenarioSwitchingTests
         await client.NextSnapshotAsync();
         server.Clock.Advance(TimeSpan.FromMinutes(10));
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equivalent(
             new[] { (GameChangeKind.Removed, "a"), (GameChangeKind.Added, "real-game") },
             new[] { await client.NextChangeAsync(), await client.NextChangeAsync() }.Select(c => (c.Kind, c.Game.Id)));
-        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.Running);
         // Live real games every 15 s, not a scenario's every second.
         server.Clock.Advance(TimeSpan.FromSeconds(14));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Equal(1, server.Feed.Fetches(Nfl));
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         await server.Feed.WaitForFetchesAsync(Nfl, 2);
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var changes = new[] { await client.NextChangeAsync(), await client.NextChangeAsync() };
         Assert.Equivalent(
@@ -150,9 +150,9 @@ public class ScenarioSwitchingTests
         using var http = server.CreateClient();
         await using var client = await server.ConnectClientAsync();
         Assert.Equal("real-game", Assert.Single(await client.NextSnapshotAsync()).Id);
-        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        Assert.Equal("real", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.Running);
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "later" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "later" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var removed = await client.NextChangeAsync();
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         var added = await client.NextChangeAsync();
@@ -175,10 +175,10 @@ public class ScenarioSwitchingTests
         server.Clock.Advance(TimeSpan.FromSeconds(15));
         await server.Feed.WaitForFetchesAsync(Nfl, 2);
 
-        var switching = http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" });
-        (await switching.WaitAsync(TimeSpan.FromSeconds(10))).EnsureSuccessStatusCode();
+        var switching = http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" }, TestContext.Current.CancellationToken);
+        (await switching.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         server.Feed.Release(Nfl);
-        Assert.Equal("first", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        Assert.Equal("first", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.Running);
         Assert.Equivalent(
             new[] { (GameChangeKind.Removed, "real-game"), (GameChangeKind.Added, "a") },
             new[] { await client.NextChangeAsync(), await client.NextChangeAsync() }.Select(c => (c.Kind, c.Game.Id)));
@@ -200,13 +200,13 @@ public class ScenarioSwitchingTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
 
         Assert.Equal(status, response.StatusCode);
-        Assert.Contains(message, await response.Content.ReadAsStringAsync());
-        Assert.Equal("first", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.Running);
+        Assert.Contains(message, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal("first", (await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.Running);
         server.Clock.Advance(TimeSpan.FromSeconds(1));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
     }
 
@@ -220,14 +220,14 @@ public class ScenarioSwitchingTests
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios");
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" });
+        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken);
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "first" }, TestContext.Current.CancellationToken);
 
         Assert.NotNull(listing);
         Assert.Empty(listing.Scenarios);
         Assert.False(listing.CanControlPlay);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
     }
 }

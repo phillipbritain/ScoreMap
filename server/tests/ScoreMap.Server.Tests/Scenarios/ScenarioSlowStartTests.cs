@@ -36,7 +36,7 @@ public class ScenarioSlowStartTests
 
         // Start measuring only once the hub's delay is registered. Client delivery may take
         // arbitrary real time, so it must never cause us to advance the fake clock further.
-        await clock.DelayScheduled.WaitAsync(TimeSpan.FromSeconds(10));
+        await clock.DelayScheduled.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         clock.Advance(slowStart - TimeSpan.FromTicks(1));
         Assert.False(snapshot.IsCompleted);
 
@@ -68,10 +68,10 @@ public class ScenarioSlowStartTests
         server.WriteScenario("slow", OneGame("\"slowStart\": \"12s\","));
         using var http = server.CreateClient();
 
-        Assert.False((await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))?.StartsSlowly);
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "slow" });
+        Assert.False((await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))?.StartsSlowly);
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "slow" }, TestContext.Current.CancellationToken);
 
-        Assert.True((await response.Content.ReadFromJsonAsync<ScenarioListing>())?.StartsSlowly);
+        Assert.True((await response.Content.ReadFromJsonAsync<ScenarioListing>(TestContext.Current.CancellationToken))?.StartsSlowly);
     }
 
     [Fact]

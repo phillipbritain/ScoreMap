@@ -120,7 +120,7 @@ public sealed class EspnIndyCarTests : IDisposable
         var provider = ProviderOver(Monterey(), tracks);
         await provider.FetchScoreboardAsync(IndyCar, CancellationToken.None);
 
-        await File.WriteAllTextAsync(TracksPath, WithMonterey);
+        await File.WriteAllTextAsync(TracksPath, WithMonterey, TestContext.Current.CancellationToken);
         File.SetLastWriteTimeUtc(TracksPath, DateTime.UtcNow.AddMinutes(1));
         var game = Assert.Single(await provider.FetchScoreboardAsync(IndyCar, CancellationToken.None));
 

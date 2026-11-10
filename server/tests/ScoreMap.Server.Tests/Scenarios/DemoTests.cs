@@ -89,7 +89,7 @@ public class DemoTests
 
         // At Faster, a minute of the pill's scenario passes in under 2 s.
         server.Clock.Advance(TimeSpan.FromSeconds(2));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(demo.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(58));
 
@@ -107,11 +107,11 @@ public class DemoTests
         await real.NextSnapshotAsync();
         using var http = server.CreateClient();
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(GameChangeKind.Removed, (await real.NextChangeAsync()).Kind);
         Assert.Equal("real", (await real.NextScenarioChangeAsync()).Running);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(demo.PendingChanges());
     }
 
@@ -127,10 +127,10 @@ public class DemoTests
 
         Assert.Equal("chiefs-bills", Assert.Single(await demo.NextSnapshotAsync()).Id);
         Assert.Equal("real-game", Assert.Single(await real.NextSnapshotAsync()).Id);
-        Assert.Empty((await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios"))!.Scenarios);
-        var switched = await http.PutAsJsonAsync("/api/scenarios/running", new { name = DemoBoard.Scenario });
+        Assert.Empty((await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken))!.Scenarios);
+        var switched = await http.PutAsJsonAsync("/api/scenarios/running", new { name = DemoBoard.Scenario }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, switched.StatusCode);
-        var sped = await http.PutAsJsonAsync("/api/scenarios/speed", new { speed = "Fast" });
+        var sped = await http.PutAsJsonAsync("/api/scenarios/speed", new { speed = "Fast" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, sped.StatusCode);
     }
 

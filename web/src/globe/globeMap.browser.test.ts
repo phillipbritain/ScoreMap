@@ -29,19 +29,34 @@ import { cardZoom, fittedZoomSettings, maxZoom, unfittedZoom, zoomAt, zoomAtEqua
 const layout = vi.hoisted(() => ({ shift: 0 }))
 vi.mock('./cardLayout', async (importOriginal) => {
   const original = await importOriginal<typeof import('./cardLayout')>()
-  let sign = 1
   return {
     ...original,
-    layOutCards: (...args: Parameters<typeof original.layOutCards>) => {
-      const laidOut = original.layOutCards(...args)
-      if (!layout.shift) return laidOut
-      sign = -sign
-      const nudge = sign * layout.shift
-      for (const placement of laidOut.cards.values()) {
-        placement.offset = { ...placement.offset, dx: placement.offset.dx + nudge }
-        if (placement.trail) placement.trail = { ...placement.trail, x1: placement.trail.x1 + nudge }
+    cardLayout: (): import('./cardLayout').CardLayout => {
+      const real = original.cardLayout()
+      let sign = 1
+      let nudge = 0
+      return {
+        ...real,
+        layOut: (...args) => {
+          const changed = real.layOut(...args)
+          if (!layout.shift) {
+            nudge = 0
+            return changed
+          }
+          sign = -sign
+          nudge = sign * layout.shift
+          return true
+        },
+        shows: (gameId) => {
+          const showing = real.shows(gameId)
+          if (showing.as !== 'card' || !nudge) return showing
+          return {
+            ...showing,
+            offset: { ...showing.offset, dx: showing.offset.dx + nudge },
+            trail: { ...showing.trail, x1: showing.trail.x1 + nudge },
+          }
+        },
       }
-      return laidOut
     },
   }
 })

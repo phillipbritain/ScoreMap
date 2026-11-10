@@ -61,7 +61,7 @@ The line from a score card to its game's venue, ending at a ringed venue dot.
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
-Games shown as one marker with a count because there's no room to show them apart: a pin cluster, a card cluster or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the center of a zoomed-in view turns the globe to it instead, and its games get score cards.
+Games shown as one marker because there's no room to show them apart: a pin cluster or a card cluster, with a count, or a venue cluster. It splits apart as you zoom in, or zooms in until it does when selected. A pin cluster far from the center of a zoomed-in view turns the globe to it instead, and its games get score cards.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Pin cluster**:
@@ -73,7 +73,7 @@ While zoomed in, a cluster of games whose score cards have no room on screen eve
 _Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Venue cluster**:
-While zoomed in, a cluster where score cards' trails meet, in place of their venue dots, which would overlap. Its games' cards are already on screen, so selecting it does nothing.
+While zoomed in, a cluster where score cards' trails meet, in place of their venue dots, which would overlap. Its games' cards are already on screen, so it shows no count, and selecting it does nothing.
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Card layout**:

@@ -186,7 +186,7 @@ A status's color is the palette's; the rest of its look is each component's own,
 | `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its color, radius in pixels and opacity |
 | `components.Pin.<status>.core.ring` | The width of the ring of the game's color around the core, in pixels (0 is no ring) |
 | `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
-| `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike. A venue cluster's count fades as far; its dot and ring don't, as a venue dot's don't |
+| `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike. A venue cluster doesn't fade, as a venue dot doesn't |
 | `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
 | `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
 
@@ -202,7 +202,7 @@ The card fades are what the cards' opacities were before cards were made solid (
 
 How status reaches the rest of the globe:
 
-- **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's color (outline, glow and count; a venue cluster's dot, ring and count) is the game color its games share, or the accent (`palette.live.main`) when their colors differ.
+- **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the game color its games share, or the accent (`palette.live.main`) when their colors differ.
 - **Pulses** play in the game's color, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its color.
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
@@ -276,9 +276,8 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
 | `footnote` | The smallest on the page: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
-| `micro` | The smallest on the globe: a venue cluster's count | 700, 8 |
 
-`footnote` and `micro` are ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
+`footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
 
 Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-globe)), but its sizes are type styles' sizes.
 
@@ -334,7 +333,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
-| `components.Trail.venue.ring.radius`, `.width` | The ring around that dot. A venue cluster is the same dot and ring, with its count just beside the ring | 5, 1 |
+| `components.Trail.venue.ring.radius`, `.width` | The ring around that dot. A venue cluster is the same dot and ring | 5, 1 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
 | `components.Hover.trail.width`, `.opacity` | A hovered card's trail, and its venue dot ring's width (see [Hover](#hover)) | 2.5, 1 |
 | `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
@@ -390,8 +389,6 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 | `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.25, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
 | `components.Cluster.count.size` | Its size, a type style's | `caption` |
-| `components.Trail.venue.count.font` | The count beside a venue cluster's dot | `Open Sans Bold` |
-| `components.Trail.venue.count.size` | Its size, a type style's | `micro` |
 
 ## What checking rejects
 

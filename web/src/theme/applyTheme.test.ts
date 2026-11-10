@@ -148,8 +148,8 @@ describe('applyTheme', () => {
       // Four color roles of four each, and three statuses' colors of three; the background's two, three
       // kinds of text, a divider and hover.
       palette: 4 * 4 + 3 * 3 + 2 + 3 + 1 + 1,
-      // A font family, and ten type styles of three.
-      typography: 1 + 10 * 3,
+      // A font family, and nine type styles of three.
+      typography: 1 + 9 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
       // A small pin's core of four and glow of two, for each of three statuses, and its fire outline's size, width and two opacities.
@@ -164,8 +164,8 @@ describe('applyTheme', () => {
       // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
       // font (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
       cluster: 9 + 5 + 4 + 3,
-      // A trail's width and opacity, its glow's three and its venue's three, and a venue cluster's count's font (of four) and size.
-      trail: 8 + 5,
+      // A trail's width and opacity, its glow's three and its venue's three.
+      trail: 8,
       selection: 2,
       // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two.
       hover: 2 + 2 + 3,

@@ -12,13 +12,22 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { themeWith } from '../theme/testTheme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
-import { cardClusterLayer, cardLayoutSource } from './cardLayoutLayers'
+import { cardClusterLayer, cardLayoutSource, cardlessSelectedPinLayer, cardlessSmallPinLayer } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { flameImage } from './flames'
 import { panelGap, smallPinReach } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
-import { outerPinClusterLayer, outerSmallPinLayer, pinClusterLayer, pinSource, selectedPinLayer, smallPinLayer } from './pinLayers'
+import {
+  outerPinClusterLayer,
+  outerPinSource,
+  outerSelectedPinLayer,
+  outerSmallPinLayer,
+  pinClusterLayer,
+  pinSource,
+  selectedPinLayer,
+  smallPinLayer,
+} from './pinLayers'
 import { cardZoom, fittedZoomSettings, maxZoom, unfittedZoom, zoomAt, zoomAtEquator } from './zoomLevels'
 
 /**
@@ -408,7 +417,7 @@ describe('selection', () => {
     globe.show([game('A'), game('B', { longitude: 2 })])
     const a = await cardShown('A')
 
-    globe.select('A')
+    globe.select('B')
     expect(a.classList).toContain('score-card--selected')
     expect(card('B')!.classList).not.toContain('score-card--selected')
 
@@ -541,7 +550,7 @@ describe('selection', () => {
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
     await pinsDrawn(map, smallPinLayer, a)
-    globe.select('A')
+    globe.select('B')
     await pause(500)
     expect(map.getCenter().lng).toBeCloseTo(0)
 
@@ -1447,6 +1456,87 @@ describe('changing theme', () => {
     globe.setTheme(larger)
 
     await vi.waitFor(() => expect(container.querySelector('[data-moved]')).not.toBeNull(), { timeout: 10_000 })
+  })
+})
+
+describe('pin sources', () => {
+  /** The games the map has been given in a pin source, by id. */
+  async function inSource(map: MapLibreMap, source: string) {
+    const { features } = (await map.getSource<GeoJSONSource>(source)!.getData()) as FeatureCollection
+    return features.map((feature) => feature.properties?.gameId as string)
+  }
+
+  it('shows no score card until the pin source has loaded the games, then shows them', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    let loading = true
+    const isSourceLoaded = map.isSourceLoaded.bind(map)
+    vi.spyOn(map, 'isSourceLoaded').mockImplementation((source) => (source === pinSource && loading ? false : isSourceLoaded(source)))
+    // Frames drawn all the while, as the map draws them for other reasons.
+    const drawAnother = () => map.triggerRepaint()
+    map.on('render', drawAnother)
+    globe.show([game('A')])
+    await pause(500)
+    expect(card('A')).toBeNull()
+
+    loading = false
+    await cardShown('A')
+    map.off('render', drawAnother)
+  })
+
+  it('does not reload the pin source for a change of score or clock alone, but does for a change its pins show', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { clock: '15:00' })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+    const setData = vi.spyOn(map.getSource<GeoJSONSource>(pinSource)!, 'setData')
+
+    globe.show([game('A', { clock: '14:59', home: '7' })])
+    expect(setData).not.toHaveBeenCalled()
+
+    globe.show([game('A', { status: 'Final', home: '7' })])
+    expect(setData).toHaveBeenCalledOnce()
+  })
+
+  // Looking at 0°, 0° at cardZoom, the horizon is about 65° away.
+  it('makes a game an outer pin as the globe turns it out of the card radius, and drops it as it turns behind the globe', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    const a = game('A', { longitude: 20 })
+    globe.show([a])
+    await cardShown('A')
+    expect(await inSource(map, outerPinSource)).toEqual([])
+
+    // At the zoom it was, the venue 50° east of the center of the view.
+    map.jumpTo({ center: [-30, 0], zoom: cardZoom })
+    await pinsDrawn(map, outerSmallPinLayer, a)
+    expect(card('A')).toBeNull()
+
+    // 120° east, behind the globe.
+    map.jumpTo({ center: [-100, 0], zoom: cardZoom })
+    await vi.waitFor(async () => expect(await inSource(map, outerPinSource)).toEqual([]))
+  })
+
+  it('rings the selected game’s pin farther out, at card zoom', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, wideGlobe)
+    const outer = game('OUTER', { longitude: 38, latitude: 25 })
+    globe.show([game('INNER'), outer])
+    await pinsDrawn(map, outerSmallPinLayer, outer)
+
+    globe.select('OUTER')
+
+    await vi.waitFor(() => expect(drawnAt(map, outerSelectedPinLayer, outer).map((f) => f.properties.gameId)).toEqual(['OUTER']))
+  })
+
+  it('rings the selected game’s small pin when it has no room for its score card', async () => {
+    // A strip of globe with room for one card: the game beside it is left its small pin.
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 }, { width: 400, height: 40 })
+    const b = game('B', { longitude: 3 })
+    globe.show([game('A'), b])
+    await cardShown('A')
+    await pinsDrawn(map, cardlessSmallPinLayer, b)
+
+    globe.select('B')
+
+    await vi.waitFor(() => expect(drawnAt(map, cardlessSelectedPinLayer, b).map((f) => f.properties.gameId)).toEqual(['B']))
   })
 })
 

@@ -152,7 +152,7 @@ public sealed class VenueCacheTests
             var next = locator.LocateAsync(venue with { Name = "Another venue" }, null, CancellationToken.None);
             Assert.False(next.IsCompleted);
             server.Clock.Advance(TimeSpan.FromSeconds(2));
-            Assert.Equal(Position, (await next.WaitAsync(TimeSpan.FromSeconds(5))).Location);
+            Assert.Equal(Position, (await next.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)).Location);
             Assert.Equal(Position, (await locator.LocateAsync(venue, null, CancellationToken.None)).Location);
             Assert.Equal(2, handler.Requests.Count);
         }

@@ -43,7 +43,7 @@ public class RunningGameBoardTests
         var joining = board.JoinAsync("viewer", CancellationToken.None);
         try
         {
-            await delivery.Adding.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            await delivery.Adding.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.Equal([GamesHub.SnapshotMessage, "add"], delivery.Calls);
             Assert.False(board.IsWatching("viewer"));
             delivery.Release.TrySetResult();

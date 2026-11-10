@@ -14,7 +14,7 @@ namespace ScoreMap.Server.Tests.Scenarios;
 /// The scenario files that ship in the repo, run as the owner runs them locally: each shows what
 /// its description in the run-scoremap skill says.
 /// </summary>
-public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
+public class ShippedScenarioTests(ITestOutputHelper output)
 {
     private static readonly string ShippedFolder = Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "Scenarios", "Files");
 
@@ -66,15 +66,15 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
         using var http = server.CreateClient();
 
-        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios");
+        var listing = await http.GetFromJsonAsync<ScenarioListing>("/api/scenarios", TestContext.Current.CancellationToken);
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
         Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "worldwide"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
-            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
-            Assert.True(response.IsSuccessStatusCode, $"{name}: {await response.Content.ReadAsStringAsync()}");
+            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
+            Assert.True(response.IsSuccessStatusCode, $"{name}: {await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
         }
     }
 
@@ -90,9 +90,9 @@ public class ShippedScenarioTests(Xunit.Abstractions.ITestOutputHelper output)
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
 
-        Assert.Equal(canControlPlay, (await response.Content.ReadFromJsonAsync<ScenarioListing>())?.CanControlPlay);
+        Assert.Equal(canControlPlay, (await response.Content.ReadFromJsonAsync<ScenarioListing>(TestContext.Current.CancellationToken))?.CanControlPlay);
     }
 
     // Not slow-initial-load, whose first games wait on the real clock: it fills from worldwide's venues.

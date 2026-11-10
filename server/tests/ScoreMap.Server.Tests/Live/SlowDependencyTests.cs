@@ -85,9 +85,9 @@ public class SlowDependencyTests
         using var canceled = oldFetch.Register(() => sourceWhenCanceled.TrySetResult(switcher.Running));
         using var http = server.CreateClient();
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "next" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "next" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        Assert.Equal("real", await sourceWhenCanceled.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+        Assert.Equal("real", await sourceWhenCanceled.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
         Assert.Equal("next", switcher.Running);
         Assert.True(oldFetch.IsCancellationRequested);
     }
@@ -127,7 +127,7 @@ public class SlowDependencyTests
             Venue = new ProviderVenue("Slow Stadium", "London", null, "England"),
         });
         await using var client = await server.ConnectClientAsync();
-        await started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         var game = Assert.Single(await client.NextSnapshotAsync());
         Assert.Equal((null, null), (game.Venue.Latitude, game.Venue.Longitude));
 

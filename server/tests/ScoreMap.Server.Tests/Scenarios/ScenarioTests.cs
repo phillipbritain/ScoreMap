@@ -117,7 +117,7 @@ public class ScenarioTests
         Assert.Equal("14", Assert.Single(await client.NextSnapshotAsync()).Sides().Home.Score);
 
         server.Clock.Advance(TimeSpan.FromSeconds(9));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         var scored = await client.NextChangeAsync();
@@ -273,7 +273,7 @@ public class ScenarioTests
         await client.NextSnapshotAsync();
 
         server.Clock.Advance(TimeSpan.FromSeconds(14));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Equal(1, server.Feed.Fetches(Nfl));
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         await server.Feed.WaitForFetchesAsync(Nfl, 2);

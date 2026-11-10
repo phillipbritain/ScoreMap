@@ -87,7 +87,7 @@ public class VenuePhotoTests
         var savedPhotos = Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(savedPhotos, """
             {"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead-outside.jpg","credit":null}}
-            """);
+            """, TestContext.Current.CancellationToken);
         try
         {
             await using (var firstRun = new ScoreMapServer(savedVenuePhotosPath: savedPhotos))
@@ -121,7 +121,7 @@ public class VenuePhotoTests
         await File.WriteAllTextAsync(savedPhotos, """
             {"version":2,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead.jpg",
               "credit":{"author":"A. Photographer","licence":"CC BY-SA 4.0","licenceUrl":"https://licenses.test/by-sa","sourceUrl":"https://photos.test/page"}}}}
-            """);
+            """, TestContext.Current.CancellationToken);
         try
         {
             await using var server = new ScoreMapServer(savedVenuePhotosPath: savedPhotos);

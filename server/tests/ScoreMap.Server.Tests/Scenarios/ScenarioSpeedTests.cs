@@ -64,7 +64,7 @@ public class ScenarioSpeedTests
 
         // 1m at 32× is 1.875 s, so the fetch at 2 s (they come every 250 ms) is the first to see it.
         server.Clock.Advance(TimeSpan.FromSeconds(1.75));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromMilliseconds(250));
         var scored = await client.NextChangeAsync();
@@ -85,10 +85,10 @@ public class ScenarioSpeedTests
         await other.NextSnapshotAsync();
         server.Clock.Advance(TimeSpan.FromSeconds(20));
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Faster" });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Faster" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+        var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>(TestContext.Current.CancellationToken);
         Assert.NotNull(listing);
         Assert.Equal("Faster", listing.Speed);
         Assert.Equal((server.Clock.GetUtcNow(), startedAt.AddSeconds(20)), (listing.Clock.At, listing.Clock.Reads));
@@ -98,7 +98,7 @@ public class ScenarioSpeedTests
 
         // The other 40 s to the score take 1.25 s at 32×, and the game carries on rather than starting again.
         server.Clock.Advance(TimeSpan.FromSeconds(1));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(0.25));
         var scored = await client.NextChangeAsync();
@@ -117,21 +117,21 @@ public class ScenarioSpeedTests
         await client.NextSnapshotAsync();
         server.Clock.Advance(TimeSpan.FromSeconds(20));
 
-        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Paused" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Paused" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         // Long past the score on the real clock, nothing changes and the scenario clock still reads 20 s in.
         server.Clock.Advance(TimeSpan.FromMinutes(5));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         var paused = await ListingAsync(http);
         Assert.Equal("Paused", paused.Speed);
         Assert.Equal((server.Clock.GetUtcNow(), startedAt.AddSeconds(20)), (paused.Clock.At, paused.Clock.Reads));
 
-        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Normal" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync(SpeedPath, new { speed = "Normal" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         // The other 40 s to the score, at 1×.
         server.Clock.Advance(TimeSpan.FromSeconds(39));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromSeconds(1));
         var scored = await client.NextChangeAsync();
@@ -149,9 +149,9 @@ public class ScenarioSpeedTests
 
         foreach (var name in new[] { "test", "other" })
         {
-            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
 
-            var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+            var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>(TestContext.Current.CancellationToken);
             Assert.NotNull(listing);
             Assert.Equal("Faster", listing.Speed);
             Assert.Equal((server.Clock.GetUtcNow(), ScenarioClock.StartsAt), (listing.Clock.At, listing.Clock.Reads));
@@ -167,10 +167,10 @@ public class ScenarioSpeedTests
         var startedAt = ScenarioClock.StartsAt;
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "paused" });
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "paused" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+        var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>(TestContext.Current.CancellationToken);
         Assert.NotNull(listing);
         Assert.Equal(("test", "Paused"), (listing.Running, listing.Speed));
         // Long past the score on the real clock, a browser still gets the games as they start, and
@@ -179,7 +179,7 @@ public class ScenarioSpeedTests
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
         Assert.Equal(("chiefs-bills", "14"), (snapshot.Single().Id, snapshot.Single().Sides().Home.Score));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         Assert.Equal(startedAt, (await ListingAsync(http)).Clock.Reads);
     }
@@ -192,10 +192,10 @@ public class ScenarioSpeedTests
         server.WriteScenario("other", ScoresAtOneMinute.Replace("chiefs-bills", "other-game"));
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "Slow" });
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test", speed = "Slow" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync());
+        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(("other", "Normal"), ((await ListingAsync(http)).Running, (await ListingAsync(http)).Speed));
     }
 
@@ -224,7 +224,7 @@ public class ScenarioSpeedTests
         Assert.Empty(await client.NextSnapshotAsync());
 
         server.Clock.Advance(TimeSpan.FromMilliseconds(750));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromMilliseconds(250));
         var added = await client.NextChangeAsync();
@@ -265,7 +265,7 @@ public class ScenarioSpeedTests
 
         // The score comes 1 s of scenario time in, and shows at the first fetch from then.
         server.Clock.Advance(TimeSpan.FromMilliseconds(everyMs - 1));
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         Assert.Empty(client.PendingChanges());
         server.Clock.Advance(TimeSpan.FromMilliseconds(1));
         Assert.Equal(GameChangeKind.ScoreChanged, (await client.NextChangeAsync()).Kind);
@@ -277,13 +277,13 @@ public class ScenarioSpeedTests
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
         server.WriteScenario("test", ScoresAtOneMinute);
         using var http = server.CreateClient();
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" })).EnsureSuccessStatusCode();
+        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         server.Clock.Advance(TimeSpan.FromSeconds(10));
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Contains("real time", await response.Content.ReadAsStringAsync());
+        Assert.Contains("real time", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var listing = await ListingAsync(http);
         Assert.Equal("Faster", listing.Speed);
         Assert.Equal((server.Clock.GetUtcNow(), server.Clock.GetUtcNow()), (listing.Clock.At, listing.Clock.Reads));
@@ -300,7 +300,7 @@ public class ScenarioSpeedTests
         // A 3-minute quiet interval later, still a minute short of its pin window on the real clock.
         server.Clock.Advance(TimeSpan.FromMinutes(3));
         await server.Feed.WaitForFetchesAsync(Nfl, 2);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         Assert.Empty(client.PendingChanges());
     }
@@ -335,9 +335,9 @@ public class ScenarioSpeedTests
 
         foreach (var name in new[] { "still", "real" })
         {
-            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name });
+            var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
 
-            var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>();
+            var listing = await response.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>(TestContext.Current.CancellationToken);
             Assert.False(listing?.CanControlPlay, name);
             Assert.False((await client.NextScenarioChangeAsync()).CanControlPlay, name);
             Assert.False((await ListingAsync(http)).CanControlPlay, name);
@@ -352,13 +352,13 @@ public class ScenarioSpeedTests
         server.WriteScenario("still", StandsStill);
         using var http = server.CreateClient();
 
-        var refused = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
+        var refused = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, refused.StatusCode);
-        Assert.Contains("still", await refused.Content.ReadAsStringAsync());
+        Assert.Contains("still", await refused.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal("Faster", (await ListingAsync(http)).Speed);
-        var switched = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test" });
-        Assert.Equal("Faster", (await switched.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>())?.Speed);
+        var switched = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "test" }, TestContext.Current.CancellationToken);
+        Assert.Equal("Faster", (await switched.Content.ReadFromJsonAsync<ScenarioEndpoints.ScenarioListing>(TestContext.Current.CancellationToken))?.Speed);
     }
 
     [Fact]
@@ -369,7 +369,7 @@ public class ScenarioSpeedTests
         using var http = server.CreateClient();
         Assert.Equal("Fast", (await ListingAsync(http)).Speed);
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "FASTER" });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "FASTER" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         Assert.Equal("Faster", (await ListingAsync(http)).Speed);
@@ -385,10 +385,10 @@ public class ScenarioSpeedTests
         server.WriteScenario("test", ScoresAtOneMinute);
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync());
+        Assert.Contains("Paused, Normal, Fast, Faster", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal("Normal", (await ListingAsync(http)).Speed);
     }
 
@@ -399,7 +399,7 @@ public class ScenarioSpeedTests
         server.WriteScenario("test", ScoresAtOneMinute);
         using var http = server.CreateClient();
 
-        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" });
+        var response = await http.PutAsJsonAsync(SpeedPath, new { speed = "Fast" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

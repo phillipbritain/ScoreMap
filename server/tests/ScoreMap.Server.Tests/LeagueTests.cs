@@ -49,7 +49,7 @@ public class LeagueTests
         await using var server = new ScoreMapServer();
         using var http = server.CreateClient();
 
-        var leagues = await http.GetFromJsonAsync<LeagueListing[]>("/api/leagues");
+        var leagues = await http.GetFromJsonAsync<LeagueListing[]>("/api/leagues", TestContext.Current.CancellationToken);
 
         Assert.NotNull(leagues);
         Assert.Equal(

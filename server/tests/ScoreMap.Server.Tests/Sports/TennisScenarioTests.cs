@@ -127,15 +127,15 @@ public sealed class TennisScenarioTests : IDisposable
         var clock = new FakeTimeProvider(StartedAt);
         var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp]);
 
-        var before = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        var before = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, TestContext.Current.CancellationToken));
         Assert.Equal(new ProviderSet(2, 3), before.Sets[1]);
         clock.Advance(TimeSpan.FromSeconds(10));
-        var after = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        var after = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, TestContext.Current.CancellationToken));
         Assert.Equal(ProviderStatus.Final, after.Status);
         Assert.Equal([new ProviderSet(7, 6, 7, 4, true), new ProviderSet(2, 4)], after.Sets);
         Assert.Equal(new ProviderEarlyEnding(EarlyEndingReason.Retired, "J. Sinner"), after.EarlyEnding);
         clock.Advance(TimeSpan.FromSeconds(50));
-        var loop = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        var loop = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, TestContext.Current.CancellationToken));
         Assert.Equal("sinner-alcaraz-loop2", loop.Id);
         Assert.Equal(before.Sets, loop.Sets);
         Assert.Null(loop.EarlyEnding);
@@ -202,7 +202,7 @@ public sealed class TennisScenarioTests : IDisposable
         var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp, Nhl]);
         clock.Advance(TimeSpan.FromMinutes(30));
 
-        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, TestContext.Current.CancellationToken));
 
         Assert.Equal(ProviderStatus.Suspended, match.Status);
         var set = Assert.Single(match.Sets);
@@ -219,7 +219,7 @@ public sealed class TennisScenarioTests : IDisposable
         var feed = new ScenarioGameFeedProvider(scenario, clock, [Atp, Nhl]);
         clock.Advance(TimeSpan.FromMinutes(30));
 
-        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, default));
+        var match = Assert.Single(await feed.FetchScoreboardAsync(Atp.Key, TestContext.Current.CancellationToken));
 
         Assert.Equal(new ProviderSet(7, 6, 7, 4, true), match.Sets[0]);
         Assert.True(match.Sets.Sum(set => set.Home + set.Away) > 18);

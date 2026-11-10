@@ -316,7 +316,7 @@ public class EspnGameFeedProviderTests
     [Fact]
     public async Task A_game_listed_on_more_than_one_day_is_reported_once()
     {
-        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"));
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"), TestContext.Current.CancellationToken);
         var provider = new EspnGameFeedProvider(
             new HttpClient(StubHttpHandler.Returning(body)) { BaseAddress = new Uri("https://espn.test/sports/") },
             new FakeTimeProvider(new DateTimeOffset(2026, 10, 5, 2, 0, 0, TimeSpan.Zero)));
@@ -417,7 +417,7 @@ public class EspnGameFeedProviderTests
     [Fact]
     public async Task Home_teams_are_not_looked_up_for_games_with_a_venue()
     {
-        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"));
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "nfl.json"), TestContext.Current.CancellationToken);
         var (provider, handler) = ProviderAnswering(body, "{}");
 
         var games = await provider.FetchScoreboardAsync(Nfl, CancellationToken.None);
@@ -760,7 +760,7 @@ public class EspnGameFeedProviderTests
 
         var game = Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", cancel.Token));
         provider.EnrichGame(game, cancel.Token);
-        await provider.EnrichmentFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        await provider.EnrichmentFinishedAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 
         Assert.True(cancel.IsCancellationRequested);
         Assert.Equal(99, Assert.Single(await provider.FetchScoreboardAsync("basketball/nba", CancellationToken.None)).Sides().Home.Score);
@@ -769,7 +769,7 @@ public class EspnGameFeedProviderTests
     [Fact]
     public async Task Top_events_are_listed_by_game_id_and_tennis_matches_by_their_competition_id()
     {
-        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "top-events.json"));
+        var body = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Espn", "top-events.json"), TestContext.Current.CancellationToken);
         var handler = StubHttpHandler.Returning(body);
         var provider = ProviderOver(handler);
 

@@ -26,11 +26,11 @@ public sealed class BrowserAppTests : IDisposable
     {
         await using var server = new ScoreMapServer { BrowserAppFolder = _browserApp };
 
-        var response = await server.CreateClient().GetAsync("/");
+        var response = await server.CreateClient().GetAsync("/", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
-        Assert.Equal(IndexHtml, await response.Content.ReadAsStringAsync());
+        Assert.Equal(IndexHtml, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -38,10 +38,10 @@ public sealed class BrowserAppTests : IDisposable
     {
         await using var server = new ScoreMapServer { BrowserAppFolder = _browserApp };
 
-        var response = await server.CreateClient().GetAsync("/assets/index-abc123.js");
+        var response = await server.CreateClient().GetAsync("/assets/index-abc123.js", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(Script, await response.Content.ReadAsStringAsync());
+        Assert.Equal(Script, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -49,10 +49,10 @@ public sealed class BrowserAppTests : IDisposable
     {
         await using var server = new ScoreMapServer { BrowserAppFolder = _browserApp };
 
-        var response = await server.CreateClient().GetAsync("/games/401872965");
+        var response = await server.CreateClient().GetAsync("/games/401872965", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(IndexHtml, await response.Content.ReadAsStringAsync());
+        Assert.Equal(IndexHtml, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class BrowserAppTests : IDisposable
     {
         await using var server = new ScoreMapServer { BrowserAppFolder = _browserApp };
 
-        var response = await server.CreateClient().GetAsync("/assets/index-gone.js");
+        var response = await server.CreateClient().GetAsync("/assets/index-gone.js", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

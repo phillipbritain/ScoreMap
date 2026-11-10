@@ -341,6 +341,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 ### On the page
 
+Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names and the panel scrolls on short screens. At viewport widths up to 960px, the score block uses the full panel width with details below and no photo. This is option A from the comparison preserved on the local throwaway branch `phillipbritain/full-name-panel-prototypes`, selected by the user on November 9, 2026.
+
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
 | `components.GamePanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its color | none (`transparent`, blur 0) |
@@ -353,9 +355,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |
-| `components.GamePanel.size.height`, `.phoneHeight` | The strip's height, and its height on a phone, where the details go below the score block. The band under it, for the last score and the rest, adds three lines of its own (six on a phone) | 140, 236 |
-| `components.GamePanel.size.scoreBlock`, `.slant` | The score block's width, and how far its right edge slants | 340, 16 |
-| `components.GamePanel.size.photo`, `.logo`, `.close` | The venue photo's width, a team's logo, the close button | 180, 28, 24 |
+| `components.GamePanel.size.height`, `.phoneHeight` | The strip's minimum height, and its minimum height on a phone, where the details go below the score block. It grows for wrapped names; the band adds at least three lines of its own | 140, 236 |
+| `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
+| `components.GamePanel.size.photo`, `.logo`, `.close` | The venue photo's maximum width (also capped at 12% of the panel), a team's logo, the close button | 144, 28, 24 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest | 92 |
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |

@@ -125,10 +125,8 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   color (--game-color, set on the panel, with --text-on-game-color for text on it). One
-   size whatever the game, so it never jumps from one game to the next: the score block, the details
-   and the photo each have a fixed width, the band under them a fixed height, and every line of text
-   is clipped to its slot. */
+   color (--game-color, set on the panel, with --text-on-game-color for text on it). Full team and
+   player names wrap in their rows; the strip grows to fit them. Short screens scroll the panel. */
 .game-panel {
   position: absolute;
   left: 50%;
@@ -138,8 +136,9 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  /* The score block and photo are clipped to the panel's corners. */
-  overflow: hidden;
+  max-height: calc(100% - 6 * var(--spacing));
+  /* Keep long identities reachable even in a short viewport. */
+  overflow-y: auto;
   border-top: var(--shape-border-width-thick) solid var(--game-color);
   border-radius: var(--game-panel-corner);
   /* Glass (see above), shading from top to bottom. */
@@ -166,20 +165,20 @@ body {
 .game-panel__main {
   display: flex;
   flex-shrink: 0;
-  height: var(--game-panel-size-height);
+  min-height: var(--game-panel-size-height);
 }
 
-/* The score block at the left, slanted on its right edge. One column that can't grow past the
-   block, so a long team name is clipped rather than pushing its score out. */
+/* The score block at the left, slanted on its right edge. Names wrap within their share of each
+   row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
 .game-panel__score {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: calc(0.5 * var(--spacing));
+  gap: calc(2 * var(--spacing));
   box-sizing: border-box;
-  width: var(--game-panel-size-score-block);
+  width: min(var(--game-panel-size-score-block), 42%);
   flex-shrink: 0;
-  padding: calc(2 * var(--spacing)) calc(6 * var(--spacing)) calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
   /* Clearing with the panel's glass, but never all the way, so the score block stands out from it. */
   --score-block-opacity: calc((0.15 + 0.85 * var(--frost)) * 100%);
   background: linear-gradient(
@@ -201,12 +200,11 @@ body {
   text-transform: uppercase;
 }
 
-/* One line: the score block has no room for a second beside two team rows and the progress line. */
+/* Let long league names grow with the score block too. */
 .game-panel__league {
   margin-bottom: var(--spacing);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  padding-right: calc(5 * var(--spacing));
+  overflow-wrap: anywhere;
 }
 
 .game-panel__label {
@@ -243,9 +241,8 @@ body {
 .game-panel__team-name {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
 }
 
 /* A team's poll ranking before its name, and its record after it, quieter than the name. */
@@ -370,13 +367,15 @@ body {
    there's no photo. */
 .game-panel__photo {
   position: relative;
-  width: var(--game-panel-size-photo);
+  width: min(var(--game-panel-size-photo), 12%);
   margin: 0;
   flex-shrink: 0;
   background: radial-gradient(ellipse at 70% 50%, var(--game-panel-photo), transparent 70%);
 }
 
 .game-panel__photo img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -426,15 +425,14 @@ body {
   cursor: pointer;
 }
 
-/* The band under the strip: the last score (or soccer's goals and cards), where play stands, the
-   betting line and the crowd, each a cell of a label and two lines under it, ruled off from the strip.
-   Its height is fixed, three lines and its padding, so it keeps its size whatever the game shows. The
-   last score and where play stands get twice the room of the others. */
+/* Sport-specific contest details below the strip. The band has room for at least three lines and
+   grows with its contents. Wide cells give scorelines and leaderboards more room. */
 .game-panel__band {
   display: flex;
   gap: calc(4 * var(--spacing));
   box-sizing: border-box;
-  height: calc(4 * var(--spacing) + 3lh);
+  flex-shrink: 0;
+  min-height: calc(4 * var(--spacing) + 3lh);
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
@@ -522,21 +520,20 @@ body {
   text-overflow: ellipsis;
 }
 
-/* On a phone: the score block above the details, and no photo; the band's cells two to a row. */
-@media (max-width: 640px) {
+/* On narrow screens: give names the full panel width, with details below and no photo. */
+@media (max-width: 960px) {
   .game-panel {
     clip-path: none;
   }
 
   .game-panel__main {
     flex-direction: column;
-    height: var(--game-panel-size-phone-height);
+    min-height: var(--game-panel-size-phone-height);
   }
 
   .game-panel__band {
     flex-wrap: wrap;
     gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
-    height: calc(4 * var(--spacing) + 6lh);
     padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   }
 
@@ -546,6 +543,7 @@ body {
 
   .game-panel__score {
     width: auto;
+    padding: calc(3 * var(--spacing));
     clip-path: none;
   }
 

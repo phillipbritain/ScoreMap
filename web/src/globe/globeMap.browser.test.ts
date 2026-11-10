@@ -417,7 +417,7 @@ describe('selection', () => {
     globe.show([game('A'), game('B', { longitude: 2 })])
     const a = await cardShown('A')
 
-    globe.select('B')
+    globe.select('A')
     expect(a.classList).toContain('score-card--selected')
     expect(card('B')!.classList).not.toContain('score-card--selected')
 
@@ -550,7 +550,7 @@ describe('selection', () => {
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
     await pinsDrawn(map, smallPinLayer, a)
-    globe.select('B')
+    globe.select('A')
     await pause(500)
     expect(map.getCenter().lng).toBeCloseTo(0)
 

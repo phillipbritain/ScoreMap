@@ -13,7 +13,7 @@ namespace ScoreMap.Server.Hubs;
 /// <see cref="DemoBoard"/> instead of the real game board (ADR-0019).
 /// </summary>
 public sealed class GamesHub(
-    RunningGameBoard board, DemoBoard demo, IServiceProvider services, TimeProvider realTime) : Hub
+    RunningGameBoard board, DemoBoard demo, TimeProvider realTime) : Hub
 {
     public const string Path = "/hubs/games";
 
@@ -58,8 +58,7 @@ public sealed class GamesHub(
         }
         else
         {
-            var slowStart = services.GetService<ScenarioSwitcher>()?.SlowStart ?? TimeSpan.Zero;
-            await ConnectAsync(board, slowStart);
+            await ConnectAsync(board, board.SlowStart);
         }
         await base.OnConnectedAsync();
     }

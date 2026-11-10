@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
-using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Scenarios;
@@ -32,13 +31,12 @@ public sealed partial class RunningGameBoard : BackgroundService
     private TimeSpan _quietInterval;
 
     public RunningGameBoard(
-        IGameFeedProvider feed, VenueLocator venues, VenuePhotos photos, OfficialWatchLinks watchLinks,
+        BoardSource source, VenueLocator venues, VenuePhotos photos, OfficialWatchLinks watchLinks,
         IStreamLinkSource streams, IOptions<List<League>> leagues, TimeProvider clock,
-        IHubContext<GamesHub> hub, IOptions<PollingOptions> polling, ILogger<RunningGameBoard> logger)
-        : this(new BoardState(feed, venues, photos, watchLinks, streams, leagues,
-                (feed as ScenarioSwitcher)?.BoardClock ?? clock),
+        IHubContext<GamesHub> hub, ILogger<RunningGameBoard> logger)
+        : this(new BoardState(source.Feed, venues, photos, watchLinks, streams, leagues, source.GameClock),
             new BrowserConnections(GamesHub.RealGamesGroup), hub, clock,
-            (feed as ScenarioSwitcher)?.Polling ?? polling.Value, logger, feed as ScenarioSwitcher)
+            source.Polling, logger, source.Controls)
     { }
 
     private RunningGameBoard(
@@ -55,17 +53,21 @@ public sealed partial class RunningGameBoard : BackgroundService
         _switcher = switcher;
     }
 
-    // Demo creation belongs here too: callers never assemble mutable state, polling and viewers.
+    // Demo creation belongs here too: callers supply a source, never mutable board state or viewers.
     internal static RunningGameBoard CreateDemo(
-        IServiceProvider services, IGameFeedProvider feed, TimeProvider gameClock, string group) =>
-        new(ActivatorUtilities.CreateInstance<BoardState>(services, feed, gameClock),
+        IServiceProvider services, BoardSource source, string group) =>
+        new(ActivatorUtilities.CreateInstance<BoardState>(services, source.Feed, source.GameClock),
             new BrowserConnections(group), services.GetRequiredService<IHubContext<GamesHub>>(),
-            services.GetRequiredService<TimeProvider>(), ScenarioSwitcher.ScenarioPolling(Speed.Normal),
-            services.GetRequiredService<ILogger<RunningGameBoard>>());
+            services.GetRequiredService<TimeProvider>(), source.Polling,
+            services.GetRequiredService<ILogger<RunningGameBoard>>(), source.Controls);
 
     /// <summary>A published immutable snapshot, safe to read while leagues update.</summary>
     public IReadOnlyList<Game> Games => _board.Games;
     public IReadOnlyList<League> Leagues => _board.Leagues;
+
+    /// <summary>How long each viewer waits before joining, in real time.</summary>
+    public TimeSpan SlowStart => _switcher?.SlowStart ?? TimeSpan.Zero;
+
     public bool IsWatching(string connectionId) => _connections.IsConnected(connectionId);
     public void Leave(string connectionId) => _connections.Disconnected(connectionId);
 

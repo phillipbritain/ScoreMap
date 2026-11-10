@@ -12,8 +12,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { Point } from 'geojson'
 import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
-import { noRecentScorers, type RecentScorers } from '../games/scorers'
-import { changeSince, lastNumber, noRecentChanges, type RecentChanges } from '../games/recentChanges'
+import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
@@ -290,7 +289,7 @@ export class GlobeMap {
    * A game whose venue isn't placed (its lookup pending, or found nothing) is left off the globe
    * altogether: no pin, card, name or ring. Once placed, it comes into view at its venue.
    */
-  show(games: readonly Game[] | null, changes: RecentChanges = noRecentChanges, scorers: RecentScorers = noRecentScorers): void {
+  show(games: readonly Game[] | null, justHappened: JustHappened = noneJustHappened): void {
     if (!games) return
     this.settling.gamesArrived()
     this.unsettle()
@@ -301,11 +300,11 @@ export class GlobeMap {
     // Names first: cards are laid out around them.
     this.names.showGames(placed)
     if (this.reachShown) this.showReachRings()
-    this.cards.setGames(placed, scorers)
+    this.cards.setGames(placed, justHappened)
     const played = this.changesPlayed
-    this.changesPlayed = Math.max(played, lastNumber(changes))
+    this.changesPlayed = Math.max(played, lastNumber(justHappened))
     for (const game of placed) {
-      const kind = before.has(game.id) ? changeSince(changes, game.id, played) : null
+      const kind = before.has(game.id) ? changeSince(justHappened, game.id, played) : null
       const animation = kind && pinAnimation(kind, game)
       if (animation) void this.animate(game, animation)
     }

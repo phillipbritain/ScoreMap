@@ -4,6 +4,7 @@ import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
+import { scorerOf } from './games/justHappened'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
@@ -128,7 +129,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
-  const { games, changes, scorers, cutOffSince, waking } = useLiveGames(
+  const { games, justHappened, cutOffSince, waking } = useLiveGames(
     behavior.asleep.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
@@ -168,8 +169,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
-          changes={changes}
-          scorers={scorers}
+          justHappened={justHappened}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}
           onSelectGame={selectGame}
@@ -234,7 +234,7 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           <GamePanel
             ref={panel}
             game={selectedGame}
-            scorer={scorers.get(selectedGame.id)}
+            scorer={scorerOf(justHappened, selectedGame.id)}
             color={selectedColor}
             textOnColor={textOn(selectedColor, theme.palette.text.primary, theme.palette.background.paper)}
             onClose={closeGame}

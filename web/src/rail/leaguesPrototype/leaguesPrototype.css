@@ -1,0 +1,850 @@
+/* PROTOTYPE (throwaway, not for main): the looks LeaguesPrototype tries for the rail's Leagues
+   popover. Colors come from the theme's custom properties, mixed where a tint is wanted; a tint
+   that's kept would become a theme setting (see the report on the prototype branch). */
+
+/* ─── Shared bits ─────────────────────────────────────────────────────────────────────────────── */
+
+.pp-star {
+  width: 1em;
+  height: 1em;
+}
+
+.pp-note {
+  margin: 0 0 calc(3 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
+.pp-off {
+  opacity: var(--controls-off-opacity);
+}
+
+[class^='pp-'] button {
+  font-family: var(--typography-font-family);
+  cursor: pointer;
+}
+
+[class^='pp-'] button:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
+}
+
+/* ─── The floating bar ────────────────────────────────────────────────────────────────────────── */
+
+.picker-proto-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 24px);
+  padding: 6px 8px;
+  transform: translateX(-50%);
+  border: 2px dashed #ff3df5;
+  border-radius: 999px;
+  background: #111;
+  box-shadow: 0 4px 20px #000a;
+  color: #fff;
+  font: 12px/1.3 system-ui, sans-serif;
+}
+
+.picker-proto-bar button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #ff3df5;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.picker-proto-bar__label {
+  text-align: center;
+}
+
+/* ─── B: Gold glow pills ──────────────────────────────────────────────────────────────────────── */
+
+.pp-glow-scope {
+  display: flex;
+  margin-bottom: calc(3 * var(--spacing));
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.pp-glow-scope__option {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  margin-bottom: calc(-1 * var(--shape-border-width-thin));
+  padding: calc(2 * var(--spacing)) 0;
+  border: none;
+  border-bottom: var(--shape-border-width-medium) solid transparent;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-glow-scope__option:hover {
+  color: var(--palette-text-primary);
+}
+
+.pp-glow-scope__option[aria-checked='true'] {
+  border-bottom-color: var(--palette-secondary-main);
+  color: var(--palette-secondary-light);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--palette-secondary-main) 60%, transparent);
+}
+
+.pp-glow__all,
+.pp-glow__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: var(--spacing) calc(3 * var(--spacing)) var(--spacing) calc(2.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-secondary) 30%, transparent);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  transition: border-color 120ms, background 120ms, box-shadow 120ms, color 120ms;
+}
+
+.pp-glow__all:hover,
+.pp-glow__chip:hover {
+  border-color: var(--palette-text-secondary);
+  background: var(--palette-action-hover);
+  color: var(--palette-text-primary);
+}
+
+.pp-glow__all[aria-pressed='true'],
+.pp-glow__chip[aria-pressed='true'] {
+  border-color: var(--palette-secondary-main);
+  background: color-mix(in srgb, var(--palette-secondary-main) 14%, var(--palette-primary-dark));
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--palette-secondary-main) 35%, transparent),
+    inset 0 0 6px color-mix(in srgb, var(--palette-secondary-main) 25%, transparent);
+  color: var(--palette-secondary-light);
+}
+
+.pp-glow__all[aria-pressed='true']:hover,
+.pp-glow__chip[aria-pressed='true']:hover {
+  background: color-mix(in srgb, var(--palette-secondary-main) 24%, var(--palette-primary-dark));
+}
+
+.pp-glow__all[data-state='mixed'] {
+  border-style: dashed;
+  border-color: var(--palette-secondary-main);
+}
+
+.pp-glow__dot {
+  width: 6px;
+  height: 6px;
+  border: var(--shape-border-width-thin) solid currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+[aria-pressed='true'] > .pp-glow__dot {
+  border-color: var(--palette-secondary-main);
+  background: var(--palette-secondary-light);
+  box-shadow: 0 0 6px var(--palette-secondary-main);
+  opacity: 1;
+}
+
+.pp-glow__all[data-state='mixed'] > .pp-glow__dot {
+  background: linear-gradient(90deg, var(--palette-secondary-main) 50%, transparent 50%);
+  border-color: var(--palette-secondary-main);
+  opacity: 1;
+}
+
+.pp-glow__all {
+  margin-bottom: calc(4 * var(--spacing));
+}
+
+.pp-glow__count {
+  padding: 0 calc(1.5 * var(--spacing));
+  border-radius: var(--controls-corner);
+  background: var(--palette-primary-dark);
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.pp-glow__sport + .pp-glow__sport {
+  margin-top: calc(4 * var(--spacing));
+}
+
+.pp-glow__sport-name {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(2 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.pp-glow__sport-name:hover,
+.pp-glow__sport-name[data-state='on'] {
+  color: var(--palette-text-primary);
+}
+
+.pp-glow__sport-name[data-state='on'] .pp-glow__count {
+  color: var(--palette-secondary-light);
+}
+
+.pp-glow__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(2 * var(--spacing));
+}
+
+/* ─── C: Toggle list ──────────────────────────────────────────────────────────────────────────── */
+
+/* A dark trough with a raised navy thumb, not a white fill. */
+.pp-rows-scope {
+  display: flex;
+  gap: var(--spacing);
+  margin-bottom: calc(3 * var(--spacing));
+  padding: var(--spacing);
+  border-radius: var(--controls-corner);
+  background: var(--palette-background-default);
+}
+
+.pp-rows-scope__option {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: none;
+  border-radius: var(--controls-corner);
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-rows-scope__option:hover {
+  color: var(--palette-text-primary);
+}
+
+.pp-rows-scope__option[aria-checked='true'] {
+  background: var(--palette-primary-main);
+  color: var(--palette-text-primary);
+}
+
+.pp-rows-scope__option[aria-checked='true'] .pp-star {
+  color: var(--palette-secondary-main);
+}
+
+.pp-rows__list {
+  margin: 0 calc(-3 * var(--spacing));
+}
+
+.pp-rows__row {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  width: 100%;
+  min-height: 40px;
+  padding: 0 calc(3 * var(--spacing));
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-body2-font-size);
+  text-align: left;
+}
+
+.pp-rows__row:hover {
+  background: var(--palette-action-hover);
+}
+
+.pp-rows__row[aria-checked='true'],
+.pp-rows__row[aria-checked='mixed'] {
+  color: var(--palette-text-primary);
+}
+
+.pp-rows__row--all {
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-rows__row--sport {
+  margin-top: calc(2 * var(--spacing));
+  font-size: var(--typography-subtitle2-font-size);
+  font-weight: var(--typography-subtitle2-font-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pp-rows__row--league {
+  padding-left: calc(6 * var(--spacing));
+  min-height: 36px;
+}
+
+.pp-rows__name {
+  flex: 1;
+}
+
+.pp-rows__count {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pp-switch {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--palette-divider);
+  transition: background 150ms;
+}
+
+.pp-switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--palette-text-secondary);
+  transition: left 150ms, background 150ms;
+}
+
+.pp-switch[data-state='on'] {
+  background: var(--palette-secondary-main);
+}
+
+.pp-switch[data-state='on'] .pp-switch__knob {
+  left: 17px;
+  background: var(--palette-background-paper);
+}
+
+.pp-switch[data-state='mixed'] {
+  background: color-mix(in srgb, var(--palette-secondary-main) 45%, var(--palette-divider));
+}
+
+.pp-switch[data-state='mixed'] .pp-switch__knob {
+  left: 10px;
+  background: var(--palette-text-primary);
+}
+
+/* ─── D: Sport colors ─────────────────────────────────────────────────────────────────────────── */
+
+.pp-colors-scope {
+  display: flex;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(3 * var(--spacing));
+}
+
+.pp-colors-scope__option {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-item-corner);
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-colors-scope__option:hover {
+  border-color: var(--palette-primary-light);
+  color: var(--palette-text-primary);
+}
+
+.pp-colors-scope__option[aria-checked='true'] {
+  border-color: var(--palette-primary-light);
+  background: var(--palette-primary-main);
+  color: var(--palette-text-primary);
+}
+
+.pp-colors__all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: calc(3 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: none;
+  border-radius: var(--menu-item-corner);
+  background: var(--palette-primary-dark);
+  color: var(--palette-text-primary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-colors__all:hover {
+  background: var(--palette-action-hover);
+}
+
+.pp-colors__count {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.pp-colors__sport + .pp-colors__sport {
+  margin-top: calc(3 * var(--spacing));
+}
+
+.pp-colors__sport-name {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(1.5 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-primary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-colors__sport-name:hover .pp-colors__bar {
+  box-shadow: 0 0 6px var(--pp-color);
+}
+
+.pp-colors__bar {
+  width: 4px;
+  height: 1.1em;
+  border-radius: 2px;
+  background: var(--pp-color);
+}
+
+.pp-colors__sport-name[data-state='off'] .pp-colors__bar {
+  background: transparent;
+  outline: var(--shape-border-width-thin) solid var(--pp-color);
+}
+
+.pp-colors__sport-name[data-state='mixed'] .pp-colors__bar {
+  background: linear-gradient(var(--pp-color) 50%, transparent 50%);
+  outline: var(--shape-border-width-thin) solid var(--pp-color);
+}
+
+.pp-colors__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(1.5 * var(--spacing));
+  padding-left: calc(3 * var(--spacing));
+}
+
+.pp-colors__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: var(--spacing) calc(2.5 * var(--spacing)) var(--spacing) calc(2 * var(--spacing));
+  border: var(--shape-border-width-thin) solid color-mix(in srgb, var(--pp-color) 30%, transparent);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+}
+
+.pp-colors__chip:hover {
+  border-color: var(--pp-color);
+  color: var(--palette-text-primary);
+}
+
+.pp-colors__chip[aria-pressed='true'] {
+  border-color: var(--pp-color);
+  background: color-mix(in srgb, var(--pp-color) 22%, var(--palette-background-paper));
+  color: var(--palette-text-primary);
+}
+
+.pp-colors__chip[aria-pressed='true']:hover {
+  background: color-mix(in srgb, var(--pp-color) 32%, var(--palette-background-paper));
+}
+
+.pp-colors__dot {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: var(--shape-border-width-medium) solid var(--pp-color);
+  border-radius: 50%;
+}
+
+[aria-pressed='true'] > .pp-colors__dot {
+  background: var(--pp-color);
+}
+
+/* ─── E: Sport cards + checkboxes ─────────────────────────────────────────────────────────────── */
+
+.pp-cards-scope {
+  display: flex;
+  margin-bottom: calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-item-corner);
+  overflow: hidden;
+}
+
+.pp-cards-scope__option {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-cards-scope__option + .pp-cards-scope__option {
+  border-left: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.pp-cards-scope__option:hover {
+  background: var(--palette-action-hover);
+}
+
+.pp-cards-scope__option[aria-checked='true'] {
+  background: var(--palette-primary-dark);
+  box-shadow: inset 0 calc(-1 * var(--shape-border-width-medium)) 0 var(--palette-secondary-main);
+  color: var(--palette-text-primary);
+}
+
+.pp-cards__all,
+.pp-cards__head,
+.pp-cards__league {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  padding: var(--spacing);
+  border: none;
+  border-radius: var(--menu-item-corner);
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-body2-font-size);
+  text-align: left;
+}
+
+.pp-cards__all:hover,
+.pp-cards__head:hover,
+.pp-cards__league:hover {
+  background: var(--palette-action-hover);
+  color: var(--palette-text-primary);
+}
+
+.pp-cards__all {
+  width: 100%;
+  margin-bottom: calc(2 * var(--spacing));
+  color: var(--palette-text-primary);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-cards__count {
+  margin-left: auto;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.pp-cards__card {
+  padding: calc(1.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid transparent;
+  border-radius: var(--menu-corner);
+  background: var(--palette-primary-dark);
+}
+
+.pp-cards__card[data-state='off'] {
+  background: transparent;
+  border-color: var(--palette-divider);
+}
+
+.pp-cards__card + .pp-cards__card {
+  margin-top: calc(2 * var(--spacing));
+}
+
+.pp-cards__head {
+  width: 100%;
+  color: var(--palette-text-primary);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-cards__sport {
+  flex: 1;
+}
+
+.pp-cards__meter {
+  display: flex;
+  gap: 2px;
+}
+
+.pp-cards__segment {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--palette-divider);
+}
+
+.pp-cards__segment[data-on='true'] {
+  background: var(--palette-secondary-main);
+}
+
+.pp-cards__leagues {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 var(--spacing);
+}
+
+.pp-cards__league[aria-checked='true'] {
+  color: var(--palette-text-primary);
+}
+
+.pp-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: var(--shape-border-width-medium) solid var(--palette-text-secondary);
+  border-radius: 3px;
+  color: var(--palette-secondary-contrast-text);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pp-check[data-state='on'],
+.pp-check[data-state='mixed'] {
+  border-color: var(--palette-secondary-main);
+  background: var(--palette-secondary-main);
+}
+
+/* ─── F: Sport tabs ───────────────────────────────────────────────────────────────────────────── */
+
+.rail__popover:has(.pp-tabs) {
+  width: 420px;
+}
+
+.pp-tabs-scope {
+  display: flex;
+  gap: calc(4 * var(--spacing));
+  margin-bottom: calc(3 * var(--spacing));
+}
+
+.pp-tabs-scope__option {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.pp-tabs-scope__option:hover {
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs-scope__option[aria-checked='true'] {
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs-scope__option[aria-checked='true'] .pp-star {
+  color: var(--palette-secondary-main);
+}
+
+.pp-tabs__body {
+  display: flex;
+  gap: calc(3 * var(--spacing));
+}
+
+.pp-tabs__sports {
+  display: flex;
+  flex: 0 0 132px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pp-tabs__tab {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  border: none;
+  border-left: var(--shape-border-width-medium) solid transparent;
+  border-radius: 0 var(--menu-item-corner) var(--menu-item-corner) 0;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-body2-font-size);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pp-tabs__tab:hover {
+  background: var(--palette-action-hover);
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs__tab[aria-selected='true'] {
+  border-left-color: var(--palette-secondary-main);
+  background: var(--palette-primary-dark);
+  color: var(--palette-text-primary);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-tabs__tab-name {
+  flex: 1;
+}
+
+.pp-tabs__count {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.pp-tabs__ring {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: var(--shape-border-width-medium) solid var(--palette-text-secondary);
+  border-radius: 50%;
+}
+
+.pp-tabs__ring[data-state='on'] {
+  border-color: var(--palette-secondary-main);
+  background: var(--palette-secondary-main);
+}
+
+.pp-tabs__ring[data-state='mixed'] {
+  border-color: var(--palette-secondary-main);
+  background: linear-gradient(90deg, var(--palette-secondary-main) 50%, transparent 50%);
+}
+
+.pp-tabs__all {
+  margin-top: calc(2 * var(--spacing));
+  padding: var(--spacing) calc(2 * var(--spacing));
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  text-align: left;
+  text-decoration: underline;
+}
+
+.pp-tabs__all:hover {
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs__panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(1.5 * var(--spacing));
+  min-width: 0;
+}
+
+.pp-tabs__sport-switch {
+  align-self: flex-start;
+  margin-bottom: var(--spacing);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-secondary-light);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.pp-tabs__sport-switch:hover {
+  text-decoration: underline;
+}
+
+.pp-tabs__tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-radius: var(--menu-item-corner);
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  text-align: left;
+}
+
+.pp-tabs__tile:hover {
+  border-color: var(--palette-primary-light);
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs__tile[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--palette-secondary-main) 60%, transparent);
+  background: color-mix(in srgb, var(--palette-secondary-main) 10%, var(--palette-primary-dark));
+  color: var(--palette-text-primary);
+}
+
+.pp-tabs__tile-state {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+}
+
+.pp-tabs__tile[aria-pressed='true'] .pp-tabs__tile-state {
+  color: var(--palette-secondary-light);
+}
+
+/* On a phone the sports become a scrolling row across the top. */
+@media (max-width: 640px) {
+  .rail__popover:has(.pp-tabs) {
+    width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
+  }
+
+  .pp-tabs__body {
+    flex-direction: column;
+  }
+
+  .pp-tabs__sports {
+    flex: none;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: var(--spacing);
+  }
+
+  .pp-tabs__tab {
+    border-left: none;
+    border-bottom: var(--shape-border-width-medium) solid transparent;
+    border-radius: var(--menu-item-corner) var(--menu-item-corner) 0 0;
+  }
+
+  .pp-tabs__tab[aria-selected='true'] {
+    border-bottom-color: var(--palette-secondary-main);
+  }
+
+  .pp-tabs__all {
+    margin-top: 0;
+    white-space: nowrap;
+  }
+}

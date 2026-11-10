@@ -7,7 +7,8 @@ import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
 import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
-import { Leagues } from './Leagues'
+import { LeaguesPrototype } from './leaguesPrototype/LeaguesPrototype'
+import { PickerPrototypeBar } from './leaguesPrototype/PickerPrototypeBar'
 import { MapTypes } from './MapTypes'
 import { railIcon, type RailButtonName } from './railButtons'
 import { RailIcon } from './railIcons'
@@ -119,7 +120,8 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
           aria-label={popoverNames[open]}
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
         >
-          {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
+          {/* PROTOTYPE: the Leagues popover's looks, switched by ?pickerProto= (see leaguesPrototype/). */}
+          {open === 'leagues' && <LeaguesPrototype leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
           {open === 'mapType' && <MapTypes settings={settings} onChange={onChange} onPicked={() => setOpen(null)} />}
           {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
           {open === 'games' && (
@@ -134,6 +136,7 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
           )}
         </div>
       )}
+      {import.meta.env.DEV && <PickerPrototypeBar />}
     </div>
   )
 }

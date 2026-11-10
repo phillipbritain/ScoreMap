@@ -1,14 +1,17 @@
-import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
 import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam, type PhotoCredit } from '../games/game'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
+import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
 interface GamePanelProps {
   game: Game
+  /** The side that last scored, lit up for a moment (see RecentScorers); none since the last snapshot. */
+  scorer?: Scorer
   /** The game's color (see gameColor), for the panel's top edge, glow and progress line. */
   color: string
   /** The color of text on the game's color, readable on it (see textOn). */
@@ -31,7 +34,7 @@ interface PanelLink {
  * player names wrap in place; the panel grows to fit them and scrolls on short screens. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
  */
-export function GamePanel({ game, color, textOnColor, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -64,7 +67,9 @@ export function GamePanel({ game, color, textOnColor, onClose, ref }: GamePanelP
           <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
             {game.league}
           </div>
-          {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => <TeamRow key={i} team={team} />)}
+          {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
+              <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
+            ))}
           {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
           {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
           {progress && (
@@ -185,11 +190,28 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
   )
 }
 
-/** A team: its logo, its poll ranking if it has one, its name, its record and its score. */
-function TeamRow({ team }: { team: GameTeam }) {
+/**
+ * A team: its logo, its poll ranking if it has one, its name, its record and its score. Lit up for a
+ * moment when it scores (scoredAt, the clock's time), as its score card's row is.
+ */
+function TeamRow({ team, scoredAt }: { team: GameTeam; scoredAt: number | null }) {
   const name = team.rank !== null ? `#${team.rank} ${team.fullName}` : team.fullName
+  const row = useRef<HTMLDivElement>(null)
+  // Set on the element rather than rendered, so each score starts the glow afresh and a panel opened
+  // partway through one carries on from there (see spotlightElapsed).
+  useLayoutEffect(() => {
+    const element = row.current
+    if (!element) return
+    element.classList.remove('game-panel__team--scored')
+    const elapsed = spotlightElapsed(scoredAt === null ? undefined : { side: 'home', at: scoredAt }, performance.now())
+    if (elapsed === null) return
+    // Reading layout between removing and adding the class restarts a glow already playing.
+    void element.offsetWidth
+    element.style.setProperty('--scorer-spotlight-delay', `${-elapsed}ms`)
+    element.classList.add('game-panel__team--scored')
+  }, [scoredAt])
   return (
-    <div className="game-panel__team">
+    <div ref={row} className="game-panel__team">
       {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
       <span className="game-panel__team-name" data-tooltip={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
         {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}

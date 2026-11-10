@@ -4,6 +4,8 @@ import { Marker, type GeoJSONSource, type Map as MapLibreMap } from 'maplibre-gl
 import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { PlacedGame } from '../games/placedGames'
+import { sidesTopFirst } from '../games/sides'
+import { noRecentScorers, spotlightElapsed, type RecentScorers, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardPins, type CardPin } from './cardPins'
 import { layOutCards, type CardLayout, type CardPlacement, type ScreenOffset } from './cardLayout'
@@ -33,7 +35,7 @@ interface PlacedCard {
   /** The card last drawn into the marker, so unchanged cards aren't redrawn every frame. */
   drawn: string
   /** What the card was last drawn from, so it's worked out afresh only when one of them changes. */
-  drawnFrom: { game: Game; color: string; flames: boolean; selected: boolean; theme: Theme } | null
+  drawnFrom: { game: Game; color: string; flames: boolean; selected: boolean; theme: Theme; scorer: Scorer | undefined } | null
   /** The card's two rows as last drawn, top first. */
   rows: Element[]
   /** The card's size on screen, measured when it's drawn. */
@@ -76,6 +78,7 @@ export interface ShownScoreCard {
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
   private games = new Map<string, PlacedGame>()
+  private scorers: RecentScorers = noRecentScorers
   private selectedGameId: string | null = null
   /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
   private hoveredGameId: string | null = null
@@ -189,8 +192,10 @@ export class ScoreCardMarkers {
     return shown
   }
 
-  setGames(games: readonly PlacedGame[]): void {
+  /** Shows these games, lighting up the side that just scored in each (see RecentScorers). */
+  setGames(games: readonly PlacedGame[], scorers: RecentScorers = noRecentScorers): void {
     this.games = new Map(games.map((game) => [game.id, game]))
+    this.scorers = scorers
     this.settleAgain()
     this.sync()
   }
@@ -229,6 +234,7 @@ export class ScoreCardMarkers {
       const flames = game.hot
       const selected = gameId === this.selectedGameId
       const theme = this.theme()
+      const scorer = this.scorers.get(gameId)
       let placed = this.placed.get(gameId)
       if (!placed) {
         // MapLibre owns the marker element's classes and transform, so the card goes inside it.
@@ -268,18 +274,19 @@ export class ScoreCardMarkers {
         if (at.lng !== lngLat[0] || at.lat !== lngLat[1]) placed.marker.setLngLat(lngLat)
       }
       const from = placed.drawnFrom
-      if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme) continue
-      placed.drawnFrom = { game, color, flames, selected, theme }
+      if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme && from.scorer === scorer) continue
+      placed.drawnFrom = { game, color, flames, selected, theme, scorer }
       const card = scoreCard(game)
       placed.marker.getElement().firstElementChild!.setAttribute('aria-label', gameLabel(game))
       const header = headerText(color, theme)
-      const drawn = JSON.stringify({ card, color, header, selected })
+      const drawn = JSON.stringify({ card, color, header, selected, scorer })
       if (placed.drawn !== drawn) {
         const element = placed.marker.getElement()
         // Live cards draw on top, as Live small pins do; the selected card above all.
         element.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         const cardElement = element.firstElementChild as HTMLElement
         placed.rows = drawScoreCard(cardElement, card, { color, header }, selected, this.animating.get(gameId))
+        spotlightScorer(placed.rows, game, scorer)
         placed.drawn = drawn
         placed.width = cardElement.offsetWidth
         placed.height = cardElement.offsetHeight
@@ -592,6 +599,19 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
 }
 
 /** The fire outline around a hot game's card, shaped and animated by the CSS. */
+/**
+ * Lights up the row of the side that just scored, for what's left of its spotlight: the glow is the
+ * CSS's, started as far in as the spotlight already is, so a card redrawn partway (for its clock)
+ * carries on rather than starting over.
+ */
+function spotlightScorer(rows: readonly Element[], game: Game, scorer: Scorer | undefined): void {
+  const elapsed = spotlightElapsed(scorer, performance.now())
+  if (elapsed === null || !scorer || game.contest.kind !== 'sides') return
+  const row = rows[sidesTopFirst(game.sport, game.contest).indexOf(game.contest[scorer.side])] as HTMLElement | undefined
+  row?.classList.add('score-card__team--scored')
+  row?.style.setProperty('--scorer-spotlight-delay', `${-elapsed}ms`)
+}
+
 function flames(): HTMLElement {
   const outline = span('score-card__flames', '')
   outline.setAttribute('aria-hidden', 'true')

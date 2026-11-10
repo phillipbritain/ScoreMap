@@ -883,6 +883,51 @@ body {
   }
 }
 
+/* A score card coming in as its game arrives on the board (or is shown again), or going out as it
+   leaves (see globe/cardComings.ts): a quick fade with a slight scale from its foot, by its trail, which
+   fades with it. On the marker MapLibre moves, by its own scale and opacity, so neither clashes with the
+   marker's transform nor the card's own animations; the duration and delay are set from cardComingDuration. */
+.score-card-coming {
+  transform-origin: bottom center;
+  animation-name: score-card-coming;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.score-card-going {
+  transform-origin: bottom center;
+  animation-name: score-card-going;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
+@keyframes score-card-coming {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+
+@keyframes score-card-going {
+  to {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+
+@keyframes score-card-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes score-card-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
@@ -993,6 +1038,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .score-card {
     transition: none;
+  }
+
+  /* A card coming in or going out fades in place, without the scale. */
+  .score-card-coming {
+    animation-name: score-card-fade-in;
+  }
+
+  .score-card-going {
+    animation-name: score-card-fade-out;
   }
 
   .score-card__flames::before,

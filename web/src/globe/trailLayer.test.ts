@@ -27,8 +27,8 @@ describe('trailShapes', () => {
   it("rings a trail's own venue, with a dot on it, at the theme's sizes, but not a venue cluster's", () => {
     const circles = shapesOf().filter((shape) => shape.kind === 'circle')
     expect(circles).toEqual([
-      { kind: 'circle', at: a.to, radius: 6, strokeWidth: 1.5, blur: 0, color: 'transparent', opacity: 1, stroke: '#aaaaaa' },
-      { kind: 'circle', at: a.to, radius: 3, strokeWidth: 0, blur: 0, color: '#aaaaaa', opacity: 1, stroke: 'transparent' },
+      { kind: 'circle', at: a.to, radius: 6, strokeWidth: 1.5, blur: 0, color: 'transparent', opacity: 1, stroke: '#aaaaaa', strokeOpacity: 1 },
+      { kind: 'circle', at: a.to, radius: 3, strokeWidth: 0, blur: 0, color: '#aaaaaa', opacity: 1, stroke: 'transparent', strokeOpacity: 1 },
     ])
   })
 
@@ -40,9 +40,9 @@ describe('trailShapes', () => {
       [1.5, 0.8],
     ])
     expect(shapes.filter((shape) => shape.kind === 'circle')).toEqual([
-      { kind: 'circle', at: a.to, radius: 14, strokeWidth: 0, blur: 1, color: '#aaaaaa', opacity: 0.7, stroke: 'transparent' },
-      { kind: 'circle', at: a.to, radius: 6, strokeWidth: 3, blur: 0, color: 'transparent', opacity: 1, stroke: '#aaaaaa' },
-      { kind: 'circle', at: a.to, radius: 4, strokeWidth: 0, blur: 0, color: '#aaaaaa', opacity: 1, stroke: 'transparent' },
+      { kind: 'circle', at: a.to, radius: 14, strokeWidth: 0, blur: 1, color: '#aaaaaa', opacity: 0.7, stroke: 'transparent', strokeOpacity: 1 },
+      { kind: 'circle', at: a.to, radius: 6, strokeWidth: 3, blur: 0, color: 'transparent', opacity: 1, stroke: '#aaaaaa', strokeOpacity: 1 },
+      { kind: 'circle', at: a.to, radius: 4, strokeWidth: 0, blur: 0, color: '#aaaaaa', opacity: 1, stroke: 'transparent', strokeOpacity: 1 },
     ])
   })
 
@@ -53,5 +53,10 @@ describe('trailShapes', () => {
     expect(boldLines(shapesOf('a', 'b'))).toEqual([3, 3])
     expect(boldLines(shapesOf(null, 'b'))).toEqual([1.5, 3])
     expect(boldLines(shapesOf(null, null))).toEqual([1.5, 1.5])
+  })
+
+  it('fades a trail and its venue dot with its card as it comes in or goes out', () => {
+    const halfway = trailShapes([{ ...a, opacity: 0.5 }], ['#aaaaaa'], [], theme.components)
+    expect(halfway.map((shape) => (shape.kind === 'line' ? shape.opacity : [shape.opacity, shape.strokeOpacity]))).toEqual([0.15, 0.4, [1, 0.5], [0.5, 1]])
   })
 })

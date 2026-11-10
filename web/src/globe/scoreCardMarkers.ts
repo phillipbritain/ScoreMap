@@ -8,6 +8,7 @@ import { sidesTopFirst } from '../games/sides'
 import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
+import { cardComingDuration, cardComings } from './cardComings'
 import { cardPins, type CardPin } from './cardPins'
 import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type ScreenOffset, type Showing, type VenueSizes } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
@@ -19,7 +20,7 @@ import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
 import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
-import type { TrailLayer } from './trailLayer'
+import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
 
@@ -81,6 +82,15 @@ export class ScoreCardMarkers {
   private hoveredGameId: string | null = null
   /** Cards mid-animation, so redrawing a card (say, with its new score) doesn't cut the animation short. */
   private readonly animating = new Map<string, PinAnimation>()
+  /** Which cards are coming in or going out, as their games arrive on the board or leave it (see cardComings). */
+  private readonly comings = cardComings()
+  /**
+   * Cards going out, their games gone from the board: out of the layout, so they hold no room, and
+   * drawn with the trail they had until they've gone.
+   */
+  private readonly goingOut = new Map<string, { marker: Marker; trail: TrailOnGlobe | undefined }>()
+  /** The trails of the cards laid out, as last drawn (see drawLayout). */
+  private layoutTrails: TrailOnGlobe[] = []
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
   private readonly colorOf: (game: Game) => string
@@ -186,6 +196,15 @@ export class ScoreCardMarkers {
   setGames(games: readonly PlacedGame[], justHappened: JustHappened = noneJustHappened): void {
     this.games = new Map(games.map((game) => [game.id, game]))
     this.justHappened = justHappened
+    const { gone, back } = this.comings.showGames(this.games.keys())
+    // A game back while its card was going out gets a new card, coming in: the old one goes at once.
+    for (const gameId of back) this.removeGoingOut(gameId)
+    const now = performance.now()
+    for (const gameId of gone) {
+      const placed = this.placed.get(gameId)
+      // A card on screen goes out; one with no room (or not yet laid out) just goes, as sync removes it.
+      if (placed?.offset && !placed.inCardCluster) this.goOut(gameId, placed, now)
+    }
     this.settling.settleAfresh()
     this.sync()
   }
@@ -246,6 +265,7 @@ export class ScoreCardMarkers {
         })
         // Above the venue, its trail down to it (see layOut); the city's name sits below its dot.
         const marker = new Marker({ element, anchor: 'bottom' })
+        if (this.comings.cardPlaced(gameId, performance.now())) this.startComing(element, 'score-card-coming', 0)
         placed = {
           marker: marker.setLngLat(lngLat).addTo(this.map),
           drawn: '',
@@ -283,6 +303,9 @@ export class ScoreCardMarkers {
         changed = true
       }
     }
+
+    // Any game arrived and not given a card now comes into view later as cards always have, at once.
+    if (pinsLoaded) this.comings.pinsRead()
 
     // Having given up settling, the cards stay as the map last drew them and their trails, so the two
     // match, unless a card is new and has yet to be laid out (see GlobeSettling.holdsLayout).
@@ -394,7 +417,8 @@ export class ScoreCardMarkers {
     const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, this.layout, unproject)
     const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
     if (!source) return cardClusters
-    this.trails.show(trails)
+    this.layoutTrails = trails
+    this.showTrails()
     // The features with those points and the footprints' offsets left out, which are compared by how far they've come.
     const footprints: number[][] = []
     const shape = JSON.stringify(features, (key, value: unknown) => {
@@ -417,6 +441,57 @@ export class ScoreCardMarkers {
     void source.setData(features)
     this.layoutDrawn = { shape, lngLats: [...onScreen.keys()], footprints }
     return cardClusters
+  }
+
+  /**
+   * Starts a card coming in or going out (see cardComings): the look is the CSS's class, played over
+   * cardComingDuration, `delay` milliseconds in (going out from partway in). Checks once it's over.
+   */
+  private startComing(element: HTMLElement, className: 'score-card-coming' | 'score-card-going', delay: number): void {
+    element.classList.remove('score-card-coming')
+    element.style.animationDuration = `${cardComingDuration}ms`
+    element.style.animationDelay = `${-delay}ms`
+    element.classList.add(className)
+    setTimeout(this.comingsOver, cardComingDuration - delay + 20)
+  }
+
+  /** A game gone from the board: its card, on screen, goes out, out of the layout so it holds no room. */
+  private goOut(gameId: string, placed: PlacedCard, now: number): void {
+    const element = placed.marker.getElement()
+    if (gameId === this.hoveredGameId) this.hover(null)
+    this.releaseFocus(element)
+    this.placed.delete(gameId)
+    this.animating.delete(gameId)
+    this.comings.goOut(gameId, now)
+    element.inert = true
+    element.setAttribute('aria-hidden', 'true')
+    this.startComing(element, 'score-card-going', now - this.comings.coming(gameId)!.at)
+    this.goingOut.set(gameId, { marker: placed.marker, trail: this.layoutTrails.find((trail) => trail.gameId === gameId) })
+    this.layoutTrails = this.layoutTrails.filter((trail) => trail.gameId !== gameId)
+    this.showTrails()
+  }
+
+  private removeGoingOut(gameId: string): void {
+    this.goingOut.get(gameId)?.marker.remove()
+    this.goingOut.delete(gameId)
+  }
+
+  /** Cards done coming in are left as they are; those done going out are removed, and their trails with them. */
+  private readonly comingsOver = () => {
+    const { cameIn, wentOut } = this.comings.over(performance.now())
+    for (const gameId of cameIn) this.placed.get(gameId)?.marker.getElement().classList.remove('score-card-coming')
+    for (const gameId of wentOut) this.removeGoingOut(gameId)
+    if (cameIn.length > 0 || wentOut.length > 0) this.showTrails()
+  }
+
+  /** Gives the trail layer the laid-out cards' trails and those going out, each fading with its card if it's coming in or going out. */
+  private showTrails(): void {
+    const withComing = (trail: TrailOnGlobe): TrailOnGlobe => {
+      const coming = this.comings.coming(trail.gameId)
+      return coming ? { ...trail, coming } : trail
+    }
+    const goingOut = [...this.goingOut.values()].flatMap(({ trail }) => (trail ? [trail] : []))
+    this.trails.show([...this.layoutTrails, ...goingOut].map(withComing))
   }
 
   /** How a game shows on screen now, zoomed in (see cardLayout). */
@@ -483,6 +558,8 @@ export class ScoreCardMarkers {
       this.releaseFocus(marker.getElement())
       marker.remove()
     }
+    for (const gameId of [...this.goingOut.keys()]) this.removeGoingOut(gameId)
+    this.layoutTrails = []
     this.layout = cardLayout()
     this.cardClustersDrawn = []
     this.placed.clear()

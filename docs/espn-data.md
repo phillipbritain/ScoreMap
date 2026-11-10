@@ -73,7 +73,7 @@ Soccer, rugby, cricket and tennis games never get a summary request. Soccer's su
 
 ### Not offered
 
-ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scoreboard is the only one that has a venue's `capacity`, and ScoreMap shows attendance instead.
+ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scoreboard is the only one that has a venue's `capacity`, which ScoreMap doesn't read.
 
 ### NCAA men's hockey
 

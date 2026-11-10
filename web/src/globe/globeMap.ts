@@ -26,6 +26,7 @@ import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle } from './globeStyle'
 import { fadeNearHorizon, fadedOut, isBehindGlobe } from './horizon'
 import { traceLayouts } from './layoutTrace'
+import { globeSettling, type GlobeSettling } from './globeSettling'
 import { clearCenter, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { drawFlamesOnDemand } from './flames'
@@ -167,7 +168,6 @@ export class GlobeMap {
   private readonly stopHorizonFade: () => void
   private readonly onSelect: (gameId: string) => void
   private readonly onCameraMove: (camera: Camera) => void
-  private readonly onStage: (stage: LoadingStage) => void
   /**
    * The games as the globe last showed them, which tells which of the next ones were shown both times:
    * only those whose venues are placed (see placedGames), so a game coming into place appears at its venue.
@@ -188,15 +188,8 @@ export class GlobeMap {
   /** The zoom score cards show from (see FittedZoom), measured at the equator (see pinSize), which changes with setZoomLimits. */
   private cardZoom: number
   private destroyed = false
-  private styleFailed = false
-  /** Whether the map has gone idle since it last drew a frame or was given anything to show (see settled). */
-  private idle = false
-  /** Whether it has been given the server's first snapshot of games (see show). */
-  private hasGames = false
-  /** Whether it has settled since it was first given games: once true, it stays true (see stage). */
-  private wasReady = false
-  /** The stage last told to onStage. */
-  private toldStage: LoadingStage = 'waitingForGames'
+  /** When the globe is still, and when it's Ready (see GlobeSettling): the score cards report to it too. */
+  private readonly settling: GlobeSettling
 
   constructor(
     container: HTMLElement,
@@ -206,7 +199,6 @@ export class GlobeMap {
     this.mapType = mapType
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
-    this.onStage = onStage
     this.cityLabels = cityLabels
     this.cardZoom = zoomSettings.cardZoom
     this.maxZoom = zoomSettings.maxZoom
@@ -229,6 +221,8 @@ export class GlobeMap {
     })
     this.map = map
     this.theme = theme
+    // The map takes keys once the globe is ready (see GlobeSettling.wentIdle).
+    this.settling = globeSettling({ onStage, onReady: () => map.keyboard.enable() })
     try {
       map.touchZoomRotate.disableRotation()
       // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.
@@ -257,8 +251,15 @@ export class GlobeMap {
         (source, id, { center }) => source === cityNameSource && this.names.namesACard(id, center),
       )
       this.trails = trailLayer(currentTheme)
-      this.cards = new ScoreCardMarkers(map, currentTheme, this.colorOf, this.names, this.trails, () => this.cardZoom, (gameId) =>
-        this.onSelect(gameId),
+      this.cards = new ScoreCardMarkers(
+        map,
+        currentTheme,
+        this.colorOf,
+        this.names,
+        this.trails,
+        () => this.cardZoom,
+        (gameId) => this.onSelect(gameId),
+        this.settling,
       )
       drawFlamesOnDemand(map)
 
@@ -275,6 +276,7 @@ export class GlobeMap {
       // without drawing another frame (as after the reload on zooming in to the card zoom).
       map.on('idle', this.syncCards)
       // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
+      // After the cards' sync above: the settling checks Ready on idle, after that idle's card sync.
       map.on('render', this.drew)
       map.on('idle', this.goneIdle)
       map.on('click', pinClusterLayer, this.zoomToPinCluster)
@@ -313,8 +315,7 @@ export class GlobeMap {
    */
   show(games: readonly Game[] | null, changes: RecentChanges = noRecentChanges, scorers: RecentScorers = noRecentScorers): void {
     if (!games) return
-    this.hasGames = true
-    this.tellStage()
+    this.settling.gamesArrived()
     this.unsettle()
     const placed = placedGames(games)
     const before = this.shown
@@ -546,26 +547,24 @@ export class GlobeMap {
    * so tests and scripts wait on it after one. For the initial load, see stage.
    */
   settled(): boolean {
-    return this.stillButCards() && this.cards.steady()
+    return this.settling.settled({ pinsLoaded: this.pinsLoaded() })
   }
 
-  /** Whether everything settled asks for holds, the score cards aside. */
-  private stillButCards(): boolean {
+  /** Whether both pin sources have loaded the games last given them. */
+  private pinsLoaded(): boolean {
     const loaded = (source: string) => !!this.map.getSource(source) && this.map.isSourceLoaded(source)
-    return loaded(pinSource) && loaded(outerPinSource) && this.idle
+    return loaded(pinSource) && loaded(outerPinSource)
   }
 
   /**
    * How far the initial load has got: waiting for games until it's first given some (see show),
    * drawing until it first settles, or would but for score cards that have given up settling (see
-   * noteReady), then ready for good, through pans, changes of games, fresh snapshots and
+   * GlobeSettling.wentIdle), then ready for good, through pans, changes of games, fresh snapshots and
    * reconnections. Everything that waits for the globe to load reads this; settled
    * says whether it's still right now. A failed initial style stays at styleError until destroyed.
    */
   stage(): LoadingStage {
-    if (this.styleFailed) return 'styleError'
-    if (this.wasReady) return 'ready'
-    return this.hasGames ? 'drawing' : 'waitingForGames'
+    return this.settling.stage()
   }
 
   /** The score cards on the page now that a viewer can see, none while pins are small (see ScoreCardMarkers.shownCards). */
@@ -579,7 +578,7 @@ export class GlobeMap {
    * pan stops on still had the cards settling.
    */
   cardsSteady(): boolean {
-    return this.cards.steady()
+    return this.settling.cardsSteady()
   }
 
   /** Zooms in one step, as MapLibre's own zoom button does (the rail's zoom in). */
@@ -623,8 +622,7 @@ export class GlobeMap {
   // the style exists, and must not replace a usable globe with the initialization error.
   private readonly initialStyleError = () => {
     if (this.destroyed || this.map.getStyle()) return
-    this.styleFailed = true
-    this.tellStage()
+    this.settling.styleFailed()
   }
 
   private readonly addPins = () => {
@@ -714,39 +712,12 @@ export class GlobeMap {
     source.setData(pins)
   }
 
-  private readonly drew = () => (this.idle = false)
-  private readonly goneIdle = () => {
-    this.idle = true
-    this.noteReady()
-  }
-
-  /**
-   * Becomes ready the first time it has settled with games, or would have but for score cards that
-   * have given up settling (see ScoreCardMarkers.gaveUpSettling): a layout that never steadies
-   * mustn't keep the loading screen up. Checked as the map goes idle, after the score cards' sync on
-   * it. Only then can it become settled: every other change to the cards comes with a frame drawn or
-   * the globe unsettled. Having given up, the cards ask for no frames and give the map nothing new
-   * to draw, so the map goes idle after them.
-   */
-  private noteReady(): void {
-    if (this.wasReady || !this.hasGames) return
-    if (!this.stillButCards() || !(this.cards.steady() || this.cards.gaveUpSettling())) return
-    this.wasReady = true
-    this.map.keyboard.enable()
-    this.tellStage()
-  }
-
-  /** Tells onStage the stage, if it has moved on since it was last told. */
-  private tellStage(): void {
-    const stage = this.stage()
-    if (stage === this.toldStage) return
-    this.toldStage = stage
-    this.onStage(stage)
-  }
+  private readonly drew = () => this.settling.frameDrawn()
+  private readonly goneIdle = () => this.settling.wentIdle({ pinsLoaded: this.pinsLoaded() })
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */
   private unsettle(): void {
-    this.idle = false
+    this.settling.unsettle()
     this.map.triggerRepaint()
   }
 

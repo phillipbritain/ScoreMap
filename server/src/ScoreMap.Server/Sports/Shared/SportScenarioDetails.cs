@@ -31,8 +31,6 @@ internal sealed class SportScenarioDetails(League league, SportScenario sport)
         {
             Contest = new ProviderSides(sport.WithRecord(sides.Home), sport.WithRecord(sides.Away)),
             Note = sport.Note(game),
-            Odds = sport.Odds(game),
-            Attendance = started ? sport.Attendance(game) : null,
         };
         if (!started || !sport.HasPlayDetails)
             return game;

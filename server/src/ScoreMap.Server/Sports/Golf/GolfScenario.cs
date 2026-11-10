@@ -13,9 +13,7 @@ internal sealed class GolfScenario(League league) : SportScenario(league)
     // Preserve the existing two-sided fill behavior; this does not add specialized fill support.
     internal override SportPlay CreatePlay() => new CountdownPlay(League, new(1.4, [(1, 1.0)], 6, null));
 
-    protected override int? Capacity => 18500;
     protected override int UsualScore => 1;
     protected override string NoteText(Random random) => LegacyScenarioDetails.QualifierNote(random);
-    protected override (string Line, double Total)? BettingLine(Random random, ProviderTeam favorite) => LegacyScenarioDetails.GoalOdds(random, favorite);
     protected override string ScoreText(int points, Random random) => LegacyScenarioDetails.HockeyScore(points, random);
 }

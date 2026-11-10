@@ -449,25 +449,23 @@ public class EspnGameFeedProviderTests
         new FakeTimeProvider(new DateTimeOffset(2026, 10, 4, 18, 0, 0, TimeSpan.Zero)));
 
     [Fact]
-    public async Task Teams_carry_their_poll_ranking_and_record_and_the_game_its_attendance()
+    public async Task Teams_carry_their_poll_ranking_and_record()
     {
         var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
 
         var game = Assert.Single(games, g => g.Id == "401752865");
         Assert.Equal(("ILL", 17, "5-2"), (game.Sides().Home.Abbreviation, game.Sides().Home.Rank, game.Sides().Home.Record));
         Assert.Equal(("OSU", 1, "6-0"), (game.Sides().Away.Abbreviation, game.Sides().Away.Rank, game.Sides().Away.Record));
-        Assert.Equal(60670, game.Attendance);
     }
 
     [Fact]
-    public async Task Unranked_teams_have_no_rank_and_an_attendance_of_nought_is_none()
+    public async Task Unranked_teams_have_no_rank()
     {
         // ESPN ranks every team outside its poll 99.
         var games = await FetchFixtureAsync("college-football-ranked.json", "football/college-football");
 
         var game = Assert.Single(games, g => g.Id == "401761625");
         Assert.Equal((null, null), (game.Sides().Home.Rank, game.Sides().Away.Rank));
-        Assert.Null(game.Attendance);
     }
 
     [Fact]
@@ -533,12 +531,11 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
-    public async Task Scheduled_game_carries_its_betting_line()
+    public async Task Scheduled_game_carries_its_status()
     {
         var game = Assert.Single(await FetchFixtureAsync("nfl-scheduled-odds.json", Nfl));
 
         Assert.Equal(ProviderStatus.Scheduled, game.Status);
-        Assert.Equal(new ProviderOdds("SEA -2.5", 40.5, "DraftKings"), game.Odds);
     }
 
     [Fact]

@@ -64,13 +64,6 @@ export interface StreamLink {
   url: string
 }
 
-/** The betting line: the favorite and its spread as the bookmaker writes it ("SEA -2.5"), and the total points it expects. */
-export interface GameOdds {
-  line: string | null
-  overUnder: number | null
-  bookmaker: string | null
-}
-
 /**
  * Where play stands in a Live game, each part null (or false) where it doesn't apply: the last play
  * described; in football the down and distance ("3rd & 7 at DEN 34") and the team with the ball (its
@@ -218,9 +211,6 @@ export interface Game {
   streamLinks: StreamLink[]
   /** What's special about the game, as the feed puts it: a playoff round ("NLDS - Game 2"), a game abroad ("NFL London Games"). */
   note: string | null
-  /** How many came to watch, once the feed reports it. */
-  attendance: number | null
-  odds: GameOdds | null
   /** Where play stands right now; only while the game is Live. */
   situation: GameSituation | null
   /** The last score; null before anyone scores, and in cricket. */

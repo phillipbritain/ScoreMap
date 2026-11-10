@@ -24,8 +24,6 @@ const arrowhead: Game = {
   broadcasters: [],
   streamLinks: [],
   note: null,
-  attendance: null,
-  odds: null,
   situation: null,
   lastScore: null,
   keyEvents: [],

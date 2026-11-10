@@ -325,8 +325,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             status?.Type?.State == "in" ? ToPhase(status.Type) : ProviderPeriodPhase.Playing)
         {
             Note = ToNote(competition.Notes),
-            Attendance = competition.Attendance > 0 ? competition.Attendance : null,
-            Odds = ToOdds(competition.Odds?.FirstOrDefault()),
             Situation = status?.Type?.State == "in" ? ToSituation(competition.Situation, teams) : null,
             KeyEvents = keyEvents,
             LastScore = keyEvents.LastOrDefault(k => k.Kind is not (KeyEventKind.YellowCard or KeyEventKind.RedCard)) is { } score
@@ -373,7 +371,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 ToBroadcasters(match.Broadcasts, match.GeoBroadcasts))
             {
                 Note = string.Join(" · ", new[] { name, ShortRound(round) }.OfType<string>()) is { Length: > 0 } note ? note : null,
-                Odds = ToOdds(match.Odds?.FirstOrDefault()),
                 Sets = sets,
                 EarlyEnding = ToEarlyEnding(match.Status?.Type, home!, away!),
             };
@@ -704,11 +701,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         return headlines.Count > 0 ? string.Join(" · ", headlines) : null;
     }
 
-    private static ProviderOdds? ToOdds(Odds? odds) =>
-        odds is null || (string.IsNullOrWhiteSpace(odds.Details) && odds.OverUnder is null)
-            ? null
-            : new ProviderOdds(NullIfBlank(odds.Details), odds.OverUnder, odds.Provider?.Name);
-
     /// <summary>
     /// Where play stands, from the scoreboard's situation, which ESPN gives only while a game is under way
     /// (and in cricket gives empty). Null when it says nothing.
@@ -915,7 +907,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status,
         string? Name, List<EventGrouping>? Groupings, Venue? Circuit);
     private sealed record Competition(string? Id, DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
-        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, int? Attendance, List<Odds>? Odds,
+        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts,
         Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type, Format? Format);
     // F1: which session of the weekend a competition is ("FP1", "Qual", "Race"); MMA: a bout's weight class.
     private sealed record CompetitionType(string? Abbreviation);
@@ -936,7 +928,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record EventGrouping(GroupingType? Grouping, List<Match>? Competitions);
     private sealed record GroupingType(string? Slug);
     private sealed record Match(string? Id, DateTimeOffset? Date, Venue? Venue, List<MatchSide>? Competitors, Status? Status,
-        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, List<Odds>? Odds, Round? Round);
+        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, Round? Round);
     private sealed record Round(string? DisplayName);
     private sealed record MatchSide(string? HomeAway, Player? Athlete, List<Linescore>? Linescores, bool? Winner);
     private sealed record Player(string? DisplayName, string? ShortName, Flag? Flag);
@@ -944,8 +936,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Linescore(double? Value, int? Tiebreak, bool? Winner, int? Period, List<Linescore>? Linescores);
     private sealed record TeamRecord(string? Type, string? Summary);
     private sealed record CuratedRank(int? Current);
-    private sealed record Odds(string? Details, double? OverUnder, OddsProvider? Provider);
-    private sealed record OddsProvider(string? Name);
     private sealed record Situation(LastPlay? LastPlay, string? DownDistanceText, string? Possession,
         int? Balls, int? Strikes, int? Outs, bool? OnFirst, bool? OnSecond, bool? OnThird);
     private sealed record LastPlay(string? Text);

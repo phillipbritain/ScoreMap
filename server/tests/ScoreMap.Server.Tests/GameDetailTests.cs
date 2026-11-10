@@ -21,13 +21,11 @@ public class GameDetailTests
         Game("1", leagueKey, DateTimeOffset.MinValue, ProviderStatus.InProgress, 1, 0, "4:12", 3);
 
     [Fact]
-    public async Task Teams_carry_their_rank_and_record_and_the_game_its_note_attendance_and_betting_line()
+    public async Task Teams_carry_their_rank_and_record_and_the_game_its_note()
     {
         var game = Live(Nfl) with
         {
             Note = "AFC Wild Card Playoffs",
-            Attendance = 60670,
-            Odds = new ProviderOdds("KC -3.5", 47.5, "DraftKings"),
         };
         game = game with
         {
@@ -41,8 +39,6 @@ public class GameDetailTests
         Assert.Equal((17, "5-2"), (sent.Sides().Home.Rank, sent.Sides().Home.Record));
         Assert.Equal((null, "6-0"), (sent.Sides().Away.Rank, sent.Sides().Away.Record));
         Assert.Equal("AFC Wild Card Playoffs", sent.Note);
-        Assert.Equal(60670, sent.Attendance);
-        Assert.Equal(new GameOdds("KC -3.5", 47.5, "DraftKings"), sent.Odds);
     }
 
     [Theory]

@@ -25,8 +25,6 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     broadcasters: [],
     streamLinks: [],
     note: null,
-    attendance: null,
-    odds: null,
     situation: null,
     lastScore: null,
     keyEvents: [],

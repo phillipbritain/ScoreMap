@@ -4,6 +4,12 @@ import { comingOpacity, stillComing, type CardComing } from './cardComings'
 
 export const trailLayerId = 'trails'
 
+/** PROTOTYPE, throw away: how trails come and go with their cards, for the variant being tried (see cardComingPrototype). */
+let trailComing: 'fade' | 'grow' = 'fade'
+export function setTrailComing(how: 'fade' | 'grow'): void {
+  trailComing = how
+}
+
 /** A moved card's trail, as the card layout gives it (see cardLayoutLayers' cardLayoutDrawing). */
 export interface TrailOnGlobe {
   gameId: string
@@ -71,7 +77,15 @@ export function trailLayer(theme: () => Theme): TrailLayer {
     return trails.map(({ gameId, venue, start, end, dot, coming }) => {
       const at = map!.project(venue)
       const opacity = coming ? comingOpacity(coming, now) : 1
-      return { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot, opacity }
+      const from = { x: at.x + start.dx, y: at.y + start.dy }
+      const to = map!.project(end)
+      if (trailComing === 'grow' && coming) {
+        // PROTOTYPE: grown up from the venue over the first 55% of coming in, drawn back down over the last 55% of going out.
+        const length = Math.min(1, opacity / 0.55)
+        const grown = { x: to.x + (from.x - to.x) * length, y: to.y + (from.y - to.y) * length }
+        return { gameId, from: grown, to, dot, opacity: Math.min(1, opacity / 0.15) }
+      }
+      return { gameId, from, to, dot, opacity }
     })
   }
 

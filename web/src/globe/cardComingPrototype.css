@@ -1,0 +1,187 @@
+/* PROTOTYPE, throw away: the looks of the card coming in / going out variants (see cardComingPrototype.ts).
+   A is the real one, in index.css. With reduce motion on, every variant fades in place as A does. */
+@media (prefers-reduced-motion: no-preference) {
+  /* B: the trail grows up from the venue first (the trail layer), then the card opens from its foot. */
+  :root[data-card-coming='B'] .score-card-coming {
+    animation-name: proto-grow-in;
+  }
+  :root[data-card-coming='B'] .score-card-going {
+    animation-name: proto-grow-out;
+  }
+
+  /* C: springs in past its size and settles; shrinks away. */
+  :root[data-card-coming='C'] .score-card-coming {
+    animation-name: proto-pop-in;
+    animation-timing-function: linear;
+  }
+  :root[data-card-coming='C'] .score-card-going {
+    animation-name: proto-pop-out;
+  }
+
+  /* D: drops in from a little above, landing on its trail; lifts up and away. */
+  :root[data-card-coming='D'] .score-card-coming {
+    animation-name: proto-drop-in;
+  }
+  :root[data-card-coming='D'] .score-card-going {
+    animation-name: proto-lift-out;
+  }
+}
+
+/* E: arrives lit in its game's color and settles; dims as a Final card does, then fades. Light, not
+   motion, so it plays with reduce motion on too. */
+:root[data-card-coming='E'] .score-card-coming {
+  animation-name: proto-fade-in;
+}
+:root[data-card-coming='E'] .score-card-coming > .score-card {
+  animation: proto-light-up 600ms ease-out both;
+}
+:root[data-card-coming='E'] .score-card-going {
+  animation-name: proto-dim-out;
+}
+
+@keyframes proto-grow-in {
+  0%,
+  45% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes proto-grow-out {
+  0% {
+    opacity: 1;
+    scale: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@keyframes proto-pop-in {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  55% {
+    opacity: 1;
+    scale: 1.08;
+  }
+  80% {
+    scale: 0.98;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes proto-pop-out {
+  0% {
+    scale: 1;
+  }
+  25% {
+    scale: 1.05;
+    opacity: 1;
+  }
+  100% {
+    scale: 0.5;
+    opacity: 0;
+  }
+}
+
+@keyframes proto-drop-in {
+  from {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}
+
+@keyframes proto-lift-out {
+  to {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}
+
+@keyframes proto-fade-in {
+  from {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes proto-light-up {
+  0%,
+  30% {
+    filter: brightness(1.6);
+    box-shadow: 0 0 18px 6px var(--game-color);
+  }
+}
+
+@keyframes proto-dim-out {
+  0% {
+    opacity: 1;
+    filter: none;
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(0.6) saturate(0.2);
+  }
+  100% {
+    opacity: 0;
+    filter: brightness(0.6) saturate(0.2);
+  }
+}
+
+/* The floating bar that switches variants: not part of any design being judged. */
+.card-coming-prototype {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 13px/1.2 system-ui, sans-serif;
+}
+
+.card-coming-prototype button {
+  padding: 3px 9px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+.card-coming-prototype button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.card-coming-prototype__label {
+  min-width: 15em;
+  text-align: center;
+  font-weight: 600;
+}
+
+.card-coming-prototype__sep {
+  width: 1px;
+  height: 18px;
+  background: #ccc;
+}

@@ -1197,7 +1197,6 @@ describe('animations', () => {
 
   it.each([
     ['score', 'ScoreChanged', 'Live', game('A', { home: '0' }), game('A', { home: '7' })],
-    ['start', 'Started', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { home: '0' })],
     ['finish', 'Finished', 'Live', game('A', { home: '21' }), game('A', { status: 'Final', home: '21' })],
     // The server judges any game reaching Final as finishing, not only a live one.
     ['finish', 'Finished', 'Upcoming', game('A', { status: 'Upcoming', home: null, away: null }), game('A', { status: 'Final', home: null, away: null })],
@@ -1209,6 +1208,22 @@ describe('animations', () => {
     globe.show([after], changed(kind, after))
 
     await vi.waitFor(() => expect(card('A')!.classList).toContain(`score-card--animate-${animation}`))
+  })
+
+  it('plays nothing on a game’s score card as it starts, so the card does not jump', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    const upcoming = game('A', { status: 'Upcoming', home: null, away: null })
+    globe.show([upcoming])
+    await cardShown('A')
+    const watching = watchPulses()
+
+    globe.show([game('A', { home: '0' })], changed('Started', game('A', { home: '0' })))
+    await vi.waitFor(() => expect(card('A')!.className).toContain('score-card--live'))
+    await pause(300)
+    watching.stop()
+
+    expect(card('A')!.getAnimations()).toEqual([])
+    expect([...watching.pulses]).toEqual([])
   })
 
   it('plays over a game’s small pin, zoomed out', async () => {

@@ -447,6 +447,9 @@ export class ScoreCardMarkers {
       pulse(this.map, this.colorOf(game), placed.marker.getLngLat().toArray(), animation, 'pin')
       return true
     }
+    // A card shown plays nothing as its game starts: a pop there made the card jump. Its header turning
+    // Live shows the start; a small pin or a cluster still pulses for it.
+    if (animation === 'start') return placed !== undefined
     const element = this.placed.get(gameId)?.marker.getElement().firstElementChild as HTMLElement | null | undefined
     if (!element) return false
     const playing = this.animating.get(gameId)

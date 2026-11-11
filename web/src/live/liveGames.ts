@@ -68,7 +68,7 @@ export interface LiveGamesOptions {
 
 export interface LiveGames {
   readonly state: LiveGamesState
-  /** A new idle timeout, from the behavior tuner (local runs only): it counts from now if the page is hidden. */
+  /** A new idle timeout: it counts from now if the page is hidden. */
   setIdleTimeout: (ms: number) => void
   /** Disconnects and stops watching the page. */
   stop: () => void

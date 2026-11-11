@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { builtInBehavior, loadBehavior, noOverlays } from './behaviorTuner/behavior'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
@@ -11,7 +10,9 @@ import { Globe, type GlobeHandle } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
 import { useFittedZoom } from './globe/useFittedZoom'
-import { zoomForMapType, type ZoomSettings } from './globe/zoomLevels'
+import { cityLabelSettings } from './globe/cityLabels'
+import { zoomForMapType, zoomSettings, type ZoomSettings } from './globe/zoomLevels'
+import { asleepSettings } from './live/asleep'
 import { DemoLabel } from './demo/DemoLabel'
 import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
@@ -34,19 +35,13 @@ import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
 /** The tuners, as the rail's Tuners popover lists them. */
-const tuners = [
-  { key: 'theme', name: 'Theme' },
-  { key: 'behavior', name: 'Behavior' },
-] as const
+const tuners = [{ key: 'theme', name: 'Theme' }] as const
 
 type Tuner = (typeof tuners)[number]['key']
 
-// The theme and behavior tuners, on local runs only: left out of a build.
+// The theme tuner, on local runs only: left out of a build.
 const ThemeTuner = import.meta.env.DEV
   ? lazy(() => import('./themeTuner/ThemeTuner').then(({ ThemeTuner }) => ({ default: ThemeTuner })))
-  : null
-const BehaviorTuner = import.meta.env.DEV
-  ? lazy(() => import('./behaviorTuner/BehaviorTuner').then(({ BehaviorTuner }) => ({ default: BehaviorTuner })))
   : null
 
 // The width below which the page takes its phone layout, as index.css has it.
@@ -83,14 +78,8 @@ interface AppProps {
  */
 export default function App({ theme: startTheme, tuning, demo = false }: AppProps) {
   const [theme, setTheme] = useTheme(startTheme)
-  // The app's own behavior, or on a local run (but not in a demo) the behavior tuner's draft saved in this browser.
-  const [behavior, setBehavior] = useState(() =>
-    import.meta.env.DEV && !demo ? loadBehavior(window.localStorage) : builtInBehavior,
-  )
   // A demo opens on first-visit settings and saves none.
   const store = demo ? demoStore : savedStore
-  // What the behavior tuner draws on the globe to show its settings at work (local runs only).
-  const [overlays, setOverlays] = useState(noOverlays)
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
   const [globeAttempt, setGlobeAttempt] = useState(0)
@@ -103,33 +92,25 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
-  const fittedZoom = useFittedZoom(behavior.zoom)
+  const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
   const zoom = useMemo(() => zoomForMapType(fittedZoom, viewerSettings.mapType), [fittedZoom, viewerSettings.mapType])
   const [camera] = useState(() => openingCamera(store, zoom))
-  // A new start zoom from the behavior tuner puts the globe at Home at once, to show it.
-  const shownStartZoom = useRef(behavior.zoom.startZoom)
-  useEffect(() => {
-    if (behavior.zoom.startZoom === shownStartZoom.current) return
-    shownStartZoom.current = behavior.zoom.startZoom
-    globe.current?.jumpTo(homeCamera(viewerPlace(), zoom))
-  }, [behavior.zoom, zoom])
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
   const { leagues } = leagueList
   // The scenario pill, and where play can be controlled the media keys and clock (local runs only).
   const scenarios = useScenarioControls(demo)
   // Which tuners' panels are open (local runs only), and how many settings each one's draft changes.
-  const [tunersOpen, setTunersOpen] = useState<Record<Tuner, boolean>>({ theme: false, behavior: false })
-  const [tunerChanges, setTunerChanges] = useState<Record<Tuner, number>>({ theme: 0, behavior: 0 })
+  const [tunersOpen, setTunersOpen] = useState<Record<Tuner, boolean>>({ theme: false })
+  const [tunerChanges, setTunerChanges] = useState<Record<Tuner, number>>({ theme: 0 })
   const themeChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, theme: count })), [])
-  const behaviorChanges = useCallback((count: number) => setTunerChanges((was) => ({ ...was, behavior: count })), [])
   const { setListing: setScenarioListing } = scenarios
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
   const { games, justHappened, cutOffSince, waking } = useLiveGames(
-    behavior.asleep.idleTimeoutMinutes * 60_000,
+    asleepSettings.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
   )
@@ -160,11 +141,10 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
           key={`globe-${globeAttempt}`}
           ref={globe}
           theme={theme}
-          cityLabels={behavior.cityLabels}
+          cityLabels={cityLabelSettings}
           zoomSettings={zoom}
           colors={colors}
           mapType={viewerSettings.mapType}
-          showGameCityReach={overlays.gameCityReach}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={games && visible}
           justHappened={justHappened}
@@ -295,8 +275,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
               </ul>
             )
           }
-          tunersOpen={tunersOpen.theme || tunersOpen.behavior}
-          onTunersClose={() => setTunersOpen({ theme: false, behavior: false })}
+          tunersOpen={tunersOpen.theme}
+          onTunersClose={() => setTunersOpen({ theme: false })}
         />
         {/* Over the globe and the rail, which come before it; the Feedback button is lifted above it
             (see .globe-area--touring), and the dev tools come after it. */}
@@ -311,8 +291,8 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
           />
         )}
-        {BehaviorTuner && ThemeTuner && tuning && (
-          // Hidden, not unmounted, by Shift+S, so the tuners keep their open panels and drafts.
+        {ThemeTuner && tuning && (
+          // Hidden, not unmounted, by Shift+S, so the tuner keeps its open panel and draft.
           <div className="dev-tools" data-keeps-popovers hidden={!scenarios.devToolsShown}>
             <Suspense>
               <ThemeTuner
@@ -324,17 +304,6 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
                 open={tunersOpen.theme}
                 onChangeCount={themeChanges}
                 onClose={() => setTunersOpen((was) => ({ ...was, theme: false }))}
-              />
-              <BehaviorTuner
-                builtIn={builtInBehavior}
-                behavior={behavior}
-                onChange={setBehavior}
-                overlays={overlays}
-                onOverlays={setOverlays}
-                zoomNow={cameraNow.zoom}
-                open={tunersOpen.behavior}
-                onChangeCount={behaviorChanges}
-                onClose={() => setTunersOpen((was) => ({ ...was, behavior: false }))}
               />
             </Suspense>
           </div>

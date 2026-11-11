@@ -45,7 +45,7 @@ function LoadingGlobe() {
       theme: builtInTheme,
       cityLabels: cityLabelSettings,
       zoomSettings: { ...unfittedZoom, minZoom: 2 },
-      colors: { sportColors: {}, leagueColors: {} }, mapType: 'plain', showGameCityReach: false,
+      colors: { sportColors: {}, leagueColors: {} }, mapType: 'plain',
       games: [], justHappened: noneJustHappened, selectedGameId: null,
       panel: { current: null }, onSelectGame: () => {},
       startCamera: { longitude: 0, latitude: 0, zoom: 2 },

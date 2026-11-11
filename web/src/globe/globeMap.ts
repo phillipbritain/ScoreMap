@@ -40,7 +40,6 @@ import {
 import { outerPinClusterLayer, outerPinSource, outerSmallPinLayer, clusterFootprint, pinClusterLayer, pinSource, smallPinLayer } from './pinLayers'
 import { addPinSources, pinLayoutOn, type PinSources } from './pinSources'
 import { pulse } from './pinPulse'
-import { addReachRings, type ReachRings } from './reachRings'
 import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
@@ -140,11 +139,8 @@ export class GlobeMap {
   /** The moved cards' trails, drawn on the map (see trailLayer). */
   private readonly trails: TrailLayer
   private readonly names: PlaceNames
-  private readonly reachRings: ReachRings
   /** What the city labels are chosen by (see setCityLabelSettings). */
   private cityLabels: CityLabelSettings
-  /** Whether each game's city label reach is ringed on the globe (see showGameCityReach). */
-  private reachShown = false
   private readonly glow: GlobeGlow
   /** Stops fading place names and pins near the horizon (see fadeNearHorizon). */
   private readonly stopHorizonFade: () => void
@@ -218,8 +214,6 @@ export class GlobeMap {
       else map.setStyle(style)
       const currentTheme = () => this.theme
       this.glow = addGlobeGlow(map, currentTheme)
-      // Before the pins' layers are added on style load, so they're drawn under the pins.
-      this.reachRings = addReachRings(map)
       this.names = addPlaceNames(map, currentTheme, cityLabels, cityNamesFrom(this.pinLayout().size))
       // City names, small pins and pin clusters fade out as they near the horizon, which they'd crowd:
       // all but the names of the cities of games with score cards, which always show with their cards.
@@ -299,7 +293,6 @@ export class GlobeMap {
     this.pins?.showGames(placed)
     // Names first: cards are laid out around them.
     this.names.showGames(placed)
-    if (this.reachShown) this.showReachRings()
     this.cards.setGames(placed, justHappened)
     const played = this.changesPlayed
     this.changesPlayed = Math.max(played, lastNumber(justHappened))
@@ -450,18 +443,17 @@ export class GlobeMap {
   /** A game's color, in the colors and theme the globe has now. */
   private readonly colorOf = (game: Game): string => gameColor(this.colors, game, this.theme)
 
-  /** Labels cities by these settings from now on (on a local run, from the behavior tuner). */
+  /** Labels cities by these settings from now on. */
   setCityLabelSettings(settings: CityLabelSettings): void {
     if (settings === this.cityLabels) return
     this.cityLabels = settings
     this.unsettle()
     this.names.setSettings(settings)
-    this.showReachRings()
   }
 
   /**
-   * Zooms no further out or in than these from now on, and shows score cards from their card zoom (on
-   * a local run, from the behavior tuner; and as the window is resized, see fittedZoomSettings).
+   * Zooms no further out or in than these from now on, and shows score cards from their card zoom (as
+   * the window is resized, see fittedZoomSettings, and as the map type changes).
    */
   setZoomLimits({ minZoom, maxZoom, cardZoom }: FittedZoom): void {
     this.map.setMinZoom(minZoom)
@@ -478,19 +470,6 @@ export class GlobeMap {
     this.unsettle()
     // Which switches the pin sets' layers and the city names over, if the pin size changes.
     this.cameraMoved()
-  }
-
-  /** Rings each game at the reach its city label may be within, or stops (on a local run, from the behavior tuner). */
-  showGameCityReach(shown: boolean): void {
-    if (shown === this.reachShown) return
-    this.reachShown = shown
-    this.unsettle()
-    this.showReachRings()
-  }
-
-  private showReachRings(): void {
-    const venues = this.reachShown ? [...this.shown.values()].map((game) => game.venue) : []
-    this.reachRings.show(venues, this.cityLabels.gameCityKm)
   }
 
   /**
@@ -551,11 +530,6 @@ export class GlobeMap {
     this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
 
-  /** Puts the camera there at once, with no flight (the behavior tuner showing the start zoom). */
-  jumpTo(camera: Camera): void {
-    this.map.jumpTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
-  }
-
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
     if (this.destroyed) return
@@ -566,7 +540,6 @@ export class GlobeMap {
     this.glow?.remove()
     this.names?.remove()
     this.stopHorizonFade?.()
-    this.reachRings?.remove()
     this.map.remove()
   }
 

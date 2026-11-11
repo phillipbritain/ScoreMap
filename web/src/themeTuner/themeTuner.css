@@ -1,11 +1,9 @@
-/* The theme tuner (local runs only), and the behavior tuner, which shares its look. Tools for trying
-   the theme rather than part of it, so they have a plain look of their own, solid and in fixed
-   colors, sizes and font, and read none of the theme's custom properties: tuning text sizes, colors
-   or surfaces can't make them unreadable.
+/* The theme tuner (local runs only). A tool for trying the theme rather than part of it, so it has a
+   plain look of its own, solid and in fixed colors, sizes and font, and reads none of the theme's
+   custom properties: tuning text sizes, colors or surfaces can't make it unreadable.
 
-   Opened from the top rail's Tuners popover, their panels sit at the top left, below the top rail and
-   clear of the rail at the top right: the theme's at the left, the behavior's there too, or beside
-   the theme's when both are open. The space between them lets the globe through. On a phone, a sheet
+   Opened from the top rail's Tuners popover, its panel sits at the top left, below the top rail and
+   clear of the rail at the top right. On a phone, a sheet
    (see below). Placed by the theme's spacing and rail button size, to keep below the top rail. */
 .dev-tools {
   /* The tools' own colors. */
@@ -115,10 +113,6 @@
   border-radius: 50%;
   font-size: 16px;
   line-height: 1;
-}
-
-.dev-tools:has(.theme-tuner--theme > .theme-tuner__panel) .theme-tuner--behavior > .theme-tuner__panel {
-  left: calc(380px + 8px);
 }
 
 .theme-tuner__tabs {
@@ -233,14 +227,6 @@
   margin-top: 4px;
   color: var(--tuner-dim);
   font-weight: 600;
-}
-
-/* The globe's zoom now, beside the Zoom heading, for comparing with the zoom settings. */
-.behavior-tuner__now {
-  margin-left: 8px;
-  font-weight: normal;
-  opacity: 0.7;
-  font-variant-numeric: tabular-nums;
 }
 
 .theme-tuner__group--top > .theme-tuner__heading {
@@ -419,42 +405,6 @@
   white-space: pre-wrap;
 }
 
-/* The behavior tuner's switch to show a setting at work on the globe, before its name: a knob
-   that slides right and lights up when on. */
-.theme-tuner .behavior-tuner__switch {
-  position: relative;
-  flex: none;
-  width: 24px;
-  height: 14px;
-  margin-right: 6px;
-  padding: 0;
-  border-radius: 999px;
-  background: #444;
-  vertical-align: middle;
-}
-
-.behavior-tuner__switch::after {
-  content: '';
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--tuner-dim);
-  transition: transform 0.15s;
-}
-
-.theme-tuner .behavior-tuner__switch[aria-checked='true'] {
-  border-color: var(--tuner-accent);
-  background: var(--tuner-accent);
-}
-
-.behavior-tuner__switch[aria-checked='true']::after {
-  background: var(--tuner-surface);
-  transform: translateX(10px);
-}
-
 /* On a touch screen, its boxes at 16px: Safari on an iPhone zooms the page in on focusing a smaller
    one (see index.css). */
 @media (pointer: coarse) {
@@ -465,15 +415,10 @@
 }
 
 /* On a phone: a sheet across the width left of the rail, as the rail's popovers are, so the rail
-   stays in reach, and no taller than two thirds of the screen, so the globe shows below it. With both
-   tuners open they lie in the same place, the behavior tuner's on top. */
+   stays in reach, and no taller than two thirds of the screen, so the globe shows below it. */
 @media (max-width: 640px) {
   .theme-tuner__panel {
     width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
     max-height: 66vh;
-  }
-
-  .dev-tools:has(.theme-tuner--theme > .theme-tuner__panel) .theme-tuner--behavior > .theme-tuner__panel {
-    left: 0;
   }
 }

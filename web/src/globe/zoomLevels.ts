@@ -36,7 +36,7 @@ export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
   return degreesApart(center, venue) <= cardRadius
 }
 
-/** How far out and in the globe zooms, and where it starts (on a local run, the behavior tuner can change them). */
+/** How far out and in the globe zooms, and where it starts. */
 export interface ZoomSettings {
   /**
    * The furthest out: just short of cardZoom, so small pins and their clusters still show.

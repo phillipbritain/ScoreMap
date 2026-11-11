@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for panels). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## What a theme is
 
@@ -150,7 +150,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
-| `components.Tooltip.surface` | A tooltip, tinting its glass (see [Tooltips](#tooltips)) | `background.paper` |
+| `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
@@ -204,7 +204,7 @@ How status reaches the rest of the globe:
 - **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the game color its games share, or the accent (`palette.live.main`) when their colors differ.
 - **Pulses** play in the game's color, over its small pin, score card or cluster alike. A score, a start and a finish are told apart by the pulse's shape, never its color.
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
-- **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, leaving only the soft shadow their glass casts (see [Glass](#glass)).
+- **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, so they cast none (see [Glass](#glass)).
 - **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
 ### Hot games' flames
@@ -231,25 +231,16 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. They use their existing theme surface colors with **frost** set to 1. The game panel isn't glass at all (from November 2026, when its venue photo came to fill part of it): it's its surface colors, solid, with no frost and nothing blurred behind it. Score cards keep their glass; pins are unchanged.
+Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the game panel, the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
 
-The shared glass material still supports local theme experiments. Each component has a **frost**, from 0 to 1:
+A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`, 0.6 in the dark theme):
 
-- at **0**, clear glass: the globe behind is sharp, its color lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
-- at **1**, opaque frosted glass: the globe is blurred away behind the component's surface color, solid.
+- at **0**, clear glass: the globe behind is sharp, its color lifted; the edges catch the light, brightest at the top left, with a faint sheen across;
+- at **1**, opaque: the card's fill, solid.
 
-In between, the surface color is as solid as the frost and the blur grows with it, while the edges and sheen dim. The glass is tinted with the component's own surface color (`components.ScoreCard.fill`, `components.Rail.surface`, `components.Controls.surface`, `components.Tooltip.surface`), so the palette still colors it, and every pane casts a soft shadow onto the globe in the background's color.
+In between, the fill is as solid as the frost, while the edges and sheen dim, and the card casts a soft shadow onto the globe in the background's color. The frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
 
-On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, though, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
-
-| Setting | Which glass | Dark theme |
-| --- | --- | --- |
-| `components.ScoreCard.frost` | Score cards' | 0.6 |
-| `components.Rail.frost` | The rail's groups and popovers, the top rail's (local runs), and welcome tour panels | 1 |
-| `components.Controls.frost` | The no-pins message, demo label, and Feedback button and panel | 1 |
-| `components.Tooltip.frost` | Tooltips' | 1 |
-
-Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: each frost is on its component's tab.
+Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: the frost is on the Score card tab.
 
 ### Tooltips
 
@@ -433,7 +424,7 @@ A new setting goes in the settings in `web/src/theme/theme.ts` and in every them
 Some of the look is in code on purpose, as behavior or layout rather than a theme's choices:
 
 - motion: durations, easings and the shapes of the animations, including the status light's pulse and the sizes and opacities inside their keyframes;
-- how glass works out from its frost (see [Glass](#glass)): how far the globe blurs, how much its color is lifted, how bright the edges and sheen are, the shadow it casts, and the lens's warp (`web/src/theme/GlassLens.tsx`);
+- how a score card's glass works out from its frost (see [Glass](#glass)): how bright the edges and sheen are, and the shadow it casts;
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);

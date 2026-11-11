@@ -70,26 +70,13 @@ body {
   pointer-events: none;
 }
 
-/* Glass: every surface over the globe (score cards, the rail and its popovers, the no-pins message,
-   the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018). The game panel
-   isn't: it's solid, with no blur behind it (ADR-0023).
-   Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
-   slight bend and lifted in color, its edges catching the light; at 1 opaque frosted glass. The glass
-   is tinted with the component's own surface color (--glass-tint, or --glass-fill for a fill of its
-   own), as solid as the frost.
-
-   A surface holding another glass surface (a rail group holds its popover)
-   has its glass on a layer behind its content (::before), since glass on the surface itself would keep
-   the glass inside from seeing past it. */
-.score-card,
-.rail__group::before,
-.rail__popover,
-.no-pins,
-.demo-label,
-.feedback__button,
-.feedback__panel,
-.welcome-tour__panel,
-.tooltip {
+/* Glass: a score card is a pane of glass the globe shows through (ADR-0018). Its frost, 0 to 1, says
+   how far: at 0 clear glass, its edges catching the light; at 1 opaque. The glass is tinted with the
+   card's own surface color (--glass-tint), as solid as the frost. Every other surface over the globe (the
+   game panel, the rail and its popovers, the no-pins message, the demo label, the Feedback button and
+   panel, welcome tour panels and tooltips) is solid, its surface color with nothing behind it blurred
+   (ADR-0023). */
+.score-card {
   /* How brightly the glass catches the light: most when clear. */
   --glass-shine: calc(1 - var(--frost));
   --glass-fill: color-mix(in srgb, var(--glass-tint) calc(var(--frost) * 100%), transparent);
@@ -103,25 +90,7 @@ body {
     linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
     linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
     var(--glass-fill);
-  /* Behind it, the globe blurred and lifted in color as the frost says, and on the larger panes bent
-     by the lens (--glass-lens, see theme/GlassLens.tsx). Score cards have neither (see .score-card). */
-  -webkit-backdrop-filter: blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
-  backdrop-filter: var(--glass-lens, ) blur(calc(22px * var(--frost))) saturate(calc(1.9 - 0.7 * var(--frost)));
   box-shadow: var(--glass-rim);
-}
-
-/* A surface whose glass is a layer behind its content. */
-.rail__group {
-  isolation: isolate;
-}
-
-.rail__group::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
@@ -557,13 +526,11 @@ body {
   --card-surface: var(--score-card-fill);
   --card-ink: var(--score-card-text);
   --fade: calc(var(--status-card-fade) * 100%);
-  /* Glass (see above), tinted with its fill, but with the globe behind it left as it is, neither blurred
+  /* Glass (see above), tinted with its fill, with the globe behind it left as it is, neither blurred
      nor lifted in color: blurring what's behind every card again each frame of a pan, as the globe
      turns under them, was most of what slowed panning where cards crowd (ADR-0018). */
   --frost: var(--score-card-frost);
   --glass-tint: var(--card-surface);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
   --card-color: color-mix(in srgb, var(--game-color), var(--card-surface) var(--fade));
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;
@@ -989,10 +956,6 @@ body {
 /* The rail at the top right: its groups of buttons stacked down, its popovers to its left.
    Above the no-pins message along the bottom, which an open popover can reach down to. */
 .rail {
-  /* Glass (see above), for the rail's groups and popovers. */
-  --frost: var(--rail-frost);
-  --glass-tint: var(--rail-surface);
-  --glass-lens: url(#glass-lens);
   position: absolute;
   top: calc(3 * var(--spacing));
   right: calc(3 * var(--spacing));
@@ -1003,12 +966,9 @@ body {
 }
 
 /* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
-   on the rail's glass, each popover hanging below the row at the screen's left, as the tuners' panels
+   on the rail's surface, each popover hanging below the row at the screen's left, as the tuners' panels
    do, whichever button opened it. */
 .top-rail {
-  --frost: var(--rail-frost);
-  --glass-tint: var(--rail-surface);
-  --glass-lens: url(#glass-lens);
   position: absolute;
   top: calc(3 * var(--spacing));
   left: calc(3 * var(--spacing));
@@ -1043,10 +1003,8 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--menu-corner);
-}
-
-.rail__group::before {
-  box-shadow: var(--rail-shadow), var(--glass-rim);
+  background: var(--rail-surface);
+  box-shadow: var(--rail-shadow);
 }
 
 .rail__group > .rail__button + .rail__button {
@@ -1109,7 +1067,7 @@ body {
 }
 
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
-   glass. */
+   surface. */
 .rail__popover {
   position: absolute;
   top: 0;
@@ -1121,9 +1079,10 @@ body {
   overflow-y: auto;
   padding: calc(3 * var(--spacing));
   border-radius: var(--menu-corner);
+  background: var(--rail-surface);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
-  box-shadow: var(--rail-shadow), var(--glass-rim);
+  box-shadow: var(--rail-shadow);
 }
 
 /* On a phone: a sheet across all the width left of the rail, from the rail's top down, so the rail's
@@ -1863,10 +1822,6 @@ body {
 
 /* Along the bottom of the globe: the no-pins message centered. */
 .bottom-stack {
-  /* Glass (see above), for the no-pins message. */
-  --frost: var(--controls-frost);
-  --glass-tint: var(--controls-surface);
-  --glass-lens: url(#glass-lens);
   position: absolute;
   right: calc(3 * var(--spacing));
   bottom: calc(8 * var(--spacing));
@@ -1883,6 +1838,7 @@ body {
   margin: 0;
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
   border-radius: var(--controls-message-corner);
+  background: var(--controls-surface);
   color: var(--palette-text-primary);
 }
 
@@ -1900,11 +1856,9 @@ body {
   white-space: nowrap;
 }
 
-/* A tooltip (see tooltip/Tooltips.tsx): a small pane of glass above what it's for, or below where
+/* A tooltip (see tooltip/Tooltips.tsx): a small solid panel above what it's for, or below where
    there's no room, on its left for the rail's buttons, or on the right of the Games list for its games, easing in from it. Over everything but the local-run tools' own. */
 .tooltip {
-  --frost: var(--tooltip-frost);
-  --glass-tint: var(--tooltip-surface);
   position: fixed;
   top: 0;
   left: 0;
@@ -1913,6 +1867,7 @@ body {
   max-width: 280px;
   padding: var(--spacing) calc(2.5 * var(--spacing));
   border-radius: var(--menu-corner);
+  background: var(--tooltip-surface);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-caption-font-size);
@@ -1950,12 +1905,9 @@ body {
   }
 }
 
-/* The Feedback button at the bottom right, and its panel opening above it, on the controls' glass.
+/* The Feedback button at the bottom right, and its panel opening above it, on the controls' surface.
    Above the game panel, which narrows to keep clear of the button (see below). */
 .feedback {
-  --frost: var(--controls-frost);
-  --glass-tint: var(--controls-surface);
-  --glass-lens: url(#glass-lens);
   position: absolute;
   right: calc(3 * var(--spacing));
   bottom: calc(3 * var(--spacing));
@@ -1982,7 +1934,8 @@ body {
   padding: 0;
   border: none;
   border-radius: 50%;
-  box-shadow: var(--controls-shadow), var(--glass-rim);
+  background: var(--controls-surface);
+  box-shadow: var(--controls-shadow);
   color: var(--palette-text-primary);
   cursor: pointer;
 }
@@ -2002,7 +1955,8 @@ body {
   max-width: calc(100vw - 6 * var(--spacing));
   padding: calc(3 * var(--spacing));
   border-radius: var(--menu-corner);
-  box-shadow: var(--controls-shadow), var(--glass-rim);
+  background: var(--controls-surface);
+  box-shadow: var(--controls-shadow);
   font-size: var(--typography-body2-font-size);
 }
 
@@ -2120,11 +2074,8 @@ body {
 }
 
 /* The label over the globe in a demo (ADR-0019), saying its games are made up: a small pane of the
-   controls' glass at the top, centered, which clicks pass through to the globe. */
+   controls' surface at the top, centered, which clicks pass through to the globe. */
 .demo-label {
-  --frost: var(--controls-frost);
-  --glass-tint: var(--controls-surface);
-  --glass-lens: url(#glass-lens);
   position: absolute;
   top: calc(3 * var(--spacing));
   left: 50%;
@@ -2139,7 +2090,8 @@ body {
   font-weight: var(--typography-body2-font-weight);
   white-space: nowrap;
   transform: translateX(-50%);
-  box-shadow: var(--controls-shadow), var(--glass-rim);
+  background: var(--controls-surface);
+  box-shadow: var(--controls-shadow);
   pointer-events: none;
   user-select: none;
 }
@@ -2175,11 +2127,8 @@ body {
   background: var(--dim);
 }
 
-/* A step's panel, in the middle of the screen, on the rail's glass as its popovers are. */
+/* A step's panel, in the middle of the screen, on the rail's surface as its popovers are. */
 .welcome-tour__panel {
-  --frost: var(--rail-frost);
-  --glass-tint: var(--rail-surface);
-  --glass-lens: url(#glass-lens);
   position: relative;
   box-sizing: border-box;
   width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
@@ -2191,7 +2140,8 @@ body {
   font-family: var(--typography-font-family);
   font-size: var(--typography-body2-font-size);
   font-weight: var(--typography-body2-font-weight);
-  box-shadow: var(--rail-shadow), var(--glass-rim);
+  background: var(--rail-surface);
+  box-shadow: var(--rail-shadow);
 }
 
 .welcome-tour__heading {

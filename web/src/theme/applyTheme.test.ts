@@ -71,15 +71,9 @@ describe('applyTheme', () => {
     expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
   })
 
-  it('writes each glass’s frost', () => {
-    const properties = propertiesOf(
-      themeWith((json) => {
-        json.components.ScoreCard.frost = 0.3
-        json.components.Rail.frost = 0.7
-      }),
-    )
+  it('writes the score card’s frost', () => {
+    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.frost = 0.3)))
     expect(properties.get('--score-card-frost')).toBe('0.3')
-    expect(properties.get('--rail-frost')).toBe('0.7')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
@@ -179,12 +173,12 @@ describe('applyTheme', () => {
       gamePanel: 9 + 1 + 3 + 1 + 2 + 7 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's frost, ten colors and shadows and seven sizes.
-      rail: 1 + 10 + 7,
-      // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
-      controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
-      // A tooltip's frost and surface.
-      tooltip: 2,
+      // The rail's ten colors and shadows and seven sizes.
+      rail: 10 + 7,
+      // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
+      controls: 1 + 1 + 2 + 1 + 2 + 2,
+      // A tooltip's surface.
+      tooltip: 1,
       // The loading screen's dim (a color and an opacity), rocket (two colors and a size) and message.
       loadingScreen: 2 + 3 + 1,
       // The welcome tour's dim opacity and arrow width.

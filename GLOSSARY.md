@@ -181,7 +181,7 @@ One of a theme's kinds of text, named as MUI's typography variants are (`body2`,
 _Avoid_: Variant, text size, font role
 
 **Glass**:
-What every surface over the globe is made of (score cards, the game panel, the rail, the scenario controls, tooltips): a pane the globe shows through, tinted with the surface's color, its edges catching the light (ADR-0018).
+What a score card is made of: a pane the globe shows through, tinted with the card's fill, its edges catching the light (ADR-0018). Every other surface over the globe (the game panel, the rail, the scenario controls, tooltips) is solid (ADR-0023).
 _Avoid_: Background, see-through fill
 
 **Frost**:

@@ -157,7 +157,6 @@
     "Menu": { "corner": 2 },
     "MenuItem": { "corner": 1.5 },
     "Rail": {
-      "frost": 1,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "open": "secondary.main",
@@ -168,7 +167,6 @@
       "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mark": 1, "mapType": 64 }
     },
     "Controls": {
-      "frost": 1,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "on": { "fill": "offWhite.500", "text": "navy.800" },
@@ -177,7 +175,7 @@
       "message": { "corner": 2 },
       "size": { "key": 34, "icon": 14 }
     },
-    "Tooltip": { "frost": 1, "surface": "background.paper" },
+    "Tooltip": { "surface": "background.paper" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },

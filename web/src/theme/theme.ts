@@ -554,11 +554,10 @@ const settings = {
      * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
-     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The frost
-     * of their glass.
+     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. They're
+     * solid, not glass (ADR-0023).
      */
     Rail: {
-      frost,
       surface: color,
       shadow,
       open: color,
@@ -572,10 +571,9 @@ const settings = {
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
      * surface and drop shadow, a speed key that's on, and how opaque one that's off is. A control's
      * corners (the scenario pill and clock, the speed keys, league chips) and the message's. Its size: a
-     * speed key and its icon. The frost of their glass.
+     * speed key and its icon. They're solid, not glass (ADR-0023).
      */
     Controls: {
-      frost,
       surface: color,
       shadow,
       on: { fill: color, text: color },
@@ -584,8 +582,8 @@ const settings = {
       message: { corner },
       size: { key: pixels, icon: pixels },
     },
-    /** A tooltip: its surface, tinting its glass, and the frost of its glass. */
-    Tooltip: { frost, surface: color },
+    /** A tooltip: its surface (solid, not glass: ADR-0023). */
+    Tooltip: { surface: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed

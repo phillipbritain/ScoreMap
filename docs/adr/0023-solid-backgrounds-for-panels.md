@@ -1,3 +1,5 @@
 # Solid backgrounds for panels
 
 Panels and popovers over the globe are too hard to read when the map shows through them. Give them opaque, theme-colored backgrounds using the existing shared surface settings; the current settings and their scope live in the [style guide](../style-guide.md#glass). This supersedes ADR-0018's choice of glass for every surface, while retaining its score card treatment and the ability to experiment with frost in the local theme tuner.
+
+In November 2026 the glass was taken off these surfaces altogether, and off the game panel too: at frost 1 they were opaque, but the shared glass rule still blurred and lensed the globe behind them every frame. They're now their surface colors, solid, with no blur or glass edges behind them, and `components.Rail.frost`, `components.Controls.frost`, `components.Tooltip.frost` and `components.GamePanel.frost` are no longer theme settings, so their frost can no longer be tried in the theme tuner. Score cards keep their glass and its frost.

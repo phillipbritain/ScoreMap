@@ -734,25 +734,6 @@ body {
   letter-spacing: var(--score-card-header-letter-spacing);
 }
 
-.score-card__light {
-  width: var(--score-card-size-light);
-  height: var(--score-card-size-light);
-  border-radius: 50%;
-  background: var(--card-color);
-  /* Lit as its card glows. */
-  box-shadow: 0 0 calc(var(--status-card-glow-radius) * 0.75) var(--card-color);
-}
-
-.score-card--live .score-card__light {
-  animation: score-card-light 1.6s ease-in-out infinite;
-}
-
-@keyframes score-card-light {
-  50% {
-    opacity: 0.3;
-  }
-}
-
 /* Fire wraps the whole edge. The card's box is masked out, so its glass stays clear. */
 .score-card__flames {
   --fire-reach: max(var(--score-card-flames-glow-radius), var(--score-card-flames-width));
@@ -962,7 +943,7 @@ body {
 }
 
 .pin-pulse--score {
-  animation: pin-pulse 0.9s ease-out 3;
+  animation: pin-pulse-score 0.9s ease-out;
 }
 
 .pin-pulse--start {
@@ -981,6 +962,18 @@ body {
   }
   100% {
     transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* A score's ring, smaller than a start's: it reaches a little past the pin or cluster, not far out. */
+@keyframes pin-pulse-score {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.8);
     opacity: 0;
   }
 }
@@ -1093,9 +1086,8 @@ body {
   }
 }
 
-/* Changes still show, and nothing moves or blinks: a score's glow fades without shrinking, a Live score
-   card's status light stays lit (Live is told by its glow and brightness alone), a hot game's flames
-   stand still, every pin's ring fades in place and a hovered card changes at once. */
+/* Changes still show, and nothing moves or blinks: a score's glow fades without shrinking, a hot game's
+   flames stand still, every pin's ring fades in place and a hovered card changes at once. */
 @media (prefers-reduced-motion: reduce) {
   .score-card {
     transition: none;
@@ -1117,10 +1109,6 @@ body {
 
   .score-card--animate-start {
     animation: score-card-finish 2.4s ease-in-out;
-  }
-
-  .score-card--live .score-card__light {
-    animation: none;
   }
 
   .score-card__team--scored,

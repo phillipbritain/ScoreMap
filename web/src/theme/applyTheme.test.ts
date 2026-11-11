@@ -177,9 +177,9 @@ describe('applyTheme', () => {
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
       pulse: 4,
-      // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
+      // A score card's fill, text, shadow, frost, header's two, corner, four sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
-      scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 7 + 3 * 3,
+      scoreCard: 3 + 1 + 2 + 1 + 4 + 3 + 7 + 3 * 3,
       // The game panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
       // three, corner, cut corner's two, eight sizes (the close tab's two) and logo plate of three.
       gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,

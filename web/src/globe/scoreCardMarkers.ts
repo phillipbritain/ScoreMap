@@ -519,10 +519,10 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   element.classList.toggle('score-card--selected', selected)
   if (animation) element.classList.add(animationClass(animation))
   element.dataset.gameId = card.gameId
-  // A header strip with a status light and the clock (or the status), then the teams.
+  // A header strip with the clock (or the status), then the teams.
   const header = document.createElement('div')
   header.className = 'score-card__header'
-  header.append(span('score-card__light', ''), span('score-card__clock', card.clockLine || card.status))
+  header.append(span('score-card__clock', card.clockLine || card.status))
   const rows = [team(card.top), team(card.bottom)]
   element.replaceChildren(header, ...rows)
   if (card.flames) element.append(flames())

@@ -382,7 +382,6 @@ function ExampleScoreCard() {
       <span className="welcome-tour__example-tag">Example</span>
       <div className="score-card score-card--live">
         <div className="score-card__header">
-          <span className="score-card__light" />
           <span className="score-card__clock">Q3 4:12</span>
         </div>
         {[

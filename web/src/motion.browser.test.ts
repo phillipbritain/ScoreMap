@@ -36,7 +36,6 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
   return (animations[0].effect as KeyframeEffect).getKeyframes()
 }
 
-const liveLight = () => element('score-card score-card--live', 'score-card__light')
 const flame = () => element('score-card score-card--live', 'score-card__flames')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start', 'finish'] as const
@@ -44,11 +43,6 @@ const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
 
 describe('with reduce motion off', () => {
-  it('blinks a Live score card’s status light', () => {
-    const opacities = keyframesOf(liveLight()).map((keyframe) => keyframe.opacity)
-    expect(opacities).toContain('0.3')
-  })
-
   it('animates a hot game’s fire outline and glow', () => {
     const fire = flame()
     expect(fire.getAnimations({ subtree: true }).length).toBeGreaterThan(0)
@@ -81,13 +75,6 @@ describe('with reduce motion off', () => {
 describe('with reduce motion on', () => {
   beforeEach(async () => {
     await commands.reduceMotion(true)
-  })
-
-  it('keeps a Live score card’s status light fully lit, without blinking', () => {
-    const light = liveLight()
-
-    expect(light.getAnimations()).toEqual([])
-    expect(getComputedStyle(light).opacity).toBe('1')
   })
 
   it('keeps a hot game’s flames, standing still', () => {

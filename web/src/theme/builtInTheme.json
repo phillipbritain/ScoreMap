@@ -125,7 +125,7 @@
       "frost": 0.6,
       "header": { "tint": 0.28, "letterSpacing": 0.06 },
       "corner": 1.5,
-      "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "light": 6, "nameClearance": 4 },
+      "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "nameClearance": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 0.5, "corner": 0.5 } },
       "flames": { "width": 3, "glow": { "radius": 14.4, "spread": 4.32, "opacity": 0.75 }, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },

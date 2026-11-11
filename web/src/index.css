@@ -1202,8 +1202,8 @@ body {
 }
 
 /* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
-   on the rail's surface, each popover hanging below the row at the screen's left, as the tuners' panels
-   do, whichever button opened it. */
+   on the rail's surface, each popover hanging below the row at the screen's left, whichever button
+   opened it. */
 .top-rail {
   position: absolute;
   top: calc(3 * var(--spacing));
@@ -1721,62 +1721,6 @@ body {
 .scenario-pills > :not(:first-child) {
   height: calc(var(--controls-bar-height) + var(--shape-border-width-thin));
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
-}
-
-/* The Tuners popover (see TopRail, local runs only): the theme and behavior
-   tuners, each a toggle opening its panel at the top left and closing the popover, lit while open,
-   with a count of the settings its draft changes. The buttons take the tuners' own plain look
-   (themeTuner/themeTuner.css): solid, in fixed colors, sizes and font, reading none of the theme, so
-   tuning it can't make them hard to see. */
-.rail__popover--tuners {
-  width: auto;
-  padding: calc(1.5 * var(--spacing));
-}
-
-.tuner-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.tuner-menu button {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  gap: 8px;
-  width: 100%;
-  padding: 6px 12px;
-  border: 1px solid #555;
-  border-radius: 4px;
-  background: #2a2a2a;
-  color: #e6e6e6;
-  font: 600 13px/1.4 system-ui, sans-serif;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.tuner-menu button:hover {
-  background: #3a3a3a;
-}
-
-.tuner-menu button[aria-pressed='true'] {
-  border-color: #e6e6e6;
-  background: #e6e6e6;
-  color: #1c1c1c;
-}
-
-.tuner-menu__count {
-  margin-left: auto;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #e0a030;
-  color: #1c1c1c;
-  font-size: 11px;
-  font-weight: 700;
 }
 
 .scenario-pill {
@@ -2378,7 +2322,7 @@ body {
 }
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
-   from being used, under the dev tools. The Feedback button is lifted above it while it shows, so it
+   from being used. The Feedback button is lifted above it while it shows, so it
    stays usable. */
 .welcome-tour {
   /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */

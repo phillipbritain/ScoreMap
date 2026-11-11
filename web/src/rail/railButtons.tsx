@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { GamesIcon, HomeIcon, LeaguesIcon, MapTypeIcon, PaletteIcon, ScenarioIcon, TunersIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
+import { GamesIcon, HomeIcon, LeaguesIcon, MapTypeIcon, PaletteIcon, ScenarioIcon, ZoomInIcon, ZoomOutIcon } from './railIcons'
 
 /**
  * The rail's buttons, top to bottom: each one's name (its label and tooltip) and its icon. The rail
@@ -16,13 +16,12 @@ export const railButtons = [
 ] as const
 
 /**
- * The local-run tools' buttons, last on the rail on local runs only: Scenario, opening the scenario
- * controls, and Tuners, opening the theme tuner. Not in railButtons, so the welcome
+ * The local-run tools' buttons, on the top rail on local runs only: Scenario, opening the scenario
+ * controls. Not in railButtons, so the welcome
  * tour, which shows the live site's rail, doesn't list them.
  */
 export const localRunButtons = [
   { name: 'Scenario', icon: <ScenarioIcon /> },
-  { name: 'Tuners', icon: <TunersIcon /> },
 ] as const
 
 /** The name of one of the live site's rail buttons. */

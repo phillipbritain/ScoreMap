@@ -396,7 +396,7 @@ function measureText(text: string, font: string, size: number): number {
   measuring ??= document.createElement('canvas').getContext('2d')
   if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = measuredFont
-  // Many names in many fonts (the theme tuner's, say): the oldest are let go.
+  // Many names in many fonts (themes changing, say): the oldest are let go.
   if (measured.size >= measuredKept) measured.clear()
   const width = measuring.measureText(text).width
   measured.set(key, width)

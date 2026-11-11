@@ -35,7 +35,7 @@ The code reads only the resolved theme, never the JSON:
 
 - **The page** (the game panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colors, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
 - **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
-- **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is. On a local run the theme tuner changes the theme this way (see [Making or changing a theme](#making-or-changing-a-theme)).
+- **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is.
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
@@ -150,7 +150,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
 | `components.GamePanel.photo.glow` | The glow behind the venue and its watch links when the venue has no photo | `navy.600` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
+| `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario popover too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
@@ -178,7 +178,7 @@ A score card fades by color, not by being see-through: its game's color, text an
 
 Each status still has its own color in the palette, though all three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A color the viewer picks takes the place of its status's, and text written on it (the game panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
 
-A status's color is the palette's; the rest of its look is each component's own, as MUI's components style each color they come in, so a component's tab in the tuner holds all of how it looks:
+A status's color is the palette's; the rest of its look is each component's own, as MUI's components style each color they come in, so a component's settings hold all of how it looks:
 
 | Setting | What it is |
 | --- | --- |
@@ -241,7 +241,7 @@ A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`,
 
 In between, the fill is as solid as the frost, while the edges and sheen dim, and the card casts a soft shadow onto the globe in the background's color. The frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text and logos, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
 
-Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: the frost is on the Score card tab.
+Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own.
 
 ### Tooltips
 
@@ -249,7 +249,7 @@ Tooltips are drawn by the page, not the browser, whose own can't be styled: anyt
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's color. Its settings are `components.Hover`, under the theme tuner's Hover tab: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's color. Its settings are `components.Hover`: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
 
 ## Typography
 
@@ -410,7 +410,7 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
-To try changes first, use the **theme tuner**, Theme in the Tuners popover of a local run's top rail, at the top left (it's left out of a build); its panel keeps a plain look of its own, so a draft can't make it unreadable. It shows every setting but the theme's colors themselves: first the whole theme's (the palette, the typography, spacing and shape), then a tab for each component, named as it is (Pin, Score card, Game panel, Loading screen…), under a heading of their own and ruled off, as each changes only that part. A color job picks one of the palette's colors, or a step from a grid of the theme's colors, light to dark, or steps lighter (▲) or darker (▼) in its color, so it stays within the theme's colors; numbers have sliders, and type styles and globe fonts a list. A change shows at once, on the page and on the globe alike. The loading screen, seen once a page, can be held up over the globe from its tab (Rocket, or Slow message with the message under it), and stays up on every tab until put away (Off), since its message takes settings from Type; "Play exit" plays the fade it goes with. To see a real slow first load, pins and score cards coming in under it, use the `slow-initial-load` scenario (the `run-scoremap` skill). The Theme button counts the settings changed from the built-in theme, each tab those it shows, and a changed setting is marked, with a button to put it back. The draft is kept in that browser until the built-in theme's JSON changes. "Copy changes" copies what's changed, a setting to a line, to put into the JSON.
+To try a change, edit the JSON on a local run: Vite reloads the page with it, on the page and on the globe alike. To see the loading screen, which shows once a page, use the `slow-initial-load` scenario (the `run-scoremap` skill), which holds it up for 15 seconds with its slow message.
 
 1. **Colors first.** Choose the base colors and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Then the palette:** which steps are the primary and secondary colors, each status's color, the background, the text, the divider and hover.

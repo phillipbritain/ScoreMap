@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { showsDevTools, showsScenarioControls, togglesScenarioControls, type ScenarioListing } from './scenarioPicker'
+import { showsScenarioControls, togglesScenarioControls, type ScenarioListing } from './scenarioPicker'
 
 // Served by the server in Development only (ScenarioEndpoints.cs); elsewhere it lists no scenarios.
 const scenariosPath = '/api/scenarios'
@@ -38,8 +38,6 @@ export interface ScenarioControls {
   refresh: () => void
   /** Whether the scenario pill, the media keys and the clock show. */
   shown: boolean
-  /** Whether the dev tools (the Behavior and Theme buttons and their panels) show: Shift+S hides them too. */
-  devToolsShown: boolean
   /** Whether the Feedback button and its panel show: Shift+S hides them too, on the live site as well. */
   feedbackShown: boolean
 }
@@ -47,7 +45,7 @@ export interface ScenarioControls {
 /**
  * The scenario controls' state (ADR-0009): the listing, fetched on start and again on coming back to
  * the tab (for anything missed while disconnected from the games hub), and whether Shift+S has hidden
- * the controls (and the dev tools and the Feedback button with them). The app passes on the listings the server sends over the games hub to `setListing`, so
+ * the controls (and the Feedback button with them). The app passes on the listings the server sends over the games hub to `setListing`, so
  * every tab follows a switch or a change of speed made in any of them. A demo (ADR-0019) has no
  * scenario controls, so it never fetches the listing, but Shift+S still hides what it hides.
  */
@@ -87,5 +85,5 @@ export function useScenarioControls(demo: boolean): ScenarioControls {
   }, [])
 
   const refresh = useCallback(() => load(), [load])
-  return { listing, setListing, refresh, shown: showsScenarioControls(listing, { hidden }), devToolsShown: showsDevTools({ hidden }), feedbackShown: !hidden }
+  return { listing, setListing, refresh, shown: showsScenarioControls(listing, { hidden }), feedbackShown: !hidden }
 }

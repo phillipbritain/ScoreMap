@@ -6,7 +6,7 @@ The `Dockerfile` at the repo root builds the browser app with Vite and the serve
 
 ## What it runs on
 
-Everything is in `infra/main.bicep`, in the resource group `scoremap-eastus2-rg` in East US 2:
+Everything is in `infra/main.bicep`, in the resource group `scoremap-rg` in East US 2:
 
 - **The container app** `scoremap`: external HTTPS ingress (http:// redirects), WebSockets, sticky sessions for SignalR, 0.25 vCPU and 0.5 GiB, minimum and maximum 1 replica. One revision is active at a time: a new revision takes the traffic once it accepts connections, and the old one keeps serving until then.
 - **The environment** `scoremap-env`, on the consumption plan: no charge for the environment itself.
@@ -21,13 +21,13 @@ At 0.25 vCPU and 0.5 GiB, one replica always running costs about $4–5 a month,
 You need the Azure CLI and an Azure subscription. Sign in, register the resource providers the template uses (once per subscription) and create the resource group:
 
 ```sh
-rg=scoremap-eastus2-rg
+rg=scoremap-rg
 az login
 for p in Microsoft.App Microsoft.OperationalInsights Microsoft.Storage; do az provider register -n $p --wait; done
 az group create --name $rg --location eastus2
 ```
 
-The template is scoped to the resource group, so a deploy needs rights on that group only. The container app needs an image that already exists, so the first image comes from GitHub Actions: run the deploy workflow on any branch (`gh workflow run deploy --ref <branch>`), which on a branch other than `main` only builds and pushes. The first push creates the package `scoremap` under your GitHub account; make it public under Package settings → Change visibility, or Container Apps can't pull it. Then run the template with that image:
+The template is scoped to the resource group, so a deploy needs rights on that group only. The container app needs an image that already exists, so the first image comes from GitHub Actions: run the deploy workflow on any branch (`gh workflow run deploy --ref <branch>`), which on a branch other than `main` only builds and pushes. The first push creates the package `scoremap` under your GitHub account, public like the repo; if it ever shows as private, make it public under Package settings → Change visibility, or Container Apps can't pull it. Then run the template with that image:
 
 ```sh
 export SCOREMAP_IMAGE=ghcr.io/phillipbritain/scoremap:<commit>

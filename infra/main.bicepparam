@@ -1,6 +1,6 @@
 using 'main.bicep'
 
-// The deployed app (docs/deploy.md). The region comes from the resource group, scoremap-eastus2-rg in eastus2.
+// The deployed app (docs/deploy.md). The region comes from the resource group, scoremap-rg in eastus2.
 
 // Passed on each run from the shell (docs/deploy.md): the image, so a run keeps the one GitHub Actions
 // last deployed, and the feedback token, which is never checked in. Unset, the token switches filing off.

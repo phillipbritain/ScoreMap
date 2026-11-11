@@ -16,8 +16,8 @@ describe('pinAnimation', () => {
     expect(pinAnimation('Started', game('Live'))).toBe('start')
   })
 
-  it('marks a game finishing with its own, calmer animation', () => {
-    expect(pinAnimation('Finished', game('Final'))).toBe('finish')
+  it('plays nothing as a game finishes', () => {
+    expect(pinAnimation('Finished', game('Final'))).toBeNull()
   })
 
   it('celebrates a basketball score change only in clutch time, judged on the score after the basket', () => {
@@ -25,8 +25,7 @@ describe('pinAnimation', () => {
     expect(pinAnimation('ScoreChanged', game('Live', 'Basketball', false))).toBeNull()
   })
 
-  it('keeps basketball starting and finishing animated outside clutch time', () => {
+  it('keeps basketball starting animated outside clutch time', () => {
     expect(pinAnimation('Started', game('Live', 'Basketball'))).toBe('start')
-    expect(pinAnimation('Finished', game('Final', 'Basketball'))).toBe('finish')
   })
 })

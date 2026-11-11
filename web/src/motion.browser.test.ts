@@ -38,7 +38,7 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 
 const flame = () => element('score-card score-card--live', 'score-card__flames')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
-const pinAnimations = ['score', 'start', 'finish'] as const
+const pinAnimations = ['score', 'start'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
 

@@ -117,7 +117,7 @@
       "trail": { "width": 2.5, "opacity": 1 },
       "venue": { "radius": 3.5, "glow": { "radius": 12, "opacity": 0.6 } }
     },
-    "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": { "lively": 3, "calm": 2 } },
+    "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": 3 },
     "ScoreCard": {
       "fill": "primary.dark",
       "text": "text.primary",

@@ -176,7 +176,7 @@ describe('applyTheme', () => {
       // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two.
       hover: 2 + 2 + 3,
       // Two sizes and two ring widths.
-      pulse: 4,
+      pulse: 3,
       // A score card's fill, text, shadow, frost, header's two, corner, four sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 4 + 3 + 7 + 3 * 3,

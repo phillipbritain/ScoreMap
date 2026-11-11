@@ -843,14 +843,10 @@ body {
 }
 
 /* Animations for changes worth noticing (see globe/pinAnimation.ts): a glow of the card's edge when
-   the score changes, nothing moving, and a slow, quiet dim when it finishes. A start plays nothing on a
-   card (see ScoreCardMarkers.animate). */
-.score-card--animate-score {
+   the score changes or the game starts, nothing moving; nothing when it finishes. */
+.score-card--animate-score,
+.score-card--animate-start {
   animation: score-card-score 1.6s ease-out;
-}
-
-.score-card--animate-finish {
-  animation: score-card-finish 2.4s ease-in-out;
 }
 
 /* The new score takes the game's color too, fading back with the glow. */
@@ -870,7 +866,8 @@ body {
 
 /* For reduce motion, the lit edge drawn over the card's own and faded out, so the glow doesn't shrink:
    only its color fades. */
-.score-card--animate-score::after {
+.score-card--animate-score::after,
+.score-card--animate-start::after {
   content: '';
   position: absolute;
   inset: calc(-1 * var(--shape-border-width-thin));
@@ -896,23 +893,12 @@ body {
   }
 }
 
-@keyframes score-card-finish {
-  0%,
-  100% {
-    filter: none;
-  }
-  40% {
-    filter: brightness(0.85) saturate(0.5);
-    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--palette-final-main) 60%, transparent);
-  }
-}
-
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
   width: var(--pulse-size-pin);
   height: var(--pulse-size-pin);
-  border: var(--pulse-ring-lively) solid var(--pulse-color);
+  border: var(--pulse-ring) solid var(--pulse-color);
   border-radius: 50%;
   opacity: 0;
 }
@@ -922,31 +908,12 @@ body {
   height: var(--pulse-size-cluster);
 }
 
-.pin-pulse--score {
+.pin-pulse--score,
+.pin-pulse--start {
   animation: pin-pulse-score 0.9s ease-out;
 }
 
-.pin-pulse--start {
-  animation: pin-pulse 1.2s ease-out 2;
-}
-
-.pin-pulse--finish {
-  border-width: var(--pulse-ring-calm);
-  animation: pin-pulse-calm 2.6s ease-in-out;
-}
-
-@keyframes pin-pulse {
-  0% {
-    transform: scale(0.6);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(3.2);
-    opacity: 0;
-  }
-}
-
-/* A score's ring, smaller than a start's: it reaches a little past the pin or cluster, not far out. */
+/* A score's or a start's ring: it reaches a little past the pin or cluster, not far out. */
 @keyframes pin-pulse-score {
   0% {
     transform: scale(0.6);
@@ -958,21 +925,7 @@ body {
   }
 }
 
-@keyframes pin-pulse-calm {
-  0% {
-    transform: scale(1);
-    opacity: 0;
-  }
-  40% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-/* The calm ring without the growing: it fades in and out in place, for reduce motion. */
+/* The ring without the growing: it fades in and out in place, for reduce motion. */
 @keyframes pin-pulse-still {
   40% {
     opacity: 0.6;
@@ -1078,12 +1031,14 @@ body {
     animation: none;
   }
 
-  .score-card--animate-score {
+  .score-card--animate-score,
+  .score-card--animate-start {
     animation: none;
   }
 
   /* The card's own animation is none, so this one's end is the card's (see ScoreCardMarkers.animate). */
-  .score-card--animate-score::after {
+  .score-card--animate-score::after,
+  .score-card--animate-start::after {
     animation: score-card-score-still 1.6s ease-out;
   }
 
@@ -1095,8 +1050,7 @@ body {
   }
 
   .pin-pulse--score,
-  .pin-pulse--start,
-  .pin-pulse--finish {
+  .pin-pulse--start {
     animation: pin-pulse-still 2.6s ease-in-out;
   }
 }

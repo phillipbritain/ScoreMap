@@ -133,14 +133,12 @@
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
     },
     "GamePanel": {
-      "frost": 0.85,
       "surface": { "top": "background.paper", "bottom": "background.paper" },
       "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
       "score": { "fill": "navy.600", "text": "text.primary" },
       "unofficial": "text.secondary",
-      "photo": "navy.600",
-      "credit": { "fill": "background.default", "text": "text.secondary" },
-      "close": "primary.dark",
+      "photo": { "glow": "navy.600", "opacity": 0.4 },
+      "frost": 0.55,
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "glow": { "y": 0, "blur": 0, "opacity": 0 },
       "corner": 2,
@@ -149,19 +147,16 @@
       "size": {
         "width": 1200,
         "height": 140,
-        "phoneHeight": 236,
         "scoreBlock": 504,
         "slant": 16,
-        "photo": 144,
         "logo": 28,
-        "close": 24,
+        "close": { "width": 28, "height": 18 },
         "scoreWidth": 2.6
       }
     },
     "Menu": { "corner": 2 },
     "MenuItem": { "corner": 1.5 },
     "Rail": {
-      "frost": 1,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "open": "secondary.main",
@@ -172,7 +167,6 @@
       "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mark": 1, "mapType": 64 }
     },
     "Controls": {
-      "frost": 1,
       "surface": "background.paper",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "on": { "fill": "offWhite.500", "text": "navy.800" },
@@ -181,7 +175,7 @@
       "message": { "corner": 2 },
       "size": { "key": 34, "icon": 14 }
     },
-    "Tooltip": { "frost": 1, "surface": "background.paper" },
+    "Tooltip": { "surface": "background.paper" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },

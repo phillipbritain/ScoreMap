@@ -25,7 +25,6 @@ import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
-import { GlassLens } from './theme/GlassLens'
 import { Tooltips } from './tooltip/Tooltips'
 import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
@@ -155,7 +154,6 @@ export default function App({ theme: startTheme, tuning, demo = false }: AppProp
 
   return (
     <div className="app">
-      <GlassLens />
       <Tooltips />
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe

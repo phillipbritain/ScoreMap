@@ -99,12 +99,6 @@ public sealed class ScoreMapServer(
     public string? BrowserAppFolder { get; init; }
 
     /// <summary>
-    /// Runs the server as Azure App Service would, with HOME set to this folder, and leaves the
-    /// saved venue lookups and photos paths unconfigured so the server picks its App Service defaults.
-    /// </summary>
-    public string? AppServiceHome { get; init; }
-
-    /// <summary>
     /// The owner's watch links file: a fresh temp file, written by <see cref="AddWatchLink"/>,
     /// unless the server was started with the watch links file that ships with ScoreMap.
     /// </summary>
@@ -205,16 +199,8 @@ public sealed class ScoreMapServer(
         }
         if (BrowserAppFolder is not null)
             builder.UseWebRoot(BrowserAppFolder);
-        if (AppServiceHome is not null)
-        {
-            builder.UseSetting("WEBSITE_SITE_NAME", "scoremap-test");
-            builder.UseSetting("HOME", AppServiceHome);
-        }
-        else
-        {
-            builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
-            builder.UseSetting("Venues:SavedPhotosPath", SavedVenuePhotosPath);
-        }
+        builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
+        builder.UseSetting("Venues:SavedPhotosPath", SavedVenuePhotosPath);
         for (var i = 0; i < _streamSites.Count; i++)
         {
             builder.UseSetting($"StreamFinder:Sites:{i}:Name", _streamSites[i].Name);
@@ -227,7 +213,7 @@ public sealed class ScoreMapServer(
             builder.UseSetting("Feedback:GitHubToken", FeedbackToken);
         if (FeedbackTimeout is { } feedbackTimeout)
             builder.UseSetting("Feedback:TimeoutSeconds", feedbackTimeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        // As on App Service (infra/main.bicep): each visitor's address from the proxy's X-Forwarded-For.
+        // As in production (infra/main.bicep): each visitor's address from the proxy's X-Forwarded-For.
         builder.UseSetting("FORWARDEDHEADERS_ENABLED", "true");
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.UseSetting("Venues:LeagueLocationsPath", LeagueVenueLocationsPath);

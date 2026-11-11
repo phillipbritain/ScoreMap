@@ -64,4 +64,4 @@ CI (`.github/workflows/ci.yml`) runs all of these on every pull request.
 
 ## Deploy
 
-ScoreMap runs on Azure App Service. `dotnet publish` also builds the browser app into the published `wwwroot`, so the server serves the whole app. After a one-time setup, `.github/workflows/deploy.yml` tests, publishes and deploys on every push to `main`; `./scripts/deploy.ps1 -ResourceGroup <group> -AppName <app>` deploys by hand. See [docs/deploy.md](docs/deploy.md).
+ScoreMap runs on Azure Container Apps, as one image (`Dockerfile`) holding the server and the browser app, with one replica always running (ADR-0024). After a one-time setup, `.github/workflows/deploy.yml` builds the image, pushes it to GitHub Container Registry and deploys it on every push to `main`. See [docs/deploy.md](docs/deploy.md).

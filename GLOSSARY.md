@@ -81,7 +81,7 @@ While zoomed in, where each game's score card goes on screen, and which games ga
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for its last score (who scored, and when), tennis sets, a field's leaderboard or a fight card's bouts.
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe: its score and last score (who scored, and when), and its venue and where to watch over the venue's photo, with a band under it for tennis sets, a field's leaderboard or a fight card's bouts.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
@@ -181,7 +181,7 @@ One of a theme's kinds of text, named as MUI's typography variants are (`body2`,
 _Avoid_: Variant, text size, font role
 
 **Glass**:
-What every surface over the globe is made of (score cards, the game panel, the rail, the scenario controls, tooltips): a pane the globe shows through, tinted with the surface's color, its edges catching the light (ADR-0018).
+What a score card is made of: a pane the globe shows through, tinted with the card's fill, its edges catching the light (ADR-0018); on a desktop, the game panel's score block too, blurring the globe. Every other surface over the globe (the rest of the game panel, the rail, the scenario controls, tooltips) is solid (ADR-0023).
 _Avoid_: Background, see-through fill
 
 **Frost**:

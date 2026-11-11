@@ -6,7 +6,7 @@
 
 This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never in main: no tests, no polish, values written straight into `prototype.css`.
 
-- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `I`, `J`).
+- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`, `D`, `E`, `F`, `G`, `H`, `I`, `J`, `K`).
 - Flip with the pink bar's ‹ and › buttons, or ← and → (Shift+← and → while the globe has focus, since it pans with the arrows). The URL keeps the variant across a reload.
 - The bar reserves 40px at the bottom of the screen; every variant, today's included, sits above that, so ignore those 40px when judging height.
 
@@ -24,6 +24,7 @@ This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never 
 | `H` | G, venue and watch in the corners (round 8) | As G, with no block, wash or slant behind the score section: the league, names and scores sit on the photo alone, with a soft shadow on the text (each score keeps its own small box). The venue's name and place sit in the top right corner, beside the close button; the watch links, on one line, sit in the bottom right corner. On a phone the venue is at the top right across from the league, and watch at the bottom right under the details. Basketball game: 203 / 281 (G: 212 / 352). |
 | `I` | C, labeled last score, watch in the photo corner (round 9) | As C (the last score in the score block), with the "Last score" label over it, no "Venue" label, and the watch links on one line in the bottom left corner of the photo's part of the strip, under the venue. A leaderboard, fight card or sets still run in the band under the strip. Basketball game: 205 / 308 (C: 186 / 282). |
 | `J` | I, no photo behind the bottom section (round 10) | As I, with the photo behind the venue and watch only, ending where the band under the strip (a golf, racing or other field's leaderboard, a fight card, tennis sets) begins, so the band sits on the panel's plain surface. A game with no band looks as I. |
+| `K` | J, no photo credit (round 11) | As J, without the photo's credit (its author and license, shown over the photo on hover). Most Wikimedia Commons photos are CC BY or CC BY-SA, whose licenses ask for the credit whatever the use, hobby apps included; public-domain and CC0 photos don't. Leaving it out is the owner's call, as ADR-0022 records for the satellite map's credit; if K wins, record it the same way. |
 
 Heights measured in a browser (desktop 1280×800 / phone 390×844, in pixels; the soccer game is `worldwide`'s, the rest `edge-cases`'). The Faroe Islands venue has no photo, so it shows the faint glow today's panel shows in its place.
 

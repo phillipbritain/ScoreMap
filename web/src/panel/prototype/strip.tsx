@@ -185,13 +185,24 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
  * The venue photo (round 3: every variant shows it), its credit on hover; a faint glow holds its place when the
  * venue has none or it fails to load, as today. Anything passed in lies over it (such as the venue's name).
  */
-export function VenuePhoto({ facts, className, children }: { facts: PanelFacts; className: string; children?: ReactNode }) {
+export function VenuePhoto({
+  facts,
+  className,
+  children,
+  credit = true,
+}: {
+  facts: PanelFacts
+  className: string
+  children?: ReactNode
+  /** Round 11: false leaves out the photo's credit (its author and license), which most Commons licenses ask for. */
+  credit?: boolean
+}) {
   const [broken, setBroken] = useState<string | null>(null)
   const photo = facts.photo && facts.photo.url !== broken ? facts.photo : null
   return (
     <figure className={photo ? `pp-photo ${className}` : `pp-photo pp-photo--none ${className}`}>
       {photo && <img src={photo.url} alt="" onError={() => setBroken(photo.url)} />}
-      {photo?.credit && <figcaption className="pp-photo__credit">{photo.credit}</figcaption>}
+      {credit && photo?.credit && <figcaption className="pp-photo__credit">{photo.credit}</figcaption>}
       {children}
     </figure>
   )

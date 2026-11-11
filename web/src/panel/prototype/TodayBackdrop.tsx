@@ -27,6 +27,8 @@ interface Options {
   watchInCorner?: boolean
   /** Round 10: true keeps the photo behind the strip's details only, so the band under the strip has none. */
   photoInStripOnly?: boolean
+  /** Round 11: false leaves out the photo's credit on hover. */
+  photoCredit?: boolean
 }
 
 function TodayBackdrop({
@@ -37,6 +39,7 @@ function TodayBackdrop({
   lastScoreLabel = false,
   watchInCorner = false,
   photoInStripOnly = false,
+  photoCredit = true,
   game,
   scorer,
   color,
@@ -65,7 +68,7 @@ function TodayBackdrop({
           {place === 'score' && <ScoreBlockLastScore game={game} label={lastScoreLabel} />}
         </div>
         <div className="tb__details">
-          {photoInStripOnly && <VenuePhoto facts={facts} className="tb__strip-photo" />}
+          {photoInStripOnly && <VenuePhoto facts={facts} className="tb__strip-photo" credit={photoCredit} />}
           <Cell label={venueLabel ? 'Venue' : null}>
             <Venue facts={facts} />
           </Cell>
@@ -161,4 +164,13 @@ export function VariantI(props: VariantProps) {
 /** J (round 10): I with the photo behind the strip's details only, none behind the band (leaderboard, fight card, sets). */
 export function VariantJ(props: VariantProps) {
   return <TodayBackdrop place="score" lastScoreLabel venueLabel={false} watchInCorner photoInStripOnly {...props} />
+}
+
+/**
+ * K (round 11): J without the photo's credit. Most Wikimedia Commons photos are CC BY or CC BY-SA, whose
+ * licenses ask for the credit whatever the use; leaving it out is the owner's call, as ADR-0022 records for the
+ * satellite map.
+ */
+export function VariantK(props: VariantProps) {
+  return <TodayBackdrop place="score" lastScoreLabel venueLabel={false} watchInCorner photoInStripOnly photoCredit={false} {...props} />
 }

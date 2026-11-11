@@ -14,6 +14,7 @@ export const variants = [
   { key: 'H', name: 'G, venue and watch in the corners' },
   { key: 'I', name: 'C, labeled last score, watch in the photo corner' },
   { key: 'J', name: 'I, no photo behind the bottom section' },
+  { key: 'K', name: 'J, no photo credit' },
 ] as const
 
 const readVariant = () => {

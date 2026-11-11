@@ -5,7 +5,6 @@ import {
   pickerEntries,
   pillLabel,
   showsScenarioControls,
-  showsDevTools,
   togglesScenarioControls,
   type ScenarioListing,
 } from './scenarioPicker'
@@ -124,11 +123,6 @@ describe('Shift+S', () => {
   it('hides and shows the pills and the clock', () => {
     expect(togglesScenarioControls(shiftS)).toBe(true)
     expect(showsScenarioControls(local, { hidden: true })).toBe(false)
-  })
-
-  it('hides and shows the Behavior and Theme tuners with them', () => {
-    expect(showsDevTools({ hidden: true })).toBe(false)
-    expect(showsDevTools({ hidden: false })).toBe(true)
   })
 
   it('does nothing while typing in a text field', () => {

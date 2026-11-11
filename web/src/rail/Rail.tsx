@@ -154,7 +154,6 @@ export function RailButton({
   popover,
   open,
   badge,
-  on,
   tooltipSide = 'left',
   onClick,
 }: {
@@ -163,8 +162,6 @@ export function RailButton({
   popover?: string
   open?: string | null
   badge?: number
-  /** Whether a popover's button shows on though its popover is closed (Tuners, with a tuner open). */
-  on?: boolean
   /** Where its tooltip shows: on the left on the rail, so it covers none of the others; below on the top rail. */
   tooltipSide?: 'left' | 'below'
   onClick: () => void
@@ -178,7 +175,7 @@ export function RailButton({
       data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
-      aria-expanded={popover ? (on ?? open === popover) : undefined}
+      aria-expanded={popover ? open === popover : undefined}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).

@@ -22,8 +22,6 @@ interface GlobeProps {
   colors: PickedColors
   /** What the globe is drawn as (see globeStyle). A change restyles it in place (see GlobeMap.setMapType). */
   mapType: MapType
-  /** Whether each game is ringed at the reach its city label may be within (a local-run tool). */
-  showGameCityReach: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
   /**
@@ -56,14 +54,12 @@ interface GlobeProps {
 }
 
 /**
- * The app's hold on the globe (see GlobeMap): its camera, for the rail's zoom buttons and Home and the
- * behavior tuner, and the score cards shown, for the welcome tour to point at.
+ * The app's hold on the globe (see GlobeMap): its camera, for the rail's zoom buttons and Home, and the score cards shown, for the welcome tour to point at.
  */
 export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
-  jumpTo: (camera: Camera) => void
   /** Centers a game picked from the Games list clear of the game panel (see GlobeMap.centerOn). */
   centerOn: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
@@ -71,7 +67,7 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGameCityReach, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
   const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType })
@@ -119,7 +115,6 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGa
       zoomIn: () => globe.current?.zoomIn(),
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
-      jumpTo: (camera) => globe.current?.jumpTo(camera),
       centerOn: (gameId) => globe.current?.centerOn(gameId, panel.current?.getBoundingClientRect() ?? null),
       shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
@@ -131,7 +126,6 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, showGa
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
-  useEffect(() => globe.current?.showGameCityReach(showGameCityReach), [showGameCityReach])
   // In this order, so the selected game is among the games shown when the globe lifts it clear of
   // the panel. The panel opens in the same render, so it's on the page by now.
   useEffect(() => globe.current?.show(games, justHappened), [games, justHappened])

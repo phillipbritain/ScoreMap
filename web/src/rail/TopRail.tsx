@@ -4,7 +4,7 @@ import { useClickAway } from '../menus/clickAway'
 import { RailButton } from './Rail'
 import { nextPopover, type PopoverEvent } from './railControls'
 
-/** The top rail's popovers: Scenario (the scenario controls) and Tuners (the theme and behavior tuners). */
+/** The top rail's popovers: Scenario (the scenario controls) and Tuners (the theme tuner). */
 export type TopRailPopover = 'scenario' | 'tuners'
 
 interface TopRailProps {

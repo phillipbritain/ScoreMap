@@ -18,7 +18,7 @@ describe('canZoom', () => {
     expect(canZoom({ longitude: 0, latitude, zoom: minZoom }).out).toBe(true)
   })
 
-  it('stops at the zoom limits it is given (the behavior tuner’s)', () => {
+  it('stops at the zoom limits it is given', () => {
     const limits = { minZoom: 1, startZoom: 1, maxZoom: 8, satelliteMaxZoom: 10 }
     expect(canZoom({ longitude: 0, latitude: 0, zoom: 8 }, limits).in).toBe(false)
     expect(canZoom({ longitude: 0, latitude: 0, zoom: 1 }, limits).out).toBe(false)

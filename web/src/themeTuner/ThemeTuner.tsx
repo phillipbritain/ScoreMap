@@ -416,7 +416,7 @@ function ColorJob({
   )
 }
 
-/** A tuner panel's header: its name, and a button closing it. The behavior tuner shares it. */
+/** A tuner panel's header: its name, and a button closing it. */
 export function TunerHeader({ name, onClose }: { name: string; onClose: () => void }) {
   return (
     <div className="theme-tuner__header">

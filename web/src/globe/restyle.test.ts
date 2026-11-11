@@ -22,7 +22,7 @@ describe('layerChanges', () => {
     // Surrounding fire images resize with the cluster outline.
     const flameImages = ['step', ['get', 'point_count'], flameImage(wider, wider.components.Cluster.flame, 14), 5, flameImage(wider, wider.components.Cluster.flame, 16), 15, flameImage(wider, wider.components.Cluster.flame, 19)]
     // Pin clusters' footprints as far across as they reach (14, 16 and 19), with a pixel each side, over the footprint image's 32.
-    // A card cluster's outline is inside its size, and a venue cluster is drawn as a venue dot is, so neither footprint changes.
+    // A card cluster's outline is inside its size, so its footprint doesn't change.
     const footprintSizes = (count: string) => ['step', ['get', count], 30, 5, 34, 15, 40]
     const footprintSize = (across: unknown) => ({ kind: 'layout', property: 'icon-size', value: ['/', across, 32] })
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([

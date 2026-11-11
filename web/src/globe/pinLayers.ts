@@ -308,12 +308,12 @@ export const clusterFootprint = { image: 'cluster-footprint', size: 32 }
 
 /**
  * An invisible stand-in for a cluster, disc and outline with a pixel's margin each side, `diameter`
- * across (an expression by the cluster's count, in pixels, see clusterFootprintSizes), placed whatever
+ * across (in pixels, or an expression by the cluster's count, see clusterFootprintSizes), placed whatever
  * else is there. On top of every name, so city names keep clear of clusters, keeping their circles and
  * counts readable: a city's name moves to another side of its dot, or is left out if no side is free,
  * but a game's city is still named below its dot if no side is free (see placeNames' city names).
  */
-export function clusterFootprintLayout(diameter: ExpressionSpecification): SymbolLayerSpecification['layout'] {
+export function clusterFootprintLayout(diameter: number | ExpressionSpecification): SymbolLayerSpecification['layout'] {
   return {
     'icon-image': clusterFootprint.image,
     'icon-size': ['/', diameter, clusterFootprint.size],

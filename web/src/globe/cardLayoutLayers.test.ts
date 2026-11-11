@@ -67,7 +67,7 @@ describe('cardLayoutDrawing', () => {
       ['a', [10, -20], false],
       ['b', [10, -20], false],
     ])
-    expect(features('venueCluster').map(({ properties, geometry }) => [properties?.count, (geometry as Point).coordinates])).toEqual([[2, [10, -20]]])
+    expect(features('venueCluster').map(({ geometry }) => (geometry as Point).coordinates)).toEqual([[10, -20]])
   })
 
   it('draws a venue cluster with the status the most prominent of its games shows as', () => {

@@ -106,11 +106,7 @@ export function cardLayoutDrawing(
       continue
     }
     const games = [...noRoom, ...withTrails]
-    const shared = {
-      status: groupStatus(games.map((card) => card.status)),
-      [sharedColorProperty]: sharedColorKey(games),
-      count: games.length,
-    }
+    const shared = { status: groupStatus(games.map((card) => card.status)), [sharedColorProperty]: sharedColorKey(games) }
     if (kind === 'venueCluster') {
       features.push(feature({ kind: 'venueCluster', ...shared }, { type: 'Point', coordinates: lngLat }))
       continue
@@ -119,7 +115,7 @@ export function cardLayoutDrawing(
     features.push(
       feature(
         // Flames for a game with no room: one whose card is on screen shows its own.
-        { kind: 'cardCluster', ...shared, firstGameId: games[0].gameId, flames: noRoom.some((card) => card.flames) },
+        { kind: 'cardCluster', ...shared, count: games.length, firstGameId: games[0].gameId, flames: noRoom.some((card) => card.flames) },
         { type: 'Point', coordinates: lngLat },
       ),
     )
@@ -131,23 +127,13 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
   return { type: 'Feature', properties, geometry }
 }
 
-/** How far a venue cluster's count is from its ring, and how wide its outline is, in pixels. */
-const venueCountGap = 1.5
-const venueCountHalo = 2
-
-/** How far a venue cluster reaches from its venue: its ring, then a two-digit count (a digit is about 0.6 em wide). */
-function venueClusterReach(theme: Theme): number {
-  const { ring, count } = theme.components.Trail.venue
-  return ring.radius + ring.width + venueCountGap + 2 * 0.6 * count.size
-}
-
 /**
  * The venue clusters moved cards' trails end at, and card clusters, from the bottom up. Added beneath
  * the place names, so every name draws over them, and over the trails beneath them (see trailLayer).
  *
  * A venue cluster is drawn as the venue dot its trails would otherwise each end at (see trailLayer), a
- * dot in a ring, in its games' color (see clusterColor), with its count beside it (see the theme's
- * trail). A card cluster is a disc outlined and lit in its games' color, with the count in it, as a
+ * dot in a ring, in its games' color (see clusterColor), with no count: its games' cards are on
+ * screen. A card cluster is a disc outlined and lit in its games' color, with the count in it, as a
  * pin cluster of some games is (see the theme's cluster). A card cluster holding a game that shows
  * flames has a flame on its top edge, as a pin cluster does; a venue cluster never does, as its games'
  * cards are on screen, flames and all.
@@ -157,7 +143,6 @@ export function cardLayoutLayers(
 ): [
   CircleLayerSpecification,
   CircleLayerSpecification,
-  SymbolLayerSpecification,
   CircleLayerSpecification,
   SymbolLayerSpecification,
   CircleLayerSpecification,
@@ -187,28 +172,6 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('venueCluster'),
       paint: { 'circle-radius': venue.radius, 'circle-color': clusterPaint },
-    },
-    {
-      id: 'venue-cluster-counts',
-      type: 'symbol',
-      source: cardLayoutSource,
-      filter: kindIs('venueCluster'),
-      layout: {
-        'text-field': ['to-string', ['get', 'count']],
-        'text-font': [venue.count.font.name],
-        'text-size': venue.count.size,
-        // Beside the ring, just clear of it (the offset is in ems of the count's size).
-        'text-anchor': 'left',
-        'text-offset': [(venue.ring.radius + venue.ring.width + venueCountGap) / venue.count.size, 0],
-        'text-allow-overlap': true,
-      },
-      paint: {
-        'text-color': clusterPaint,
-        'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
-        // Outlined in a cluster's fill, so trails and borders running behind it don't break it up.
-        'text-halo-color': cluster.fill,
-        'text-halo-width': venueCountHalo,
-      },
     },
     {
       id: 'card-cluster-glows',
@@ -287,22 +250,17 @@ export const cardFootprintLayerSpec: SymbolLayerSpecification = {
 }
 
 /**
- * An invisible stand-in for each venue cluster and card cluster, as a pin cluster has (see pinLayers'
- * clusterFootprintLayout): a card cluster as wide as a pin cluster of some games, outline and all; a
- * venue cluster centered on its ring and reaching past a two-digit count beside it.
+ * An invisible stand-in for each card cluster, as a pin cluster has (see pinLayers'
+ * clusterFootprintLayout), as wide as a pin cluster of some games, outline and all. A venue cluster
+ * has none, as a venue dot has none: it has no count to keep readable.
  */
 export function cardClusterFootprintLayerSpec(theme: Theme): SymbolLayerSpecification {
   return {
     id: 'card-cluster-footprints',
     type: 'symbol',
     source: cardLayoutSource,
-    filter: ['in', ['get', 'kind'], ['literal', ['venueCluster', 'cardCluster']]],
-    layout: clusterFootprintLayout([
-      'case',
-      kindIs('cardCluster'),
-      clusterFootprintAcross(theme.components.Cluster.radius.some),
-      clusterFootprintAcross(venueClusterReach(theme)),
-    ]),
+    filter: kindIs('cardCluster'),
+    layout: clusterFootprintLayout(clusterFootprintAcross(theme.components.Cluster.radius.some)),
     paint: { 'icon-opacity': 0 },
   }
 }

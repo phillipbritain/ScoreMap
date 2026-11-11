@@ -9,6 +9,7 @@ export const variants = [
   { key: 'C', name: 'Last score in score block' },
   { key: 'D', name: 'A, no Venue label' },
   { key: 'E', name: 'D, photo under the score too' },
+  { key: 'F', name: 'D, Watch under the venue' },
 ] as const
 
 const readVariant = () => {

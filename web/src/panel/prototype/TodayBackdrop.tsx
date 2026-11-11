@@ -19,12 +19,15 @@ interface Options {
   venueLabel?: boolean
   /** Round 5: true puts the photo behind the whole panel, the score block too, in place of its solid color. */
   photoUnderScore?: boolean
+  /** Round 6: true puts Watch under the venue's name and place, in one column, rather than beside it. */
+  watchUnderVenue?: boolean
 }
 
 function TodayBackdrop({
   place,
   venueLabel = true,
   photoUnderScore = false,
+  watchUnderVenue = false,
   game,
   scorer,
   color,
@@ -37,7 +40,7 @@ function TodayBackdrop({
   return (
     <aside
       ref={panelRef}
-      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}`}
+      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}${watchUnderVenue ? ' tb--watch-under-venue' : ''}`}
       style={colorStyle(color, textOnColor)}
       aria-label="Game panel"
       onKeyDown={closeOnEscape(onClose)}
@@ -115,4 +118,9 @@ export function VariantD(props: VariantProps) {
 /** E (round 5): D with the photo behind the whole panel, the score block too, in place of its solid color. */
 export function VariantE(props: VariantProps) {
   return <TodayBackdrop place="band" venueLabel={false} photoUnderScore {...props} />
+}
+
+/** F (round 6): D with Watch under the venue's name and place. */
+export function VariantF(props: VariantProps) {
+  return <TodayBackdrop place="band" venueLabel={false} watchUnderVenue {...props} />
 }

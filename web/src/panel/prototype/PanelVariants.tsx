@@ -1,11 +1,11 @@
-// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, backdrop, A–E) and shows the floating
+// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, backdrop, A–F) and shows the floating
 // switcher bar at the bottom of the page on local runs. See ./README.md. Kept out of main.
 import { useEffect } from 'react'
 import { GamePanel } from '../GamePanel'
 import type { VariantProps } from './facts'
 import { variants } from './variantList'
 import type { Game } from '../../games/game'
-import { VariantA, VariantB, VariantC, VariantD, VariantE } from './TodayBackdrop'
+import { VariantA, VariantB, VariantC, VariantD, VariantE, VariantF } from './TodayBackdrop'
 import { VariantE as VariantBackdrop } from './VariantE'
 import './prototype.css'
 
@@ -18,6 +18,7 @@ const panels = [
   VariantC,
   VariantD,
   VariantE,
+  VariantF,
 ]
 
 /** The selected game's panel, in whichever variant the URL asks for. */
@@ -29,9 +30,8 @@ export function PanelVariant({ index, ...props }: VariantProps & { index: number
 
 /**
  * Round 5: made-up watch links for a game that lists none (every scenario game, as scenarios have no
- * broadcasters), so each panel, today's too, shows what real links look like: four channels (more than the
- * three listed, so "+N more" shows; one with no web address, shown as a plain name) and an unofficial stream.
- * DUMMY DATA: these channels aren't real listings for the game.
+ * broadcasters), so each panel, today's too, shows what real links look like. Round 6: two at most, as the
+ * user asked. DUMMY DATA: these channels aren't real listings for the game.
  */
 function withDummyWatchLinks(game: Game): Game {
   if (game.broadcasters.length > 0 || game.streamLinks.length > 0) return game
@@ -40,10 +40,7 @@ function withDummyWatchLinks(game: Game): Game {
     broadcasters: [
       { name: 'ESPN', country: null, watchUrl: 'https://www.espn.com/watch/' },
       { name: 'Peacock', country: null, watchUrl: 'https://www.peacocktv.com/' },
-      { name: 'Fox Sports 1', country: null, watchUrl: null },
-      { name: 'Sky Sports Main Event', country: null, watchUrl: 'https://www.skysports.com/watch' },
     ],
-    streamLinks: [{ site: 'StreamSite (dummy)', url: 'https://example.com/' }],
   }
 }
 

@@ -798,3 +798,17 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* ---------- Round 6: F, Watch under the venue's name and place, in one column ---------- */
+.tb--watch-under-venue .tb__details {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(3 * var(--spacing));
+}
+
+@media (max-width: 640px) {
+  .tb--watch-under-venue .tb__details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(2 * var(--spacing));
+  }
+}

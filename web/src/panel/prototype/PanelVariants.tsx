@@ -1,27 +1,50 @@
-// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, backdrop, A–C) and shows the floating
+// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, backdrop, A–E) and shows the floating
 // switcher bar at the bottom of the page on local runs. See ./README.md. Kept out of main.
 import { useEffect } from 'react'
 import { GamePanel } from '../GamePanel'
 import type { VariantProps } from './facts'
 import { variants } from './variantList'
-import { VariantA, VariantB, VariantC } from './TodayBackdrop'
-import { VariantE } from './VariantE'
+import type { Game } from '../../games/game'
+import { VariantA, VariantB, VariantC, VariantD, VariantE } from './TodayBackdrop'
+import { VariantE as VariantBackdrop } from './VariantE'
 import './prototype.css'
 
 // In the order of variants in ./variantList.ts.
 const panels = [
   ({ panelRef, ...props }: VariantProps) => <GamePanel ref={panelRef} {...props} />,
-  VariantE,
+  VariantBackdrop,
   VariantA,
   VariantB,
   VariantC,
+  VariantD,
+  VariantE,
 ]
 
 /** The selected game's panel, in whichever variant the URL asks for. */
 export function PanelVariant({ index, ...props }: VariantProps & { index: number }) {
   const Panel = panels[index]
   // Keyed by game, so a variant's state (such as Show all) starts afresh for each game.
-  return <Panel key={props.game.id} {...props} />
+  return <Panel key={props.game.id} {...props} game={withDummyWatchLinks(props.game)} />
+}
+
+/**
+ * Round 5: made-up watch links for a game that lists none (every scenario game, as scenarios have no
+ * broadcasters), so each panel, today's too, shows what real links look like: four channels (more than the
+ * three listed, so "+N more" shows; one with no web address, shown as a plain name) and an unofficial stream.
+ * DUMMY DATA: these channels aren't real listings for the game.
+ */
+function withDummyWatchLinks(game: Game): Game {
+  if (game.broadcasters.length > 0 || game.streamLinks.length > 0) return game
+  return {
+    ...game,
+    broadcasters: [
+      { name: 'ESPN', country: null, watchUrl: 'https://www.espn.com/watch/' },
+      { name: 'Peacock', country: null, watchUrl: 'https://www.peacocktv.com/' },
+      { name: 'Fox Sports 1', country: null, watchUrl: null },
+      { name: 'Sky Sports Main Event', country: null, watchUrl: 'https://www.skysports.com/watch' },
+    ],
+    streamLinks: [{ site: 'StreamSite (dummy)', url: 'https://example.com/' }],
+  }
 }
 
 /** The floating bar to flip between variants: arrows, or the ← and → keys (Shift+← and → on the globe). Local runs only. */

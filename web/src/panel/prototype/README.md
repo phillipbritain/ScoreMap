@@ -6,7 +6,7 @@
 
 This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never in main: no tests, no polish, values written straight into `prototype.css`.
 
-- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`).
+- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`, `D`, `E`).
 - Flip with the pink bar's ‹ and › buttons, or ← and → (Shift+← and → while the globe has focus, since it pans with the arrows). The URL keeps the variant across a reload.
 - The bar reserves 40px at the bottom of the screen; every variant, today's included, sits above that, so ignore those 40px when judging height.
 
@@ -17,6 +17,8 @@ This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never 
 | `A` | Today + backdrop | In the band under the strip, as today |
 | `B` | Last score beside venue | A third column beside Venue and Watch, in the strip. A leaderboard, fight card or tennis sets go there too, so there's no band at all. On a phone it runs across the width under Venue and Watch. |
 | `C` | Last score in score block | In the score block, under the teams and progress line, as a quiet line. A leaderboard, fight card or sets stay in the band under the strip. |
+| `D` | A, no Venue label (round 5) | As A; the venue's name and place show without the "Venue" label over them. |
+| `E` | D, photo under the score too (round 5) | As D, with the photo behind the whole panel: the score block has no solid color, only a dark wash so the names and scores stay readable. |
 
 Heights measured in a browser (desktop 1280×800 / phone 390×844, in pixels; the soccer game is `worldwide`'s, the rest `edge-cases`'). The Faroe Islands venue has no photo, so it shows the faint glow today's panel shows in its place.
 
@@ -27,5 +29,7 @@ Heights measured in a browser (desktop 1280×800 / phone 390×844, in pixels; th
 | Basketball, long names (Chicago) | 240 / 337 | 171 / 245 | 212 / 306 | 163 / 297 | 186 / 277 |
 | No photo (Faroe Islands) | 240 / 326 | 145 / 203 | 212 / 276 | 163 / 267 | 186 / 251 |
 | Soccer (Chelsea v Arsenal) | | | | 163 / 267 | 186 / 251 |
+
+**Round 5** added D and E, and made-up watch links. Scenario games list no channels, so every panel, today's included, gets four made-up channels and one made-up unofficial stream for any game that lists none (`withDummyWatchLinks` in `PanelVariants.tsx`; DUMMY DATA, not real listings). With more than three, the first three show and the rest fold into "+2 more", as on today's panel; "Fox Sports 1" has no web address, so it shows as a plain name. Variants A–E list the links one per line, as today's panel does. That puts them about 40px taller on a phone than the heights above, which were measured with "No channels listed": the basketball game measured 348px on a phone for D and E, against 364px for today's panel.
 
 The real panel's code (`../GamePanel.tsx`) is untouched; `App.tsx` mounts `PanelVariant` and the switcher in its place.

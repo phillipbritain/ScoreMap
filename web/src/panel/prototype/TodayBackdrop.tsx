@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react'
 import type { Game } from '../../games/game'
 import { closeOnEscape, colorStyle, panelFacts, type VariantProps } from './facts'
-import { CloseButton, InlineBoard, TeamRow, Venue, VenuePhoto, WatchInline } from './strip'
+import { CloseButton, InlineBoard, TeamRow, Venue, VenuePhoto, WatchStacked } from './strip'
 
 /**
  * Where the last score goes: in the band under the strip, as today ('band'); a third column beside venue and
@@ -13,13 +13,31 @@ import { CloseButton, InlineBoard, TeamRow, Venue, VenuePhoto, WatchInline } fro
  */
 type LastScorePlace = 'band' | 'column' | 'score'
 
-function TodayBackdrop({ place, game, scorer, color, textOnColor, onClose, panelRef }: VariantProps & { place: LastScorePlace }) {
+interface Options {
+  place: LastScorePlace
+  /** Round 5: false leaves out the "Venue" label over the venue's name and place. */
+  venueLabel?: boolean
+  /** Round 5: true puts the photo behind the whole panel, the score block too, in place of its solid color. */
+  photoUnderScore?: boolean
+}
+
+function TodayBackdrop({
+  place,
+  venueLabel = true,
+  photoUnderScore = false,
+  game,
+  scorer,
+  color,
+  textOnColor,
+  onClose,
+  panelRef,
+}: VariantProps & Options) {
   const facts = panelFacts(game, scorer)
   const band = place === 'band' || place === 'score'
   return (
     <aside
       ref={panelRef}
-      className={`pp pp-strip tb tb--${place}`}
+      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}`}
       style={colorStyle(color, textOnColor)}
       aria-label="Game panel"
       onKeyDown={closeOnEscape(onClose)}
@@ -35,11 +53,11 @@ function TodayBackdrop({ place, game, scorer, color, textOnColor, onClose, panel
           {place === 'score' && <ScoreBlockLastScore game={game} />}
         </div>
         <div className="tb__details">
-          <Cell label="Venue">
+          <Cell label={venueLabel ? 'Venue' : null}>
             <Venue facts={facts} />
           </Cell>
           <Cell label="Watch">
-            <WatchInline facts={facts} />
+            <WatchStacked facts={facts} />
           </Cell>
           {place === 'column' && <InlineBoard game={game} facts={facts} prefix="tb-col" />}
         </div>
@@ -50,10 +68,10 @@ function TodayBackdrop({ place, game, scorer, color, textOnColor, onClose, panel
   )
 }
 
-function Cell({ label, children }: { label: string; children: ReactNode }) {
+function Cell({ label, children }: { label: string | null; children: ReactNode }) {
   return (
     <div className="tb__cell">
-      <div className="pp-label">{label}</div>
+      {label && <div className="pp-label">{label}</div>}
       {children}
     </div>
   )
@@ -87,4 +105,14 @@ export function VariantB(props: VariantProps) {
 /** C: as A, with the last score in the score block under the progress line. */
 export function VariantC(props: VariantProps) {
   return <TodayBackdrop place="score" {...props} />
+}
+
+/** D (round 5): A without the "Venue" label; the venue's name and place still show. */
+export function VariantD(props: VariantProps) {
+  return <TodayBackdrop place="band" venueLabel={false} {...props} />
+}
+
+/** E (round 5): D with the photo behind the whole panel, the score block too, in place of its solid color. */
+export function VariantE(props: VariantProps) {
+  return <TodayBackdrop place="band" venueLabel={false} photoUnderScore {...props} />
 }

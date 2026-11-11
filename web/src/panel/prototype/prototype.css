@@ -743,3 +743,58 @@
     mask-image: linear-gradient(180deg, transparent, #000 40%);
   }
 }
+
+/* ---------- Round 5: E, the photo behind the whole panel, the score block too ---------- */
+.tb--photo-under-score .tb__backdrop {
+  left: 0;
+}
+
+.tb--photo-under-score .tb__backdrop > img {
+  opacity: 0.45;
+  mask-image: none;
+}
+
+/* The score block takes no solid color, only a dark wash from the left so the names and scores stay readable;
+   its slant shows as a hairline. */
+.tb--photo-under-score .tb__score {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--game-panel-surface-top) 70%, transparent),
+    color-mix(in srgb, var(--game-panel-surface-top) 25%, transparent)
+  );
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+@media (max-width: 640px) {
+  .tb--photo-under-score .tb__backdrop {
+    top: 0;
+    height: auto;
+  }
+
+  .tb--photo-under-score .tb__backdrop > img {
+    mask-image: none;
+  }
+
+  .tb--photo-under-score .tb__score {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--game-panel-surface-top) 65%, transparent),
+      color-mix(in srgb, var(--game-panel-surface-top) 35%, transparent)
+    );
+  }
+}
+
+/* Watch links one per line, as today's panel. */
+.pp-watch-stack {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pp-watch-stack li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

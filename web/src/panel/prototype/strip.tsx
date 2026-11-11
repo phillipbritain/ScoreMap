@@ -196,3 +196,24 @@ export function VenuePhoto({ facts, className, children }: { facts: PanelFacts; 
     </figure>
   )
 }
+
+/** The watch links one per line, as today's panel lists them: the first three, the rest as "+N more" (named on hover). */
+export function WatchStacked({ facts }: { facts: PanelFacts }) {
+  if (facts.links.length === 0) return <div className="pp-muted">No channels listed</div>
+  const listed = facts.links.slice(0, 3)
+  const folded = facts.links.slice(3)
+  return (
+    <ul className="pp-watch-stack">
+      {listed.map((link) => (
+        <li key={`${link.name} ${link.url}`}>
+          <WatchAnchor link={link} />
+        </li>
+      ))}
+      {folded.length > 0 && (
+        <li className="pp-muted" data-tooltip={folded.map((link) => link.name).join(', ')}>
+          +{folded.length} more
+        </li>
+      )}
+    </ul>
+  )
+}

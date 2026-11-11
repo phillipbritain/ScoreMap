@@ -7,6 +7,8 @@ export const variants = [
   { key: 'A', name: 'Today + backdrop' },
   { key: 'B', name: 'Last score beside venue' },
   { key: 'C', name: 'Last score in score block' },
+  { key: 'D', name: 'A, no Venue label' },
+  { key: 'E', name: 'D, photo under the score too' },
 ] as const
 
 const readVariant = () => {

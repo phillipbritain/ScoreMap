@@ -41,7 +41,7 @@ Motion isn't part of a theme: durations, easings and the animations' shapes stay
 
 When a two-sided game's score changes, the side that scored is lit for 3 seconds, on its score card's row and in the game panel: a tint and inner glow in the game's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A Live score card's status light stays fully lit, so Live is told from Upcoming by its glow and brightness alone. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score or a start plays the finish's calm dim on its score card, without the bounce or the pop. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colors
 
@@ -83,7 +83,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
 | `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does the welcome tour's switch in My leagues (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
-| `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
+| `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
@@ -168,7 +168,7 @@ A league that's on is lit in gold, as a game is, rather than filled in off-white
 
 A game's status shows by **brightness and glow, not color** (ADR-0012). Color is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a color the viewer picks in Display Settings on the rail (ADR-0017). With none picked, the dark theme gives every game the one gold. Disrupted games (postponed, suspended or canceled) aren't shown, so have no look (ADR-0021).
 
-- **Live** glows widest, its small pin has a bright core, and its score card's status light pulses (that animation is in the CSS), unless reduce motion is on (see [Where the theme reaches](#where-the-theme-reaches)).
+- **Live** glows widest and its small pin has a bright core.
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 
@@ -185,8 +185,8 @@ A status's color is the palette's; the rest of its look is each component's own,
 | `components.Pin.<status>.core.ring` | The width of the ring of the game's color around the core, in pixels (0 is no ring) |
 | `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
 | `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike. A venue cluster doesn't fade, as a venue dot doesn't |
-| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, status light, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
-| `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity, and the status light's glow 0.75 times as far |
+| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
+| `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity |
 
 The dark theme's:
 
@@ -237,7 +237,7 @@ A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`,
 - at **0**, clear glass: the globe behind is sharp, its color lifted; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque: the card's fill, solid.
 
-In between, the fill is as solid as the frost, while the edges and sheen dim, and the card casts a soft shadow onto the globe in the background's color. The frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
+In between, the fill is as solid as the frost, while the edges and sheen dim, and the card casts a soft shadow onto the globe in the background's color. The frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text and logos, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
 
 Trails let the map show through by their own `opacity` (see [On the globe](#on-the-globe)), their glow keeping its own. Tune both in the theme tuner on a local run: the frost is on the Score card tab.
 
@@ -272,7 +272,7 @@ Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-
 ## Spacing and shape
 
 - **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a few units and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 2, 4, 6, 8, 12, 16, 24 and 32 pixels (half a unit to 8).
-- **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters, the status light) stay circles whatever it is.
+- **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters) stay circles whatever it is.
 - **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, a color swatch's ring `medium`, the game panel's top edge `thick`. The dark theme's are 1, 2 and 3.
 
 ### Corners and the cut corner
@@ -356,7 +356,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.GamePanel.size.close.width`, `.height` | The close button's tab, above the panel's top right corner | 28, 18 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest | 92 |
-| `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
+| `components.ScoreCard.size.logo` | A team's logo on a score card | 16 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
@@ -425,7 +425,7 @@ A new setting goes in the settings in `web/src/theme/theme.ts` and in every them
 
 Some of the look is in code on purpose, as behavior or layout rather than a theme's choices:
 
-- motion: durations, easings and the shapes of the animations, including the status light's pulse and the sizes and opacities inside their keyframes;
+- motion: durations, easings and the shapes of the animations, including the sizes and opacities inside their keyframes;
 - how a score card's glass works out from its frost (see [Glass](#glass)): how bright the edges and sheen are, and the shadow it casts; and the game panel score block's: how far it blurs, its lit edges, and its score boxes' panes and lifted records;
 - the game panel's fade behind each line on a phone, and how far a scoring row's light reaches;
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;

@@ -483,13 +483,13 @@ const settings = {
      * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's
      * tinted with its game's color, 0 not at all and 1 the color itself, its text then the card's text
      * or fill, whichever reads better on the tint, and how far apart its letters are spaced, in ems) and
-     * its corners. Its outline, header line, light and glow are its game's color. Its size: its narrowest, a team's
+     * its corners. Its outline, header line and glow are its game's color. Its size: its narrowest, a team's
      * logo, how far above its venue it sits at the least, its trail between (the globe places cards by this),
-     * its status light, and how far it keeps clear of the letters of a city named for its game (the
+     * and how far it keeps clear of the letters of a city named for its game (the
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
      * fades and glows (see cardStatus). Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
-     * outline and status light stay solid. A hot game's card has an animated fire
+     * and outline stay solid. A hot game's card has an animated fire
      * outline around its entire edge, cut out behind the glass. Its width, glow radius, spread and
      * opacity are tunable, in fire's colors: red tips, orange middle and white-hot core.
      */
@@ -500,7 +500,7 @@ const settings = {
       frost,
       header: { tint: opacity, letterSpacing: tracking },
       corner,
-      size: { minWidth: pixels, logo: pixels, venueGap: pixels, light: pixels, nameClearance: pixels },
+      size: { minWidth: pixels, logo: pixels, venueGap: pixels, nameClearance: pixels },
       logo: { plate: logoPlate },
       flames: {
         width: pixels,

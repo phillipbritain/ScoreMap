@@ -445,7 +445,8 @@ body {
   text-overflow: ellipsis;
 }
 
-/* On narrow screens: give names the full panel width, with the details (and the photo) below. */
+/* On narrow screens: give names the full panel width, with the details (and the photo) below, and
+   tighter spacing than on a desktop, so the panel takes less of the screen. */
 @media (max-width: 960px) {
   .game-panel {
     clip-path: none;
@@ -458,8 +459,8 @@ body {
 
   .game-panel__band {
     flex-wrap: wrap;
-    gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
-    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+    gap: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+    padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
   .game-panel__cell {
@@ -468,13 +469,25 @@ body {
 
   .game-panel__score {
     width: auto;
-    padding: calc(3 * var(--spacing));
+    gap: var(--spacing);
+    padding: calc(2 * var(--spacing));
     clip-path: none;
   }
 
+  /* Clear of the close button at the top right. */
+  .game-panel__league {
+    margin-bottom: calc(0.5 * var(--spacing));
+    padding-right: calc(8 * var(--spacing));
+  }
+
+  .game-panel__progress,
+  .game-panel__last-score {
+    margin-top: calc(0.5 * var(--spacing));
+  }
+
   .game-panel__details {
-    gap: calc(2 * var(--spacing));
-    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+    gap: var(--spacing);
+    padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
   /* Fading in from the score block above. */

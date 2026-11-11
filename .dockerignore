@@ -1,0 +1,10 @@
+# Only what the Dockerfile copies matters; keep local builds, packages and history out of the build context.
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/TestResults/
+.git/
+.claude/
+.agents/
+server/src/ScoreMap.Server/data/

@@ -47,19 +47,9 @@ builder.Services.AddSingleton<IGameFeedProvider>(sp =>
 
 // Venue locator, with OpenStreetMap Nominatim as its place search. The place search is a
 // singleton so its rate limit holds across the whole app.
-builder.Services.AddOptions<VenueOptions>()
-    .Bind(builder.Configuration.GetSection("Venues"))
-    .PostConfigure<IConfiguration>((options, config) =>
-    {
-        // On Azure App Service only HOME (/home) is writable and kept across restarts and
-        // redeploys, so relative saved-lookups and saved-photos paths are taken from there instead.
-        if (config["WEBSITE_SITE_NAME"] is not null && config["HOME"] is { } home)
-        {
-            options.SavedLocationsPath = Path.Combine(home, options.SavedLocationsPath);
-            options.SavedPhotosPath = Path.Combine(home, options.SavedPhotosPath);
-            options.SavedEventVenuesPath = Path.Combine(home, options.SavedEventVenuesPath);
-        }
-    });
+// In production the saved lookups are on a mounted file share, set by the Venues__Saved*Path
+// settings (infra/main.bicep), so they survive a new revision.
+builder.Services.Configure<VenueOptions>(builder.Configuration.GetSection("Venues"));
 builder.Services.Configure<NominatimOptions>(builder.Configuration.GetSection("Nominatim"));
 builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>
 {

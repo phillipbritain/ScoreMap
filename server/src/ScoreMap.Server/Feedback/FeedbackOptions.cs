@@ -8,7 +8,7 @@ public sealed class FeedbackOptions
 {
     /// <summary>
     /// The owner's fine-grained GitHub token, able only to write this repo's issues. Set in production
-    /// from the App Service setting <c>Feedback__GitHubToken</c>; never sent to a browser.
+    /// from the container app's secret, as the setting <c>Feedback__GitHubToken</c>; never sent to a browser.
     /// </summary>
     public string? GitHubToken { get; set; }
 

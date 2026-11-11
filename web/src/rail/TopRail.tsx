@@ -4,8 +4,8 @@ import { useClickAway } from '../menus/clickAway'
 import { RailButton } from './Rail'
 import { nextPopover, type PopoverEvent } from './railControls'
 
-/** The top rail's popovers: Scenario (the scenario controls) and Tuners (the theme tuner). */
-export type TopRailPopover = 'scenario' | 'tuners'
+/** The top rail's popover: Scenario (the scenario controls). */
+export type TopRailPopover = 'scenario'
 
 interface TopRailProps {
   /**
@@ -13,27 +13,18 @@ interface TopRailProps {
    * Shift+S, or during the welcome tour) there's no Scenario button.
    */
   scenarioControls?: ReactNode
-  /** The tuners' menu, which the Tuners button opens in a popover; with none, there's no Tuners button. */
-  tuners?: ReactNode
-  /**
-   * Whether a tuner's panel is open, which keeps the Tuners button on as its menu does. Pressed while
-   * on, the button turns off, closing the menu and the panels (onTunersClose); off, it opens the menu.
-   */
-  tunersOpen: boolean
-  onTunersClose: () => void
 }
 
 /**
- * The top rail (local runs only): the local-run tools' buttons side by side at the top left of the
- * globe, as the rail's are, so the rail itself keeps to the live site's buttons. Scenario and Tuners
- * each open a popover below their button, one at a time, closed as the rail's are: by its button,
- * Escape or a click away from it. A pick that's done with its popover ([data-closes-popover], a tuner
- * opened) closes it too. With neither button, it isn't drawn.
+ * The top rail (local runs only): the local-run tools' button at the top left of the globe, as the
+ * rail's are, so the rail itself keeps to the live site's buttons. Scenario opens a popover below its
+ * button, closed as the rail's are: by its button, Escape or a click away from it. A pick that's done
+ * with its popover ([data-closes-popover]) closes it too. With no button, it isn't drawn.
  */
-export function TopRail({ scenarioControls, tuners, tunersOpen, onTunersClose }: TopRailProps) {
+export function TopRail({ scenarioControls }: TopRailProps) {
   const [chosen, setOpen] = useState<TopRailPopover | null>(null)
   // A popover closes if what it holds goes (Shift+S).
-  const open = (chosen === 'scenario' && !scenarioControls) || (chosen === 'tuners' && !tuners) ? null : chosen
+  const open = chosen === 'scenario' && !scenarioControls ? null : chosen
   const popover = useRef<HTMLDivElement>(null)
   const popoverEvent = (event: PopoverEvent<TopRailPopover>) => setOpen((current) => nextPopover(current, event))
 
@@ -51,8 +42,7 @@ export function TopRail({ scenarioControls, tuners, tunersOpen, onTunersClose }:
     () => setOpen((current) => nextPopover(current, 'outside')),
   )
 
-  if (!scenarioControls && !tuners) return null
-  const tunersOn = open === 'tuners' || tunersOpen
+  if (!scenarioControls) return null
 
   // Each button with its popover, which hangs below the row, at its left (see .top-rail).
   const item = (name: TopRailPopover, button: ReactNode, content: ReactNode) => (
@@ -64,7 +54,7 @@ export function TopRail({ scenarioControls, tuners, tunersOpen, onTunersClose }:
           id="top-rail-popover"
           className={`rail__popover top-rail__popover rail__popover--${name}`}
           role="dialog"
-          aria-label={name === 'scenario' ? 'Scenario' : 'Tuners'}
+          aria-label="Scenario"
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
           onClick={(event) => {
             if ((event.target as Element).closest('[data-closes-popover]')) setOpen(null)
@@ -91,24 +81,6 @@ export function TopRail({ scenarioControls, tuners, tunersOpen, onTunersClose }:
             'scenario',
             <RailButton label="Scenario" popover="scenario" open={open} tooltipSide="below" onClick={() => popoverEvent({ press: 'scenario' })} />,
             scenarioControls,
-          )}
-        {tuners &&
-          item(
-            'tuners',
-            <RailButton
-              label="Tuners"
-              popover="tuners"
-              open={open}
-              on={tunersOn}
-              tooltipSide="below"
-              onClick={() => {
-                if (tunersOn) {
-                  onTunersClose()
-                  setOpen(null)
-                } else popoverEvent({ press: 'tuners' })
-              }}
-            />,
-            tuners,
           )}
       </div>
     </div>

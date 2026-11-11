@@ -98,7 +98,7 @@ body {
    color (--game-color, set on the panel, with --text-on-game-color for text on it): the score block, then
    the venue and its watch links over the venue's photo, with a band under the strip for a field's
    leaderboard, a fight card or tennis sets. Full team and player names wrap in their rows; the strip grows
-   to fit them. Short screens scroll the panel. */
+   to fit them; the panel never scrolls. */
 .game-panel {
   position: absolute;
   left: 50%;
@@ -108,7 +108,6 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  max-height: calc(100% - 6 * var(--spacing));
   border-top: var(--shape-border-width-thick) solid var(--game-color);
   /* Square at the top right, where the close button's tab rises from it. */
   border-radius: var(--game-panel-corner) 0 var(--game-panel-corner) var(--game-panel-corner);
@@ -120,15 +119,13 @@ body {
     0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
 }
 
-/* Everything in the panel but the close button, which sits on its tab above it: in the panel's corners,
-   and scrolling on a short screen. It clips rather than the panel, which would cut off the tab. Its own
-   surfaces (the score block's glass, the details and the band) paint the panel: on a desktop it has none of
-   its own. */
+/* Everything in the panel but the close button, which sits on its tab above it, clipped to the panel's
+   corners: it clips rather than the panel, which would cut off the tab. Its own surfaces (the score
+   block's glass, the details and the band) paint the panel: on a desktop it has none of its own. */
 .game-panel__body {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow-y: auto;
+  overflow: clip;
   border-radius: inherit;
 }
 
@@ -2250,7 +2247,6 @@ body {
   .game-panel {
     bottom: 0;
     width: 100%;
-    max-height: calc(100% - 3 * var(--spacing));
     border-radius: 0;
   }
 }

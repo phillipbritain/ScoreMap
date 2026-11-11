@@ -331,7 +331,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 ### On the page
 
-Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names and the panel scrolls on short screens.
+Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names; the panel never scrolls, on any screen.
 
 The game panel's strip is the score block (the league, the score, the progress line, and the last score under its label, on one line, cut short with an ellipsis and in full on hover), then the venue's name and place at the top and the watch links (the first two, on one line) at the foot, over the venue's photo. A game that lists no watch links has no Watch line. On a desktop the score block is glass (see [Glass](#glass)), and the photo fills the rest of the strip right up to the score block's slanted edge, dimmed to `components.GamePanel.photo.opacity`; with no photo, a faint glow holds its place. There's no Sport, and no "Venue" label. A band under the strip, on the panel's own surface with no photo, holds a field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them; a game with none has no band. The close button is on a small tab in the game's color, rising from the panel's lit top edge at its right end, so it covers nothing. When a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)): the light reaches a little past the row, as far beyond the logo as beyond the score, its right edge on the score box's slant.
 

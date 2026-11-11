@@ -33,7 +33,7 @@ interface PanelLink {
  * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
  * and the last score) and the venue and its watch links (if it lists any) over the venue's photo; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
- * player names wrap in place; the panel grows to fit them and scrolls on short screens. Other clipped
+ * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
  */
 export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: GamePanelProps) {
@@ -64,7 +64,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
         onClose()
       }
     }}>
-      {/* What scrolls on a short screen: everything but the close button, which sits on its tab above. */}
+      {/* Everything but the close button, which sits on its tab above, clipped to the panel's corners. */}
       <div className="game-panel__body">
         <div className="game-panel__main">
           <div className="game-panel__score">

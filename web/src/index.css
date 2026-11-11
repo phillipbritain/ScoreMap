@@ -861,10 +861,10 @@ body {
   text-align: right;
 }
 
-/* Animations for changes worth noticing (see globe/pinAnimation.ts): a lively bounce and flash when
-   the score changes, a pop when a game starts, and a slow, quiet dim when it finishes. */
+/* Animations for changes worth noticing (see globe/pinAnimation.ts): a glow of the card's edge when
+   the score changes, nothing moving, a pop when a game starts, and a slow, quiet dim when it finishes. */
 .score-card--animate-score {
-  animation: score-card-score 1.4s ease-out;
+  animation: score-card-score 1.6s ease-out;
 }
 
 .score-card--animate-start {
@@ -875,29 +875,39 @@ body {
   animation: score-card-finish 2.4s ease-in-out;
 }
 
-/* The new score itself flashes too. */
+/* The new score takes the game's color too, fading back with the glow. */
 .score-card--animate-score .score-card__score {
-  animation: score-card-score-flash 1.4s ease-out;
+  animation: score-card-score-flash 1.6s ease-out;
 }
 
+/* The edge lit in the game's color, held a moment, then fading back into the card's own glow. */
 @keyframes score-card-score {
-  0% {
-    transform: scale(1);
-  }
-  15% {
-    transform: scale(1.3);
+  0%,
+  20% {
     box-shadow:
-      0 0 0 4px var(--card-color),
-      0 0 18px 6px var(--card-color);
+      0 0 0 2px var(--card-color),
+      0 0 14px 4px var(--card-color);
   }
-  30% {
-    transform: scale(0.95);
-  }
-  45% {
-    transform: scale(1.12);
-  }
-  65% {
-    transform: scale(1);
+}
+
+/* For reduce motion, the lit edge drawn over the card's own and faded out, so the glow doesn't shrink:
+   only its color fades. */
+.score-card--animate-score::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--shape-border-width-thin));
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 2px var(--card-color),
+    0 0 14px 4px var(--card-color);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes score-card-score-still {
+  0%,
+  20% {
+    opacity: 1;
   }
 }
 
@@ -1057,7 +1067,7 @@ body {
 .score-card--animate-score .score-card__team--scored .score-card__score {
   animation:
     scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms),
-    score-card-score-flash 1.4s ease-out;
+    score-card-score-flash 1.6s ease-out;
 }
 
 @keyframes scorer-spotlight {
@@ -1083,9 +1093,9 @@ body {
   }
 }
 
-/* Changes still show, without the bouncing, and nothing moves or blinks: a Live score card's status
-   light stays lit (Live is told by its glow and brightness alone), a hot game's flames stand still,
-   every pin's ring fades in place and a hovered card changes at once. */
+/* Changes still show, and nothing moves or blinks: a score's glow fades without shrinking, a Live score
+   card's status light stays lit (Live is told by its glow and brightness alone), a hot game's flames
+   stand still, every pin's ring fades in place and a hovered card changes at once. */
 @media (prefers-reduced-motion: reduce) {
   .score-card {
     transition: none;
@@ -1096,7 +1106,15 @@ body {
     animation: none;
   }
 
-  .score-card--animate-score,
+  .score-card--animate-score {
+    animation: none;
+  }
+
+  /* The card's own animation is none, so this one's end is the card's (see ScoreCardMarkers.animate). */
+  .score-card--animate-score::after {
+    animation: score-card-score-still 1.6s ease-out;
+  }
+
   .score-card--animate-start {
     animation: score-card-finish 2.4s ease-in-out;
   }

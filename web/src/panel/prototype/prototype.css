@@ -907,3 +907,26 @@
     margin-top: calc(2 * var(--spacing));
   }
 }
+
+/* ---------- Round 9: I, the last score labeled in the score block; watch in the photo part's bottom left ---------- */
+.tb__last-cell {
+  margin-top: var(--spacing);
+}
+
+/* The details as one column: the venue at the top, watch pinned to the foot. */
+.tb--watch-in-corner .tb__details {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+}
+
+.tb__corner-watch {
+  align-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .tb--watch-in-corner .tb__details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(2 * var(--spacing));
+  }
+}

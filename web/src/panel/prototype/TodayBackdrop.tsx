@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react'
 import type { Game } from '../../games/game'
 import { closeOnEscape, colorStyle, panelFacts, type VariantProps } from './facts'
-import { CloseButton, InlineBoard, TeamRow, Venue, VenuePhoto, WatchStacked } from './strip'
+import { CloseButton, InlineBoard, TeamRow, Venue, VenuePhoto, WatchInline, WatchStacked } from './strip'
 
 /**
  * Where the last score goes: in the band under the strip, as today ('band'); a third column beside venue and
@@ -21,6 +21,10 @@ interface Options {
   photoUnderScore?: boolean
   /** Round 6: true puts Watch under the venue's name and place, in one column, rather than beside it. */
   watchUnderVenue?: boolean
+  /** Round 9: true labels the last score "Last score" where it's in the score block ('score'). */
+  lastScoreLabel?: boolean
+  /** Round 9: true puts the watch links, on one line, in the bottom left corner of the photo's part of the strip. */
+  watchInCorner?: boolean
 }
 
 function TodayBackdrop({
@@ -28,6 +32,8 @@ function TodayBackdrop({
   venueLabel = true,
   photoUnderScore = false,
   watchUnderVenue = false,
+  lastScoreLabel = false,
+  watchInCorner = false,
   game,
   scorer,
   color,
@@ -40,7 +46,7 @@ function TodayBackdrop({
   return (
     <aside
       ref={panelRef}
-      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}${watchUnderVenue ? ' tb--watch-under-venue' : ''}`}
+      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}${watchUnderVenue ? ' tb--watch-under-venue' : ''}${watchInCorner ? ' tb--watch-in-corner' : ''}`}
       style={colorStyle(color, textOnColor)}
       aria-label="Game panel"
       onKeyDown={closeOnEscape(onClose)}
@@ -53,15 +59,21 @@ function TodayBackdrop({
             <TeamRow key={row.key} row={row} prefix="tb" />
           ))}
           {facts.progress && <span className="pp-progress tb__progress">{facts.progress}</span>}
-          {place === 'score' && <ScoreBlockLastScore game={game} />}
+          {place === 'score' && <ScoreBlockLastScore game={game} label={lastScoreLabel} />}
         </div>
         <div className="tb__details">
           <Cell label={venueLabel ? 'Venue' : null}>
             <Venue facts={facts} />
           </Cell>
-          <Cell label="Watch">
-            <WatchStacked facts={facts} />
-          </Cell>
+          {watchInCorner ? (
+            <div className="tb__corner-watch">
+              <span className="pp-label">Watch</span> <WatchInline facts={facts} max={2} />
+            </div>
+          ) : (
+            <Cell label="Watch">
+              <WatchStacked facts={facts} />
+            </Cell>
+          )}
           {place === 'column' && <InlineBoard game={game} facts={facts} prefix="tb-col" />}
         </div>
       </div>
@@ -81,16 +93,23 @@ function Cell({ label, children }: { label: string | null; children: ReactNode }
 }
 
 /** The last score as a quiet line under the progress, two lines at most (in full on hover). */
-function ScoreBlockLastScore({ game }: { game: Game }) {
+function ScoreBlockLastScore({ game, label }: { game: Game; label: boolean }) {
   const { lastScore } = game
   if (!lastScore) return null
-  return (
+  const line = (
     <div className="pp-clamp tb__last" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()}>
       <span className="pp-strong">
         {lastScore.when && `${lastScore.when} · `}
         {lastScore.team}
       </span>{' '}
       {lastScore.text}
+    </div>
+  )
+  if (!label) return line
+  return (
+    <div className="tb__last-cell">
+      <div className="pp-label">Last score</div>
+      {line}
     </div>
   )
 }
@@ -128,4 +147,9 @@ export function VariantF(props: VariantProps) {
 /** G (round 7): F with the photo behind the whole panel, the score block too, as E. */
 export function VariantG(props: VariantProps) {
   return <TodayBackdrop place="band" venueLabel={false} watchUnderVenue photoUnderScore {...props} />
+}
+
+/** I (round 9): C with the "Last score" label, no Venue label, and watch in the photo part's bottom left corner. */
+export function VariantI(props: VariantProps) {
+  return <TodayBackdrop place="score" lastScoreLabel venueLabel={false} watchInCorner {...props} />
 }

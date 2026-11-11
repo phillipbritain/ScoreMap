@@ -231,7 +231,7 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. They use their existing theme surface colors with **frost** set to 1. The game panel is an exception, retaining its glass effect alongside score cards; pins are unchanged.
+Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, tooltips, and the game panel (from November 2026, when its venue photo came to fill part of it). They use their existing theme surface colors with **frost** set to 1. Score cards keep their glass; pins are unchanged.
 
 The shared glass material still supports local theme experiments. Each component has a **frost**, from 0 to 1:
 
@@ -245,7 +245,7 @@ On a score card the frost clears more than the fill: its header's tint, its stat
 | Setting | Which glass | Dark theme |
 | --- | --- | --- |
 | `components.ScoreCard.frost` | Score cards' | 0.6 |
-| `components.GamePanel.frost` | The game panel's | 0.85 |
+| `components.GamePanel.frost` | The game panel's | 1 |
 | `components.Rail.frost` | The rail's groups and popovers, the top rail's (local runs), and welcome tour panels | 1 |
 | `components.Controls.frost` | The no-pins message, demo label, and Feedback button and panel | 1 |
 | `components.Tooltip.frost` | Tooltips' | 1 |

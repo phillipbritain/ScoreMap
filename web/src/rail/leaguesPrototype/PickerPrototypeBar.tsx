@@ -33,7 +33,9 @@ export function PickerPrototypeBar() {
         ←
       </button>
       <span className="picker-proto-bar__label">
-        Leagues picker prototype · {index + 1}/{pickerProtoVariants.length} <b>{variant.key}</b> ({variant.name})
+        <span className="picker-proto-bar__long">Leagues picker prototype · </span>
+        {index + 1}/{pickerProtoVariants.length} <b>{variant.key}</b>
+        <span className="picker-proto-bar__long"> ({variant.name})</span>
       </span>
       <button type="button" aria-label="Next picker look" onClick={() => step(1)}>
         →

@@ -72,9 +72,10 @@ body {
 
 /* Glass: a score card is a pane of glass the globe shows through (ADR-0018). Its frost, 0 to 1, says
    how far: at 0 clear glass, its edges catching the light; at 1 opaque. The glass is tinted with the
-   card's own surface color (--glass-tint), as solid as the frost. Every other surface over the globe (the
-   game panel, the rail and its popovers, the no-pins message, the demo label, the Feedback button and
-   panel, welcome tour panels and tooltips) is solid, its surface color with nothing behind it blurred
+   card's own surface color (--glass-tint), as solid as the frost. The game panel's score block is glass
+   too on a desktop (see .game-panel__score). Every other surface over the globe (the rest of the game
+   panel, the rail and its popovers, the no-pins message, the demo label, the Feedback button and panel,
+   welcome tour panels and tooltips) is solid, its surface color with nothing behind it blurred
    (ADR-0023). */
 .score-card {
   /* How brightly the glass catches the light: most when clear. */
@@ -108,21 +109,38 @@ body {
   box-sizing: border-box;
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   max-height: calc(100% - 6 * var(--spacing));
-  /* Keep long identities reachable even in a short viewport. */
-  overflow-y: auto;
   border-top: var(--shape-border-width-thick) solid var(--game-color);
-  border-radius: var(--game-panel-corner);
-  /* Solid, not glass (ADR-0023): the globe doesn't show through. Shading from top to bottom. */
-  background: linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+  /* Square at the top right, where the close button's tab rises from it. */
+  border-radius: var(--game-panel-corner) 0 var(--game-panel-corner) var(--game-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
   box-shadow:
     var(--game-panel-shadow),
     0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
-  /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
-  --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
-  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
+}
+
+/* Everything in the panel but the close button, which sits on its tab above it: in the panel's corners,
+   and scrolling on a short screen. It clips rather than the panel, which would cut off the tab. Its own
+   surfaces (the score block's glass, the details and the band) paint the panel: on a desktop it has none of
+   its own. */
+.game-panel__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: inherit;
+}
+
+/* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it: beveled rather than
+   clipped, as a clip path would stop the score block's glass seeing the globe behind the panel. */
+@media (min-width: 961px) {
+  @container style(--game-panel-cut-corner-on: 1) {
+    .game-panel__body {
+      border-bottom-left-radius: var(--game-panel-cut-corner-size);
+      corner-bottom-left-shape: bevel;
+    }
+  }
 }
 
 /* The strip: the score block, then the details over the photo. */
@@ -142,9 +160,36 @@ body {
   box-sizing: border-box;
   width: min(var(--game-panel-size-score-block), 42%);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
   padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
-  background: linear-gradient(180deg, var(--game-panel-score-block-top), var(--game-panel-score-block-bottom));
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
+}
+
+/* On a desktop the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
+   its colors as solid as the panel's frost, its edges lit from the top left. */
+@media (min-width: 961px) {
+  .game-panel__score {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--game-panel-score-block-top) calc(var(--game-panel-frost) * 100%), transparent),
+      color-mix(in srgb, var(--game-panel-score-block-bottom) calc(var(--game-panel-frost) * 100%), transparent)
+    );
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
+  }
+
+  /* Its scores on panes of the same glass, and its records lifted off it. */
+  .game-panel__score .game-panel__team-score {
+    background: color-mix(in srgb, var(--palette-text-primary) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
+  }
+
+  .game-panel__score .game-panel__record {
+    color: color-mix(in srgb, var(--palette-text-primary) 80%, transparent);
+    text-shadow: 0 1px 2px var(--palette-background-default);
+  }
 }
 
 /* Secondary text, tracked out like the country names on the globe. */
@@ -254,9 +299,12 @@ body {
 }
 
 /* The venue at the top and its watch links at the foot, over the venue's photo (see .game-panel__photo),
-   or the faint glow that holds its place when there's none. Clear of the close button at the right. */
+   or the faint glow that holds its place when there's none, on the panel's surface. It reaches back under
+   the score block's slant, cut on that diagonal, and lies over the score block there, so the photo fills
+   the wedge and the glass, whose blur may be drawn past its edge, can't frost it. */
 .game-panel__details {
   position: relative;
+  z-index: 2;
   isolation: isolate;
   flex: 1;
   display: grid;
@@ -264,14 +312,18 @@ body {
   grid-template-rows: auto 1fr;
   gap: calc(2 * var(--spacing));
   min-width: 0;
-  padding: calc(3 * var(--spacing)) calc(10 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  margin-left: calc(-1 * var(--game-panel-size-slant));
+  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing) + var(--game-panel-size-slant));
   overflow: hidden;
-  background: radial-gradient(ellipse at 85% 40%, var(--game-panel-photo-glow), transparent 60%);
+  background:
+    radial-gradient(ellipse at 85% 40%, var(--game-panel-photo-glow), transparent 60%),
+    linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+  clip-path: polygon(var(--game-panel-size-slant) 0, 100% 0, 100% 100%, 0 100%);
   text-shadow: 0 1px 3px var(--palette-background-default);
 }
 
-/* The venue's photo, filling the details behind them: dimmed by the theme's opacity, and fading in from the
-   score block so the text over it stays readable. */
+/* The venue's photo, filling the details behind them up to the score block's slant, dimmed by the theme's
+   opacity so the text over it stays readable. */
 .game-panel__photo {
   position: absolute;
   inset: 0;
@@ -281,7 +333,6 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: var(--game-panel-photo-opacity);
-  mask-image: linear-gradient(90deg, transparent, #000000 50%);
 }
 
 /* Two lines at most for a venue's name. */
@@ -332,21 +383,27 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
+/* The close button on a tab in the game's color rising from the panel's lit top edge at its right end,
+   clear of the photo. */
 .game-panel__close {
   position: absolute;
-  top: var(--spacing);
-  right: var(--spacing);
-  width: var(--game-panel-size-close);
-  height: var(--game-panel-size-close);
+  right: 0;
+  bottom: 100%;
+  width: var(--game-panel-size-close-width);
+  height: var(--game-panel-size-close-height);
   border: none;
-  border-radius: 50%;
-  background: var(--game-panel-close);
-  color: var(--palette-text-primary);
+  border-radius: calc(1.5 * var(--shape-border-radius)) calc(1.5 * var(--shape-border-radius)) 0 0;
+  background: var(--game-color);
+  color: var(--text-on-game-color);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-body1-font-size);
+  font-size: var(--typography-caption-font-size);
   font-weight: var(--typography-button-font-weight);
   line-height: 1;
   cursor: pointer;
+}
+
+.game-panel__close:hover {
+  filter: brightness(1.15);
 }
 
 /* A field's leaderboard, a fight card or tennis sets below the strip, on the panel's own surface (no
@@ -359,6 +416,7 @@ body {
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+  background: var(--game-panel-surface-bottom);
   line-height: 1.3;
 }
 
@@ -431,14 +489,7 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* Two lines at most, such as a last score's description. */
-.game-panel__clamp {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
+/* One line, cut short with an ellipsis, such as a last score's description. */
 .game-panel__one-line {
   overflow: hidden;
   white-space: nowrap;
@@ -448,19 +499,17 @@ body {
 /* On narrow screens: give names the full panel width, with the details (and the photo) below, and
    tighter spacing than on a desktop, so the panel takes less of the screen. */
 @media (max-width: 960px) {
-  .game-panel {
-    clip-path: none;
-  }
-
   .game-panel__main {
     flex-direction: column;
     min-height: 0;
   }
 
+  /* Over the photo, which fills the whole panel on a phone (below). */
   .game-panel__band {
     flex-wrap: wrap;
     gap: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+    background: none;
   }
 
   .game-panel__cell {
@@ -474,10 +523,9 @@ body {
     clip-path: none;
   }
 
-  /* Clear of the close button at the top right. */
   .game-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
-    padding-right: calc(8 * var(--spacing));
+    padding-right: 0;
   }
 
   .game-panel__progress,
@@ -490,9 +538,85 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
-  /* Fading in from the score block above. */
-  .game-panel__photo {
-    mask-image: linear-gradient(180deg, transparent, #000000 40%);
+  /* The venue's photo behind the whole panel, the score block and band too, rather than behind the venue
+     alone, and the watch links in the panel's bottom right corner: the strip and the details give way to
+     their contents, laid out down the panel, and the score block has no color of its own. With no photo,
+     the faint glow in its place is the panel's. */
+  .game-panel {
+    background:
+      radial-gradient(ellipse at 85% 75%, var(--game-panel-photo-glow), transparent 60%),
+      linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+  }
+
+  .game-panel__main,
+  .game-panel__details {
+    display: contents;
+    text-shadow: none;
+  }
+
+  .game-panel__score {
+    background: none;
+  }
+
+  /* A fade behind each line in the score block, so it reads over the photo: dark at the left under the
+     logo and name, clearing to nothing by the score, out to the panel's edges with a thin gap between
+     lines. It's behind the row and under the scorer's light, so nothing in the row moves. */
+  .game-panel__score .game-panel__team {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .game-panel__score .game-panel__team::after {
+    content: '';
+    position: absolute;
+    inset: calc(-0.25 * var(--spacing)) calc(-2 * var(--spacing));
+    z-index: -2;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--palette-background-default) 90%, transparent),
+      color-mix(in srgb, var(--palette-background-default) 50%, transparent) 55%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* The score at the top, then the band, then the venue and its watch links side by side along the foot:
+     the venue in the bottom left corner, watch in the bottom right, its label over its links. */
+  .game-panel__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    grid-template-areas:
+      'score score'
+      'band band'
+      'venue watch';
+  }
+
+  .game-panel__score {
+    grid-area: score;
+  }
+
+  .game-panel__band {
+    grid-area: band;
+  }
+
+  .game-panel__venue {
+    grid-area: venue;
+    align-self: end;
+    min-width: 0;
+    padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  }
+
+  .game-panel__watch {
+    grid-area: watch;
+    align-self: end;
+    box-sizing: border-box;
+    max-width: 50vw;
+    padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+    text-align: right;
+  }
+
+  .game-panel__watch > .game-panel__label {
+    display: block;
   }
 }
 
@@ -879,9 +1003,52 @@ body {
    (see games/scorers.ts): steady, then fading out. 3s is spotlightMs; the delay, set where the row is
    drawn, starts a row drawn partway through as far in as the spotlight already is. */
 .score-card__team--scored,
-.game-panel__team--scored {
+.game-panel__team--scored::before {
   border-radius: var(--shape-border-radius);
   animation: scorer-spotlight 3s ease-in var(--scorer-spotlight-delay, 0ms);
+}
+
+/* In the game panel the light reaches past the row, as far beyond the logo as beyond the score, padded out
+   inside a matching negative margin so nothing in the row moves. Its right edge slants with the score chip
+   (skewX(-10deg) above), the same distance from the chip all the way down, measured across a one-line
+   row: one with a name on two lines keeps the angle. */
+.game-panel__team--scored {
+  --reach-x: calc(2 * var(--spacing));
+  --reach-y: var(--spacing);
+  --row-height: calc(var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding));
+  --reach-right: calc(var(--reach-x) + tan(10deg) * (var(--reach-y) + var(--row-height) / 2));
+  position: relative;
+  isolation: isolate;
+  margin: calc(-1 * var(--reach-y)) calc(-1 * var(--reach-right)) calc(-1 * var(--reach-y)) calc(-1 * var(--reach-x));
+  padding: var(--reach-y) var(--reach-right) var(--reach-y) var(--reach-x);
+}
+
+/* On a phone the score block's padding is tighter, so the light reaches less far out to stay within it, still
+   as far beyond the logo as beyond the score. */
+@media (max-width: 960px) {
+  .game-panel__team--scored {
+    --reach-x: var(--spacing);
+  }
+}
+
+/* The light itself, behind the row: its bottom right corner rounded on the slant as the others are. */
+.game-panel__team--scored::before {
+  --corner: calc(1.5 * var(--shape-border-radius));
+  --cut: calc(tan(10deg) * (var(--row-height) + 2 * var(--reach-y)));
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: var(--corner);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);
+  clip-path: shape(
+    from 0 0,
+    hline to 100%,
+    line to calc(100% - var(--cut) + sin(10deg) * var(--corner)) calc(100% - cos(10deg) * var(--corner)),
+    curve to calc(100% - var(--cut) - var(--corner)) 100% with calc(100% - var(--cut)) 100%,
+    hline to 0,
+    close
+  );
 }
 
 .score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
@@ -942,7 +1109,7 @@ body {
   }
 
   .score-card__team--scored,
-  .game-panel__team--scored,
+  .game-panel__team--scored::before,
   .score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
   .game-panel__team--scored :is(.game-panel__team-name, .game-panel__team-score) {
     animation-timing-function: step-end;
@@ -2075,6 +2242,16 @@ body {
 @media (min-width: 641px) {
   .feedback:not([hidden]) ~ .game-panel {
     width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
+  }
+}
+
+/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
+@media (max-width: 640px) {
+  .game-panel {
+    bottom: 0;
+    width: 100%;
+    max-height: calc(100% - 3 * var(--spacing));
+    border-radius: 0;
   }
 }
 

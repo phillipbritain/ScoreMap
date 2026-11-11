@@ -514,14 +514,14 @@ const settings = {
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
      * unofficial stream links, the venue's photo behind the venue and watch links (the glow in its place
-     * when there's none, and how opaque the photo is), the close button and the panel's drop shadow. Its
-     * top edge is the game's color, and it glows in that color, this far up, this blurred and this
-     * strongly. Its corners, and its bottom left corner cut off, like a broadcast graphic, or not: this
-     * many spacing units along each side. Its size: its width at most, the strip's minimum height (on a
-     * desktop); the score block's maximum width and how far its right edge slants; a team's logo;
-     * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
-     * logoPlate). It sits clear of the scenario
-     * controls by their keys' size. It's solid, not glass (ADR-0023), so it has no frost.
+     * when there's none, and how opaque the photo is) and the panel's drop shadow. On a desktop its score
+     * block is glass, this frosted (ADR-0023's exception); the rest is solid. Its top edge is the game's
+     * color, and it glows in that color, this far up, this blurred and this strongly; its close button is
+     * on a tab of that color above it. Its corners, and its bottom left corner cut off, like a broadcast
+     * graphic, or not: this many spacing units along each side. Its size: its width at most, the strip's
+     * minimum height (on a desktop); the score block's maximum width and how far its right edge slants; a
+     * team's logo; the close button's tab; and a team's score box, in ems of its digits. The plate each
+     * logo sits on (see logoPlate). It sits clear of the scenario controls by their keys' size.
      */
     GamePanel: {
       surface: { top: color, bottom: color },
@@ -529,7 +529,7 @@ const settings = {
       score: { fill: color, text: color },
       unofficial: color,
       photo: { glow: color, opacity },
-      close: color,
+      frost,
       shadow,
       glow: { y: offset, blur: pixels, opacity },
       corner,
@@ -541,7 +541,7 @@ const settings = {
         scoreBlock: pixels,
         slant: pixels,
         logo: pixels,
-        close: pixels,
+        close: { width: pixels, height: pixels },
         scoreWidth: ems,
       },
     },

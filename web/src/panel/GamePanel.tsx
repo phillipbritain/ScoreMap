@@ -64,49 +64,52 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
         onClose()
       }
     }}>
-      <div className="game-panel__main">
-        <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
-            {game.league}
+      {/* What scrolls on a short screen: everything but the close button, which sits on its tab above. */}
+      <div className="game-panel__body">
+        <div className="game-panel__main">
+          <div className="game-panel__score">
+            <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+              {game.league}
+            </div>
+            {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
+                <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
+              ))}
+            {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
+            {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
+            {progress && (
+              <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
+                {progress}
+              </div>
+            )}
+            <LastScore game={game} />
           </div>
-          {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
-              <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
-            ))}
-          {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
-          {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
-          {progress && (
-            <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
-              {progress}
-            </div>
-          )}
-          <LastScore game={game} />
-        </div>
 
-        {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none. */}
-        <div className="game-panel__details">
-          {photo && (
-            <img className="game-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
-          )}
-          <div className="game-panel__venue">
-            <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
-              {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
+          {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none. */}
+          <div className="game-panel__details">
+            {photo && (
+              <img className="game-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
+            )}
+            <div className="game-panel__venue">
+              <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
+                {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
+              </div>
+              {placeLine && (
+                <div className="game-panel__muted game-panel__place" data-tooltip={placeLine} data-tooltip-when-clipped>
+                  <MapsLink query={placeLine}>{placeLine}</MapsLink>
+                </div>
+              )}
             </div>
-            {placeLine && (
-              <div className="game-panel__muted game-panel__place" data-tooltip={placeLine} data-tooltip-when-clipped>
-                <MapsLink query={placeLine}>{placeLine}</MapsLink>
+            {/* Left out when the game lists none. */}
+            {links.length > 0 && (
+              <div className="game-panel__watch">
+                <span className="game-panel__label">Watch</span> <WatchLinks links={links} />
               </div>
             )}
           </div>
-          {/* Left out when the game lists none. */}
-          {links.length > 0 && (
-            <div className="game-panel__watch">
-              <span className="game-panel__label">Watch</span> <WatchLinks links={links} />
-            </div>
-          )}
         </div>
-      </div>
 
-      <GameBand game={game} />
+        <GameBand game={game} />
+      </div>
 
       <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
         ×
@@ -161,7 +164,8 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
 
 /**
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
- * of the score block: two lines at most, in full on hover. Nothing before a score.
+ * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Nothing
+ * before a score.
  */
 function LastScore({ game }: { game: Game }) {
   const { lastScore } = game
@@ -169,7 +173,7 @@ function LastScore({ game }: { game: Game }) {
   return (
     <div className="game-panel__last-score">
       <div className="game-panel__label">Last score</div>
-      <div className="game-panel__clamp" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
+      <div className="game-panel__one-line" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
         <span className="game-panel__strong">
           {lastScore.when && `${lastScore.when} · `}
           {lastScore.team}

@@ -76,6 +76,18 @@ describe('applyTheme', () => {
     expect(properties.get('--score-card-frost')).toBe('0.3')
   })
 
+  it('writes the game panel’s frost and its close tab’s size', () => {
+    const properties = propertiesOf(
+      themeWith((json) => {
+        json.components.GamePanel.frost = 0.7
+        json.components.GamePanel.size.close = { width: 30, height: 20 }
+      }),
+    )
+    expect(properties.get('--game-panel-frost')).toBe('0.7')
+    expect(properties.get('--game-panel-size-close-width')).toBe('30px')
+    expect(properties.get('--game-panel-size-close-height')).toBe('20px')
+  })
+
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
     const properties = propertiesOf(themeWith((json) => (json.components.Hover.card = { borderWidth: 3, solid: false })))
     expect(properties.get('--hover-card-border-width')).toBe('3px')
@@ -168,9 +180,9 @@ describe('applyTheme', () => {
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 7 + 3 * 3,
-      // The game panel's nine colors and shadows, the photo's opacity, glow of three, corner, cut corner's
-      // two, seven sizes and logo plate of three (no frost: it's solid).
-      gamePanel: 9 + 1 + 3 + 1 + 2 + 7 + 3,
+      // The game panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
+      // three, corner, cut corner's two, eight sizes (the close tab's two) and logo plate of three.
+      gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
       // The rail's ten colors and shadows and seven sizes.

@@ -142,12 +142,11 @@ Beside the palette's background, text, divider and hover:
 | `components.Controls.surface` | The "No games right now." message, and the Feedback button and panel | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
 | `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
-| `components.GamePanel.surface.top`, `.bottom` | The game panel, shading from top to bottom | `background.paper`, `background.paper` (solid) |
-| `components.GamePanel.scoreBlock.top`, `.bottom` | The game panel's score block, shading from top to bottom | `primary.dark`, `primary.dark` (solid) |
-| `components.GamePanel.score.fill`, `.text` | A team's score box on the game panel | `navy.600`, `text.primary` |
+| `components.GamePanel.surface.top`, `.bottom` | The game panel (on a desktop, its venue part and band), shading from top to bottom | `background.paper`, `background.paper` (solid) |
+| `components.GamePanel.scoreBlock.top`, `.bottom` | The game panel's score block, shading from top to bottom: on a desktop the tint of its glass (see [Glass](#glass)) | `primary.dark`, `primary.dark` |
+| `components.GamePanel.score.fill`, `.text` | A team's score box on the game panel; on a desktop the box is a pane of the score block's glass instead, only its text this color | `navy.600`, `text.primary` |
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
 | `components.GamePanel.photo.glow` | The glow behind the venue and its watch links when the venue has no photo | `navy.600` |
-| `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
@@ -231,7 +230,7 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the game panel, the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
+Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So, on a desktop, is the game panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its top and left edges lit; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the game panel, the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
 
 A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`, 0.6 in the dark theme):
 
@@ -259,10 +258,10 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `h6` | Scores on the game panel; a score card's scores take its weight | 700, 20 |
 | `subtitle1` | Team names on the game panel; a score card's team abbreviations take its weight | 700, 16 |
 | `subtitle2` | A score card's clock line, and the rest of its text | 600, 12 |
-| `body1` | Body text; the game panel's close button takes its size | 400, 16 |
+| `body1` | Body text | 400, 16 |
 | `body2` | The game panel, the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
 | `button` | Buttons: sport names in Leagues and Display Settings, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
-| `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
+| `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips; the game panel's close button takes its size | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
 | `footnote` | The smallest on the page: a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
@@ -289,7 +288,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: a speed key, league chips, "Reset colors", the Feedback panel's buttons | `pill` |
 
-The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. The dark theme has it off (size 4, unused).
+The **cut corner** cuts off the game panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. It's beveled (CSS `corner-shape`) rather than clipped, which would stop the score block's glass seeing the globe, and only on a desktop. The dark theme has it off (size 4, unused). The panel's top right corner is square, where the close button's tab rises from it, and on a phone (640px wide or less) every corner is.
 
 ### Logo plates
 
@@ -334,7 +333,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names and the panel scrolls on short screens.
 
-The game panel's strip is the score block (the league, the score, the progress line, and the last score under its label), then the venue's name and place at the top and the watch links (the first two, on one line) at the foot, over the venue's photo. A game that lists no watch links has no Watch line. The photo fills that part of the strip, dimmed to `components.GamePanel.photo.opacity` and fading in from the score block; with no photo, a faint glow holds its place. There's no Sport, and no "Venue" label. A band under the strip, on the panel's own surface with no photo, holds a field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them; a game with none has no band. At viewport widths up to 960px, the score block uses the full panel width, with the venue, its watch links and the photo below it, then the band, all spaced more tightly than on a desktop (the padding and gaps about a third smaller), so the panel takes less of a phone's screen. The photo's credit isn't shown (ADR-0025). This is variant K from the comparison preserved on the throwaway branch `phillipbritain/game-panel-prototype`, selected by the user on November 10, 2026.
+The game panel's strip is the score block (the league, the score, the progress line, and the last score under its label, on one line, cut short with an ellipsis and in full on hover), then the venue's name and place at the top and the watch links (the first two, on one line) at the foot, over the venue's photo. A game that lists no watch links has no Watch line. On a desktop the score block is glass (see [Glass](#glass)), and the photo fills the rest of the strip right up to the score block's slanted edge, dimmed to `components.GamePanel.photo.opacity`; with no photo, a faint glow holds its place. There's no Sport, and no "Venue" label. A band under the strip, on the panel's own surface with no photo, holds a field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them; a game with none has no band. The close button is on a small tab in the game's color, rising from the panel's lit top edge at its right end, so it covers nothing. When a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)): the light reaches a little past the row, as far beyond the logo as beyond the score, its right edge on the score box's slant.
+
+At viewport widths up to 960px, the photo fills the whole panel, behind the score block and the band too, the score block has no color of its own, and a fade behind each line of it, dark under the logo and name and clearing by the score, keeps it readable over the photo. The score block uses the full panel width, then the band, then the venue in the bottom left corner and the watch links in the bottom right, their label above them, all spaced more tightly than on a desktop (the padding and gaps about a third smaller), so the panel takes less of a phone's screen. At 640px wide or less the panel runs edge to edge along the bottom of the screen. The photo's credit isn't shown (ADR-0025). This grew from variant K in the comparison preserved on the throwaway branch `phillipbritain/game-panel-prototype`, selected by the user on November 10, 2026, and was tuned with them on November 11.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
@@ -347,11 +348,12 @@ The game panel's strip is the score block (the league, the score, the progress l
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
-| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its watch links, 0 to 1 | 0.4 |
+| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its watch links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |
 | `components.GamePanel.size.height` | The strip's minimum height on a desktop; it grows for wrapped names. On a phone the panel is as tall as its contents | 140 |
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
-| `components.GamePanel.size.logo`, `.close` | A team's logo, the close button | 28, 24 |
+| `components.GamePanel.size.logo` | A team's logo | 28 |
+| `components.GamePanel.size.close.width`, `.height` | The close button's tab, above the panel's top right corner | 28, 18 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest | 92 |
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |
@@ -424,7 +426,8 @@ A new setting goes in the settings in `web/src/theme/theme.ts` and in every them
 Some of the look is in code on purpose, as behavior or layout rather than a theme's choices:
 
 - motion: durations, easings and the shapes of the animations, including the status light's pulse and the sizes and opacities inside their keyframes;
-- how a score card's glass works out from its frost (see [Glass](#glass)): how bright the edges and sheen are, and the shadow it casts;
+- how a score card's glass works out from its frost (see [Glass](#glass)): how bright the edges and sheen are, and the shadow it casts; and the game panel score block's: how far it blurs, its lit edges, and its score boxes' panes and lifted records;
+- the game panel's fade behind each line on a phone, and how far a scoring row's light reaches;
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);

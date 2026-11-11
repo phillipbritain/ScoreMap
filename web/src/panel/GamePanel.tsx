@@ -31,7 +31,7 @@ interface PanelLink {
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
  * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
- * and the last score) and the venue and its watch links over the venue's photo; under it, a band for a
+ * and the last score) and the venue and its watch links (if it lists any) over the venue's photo; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
  * player names wrap in place; the panel grows to fit them and scrolls on short screens. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
@@ -97,9 +97,12 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
               </div>
             )}
           </div>
-          <div className="game-panel__watch">
-            <span className="game-panel__label">Watch</span> <WatchLinks links={links} />
-          </div>
+          {/* Left out when the game lists none. */}
+          {links.length > 0 && (
+            <div className="game-panel__watch">
+              <span className="game-panel__label">Watch</span> <WatchLinks links={links} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -126,7 +129,6 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
  * plain names otherwise. The first few are listed; the rest are named on hover over "+N more".
  */
 function WatchLinks({ links }: { links: PanelLink[] }) {
-  if (links.length === 0) return <span className="game-panel__muted">No channels listed</span>
   const { listed, folded } = listedWatchLinks(links)
   return (
     <span className="game-panel__links">

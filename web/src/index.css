@@ -1397,7 +1397,8 @@ body {
   fill: var(--palette-text-primary);
 }
 
-/* A league as a pill, filled in while on. */
+/* A league as a pill. Off, it's a faint outline; on, it's lit as a Live score card is: its outline in
+   the lit color, its fill tinted with it, and a soft glow around it. */
 .rail-chip {
   padding: var(--spacing) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
@@ -1411,11 +1412,34 @@ body {
   cursor: pointer;
 }
 
-/* Filled in, not bolder: bold text would widen the chip and shift the chips after it. */
+/* Lit, not bolder: bold text would widen the chip and shift the chips after it. */
 .rail-chip[aria-pressed='true'] {
-  border-color: var(--rail-on-fill);
-  background: var(--rail-on-fill);
+  border-color: var(--rail-on-outline);
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
   color: var(--rail-on-text);
+}
+
+@media (hover: hover) {
+  .rail-chip:hover {
+    border-color: var(--palette-text-secondary);
+    background: var(--palette-action-hover);
+    color: var(--palette-text-primary);
+  }
+
+  /* A lit chip under the pointer stays lit, its tint a little stronger. */
+  .rail-chip[aria-pressed='true']:hover {
+    border-color: var(--rail-on-outline);
+    background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 175%), var(--rail-on-fill));
+    color: var(--rail-on-text);
+  }
+}
+
+.rail-chip:focus-visible,
+.rail-sport__name:focus-visible,
+.leagues-scope__option:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
 }
 
 /* A sport in a popover: its name, then its leagues. */
@@ -1423,27 +1447,39 @@ body {
   margin-top: calc(3 * var(--spacing));
 }
 
+/* A sport's name as a small heading in capitals, brighter while all its leagues are on. */
 .rail-sport__name {
   display: flex;
-  gap: calc(1.5 * var(--spacing));
-  margin-bottom: calc(1.5 * var(--spacing));
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(2 * var(--spacing));
   padding: 0;
   border: none;
   background: none;
-  color: var(--palette-text-primary);
+  color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
   cursor: pointer;
 }
 
-/* Leagues: "Top Events | My leagues" at the top, as one control split in two, the choice filled in. */
+.rail-sport__name--on {
+  color: var(--palette-text-primary);
+}
+
+@media (hover: hover) {
+  .rail-sport__name:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
+/* Leagues: "Top Events | My leagues" at the top, as two tabs, the choice underlined and lit. */
 .leagues-scope {
   display: flex;
   margin-bottom: calc(3 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
-  border-radius: var(--controls-corner);
-  overflow: hidden;
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .leagues-scope__option {
@@ -1452,9 +1488,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: calc(1.5 * var(--spacing));
-  padding: calc(1.5 * var(--spacing)) calc(3 * var(--spacing));
+  margin-bottom: calc(-1 * var(--shape-border-width-thin));
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   border: none;
-  background: transparent;
+  border-bottom: var(--shape-border-width-medium) solid transparent;
+  background: none;
   color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-button-font-size);
@@ -1463,9 +1501,16 @@ body {
   cursor: pointer;
 }
 
+@media (hover: hover) {
+  .leagues-scope__option:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
 .leagues-scope__option[aria-checked='true'] {
-  background: var(--rail-on-fill);
+  border-bottom-color: var(--rail-on-outline);
   color: var(--rail-on-text);
+  text-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
 }
 
 .leagues-scope__star {
@@ -1489,47 +1534,41 @@ body {
   align-items: center;
   gap: calc(2 * var(--spacing));
   margin-bottom: calc(3 * var(--spacing));
-  padding-bottom: calc(2 * var(--spacing));
+  padding-bottom: calc(3 * var(--spacing));
   border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .leagues-master__chip {
+  height: var(--rail-size-all-leagues);
   display: flex;
   align-items: center;
   gap: calc(2 * var(--spacing));
-  height: var(--rail-size-all-leagues);
-  padding: 0 calc(2 * var(--spacing));
-  font-size: var(--typography-button-font-size);
+  padding: 0 calc(2 * var(--spacing)) 0 calc(3 * var(--spacing));
 }
 
-/* ✓ when all are on, – when some are. Fixed sizes here, on the chip and on the count, so the chip
-   keeps its size whatever the state: the ✓ comes from a taller fallback font. */
-.leagues-master__mark {
-  width: var(--rail-size-mark);
-  height: var(--rail-size-mark);
-  line-height: 1;
-  margin-right: calc(-1 * var(--spacing));
-  text-align: center;
-}
-
+/* Some on: the outline dashed in the lit color. */
 .leagues-master__chip--mixed {
   border-style: dashed;
-  border-color: var(--rail-on-fill);
+  border-color: var(--rail-on-outline);
 }
 
-/* How many leagues are on, as a badge that reads on a chip that's on and on one that's off alike. */
-.leagues-master__count {
+/* How many leagues are on (on "All leagues", and after a sport's name), as a badge. */
+.leagues-master__count,
+.leagues-sport__count {
   min-width: var(--rail-size-count-width);
-  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
+  padding: 0 calc(1.5 * var(--spacing));
   border-radius: var(--controls-corner);
   background: var(--rail-chip-badge);
   text-align: center;
-  color: var(--palette-text-secondary);
+  color: var(--rail-count);
+  font-family: var(--typography-font-family);
   font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+  letter-spacing: 0;
 }
 
-.leagues-master__chip--on .leagues-master__count {
-  background: var(--rail-on-text);
+.rail-sport__name--on .leagues-sport__count {
+  color: var(--rail-on-text);
 }
 
 .leagues-master__hint {
@@ -1541,14 +1580,7 @@ body {
 .leagues-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: calc(1.5 * var(--spacing));
-}
-
-/* How many of the sport's leagues are on, such as 2/2. */
-.leagues-sport__count {
-  color: var(--rail-count);
-  font-family: var(--typography-font-family);
-  font-weight: var(--typography-button-font-weight);
+  gap: calc(2 * var(--spacing));
 }
 
 /* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */
@@ -2450,7 +2482,7 @@ body {
 
 @media (hover: hover) {
   .welcome-tour__choice:hover {
-    border-color: var(--rail-on-fill);
+    border-color: var(--rail-on-outline);
     background: var(--palette-action-hover);
   }
 }
@@ -2483,7 +2515,7 @@ body {
 
 .welcome-tour__sport--on,
 .welcome-tour__sport--mixed {
-  border-color: var(--rail-on-fill);
+  border-color: var(--rail-on-outline);
 }
 
 /* A label with its switch at the right: "Select all", and each sport's name. */
@@ -2577,12 +2609,13 @@ body {
   margin-top: calc(4 * var(--spacing));
 }
 
-/* A step's own button (Next, Done), filled as a chip that's on. */
+/* A step's own button (Next, Done), lit as a chip that's on. */
 .welcome-tour__button {
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
-  border: none;
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
   border-radius: var(--controls-corner);
-  background: var(--rail-on-fill);
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
   color: var(--rail-on-text);
   font-family: var(--typography-font-family);
   font-size: var(--typography-button-font-size);

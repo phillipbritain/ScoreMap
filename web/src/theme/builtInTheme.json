@@ -163,8 +163,8 @@
       "count": "text.secondary",
       "hint": "text.secondary",
       "chip": { "outline": "primary.main", "badge": "primary.dark" },
-      "on": { "fill": "offWhite.500", "text": "navy.800" },
-      "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mark": 1, "mapType": 64 }
+      "on": { "fill": "primary.dark", "outline": "secondary.main", "tint": 0.14, "text": "secondary.light", "glow": { "radius": 8, "opacity": 0.35 } },
+      "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mapType": 64 }
     },
     "Controls": {
       "surface": "background.paper",

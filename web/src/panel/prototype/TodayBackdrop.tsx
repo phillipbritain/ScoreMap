@@ -124,3 +124,8 @@ export function VariantE(props: VariantProps) {
 export function VariantF(props: VariantProps) {
   return <TodayBackdrop place="band" venueLabel={false} watchUnderVenue {...props} />
 }
+
+/** G (round 7): F with the photo behind the whole panel, the score block too, as E. */
+export function VariantG(props: VariantProps) {
+  return <TodayBackdrop place="band" venueLabel={false} watchUnderVenue photoUnderScore {...props} />
+}

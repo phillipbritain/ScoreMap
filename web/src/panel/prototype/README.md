@@ -6,7 +6,7 @@
 
 This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never in main: no tests, no polish, values written straight into `prototype.css`.
 
-- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`, `D`, `E`, `F`).
+- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `backdrop`, `B`, `C`, `D`, `E`, `F`, `G`).
 - Flip with the pink bar's ‹ and › buttons, or ← and → (Shift+← and → while the globe has focus, since it pans with the arrows). The URL keeps the variant across a reload.
 - The bar reserves 40px at the bottom of the screen; every variant, today's included, sits above that, so ignore those 40px when judging height.
 
@@ -20,6 +20,7 @@ This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never 
 | `D` | A, no Venue label (round 5) | As A; the venue's name and place show without the "Venue" label over them. |
 | `E` | D, photo under the score too (round 5) | As D, with the photo behind the whole panel: the score block has no solid color, only a dark wash so the names and scores stay readable. |
 | `F` | D, Watch under the venue (round 6) | As D, with Watch (its label and links) under the venue's name and place in one column, rather than beside them. Same height as D on a desktop; on a phone about 40px taller, as the two stack. |
+| `G` | F, photo behind the whole panel (round 7) | As F, with the photo behind the whole panel, the score block too, as E: the score block has no solid color, only a dark wash. |
 
 Heights measured in a browser (desktop 1280×800 / phone 390×844, in pixels; the soccer game is `worldwide`'s, the rest `edge-cases`'). The Faroe Islands venue has no photo, so it shows the faint glow today's panel shows in its place.
 

@@ -2,30 +2,31 @@
 
 **Question:** how should the game panel be laid out to use space better, especially on a phone, where today's panel takes too much room?
 
-**Round 2** (this one): the user liked today's panel best (a strip at the bottom center, everything showing, no tabs and no expanding or collapsing), so these five variants are layout updates of it: the same content, moved around and resized. Round 1's radically different variants (score bug, side sheet, ticker, tabs, floating card) are in this branch's history at commit `2718d7a`.
+**Round 3** (this one): the user liked today's panel and round 2's Compact best, and wants the venue photo kept. So these variants keep that general layout (a strip at the bottom center, the slanted score block, everything showing, no tabs and no expanding or collapsing), with the content in different spots and sizes. Every variant shows the photo, on a phone too (today's panel hides it there). Earlier rounds are in this branch's history: round 1 (radically different variants) at `2718d7a`, round 2 (layout updates) at `d1bd48b`.
 
 This lives on the throwaway branch `phillipbritain/game-panel-prototype`, never in main: no tests, no polish, values written straight into `prototype.css`.
 
-- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `B`, `C`, `D`, `E`).
+- Open the app as usual (`http://localhost:5173`), then add `?variant=A` (or `current`, `compact`, `B`, `C`, `D`, `E`).
 - Flip with the pink bar's ‹ and › buttons, or ← and → (Shift+← and → while the globe has focus, since it pans with the arrows). The URL keeps the variant across a reload.
 - The bar reserves 40px at the bottom of the screen; every variant, today's included, sits above that, so ignore those 40px when judging height.
 
-| Key | Name | What moves or changes from today's panel |
+| Key | Name | Where things go |
 | --- | --- | --- |
 | `current` | Today's panel | |
-| `A` | One row | The band (leaderboard, fight card, sets, last score) moves up beside the score block, and venue and watch become a narrow column at the right: one short row. No photo. On a phone: score, details, then venue and watch side by side. |
-| `B` | Compact | Today's layout as it is, shrunk: smaller logos, scores, type and padding, a narrower photo. On a phone, venue and watch fold into a line each under the score. |
-| `C` | Narrow card | A 720px card, stacked: league and progress, the score, the details, then one footer line for sport, venue (with the photo as a thumbnail) and watch. The sides of the globe stay clear on a desktop. |
-| `D` | Head to head | The two sides face each other across one centered scoreboard row (name, logo, score – score, logo, name), progress under the scores; under it, the details and venue and watch side by side. A field keeps its two rows. On a phone, names wrap under their logos. |
-| `E` | Info ribbon | Sport, venue and watch become one thin ribbon across the top with the league and progress, the photo fades in behind the right of the panel, and under it the score block and details sit side by side. |
+| `compact` | Compact (round 2) | Today's layout, smaller. Round 3 adds the photo on a phone, as a short banner across the top. |
+| `A` | Photo first | The photo moves to the left edge, fading into the score; sport, venue and watch after the score; the band under the strip. On a phone the photo is a banner across the top with the league and progress over its foot. |
+| `B` | Band inside | The band moves up into the details column, under one slim line of sport, venue and watch, so there's no band row; the photo stays at the right. On a phone the photo is a thumbnail beside the venue and watch lines. |
+| `C` | Big score | The score block takes about half the strip, with bigger logos, names and scores; sport, venue and watch stack in a narrow column; the photo is larger at the right; the band is small type underneath. On a phone the photo sits behind the score block. |
+| `D` | Venue card | The photo becomes the venue's card, with the venue's name and place over its foot and the sport over its top; the band moves up beside the score, with the watch links under it. No band row. On a phone the card goes across the width between the score and the details. |
+| `E` | Photo backdrop | Compact's layout, with the photo filling the panel behind the details and band (darkened toward the score) instead of a column of its own. On a phone it fills behind everything under the score. |
 
-Heights measured in a browser on `edge-cases` (desktop 1280×800 / phone 390×844, in pixels):
+Heights measured in a browser on `edge-cases` (desktop 1280×800 / phone 390×844, in pixels). The Faroe Islands game's venue has no photo, so it shows the faint glow today's panel shows in its place.
 
-| Game | Today | A | B | C | D | E |
-| --- | --- | --- | --- | --- | --- | --- |
-| NASCAR (Coliseum) | 240 / 347 | 130 / 268 | 143 / 224 | 219 / 244 | 199 / 282 | 116 / 241 |
-| UFC (Madison Square Garden) | 241 / 417 | 116 / 326 | 157 / 273 | 236 / 306 | 186 / 348 | 131 / 318 |
-| Long names (Chicago) | 240 / 337 | 131 / 249 | 154 / 229 | 195 / 234 | 161 / 300 | 147 / 246 |
-| Missing logos (Edmonton) | 240 / 326 | 112 / 223 | 139 / 185 | 195 / 203 | 161 / 264 | 116 / 215 |
+| Game | Today | Compact | A | B | C | D | E |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| NASCAR (Coliseum) | 240 / 347 | 143 / 288 | 149 / 291 | 115 / 255 | 170 / 251 | 116 / 312 | 149 / 258 |
+| UFC (Madison Square Garden) | 241 / 417 | 157 / 337 | 163 / 324 | 115 / 303 | 183 / 300 | 125 / 360 | 163 / 291 |
+| Long names (Chicago) | 240 / 337 | 154 / 293 | 171 / 278 | 141 / 257 | 166 / 252 | 141 / 314 | 171 / 245 |
+| No photo (Faroe Islands) | | 139 / 249 | 145 / 236 | 115 / 215 | 166 / 212 | 116 / 272 | 145 / 203 |
 
 The real panel's code (`../GamePanel.tsx`) is untouched; `App.tsx` mounts `PanelVariant` and the switcher in its place.

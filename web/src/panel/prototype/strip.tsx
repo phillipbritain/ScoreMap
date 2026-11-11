@@ -1,6 +1,6 @@
 // PROTOTYPE (throwaway): pieces the round-2 variants share (layout updates of today's panel, see ./README.md).
 // Each variant arranges and sizes them its own way through its CSS prefix.
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Game } from '../../games/game'
 import { boutLine, entrantPosition, type PanelFacts, type ScoreRow } from './facts'
 import { useScoredRow } from './hooks'
@@ -165,5 +165,21 @@ export function CloseButton({ onClose }: { onClose: () => void }) {
     <button type="button" className="game-panel__close pp-close" onClick={onClose} aria-label="Close game panel">
       ×
     </button>
+  )
+}
+
+/**
+ * The venue photo (round 3: every variant shows it), its credit on hover; a faint glow holds its place when the
+ * venue has none or it fails to load, as today. Anything passed in lies over it (such as the venue's name).
+ */
+export function VenuePhoto({ facts, className, children }: { facts: PanelFacts; className: string; children?: ReactNode }) {
+  const [broken, setBroken] = useState<string | null>(null)
+  const photo = facts.photo && facts.photo.url !== broken ? facts.photo : null
+  return (
+    <figure className={photo ? `pp-photo ${className}` : `pp-photo pp-photo--none ${className}`}>
+      {photo && <img src={photo.url} alt="" onError={() => setBroken(photo.url)} />}
+      {photo?.credit && <figcaption className="pp-photo__credit">{photo.credit}</figcaption>}
+      {children}
+    </figure>
   )
 }

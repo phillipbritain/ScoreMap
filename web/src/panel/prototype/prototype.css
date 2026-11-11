@@ -331,12 +331,12 @@
 }
 
 /* Today's score box: a filled, slanted box wide enough for three digits. */
-.pa__value,
 .pb__value,
-.pc__value,
-.pd__value,
-.pe__value,
-.pd__big {
+.qa__value,
+.qb__value,
+.qc__value,
+.qd__value,
+.qe__value {
   box-sizing: border-box;
   flex-shrink: 0;
   background: var(--game-panel-score-fill);
@@ -348,11 +348,12 @@
 }
 
 /* A team row: names wrap in place, as today. */
-.pa__row,
 .pb__row,
-.pc__row,
-.pd__row,
-.pe__row {
+.qa__row,
+.qb__row,
+.qc__row,
+.qd__row,
+.qe__row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -360,93 +361,25 @@
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
-.pa__name,
 .pb__name,
-.pc__name,
-.pd__name,
-.pe__name {
+.qa__name,
+.qb__name,
+.qc__name,
+.qd__name,
+.qe__name {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.pa__record,
 .pb__record,
-.pc__record,
-.pd__record,
-.pe__record {
+.qa__record,
+.qb__record,
+.qc__record,
+.qd__record,
+.qe__record {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
-}
-
-/* ----- A: One row ----- */
-.pa {
-  display: grid;
-  grid-template-columns: minmax(0, 360px) minmax(0, 1fr) minmax(0, 220px);
-}
-
-.pa__score {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 6px;
-  padding: 10px 24px 10px 14px;
-  background: var(--game-panel-score-block-top);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-}
-
-.pa__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-width: 0;
-}
-
-.pa__row {
-  font-size: 15px;
-}
-
-.pa__value {
-  width: 2.6em;
-  font-size: 18px;
-}
-
-.pa__board {
-  align-self: center;
-  min-width: 0;
-  padding: 10px 14px;
-}
-
-.pa__side {
-  display: grid;
-  align-content: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 10px 36px 10px 14px;
-  border-left: 1px solid var(--palette-divider);
-}
-
-@media (max-width: 640px) {
-  .pa {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pa__score {
-    padding: 8px 40px 8px 12px;
-    clip-path: none;
-  }
-
-  .pa__board {
-    padding: 8px 12px 0;
-  }
-
-  /* Venue and watch side by side, each a column. */
-  .pa__side {
-    grid-template-columns: 1fr 1fr;
-    padding: 8px 12px;
-    border-left: none;
-  }
 }
 
 /* ----- B: Compact (today's layout, smaller) ----- */
@@ -500,7 +433,9 @@
 .pb__photo {
   width: min(110px, 10%);
   flex-shrink: 0;
-  object-fit: cover;
+}
+
+.pb__photo img {
   mask-image: linear-gradient(90deg, transparent, #000 35%);
 }
 
@@ -533,9 +468,19 @@
     padding: 6px 12px;
   }
 
-  .pb__sport,
-  .pb__photo {
+  .pb__sport {
     display: none;
+  }
+
+  /* Round 3: a short banner across the top. */
+  .pb__photo {
+    order: -1;
+    width: auto;
+    height: 64px;
+  }
+
+  .pb__photo img {
+    mask-image: linear-gradient(180deg, #000 40%, transparent);
   }
 
   .pb__venue,
@@ -562,374 +507,10 @@
   }
 }
 
-/* ----- C: Narrow card ----- */
-.pc {
-  display: grid;
-  gap: 8px;
-  width: min(720px, calc(100% - 6 * var(--spacing)));
-  padding: 10px 14px 10px;
-}
-
-.pc__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.pc__league {
-  flex: 1;
-  min-width: 0;
-}
-
-.pc__head .pp-progress {
-  max-width: 50%;
-}
-
-.pc__score {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
-}
-
-.pc__row {
-  font-size: var(--typography-subtitle1-font-size);
-}
-
-.pc__value {
-  width: 2.6em;
-  font-size: var(--typography-h6-font-size);
-}
-
-.pc__board {
-  padding-top: 8px;
-  border-top: 1px solid var(--palette-divider);
-}
-
-.pc__foot {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  padding-top: 8px;
-  border-top: 1px solid var(--palette-divider);
-  font-size: var(--typography-caption-font-size);
-}
-
-.pc__thumb {
-  width: 44px;
-  height: 30px;
-  flex-shrink: 0;
-  border-radius: 4px;
-  object-fit: cover;
-}
-
-.pc__where {
-  flex: 1.4;
-  min-width: 0;
-}
-
-.pc__watch {
-  flex: 1;
-  min-width: 0;
-}
-
-@media (max-width: 640px) {
-  .pc {
-    width: calc(100% - 6 * var(--spacing));
-    padding: 8px 10px;
-    gap: 6px;
-  }
-
-  .pc__thumb {
-    display: none;
-  }
-
-  .pc__foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    padding-top: 6px;
-  }
-
-  .pc__board {
-    padding-top: 6px;
-  }
-}
-
-/* ----- D: Head to head ----- */
-.pd__board-row {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  padding: 10px 44px 8px;
-  background: var(--game-panel-score-block-top);
-}
-
-.pd__versus {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  max-width: 820px;
-}
-
-.pd__side {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  min-width: 0;
-  border-radius: 4px;
-  font-size: var(--typography-subtitle1-font-size);
-  font-weight: var(--typography-subtitle1-font-weight);
-}
-
-/* The second side mirrored: its logo by the scores, its name outside. */
-.pd__side--end {
-  flex-direction: row-reverse;
-}
-
-.pd__side-name {
-  display: grid;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  text-align: right;
-}
-
-.pd__side--end .pd__side-name {
-  text-align: left;
-}
-
-.pd__scores {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pd__big {
-  min-width: 2.2em;
-  padding: 0 4px;
-  font-size: 24px;
-}
-
-.pd__dash {
-  color: var(--palette-text-secondary);
-}
-
-.pd__field {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-  width: 100%;
-  max-width: 520px;
-}
-
-.pd__value {
-  width: 2.6em;
-  font-size: 18px;
-}
-
-.pd__lower {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-}
-
-.pd__lower > :only-child {
-  grid-column: 1 / -1;
-}
-
-.pd__board {
-  min-width: 0;
-  padding: 8px 14px;
-}
-
-.pd__meta {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  min-width: 0;
-  padding: 8px 14px;
-  border-left: 1px solid var(--palette-divider);
-}
-
-@media (max-width: 640px) {
-  .pd__board-row {
-    padding: 8px 10px;
-  }
-
-  /* Logo over the name on each side, the scores between: names wrap under their logos. */
-  .pd__versus {
-    gap: 8px;
-  }
-
-  .pd__side,
-  .pd__side--end {
-    flex-direction: column-reverse;
-    gap: 4px;
-    font-size: 14px;
-  }
-
-  .pd__side-name,
-  .pd__side--end .pd__side-name {
-    text-align: center;
-  }
-
-  .pd__big {
-    font-size: 22px;
-  }
-
-  .pd__league {
-    padding-right: 30px;
-  }
-
-  .pd__lower {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pd__board {
-    padding: 8px 12px 0;
-  }
-
-  .pd__meta {
-    padding: 8px 12px;
-    border-left: none;
-  }
-}
-
-/* ----- E: Info ribbon ----- */
-.pe {
-  isolation: isolate;
-}
-
-.pe__photo {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  width: 30%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.35;
-  mask-image: linear-gradient(90deg, transparent, #000 60%);
-}
-
-.pe__ribbon {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-  padding: 5px 6px 5px 14px;
-  border-bottom: 1px solid var(--palette-divider);
-  font-size: var(--typography-caption-font-size);
-}
-
-.pe__league {
-  flex-shrink: 0;
-  color: var(--palette-text-secondary);
-  font-size: var(--typography-footnote-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  letter-spacing: var(--typography-overline-letter-spacing);
-  text-transform: uppercase;
-}
-
-.pe__ribbon .pp-progress {
-  flex-shrink: 0;
-}
-
-.pe__info {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pe__ribbon .pp-close {
-  margin-left: auto;
-}
-
-.pe__main {
-  display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
-}
-
-.pe__main > :only-child {
-  grid-column: 1;
-}
-
-.pe__score {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 6px;
-  padding: 10px 26px 10px 14px;
-  background: var(--game-panel-score-block-top);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-}
-
-.pe__row {
-  font-size: var(--typography-subtitle1-font-size);
-}
-
-.pe__value {
-  width: 2.6em;
-  font-size: var(--typography-h6-font-size);
-}
-
-.pe__board {
-  align-self: center;
-  min-width: 0;
-  padding: 10px 14px;
-}
-
-@media (max-width: 640px) {
-  /* The ribbon wraps: league, progress and close, then the venue and the channels, a line each. */
-  .pe__ribbon {
-    flex-wrap: wrap;
-    gap: 2px 10px;
-    padding: 5px 6px 6px 12px;
-  }
-
-  .pe__ribbon .pp-close {
-    order: 1;
-  }
-
-  .pe__info {
-    order: 2;
-    flex-basis: 100%;
-  }
-
-  .pe__main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .pe__score {
-    padding: 8px 12px;
-    clip-path: none;
-  }
-
-  .pe__board {
-    padding: 8px 12px;
-  }
-
-  .pe__photo {
-    width: 50%;
-    height: 56px;
-    bottom: auto;
-  }
-}
-
 @media (max-width: 640px) {
   .pp-strip {
     width: calc(100% - 6 * var(--spacing));
   }
-}
-
-/* Under the scores, centered. */
-.pd .pd__progress {
-  justify-self: center;
 }
 
 /* On wide screens, narrowed on both sides to leave the corner to the Feedback button, as today's panel. */
@@ -937,8 +518,547 @@
   .feedback:not([hidden]) ~ .pp-strip {
     width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
   }
+}
 
-  .feedback:not([hidden]) ~ .pp-strip.pc {
-    width: min(720px, calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
+/* ---------- Round 3: today's and Compact's layouts, content moved and resized; every one shows the photo ---------- */
+
+/* The venue photo, covering its box; a faint glow in its place with none, as today; its credit on hover. */
+.pp-photo {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 70% 50%, var(--game-panel-photo), transparent 70%);
+}
+
+.pp-photo > img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pp-photo__credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  padding: 2px 6px;
+  overflow: hidden;
+  background: var(--game-panel-credit-fill);
+  color: var(--game-panel-credit-text);
+  font-size: var(--typography-footnote-font-size);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.pp-photo:hover .pp-photo__credit {
+  opacity: 1;
+}
+
+/* The slanted score block, as today's. */
+.qa__score,
+.qb__score,
+.qc__score,
+.qd__score,
+.qe__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 8px 22px 8px 12px;
+  background: var(--game-panel-score-block-top);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.qa__row,
+.qb__row,
+.qd__row,
+.qe__row {
+  font-size: 15px;
+}
+
+.qa__value,
+.qb__value,
+.qd__value,
+.qe__value {
+  width: 2.6em;
+  font-size: 17px;
+}
+
+/* The band under a strip, as Compact's. */
+.qa__board,
+.qc__board,
+.qe__board {
+  padding: 6px 14px 8px;
+  border-top: 1px solid var(--palette-divider);
+  font-size: var(--typography-caption-font-size);
+}
+
+.qa__board .pp-label,
+.qc__board .pp-label,
+.qe__board .pp-label {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .qa__score,
+  .qb__score,
+  .qc__score,
+  .qd__score,
+  .qe__score {
+    padding: 8px 40px 8px 12px;
+    clip-path: none;
+  }
+
+  .qa__board,
+  .qc__board,
+  .qe__board {
+    padding: 6px 12px 8px;
+  }
+}
+
+/* ----- A: Photo first ----- */
+.qa__main {
+  display: flex;
+  min-height: 104px;
+}
+
+.qa__photo {
+  width: min(170px, 15%);
+  flex-shrink: 0;
+}
+
+.qa__photo > img {
+  mask-image: linear-gradient(270deg, transparent, #000 45%);
+}
+
+.qa__photo-head {
+  display: none;
+}
+
+.qa__score {
+  width: min(400px, 36%);
+  flex-shrink: 0;
+  background: transparent;
+}
+
+.qa__details {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 8px 40px 8px 14px;
+  border-left: 1px solid var(--palette-divider);
+  font-size: var(--typography-caption-font-size);
+}
+
+@media (max-width: 640px) {
+  .qa__main {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* A banner across the top, the league and progress over its foot. */
+  .qa__photo {
+    width: auto;
+    height: 72px;
+  }
+
+  .qa__photo > img {
+    mask-image: none;
+  }
+
+  .qa__photo-head {
+    position: absolute;
+    right: 40px;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 18px 12px 6px;
+    background: linear-gradient(180deg, transparent, var(--game-panel-surface-top));
+  }
+
+  .qa__photo-head .pp-label {
+    color: var(--palette-text-primary);
+  }
+
+  .qa__league,
+  .qa__progress {
+    display: none;
+  }
+
+  .qa__score {
+    width: auto;
+    padding-right: 12px;
+  }
+
+  .qa__details {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 6px 12px;
+    border-left: none;
+    border-top: 1px solid var(--palette-divider);
+  }
+
+  .qa .pp-strip > .pp-close,
+  .qa > .pp-close {
+    z-index: 3;
+  }
+}
+
+/* ----- B: Band inside ----- */
+.qb {
+  display: grid;
+  grid-template-columns: minmax(0, min(380px, 34%)) minmax(0, 1fr) min(150px, 13%);
+  min-height: 104px;
+}
+
+.qb__middle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: var(--typography-caption-font-size);
+}
+
+.qb__facts {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.qb__thumb {
+  display: none;
+}
+
+.qb__lines {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 2px 18px;
+  min-width: 0;
+}
+
+.qb__line {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qb__board {
+  padding-top: 6px;
+  border-top: 1px solid var(--palette-divider);
+}
+
+.qb__board .pp-label {
+  display: none;
+}
+
+.qb__photo > img {
+  mask-image: linear-gradient(90deg, transparent, #000 35%);
+}
+
+@media (max-width: 640px) {
+  .qb {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qb__photo {
+    display: none;
+  }
+
+  /* The photo as a thumbnail beside the venue and watch, a line each. */
+  .qb__thumb {
+    display: block;
+    width: 96px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 4px;
+  }
+
+  /* No wrapping in a column, or each line is as wide as its longest. */
+  .qb__lines {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .qb__middle {
+    padding: 8px 12px;
+  }
+}
+
+/* ----- C: Big score ----- */
+.qc__main {
+  display: flex;
+  min-height: 132px;
+}
+
+.qc__score {
+  width: min(560px, 48%);
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 10px 28px 10px 14px;
+}
+
+.qc__backdrop {
+  display: none;
+}
+
+.qc__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qc__row {
+  gap: 10px;
+  font-size: 19px;
+}
+
+.qc .qc__row .pp-mark {
+  width: 32px;
+  height: 32px;
+}
+
+.qc__value {
+  width: 2.4em;
+  font-size: 26px;
+}
+
+.qc__details {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  font-size: var(--typography-caption-font-size);
+}
+
+.qc__watch-label {
+  margin-top: 8px;
+}
+
+.qc__photo {
+  width: min(240px, 22%);
+  flex-shrink: 0;
+}
+
+.qc__photo > img {
+  mask-image: linear-gradient(90deg, transparent, #000 30%);
+}
+
+@media (max-width: 640px) {
+  .qc__main {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* The photo behind the score block, darkened toward the names. */
+  .qc__score {
+    position: relative;
+    isolation: isolate;
+    width: auto;
+    padding: 10px 40px 10px 12px;
+    background: var(--game-panel-score-block-top);
+  }
+
+  .qc__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    display: block;
+  }
+
+  .qc__backdrop > img {
+    opacity: 0.45;
+    mask-image: linear-gradient(90deg, transparent 10%, #000);
+  }
+
+  .qc__row {
+    font-size: 17px;
+  }
+
+  .qc .qc__row .pp-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .qc__value {
+    font-size: 22px;
+  }
+
+  .qc__photo {
+    display: none;
+  }
+
+  .qc__details {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 2px 8px;
+    padding: 6px 12px;
+  }
+
+  .qc__watch-label {
+    margin-top: 0;
+  }
+}
+
+/* ----- D: Venue card ----- */
+.qd {
+  display: grid;
+  grid-template-columns: minmax(0, min(380px, 34%)) minmax(0, 1fr) min(230px, 20%);
+  min-height: 116px;
+}
+
+.qd__middle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: var(--typography-caption-font-size);
+}
+
+.qd__watch {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qd__card {
+  min-height: 100px;
+}
+
+/* The venue's name and place over the photo's foot, the sport over its top. */
+.qd__venue {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  padding: 18px 10px 6px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--game-panel-surface-top) 92%, transparent) 55%);
+  font-size: var(--typography-caption-font-size);
+}
+
+.qd__sport {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 1;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--game-panel-surface-top) 80%, transparent);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.qd > .pp-close {
+  z-index: 2;
+}
+
+@media (max-width: 640px) {
+  .qd {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The card across the width, between the score and the details. */
+  .qd__card {
+    order: 1;
+    min-height: 88px;
+  }
+
+  .qd__middle {
+    order: 2;
+    padding: 8px 12px;
+  }
+}
+
+/* ----- E: Photo backdrop ----- */
+.qe {
+  isolation: isolate;
+}
+
+.qe__backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 30%;
+  z-index: -1;
+  background: none;
+}
+
+.qe__backdrop > img {
+  opacity: 0.4;
+  mask-image: linear-gradient(90deg, transparent, #000 50%);
+}
+
+.qe__main {
+  display: flex;
+  min-height: 96px;
+}
+
+.qe__score {
+  width: min(380px, 34%);
+  flex-shrink: 0;
+}
+
+.qe__details {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 8px 40px 8px 14px;
+  font-size: var(--typography-caption-font-size);
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+.qe__board {
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+@media (max-width: 640px) {
+  .qe__main {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .qe__score {
+    width: auto;
+  }
+
+  /* Behind everything under the score. */
+  .qe__backdrop {
+    top: auto;
+    left: 0;
+    height: 60%;
+  }
+
+  .qe__backdrop > img {
+    mask-image: linear-gradient(180deg, transparent, #000 40%);
+  }
+
+  .qe__details {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 6px 12px;
   }
 }

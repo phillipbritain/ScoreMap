@@ -70,8 +70,9 @@ body {
   pointer-events: none;
 }
 
-/* Glass: every surface over the globe (score cards, the game panel, the rail and its popovers,
-   the no-pins message, the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018).
+/* Glass: every surface over the globe (score cards, the rail and its popovers, the no-pins message,
+   the demo label and tooltips) is a pane of glass the globe shows through (ADR-0018). The game panel
+   isn't: it's solid, with no blur behind it (ADR-0023).
    Its component's frost, 0 to 1, says how far: at 0 clear glass, the globe behind it sharp but for a
    slight bend and lifted in color, its edges catching the light; at 1 opaque frosted glass. The glass
    is tinted with the component's own surface color (--glass-tint, or --glass-fill for a fill of its
@@ -81,7 +82,6 @@ body {
    has its glass on a layer behind its content (::before), since glass on the surface itself would keep
    the glass inside from seeing past it. */
 .score-card,
-.game-panel,
 .rail__group::before,
 .rail__popover,
 .no-pins,
@@ -143,21 +143,14 @@ body {
   overflow-y: auto;
   border-top: var(--shape-border-width-thick) solid var(--game-color);
   border-radius: var(--game-panel-corner);
-  /* Glass (see above), shading from top to bottom. */
-  --frost: var(--game-panel-frost);
-  --glass-lens: url(#glass-lens);
-  --glass-fill: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--game-panel-surface-top) calc(var(--frost) * 100%), transparent),
-    color-mix(in srgb, var(--game-panel-surface-bottom) calc(var(--frost) * 100%), transparent)
-  );
+  /* Solid, not glass (ADR-0023): the globe doesn't show through. Shading from top to bottom. */
+  background: linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
   box-shadow:
     var(--game-panel-shadow),
-    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent),
-    var(--glass-rim);
+    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
   /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it. */
   --cut-corner: calc(var(--game-panel-cut-corner-on) * var(--game-panel-cut-corner-size));
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
@@ -181,13 +174,7 @@ body {
   width: min(var(--game-panel-size-score-block), 42%);
   flex-shrink: 0;
   padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
-  /* Clearing with the panel's glass, but never all the way, so the score block stands out from it. */
-  --score-block-opacity: calc((0.15 + 0.85 * var(--frost)) * 100%);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--game-panel-score-block-top) var(--score-block-opacity), transparent),
-    color-mix(in srgb, var(--game-panel-score-block-bottom) var(--score-block-opacity), transparent)
-  );
+  background: linear-gradient(180deg, var(--game-panel-score-block-top), var(--game-panel-score-block-bottom));
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
@@ -237,7 +224,7 @@ body {
 }
 
 .game-panel__team img {
-  background: color-mix(in srgb, var(--game-panel-logo-plate-fill) calc(var(--frost) * 100%), transparent);
+  background: var(--game-panel-logo-plate-fill);
 }
 
 .game-panel__team-name {
@@ -265,7 +252,7 @@ body {
   box-sizing: border-box;
   width: var(--game-panel-size-score-width);
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--game-panel-score-fill) calc(var(--frost) * 100%), transparent);
+  background: var(--game-panel-score-fill);
   color: var(--game-panel-score-text);
   font-family: var(--typography-font-family);
   font-size: var(--typography-h6-font-size);

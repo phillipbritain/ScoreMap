@@ -231,21 +231,20 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, tooltips, and the game panel (from November 2026, when its venue photo came to fill part of it). They use their existing theme surface colors with **frost** set to 1. Score cards keep their glass; pins are unchanged.
+Panels and popovers over the globe have solid backgrounds so their contents stay readable (ADR-0023): the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. They use their existing theme surface colors with **frost** set to 1. The game panel isn't glass at all (from November 2026, when its venue photo came to fill part of it): it's its surface colors, solid, with no frost and nothing blurred behind it. Score cards keep their glass; pins are unchanged.
 
 The shared glass material still supports local theme experiments. Each component has a **frost**, from 0 to 1:
 
 - at **0**, clear glass: the globe behind is sharp, its color lifted, and on the larger panes (not score cards) slightly bent, as through thick glass; the edges catch the light, brightest at the top left, with a faint sheen across;
 - at **1**, opaque frosted glass: the globe is blurred away behind the component's surface color, solid.
 
-In between, the surface color is as solid as the frost and the blur grows with it, while the edges and sheen dim. The glass is tinted with the component's own surface color (`components.ScoreCard.fill`, `components.GamePanel.surface`, `components.Rail.surface`, `components.Controls.surface`, `components.Tooltip.surface`), so the palette still colors it, and every pane casts a soft shadow onto the globe in the background's color.
+In between, the surface color is as solid as the frost and the blur grows with it, while the edges and sheen dim. The glass is tinted with the component's own surface color (`components.ScoreCard.fill`, `components.Rail.surface`, `components.Controls.surface`, `components.Tooltip.surface`), so the palette still colors it, and every pane casts a soft shadow onto the globe in the background's color.
 
-On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Likewise on the game panel its score block (never all the way, so it stands out), its score boxes and its logo plates. Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, though, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
+On a score card the frost clears more than the fill: its header's tint, its status glow inside it and its logo plates clear with it too, so at 0 a card is only its edge, text, logos and status light, and its outline and glow outside keep its status look (Live's glow, Final's fade). Logos drawn for a light background are harder to see the clearer the glass. A score card's glass isn't blurred, though, whatever its frost: the globe behind it shows sharp under its tint (ADR-0018), so its frost is how solid that tint is.
 
 | Setting | Which glass | Dark theme |
 | --- | --- | --- |
 | `components.ScoreCard.frost` | Score cards' | 0.6 |
-| `components.GamePanel.frost` | The game panel's | 1 |
 | `components.Rail.frost` | The rail's groups and popovers, the top rail's (local runs), and welcome tour panels | 1 |
 | `components.Controls.frost` | The no-pins message, demo label, and Feedback button and panel | 1 |
 | `components.Tooltip.frost` | Tooltips' | 1 |

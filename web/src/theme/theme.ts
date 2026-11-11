@@ -521,11 +521,9 @@ const settings = {
      * desktop); the score block's maximum width and how far its right edge slants; a team's logo;
      * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
      * logoPlate). It sits clear of the scenario
-     * controls by their keys' size. Its glass's frost: its surface, score block, score boxes and logo
-     * plates clear with it.
+     * controls by their keys' size. It's solid, not glass (ADR-0023), so it has no frost.
      */
     GamePanel: {
-      frost,
       surface: { top: color, bottom: color },
       scoreBlock: { top: color, bottom: color },
       score: { fill: color, text: color },

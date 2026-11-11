@@ -174,9 +174,9 @@ describe('applyTheme', () => {
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 7 + 3 * 3,
-      // The game panel's frost, nine colors and shadows, the photo's opacity, glow of three, corner, cut
-      // corner's two, seven sizes and logo plate of three.
-      gamePanel: 1 + 9 + 1 + 3 + 1 + 2 + 7 + 3,
+      // The game panel's nine colors and shadows, the photo's opacity, glow of three, corner, cut corner's
+      // two, seven sizes and logo plate of three (no frost: it's solid).
+      gamePanel: 9 + 1 + 3 + 1 + 2 + 7 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
       // The rail's frost, ten colors and shadows and seven sizes.

@@ -101,6 +101,8 @@ const inPixels = (value: number) => `${value}px`
 /** A size in pixels, written to CSS as one. */
 const pixels: Setting<number> = { ...numberFrom(0, Infinity, 'a number of pixels'), css: inPixels }
 const opacity = numberFrom(0, 1, 'an opacity from 0 to 1')
+/** How much of one color is mixed into another, from none (0) to all of it (1). */
+const share = numberFrom(0, 1, 'a share from 0 to 1')
 /** How frosted a pane of glass is, from clear (0) to opaque frosted glass (1) (ADR-0018). */
 const frost = numberFrom(0, 1, 'a frost from 0 (clear glass) to 1 (opaque frosted glass)')
 /** How far something is moved, in pixels, either way; written to CSS in pixels. */
@@ -553,9 +555,10 @@ const settings = {
      * The rail and its popovers (Leagues, Display Settings and Games): their surface and drop shadow; the
      * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
-     * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
-     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. They're
-     * solid, not glass (ADR-0023).
+     * on: lit as a Live score card is, its fill with this share of its outline's color mixed in, its
+     * text, and a glow in its outline's color, this far and this strong. Its size: a button and its
+     * icon, a popover's width, the "All leagues" chip's height, and the narrowest a count of leagues
+     * is, in ems. They're solid, not glass (ADR-0023).
      */
     Rail: {
       surface: color,
@@ -564,8 +567,8 @@ const settings = {
       count: color,
       hint: color,
       chip: { outline: color, badge: color },
-      on: { fill: color, text: color },
-      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mark: ems, mapType: pixels },
+      on: { fill: color, outline: color, tint: share, text: color, glow: { radius: pixels, opacity } },
+      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mapType: pixels },
     },
     /**
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their

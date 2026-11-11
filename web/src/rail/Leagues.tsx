@@ -60,9 +60,6 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
             aria-pressed={allState === 'on'}
             onClick={() => onChange(withAllLeagues(settings, leagues, allState !== 'on'))}
           >
-            <span className="leagues-master__mark" aria-hidden="true">
-              {allState === 'on' ? '✓' : allState === 'mixed' ? '–' : ''}
-            </span>
             All leagues
             <span className="leagues-master__count">
               {leaguesOn}/{leagues.length}
@@ -79,7 +76,7 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
               {/* Switches every league in the sport on, or off when they're all on already. */}
               <button
                 type="button"
-                className="rail-sport__name"
+                className={on === group.leagues.length ? 'rail-sport__name rail-sport__name--on' : 'rail-sport__name'}
                 onClick={() => onChange(withSport(settings, group, sportSwitch(settings, group) !== 'on'))}
               >
                 {group.sport}{' '}

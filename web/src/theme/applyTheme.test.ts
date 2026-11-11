@@ -130,13 +130,13 @@ describe('applyTheme', () => {
         json.components.ScoreCard.header.letterSpacing = 0.2
         json.components.PlaceNames.country.letterSpacing = 0.1
         json.components.GamePanel.size.scoreWidth = 3
-        json.components.Rail.size.mark = 1.1
+        json.components.Rail.size.countWidth = 1.1
       }),
     )
     expect(properties.get('--score-card-header-letter-spacing')).toBe('0.2em')
     expect(properties.get('--place-names-country-letter-spacing')).toBe('0.1em')
     expect(properties.get('--game-panel-size-score-width')).toBe('3em')
-    expect(properties.get('--rail-size-mark')).toBe('1.1em')
+    expect(properties.get('--rail-size-count-width')).toBe('1.1em')
   })
 
   it('writes a shadow as a CSS shadow, its color resolved', () => {
@@ -185,8 +185,8 @@ describe('applyTheme', () => {
       gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's ten colors and shadows and seven sizes.
-      rail: 10 + 7,
+      // The rail's ten colors and shadows, a lit chip's outline, tint and glow of two, and six sizes.
+      rail: 10 + 4 + 6,
       // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's surface.

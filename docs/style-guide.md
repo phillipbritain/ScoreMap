@@ -82,7 +82,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; only the welcome tour's switch in My leagues names it (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does the welcome tour's switch in My leagues (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -152,17 +152,17 @@ Beside the palette's background, text, divider and hover:
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
-| `components.Rail.count` | The count of a sport's leagues that are on | `text.secondary` |
+| `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
-| `components.Rail.chip.badge` | The badge counting leagues on the "All leagues" chip | `primary.dark` |
-| `components.Rail.on.fill`, `.text` | A league chip that's on | `offWhite.500`, `navy.800` |
+| `components.Rail.chip.badge` | The badge counting leagues, after a sport's name and on the "All leagues" chip | `primary.dark` |
+| `components.Rail.on.fill`, `.outline`, `.text` | A league chip that's on, lit as a Live score card is: its fill, with `Rail.on.tint` of its outline's color mixed in (0.14), its outline and glow (`Rail.on.glow.radius` and `.opacity`, 8 and 0.35), and its text. The chosen "Top Events" or "My leagues" is underlined in the outline's color, and the welcome tour's Next and Done buttons are lit the same way | `primary.dark`, `secondary.main`, `secondary.light` |
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's color) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
 | `components.LoadingScreen.message` | The message under the loading screen's rocket when loading is slow | `text.primary` |
 
-"On" is off-white everywhere (a league chip, a lit speed key, the selection), so chosen looks the same across the app; a rail button whose popover is open is gold.
+A league that's on is lit in gold, as a game is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
 
 ## How a game's status shows
 
@@ -260,9 +260,9 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `subtitle2` | A score card's clock line, and the rest of its text | 600, 12 |
 | `body1` | Body text | 400, 16 |
 | `body2` | The game panel, the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
-| `button` | Buttons: sport names in Leagues and Display Settings, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
+| `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips; the game panel's close button takes its size | 400, 12 |
-| `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
+| `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, in capitals | 700, 12, 0.14em |
 | `footnote` | The smallest on the page: a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
 `footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
@@ -362,7 +362,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |
 | `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's surface, coastline and border colors | 64 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
-| `components.Rail.size.countWidth`, `.mark` | On the "All leagues" chip, the narrowest its count is, and the box its mark (✓ or –) sits in, so the chip keeps its size whichever shows; in ems | 3.2, 1 |
+| `components.Rail.size.countWidth` | The narrowest a count of leagues is, in ems | 3.2 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |
 | `components.LoadingScreen.rocket.size` | The loading screen's rocket, its box across | 64 |
 

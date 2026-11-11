@@ -22,7 +22,7 @@ param githubIdentityName string = 'scoremap-github'
 param githubSubject string
 
 @secure()
-@description('Fine-grained GitHub token that can only write this repo's issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged.')
+@description('Fine-grained GitHub token that can only write this repo\'s issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged.')
 param feedbackGitHubToken string = ''
 
 resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {
@@ -48,7 +48,8 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
     // ever runs on more than one.
     clientAffinityEnabled: true
     siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|11.0'
+      // From .NET 11 the stack is named dotnet|<major> (`az webapp list-runtimes --os linux`), not DOTNETCORE|<version>.
+      linuxFxVersion: 'dotnet|11'
       appCommandLine: 'dotnet ScoreMap.Server.dll'
       webSocketsEnabled: true
       // Always On isn't available on F1. ScoreMap is fine sleeping when idle (ADR-0007).

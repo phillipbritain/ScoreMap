@@ -29,7 +29,20 @@ const leaderboardLength = 10
  * The contest's details, flowing inline as today's band does: a field's leaderboard, a fight card's bouts, a
  * tennis match's sets, or the last score. Empty when there's nothing.
  */
-export function InlineBoard({ game, facts, prefix, labels = true }: { game: Game; facts: PanelFacts; prefix: string; labels?: boolean }) {
+export function InlineBoard({
+  game,
+  facts,
+  prefix,
+  labels = true,
+  lastScore: showLastScore = true,
+}: {
+  game: Game
+  facts: PanelFacts
+  prefix: string
+  labels?: boolean
+  /** False where the variant shows the last score elsewhere. */
+  lastScore?: boolean
+}) {
   const [all, setAll] = useState(false)
   const { field, bouts } = facts
   const { scoreline, lastScore } = game
@@ -88,7 +101,7 @@ export function InlineBoard({ game, facts, prefix, labels = true }: { game: Game
         </div>
       </div>
     )
-  if (lastScore)
+  if (lastScore && showLastScore)
     return (
       <div className={`${prefix}__board`}>
         {labels && <div className="pp-label">Last score</div>}

@@ -3,12 +3,10 @@ import { useEffect, useState } from 'react'
 
 export const variants = [
   { key: 'current', name: 'Today’s panel' },
-  { key: 'compact', name: 'Compact (round 2)' },
-  { key: 'A', name: 'Photo first' },
-  { key: 'B', name: 'Band inside' },
-  { key: 'C', name: 'Big score' },
-  { key: 'D', name: 'Venue card' },
-  { key: 'E', name: 'Photo backdrop' },
+  { key: 'backdrop', name: 'Photo backdrop (round 3)' },
+  { key: 'A', name: 'Today + backdrop' },
+  { key: 'B', name: 'Last score beside venue' },
+  { key: 'C', name: 'Last score in score block' },
 ] as const
 
 const readVariant = () => {

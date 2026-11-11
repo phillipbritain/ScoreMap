@@ -1,26 +1,20 @@
-// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, compact, A–E) and shows the floating
+// PROTOTYPE (throwaway): picks the game panel variant from `?variant=` (current, backdrop, A–C) and shows the floating
 // switcher bar at the bottom of the page on local runs. See ./README.md. Kept out of main.
 import { useEffect } from 'react'
 import { GamePanel } from '../GamePanel'
 import type { VariantProps } from './facts'
 import { variants } from './variantList'
-import { VariantA } from './VariantA'
-import { VariantB } from './VariantB'
-import { VariantCompact } from './VariantCompact'
-import { VariantC } from './VariantC'
-import { VariantD } from './VariantD'
+import { VariantA, VariantB, VariantC } from './TodayBackdrop'
 import { VariantE } from './VariantE'
 import './prototype.css'
 
 // In the order of variants in ./variantList.ts.
 const panels = [
   ({ panelRef, ...props }: VariantProps) => <GamePanel ref={panelRef} {...props} />,
-  VariantCompact,
+  VariantE,
   VariantA,
   VariantB,
   VariantC,
-  VariantD,
-  VariantE,
 ]
 
 /** The selected game's panel, in whichever variant the URL asks for. */

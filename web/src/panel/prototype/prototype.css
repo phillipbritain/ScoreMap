@@ -382,131 +382,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ----- B: Compact (today's layout, smaller) ----- */
-.pb__main {
-  display: flex;
-  min-height: 96px;
-}
-
-.pb__score {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 4px;
-  box-sizing: border-box;
-  width: min(380px, 38%);
-  flex-shrink: 0;
-  padding: 8px 22px 8px 12px;
-  background: var(--game-panel-score-block-top);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-}
-
-.pb .pp-mark {
-  width: 18px;
-  height: 18px;
-}
-
-.pb__row {
-  gap: 6px;
-  font-size: 14px;
-}
-
-.pb__value {
-  width: 2.6em;
-  font-size: 15px;
-}
-
-.pb__progress {
-  margin-top: 2px;
-}
-
-.pb__details {
-  flex: 1;
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 16px;
-  min-width: 0;
-  padding: 8px 14px;
-  font-size: var(--typography-caption-font-size);
-}
-
-.pb__photo {
-  width: min(110px, 10%);
-  flex-shrink: 0;
-}
-
-.pb__photo img {
-  mask-image: linear-gradient(90deg, transparent, #000 35%);
-}
-
-.pb__board {
-  padding: 6px 14px 8px;
-  border-top: 1px solid var(--palette-divider);
-  font-size: var(--typography-caption-font-size);
-}
-
-.pb__board .pp-label {
-  display: none;
-}
-
-@media (max-width: 640px) {
-  .pb__main {
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .pb__score {
-    width: auto;
-    padding: 8px 40px 8px 12px;
-    clip-path: none;
-  }
-
-  /* Venue and watch on one line each, labels inline; the sport is in the venue's label already. */
-  .pb__details {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2px;
-    padding: 6px 12px;
-  }
-
-  .pb__sport {
-    display: none;
-  }
-
-  /* Round 3: a short banner across the top. */
-  .pb__photo {
-    order: -1;
-    width: auto;
-    height: 64px;
-  }
-
-  .pb__photo img {
-    mask-image: linear-gradient(180deg, #000 40%, transparent);
-  }
-
-  .pb__venue,
-  .pb__watch {
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .pb__venue > div:last-child {
-    display: flex;
-    gap: 6px;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .pb__board {
-    padding: 6px 12px 8px;
-  }
-}
-
 @media (max-width: 640px) {
   .pp-strip {
     width: calc(100% - 6 * var(--spacing));
@@ -624,372 +499,6 @@
   }
 }
 
-/* ----- A: Photo first ----- */
-.qa__main {
-  display: flex;
-  min-height: 104px;
-}
-
-.qa__photo {
-  width: min(170px, 15%);
-  flex-shrink: 0;
-}
-
-.qa__photo > img {
-  mask-image: linear-gradient(270deg, transparent, #000 45%);
-}
-
-.qa__photo-head {
-  display: none;
-}
-
-.qa__score {
-  width: min(400px, 36%);
-  flex-shrink: 0;
-  background: transparent;
-}
-
-.qa__details {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 16px;
-  min-width: 0;
-  padding: 8px 40px 8px 14px;
-  border-left: 1px solid var(--palette-divider);
-  font-size: var(--typography-caption-font-size);
-}
-
-@media (max-width: 640px) {
-  .qa__main {
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  /* A banner across the top, the league and progress over its foot. */
-  .qa__photo {
-    width: auto;
-    height: 72px;
-  }
-
-  .qa__photo > img {
-    mask-image: none;
-  }
-
-  .qa__photo-head {
-    position: absolute;
-    right: 40px;
-    bottom: 0;
-    left: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 18px 12px 6px;
-    background: linear-gradient(180deg, transparent, var(--game-panel-surface-top));
-  }
-
-  .qa__photo-head .pp-label {
-    color: var(--palette-text-primary);
-  }
-
-  .qa__league,
-  .qa__progress {
-    display: none;
-  }
-
-  .qa__score {
-    width: auto;
-    padding-right: 12px;
-  }
-
-  .qa__details {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 10px;
-    padding: 6px 12px;
-    border-left: none;
-    border-top: 1px solid var(--palette-divider);
-  }
-
-  .qa .pp-strip > .pp-close,
-  .qa > .pp-close {
-    z-index: 3;
-  }
-}
-
-/* ----- B: Band inside ----- */
-.qb {
-  display: grid;
-  grid-template-columns: minmax(0, min(380px, 34%)) minmax(0, 1fr) min(150px, 13%);
-  min-height: 104px;
-}
-
-.qb__middle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 8px 14px;
-  font-size: var(--typography-caption-font-size);
-}
-
-.qb__facts {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.qb__thumb {
-  display: none;
-}
-
-.qb__lines {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
-  gap: 2px 18px;
-  min-width: 0;
-}
-
-.qb__line {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.qb__board {
-  padding-top: 6px;
-  border-top: 1px solid var(--palette-divider);
-}
-
-.qb__board .pp-label {
-  display: none;
-}
-
-.qb__photo > img {
-  mask-image: linear-gradient(90deg, transparent, #000 35%);
-}
-
-@media (max-width: 640px) {
-  .qb {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .qb__photo {
-    display: none;
-  }
-
-  /* The photo as a thumbnail beside the venue and watch, a line each. */
-  .qb__thumb {
-    display: block;
-    width: 96px;
-    height: 56px;
-    flex-shrink: 0;
-    border-radius: 4px;
-  }
-
-  /* No wrapping in a column, or each line is as wide as its longest. */
-  .qb__lines {
-    flex-direction: column;
-    flex-wrap: nowrap;
-  }
-
-  .qb__middle {
-    padding: 8px 12px;
-  }
-}
-
-/* ----- C: Big score ----- */
-.qc__main {
-  display: flex;
-  min-height: 132px;
-}
-
-.qc__score {
-  width: min(560px, 48%);
-  flex-shrink: 0;
-  gap: 8px;
-  padding: 10px 28px 10px 14px;
-}
-
-.qc__backdrop {
-  display: none;
-}
-
-.qc__head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.qc__row {
-  gap: 10px;
-  font-size: 19px;
-}
-
-.qc .qc__row .pp-mark {
-  width: 32px;
-  height: 32px;
-}
-
-.qc__value {
-  width: 2.4em;
-  font-size: 26px;
-}
-
-.qc__details {
-  flex: 1;
-  min-width: 0;
-  padding: 10px 14px;
-  font-size: var(--typography-caption-font-size);
-}
-
-.qc__watch-label {
-  margin-top: 8px;
-}
-
-.qc__photo {
-  width: min(240px, 22%);
-  flex-shrink: 0;
-}
-
-.qc__photo > img {
-  mask-image: linear-gradient(90deg, transparent, #000 30%);
-}
-
-@media (max-width: 640px) {
-  .qc__main {
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  /* The photo behind the score block, darkened toward the names. */
-  .qc__score {
-    position: relative;
-    isolation: isolate;
-    width: auto;
-    padding: 10px 40px 10px 12px;
-    background: var(--game-panel-score-block-top);
-  }
-
-  .qc__backdrop {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    display: block;
-  }
-
-  .qc__backdrop > img {
-    opacity: 0.45;
-    mask-image: linear-gradient(90deg, transparent 10%, #000);
-  }
-
-  .qc__row {
-    font-size: 17px;
-  }
-
-  .qc .qc__row .pp-mark {
-    width: 28px;
-    height: 28px;
-  }
-
-  .qc__value {
-    font-size: 22px;
-  }
-
-  .qc__photo {
-    display: none;
-  }
-
-  .qc__details {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 2px 8px;
-    padding: 6px 12px;
-  }
-
-  .qc__watch-label {
-    margin-top: 0;
-  }
-}
-
-/* ----- D: Venue card ----- */
-.qd {
-  display: grid;
-  grid-template-columns: minmax(0, min(380px, 34%)) minmax(0, 1fr) min(230px, 20%);
-  min-height: 116px;
-}
-
-.qd__middle {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 8px 14px;
-  font-size: var(--typography-caption-font-size);
-}
-
-.qd__watch {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.qd__card {
-  min-height: 100px;
-}
-
-/* The venue's name and place over the photo's foot, the sport over its top. */
-.qd__venue {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  padding: 18px 10px 6px;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--game-panel-surface-top) 92%, transparent) 55%);
-  font-size: var(--typography-caption-font-size);
-}
-
-.qd__sport {
-  position: absolute;
-  top: 6px;
-  left: 8px;
-  z-index: 1;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--game-panel-surface-top) 80%, transparent);
-  font-size: var(--typography-footnote-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  letter-spacing: var(--typography-overline-letter-spacing);
-  text-transform: uppercase;
-}
-
-.qd > .pp-close {
-  z-index: 2;
-}
-
-@media (max-width: 640px) {
-  .qd {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* The card across the width, between the score and the details. */
-  .qd__card {
-    order: 1;
-    min-height: 88px;
-  }
-
-  .qd__middle {
-    order: 2;
-    padding: 8px 12px;
-  }
-}
-
 /* ----- E: Photo backdrop ----- */
 .qe {
   isolation: isolate;
@@ -1060,5 +569,177 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 10px;
     padding: 6px 12px;
+  }
+}
+
+/* ---------- Round 4: today's panel with the photo backdrop, no Sport; where the last score goes ---------- */
+.tb {
+  isolation: isolate;
+}
+
+/* Today's strip: the score block at its size, the details beside it. */
+.tb__main {
+  display: flex;
+  min-height: var(--game-panel-size-height);
+}
+
+.tb__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: calc(2 * var(--spacing));
+  box-sizing: border-box;
+  width: min(var(--game-panel-size-score-block), 42%);
+  flex-shrink: 0;
+  padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  background: var(--game-panel-score-block-top);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
+}
+
+.tb__league {
+  margin-bottom: var(--spacing);
+}
+
+.tb__row {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  border-radius: 4px;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.tb .tb__row .pp-mark {
+  width: var(--game-panel-size-logo);
+  height: var(--game-panel-size-logo);
+  padding: var(--game-panel-logo-plate-padding);
+}
+
+.tb__name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tb__record {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.tb__value {
+  box-sizing: border-box;
+  width: var(--game-panel-size-score-width);
+  flex-shrink: 0;
+  background: var(--game-panel-score-fill);
+  color: var(--game-panel-score-text);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-h6-font-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transform: skewX(-10deg);
+}
+
+.tb__progress {
+  margin-top: var(--spacing);
+}
+
+/* C: the last score in the score block, quieter than the names. */
+.tb__last {
+  font-size: var(--typography-caption-font-size);
+}
+
+/* Venue and watch (B: and the last score) as today's details columns, over the photo. */
+.tb__details {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: calc(4 * var(--spacing));
+  min-width: 0;
+  padding: calc(3 * var(--spacing)) calc(10 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+.tb--column .tb__details {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.6fr);
+}
+
+.tb__cell {
+  min-width: 0;
+}
+
+.tb-col__board {
+  min-width: 0;
+}
+
+.tb__cell .pp-muted,
+.tb-col__board .pp-muted {
+  font-size: var(--typography-caption-font-size);
+}
+
+/* The band under the strip, as today's, over the photo. */
+.tb__board {
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+/* The photo behind the details and band, darkened toward the score block. */
+.tb__backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: min(var(--game-panel-size-score-block), 42%);
+  z-index: -1;
+  background: none;
+}
+
+.tb__backdrop > img {
+  opacity: 0.4;
+  mask-image: linear-gradient(90deg, transparent, #000 50%);
+}
+
+.tb__backdrop.pp-photo--none {
+  background: radial-gradient(ellipse at 85% 40%, var(--game-panel-photo), transparent 60%);
+}
+
+/* On a phone, as today's: the score block across the width, the details under it; the photo behind
+   everything under the score. */
+@media (max-width: 640px) {
+  .tb__main {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .tb__score {
+    width: auto;
+    padding: calc(3 * var(--spacing)) calc(10 * var(--spacing)) calc(3 * var(--spacing)) calc(3 * var(--spacing));
+    clip-path: none;
+  }
+
+  .tb__details,
+  .tb--column .tb__details {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  }
+
+  /* B: the last score (or other details) across the width under venue and watch, still in the strip. */
+  .tb-col__board {
+    grid-column: 1 / -1;
+  }
+
+  .tb__board {
+    padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  }
+
+  .tb__backdrop {
+    top: auto;
+    left: 0;
+    height: 60%;
+  }
+
+  .tb__backdrop > img {
+    mask-image: linear-gradient(180deg, transparent, #000 40%);
   }
 }

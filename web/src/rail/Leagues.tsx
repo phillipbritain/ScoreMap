@@ -53,8 +53,7 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
       {top && <p className="leagues-scope__note">The games ESPN picks as the most important right now, in every sport.</p>}
       <div className={top ? 'leagues-list leagues-list--off' : 'leagues-list'} inert={top}>
         <div className="leagues-master">
-          {/* Switches every league on, or off when they're all on already, like a sport's name. Its dot is lit
-              when all are on, half lit when some are. */}
+          {/* Switches every league on, or off when they're all on already, like a sport's name. */}
           <button
             type="button"
             className={`rail-chip leagues-master__chip leagues-master__chip--${allState}`}

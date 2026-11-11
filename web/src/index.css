@@ -1343,13 +1343,10 @@ body {
   fill: var(--palette-text-primary);
 }
 
-/* A league as a pill, a dot before its name. Off, it's hollow and faint; on, it's lit as a Live score
-   card is: its outline and dot in the lit color, its fill tinted with it, and a soft glow around it. */
+/* A league as a pill. Off, it's a faint outline; on, it's lit as a Live score card is: its outline in
+   the lit color, its fill tinted with it, and a soft glow around it. */
 .rail-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(1.5 * var(--spacing));
-  padding: var(--spacing) calc(3 * var(--spacing)) var(--spacing) calc(2.5 * var(--spacing));
+  padding: var(--spacing) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
   border-radius: var(--controls-corner);
   background: transparent;
@@ -1361,30 +1358,12 @@ body {
   cursor: pointer;
 }
 
-.rail-chip::before {
-  content: '';
-  flex: none;
-  box-sizing: border-box;
-  width: var(--rail-size-dot);
-  height: var(--rail-size-dot);
-  border: var(--shape-border-width-thin) solid currentColor;
-  border-radius: 50%;
-  opacity: var(--controls-off-opacity);
-}
-
 /* Lit, not bolder: bold text would widen the chip and shift the chips after it. */
 .rail-chip[aria-pressed='true'] {
   border-color: var(--rail-on-outline);
   background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
   box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
   color: var(--rail-on-text);
-}
-
-.rail-chip[aria-pressed='true']::before {
-  border-color: var(--rail-on-outline);
-  background: var(--rail-on-text);
-  box-shadow: 0 0 var(--rail-size-dot) var(--rail-on-outline);
-  opacity: 1;
 }
 
 @media (hover: hover) {
@@ -1507,19 +1486,16 @@ body {
 
 .leagues-master__chip {
   height: var(--rail-size-all-leagues);
-  padding: 0 calc(2 * var(--spacing)) 0 calc(2.5 * var(--spacing));
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  padding: 0 calc(2 * var(--spacing)) 0 calc(3 * var(--spacing));
 }
 
-/* Some on: the outline dashed in the lit color, the dot half lit. */
+/* Some on: the outline dashed in the lit color. */
 .leagues-master__chip--mixed {
   border-style: dashed;
   border-color: var(--rail-on-outline);
-}
-
-.leagues-master__chip--mixed::before {
-  border-color: var(--rail-on-outline);
-  background: linear-gradient(90deg, var(--rail-on-text) 50%, transparent 50%);
-  opacity: 1;
 }
 
 /* How many leagues are on (on "All leagues", and after a sport's name), as a badge. */

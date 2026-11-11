@@ -557,8 +557,8 @@ const settings = {
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on: lit as a Live score card is, its fill with this share of its outline's color mixed in, its
      * text, and a glow in its outline's color, this far and this strong. Its size: a button and its
-     * icon, a popover's width, the "All leagues" chip's height, the narrowest its count is (in ems),
-     * and the dot on a chip that's lit while it's on. They're solid, not glass (ADR-0023).
+     * icon, a popover's width, the "All leagues" chip's height, and the narrowest a count of leagues
+     * is, in ems. They're solid, not glass (ADR-0023).
      */
     Rail: {
       surface: color,
@@ -568,7 +568,7 @@ const settings = {
       hint: color,
       chip: { outline: color, badge: color },
       on: { fill: color, outline: color, tint: share, text: color, glow: { radius: pixels, opacity } },
-      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, dot: pixels, mapType: pixels },
+      size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mapType: pixels },
     },
     /**
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their

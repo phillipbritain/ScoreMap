@@ -185,8 +185,8 @@ describe('applyTheme', () => {
       gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's ten colors and shadows, a lit chip's outline, tint and glow of two, and seven sizes.
-      rail: 10 + 4 + 7,
+      // The rail's ten colors and shadows, a lit chip's outline, tint and glow of two, and six sizes.
+      rail: 10 + 4 + 6,
       // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's surface.

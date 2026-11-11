@@ -164,7 +164,7 @@
       "hint": "text.secondary",
       "chip": { "outline": "primary.main", "badge": "primary.dark" },
       "on": { "fill": "primary.dark", "outline": "secondary.main", "tint": 0.14, "text": "secondary.light", "glow": { "radius": 8, "opacity": 0.35 } },
-      "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "dot": 6, "mapType": 64 }
+      "size": { "button": 36, "icon": 18, "width": 320, "allLeagues": 32, "countWidth": 3.2, "mapType": 64 }
     },
     "Controls": {
       "surface": "background.paper",

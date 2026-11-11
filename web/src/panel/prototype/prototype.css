@@ -812,3 +812,98 @@
     gap: calc(2 * var(--spacing));
   }
 }
+
+/* ---------- Round 8: H, the score on the photo alone; venue top right, watch bottom right ---------- */
+/* League and venue across the top, the score under the league, the band's details and watch across the
+   foot: the venue in the top right corner (clear of the close button), watch in the bottom right. */
+.tc__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+  grid-template-areas:
+    'league venue'
+    'score venue'
+    'board watch';
+  column-gap: calc(4 * var(--spacing));
+  min-height: var(--game-panel-size-height);
+  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  text-shadow: 0 1px 3px var(--palette-background-default), 0 0 8px var(--palette-background-default);
+}
+
+.tc__league {
+  grid-area: league;
+  margin-bottom: calc(2 * var(--spacing));
+}
+
+.tc__venue {
+  grid-area: venue;
+  align-self: start;
+  justify-self: end;
+  max-width: 360px;
+  padding-right: calc(7 * var(--spacing));
+  text-align: right;
+}
+
+/* No block, wash or slant: the names and scores sit on the photo. */
+.tc__score {
+  grid-area: score;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(2 * var(--spacing));
+  max-width: calc(var(--game-panel-size-score-block) - 10 * var(--spacing));
+}
+
+.tc__board {
+  grid-area: board;
+  align-self: end;
+  min-width: 0;
+  margin-top: calc(3 * var(--spacing));
+}
+
+.tc__watch {
+  grid-area: watch;
+  align-self: end;
+  justify-self: end;
+  margin-top: calc(3 * var(--spacing));
+  white-space: nowrap;
+}
+
+/* The photo plainer than G's, with nothing over the score to dim it. */
+.tc .tb__backdrop > img {
+  opacity: 0.4;
+}
+
+@media (max-width: 640px) {
+  /* The league and venue across the top, the score under them, then the details, then watch at the bottom
+     right. */
+  .tc__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'league venue'
+      'score score'
+      'board board'
+      'watch watch';
+    column-gap: calc(3 * var(--spacing));
+    min-height: 0;
+    padding: calc(3 * var(--spacing));
+  }
+
+  .tc__venue {
+    max-width: none;
+    padding-right: calc(6 * var(--spacing));
+    font-size: var(--typography-caption-font-size);
+  }
+
+  .tc__score {
+    max-width: none;
+    margin-top: calc(2 * var(--spacing));
+  }
+
+  .tc__board {
+    margin-top: calc(3 * var(--spacing));
+  }
+
+  .tc__watch {
+    margin-top: calc(2 * var(--spacing));
+  }
+}

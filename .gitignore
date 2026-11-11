@@ -24,6 +24,3 @@ Thumbs.db
 # Saved venue lookups (server runtime data)
 server/src/ScoreMap.Server/data/
 
-# Publish output (scripts/deploy.ps1)
-/publish/
-/publish.zip

@@ -1,7 +1,10 @@
-# Tests, publishes and deploys ScoreMap to Azure App Service on every push to main, or when
-# started by hand (Actions > deploy > Run workflow). Skips itself unless the repository variable
-# AZURE_WEBAPP_NAME and the secrets AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID
-# exist. Azure only trusts runs on main. See docs/deploy.md ("Deploy from GitHub Actions").
+# Builds ScoreMap's image, pushes it to GitHub Container Registry tagged with the commit, and deploys
+# it to Azure Container Apps as a new revision, on every push to main or when started by hand
+# (Actions > deploy > Run workflow). Fails unless the new revision starts and takes the traffic.
+# Started by hand on another branch, it only builds and pushes that branch's image: Azure only trusts
+# runs on main. The deploy skips itself unless the repository variables AZURE_RESOURCE_GROUP and
+# AZURE_CONTAINERAPP_NAME and the secrets AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID
+# exist. See docs/deploy.md ("Deploy from GitHub Actions").
 name: deploy
 
 on:
@@ -11,48 +14,80 @@ on:
 
 # One deploy at a time; a newer push waits for the running deploy rather than racing it.
 concurrency:
-  group: deploy
+  group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
   deploy:
-    if: vars.AZURE_WEBAPP_NAME != ''
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      # GitHub Container Registry wants the name in lower case.
+      IMAGE: ghcr.io/${{ github.repository_owner }}/scoremap:${{ github.sha }}
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-dotnet@v6
+      - uses: docker/build-push-action@v7
         with:
-          dotnet-version: '11.0.x'
-
-      - run: npm --prefix web ci
-      - run: npm --prefix web test
-      - run: dotnet test server/ScoreMap.slnx -c Release
-
-      # Builds the browser app into the published wwwroot too.
-      - run: dotnet publish server/src/ScoreMap.Server -c Release -o ${{ runner.temp }}/app
-
-      # A demo shows the worldwide scenario on the live site (ADR-0019), so its file must ship.
-      - name: Check the demo's scenario file is published
-        run: test -f "${{ runner.temp }}/app/Scenarios/Files/worldwide.json" || { echo "::error::worldwide.json is missing from the publish; demos would fail on the live site"; exit 1; }
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}
+          build-args: COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - uses: azure/login@v3
+        if: github.ref == 'refs/heads/main' && vars.AZURE_CONTAINERAPP_NAME != ''
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
-          package: ${{ runner.temp }}/app
+      # The update returns once Azure has accepted the new revision, not once it runs, so wait for
+      # it: it must report Running and Healthy, and be the revision taking the traffic. A revision
+      # that doesn't start leaves the old one serving, and fails the run.
+      - name: Deploy the image as a new revision
+        if: github.ref == 'refs/heads/main' && vars.AZURE_CONTAINERAPP_NAME != ''
+        env:
+          RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+          APP: ${{ vars.AZURE_CONTAINERAPP_NAME }}
+        run: |
+          az config set extension.use_dynamic_install=yes_without_prompt --only-show-errors
+          az containerapp update -g "$RG" -n "$APP" --image "$IMAGE" --only-show-errors -o none
+          revision=$(az containerapp show -g "$RG" -n "$APP" --query properties.latestRevisionName -o tsv)
+          echo "New revision: $revision"
+          for i in $(seq 60); do
+            read -r running health <<<"$(az containerapp revision show -g "$RG" -n "$APP" --revision "$revision" \
+              --query '[properties.runningState, properties.healthState]' -o tsv | tr '\n' ' ')"
+            ready=$(az containerapp show -g "$RG" -n "$APP" --query properties.latestReadyRevisionName -o tsv)
+            echo "$(date -u +%T) running=$running health=$health ready=$ready"
+            case "$running" in Failed|Degraded)
+              echo "::error::Revision $revision didn't start ($running); the old revision is still serving"
+              az containerapp logs show -g "$RG" -n "$APP" --revision "$revision" --type system --tail 50 || true
+              exit 1;;
+            esac
+            if [[ "$health" == Healthy && "$ready" == "$revision" && "$running" == Running* ]]; then
+              fqdn=$(az containerapp show -g "$RG" -n "$APP" --query properties.configuration.ingress.fqdn -o tsv)
+              curl --fail --silent --show-error --max-time 30 "https://$fqdn/api/leagues" -o /dev/null
+              echo "Deployed $IMAGE as $revision: https://$fqdn"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Revision $revision wasn't running and healthy after 10 minutes; the old revision is still serving"
+          az containerapp logs show -g "$RG" -n "$APP" --revision "$revision" --type system --tail 50 || true
+          exit 1

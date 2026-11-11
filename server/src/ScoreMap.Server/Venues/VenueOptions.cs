@@ -4,21 +4,20 @@ namespace ScoreMap.Server.Venues;
 public sealed class VenueOptions
 {
     /// <summary>
-    /// File the venue lookups are saved to. A relative path is relative to the content root, or
-    /// to HOME when running on Azure App Service (so by default /home/data/venue-locations.json).
+    /// File the venue lookups are saved to. A relative path is relative to the content root; in
+    /// production it is on the mounted file share (infra/main.bicep).
     /// </summary>
     public string SavedLocationsPath { get; set; } = "data/venue-locations.json";
 
     /// <summary>
     /// File the venue photos found are saved to. Relative paths resolve as for
-    /// <see cref="SavedLocationsPath"/> (on App Service, by default /home/data/venue-photos.json).
+    /// <see cref="SavedLocationsPath"/>.
     /// </summary>
     public string SavedPhotosPath { get; set; } = "data/venue-photos.json";
 
     /// <summary>
     /// File the venues of games whose scoreboard gives none (NASCAR races), looked up once per event in
-    /// ESPN's core API, are saved to. Relative paths resolve as for <see cref="SavedLocationsPath"/> (on
-    /// App Service, by default /home/data/event-venues.json).
+    /// ESPN's core API, are saved to. Relative paths resolve as for <see cref="SavedLocationsPath"/>.
     /// </summary>
     public string SavedEventVenuesPath { get; set; } = "data/event-venues.json";
 

@@ -99,10 +99,10 @@ html[data-blip-proto='underline'] .score-card--animate-score .score-card__score 
   position: relative;
 }
 
-html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score::after,
+html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score:not(:empty)::after,
 html[data-blip-proto='underline']
   .score-card--animate-score:not(:has(.score-card__team--scored))
-  .score-card__score::after {
+  .score-card__score:not(:empty)::after {
   content: '';
   position: absolute;
   left: 0;
@@ -205,10 +205,10 @@ html[data-blip-proto='dot'] .score-card--animate-score::after {
       scorer-spotlight-text 3s step-end var(--scorer-spotlight-delay, 0ms);
   }
 
-  html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score::after,
+  html[data-blip-proto='underline'] .score-card--animate-score .score-card__team--scored .score-card__score:not(:empty)::after,
   html[data-blip-proto='underline']
     .score-card--animate-score:not(:has(.score-card__team--scored))
-    .score-card__score::after {
+    .score-card__score:not(:empty)::after {
     transform: none;
     animation-name: blip-proto-fade;
   }
@@ -275,4 +275,25 @@ html[data-blip-proto='dot'] .score-card--animate-score::after {
 
 .blip-proto-bar__fire {
   background: #ff2d95 !important;
+}
+
+.blip-proto-bar button,
+.blip-proto-bar__label {
+  white-space: nowrap;
+}
+
+/* Phone width: a narrower bar, low enough to keep clear of most cards. */
+@media (max-width: 640px) {
+  .blip-proto-bar {
+    bottom: 12px;
+    left: 8px;
+    transform: none;
+    gap: 4px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .blip-proto-bar__label {
+    min-width: 0;
+  }
 }

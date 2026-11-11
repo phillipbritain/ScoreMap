@@ -71,15 +71,21 @@ describe('applyTheme', () => {
     expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
   })
 
-  it('writes each glass’s frost', () => {
+  it('writes the score card’s frost', () => {
+    const properties = propertiesOf(themeWith((json) => (json.components.ScoreCard.frost = 0.3)))
+    expect(properties.get('--score-card-frost')).toBe('0.3')
+  })
+
+  it('writes the game panel’s frost and its close tab’s size', () => {
     const properties = propertiesOf(
       themeWith((json) => {
-        json.components.ScoreCard.frost = 0.3
-        json.components.Rail.frost = 0.7
+        json.components.GamePanel.frost = 0.7
+        json.components.GamePanel.size.close = { width: 30, height: 20 }
       }),
     )
-    expect(properties.get('--score-card-frost')).toBe('0.3')
-    expect(properties.get('--rail-frost')).toBe('0.7')
+    expect(properties.get('--game-panel-frost')).toBe('0.7')
+    expect(properties.get('--game-panel-size-close-width')).toBe('30px')
+    expect(properties.get('--game-panel-size-close-height')).toBe('20px')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
@@ -174,17 +180,17 @@ describe('applyTheme', () => {
       // A score card's fill, text, shadow, frost, header's two, corner, five sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 5 + 3 + 7 + 3 * 3,
-      // The game panel's frost, eleven colors and shadows, glow of three, corner, cut corner's two, nine sizes
-      // and logo plate of three.
-      gamePanel: 1 + 11 + 3 + 1 + 2 + 9 + 3,
+      // The game panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
+      // three, corner, cut corner's two, eight sizes (the close tab's two) and logo plate of three.
+      gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
-      // The rail's frost, ten colors and shadows and seven sizes.
-      rail: 1 + 10 + 7,
-      // The controls' frost, surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
-      controls: 1 + 1 + 1 + 2 + 1 + 2 + 2,
-      // A tooltip's frost and surface.
-      tooltip: 2,
+      // The rail's ten colors and shadows and seven sizes.
+      rail: 10 + 7,
+      // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
+      controls: 1 + 1 + 2 + 1 + 2 + 2,
+      // A tooltip's surface.
+      tooltip: 1,
       // The loading screen's dim (a color and an opacity), rocket (two colors and a size) and message.
       loadingScreen: 2 + 3 + 1,
       // The welcome tour's dim opacity and arrow width.

@@ -513,27 +513,23 @@ const settings = {
     },
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
-     * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-     * button and the panel's drop shadow. Its top edge is the game's color, and it glows in that
-     * color, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
-     * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
-     * width at most, its minimum height, and its minimum height on a phone, where the details go below
-     * the score block; the score block's maximum width and how far its right edge slants; the venue
-     * photo's maximum width; a team's logo;
-     * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
-     * logoPlate). It sits clear of the scenario
-     * controls by their keys' size. Its glass's frost: its surface, score block, score boxes and logo
-     * plates clear with it.
+     * unofficial stream links, the venue's photo behind the venue and watch links (the glow in its place
+     * when there's none, and how opaque the photo is) and the panel's drop shadow. On a desktop its score
+     * block is glass, this frosted (ADR-0023's exception); the rest is solid. Its top edge is the game's
+     * color, and it glows in that color, this far up, this blurred and this strongly; its close button is
+     * on a tab of that color above it. Its corners, and its bottom left corner cut off, like a broadcast
+     * graphic, or not: this many spacing units along each side. Its size: its width at most, the strip's
+     * minimum height (on a desktop); the score block's maximum width and how far its right edge slants; a
+     * team's logo; the close button's tab; and a team's score box, in ems of its digits. The plate each
+     * logo sits on (see logoPlate). It sits clear of the scenario controls by their keys' size.
      */
     GamePanel: {
-      frost,
       surface: { top: color, bottom: color },
       scoreBlock: { top: color, bottom: color },
       score: { fill: color, text: color },
       unofficial: color,
-      photo: color,
-      credit: { fill: color, text: color },
-      close: color,
+      photo: { glow: color, opacity },
+      frost,
       shadow,
       glow: { y: offset, blur: pixels, opacity },
       corner,
@@ -542,12 +538,10 @@ const settings = {
       size: {
         width: pixels,
         height: pixels,
-        phoneHeight: pixels,
         scoreBlock: pixels,
         slant: pixels,
-        photo: pixels,
         logo: pixels,
-        close: pixels,
+        close: { width: pixels, height: pixels },
         scoreWidth: ems,
       },
     },
@@ -560,11 +554,10 @@ const settings = {
      * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on. Its size: a button and its icon, a popover's width, the "All leagues" chip's height, and on
-     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. The frost
-     * of their glass.
+     * that chip, the narrowest its count is and the box its mark (✓ or –) sits in, in ems. They're
+     * solid, not glass (ADR-0023).
      */
     Rail: {
-      frost,
       surface: color,
       shadow,
       open: color,
@@ -578,10 +571,9 @@ const settings = {
      * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
      * surface and drop shadow, a speed key that's on, and how opaque one that's off is. A control's
      * corners (the scenario pill and clock, the speed keys, league chips) and the message's. Its size: a
-     * speed key and its icon. The frost of their glass.
+     * speed key and its icon. They're solid, not glass (ADR-0023).
      */
     Controls: {
-      frost,
       surface: color,
       shadow,
       on: { fill: color, text: color },
@@ -590,8 +582,8 @@ const settings = {
       message: { corner },
       size: { key: pixels, icon: pixels },
     },
-    /** A tooltip: its surface, tinting its glass, and the frost of its glass. */
-    Tooltip: { frost, surface: color },
+    /** A tooltip: its surface (solid, not glass: ADR-0023). */
+    Tooltip: { surface: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed

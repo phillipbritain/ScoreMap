@@ -53,11 +53,11 @@ describe('viewerCountry', () => {
   })
 })
 describe('listedWatchLinks', () => {
-  it('lists up to three links', () => {
-    expect(listedWatchLinks(['a', 'b', 'c'])).toEqual({ listed: ['a', 'b', 'c'], folded: [] })
+  it('lists up to two links', () => {
+    expect(listedWatchLinks(['a', 'b'])).toEqual({ listed: ['a', 'b'], folded: [] })
   })
 
-  it('folds the links after the third, in order', () => {
-    expect(listedWatchLinks(['a', 'b', 'c', 'd', 'e'])).toEqual({ listed: ['a', 'b', 'c'], folded: ['d', 'e'] })
+  it('folds the links after the second, in order', () => {
+    expect(listedWatchLinks(['a', 'b', 'c', 'd'])).toEqual({ listed: ['a', 'b'], folded: ['c', 'd'] })
   })
 })

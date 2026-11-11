@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
-import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam, type PhotoCredit } from '../games/game'
+import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam } from '../games/game'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
@@ -30,8 +30,10 @@ interface PanelLink {
 
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css), with a band under it for sport-specific contest details. Team and
- * player names wrap in place; the panel grows to fit them and scrolls on short screens. Other clipped
+ * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
+ * and the last score) and the venue and its watch links (if it lists any) over the venue's photo; under it, a band for a
+ * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
+ * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
  */
 export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: GamePanelProps) {
@@ -49,7 +51,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
     // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
     ...streamLinks(game.streamLinks).map((link) => ({ name: link.site, url: link.url, unofficial: true })),
   ]
-  // A photo that fails to load is left out, with its credit, rather than shown broken.
+  // A photo that fails to load is left out rather than shown broken. Its credit isn't shown (ADR-0025).
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
   const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's color, as its score card is.
@@ -62,57 +64,52 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
         onClose()
       }
     }}>
-      <div className="game-panel__main">
-        <div className="game-panel__score">
-          <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
-            {game.league}
-          </div>
-          {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
-              <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
-            ))}
-          {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
-          {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
-          {progress && (
-            <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
-              {progress}
+      {/* Everything but the close button, which sits on its tab above, clipped to the panel's corners. */}
+      <div className="game-panel__body">
+        <div className="game-panel__main">
+          <div className="game-panel__score">
+            <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+              {game.league}
             </div>
-          )}
+            {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
+                <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
+              ))}
+            {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
+            {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
+            {progress && (
+              <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
+                {progress}
+              </div>
+            )}
+            <LastScore game={game} />
+          </div>
+
+          {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none. */}
+          <div className="game-panel__details">
+            {photo && (
+              <img className="game-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
+            )}
+            <div className="game-panel__venue">
+              <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
+                {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
+              </div>
+              {placeLine && (
+                <div className="game-panel__muted game-panel__place" data-tooltip={placeLine} data-tooltip-when-clipped>
+                  <MapsLink query={placeLine}>{placeLine}</MapsLink>
+                </div>
+              )}
+            </div>
+            {/* Left out when the game lists none. */}
+            {links.length > 0 && (
+              <div className="game-panel__watch">
+                <span className="game-panel__label">Watch</span> <WatchLinks links={links} />
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="game-panel__details">
-          <div className="game-panel__sport">
-            <div className="game-panel__label">Sport</div>
-            <div className="game-panel__value" data-tooltip={game.sport} data-tooltip-when-clipped>
-              {game.sport}
-            </div>
-          </div>
-          <div>
-            <div className="game-panel__label">Venue</div>
-            <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
-              {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
-            </div>
-            <div className="game-panel__muted" data-tooltip={placeLine} data-tooltip-when-clipped>
-              {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
-            </div>
-          </div>
-          <div>
-            <div className="game-panel__label">Watch</div>
-            <WatchLinks links={links} />
-          </div>
-        </div>
-
-        {/* Kept when there's no photo, so the details keep their width. */}
-        <figure className="game-panel__photo">
-          {photo && (
-            <>
-              <img src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
-              {photo.credit && <Credit credit={photo.credit} />}
-            </>
-          )}
-        </figure>
+        <GameBand game={game} />
       </div>
-
-      <GameBand game={game} />
 
       <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
         ×
@@ -131,42 +128,16 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
 }
 
 /**
- * The credit a Wikimedia Commons photo's license asks for: its author, linking to the photo's page,
- * and its license. Shown over the photo on hover.
- */
-function Credit({ credit }: { credit: PhotoCredit }) {
-  return (
-    <figcaption className="game-panel__credit" data-tooltip={`Photo: ${credit.author}, ${credit.license}, via Wikimedia Commons`} data-tooltip-when-clipped>
-      <a href={credit.sourceUrl} target="_blank" rel="noopener noreferrer">
-        {credit.author}
-      </a>
-      {' · '}
-      {credit.licenseUrl ? (
-        <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer">
-          {credit.license}
-        </a>
-      ) : (
-        credit.license
-      )}
-    </figcaption>
-  )
-}
-
-/**
- * Official watch links, then unofficial streams, as links where there's a web address and plain
- * names otherwise. The first few are listed; the rest are named on hover over "+N more".
+ * Official watch links, then unofficial streams, on one line: as links where there's a web address and
+ * plain names otherwise. The first few are listed; the rest are named on hover over "+N more".
  */
 function WatchLinks({ links }: { links: PanelLink[] }) {
-  if (links.length === 0) return (
-      <div className="game-panel__muted" data-tooltip="No channels listed" data-tooltip-when-clipped>
-        No channels listed
-      </div>
-    )
   const { listed, folded } = listedWatchLinks(links)
   return (
-    <ul className="game-panel__watch">
-      {listed.map((link) => (
-        <li key={`${link.name} ${link.url}`} data-tooltip={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
+    <span className="game-panel__links">
+      {listed.map((link, i) => (
+        <span key={`${link.name} ${link.url}`} data-tooltip={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
+          {i > 0 && ', '}
           {link.url ? (
             <a
               href={link.url}
@@ -179,14 +150,37 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
             link.name
           )}
           {link.unofficial && <span className="game-panel__unofficial"> · unofficial</span>}
-        </li>
+        </span>
       ))}
       {folded.length > 0 && (
-        <li className="game-panel__muted" data-tooltip={folded.map((link) => link.name).join(', ')}>
+        <span className="game-panel__muted" data-tooltip={folded.map((link) => link.name).join(', ')}>
+          {' '}
           +{folded.length} more
-        </li>
+        </span>
       )}
-    </ul>
+    </span>
+  )
+}
+
+/**
+ * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
+ * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Nothing
+ * before a score.
+ */
+function LastScore({ game }: { game: Game }) {
+  const { lastScore } = game
+  if (!lastScore) return null
+  return (
+    <div className="game-panel__last-score">
+      <div className="game-panel__label">Last score</div>
+      <div className="game-panel__one-line" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
+        <span className="game-panel__strong">
+          {lastScore.when && `${lastScore.when} · `}
+          {lastScore.team}
+        </span>{' '}
+        {lastScore.text}
+      </div>
+    </div>
   )
 }
 
@@ -274,12 +268,12 @@ const sideWithRecord = ({ name, record }: GameBoutSide): string => (record ? `${
 const leaderboardLength = 10
 
 /**
- * The band under the strip: the last score (who scored and when; in soccer the goal's scorer and
- * minute), or in tennis the scoreline set by set, or for a field its leaderboard, or for a fight card its
- * bouts, each with its label.
+ * The band under the strip: in tennis the scoreline set by set, or for a field its leaderboard, or for a
+ * fight card its bouts, each with its label. None for a game with none of them (its last score is in the
+ * score block).
  */
 function GameBand({ game }: { game: Game }) {
-  const { lastScore, scoreline, contest } = game
+  const { scoreline, contest } = game
   const field: GameField = contest.kind === 'field' ? contest : { kind: 'field', entries: [] }
   const { entries } = field
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
@@ -287,7 +281,7 @@ function GameBand({ game }: { game: Game }) {
   const [shownAllOf, setShownAllOf] = useState<string | null>(null)
   const showAll = shownAllOf === game.id
   const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
-  const empty = !lastScore && !scoreline && entries.length === 0 && bouts.length === 0
+  if (!scoreline && entries.length === 0 && bouts.length === 0) return null
   return (
     <div className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {entries.length > 0 && (
@@ -329,18 +323,6 @@ function GameBand({ game }: { game: Game }) {
           </div>
         </BandCell>
       )}
-      {lastScore && (
-        <BandCell label="Last score" wide>
-          <div className="game-panel__clamp" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
-            <span className="game-panel__strong">
-              {lastScore.when && `${lastScore.when} · `}
-              {lastScore.team}
-            </span>{' '}
-            {lastScore.text}
-          </div>
-        </BandCell>
-      )}
-      {empty && <div className="game-panel__muted game-panel__band-empty">No game details yet</div>}
     </div>
   )
 }

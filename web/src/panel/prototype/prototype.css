@@ -930,3 +930,36 @@
     gap: calc(2 * var(--spacing));
   }
 }
+
+/* ---------- Round 10: J, the photo behind the strip's details only, none behind the band ---------- */
+.tb--photo-in-strip .tb__details {
+  position: relative;
+  isolation: isolate;
+}
+
+.tb__strip-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: none;
+}
+
+.tb__strip-photo > img {
+  opacity: 0.4;
+  mask-image: linear-gradient(90deg, transparent, #000 50%);
+}
+
+.tb__strip-photo.pp-photo--none {
+  background: radial-gradient(ellipse at 85% 40%, var(--game-panel-photo), transparent 60%);
+}
+
+/* The band on the panel's own surface: no photo to lift the text off. */
+.tb--photo-in-strip .tb__board {
+  text-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .tb__strip-photo > img {
+    mask-image: linear-gradient(180deg, transparent, #000 40%);
+  }
+}

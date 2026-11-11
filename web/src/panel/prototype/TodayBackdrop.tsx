@@ -25,6 +25,8 @@ interface Options {
   lastScoreLabel?: boolean
   /** Round 9: true puts the watch links, on one line, in the bottom left corner of the photo's part of the strip. */
   watchInCorner?: boolean
+  /** Round 10: true keeps the photo behind the strip's details only, so the band under the strip has none. */
+  photoInStripOnly?: boolean
 }
 
 function TodayBackdrop({
@@ -34,6 +36,7 @@ function TodayBackdrop({
   watchUnderVenue = false,
   lastScoreLabel = false,
   watchInCorner = false,
+  photoInStripOnly = false,
   game,
   scorer,
   color,
@@ -46,12 +49,12 @@ function TodayBackdrop({
   return (
     <aside
       ref={panelRef}
-      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}${watchUnderVenue ? ' tb--watch-under-venue' : ''}${watchInCorner ? ' tb--watch-in-corner' : ''}`}
+      className={`pp pp-strip tb tb--${place}${photoUnderScore ? ' tb--photo-under-score' : ''}${watchUnderVenue ? ' tb--watch-under-venue' : ''}${watchInCorner ? ' tb--watch-in-corner' : ''}${photoInStripOnly ? ' tb--photo-in-strip' : ''}`}
       style={colorStyle(color, textOnColor)}
       aria-label="Game panel"
       onKeyDown={closeOnEscape(onClose)}
     >
-      <VenuePhoto facts={facts} className="tb__backdrop" />
+      {!photoInStripOnly && <VenuePhoto facts={facts} className="tb__backdrop" />}
       <div className="tb__main">
         <div className="tb__score">
           <div className="pp-label tb__league">{game.league}</div>
@@ -62,6 +65,7 @@ function TodayBackdrop({
           {place === 'score' && <ScoreBlockLastScore game={game} label={lastScoreLabel} />}
         </div>
         <div className="tb__details">
+          {photoInStripOnly && <VenuePhoto facts={facts} className="tb__strip-photo" />}
           <Cell label={venueLabel ? 'Venue' : null}>
             <Venue facts={facts} />
           </Cell>
@@ -152,4 +156,9 @@ export function VariantG(props: VariantProps) {
 /** I (round 9): C with the "Last score" label, no Venue label, and watch in the photo part's bottom left corner. */
 export function VariantI(props: VariantProps) {
   return <TodayBackdrop place="score" lastScoreLabel venueLabel={false} watchInCorner {...props} />
+}
+
+/** J (round 10): I with the photo behind the strip's details only, none behind the band (leaderboard, fight card, sets). */
+export function VariantJ(props: VariantProps) {
+  return <TodayBackdrop place="score" lastScoreLabel venueLabel={false} watchInCorner photoInStripOnly {...props} />
 }

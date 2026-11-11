@@ -13,6 +13,7 @@ export const variants = [
   { key: 'G', name: 'F, photo behind the whole panel' },
   { key: 'H', name: 'G, venue and watch in the corners' },
   { key: 'I', name: 'C, labeled last score, watch in the photo corner' },
+  { key: 'J', name: 'I, no photo behind the bottom section' },
 ] as const
 
 const readVariant = () => {

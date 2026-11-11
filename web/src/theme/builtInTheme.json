@@ -138,8 +138,7 @@
       "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
       "score": { "fill": "navy.600", "text": "text.primary" },
       "unofficial": "text.secondary",
-      "photo": "navy.600",
-      "credit": { "fill": "background.default", "text": "text.secondary" },
+      "photo": { "glow": "navy.600", "opacity": 0.4 },
       "close": "primary.dark",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "glow": { "y": 0, "blur": 0, "opacity": 0 },
@@ -149,10 +148,8 @@
       "size": {
         "width": 1200,
         "height": 140,
-        "phoneHeight": 236,
         "scoreBlock": 504,
         "slant": 16,
-        "photo": 144,
         "logo": 28,
         "close": 24,
         "scoreWidth": 2.6

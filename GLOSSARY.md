@@ -81,7 +81,7 @@ While zoomed in, where each game's score card goes on screen, and which games ga
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe, with a band under it for its last score (who scored, and when), tennis sets, a field's leaderboard or a fight card's bouts.
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe: its score and last score (who scored, and when), and its venue and where to watch over the venue's photo, with a band under it for tennis sets, a field's leaderboard or a fight card's bouts.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:

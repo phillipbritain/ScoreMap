@@ -125,8 +125,10 @@ body {
 }
 
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   color (--game-color, set on the panel, with --text-on-game-color for text on it). Full team and
-   player names wrap in their rows; the strip grows to fit them. Short screens scroll the panel. */
+   color (--game-color, set on the panel, with --text-on-game-color for text on it): the score block, then
+   the venue and its watch links over the venue's photo, with a band under the strip for a field's
+   leaderboard, a fight card or tennis sets. Full team and player names wrap in their rows; the strip grows
+   to fit them. Short screens scroll the panel. */
 .game-panel {
   position: absolute;
   left: 50%;
@@ -161,7 +163,7 @@ body {
   clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-corner) 100%, 0 calc(100% - var(--cut-corner)));
 }
 
-/* The strip: the score block, the details and the photo, side by side. */
+/* The strip: the score block, then the details over the photo. */
 .game-panel__main {
   display: flex;
   flex-shrink: 0;
@@ -295,24 +297,42 @@ body {
   transform: skewX(-14deg);
 }
 
-/* The sport, as wide as its name, then venue and watch links: the venue wider, as its name and place
-   run longer than a channel. */
+/* The venue at the top and its watch links at the foot, over the venue's photo (see .game-panel__photo),
+   or the faint glow that holds its place when there's none. Clear of the close button at the right. */
 .game-panel__details {
+  position: relative;
+  isolation: isolate;
   flex: 1;
   display: grid;
-  grid-template-columns: max-content minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: calc(4 * var(--spacing));
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: calc(2 * var(--spacing));
   min-width: 0;
-  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  padding: calc(3 * var(--spacing)) calc(10 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
+  background: radial-gradient(ellipse at 85% 40%, var(--game-panel-photo-glow), transparent 60%);
+  text-shadow: 0 1px 3px var(--palette-background-default);
 }
 
-/* Two lines at most for a sport or venue, and room for two even when it takes one. */
+/* The venue's photo, filling the details behind them: dimmed by the theme's opacity, and fading in from the
+   score block so the text over it stays readable. */
+.game-panel__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: var(--game-panel-photo-opacity);
+  mask-image: linear-gradient(90deg, transparent, #000000 50%);
+}
+
+/* Two lines at most for a venue's name. */
 .game-panel__value {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  min-height: 2lh;
   overflow: hidden;
   line-height: 1.3;
 }
@@ -322,23 +342,16 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* One line under a venue, kept even when empty. */
-.game-panel__details > div > .game-panel__muted {
-  min-height: 1lh;
+/* One line under a venue's name. */
+.game-panel__place {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+/* The watch links on one line at the foot of the details, their label before them. */
 .game-panel__watch {
-  display: grid;
-  gap: calc(0.5 * var(--spacing));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.game-panel__watch li {
+  align-self: end;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -363,51 +376,6 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* The venue photo at the right, fading in from the details. A faint glow holds its place when
-   there's no photo. */
-.game-panel__photo {
-  position: relative;
-  width: min(var(--game-panel-size-photo), 12%);
-  margin: 0;
-  flex-shrink: 0;
-  background: radial-gradient(ellipse at 70% 50%, var(--game-panel-photo), transparent 70%);
-}
-
-.game-panel__photo img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  mask-image: linear-gradient(90deg, transparent, #000000 35%);
-}
-
-/* Along the foot of the photo, shown on hover. */
-.game-panel__credit {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
-  overflow: hidden;
-  background: var(--game-panel-credit-fill);
-  color: var(--game-panel-credit-text);
-  font-size: var(--typography-footnote-font-size);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.game-panel__photo:hover .game-panel__credit {
-  opacity: 1;
-}
-
-.game-panel__credit a {
-  color: inherit;
-}
-
 .game-panel__close {
   position: absolute;
   top: var(--spacing);
@@ -425,14 +393,13 @@ body {
   cursor: pointer;
 }
 
-/* Sport-specific contest details below the strip. The band has room for at least three lines and
-   grows with its contents. Wide cells give scorelines and leaderboards more room. */
+/* A field's leaderboard, a fight card or tennis sets below the strip, on the panel's own surface (no
+   photo), as tall as they are. Wide cells give scorelines and leaderboards more room. */
 .game-panel__band {
   display: flex;
   gap: calc(4 * var(--spacing));
   box-sizing: border-box;
   flex-shrink: 0;
-  min-height: calc(4 * var(--spacing) + 3lh);
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
   overflow: hidden;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
@@ -446,10 +413,6 @@ body {
 
 .game-panel__cell--wide {
   flex-grow: 2;
-}
-
-.game-panel__band-empty {
-  align-self: center;
 }
 
 /* A tennis match's sets side by side, wrapping onto a second line when they run out of room, then how
@@ -506,6 +469,12 @@ body {
   font-weight: var(--typography-button-font-weight);
 }
 
+/* The last score at the foot of the score block, its label over it, quieter than the names. */
+.game-panel__last-score {
+  margin-top: var(--spacing);
+  font-size: var(--typography-caption-font-size);
+}
+
 /* Two lines at most, such as a last score's description. */
 .game-panel__clamp {
   display: -webkit-box;
@@ -520,7 +489,7 @@ body {
   text-overflow: ellipsis;
 }
 
-/* On narrow screens: give names the full panel width, with details below and no photo. */
+/* On narrow screens: give names the full panel width, with the details (and the photo) below. */
 @media (max-width: 960px) {
   .game-panel {
     clip-path: none;
@@ -528,7 +497,7 @@ body {
 
   .game-panel__main {
     flex-direction: column;
-    min-height: var(--game-panel-size-phone-height);
+    min-height: 0;
   }
 
   .game-panel__band {
@@ -548,17 +517,13 @@ body {
   }
 
   .game-panel__details {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     gap: calc(2 * var(--spacing));
     padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   }
 
-  .game-panel__sport {
-    display: none;
-  }
-
+  /* Fading in from the score block above. */
   .game-panel__photo {
-    display: none;
+    mask-image: linear-gradient(180deg, transparent, #000000 40%);
   }
 }
 

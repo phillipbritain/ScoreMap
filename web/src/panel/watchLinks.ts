@@ -45,8 +45,8 @@ function isFor(broadcastCountry: string | null, viewerCountry: string | null): b
 function sameCountry(a: string, b: string | null): boolean {
   return b !== null && a.toUpperCase() === b.toUpperCase()
 }
-/** How many watch links the game panel lists; more would grow it, so the rest fold into "+N more". */
-export const listedWatchLinkCount = 3
+/** How many watch links the game panel lists, on one line; more would run past it, so the rest fold into "+N more". */
+export const listedWatchLinkCount = 2
 
 /** The watch links the game panel lists, in order, and the ones folded into "+N more". */
 export function listedWatchLinks<T>(links: readonly T[]): { listed: T[]; folded: T[] } {

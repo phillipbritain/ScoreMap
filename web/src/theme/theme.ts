@@ -513,13 +513,12 @@ const settings = {
     },
     /**
      * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
-     * unofficial stream links, the glow where the venue's photo goes, the photo's credit, the close
-     * button and the panel's drop shadow. Its top edge is the game's color, and it glows in that
-     * color, this far up, this blurred and this strongly. Its corners, and its bottom left corner cut
-     * off, like a broadcast graphic, or not: this many spacing units along each side. Its size: its
-     * width at most, its minimum height, and its minimum height on a phone, where the details go below
-     * the score block; the score block's maximum width and how far its right edge slants; the venue
-     * photo's maximum width; a team's logo;
+     * unofficial stream links, the venue's photo behind the venue and watch links (the glow in its place
+     * when there's none, and how opaque the photo is), the close button and the panel's drop shadow. Its
+     * top edge is the game's color, and it glows in that color, this far up, this blurred and this
+     * strongly. Its corners, and its bottom left corner cut off, like a broadcast graphic, or not: this
+     * many spacing units along each side. Its size: its width at most, the strip's minimum height (on a
+     * desktop); the score block's maximum width and how far its right edge slants; a team's logo;
      * the close button; and a team's score box, in ems of its digits. The plate each logo sits on (see
      * logoPlate). It sits clear of the scenario
      * controls by their keys' size. Its glass's frost: its surface, score block, score boxes and logo
@@ -531,8 +530,7 @@ const settings = {
       scoreBlock: { top: color, bottom: color },
       score: { fill: color, text: color },
       unofficial: color,
-      photo: color,
-      credit: { fill: color, text: color },
+      photo: { glow: color, opacity },
       close: color,
       shadow,
       glow: { y: offset, blur: pixels, opacity },
@@ -542,10 +540,8 @@ const settings = {
       size: {
         width: pixels,
         height: pixels,
-        phoneHeight: pixels,
         scoreBlock: pixels,
         slant: pixels,
-        photo: pixels,
         logo: pixels,
         close: pixels,
         scoreWidth: ems,

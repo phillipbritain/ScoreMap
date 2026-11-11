@@ -146,8 +146,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.scoreBlock.top`, `.bottom` | The game panel's score block, shading from top to bottom | `primary.dark`, `primary.dark` (solid) |
 | `components.GamePanel.score.fill`, `.text` | A team's score box on the game panel | `navy.600`, `text.primary` |
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
-| `components.GamePanel.photo` | The glow where the venue's photo goes | `navy.600` |
-| `components.GamePanel.credit.fill`, `.text` | The photo's credit, shown on hover | `background.default`, `text.secondary` |
+| `components.GamePanel.photo.glow` | The glow behind the venue and its watch links when the venue has no photo | `navy.600` |
 | `components.GamePanel.close` | The game panel's close button | `primary.dark` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario and Tuners popovers too | `background.paper` |
@@ -275,7 +274,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `button` | Buttons: sport names in Leagues and Display Settings, league chips and their counts, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line | 700, 12, 0.14em |
-| `footnote` | The smallest on the page: the photo's credit, a score card's header line, and the game panel's labels on a phone | 400, 11 |
+| `footnote` | The smallest on the page: a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
 `footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
 
@@ -343,7 +342,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 ### On the page
 
-Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names and the panel scrolls on short screens. At viewport widths up to 960px, the score block uses the full panel width with details below and no photo. This is option A from the comparison preserved on the local throwaway branch `phillipbritain/full-name-panel-prototypes`, selected by the user on November 9, 2026.
+Game-panel team and player names wrap in the existing logo, rank, name, record and score rows, without a line limit or hover requirement. The strip grows with the names and the panel scrolls on short screens.
+
+The game panel's strip is the score block (the league, the score, the progress line, and the last score under its label), then the venue's name and place at the top and the watch links (the first two, on one line) at the foot, over the venue's photo. The photo fills that part of the strip, dimmed to `components.GamePanel.photo.opacity` and fading in from the score block; with no photo, a faint glow holds its place. There's no Sport, and no "Venue" label. A band under the strip, on the panel's own surface with no photo, holds a field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them; a game with none has no band. At viewport widths up to 960px, the score block uses the full panel width, with the venue, its watch links and the photo below it, then the band. The photo's credit isn't shown (ADR-0025). This is variant K from the comparison preserved on the throwaway branch `phillipbritain/game-panel-prototype`, selected by the user on November 10, 2026.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
@@ -356,10 +357,11 @@ Game-panel team and player names wrap in the existing logo, rank, name, record a
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
+| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its watch links, 0 to 1 | 0.4 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |
-| `components.GamePanel.size.height`, `.phoneHeight` | The strip's minimum height, and its minimum height on a phone, where the details go below the score block. It grows for wrapped names; the band adds at least three lines of its own | 140, 236 |
+| `components.GamePanel.size.height` | The strip's minimum height on a desktop; it grows for wrapped names. On a phone the panel is as tall as its contents | 140 |
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
-| `components.GamePanel.size.photo`, `.logo`, `.close` | The venue photo's maximum width (also capped at 12% of the panel), a team's logo, the close button | 144, 28, 24 |
+| `components.GamePanel.size.logo`, `.close` | A team's logo, the close button | 28, 24 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest | 92 |
 | `components.ScoreCard.size.logo`, `.light` | A team's logo on a score card, and its status light | 16, 6 |

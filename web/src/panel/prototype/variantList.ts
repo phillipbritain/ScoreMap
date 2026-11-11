@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react'
 
 export const variants = [
   { key: 'current', name: 'Today’s panel' },
-  { key: 'A', name: 'Score bug' },
-  { key: 'B', name: 'Side sheet / peek' },
-  { key: 'C', name: 'Ticker' },
-  { key: 'D', name: 'Tabs' },
-  { key: 'E', name: 'Floating card' },
+  { key: 'A', name: 'One row' },
+  { key: 'B', name: 'Compact' },
+  { key: 'C', name: 'Narrow card' },
+  { key: 'D', name: 'Head to head' },
+  { key: 'E', name: 'Info ribbon' },
 ] as const
 
 const readVariant = () => {

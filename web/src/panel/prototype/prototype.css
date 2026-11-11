@@ -256,81 +256,64 @@
   }
 }
 
-/* ---------- A: Score bug ---------- */
-.pp-a {
+/* ---------- Round 2: layout updates of today's panel ---------- */
+
+/* Where today's panel sits: a strip at the bottom center, lit along its top in the game's color. On a phone,
+   across the width, with today's margins. */
+.pp-strip {
   left: 50%;
   bottom: calc(3 * var(--spacing) + var(--pp-reserve));
-  display: flex;
-  flex-direction: column;
-  width: max-content;
-  max-width: calc(100% - 6 * var(--spacing));
+  width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   max-height: calc(100% - 6 * var(--spacing) - var(--pp-reserve));
-  border-top: 3px solid var(--game-color);
+  overflow-y: auto;
+  border-top: var(--shape-border-width-thick) solid var(--game-color);
   transform: translateX(-50%);
 }
 
-.pp-a--open {
-  width: min(760px, calc(100% - 6 * var(--spacing)));
+.pp-strip > .pp-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
 }
 
-.pp-a__bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  padding: 6px 8px 6px 12px;
-}
-
-.pp-a__league {
-  max-width: 10em;
+/* Today's progress line: the game's color, slanted. */
+.pp-progress {
+  justify-self: start;
+  align-self: center;
+  max-width: 100%;
+  padding: 1px 8px;
   overflow: hidden;
-  color: var(--palette-text-secondary);
-  font-size: var(--typography-footnote-font-size);
+  background: var(--game-color);
+  color: var(--text-on-game-color);
+  font-size: var(--typography-overline-font-size);
   font-weight: var(--typography-overline-font-weight);
-  letter-spacing: var(--typography-overline-letter-spacing);
   text-transform: uppercase;
   white-space: nowrap;
   text-overflow: ellipsis;
+  transform: skewX(-14deg);
 }
 
-.pp-a__score {
+/* A row of a contest's details flowing and wrapping, as today's band. */
+.pp-flow {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.pp-a__side {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 0 2px;
-  border-radius: 4px;
-}
-
-.pp-a__abbr {
-  overflow: hidden;
-  font-size: var(--typography-subtitle1-font-size);
-  font-weight: var(--typography-subtitle1-font-weight);
+.pp-flow li {
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
-.pp-a__value {
-  min-width: 1.6em;
-  font-size: var(--typography-h6-font-size);
-  font-weight: var(--typography-h6-font-weight);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
+.pp-flow__on {
+  box-shadow: inset 0 -2px 0 var(--game-color);
 }
 
-.pp-a__dash {
-  color: var(--palette-text-secondary);
-}
-
-.pp-a__progress {
-  padding: 2px 8px;
+.pp-set-pill {
+  padding: 1px 8px;
   background: var(--game-color);
   color: var(--text-on-game-color);
   font-size: var(--typography-overline-font-size);
@@ -340,670 +323,622 @@
   transform: skewX(-14deg);
 }
 
-.pp-a__more {
-  margin-left: auto;
-  padding: 4px 10px;
-  border: 1px solid var(--palette-divider);
-  border-radius: 999px;
-  background: none;
-  color: var(--palette-text-primary);
-  font: inherit;
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
-  white-space: nowrap;
-  cursor: pointer;
+.pp-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
-.pp-a__drawer {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 12px 20px;
-  min-height: 0;
-  padding: 12px;
-  overflow-y: auto;
-  border-bottom: 1px solid var(--palette-divider);
+/* Today's score box: a filled, slanted box wide enough for three digits. */
+.pa__value,
+.pb__value,
+.pc__value,
+.pd__value,
+.pe__value,
+.pd__big {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  background: var(--game-panel-score-fill);
+  color: var(--game-panel-score-text);
+  font-weight: var(--typography-h6-font-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transform: skewX(-10deg);
 }
 
-.pp-a__section--board {
-  grid-row: span 3;
+/* A team row: names wrap in place, as today. */
+.pa__row,
+.pb__row,
+.pc__row,
+.pd__row,
+.pe__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
-.pp-a__full-name {
+.pa__name,
+.pb__name,
+.pc__name,
+.pd__name,
+.pe__name {
+  flex: 1;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 640px) {
-  .pp-a,
-  .pp-a--open {
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-width: none;
-    transform: none;
-  }
-
-  /* Two lines: league, progress and buttons; then the score across the width. */
-  .pp-a__bar {
-    flex-wrap: wrap;
-    gap: 4px 8px;
-  }
-
-  .pp-a__league {
-    order: 1;
-    max-width: 40%;
-  }
-
-  .pp-a__progress {
-    order: 2;
-    max-width: 40%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .pp-a__more {
-    order: 3;
-  }
-
-  .pp-a .pp-close {
-    order: 4;
-  }
-
-  .pp-a__score {
-    order: 5;
-    flex-basis: 100%;
-    justify-content: center;
-  }
-
-  .pp-a__score:not(.pp-a__score--sides) {
-    justify-content: space-between;
-  }
-
-  .pp-a__drawer {
-    grid-template-columns: 1fr;
-    max-height: calc(100vh - 400px - var(--pp-reserve));
-  }
-
-  .pp-a__section--board {
-    grid-row: auto;
-  }
+.pa__record,
+.pb__record,
+.pc__record,
+.pd__record,
+.pe__record {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ---------- B: Side sheet / peek ---------- */
-.pp-b {
-  top: 64px;
-  left: 12px;
-  bottom: calc(12px + var(--pp-reserve));
-  display: flex;
-  flex-direction: column;
-  width: 340px;
-  overflow-y: auto;
-  border-left: 3px solid var(--game-color);
+/* ----- A: One row ----- */
+.pa {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr) minmax(0, 220px);
 }
 
-.pp-b__handle {
-  display: none;
+.pa__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 6px;
+  padding: 10px 24px 10px 14px;
+  background: var(--game-panel-score-block-top);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
 }
 
-.pp-b__header {
+.pa__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 10px 4px 14px;
-}
-
-.pp-b__score {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
-  padding: 4px 14px;
-}
-
-.pp-b__row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 4px;
-  font-size: var(--typography-subtitle1-font-size);
-  font-weight: var(--typography-subtitle1-font-weight);
-}
-
-.pp-b__name {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.pp-b__value {
-  min-width: 2.2em;
-  padding: 2px 4px;
-  background: var(--game-panel-score-fill);
-  font-size: var(--typography-h6-font-size);
-  font-weight: var(--typography-h6-font-weight);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.pp-b__league {
-  flex: 1;
   min-width: 0;
 }
 
-.pp-b__progress {
-  max-width: 50%;
-  overflow: hidden;
-  padding: 2px 8px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  background: var(--game-color);
-  color: var(--text-on-game-color);
-  font-size: var(--typography-overline-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  text-transform: uppercase;
+.pa__row {
+  font-size: 15px;
 }
 
-.pp-b__rest {
+.pa__value {
+  width: 2.6em;
+  font-size: 18px;
+}
+
+.pa__board {
+  align-self: center;
+  min-width: 0;
+  padding: 10px 14px;
+}
+
+.pa__side {
   display: grid;
-  gap: 14px;
-  padding: 12px 14px 14px;
-}
-
-.pp-b__photo {
-  width: 100%;
-  height: 120px;
-  border-radius: 6px;
-  object-fit: cover;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 36px 10px 14px;
+  border-left: 1px solid var(--palette-divider);
 }
 
 @media (max-width: 640px) {
-  .pp-b {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: var(--pp-reserve);
-    width: auto;
-    max-height: 132px;
-    overflow: hidden;
+  .pa {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pa__score {
+    padding: 8px 40px 8px 12px;
+    clip-path: none;
+  }
+
+  .pa__board {
+    padding: 8px 12px 0;
+  }
+
+  /* Venue and watch side by side, each a column. */
+  .pa__side {
+    grid-template-columns: 1fr 1fr;
+    padding: 8px 12px;
     border-left: none;
-    border-top: 3px solid var(--game-color);
-    border-radius: 14px 14px 0 0;
-    transition: max-height 0.25s ease;
+  }
+}
+
+/* ----- B: Compact (today's layout, smaller) ----- */
+.pb__main {
+  display: flex;
+  min-height: 96px;
+}
+
+.pb__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  width: min(380px, 38%);
+  flex-shrink: 0;
+  padding: 8px 22px 8px 12px;
+  background: var(--game-panel-score-block-top);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.pb .pp-mark {
+  width: 18px;
+  height: 18px;
+}
+
+.pb__row {
+  gap: 6px;
+  font-size: 14px;
+}
+
+.pb__value {
+  width: 2.6em;
+  font-size: 15px;
+}
+
+.pb__progress {
+  margin-top: 2px;
+}
+
+.pb__details {
+  flex: 1;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 8px 14px;
+  font-size: var(--typography-caption-font-size);
+}
+
+.pb__photo {
+  width: min(110px, 10%);
+  flex-shrink: 0;
+  object-fit: cover;
+  mask-image: linear-gradient(90deg, transparent, #000 35%);
+}
+
+.pb__board {
+  padding: 6px 14px 8px;
+  border-top: 1px solid var(--palette-divider);
+  font-size: var(--typography-caption-font-size);
+}
+
+.pb__board .pp-label {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .pb__main {
+    flex-direction: column;
+    min-height: 0;
   }
 
-  /* Up to just under the rail's buttons, so they stay in reach. */
-  .pp-b--expanded {
-    max-height: calc(100% - 300px - var(--pp-reserve));
-    overflow-y: auto;
+  .pb__score {
+    width: auto;
+    padding: 8px 40px 8px 12px;
+    clip-path: none;
   }
 
-  .pp-b__handle {
+  /* Venue and watch on one line each, labels inline; the sport is in the venue's label already. */
+  .pb__details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    padding: 6px 12px;
+  }
+
+  .pb__sport,
+  .pb__photo {
+    display: none;
+  }
+
+  .pb__venue,
+  .pb__watch {
     display: flex;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 100%;
-    padding: 6px 0 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-  }
-
-  .pp-b__handle span {
-    width: 40px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--palette-text-secondary);
-  }
-
-  .pp-b__header {
-    padding-top: 2px;
-  }
-
-  /* Peeking: one line each, so the two rows always fit. */
-  .pp-b:not(.pp-b--expanded) .pp-b__name {
+    gap: 6px;
+    align-items: baseline;
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
 
-  .pp-b:not(.pp-b--expanded) .pp-b__record {
+  .pb__venue > div:last-child {
+    display: flex;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pb__board {
+    padding: 6px 12px 8px;
+  }
+}
+
+/* ----- C: Narrow card ----- */
+.pc {
+  display: grid;
+  gap: 8px;
+  width: min(720px, calc(100% - 6 * var(--spacing)));
+  padding: 10px 14px 10px;
+}
+
+.pc__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pc__league {
+  flex: 1;
+  min-width: 0;
+}
+
+.pc__head .pp-progress {
+  max-width: 50%;
+}
+
+.pc__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.pc__row {
+  font-size: var(--typography-subtitle1-font-size);
+}
+
+.pc__value {
+  width: 2.6em;
+  font-size: var(--typography-h6-font-size);
+}
+
+.pc__board {
+  padding-top: 8px;
+  border-top: 1px solid var(--palette-divider);
+}
+
+.pc__foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--palette-divider);
+  font-size: var(--typography-caption-font-size);
+}
+
+.pc__thumb {
+  width: 44px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.pc__where {
+  flex: 1.4;
+  min-width: 0;
+}
+
+.pc__watch {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .pc {
+    width: calc(100% - 6 * var(--spacing));
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .pc__thumb {
     display: none;
   }
 
+  .pc__foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding-top: 6px;
+  }
+
+  .pc__board {
+    padding-top: 6px;
+  }
 }
 
-/* ---------- C: Ticker ---------- */
-.pp-c {
-  left: 50%;
-  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
-  display: flex;
-  align-items: stretch;
-  width: min(1200px, calc(100% - 6 * var(--spacing)));
-  height: 84px;
-  overflow: hidden;
-  border-bottom: 3px solid var(--game-color);
-  transform: translateX(-50%);
+/* ----- D: Head to head ----- */
+.pd__board-row {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 44px 8px;
+  background: var(--game-panel-score-block-top);
 }
 
-.pp-c__bug {
+.pd__versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 820px;
+}
+
+.pd__side {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  box-sizing: border-box;
-  width: 300px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  border-radius: 4px;
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+/* The second side mirrored: its logo by the scores, its name outside. */
+.pd__side--end {
+  flex-direction: row-reverse;
+}
+
+.pd__side-name {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.pd__side--end .pd__side-name {
+  text-align: left;
+}
+
+.pd__scores {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd__big {
+  min-width: 2.2em;
+  padding: 0 4px;
+  font-size: 24px;
+}
+
+.pd__dash {
+  color: var(--palette-text-secondary);
+}
+
+.pd__field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.pd__value {
+  width: 2.6em;
+  font-size: 18px;
+}
+
+.pd__lower {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.pd__lower > :only-child {
+  grid-column: 1 / -1;
+}
+
+.pd__board {
+  min-width: 0;
+  padding: 8px 14px;
+}
+
+.pd__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px 14px;
+  border-left: 1px solid var(--palette-divider);
+}
+
+@media (max-width: 640px) {
+  .pd__board-row {
+    padding: 8px 10px;
+  }
+
+  /* Logo over the name on each side, the scores between: names wrap under their logos. */
+  .pd__versus {
+    gap: 8px;
+  }
+
+  .pd__side,
+  .pd__side--end {
+    flex-direction: column-reverse;
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .pd__side-name,
+  .pd__side--end .pd__side-name {
+    text-align: center;
+  }
+
+  .pd__big {
+    font-size: 22px;
+  }
+
+  .pd__league {
+    padding-right: 30px;
+  }
+
+  .pd__lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pd__board {
+    padding: 8px 12px 0;
+  }
+
+  .pd__meta {
+    padding: 8px 12px;
+    border-left: none;
+  }
+}
+
+/* ----- E: Info ribbon ----- */
+.pe {
+  isolation: isolate;
+}
+
+.pe__photo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  width: 30%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  mask-image: linear-gradient(90deg, transparent, #000 60%);
+}
+
+.pe__ribbon {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 5px 6px 5px 14px;
+  border-bottom: 1px solid var(--palette-divider);
+  font-size: var(--typography-caption-font-size);
+}
+
+.pe__league {
   flex-shrink: 0;
-  padding: 4px 18px 4px 10px;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-footnote-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.pe__ribbon .pp-progress {
+  flex-shrink: 0;
+}
+
+.pe__info {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pe__ribbon .pp-close {
+  margin-left: auto;
+}
+
+.pe__main {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+}
+
+.pe__main > :only-child {
+  grid-column: 1;
+}
+
+.pe__score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 6px;
+  padding: 10px 26px 10px 14px;
   background: var(--game-panel-score-block-top);
   clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
 }
 
-.pp-c__league {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-c__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-  font-weight: var(--typography-subtitle1-font-weight);
-}
-
-.pp-c .pp-mark {
-  width: 18px;
-  height: 18px;
-}
-
-.pp-c__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-c__value {
-  min-width: 2em;
+.pe__row {
   font-size: var(--typography-subtitle1-font-size);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
 }
 
-.pp-c__rail {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 0 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scroll-snap-type: x proximity;
-  mask-image: linear-gradient(90deg, #000 92%, transparent);
+.pe__value {
+  width: 2.6em;
+  font-size: var(--typography-h6-font-size);
 }
 
-.pp-c__chip {
-  flex-shrink: 0;
-  max-width: 260px;
-  padding: 4px 10px;
-  border: 1px solid var(--palette-divider);
-  border-radius: 999px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  scroll-snap-align: start;
-}
-
-.pp-c__chip--text {
-  max-width: 320px;
-  border-radius: 8px;
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.pp-c__chip--color {
-  border-color: var(--game-color);
-  background: var(--game-color);
-  color: var(--text-on-game-color);
-  font-size: var(--typography-overline-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  text-transform: uppercase;
-}
-
-.pp-c__chip--on {
-  border-color: var(--game-color);
-}
-
-.pp-c > .pp-close {
+.pe__board {
   align-self: center;
-  margin-right: 8px;
+  min-width: 0;
+  padding: 10px 14px;
 }
 
 @media (max-width: 640px) {
-  .pp-c {
-    left: 0;
-    right: 0;
-    bottom: var(--pp-reserve);
-    flex-direction: column;
-    width: auto;
-    height: auto;
-    border-radius: 0;
-    transform: none;
+  /* The ribbon wraps: league, progress and close, then the venue and the channels, a line each. */
+  .pe__ribbon {
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    padding: 5px 6px 6px 12px;
   }
 
-  .pp-c__bug {
-    width: auto;
-    padding: 6px 44px 6px 10px;
+  .pe__ribbon .pp-close {
+    order: 1;
+  }
+
+  .pe__info {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .pe__main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pe__score {
+    padding: 8px 12px;
     clip-path: none;
   }
 
-  .pp-c__rail {
-    flex: none;
-    height: 44px;
-  }
-
-  .pp-c > .pp-close {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-  }
-}
-
-/* ---------- D: Tabs ---------- */
-.pp-d {
-  left: 50%;
-  bottom: calc(3 * var(--spacing) + var(--pp-reserve));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  width: min(820px, calc(100% - 6 * var(--spacing)));
-  height: 168px;
-  overflow: hidden;
-  border-top: 3px solid var(--game-color);
-  transform: translateX(-50%);
-}
-
-.pp-d__score {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 10px 14px;
-  background: color-mix(in srgb, var(--game-panel-score-block-top) 85%, transparent);
-}
-
-.pp-d__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-width: 0;
-}
-
-.pp-d__progress {
-  overflow: hidden;
-  color: var(--game-color);
-  font-size: var(--typography-footnote-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  text-transform: uppercase;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-d__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-  font-size: var(--typography-subtitle1-font-size);
-  font-weight: var(--typography-subtitle1-font-weight);
-}
-
-.pp-d__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-d__record {
-  flex-shrink: 0;
-}
-
-.pp-d__value {
-  min-width: 2.2em;
-  background: var(--game-panel-score-fill);
-  font-size: var(--typography-h6-font-size);
-  font-weight: var(--typography-h6-font-weight);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.pp-d__tabs-area {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-}
-
-.pp-d__tabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 6px 0;
-  border-bottom: 1px solid var(--palette-divider);
-}
-
-.pp-d__tab {
-  padding: 6px 10px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--palette-text-secondary);
-  font: inherit;
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.pp-d__tab[aria-selected='true'] {
-  border-bottom-color: var(--game-color);
-  color: var(--palette-text-primary);
-}
-
-.pp-d__tabs .pp-close {
-  margin-left: auto;
-}
-
-.pp-d__content {
-  flex: 1;
-  min-height: 0;
-  padding: 8px 12px;
-  overflow-y: auto;
-}
-
-.pp-d__venue {
-  display: flex;
-  gap: 12px;
-}
-
-.pp-d__venue img {
-  width: 120px;
-  height: 80px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-
-@media (max-width: 640px) {
-  .pp-d {
-    left: 0;
-    right: 0;
-    bottom: var(--pp-reserve);
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-    width: auto;
-    height: 200px;
-    border-radius: 14px 14px 0 0;
-    transform: none;
-  }
-
-  .pp-d__score {
+  .pe__board {
     padding: 8px 12px;
   }
 
-  .pp-d__tabs {
-    overflow-x: auto;
+  .pe__photo {
+    width: 50%;
+    height: 56px;
+    bottom: auto;
   }
-
-  .pp-d__venue img {
-    width: 96px;
-    height: 64px;
-  }
-}
-
-/* ---------- E: Floating card ---------- */
-.pp-e {
-  left: 12px;
-  bottom: calc(12px + var(--pp-reserve));
-  width: 340px;
-  max-height: calc(100% - 80px - var(--pp-reserve));
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 6px;
-  background: none;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
-.pp-e__card,
-.pp-e__drawer {
-  box-sizing: border-box;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--game-panel-surface-top) 92%, transparent);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-  box-shadow:
-    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 22%, transparent),
-    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
-}
-
-.pp-e__card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-  padding: 8px 10px;
-  border-left: 4px solid var(--game-color);
-}
-
-.pp-e__top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.pp-e__league {
-  flex-shrink: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-e__progress {
-  margin-left: auto;
-  overflow: hidden;
-  color: var(--game-color);
-  font-size: var(--typography-footnote-font-size);
-  font-weight: var(--typography-overline-font-weight);
-  text-transform: uppercase;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-e__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 4px;
-  font-weight: var(--typography-subtitle1-font-weight);
-}
-
-.pp-e .pp-mark {
-  width: 18px;
-  height: 18px;
-}
-
-.pp-e__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.pp-e__value {
-  font-size: var(--typography-subtitle1-font-size);
-  font-variant-numeric: tabular-nums;
-}
-
-.pp-e__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 6px;
-  margin-top: 2px;
-}
-
-.pp-e__chip {
-  min-width: 0;
-  max-width: 100%;
-  padding: 3px 10px;
-  overflow: hidden;
-  border: 1px solid var(--palette-divider);
-  border-radius: 999px;
-  background: none;
-  color: var(--palette-text-primary);
-  font: inherit;
-  font-size: var(--typography-caption-font-size);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  cursor: pointer;
-}
-
-.pp-e__chip[aria-pressed='true'] {
-  border-color: var(--game-color);
-  background: color-mix(in srgb, var(--game-color) 18%, transparent);
-}
-
-.pp-e__drawer {
-  min-height: 0;
-  padding: 8px 10px;
-  overflow-y: auto;
-}
-
-.pp-e__photo {
-  width: 100%;
-  height: 96px;
-  margin-top: 6px;
-  border-radius: 6px;
-  object-fit: cover;
 }
 
 @media (max-width: 640px) {
-  /* At the top, under the local-run top rail and left of the rail; the drawer drops below the card. */
-  .pp-e {
-    top: 56px;
-    bottom: auto;
-    left: 8px;
-    width: calc(100% - 36px - 28px);
-    max-height: calc(100% - 64px - var(--pp-reserve));
-    flex-direction: column;
+  .pp-strip {
+    width: calc(100% - 6 * var(--spacing));
+  }
+}
+
+/* Under the scores, centered. */
+.pd .pd__progress {
+  justify-self: center;
+}
+
+/* On wide screens, narrowed on both sides to leave the corner to the Feedback button, as today's panel. */
+@media (min-width: 641px) {
+  .feedback:not([hidden]) ~ .pp-strip {
+    width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
+  }
+
+  .feedback:not([hidden]) ~ .pp-strip.pc {
+    width: min(720px, calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
   }
 }

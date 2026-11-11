@@ -928,18 +928,17 @@ body {
 }
 
 /* A score card coming in as its game arrives on the board (or is shown again), or going out as it
-   leaves (see globe/cardComings.ts): a quick fade with a slight scale from its foot, by its trail, which
-   fades with it. On the marker MapLibre moves, by its own scale and opacity, so neither clashes with the
-   marker's transform nor the card's own animations; the duration and delay are set from cardComingDuration. */
+   leaves (see globe/cardComings.ts): it drops in from a little above as it fades in, landing on its
+   trail, which fades in with it, and lifts up and away as it fades out. On the marker MapLibre moves, by
+   its own translate and opacity, so neither clashes with the marker's transform nor the card's own
+   animations; the duration and delay are set from cardComingDuration. */
 .score-card-coming {
-  transform-origin: bottom center;
   animation-name: score-card-coming;
   animation-timing-function: ease-out;
   animation-fill-mode: both;
 }
 
 .score-card-going {
-  transform-origin: bottom center;
   animation-name: score-card-going;
   animation-timing-function: ease-in;
   animation-fill-mode: both;
@@ -949,14 +948,14 @@ body {
 @keyframes score-card-coming {
   from {
     opacity: 0;
-    scale: 0.92;
+    translate: 0 -18px;
   }
 }
 
 @keyframes score-card-going {
   to {
     opacity: 0;
-    scale: 0.92;
+    translate: 0 -18px;
   }
 }
 
@@ -1138,7 +1137,7 @@ body {
     transition: none;
   }
 
-  /* A card coming in or going out fades in place, without the scale. */
+  /* A card coming in or going out fades in place, without dropping in or lifting away. */
   .score-card-coming {
     animation-name: score-card-fade-in;
   }

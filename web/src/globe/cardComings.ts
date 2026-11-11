@@ -1,8 +1,8 @@
 /**
  * How long a score card takes to come in or go out, its trail and venue dot with it, in milliseconds.
- * The card's own look (a fade and a slight scale) is the CSS's (`.score-card-coming`, `.score-card-going`).
+ * The card's own look (dropping in from a little above as it fades in, lifting away as it fades out) is the CSS's (`.score-card-coming`, `.score-card-going`).
  */
-export const cardComingDuration = 250
+export const cardComingDuration = 300
 
 /** A score card coming in or going out, and when it started (as `performance.now()` gives it). */
 export interface CardComing {

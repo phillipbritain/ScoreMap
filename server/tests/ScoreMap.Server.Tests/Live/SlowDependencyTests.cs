@@ -156,7 +156,8 @@ public class SlowDependencyTests
         Assert.Empty(await client.NextSnapshotAsync());
         Assert.Equal(4, server.Feed.TotalFetches);
 
-        server.Feed.ReleaseTopEvents();
+        // Which four of the queued fetches took the slots is up to the thread pool.
+        server.Feed.ReleaseOneHeldFetch();
         await server.Feed.WaitForTotalFetchesAsync(5);
         Assert.Equal(5, server.Feed.TotalFetches);
 

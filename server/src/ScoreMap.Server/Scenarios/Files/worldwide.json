@@ -9,6 +9,7 @@
 // (from the 85th minute), Yankees v Red Sox (the top of the 9th, until its break), Mumbai v Chennai
 // (an IPL chase into its last 2 overs) and Ireland v France (Six Nations, from the 75th minute). Each
 // finishes, if the gap doesn't open first.
+// Sinner v Alcaraz is written out with its sets, a set up in the 2nd, so tennis's set scores can be checked.
 {
   "games": [
     {
@@ -486,10 +487,24 @@
       "status": "live",
       "clock": "71'",
       "period": 2
+    },
+    {
+      "id": "worldwide-sinner-alcaraz",
+      "league": "ATP",
+      "note": "SF",
+      "home": { "name": "Jannik Sinner", "abbreviation": "J. Sinner", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png" },
+      "away": { "name": "Carlos Alcaraz", "abbreviation": "C. Alcaraz", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png" },
+      "venue": { "name": "Accor Arena", "city": "Paris" },
+      "startsIn": "-1h05m",
+      "status": "live",
+      "sets": [
+        { "home": 7, "away": 6, "homeTiebreak": 7, "awayTiebreak": 5, "homeWon": true },
+        { "home": 3, "away": 4 }
+      ]
     }
   ],
   "fill": {
-    "count": 150,
+    "count": 149,
     "group": "worldwide",
     "mix": { "live": 4, "upcoming": 3, "final": 2 }
   },

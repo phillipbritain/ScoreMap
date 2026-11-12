@@ -42,3 +42,7 @@ Making or changing the theme, or any color, font, size or status look: read the 
 ### Card layout
 
 Score cards jumping about or landing in the wrong place on a running globe: capture and replay the layout, see `docs/agents/card-layout-replay.md`.
+
+### Prototyping
+
+Prototyping UI here (variants, a switcher): ScoreMap's notes to the `prototype` skill are in `docs/agents/prototyping.md`.

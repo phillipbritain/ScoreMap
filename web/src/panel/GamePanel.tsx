@@ -23,6 +23,8 @@ interface GamePanelProps {
   color: string
   /** The color of text on the game's color, readable on it (see textOn). */
   textOnColor: string
+  /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
+  venuePhotos: boolean
   onClose: () => void
   /** The panel's element, so the globe can keep the selected pin clear of it. */
   ref?: Ref<HTMLElement>
@@ -37,7 +39,7 @@ interface GamePanelProps {
  * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
  */
-export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -51,7 +53,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
   const links = streamLinks(game.streamLinks)
   // A photo that fails to load is left out rather than shown broken. Its credit isn't shown (ADR-0025).
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
-  const photo = venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
+  const photo = venuePhotos && venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's color, as its score card is.
   const colorStyle = { '--game-color': color, '--text-on-game-color': textOnColor } as CSSProperties
 
@@ -82,7 +84,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
             <LastScore game={game} />
           </div>
 
-          {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none. */}
+          {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none or the viewer switched photos off. */}
           <div className="game-panel__details">
             {photo && (
               <img className="game-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />

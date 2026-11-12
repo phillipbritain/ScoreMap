@@ -42,17 +42,9 @@ export function MapTypeIcon() {
   return <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
 }
 
-/** Display Settings: a painter's palette. */
-export function PaletteIcon() {
-  return (
-    <>
-      <circle cx="13.5" cy="6.5" r="1" />
-      <circle cx="17.5" cy="10.5" r="1" />
-      <circle cx="8.5" cy="7.5" r="1" />
-      <circle cx="6.5" cy="12.5" r="1" />
-      <path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6h1.9A5.6 5.6 0 0 0 22 11c0-5-4.5-9-10-9z" />
-    </>
-  )
+/** Display Settings: three sliders, settings to adjust (Lucide's "sliders-horizontal"). */
+export function DisplaySettingsIcon() {
+  return <path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4" />
 }
 
 /** Games: a list (Feather's "list"). */

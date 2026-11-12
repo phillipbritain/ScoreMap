@@ -189,6 +189,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             scorer={scorerOf(justHappened, selectedGame.id)}
             color={selectedColor}
             textOnColor={textOn(selectedColor, theme.palette.text.primary, theme.palette.background.paper)}
+            venuePhotos={viewerSettings.venuePhotos}
             onClose={closeGame}
           />
         )}

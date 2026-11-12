@@ -81,11 +81,11 @@ While zoomed in, where each game's score card goes on screen, and which games ga
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe: its score and last score (who scored, and when), and its venue and where to watch over the venue's photo, with a band under it for tennis sets, a field's leaderboard or a fight card's bouts.
+The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe: its score and last score (who scored, and when), and its venue and where to watch over the venue's photo (unless the viewer switched venue photos off in Display Settings), with a band under it for tennis sets, a field's leaderboard or a fight card's bouts.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (whether the game panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:

@@ -100,7 +100,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does the welcome tour's switch in My leagues (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as do the welcome tour's switches in My leagues and Display Settings' "Display venue photo on Game Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card colors" heading (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -108,7 +108,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
 | `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
 | `palette.text.link` | Links (the feedback form's thanks) | `offWhite.500` |
-| `palette.divider` | The lines between a menu's parts (between the rail's buttons, under "All leagues") | `navy.600` |
+| `palette.divider` | The lines between a menu's parts (between the rail's buttons, under "All leagues", running on from "Card colors") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
 
 The statuses' colors and `text.link` are ScoreMap's own, beside MUI's. MUI works out a color's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives them all (a status's color has no `contrastText`), so each is a step that can be seen and changed.
@@ -280,7 +280,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `body2` | The game panel, the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
 | `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips; the game panel's close button takes its size | 400, 12 |
-| `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, in capitals | 700, 12, 0.14em |
+| `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
 | `footnote` | The smallest on the page: a score card's header line, and the game panel's labels on a phone | 400, 11 |
 
 `footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.

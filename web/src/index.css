@@ -273,17 +273,10 @@ body {
   transform: skewX(-10deg);
 }
 
-/* The progress line at the left, and ESPN's logo at the right, under the scores. */
-.game-panel__progress-row {
-  display: flex;
-  align-items: center;
-  gap: calc(2 * var(--spacing));
-  min-width: 0;
-  margin-top: var(--spacing);
-}
-
 .game-panel__progress {
-  min-width: 0;
+  justify-self: start;
+  max-width: calc(100% - 2 * var(--spacing));
+  margin-top: var(--spacing);
 }
 
 /* The progress line, and in the band each of a tennis match's sets, in the game's color. */
@@ -360,12 +353,15 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The watch links on one line at the foot of the details, their label before them. */
+/* The game's StreamEast streams and its ESPN page, as their logos, stacked in the details' bottom right
+   corner, right-aligned. */
 .game-panel__watch {
   align-self: end;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(1.5 * var(--spacing));
 }
 
 /* The venue and its city link to Google Maps, kept in their own colors. */
@@ -378,25 +374,27 @@ body {
   text-decoration: underline;
 }
 
-.game-panel__watch a {
-  color: var(--palette-text-link);
-}
-
-/* The link to the game's page on ESPN: ESPN's logo, right-aligned under the scores. */
-.game-panel__espn-link {
+/* A logo as a link: StreamEast's round icon, or ESPN's wordmark, as tall as each other. */
+.game-panel__logo-link {
   flex-shrink: 0;
-  margin-left: auto;
   line-height: 0;
 }
 
-.game-panel__espn-link img {
+.game-panel__logo-link img {
   display: block;
   height: calc(4 * var(--spacing));
   filter: drop-shadow(0 1px 2px var(--palette-background-default));
 }
 
-.game-panel__espn-link:hover img {
+.game-panel__logo-link:hover img {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
+}
+
+/* StreamEast's logo, a red badge, a little taller than ESPN's wordmark so its name reads at the same size;
+   a look being tried, so its size is here rather than in the theme. */
+.game-panel__logo-link img.game-panel__stream-logo {
+  height: calc(5 * var(--spacing));
+  border-radius: var(--shape-border-radius);
 }
 
 .game-panel__unofficial {
@@ -549,7 +547,7 @@ body {
     padding-right: 0;
   }
 
-  .game-panel__progress-row,
+  .game-panel__progress,
   .game-panel__last-score {
     margin-top: calc(0.5 * var(--spacing));
   }
@@ -634,10 +632,6 @@ body {
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     text-align: right;
-  }
-
-  .game-panel__watch > .game-panel__label {
-    display: block;
   }
 }
 

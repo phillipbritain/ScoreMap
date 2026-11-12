@@ -476,9 +476,9 @@ const settings = {
     },
     /**
      * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and
-     * over a cluster, and how thick, for a lively animation (a score or a start) and a calm one (a finish).
+     * over a cluster, and how thick.
      */
-    Pulse: { size: { pin: pixels, cluster: pixels }, ring: { lively: pixels, calm: pixels } },
+    Pulse: { size: { pin: pixels, cluster: pixels }, ring: pixels },
     /**
      * A score card: its fill and text, the drop shadow a starting game's card settles with, its header (how strongly it's
      * tinted with its game's color, 0 not at all and 1 the color itself, its text then the card's text

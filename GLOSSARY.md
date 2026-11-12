@@ -105,7 +105,7 @@ Soccer's goals and cards, or rugby's tries, conversions, penalty and drop goals 
 _Avoid_: Incidents, timeline
 
 **Pulse**:
-The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes (for a field, when the lead changes hands; for a fight card, when a bout finishes), when it starts and when it finishes. It changes nothing about what's shown. Changes that came while ScoreMap was asleep or cut off don't pulse when it catches up. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
+The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes (for a field, when the lead changes hands; for a fight card, when a bout finishes), and when it starts, the same pulse for both; a game finishing plays none. It changes nothing about what's shown. Changes that came while ScoreMap was asleep or cut off don't pulse when it catches up. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
 
 **Clutch time**:

@@ -1481,10 +1481,8 @@ body {
   opacity: var(--controls-off-opacity);
 }
 
-/* Leagues: "All leagues", above the sports, as a bigger chip, dashed while only some leagues are on.
-   Display Settings' "Venue photos" switch sits above its sports the same way. */
-.leagues-master,
-.display-photos {
+/* Leagues: "All leagues", above the sports, as a bigger chip, dashed while only some leagues are on. */
+.leagues-master {
   display: flex;
   align-items: center;
   gap: calc(2 * var(--spacing));
@@ -1526,8 +1524,7 @@ body {
   color: var(--rail-on-text);
 }
 
-.leagues-master__hint,
-.display-photos__hint {
+.leagues-master__hint {
   flex: 1;
   color: var(--rail-hint);
   font-size: var(--typography-caption-font-size);
@@ -1537,6 +1534,30 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
+}
+
+/* Display Settings: "Show venue photo", its switch at the right, above the sports with a line under it. */
+.display-photos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  width: 100%;
+  margin-bottom: calc(3 * var(--spacing));
+  padding: 0 0 calc(3 * var(--spacing));
+  border: none;
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+  background: none;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.display-photos:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
 }
 
 /* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */
@@ -2434,7 +2455,7 @@ body {
   width: 100%;
 }
 
-/* A switch, its knob at the right when on: the welcome tour's. */
+/* A switch, its knob at the right when on: the welcome tour's, and Display Settings' "Show venue photo". */
 .switch {
   position: relative;
   flex: none;

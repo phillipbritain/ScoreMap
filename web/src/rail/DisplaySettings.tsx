@@ -22,7 +22,7 @@ interface DisplaySettingsProps {
 }
 
 /**
- * The rail's Display Settings popover: a "Venue photos" switch for the game panel's photo, then each sport, then its leagues, by name, with a swatch of its games'
+ * The rail's Display Settings popover: a "Show venue photo" switch for the game panel's photo, then each sport, then its leagues, by name, with a swatch of its games'
  * color, which opens a grid of the colors there are to pick (see pickableColors) under its row, and
  * a control to clear it; a league with no color of its own shows its sport's, marked as taken from
  * the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -65,19 +65,16 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
   const photos = settings.venuePhotos
   return (
     <>
-      <div className="display-photos">
-        <button
-          type="button"
-          className="rail-chip"
-          aria-pressed={photos}
-          onClick={() => onChange({ ...settings, venuePhotos: !photos })}
-        >
-          Venue photos
-        </button>
-        <span className="display-photos__hint">
-          {photos ? 'Click to hide them on game panels' : 'Click to show them on game panels'}
-        </span>
-      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={photos}
+        className="display-photos"
+        onClick={() => onChange({ ...settings, venuePhotos: !photos })}
+      >
+        Show venue photo
+        <span className={photos ? 'switch switch--on' : 'switch switch--off'} aria-hidden="true" />
+      </button>
       {leaguesBySport(leagues).map((group) => {
         const sportColor = settings.sportColors[group.sport] ?? null
         // What a league with no color of its own shows in: its sport's, else the theme's.

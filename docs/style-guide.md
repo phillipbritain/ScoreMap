@@ -100,7 +100,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does the welcome tour's switch in My leagues (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as do the welcome tour's switches in My leagues and Display Settings' "Show venue photo" (`main` when on, with a knob in `contrastText`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -171,7 +171,7 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
-| `components.Rail.hint` | The hint beside "All leagues" and "Venue photos" | `text.secondary` |
+| `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
 | `components.Rail.chip.badge` | The badge counting leagues, after a sport's name and on the "All leagues" chip | `primary.dark` |
 | `components.Rail.on.fill`, `.outline`, `.text` | A league chip that's on, lit as a Live score card is: its fill, with `Rail.on.tint` of its outline's color mixed in (0.14), its outline and glow (`Rail.on.glow.radius` and `.opacity`, 8 and 0.35), and its text. The chosen "Top Events" or "My leagues" is underlined in the outline's color, and the welcome tour's Next and Done buttons are lit the same way | `primary.dark`, `secondary.main`, `secondary.light` |

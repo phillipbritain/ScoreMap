@@ -1,0 +1,6 @@
+# Orca runs this setup in each new worktree, and holds the agent until it finishes,
+# so `npx tsc -b` and `npm test` work from the agent's first command.
+scripts:
+  setup: |
+    cd web && npm ci
+setupAgentStartupPolicy: wait-for-setup

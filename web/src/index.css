@@ -353,9 +353,23 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The watch links on one line at the foot of the details, their label before them. */
-.game-panel__watch {
+/* The foot of the details: the link to the game's page on ESPN, then the watch links on one line, their
+   label before them. */
+.game-panel__foot {
   align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  min-width: 0;
+}
+
+.game-panel__espn-link {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.game-panel__watch {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -371,7 +385,7 @@ body {
   text-decoration: underline;
 }
 
-/* The watch links, and the link to the game's page on ESPN at the end of the league line. */
+/* The watch links, and the link to the game's page on ESPN over them. */
 .game-panel__watch a,
 .game-panel__espn-link {
   color: var(--palette-text-link);
@@ -538,7 +552,7 @@ body {
   }
 
   /* The venue's photo behind the whole panel, the score block and band too, rather than behind the venue
-     alone, and the watch links in the panel's bottom right corner: the strip and the details give way to
+     alone, and the ESPN and watch links in the panel's bottom right corner: the strip and the details give way to
      their contents, laid out down the panel, and the score block has no color of its own. With no photo,
      the faint glow in its place is the panel's. */
   .game-panel {
@@ -579,8 +593,8 @@ body {
     pointer-events: none;
   }
 
-  /* The score at the top, then the band, then the venue and its watch links side by side along the foot:
-     the venue in the bottom left corner, watch in the bottom right, its label over its links. */
+  /* The score at the top, then the band, then the venue and the ESPN and watch links side by side along the foot:
+     the venue in the bottom left corner, the ESPN link over watch in the bottom right, watch's label over its links. */
   .game-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
@@ -605,13 +619,17 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
-  .game-panel__watch {
+  .game-panel__foot {
     grid-area: watch;
-    align-self: end;
+    align-items: end;
     box-sizing: border-box;
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     text-align: right;
+  }
+
+  .game-panel__watch {
+    max-width: 100%;
   }
 
   .game-panel__watch > .game-panel__label {

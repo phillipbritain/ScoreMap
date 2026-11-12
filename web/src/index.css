@@ -1536,7 +1536,7 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
-/* Display Settings: "Show venue photo", its switch at the right, above the sports with a line under it. */
+/* Display Settings: "Display venue photo on Game Panel", its switch at the right, above the sports with a line under it. */
 .display-photos {
   display: flex;
   align-items: center;
@@ -2455,7 +2455,7 @@ body {
   width: 100%;
 }
 
-/* A switch, its knob at the right when on: the welcome tour's, and Display Settings' "Show venue photo". */
+/* A switch, its knob at the right when on: the welcome tour's, and Display Settings' "Display venue photo on Game Panel". */
 .switch {
   position: relative;
   flex: none;

@@ -376,10 +376,12 @@ body {
 }
 
 /* The link to the game's page on ESPN, ESPN's logo, in the panel's top right corner under the close button,
-   level with the venue's name; the venue's name keeps clear of it. */
+   its foot level with the foot of the venue name's first line (1.3em tall), clear of the close button; the venue's
+   name keeps clear of it. */
 .game-panel__espn-link {
+  --espn-logo-height: calc(3 * var(--spacing));
   position: absolute;
-  top: calc(3 * var(--spacing));
+  top: calc(3 * var(--spacing) + 1.3em - var(--espn-logo-height));
   right: calc(4 * var(--spacing));
   z-index: 3;
   display: block;
@@ -388,7 +390,7 @@ body {
 
 .game-panel__espn-link img {
   display: block;
-  height: calc(3 * var(--spacing));
+  height: var(--espn-logo-height);
   filter: drop-shadow(0 1px 2px var(--palette-background-default));
 }
 
@@ -637,9 +639,10 @@ body {
     text-align: right;
   }
 
-  /* Level with the league's line at the top of the score block, which keeps clear of it. */
+  /* Its foot level with the foot of the league's line at the top of the score block (its overline text at
+     its normal line height, about 1.36em), which keeps clear of it. */
   .game-panel__espn-link {
-    top: calc(2 * var(--spacing));
+    top: calc(2 * var(--spacing) + 1.36 * var(--typography-overline-font-size) - var(--espn-logo-height));
     right: calc(2 * var(--spacing));
   }
 

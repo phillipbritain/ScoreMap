@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ScenarioListing } from '../scenarios/scenarioPicker'
 import { signalRGamesHub } from './liveConnection'
+import { offerMadeUpChanges } from './madeUpChange'
 import { noLiveGames, startLiveGames, type LiveGames, type LiveGamesState } from './liveGames'
 
 /**
@@ -22,7 +23,9 @@ export function useLiveGames(
       setState,
     )
     live.current = started
+    const withdraw = offerMadeUpChanges(started)
     return () => {
+      withdraw()
       started.stop()
       live.current = null
     }

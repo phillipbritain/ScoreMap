@@ -9,7 +9,7 @@ ScoreMap runs through .NET Aspire (ADR-0013): one **run** is the server and Vite
 
 ## Use the run that's there
 
-Usually the user already has a run going. Run these with the PowerShell tool:
+Usually the user already has a run going. Commands run from PowerShell or bash; where the two differ, both are given:
 
 1. `aspire ps` lists every run on the machine, with its AppHost path (so its clone). When it lists this clone's AppHost, **use that run**. It may be the user's own `aspire run`, which restarts its AppHost itself when stopped, so a `start` over it only fights it for locked build files. When it lists none at all, start one (see [Starting a run](#starting-a-run)). When it lists only another clone's run, see "One run at a time" under [Starting a run](#starting-a-run).
 2. Read its URLs. Give `--apphost` the full path, as `describe` and `wait` may not find the run from the directory alone:
@@ -21,13 +21,22 @@ Usually the user already has a run going. Run these with the PowerShell tool:
    $server = ($run | ? displayName -eq server).urls | ? name -eq http | % url
    ```
 
+   ```bash
+   apphost="$(git rev-parse --show-toplevel)/server/src/ScoreMap.AppHost/ScoreMap.AppHost.csproj"
+   run=$(aspire describe --apphost "$apphost" --format json)
+   web=$(jq -r '.resources[] | select(.displayName=="web") | .urls[0].url' <<<"$run")
+   server=$(jq -r '.resources[] | select(.displayName=="server") | .urls[] | select(.name=="http") | .url' <<<"$run")
+   ```
+
+   `jq` comes with macOS 15 and later; `command -v jq` checks for it.
+
 3. Drive it in a browser (below), starting with `npm run page -- reset $web`.
 
 **Logs** are in the run's dashboard (`aspire ps` gives its URL, with its login token), or `aspire logs server` and `aspire logs web` (`-f` to follow).
 
 **A white page** after renaming or deleting a file under `web/src`: Vite may hold a stale import, unseen by `console` and `errors`. Restart it with `aspire resource web restart --apphost $apphost`.
 
-**Server `Finished` with "address already in use"** in `aspire logs server` (and `npm run page -- ready` timing out): a server left over from an earlier watch restart, often one that crashed on a half-made change, holds the port. Stop it (`Get-Process ScoreMap.Server | Stop-Process`), then `aspire resource server restart --apphost $apphost`.
+**Server `Finished` with "address already in use"** in `aspire logs server` (and `npm run page -- ready` timing out): a server left over from an earlier watch restart, often one that crashed on a half-made change, holds the port. Stop it (`Get-Process ScoreMap.Server | Stop-Process`; bash: `pkill -f "$(git rev-parse --show-toplevel)/server/src/ScoreMap.Server/bin/"`, which stops only this clone's), then `aspire resource server restart --apphost $apphost`.
 
 ## Drive it in a browser
 
@@ -64,7 +73,7 @@ Pick the scenario that brings out what you're checking, and you know what should
 
 | Scenario | What it shows | Use it for |
 | --- | --- | --- |
-| `worldwide` | ~150 games on every continent: Upcoming, Live, Final. They play like real games: scoring (at 1×, a score every ~15 s), breaks, starts and finishes; a Final game drops out after a minute and a new one arrives. Raptors v Celtics (Toronto) is close late in the 4th, coming into clutch time; a game in each other sport becomes a hot game a few minutes in and stops being one later: Chiefs v Bills (Kansas City), Oilers v Flames (Edmonton), Arsenal v Chelsea (London), Yankees v Red Sox (the Bronx, hot through the top of the 9th), Mumbai v Chennai (an IPL chase) and Ireland v France (Dublin, Six Nations) | the globe as a whole, clusters, every status, the app under steady change; basketball's score pulses in clutch time; flames coming and going on hot games (on unless switched off in Display Settings, "Flames on hot games") |
+| `worldwide` | ~150 games on every continent: Upcoming, Live, Final. They play like real games: scoring (at 1×, a score every ~15 s), breaks, starts and finishes; a Final game drops out after a minute and a new one arrives. Raptors v Celtics (Toronto) is close late in the 4th, coming into clutch time; a game in each other sport becomes a hot game a few minutes in and stops being one later: Chiefs v Bills (Kansas City), Oilers v Flames (Edmonton), Arsenal v Chelsea (London), Yankees v Red Sox (the Bronx, hot through the top of the 9th), Mumbai v Chennai (an IPL chase) and Ireland v France (Dublin, Six Nations). Its tennis match is Sinner v Alcaraz (ATP, Accor Arena, Paris: `camera 2.3788,48.8387 12`), a set up in the 2nd, for set scores | the globe as a whole, clusters, every status, the app under steady change; basketball's score pulses in clutch time; flames coming and going on hot games (on unless switched off in Display Settings, "Flames on hot games") |
 | `crowded` | ~40 games packed into the world's biggest cities (New York, Los Angeles, Miami, London, Paris, Tokyo and more), playing like `worldwide`'s; new games arrive in those cities too | Pin clusters zoomed out; score cards, card clusters and city labels zoomed in over London, New York or Los Angeles |
 | `empty` | no games | the bare globe and the "No games right now." message |
 | `hot-finishes` | 29 games in every sport, all close near the end, so every one is a hot game: football's last minutes and overtime, basketball's clutch time, baseball's tying run on base in the 9th and 10th, hockey's last minutes, overtime and a shootout, soccer's stoppage time, extra time and penalties, IPL chases in their last overs, Six Nations matches from the 75th minute. Across North America, Europe, Brazil, Mexico, India and Melbourne; nothing changes, so they stay hot | flames on many score cards, small pins and clusters at once (on unless switched off in Display Settings, "Flames on hot games"), and the globe's smoothness with them all flickering |
@@ -76,7 +85,7 @@ Everything happens on the scenario clock, which reads noon Eastern on 4 August 2
 To switch while running (each run's scenario and speed are its own):
 
 - **The controls**, in the Scenario popover (the top rail's first button, at the top left): the scenario pill lists the scenarios and "Real games"; Reset starts the running scenario afresh at the same speed, as picking it again does; and there is a key per speed, the lit one being the speed. Picking a scenario or pressing a key changes every open tab, and a speed change carries on from where the scenario is. Where the speed can't be controlled (real games, and scenarios whose games stand still: `edge-cases`, `empty` and `hot-finishes`), the keys and the clock are hidden, leaving just the pill.
-- **From a script**, against the run's server URL (or its web URL): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (`"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
+- **From a script**, against the run's server URL (or its web URL): `Invoke-RestMethod -Method Put -Uri $server/api/scenarios/running -ContentType 'application/json' -Body '{"name":"crowded"}'` (bash: `curl -X PUT "$server/api/scenarios/running" -H 'Content-Type: application/json' -d '{"name":"crowded"}'`; `"real"` for real games; add `"speed":"Paused"` to start it standing still at its start, so you know exactly what's on screen), or `$server/api/scenarios/speed` with `'{"speed":"Faster"}'`. The pill, keys and clock in every open tab follow straight away.
 
 Scenario files are `server/src/ScoreMap.Server/Scenarios/Files/*.json`, and a new file shows up in the pill without a restart.
 
@@ -107,7 +116,7 @@ When no run is going for this clone. Setup and the basic commands (`aspire start
 
 - **One run at a time, on the same ports.** A plain `aspire start` puts the app at http://localhost:5173 and the server at http://localhost:5147 every time; keep to one run on the machine so it stays there. To run another clone or worktree, stop the run going (`aspire stop` from its root) and start a plain one in the other. Ask the user before stopping a run you didn't start, and before ever starting a second run alongside one (`aspire start --isolated`, on random ports, read as above). One clone or worktree has one run: starting it again stops the one going and starts afresh.
 - **First time on a machine:** set up as the README says. Trusting the development certificate is a Windows prompt the user must accept: ask them to run `! aspire certs trust`. Untrusted, the server shows Unhealthy and `web` waits for it forever.
-- **Start it from a shell clear of `NODE_USE_SYSTEM_CA`** (`Remove-Item Env:NODE_USE_SYSTEM_CA -ErrorAction SilentlyContinue` first, in the same PowerShell call). An agent's shell can have it set where the user's doesn't (it isn't a Windows user or machine variable), the run hands it on to Vite, and with it Node ignores the certificate Aspire gives it (`NODE_EXTRA_CA_CERTS`). The run then looks healthy, but every `/api` and `/hubs` request through `web` is a 502, and `aspire logs web` says `self-signed certificate`.
+- **Start it from a shell clear of `NODE_USE_SYSTEM_CA`** (`Remove-Item Env:NODE_USE_SYSTEM_CA -ErrorAction SilentlyContinue` first, in the same PowerShell call; bash: `unset NODE_USE_SYSTEM_CA`, in the same call). An agent's shell can have it set where the user's doesn't (it isn't a Windows user or machine variable), the run hands it on to Vite, and with it Node ignores the certificate Aspire gives it (`NODE_EXTRA_CA_CERTS`). The run then looks healthy, but every `/api` and `/hubs` request through `web` is a 502, and `aspire logs web` says `self-signed certificate`.
 - **A run watches the server** (`features.defaultWatchEnabled` in `aspire.config.json`): a saved change under `server/` restarts it within seconds, with no `aspire start`. The restart puts it back on `worldwide` at Normal, so switch the scenario and speed again after each change. `dotnet build` and `dotnet test` work alongside a run with `-c Release`: the run holds the Debug build's files, so a Debug build fails to copy over them after a server change.
 - **Stop a run you started** with `aspire stop`; done means `aspire ps` no longer lists it. `aspire stop --all` stops every run on the machine, the user's included.
 

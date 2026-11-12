@@ -23,7 +23,7 @@ export const stillComing = ({ at }: CardComing, now: number): boolean => now - a
  * Which score cards are coming in or going out: only for a game arriving on the board or leaving it
  * (it was shown 30 minutes before its start, it dropped off after it finished, or the viewer's
  * leagues showed or hid it). A card that comes or goes as the camera moves (its venue crossing the
- * horizon or the card radius, or zooming across the card zoom) or as the card layout moves it into
+ * horizon or the card radius) or as the card layout moves it into
  * or out of a card cluster just appears or goes, as before.
  */
 export interface CardComings {
@@ -38,7 +38,7 @@ export interface CardComings {
   cardPlaced(gameId: string, now: number): boolean
   /**
    * The pins were read with the games last shown in them: a game that arrived and got no card by now
-   * (its venue out of view, or zoomed out) comes into view later without coming in.
+   * (its venue out of view, or far from the center of the view) comes into view later without coming in.
    */
   pinsRead(): void
   /** A game gone from the board, whose card is on screen, goes out from now. */

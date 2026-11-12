@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   cardRadius,
-  cardZoom,
   centerLatitude,
   fittedZoomSettings,
   furthestOutZoom,
   hasCard,
-  cityNamesFrom,
-  maxZoom,
   minZoom,
   minZoomView,
-  pinLayout,
-  pinSize,
-  unfittedZoom,
+  pinClusterRadius,
   zoomAt,
   zoomAtEquator,
   zoomForMapType,
@@ -25,91 +20,34 @@ const spacing = 35
 /** MapLibre's camera at this zoom, centered on the equator. */
 const atEquator = (zoom: number) => ({ zoom, latitude: 0 })
 
-describe('pinLayout', () => {
-  it('shows small pins zoomed out further than a country, as far out as the globe goes', () => {
-    expect(pinLayout(atEquator(minZoom), spacing, cardZoom).size).toBe('small')
-    expect(pinLayout({ zoom: furthestOutZoom(60), latitude: 60 }, spacing, cardZoom).size).toBe('small')
-  })
+// About one country on screen, a zoom to measure with.
+const countryZoom = 3
 
-  it('shows score cards once a country fills the screen', () => {
-    expect(pinLayout(atEquator(2.9), spacing, cardZoom).size).toBe('small')
-    expect(pinLayout(atEquator(3), spacing, cardZoom).size).toBe('card')
-    expect(pinLayout(atEquator(7), spacing, cardZoom).size).toBe('card')
-  })
-
+describe('pinClusterRadius', () => {
   it('clusters small pins closer than the spacing', () => {
-    expect(pinLayout(atEquator(2), spacing, cardZoom).clusterRadius).toBe(35)
+    expect(pinClusterRadius(2, spacing)).toBe(35)
   })
 
   it("shrinks the radius past a whole zoom level, where MapLibre still shows that level's clusters", () => {
     // Halfway to the next level, pins are about 1.4 times as far apart on screen as when clustered.
-    expect(pinLayout(atEquator(2.5), spacing, cardZoom).clusterRadius).toBe(Math.round(35 / Math.SQRT2))
+    expect(pinClusterRadius(2.5, spacing)).toBe(Math.round(35 / Math.SQRT2))
     // In steps, rounded down, so it errs toward clustering and doesn't change every frame.
-    expect(pinLayout(atEquator(2.6), spacing, cardZoom).clusterRadius).toBe(pinLayout(atEquator(2.5), spacing, cardZoom).clusterRadius)
-    expect(pinLayout(atEquator(2.99), spacing, cardZoom).clusterRadius).toBeGreaterThan(35 / 2)
-  })
-})
-
-describe('pinSize', () => {
-  // MapLibre's globe's radius on screen, in pixels, at a zoom with the view centered at a latitude:
-  // bigger away from the equator at the same zoom.
-  const globeRadius = ({ zoom, latitude }: { zoom: number; latitude: number }) =>
-    (512 * 2 ** zoom) / (2 * Math.PI) / Math.cos((latitude * Math.PI) / 180)
-  const europe = 50
-
-  it('gives the same answer wherever the globe is turned, for the same size of globe on screen', () => {
-    for (const atEquatorZoom of [minZoom, cardZoom - 0.05, cardZoom, cardZoom + 0.05, 5]) {
-      const sizes = [0, 30, europe, -60, 80].map((latitude) => {
-        const camera = { zoom: zoomAt(latitude, atEquatorZoom), latitude }
-        expect(globeRadius(camera)).toBeCloseTo(globeRadius(atEquator(atEquatorZoom)))
-        return pinSize(camera, cardZoom)
-      })
-      expect(new Set(sizes).size, `at ${atEquatorZoom}`).toBe(1)
-    }
-  })
-
-  it('keeps small pins when a globe zoomed out just short of cards is turned from Europe to the equator', () => {
-    // Turning the globe keeps it the same size on screen, which raises MapLibre's zoom past the card zoom.
-    const overEurope = { zoom: zoomAt(europe, cardZoom - 0.05), latitude: europe }
-    const overEquator = { zoom: cardZoom - 0.05, latitude: 0 }
-    expect(overEquator.zoom).toBeGreaterThan(overEurope.zoom + 0.5)
-    expect(pinSize(overEurope, cardZoom)).toBe('small')
-    expect(pinSize(overEquator, cardZoom)).toBe('small')
-  })
-
-  it('shows score cards only once zoomed in to the card zoom, at any latitude', () => {
-    for (const latitude of [0, europe, -35]) {
-      expect(pinSize({ zoom: zoomAt(latitude, cardZoom - 0.01), latitude }, cardZoom)).toBe('small')
-      expect(pinSize({ zoom: zoomAt(latitude, cardZoom), latitude }, cardZoom)).toBe('card')
-    }
-  })
-
-  it('clusters small pins by MapLibre’s own zoom, wherever the globe is turned', () => {
-    expect(pinLayout({ zoom: 2.5, latitude: europe }, spacing, cardZoom).clusterRadius).toBe(pinLayout(atEquator(2.5), spacing, cardZoom).clusterRadius)
+    expect(pinClusterRadius(2.6, spacing)).toBe(pinClusterRadius(2.5, spacing))
+    expect(pinClusterRadius(2.99, spacing)).toBeGreaterThan(35 / 2)
   })
 })
 
 describe('zoomAt and zoomAtEquator', () => {
   it('are the same at the equator', () => {
-    expect(zoomAt(0, cardZoom)).toBe(cardZoom)
-    expect(zoomAtEquator(atEquator(cardZoom))).toBe(cardZoom)
+    expect(zoomAt(0, countryZoom)).toBe(countryZoom)
+    expect(zoomAtEquator(atEquator(countryZoom))).toBe(countryZoom)
   })
 
   it('lower MapLibre’s zoom away from the equator, a level by 60°, and convert back', () => {
-    expect(zoomAt(60, cardZoom)).toBeCloseTo(cardZoom - 1)
-    expect(zoomAt(-60, cardZoom)).toBeCloseTo(cardZoom - 1)
-    expect(zoomAtEquator({ zoom: cardZoom - 1, latitude: 60 })).toBeCloseTo(cardZoom)
+    expect(zoomAt(60, countryZoom)).toBeCloseTo(countryZoom - 1)
+    expect(zoomAt(-60, countryZoom)).toBeCloseTo(countryZoom - 1)
+    expect(zoomAtEquator({ zoom: countryZoom - 1, latitude: 60 })).toBeCloseTo(countryZoom)
     expect(zoomAtEquator({ zoom: zoomAt(37, 4.2), latitude: 37 })).toBeCloseTo(4.2)
-  })
-})
-
-describe('cityNamesFrom', () => {
-  it('names cities at every zoom when score cards show, as MapLibre takes a minimum zoom of 0 as none', () => {
-    expect(cityNamesFrom('card')).toBe(0)
-  })
-
-  it('names none when small pins show, from past the furthest in', () => {
-    expect(cityNamesFrom('small')).toBeGreaterThan(maxZoom)
   })
 })
 
@@ -117,23 +55,23 @@ describe('centerLatitude', () => {
   const laptop = { height: 800, fov: 36.87 }
 
   it('is the place’s own latitude with the place in the middle of the view', () => {
-    expect(centerLatitude(50, 0, cardZoom, laptop)).toBe(50)
+    expect(centerLatitude(50, 0, countryZoom, laptop)).toBe(50)
   })
 
   it('lies south of a place lifted above the middle of the view, and north of one dropped below it', () => {
-    expect(centerLatitude(50, -200, cardZoom, laptop)).toBeLessThan(50)
-    expect(centerLatitude(50, 200, cardZoom, laptop)).toBeGreaterThan(50)
-    expect(50 - centerLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(centerLatitude(50, 200, cardZoom, laptop) - 50)
+    expect(centerLatitude(50, -200, countryZoom, laptop)).toBeLessThan(50)
+    expect(centerLatitude(50, 200, countryZoom, laptop)).toBeGreaterThan(50)
+    expect(50 - centerLatitude(50, -200, countryZoom, laptop)).toBeCloseTo(centerLatitude(50, 200, countryZoom, laptop) - 50)
   })
 
   it('moves by about the globe’s degrees per pixel for a small lift, and by more toward the globe’s rim', () => {
-    const degreesPerPixel = 360 / (512 * 2 ** cardZoom)
-    expect(50 - centerLatitude(50, -1, cardZoom, laptop)).toBeCloseTo(degreesPerPixel, 4)
-    expect(50 - centerLatitude(50, -300, cardZoom, laptop)).toBeGreaterThan(300 * degreesPerPixel)
+    const degreesPerPixel = 360 / (512 * 2 ** countryZoom)
+    expect(50 - centerLatitude(50, -1, countryZoom, laptop)).toBeCloseTo(degreesPerPixel, 4)
+    expect(50 - centerLatitude(50, -300, countryZoom, laptop)).toBeGreaterThan(300 * degreesPerPixel)
   })
 
   it('moves by as many degrees at any latitude, for the same size of globe', () => {
-    expect(50 - centerLatitude(50, -200, cardZoom, laptop)).toBeCloseTo(10 - centerLatitude(10, -200, cardZoom, laptop))
+    expect(50 - centerLatitude(50, -200, countryZoom, laptop)).toBeCloseTo(10 - centerLatitude(10, -200, countryZoom, laptop))
   })
 
   it('stays within the latitudes MapLibre centers the view at', () => {
@@ -157,10 +95,9 @@ describe('fittedZoomSettings', () => {
   // How much of the view's shorter side the globe fills at a zoom.
   const filling = (zoom: number, shorter: number) => globeAcross(zoom) / shorter
 
-  it('keeps the settings and card zoom as they are for a laptop-sized view or larger', () => {
-    expect(laptop).toEqual(unfittedZoom)
-    expect(fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 })).toEqual(unfittedZoom)
-    expect(unfittedZoom).toEqual({ ...zoomSettings, cardZoom })
+  it('keeps the settings as they are for a laptop-sized view or larger', () => {
+    expect(laptop).toEqual(zoomSettings)
+    expect(fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 })).toEqual(zoomSettings)
   })
 
   it('lets a phone zoom further out, until the globe fills it as it fills a laptop', () => {
@@ -168,18 +105,9 @@ describe('fittedZoomSettings', () => {
     expect(filling(phone.minZoom, 390)).toBeCloseTo(filling(laptop.minZoom, minZoomView))
   })
 
-  it('shows score cards on a phone from further out, with the globe as big on screen as on a laptop', () => {
-    expect(phone.cardZoom).toBeLessThan(cardZoom)
-    expect(filling(phone.cardZoom, 390)).toBeCloseTo(filling(laptop.cardZoom, minZoomView))
-    // Still just past the furthest out, so small pins and pin clusters show zoomed fully out.
-    expect(pinLayout(atEquator(phone.minZoom), spacing, phone.cardZoom).size).toBe('small')
-    expect(pinLayout(atEquator(phone.cardZoom), spacing, phone.cardZoom).size).toBe('card')
-    expect(phone.cardZoom - phone.minZoom).toBeCloseTo(laptop.cardZoom - laptop.minZoom)
-  })
-
   it('starts a phone, and takes it Home, as far out as a laptop for the size of its screen', () => {
     expect(filling(phone.startZoom, 390)).toBeCloseTo(filling(laptop.startZoom, minZoomView))
-    expect(phone.startZoom).toBeGreaterThan(phone.cardZoom)
+    expect(phone.startZoom).toBeGreaterThan(phone.minZoom)
   })
 
   it('leaves the furthest in as it is', () => {
@@ -191,12 +119,12 @@ describe('fittedZoomSettings', () => {
   })
 
   it('leaves a view with no size yet alone', () => {
-    expect(fittedZoomSettings(zoomSettings, { width: 0, height: 0 })).toEqual(unfittedZoom)
+    expect(fittedZoomSettings(zoomSettings, { width: 0, height: 0 })).toEqual(zoomSettings)
   })
 })
 
 describe('zoomForMapType', () => {
-  const limits = { minZoom: 2, startZoom: 4, maxZoom: 11, satelliteMaxZoom: 15, cardZoom: 3 }
+  const limits = { minZoom: 2, startZoom: 4, maxZoom: 11, satelliteMaxZoom: 15 }
 
   it('zooms in as far as the plain map goes on the plain map', () => {
     expect(zoomForMapType(limits, 'plain')).toEqual(limits)

@@ -22,7 +22,7 @@ import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
-import { hasCard, pinSize } from './zoomLevels'
+import { hasCard } from './zoomLevels'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -47,11 +47,10 @@ export interface ShownScoreCard {
 }
 
 /**
- * Zoomed in, shows each pin as an HTML score card (logos, abbreviations, score, clock line). Cards
- * that would overlap are moved apart with a trail back to their venue; where there's no room for
- * them all, the rest are shown as a card cluster. The trails and card clusters are drawn by the map,
- * beneath the place names (see cardLayoutLayers). Zoomed out, the small-pin and pin cluster layers
- * show instead and no cards are placed.
+ * At every zoom, shows each pin near the center of the view as an HTML score card (logos,
+ * abbreviations, score, clock line). Cards that would overlap are moved apart with a trail back to
+ * their venue; where there's no room for them all, the rest are shown as a card cluster. The trails
+ * and card clusters are drawn by the map, beneath the place names (see cardLayoutLayers).
  */
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
@@ -74,8 +73,6 @@ export class ScoreCardMarkers {
   private readonly colorOf: (game: Game) => string
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
-  /** The zoom score cards show from now (see FittedZoom). */
-  private readonly cardZoom: () => number
   private readonly onSelect: (gameId: string) => void
   /** Where each card goes, and how each game shows, as last laid out (see cardLayout). */
   private layout: CardLayout = cardLayout()
@@ -109,12 +106,10 @@ export class ScoreCardMarkers {
     colorOf: (game: Game) => string,
     placeNames: PlaceNames,
     trails: TrailLayer,
-    cardZoom: () => number,
     onSelect: (gameId: string) => void,
     settling: GlobeSettling,
   ) {
     this.settling = settling
-    this.cardZoom = cardZoom
     this.map = map
     this.theme = theme
     this.colorOf = colorOf
@@ -183,17 +178,14 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * Places, updates and removes cards to match what the pin source shows at the current zoom, on the
-   * side of the globe facing the viewer, for games near the center of the view (see hasCard).
+   * Places, updates and removes cards to match what the pin source shows, on the side of the globe facing the viewer, for games near the center of the view (see hasCard).
    */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
     const pinsLoaded = this.map.isSourceLoaded(pinSource)
     let changed = !pinsLoaded
     const pins = pinsLoaded
-      ? pinSize({ zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }, this.cardZoom()) === 'card'
-        ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
-        : []
+      ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
       : // The source reloads after every change of games, and can't be read until it has. Live games
         // can change faster than it loads, so meanwhile the cards placed stay put but still show
         // each change.
@@ -418,7 +410,7 @@ export class ScoreCardMarkers {
     this.trails.show([...this.layoutTrails, ...goingOut].map(withComing))
   }
 
-  /** How a game shows on screen now, zoomed in (see cardLayout). */
+  /** How a game shows on screen now (see cardLayout). */
   shows(gameId: string): Showing {
     return this.layout.shows(gameId)
   }

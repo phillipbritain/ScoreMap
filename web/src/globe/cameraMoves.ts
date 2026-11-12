@@ -10,14 +10,11 @@ export type SelectionIntent = 'lift' | 'center'
 interface CameraMovesOptions {
   game: (gameId: string) => PlacedGame | undefined
   cards: Pick<ScoreCardMarkers, 'shows' | 'cardClusters'>
-  cardZoom: () => number
   pinOnPage: (game: PlacedGame) => ScreenBox
   onPick: (gameId: string) => void
   onSelection: (gameId: string | null) => void
 }
 
-// A hair past card zoom, since an ease can land a hair short of its zoom.
-const pickedGamePastCardZoom = 0.01
 const cardClusterZoomPadding = 120
 
 /**
@@ -110,7 +107,7 @@ export class CameraMoves {
     this.map.once('idle', completed)
   }
 
-  private center(game: PlacedGame, panel: ScreenBox | null, atEquator = Math.max(this.atEquator(), this.options.cardZoom() + pickedGamePastCardZoom)): void {
+  private center(game: PlacedGame, panel: ScreenBox | null, atEquator = this.atEquator()): void {
     const globe = this.map.getContainer().getBoundingClientRect()
     const { x, y } = clearCenter(globe, panel)
     const offset: [number, number] = [x - (globe.left + globe.width / 2), y - (globe.top + globe.height / 2)]

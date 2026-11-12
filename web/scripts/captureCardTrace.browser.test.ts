@@ -10,7 +10,6 @@ import '../src/index.css'
 import type { Game, GameStatus } from '../src/games/game'
 import type { Camera } from '../src/globe/camera'
 import { GlobeMap } from '../src/globe/globeMap'
-import { cardZoom } from '../src/globe/zoomLevels'
 import { applyTheme } from '../src/theme/applyTheme'
 import { builtInTheme } from '../src/theme/builtInTheme'
 
@@ -23,7 +22,7 @@ declare module 'vitest/browser' {
 
 // The globe's size on the page, where it starts, and its games: fifty venues in a spiral around 0°, 0°.
 const size = { width: 800, height: 600 }
-const start: Camera = { longitude: 14, latitude: 0, zoom: cardZoom + 1 }
+const start: Camera = { longitude: 14, latitude: 0, zoom: 4 }
 const statuses: GameStatus[] = ['Live', 'Upcoming', 'Final']
 const venues = Array.from({ length: 50 }, (_, i) => {
   const r = 0.15 * Math.sqrt(i)

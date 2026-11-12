@@ -202,9 +202,9 @@ describe('globeStyle', () => {
     expect(namedBy(tokyo, true, true)).toEqual(['city_names_card'])
   })
 
-  it('names cities from zoom 3', () => {
+  it('names cities at every zoom, as score cards show at every zoom', () => {
     for (const id of ['city_names', 'city_names_game', 'city_names_card']) {
-      expect(layer(id)?.minzoom, id).toBe(3)
+      expect(layer(id)?.minzoom, id).toBeUndefined()
       expect(layout(id)['text-field'], id).toEqual(['get', 'name'])
     }
   })

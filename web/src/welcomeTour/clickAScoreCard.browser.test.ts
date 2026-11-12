@@ -6,7 +6,7 @@ import type { StyleSpecification } from 'maplibre-gl'
 import type { PlacedGame } from '../games/placedGames'
 import { GlobeMap } from '../globe/globeMap'
 import type { ShownScoreCard } from '../globe/scoreCardMarkers'
-import { cardZoom, unfittedZoom } from '../globe/zoomLevels'
+import { zoomSettings } from '../globe/zoomLevels'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import { firstVisitSettings } from '../settings/viewerSettings'
@@ -157,7 +157,7 @@ it("points at a card on the globe, named as the card's own button names its game
   map.style.cssText = 'position: fixed; inset: 0'
   document.body.append(map)
   const globe = new GlobeMap(map, {
-    style: plainStyle, theme: builtInTheme, zoomSettings: unfittedZoom, startCamera: { longitude: 0, latitude: 0, zoom: cardZoom },
+    style: plainStyle, theme: builtInTheme, zoomSettings, startCamera: { longitude: 0, latitude: 0, zoom: 3 },
     onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
   })
   opened.push(globe)

@@ -17,7 +17,7 @@ import { cityNameBox, type ScreenBox } from './cityNameBox'
 import { kmApart, type GlobePoint } from './geo'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
 import { widestClusterReach } from './pinLayers'
-import { cardZoom, hasCard } from './zoomLevels'
+import { hasCard } from './zoomLevels'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
 // globe's own, from the city list: see cityNameLayers), towns, villages and other small places.
@@ -114,9 +114,8 @@ const cityNameFilters = {
 } satisfies Record<keyof typeof cityNameLayerIds, FilterSpecification>
 
 /**
- * The layers naming the cities in the city name source (see addPlaceNames), from the card zoom (a
- * laptop's in the style, switched by addPlaceNames as score cards show: see cityNamesFrom), with the score cards, all in the
- * theme's city look, national capitals included, with no dot: just the name, around where the city is, and
+ * The layers naming the cities in the city name source (see addPlaceNames), at every zoom as score
+ * cards show at every zoom, all in the theme's city look, national capitals included, with no dot: just the name, around where the city is, and
  * where it has room (see cityNamePositions). The city of a game whose score card is on screen (see
  * PlaceNames.showCards) is always written, below where it is unless a cluster is there (see
  * GameLayers), and cards are laid out around it. Other games' cities come next, giving way to
@@ -129,7 +128,6 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
       id: cityNameLayerIds[kind],
       type: 'symbol',
       source: cityNameSource,
-      minzoom: cardZoom,
       filter: cityNameFilters[kind],
       layout: {
         'text-field': ['get', 'name'],
@@ -192,8 +190,7 @@ export function clusterClearOffset(theme: Theme): number {
   return Math.ceil((clear / smallest) * 100) / 100
 }
 
-// How far a city's name sits from its dot, in ems: clear of a score card's trail. City names show
-// only from the card zoom, where pins are score cards.
+// How far a city's name sits from its dot, in ems: clear of a score card's trail.
 const cityNameOffset = 1
 
 /** Where and how big a city's name is written below its dot, so cards can keep clear of it. */
@@ -249,8 +246,6 @@ export interface PlaceNames {
   showGames(games: readonly PlacedGame[]): void
   /** Names the cities for the games shown by these settings from now on. */
   setSettings(settings: CityLabelSettings): void
-  /** Names cities from this zoom on, the zoom score cards show from (see FittedZoom). */
-  showFrom(zoom: number): void
   /**
    * Whether the city name source's feature with this id is a game's city with a game in reach that
    * has a score card, looking at `center` (see hasCard): a card is always shown with its city's name,
@@ -273,10 +268,9 @@ export interface PlaceNames {
 
 /**
  * Keeps the city names on a map up to date with the games shown: the Big cities, and the cities
- * labeled for the games (see cityLabels) by `settings` until they're changed, from the zoom `from`
- * until that's changed. The names' boxes are worked out in the theme `theme` gives at the time.
+ * labeled for the games (see cityLabels) by `settings` until they're changed. The names' boxes are worked out in the theme `theme` gives at the time.
  */
-export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings, from = cardZoom): PlaceNames {
+export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings): PlaceNames {
   let venues: GlobePoint[] = []
   let labels: CityLabels
   // The venues in reach of each game's city, by its feature's id (see cityNameFeatures).
@@ -300,15 +294,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     carded = cardedNow()
     map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels, carded))
   }
-  // The style names cities from a laptop's card zoom.
-  const showFromZoom = () => {
-    for (const id of Object.values(cityNameLayerIds)) if (map.getLayer(id)) map.setLayerZoomRange(id, from, 24)
-  }
   // The style starts with no cities (see cityNameSourceSpec).
-  const styleLoaded = () => {
-    showLabels()
-    showFromZoom()
-  }
+  const styleLoaded = () => showLabels()
   map.on('style.load', styleLoaded)
 
   return {
@@ -335,14 +322,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     namesACard(id, center) {
       return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(center, venue)) ?? false)
     },
-    showFrom(zoom) {
-      from = zoom
-      showFromZoom()
-    },
     nameBoxes() {
       const zoom = map.getZoom()
-      // As MapLibre does, a minimum of 0 is none: its zoom goes below 0 near the poles.
-      if (from > 0 && zoom < from) return []
       const look = cityNameLook(zoom, theme())
       return labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))

@@ -8,7 +8,7 @@ import { flameImage } from './flames'
 import { layerChanges } from './restyle'
 
 const layersIn = (theme: Theme): LayerSpecification[] => {
-  const { belowNames, belowGameNames, onTop } = gameLayers(theme, null, 'small')
+  const { belowNames, belowGameNames, onTop } = gameLayers(theme, null)
   return [...belowNames, ...belowGameNames, ...onTop]
 }
 
@@ -26,14 +26,11 @@ describe('layerChanges', () => {
     const footprintSizes = (count: string) => ['step', ['get', count], 30, 5, 34, 15, 40]
     const footprintSize = (across: unknown) => ({ kind: 'layout', property: 'icon-size', value: ['/', across, 32] })
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
-      { layer: 'pin-cluster-flames', kind: 'layout', property: 'icon-image', value: flameImages },
-      { layer: 'pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
       { layer: 'outer-pin-cluster-flames', kind: 'layout', property: 'icon-image', value: flameImages },
       { layer: 'outer-pin-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
       // A card cluster's outline is inside its size.
       { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 10 },
       { layer: 'card-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
-      { layer: 'pin-cluster-footprints', ...footprintSize(footprintSizes('point_count')) },
       { layer: 'outer-pin-cluster-footprints', ...footprintSize(footprintSizes('point_count')) },
     ])
   })

@@ -8,7 +8,7 @@ import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import type { ShownScoreCard } from './scoreCardMarkers'
-import type { FittedZoom } from './zoomLevels'
+import type { ZoomSettings } from './zoomLevels'
 import { baseStyleUrl } from './globeStyle'
 
 interface GlobeProps {
@@ -17,7 +17,7 @@ interface GlobeProps {
   /** What decides which cities are labeled. A change relabels them in place (see GlobeMap.setCityLabelSettings). */
   cityLabels: CityLabelSettings
   /** How far out and in the globe zooms. A change applies at once (see GlobeMap.setZoomLimits). */
-  zoomSettings: FittedZoom
+  zoomSettings: ZoomSettings
   /** The colors the viewer picked for games. A change recolors them in place (see GlobeMap.setColors). */
   colors: PickedColors
   /** What the globe is drawn as (see globeStyle). A change restyles it in place (see GlobeMap.setMapType). */

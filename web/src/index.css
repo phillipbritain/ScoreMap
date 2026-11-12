@@ -1536,17 +1536,16 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
-/* Display Settings: "Display venue photo on Game Panel", its switch at the right, above the sports with a line under it. */
+/* Display Settings: "Display venue photo on Game Panel", its switch at the right, above "Card colors". */
 .display-photos {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: calc(2 * var(--spacing));
   width: 100%;
-  margin-bottom: calc(3 * var(--spacing));
-  padding: 0 0 calc(3 * var(--spacing));
+  margin-bottom: calc(4 * var(--spacing));
+  padding: 0;
   border: none;
-  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
   background: none;
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
@@ -1560,15 +1559,26 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: a section's heading, "Card colors": the panel's biggest, boldest text, a step
-   above the switch's label and the sports' small capitals under it. */
+/* Display Settings: a section's heading, "Card colors": small gold capitals, a line running on from it to
+   the edge, set apart from the sports' names under it. */
 .display-section {
-  margin: 0 0 calc(4 * var(--spacing));
-  color: var(--palette-text-primary);
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  margin: 0 0 calc(2 * var(--spacing));
+  color: var(--palette-secondary-main);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-subtitle1-font-size);
-  font-weight: var(--typography-subtitle1-font-weight);
-  letter-spacing: var(--typography-subtitle1-letter-spacing);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.display-section::after {
+  content: '';
+  flex: 1;
+  height: var(--shape-border-width-thin);
+  background: var(--palette-divider);
 }
 
 /* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */

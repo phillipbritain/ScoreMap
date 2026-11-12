@@ -79,10 +79,6 @@ builder.Services.AddSingleton<IVenuePhotoSearch>(sp => new VenuePhotoSearch(
     sp.GetRequiredService<NominatimPlaceSearch>()));
 builder.Services.AddSingleton<VenuePhotos>();
 
-// Official watch links, from the owner's watch links file.
-builder.Services.Configure<WatchLinkOptions>(builder.Configuration.GetSection("WatchLinks"));
-builder.Services.AddSingleton<OfficialWatchLinks>();
-
 // Unofficial stream links: no game has any unless the stream finder is added (ADR-0002: hobby v1
 // only; delete this AddStreamFinder line and the StreamFinder*.cs files before any public launch).
 builder.Services.AddStreamFinder(builder.Configuration);

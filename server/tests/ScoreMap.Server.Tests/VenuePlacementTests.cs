@@ -18,8 +18,7 @@ public class VenuePlacementTests
         Status: ProviderStatus.InProgress,
         DisplayClock: "4:12",
         Period: 4,
-        Venue: new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"),
-        Broadcasters: []);
+        Venue: new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England"));
 
     [Fact]
     public async Task Pin_is_placed_at_the_looked_up_venue_not_the_home_teams_city()

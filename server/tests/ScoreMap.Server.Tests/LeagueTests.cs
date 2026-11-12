@@ -106,6 +106,5 @@ public class LeagueTests
         Status: ProviderStatus.InProgress,
         DisplayClock: "10:00",
         Period: 1,
-        Venue: new ProviderVenue("Stadium", "City", null, "Country"),
-        Broadcasters: []);
+        Venue: new ProviderVenue("Stadium", "City", null, "Country"));
 }

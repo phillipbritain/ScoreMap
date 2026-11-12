@@ -34,7 +34,7 @@ public class StreamFinderMatchingTests
         Status: GameStatus.Live, Delayed: false, EndTime: null,
         Contest: new GameSides(new GameTeam("H", home, null, "0"), new GameTeam("A", away, null, "0")),
         Clock: null, Period: null, ClutchTime: false, Hot: false,
-        Venue: new GameVenue(null, null, null, null, null, null, null), Broadcasters: [], StreamLinks: []);
+        Venue: new GameVenue(null, null, null, null, null, null, null), StreamLinks: []);
 
     [Fact]
     public async Task Many_games_and_viewers_share_one_schedule_and_later_games_use_it_without_another_fetch()

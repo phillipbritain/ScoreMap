@@ -60,8 +60,7 @@ internal static class GameChanges
     /// must be added here, or every poll reports every game as updated.
     /// </summary>
     private static bool Same(Game before, Game after) =>
-        before.Broadcasters.SequenceEqual(after.Broadcasters)
-        && before.StreamLinks.SequenceEqual(after.StreamLinks)
+        before.StreamLinks.SequenceEqual(after.StreamLinks)
         && before.KeyEvents.SequenceEqual(after.KeyEvents)
-        && before with { Broadcasters = after.Broadcasters, StreamLinks = after.StreamLinks, KeyEvents = after.KeyEvents } == after;
+        && before with { StreamLinks = after.StreamLinks, KeyEvents = after.KeyEvents } == after;
 }

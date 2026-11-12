@@ -353,12 +353,15 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The watch links on one line at the foot of the details, their label before them. */
+/* The game's StreamEast streams and its ESPN page, as their logos, stacked in the details' bottom right
+   corner, right-aligned. */
 .game-panel__watch {
   align-self: end;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(1.5 * var(--spacing));
 }
 
 /* The venue and its city link to Google Maps, kept in their own colors. */
@@ -371,8 +374,27 @@ body {
   text-decoration: underline;
 }
 
-.game-panel__watch a {
-  color: var(--palette-text-link);
+/* A logo as a link: StreamEast's round icon, or ESPN's wordmark, as tall as each other. */
+.game-panel__logo-link {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.game-panel__logo-link img {
+  display: block;
+  height: calc(4 * var(--spacing));
+  filter: drop-shadow(0 1px 2px var(--palette-background-default));
+}
+
+.game-panel__logo-link:hover img {
+  filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
+}
+
+/* StreamEast's logo, a red badge, a little taller than ESPN's wordmark so its name reads at the same size;
+   a look being tried, so its size is here rather than in the theme. */
+.game-panel__logo-link img.game-panel__stream-logo {
+  height: calc(5 * var(--spacing));
+  border-radius: var(--shape-border-radius);
 }
 
 .game-panel__unofficial {
@@ -610,10 +632,6 @@ body {
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     text-align: right;
-  }
-
-  .game-panel__watch > .game-panel__label {
-    display: block;
   }
 }
 

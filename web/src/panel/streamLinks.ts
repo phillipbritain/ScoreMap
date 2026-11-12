@@ -2,12 +2,16 @@
 // and Game.streamLinks together with the server's stream finder before any public launch.
 import type { StreamLink } from '../games/game'
 
+/** The one site whose stream links the game panel shows. */
+const shownSite = 'streameast'
+
 /**
- * The unofficial stream links the game panel shows for a game: the server's links, keeping
- * only web addresses since they come from scraped pages. Empty when the finder found nothing.
+ * The unofficial stream links the game panel shows for a game: the server's links from StreamEast
+ * (its site's name in any case), keeping only web addresses since they come from scraped pages.
+ * Empty when the finder found nothing there.
  */
 export function streamLinks(links: StreamLink[]): StreamLink[] {
-  return links.filter((link) => isWebAddress(link.url))
+  return links.filter((link) => link.site.toLowerCase() === shownSite && isWebAddress(link.url))
 }
 
 function isWebAddress(url: string): boolean {

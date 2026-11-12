@@ -29,8 +29,7 @@ public class GolfTests
             Status: status,
             DisplayClock: null,
             Period: round,
-            Venue: Vidanta,
-            Broadcasters: [])
+            Venue: Vidanta)
         {
             Note = "VidantaWorld Mexico Open",
         };

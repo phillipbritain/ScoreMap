@@ -146,13 +146,22 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         }
     }
 
-    public Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
+    /// <summary>Whether real games are running rather than a scenario.</summary>
+    public bool RunningRealGames => IsRealGames(_running.Name);
+
+    /// <summary>The running source's games; a scenario's with their made-up ESPN pages (see <see cref="ScenarioLinks"/>).</summary>
+    public async Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
+        Task<IReadOnlyList<ProviderGame>> fetch;
+        bool scenario;
         lock (_sourceGate)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
+            fetch = _running.Feed.FetchScoreboardAsync(leagueKey, cancellationToken);
+            scenario = !RunningRealGames;
         }
+        var games = await fetch;
+        return scenario ? games.Select(game => game with { EspnUrl = ScenarioLinks.For(game.Id).EspnUrl }).ToList() : games;
     }
 
     public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)

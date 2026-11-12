@@ -41,6 +41,14 @@ public class GameDetailTests
         Assert.Equal("AFC Wild Card Playoffs", sent.Note);
     }
 
+    [Fact]
+    public async Task Game_carries_its_ESPN_page()
+    {
+        var sent = await SnapshotOfAsync(Live(Nfl) with { EspnUrl = "https://www.espn.com/nfl/game/_/gameId/1" });
+
+        Assert.Equal("https://www.espn.com/nfl/game/_/gameId/1", sent.EspnUrl);
+    }
+
     [Theory]
     [InlineData(Nfl, 4, "5:58", Playing, "Q4 5:58")]
     [InlineData(Nfl, 5, "2:10", Playing, "OT 2:10")]

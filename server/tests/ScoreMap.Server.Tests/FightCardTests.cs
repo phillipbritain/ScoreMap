@@ -33,8 +33,7 @@ public class FightCardTests
         Status: status,
         DisplayClock: null,
         Period: null,
-        Venue: MetaApex,
-        Broadcasters: [])
+        Venue: MetaApex)
     {
         Note = "UFC Fight Night: Moicano vs. Nolan",
     };
@@ -48,7 +47,7 @@ public class FightCardTests
     }
 
     private static ProviderGame CardWith(ProviderStatus status, params ProviderBout[] bouts) => new(
-        "600061420", Ufc, DateTimeOffset.MinValue, new ProviderBouts(bouts), status, null, null, MetaApex, [])
+        "600061420", Ufc, DateTimeOffset.MinValue, new ProviderBouts(bouts), status, null, null, MetaApex)
     {
         Note = "UFC Fight Night: Moicano vs. Nolan",
     };

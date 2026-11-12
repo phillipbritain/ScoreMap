@@ -245,7 +245,7 @@ public sealed class TennisScenarioTests : IDisposable
     {
         var details = ScenarioSports.For(Atp).CreateDetails();
         var matches = Enumerable.Range(1, 120).Select(n => new ProviderGame($"match-{n}", Atp.Key, StartedAt,
-            new ProviderSides(new("H", "Home", null, null), new("A", "Away", null, null)), ProviderStatus.Scheduled, null, null, null, []));
+            new ProviderSides(new("H", "Home", null, null), new("A", "Away", null, null)), ProviderStatus.Scheduled, null, null, null));
 
         var notes = details.Fill(matches.ToList()).Select(match => match.Note).OfType<string>().ToList();
 

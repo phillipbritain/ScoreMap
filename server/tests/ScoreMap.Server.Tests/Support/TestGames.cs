@@ -24,6 +24,5 @@ public static class TestGames
         Status: status,
         DisplayClock: clock,
         Period: period,
-        Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA"),
-        Broadcasters: []);
+        Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA"));
 }

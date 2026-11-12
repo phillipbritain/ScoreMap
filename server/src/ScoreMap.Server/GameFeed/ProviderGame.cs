@@ -17,7 +17,6 @@ public sealed record ProviderGame(
     string? DisplayClock,
     int? Period,
     ProviderVenue? Venue,
-    IReadOnlyList<ProviderBroadcaster> Broadcasters,
     ProviderPeriodPhase Phase = ProviderPeriodPhase.Playing)
 {
     /// <summary>
@@ -44,6 +43,9 @@ public sealed record ProviderGame(
 
     /// <summary>Tennis: why a Final match ended before its sets were played out, and who advanced; null when it was played out.</summary>
     public ProviderEarlyEnding? EarlyEnding { get; init; }
+
+    /// <summary>The game's page on ESPN's website (its summary or gamecast); null when ESPN lists none.</summary>
+    public string? EspnUrl { get; init; }
 }
 
 /// <summary>
@@ -206,8 +208,6 @@ public sealed record ProviderVenue(string? Name, string? City, string? Region, s
     string? Court = null, Coordinates? Location = null);
 
 public sealed record Coordinates(double Latitude, double Longitude);
-
-public sealed record ProviderBroadcaster(string Name, string? Country);
 
 /// <summary>
 /// Where play stands right now, in the terms of the game's sport, each part null when it doesn't apply:

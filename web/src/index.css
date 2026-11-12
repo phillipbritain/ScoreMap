@@ -1560,13 +1560,15 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: a section's label, "Card colors", in the switch's type, above the sports' small capitals. */
+/* Display Settings: a section's heading, "Card colors": the panel's biggest, boldest text, a step
+   above the switch's label and the sports' small capitals under it. */
 .display-section {
-  margin: 0 0 calc(3 * var(--spacing));
+  margin: 0 0 calc(4 * var(--spacing));
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
+  letter-spacing: var(--typography-subtitle1-letter-spacing);
 }
 
 /* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */

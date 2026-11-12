@@ -29,7 +29,9 @@
     "button": { "fontWeight": 600, "fontSize": 14, "letterSpacing": 0 },
     "caption": { "fontWeight": 400, "fontSize": 12, "letterSpacing": 0 },
     "overline": { "fontWeight": 700, "fontSize": 12, "letterSpacing": 0.14 },
-    "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 }
+    "footnote": { "fontWeight": 400, "fontSize": 11, "letterSpacing": 0 },
+    "small": { "fontWeight": 600, "fontSize": 10, "letterSpacing": 0 },
+    "tiny": { "fontWeight": 400, "fontSize": 9, "letterSpacing": 0 }
   },
   "spacing": 4,
   "shape": {
@@ -125,8 +127,8 @@
       "frost": 0.6,
       "header": { "tint": 0.28, "letterSpacing": 0.06 },
       "corner": 1.5,
-      "size": { "minWidth": 92, "logo": 16, "venueGap": 16, "nameClearance": 4 },
-      "logo": { "plate": { "fill": "offWhite.500", "padding": 0.5, "corner": 0.5 } },
+      "size": { "minWidth": 64, "logo": 12, "venueGap": 16, "nameClearance": 4 },
+      "logo": { "plate": { "fill": "offWhite.500", "padding": 0.25, "corner": 0.5 } },
       "flames": { "width": 3, "glow": { "radius": 14.4, "spread": 4.32, "opacity": 0.75 }, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },

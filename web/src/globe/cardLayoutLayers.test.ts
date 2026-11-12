@@ -110,9 +110,9 @@ describe('cardLayoutDrawing', () => {
   it('gives every card with room a footprint where it is, moved or not, at its venue and offset to it on screen', () => {
     expect(features('footprint').map(({ geometry, properties }) => [(geometry as Point).coordinates, properties?.offset])).toEqual([
       // Each centered on its card, 36 px above its venue and 120 px to the side when moved, so its foot
-      // is half a footprint (68) below that.
-      [[10, -20.5], [0, -2]],
-      [[10, -20.5], [120, -2]],
+      // is half a footprint (50) below that.
+      [[10, -20.5], [0, -11]],
+      [[10, -20.5], [120, -11]],
     ])
   })
 

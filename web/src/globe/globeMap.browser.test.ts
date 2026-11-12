@@ -600,7 +600,7 @@ describe('camera movement lifetime', () => {
 
   it('retires the earlier move when another game is picked during an ease', async () => {
     // A little off the crowded games, so centering them moves the camera.
-    const { globe, map } = openGlobe({ longitude: -10, latitude: 0, zoom: 2 })
+    const { globe, map } = openGlobe({ longitude: -10, latitude: 0, zoom: 2 }, smallGlobe)
     const b = game('B', { longitude: -20 })
     globe.show([...crowdedGames(), b])
     await cardClusterDrawn(map)
@@ -736,8 +736,8 @@ describe('zooming in to card clusters', () => {
   it('zooms in to a card cluster the viewer selects until its games all have cards', async () => {
     const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at countryZoom.
-    const games = Array.from({ length: 16 }, (_, i) =>
-      game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
+    const games = Array.from({ length: 36 }, (_, i) =>
+      game(`G${i}`, { longitude: (i % 6) * 0.1, latitude: Math.floor(i / 6) * 0.1 }),
     )
     globe.show(games)
     const cardCluster = await cardClusterDrawn(map)
@@ -1451,8 +1451,8 @@ describe('flames', () => {
   it('shows on a card cluster holding a hot game', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
     // As in zooming in to a card cluster: far too close for their cards to fit.
-    const games = Array.from({ length: 16 }, (_, i) => ({
-      ...game(`G${i}`, { longitude: (i % 4) * 0.1, latitude: Math.floor(i / 4) * 0.1 }),
+    const games = Array.from({ length: 36 }, (_, i) => ({
+      ...game(`G${i}`, { longitude: (i % 6) * 0.1, latitude: Math.floor(i / 6) * 0.1 }),
       hot: true,
     }))
     globe.show(games)

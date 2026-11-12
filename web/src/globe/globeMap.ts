@@ -670,4 +670,3 @@ function gameLayersIn(theme: Theme, selectedGameId: string | null, size: PinSize
   const { belowNames, belowGameNames, onTop } = gameLayers(theme, selectedGameId, size)
   return [...belowNames, ...belowGameNames, ...onTop]
 }
-

@@ -60,7 +60,7 @@ export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
-  /** Centers a game picked from the Games list clear of the game panel (see GlobeMap.pickGame). */
+  /** Opens a game picked from the Games list and centers it clear of its panel (see GlobeMap.pickGame). */
   pickGame: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
   shownScoreCards: () => ShownScoreCard[]

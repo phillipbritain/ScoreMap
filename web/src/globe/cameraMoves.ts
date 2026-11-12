@@ -54,10 +54,11 @@ export class CameraMoves {
     if (this.destroyed) return
     const move = intent ?? (gameId !== null && this.pendingPick === gameId ? 'center' : 'lift')
     this.pendingPick = null
-    if (gameId === this.selectedGameId && move === 'lift') return
+    const changed = gameId !== this.selectedGameId
+    if (!changed && move === 'lift') return
     this.cancel()
     this.selectedGameId = gameId
-    this.options.onSelection(gameId)
+    if (changed) this.options.onSelection(gameId)
     const game = gameId === null ? undefined : this.options.game(gameId)
     if (!game) return
     if (move === 'center') return this.center(game, panel)

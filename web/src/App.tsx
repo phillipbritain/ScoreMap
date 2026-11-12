@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
@@ -33,6 +33,11 @@ import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
+
+// PROTOTYPE, throw away: the bar trying smaller score cards (local runs only).
+const SmallerCardsPrototypeBar = import.meta.env.DEV
+  ? lazy(() => import('./globe/SmallerCardsPrototypeBar').then(({ SmallerCardsPrototypeBar }) => ({ default: SmallerCardsPrototypeBar })))
+  : null
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -166,6 +171,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           )}
         </div>
         {demo && <DemoLabel />}
+        {SmallerCardsPrototypeBar && !demo && (
+          <Suspense>
+            <SmallerCardsPrototypeBar />
+          </Suspense>
+        )}
         {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
             hides while a game panel is open instead). */}
         <Feedback

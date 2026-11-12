@@ -124,6 +124,8 @@ export class ScoreCardMarkers {
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
     map.on('move', this.cameraMoved)
     map.on('resize', this.resized)
+    // PROTOTYPE, throw away: a switch of smaller card variant measures the cards afresh.
+    if (import.meta.env.DEV) window.addEventListener('card-proto-changed', () => this.restyle())
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -537,6 +539,9 @@ function team({ label, logoUrl, score }: ScoreCardRow): HTMLElement {
   const row = document.createElement('div')
   row.className = 'score-card__team'
   row.append(logo({ label, logoUrl, score }), span('score-card__abbreviation', label), span('score-card__score', score))
+  // PROTOTYPE, throw away: a person's name (a field's entrant or a bout's side), not a team's
+  // abbreviation, which the smaller card variants keep where they drop abbreviations.
+  if (import.meta.env.DEV && label.includes(' ')) row.dataset.protoNamed = ''
   return row
 }
 

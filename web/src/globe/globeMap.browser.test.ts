@@ -294,6 +294,48 @@ describe('score cards', () => {
   })
 })
 
+describe('score cards coming in and going out', () => {
+  const marker = (gameId: string) => card(gameId)?.parentElement ?? null
+
+  it('brings in the card of a game arriving on the board, but not those there when it opened', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A')])
+    await cardShown('A')
+    expect(marker('A')!.classList.contains('score-card-coming')).toBe(false)
+    globe.show([game('A'), game('B', { longitude: 6 })])
+    await cardShown('B')
+    expect(marker('B')!.classList.contains('score-card-coming')).toBe(true)
+    // Once in, it's left as it is.
+    await vi.waitFor(() => expect(marker('B')!.classList.contains('score-card-coming')).toBe(false))
+  })
+
+  it('takes out the card of a game gone from the board, with its trail, holding no room in the layout meanwhile', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 6 })])
+    await cardShown('B')
+    await vi.waitFor(() => expect(trailsDrawn(map).map(({ gameId }) => gameId)).toContain('B'))
+    globe.show([game('A')])
+    expect(marker('B')!.classList.contains('score-card-going')).toBe(true)
+    expect(globe.shownScoreCards().map(({ gameId }) => gameId)).toEqual(['A'])
+    expect(trailsDrawn(map).find(({ gameId }) => gameId === 'B')!.opacity).toBeLessThanOrEqual(1)
+    // Laid out without it while it's still going: only A's card keeps names out.
+    expect(await laidOut(map, 'footprint')).toHaveLength(1)
+    expect(card('B')).not.toBeNull()
+    await vi.waitFor(() => expect(card('B')).toBeNull())
+    expect(trailsDrawn(map).map(({ gameId }) => gameId)).toEqual(['A'])
+  })
+
+  it('brings a card back in when its game is shown again while it is going out', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom + 1 })
+    globe.show([game('A'), game('B', { longitude: 6 })])
+    await cardShown('B')
+    globe.show([game('A')])
+    globe.show([game('A'), game('B', { longitude: 6 })])
+    await vi.waitFor(() => expect(marker('B')?.classList.contains('score-card-coming')).toBe(true))
+    expect(container.querySelectorAll('.score-card[data-game-id="B"]')).toHaveLength(1)
+  })
+})
+
 describe('shown score cards', () => {
   it('gives each card on the page with its game, named as its button is, where it is and its two rows', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom })

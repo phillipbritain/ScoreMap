@@ -68,6 +68,8 @@ export interface LiveGamesOptions {
 
 export interface LiveGames {
   readonly state: LiveGamesState
+  /** Takes a change as if the server had sent it: for a dev run to make one happen (see madeUpChange.ts). */
+  receive: (change: GameChange) => void
   /** A new idle timeout: it counts from now if the page is hidden. */
   setIdleTimeout: (ms: number) => void
   /** Disconnects and stops watching the page. */
@@ -91,6 +93,16 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
     if (state.cutOffSince === null) update({ cutOffSince: now() })
   }
 
+  // The snapshot always comes first; a change before it has nothing to apply to.
+  const receive = (change: GameChange) => {
+    if (!state.games) return
+    const before = state.games.find((game) => game.id === change.game.id)
+    update({
+      games: applyChange(state.games, change),
+      justHappened: recordJustHappened(state.justHappened, before, change, now()),
+    })
+  }
+
   /**
    * Connects to the games hub and stays connected: SignalR reconnects on its own, and the first start, or
    * a start after a close, is retried here with backoff, forever. The server sends a fresh snapshot on
@@ -110,16 +122,8 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
     const connection = hub(
       {
         snapshot: live((games) => update({ games, justHappened: noneJustHappened, cutOffSince: null, waking: false })),
-        // The snapshot always comes first; a change before it has nothing to apply to.
         // The server's own judgment of what changed is kept for the globe to animate (see GlobeMap.show).
-        change: live((change) => {
-          if (!state.games) return
-          const before = state.games.find((game) => game.id === change.game.id)
-          update({
-            games: applyChange(state.games, change),
-            justHappened: recordJustHappened(state.justHappened, before, change, now()),
-          })
-        }),
+        change: live(receive),
         // A switch or a change of speed made in any browser: every pill and clock follows.
         scenarioChanged: live(options.onScenarioChanged),
         reconnecting: live(cutOff),
@@ -179,6 +183,7 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
     get state() {
       return state
     },
+    receive,
     setIdleTimeout: (ms) => {
       if (ms === idleTimeoutMs) return
       idleTimeoutMs = ms

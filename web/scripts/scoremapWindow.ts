@@ -13,5 +13,15 @@ declare global {
       settled?: () => boolean
       frames?: unknown[]
     }
+    /**
+     * In dev runs, what makes a score or a finish happen to a game on screen, in this tab only (see
+     * src/live/madeUpChange.ts): the change made, or null when no game on screen can.
+     */
+    scoremapGames?: {
+      happen: (
+        event: 'score' | 'finish',
+        onScreen: (game: { id: string; venue: { longitude: number | null; latitude: number | null } }) => boolean,
+      ) => { kind: string; game: { id: string } } | null
+    }
   }
 }

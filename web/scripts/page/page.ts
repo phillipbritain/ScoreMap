@@ -8,6 +8,7 @@
 //   npm run page -- camera <lng>,<lat> <zoom>      turns the camera there and waits for the globe to be still
 //   npm run page -- read <selector> [property]     textContent unless given; rect for the bounding box
 //   npm run page -- screenshot <file>              once ready and settled
+//   npm run page -- score | finish                 a Live game on screen scores or finishes, in this tab only
 //   npm run page -- pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...
 //                                                  saves the frames the cards were laid out from
 //
@@ -24,7 +25,7 @@ import { pageCheck, type PageCheck } from './pageCheck.ts'
 import { panGlobe } from './panGlobe.ts'
 import { resetUrls } from './resetUrls.ts'
 
-const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
+const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | score | finish | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
 
 const page = agentBrowser({ cwd: process.cwd(), scratch })
@@ -65,6 +66,11 @@ function main([command, ...args]: string[]): void {
     const file = resolve(args[0])
     browser(['screenshot', file])
     console.log(`Screenshot saved to ${file}`)
+  } else if ((command === 'score' || command === 'finish') && args.length === 0) {
+    const answer = inPage({ check: 'happen', event: command })
+    if ('noGame' in answer) throw new Failed(`No Live game on screen can ${command}: turn the camera to one`)
+    const { kind, gameId } = (answer as { happened: { kind: string; gameId: string } }).happened
+    console.log(`${kind}: ${gameId}, in this tab until the server's next change to it`)
   } else if (panRequest && 'tooLong' in panRequest) {
     console.error(panRequest.tooLong)
     process.exitCode = 2

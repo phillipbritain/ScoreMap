@@ -7,7 +7,7 @@ public static class StreamFinderRegistration
     /// <summary>
     /// Adds the unofficial stream finder (ADR-0002: hobby v1 only) as the server's
     /// <see cref="IStreamLinkSource"/>. It is off while the owner's site list in
-    /// "StreamFinder:Sites" is empty, as it ships.
+    /// "StreamFinder:Sites" is empty.
     /// </summary>
     public static IServiceCollection AddStreamFinder(this IServiceCollection services, IConfiguration configuration)
     {

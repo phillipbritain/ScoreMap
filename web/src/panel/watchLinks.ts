@@ -1,22 +1,22 @@
 import type { GameBroadcaster } from '../games/game'
 
-/** A channel or streaming service as the game panel lists it: linked when it has an official watch link. */
+/** A channel or streaming service with an official watch link, as the game panel lists it. */
 export interface WatchLink {
   name: string
-  url: string | null
+  url: string
 }
 
 /**
  * The official watch links the game panel shows a viewer in `viewerCountry` (ISO 3166 alpha-2,
  * or null when unknown). When the data has broadcasts for the viewer's country, broadcasts it places
- * in another country are left out; otherwise every broadcast is listed, so a viewer abroad still sees
- * which channels show the game.
+ * in another country are left out; otherwise every linked broadcast is listed. Broadcasters with
+ * no watch URL are omitted.
  */
 export function watchLinks(broadcasters: GameBroadcaster[], viewerCountry: string | null): WatchLink[] {
   const local = broadcasters.some((b) => b.country !== null && sameCountry(b.country, viewerCountry))
   const links = new Map<string, WatchLink>()
   for (const b of broadcasters) {
-    if ((local && !isFor(b.country, viewerCountry)) || links.has(b.name)) continue
+    if (!b.watchUrl?.trim() || (local && !isFor(b.country, viewerCountry)) || links.has(b.name)) continue
     links.set(b.name, { name: b.name, url: b.watchUrl })
   }
   return [...links.values()]

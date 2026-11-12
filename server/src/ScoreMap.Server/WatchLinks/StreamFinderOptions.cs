@@ -2,7 +2,7 @@ namespace ScoreMap.Server.WatchLinks;
 
 /// <summary>
 /// Unofficial stream finder settings, under "StreamFinder" in appsettings.json (ADR-0002).
-/// The site list ships empty, which switches the finder off: the owner supplies the sites.
+/// The site list is configured in appsettings.json; an empty list switches the finder off.
 /// </summary>
 public sealed class StreamFinderOptions
 {
@@ -12,7 +12,7 @@ public sealed class StreamFinderOptions
     /// <summary>How long one site gets to answer a search before it is skipped.</summary>
     public double TimeoutSeconds { get; set; } = 3;
 
-    /// <summary>How long a game's search result (links or none) is kept before searching again.</summary>
+    /// <summary>How long a parsed page (including an empty or failed result) is kept before fetching again.</summary>
     public double CacheMinutes { get; set; } = 10;
 }
 
@@ -31,8 +31,14 @@ public sealed class StreamSite
 
     /// <summary>
     /// A regular expression finding links in the search page, with a named group <c>href</c>
-    /// for the link and optionally <c>text</c> for its label. A link is kept only when its
-    /// label or address mentions both teams.
+    /// for the link, <c>first</c> and <c>second</c> for side names (or <c>text</c> for a plain
+    /// Team A vs Team B label), optionally <c>league</c> and <c>start</c> (ISO 8601 with zone).
     /// </summary>
     public string LinkPattern { get; set; } = "";
+
+    /// <summary>ScoreMap league names mapped to the site's category names. Unmapped leagues are omitted.</summary>
+    public Dictionary<string, string[]> LeagueAliases { get; set; } = [];
+
+    /// <summary>Explicit alternate side names, keyed by ScoreMap league, then full team name.</summary>
+    public Dictionary<string, Dictionary<string, string[]>> TeamAliases { get; set; } = [];
 }

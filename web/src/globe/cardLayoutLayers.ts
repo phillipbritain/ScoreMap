@@ -230,7 +230,7 @@ export function cardLayoutLayers(
  * footprints). A typical score card with a small margin: cards vary with their teams'
  * names and clock line, and a footprint image has one size, so it's an approximation.
  */
-export const cardFootprint = { image: 'card-footprint', width: 106, height: 68 }
+export const cardFootprint = { image: 'card-footprint', width: 78, height: 50 }
 
 /** On top of every name, so names are placed around the cards rather than under them. */
 export const cardFootprintLayerSpec: SymbolLayerSpecification = {

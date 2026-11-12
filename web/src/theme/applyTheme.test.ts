@@ -154,8 +154,8 @@ describe('applyTheme', () => {
       // Four color roles of four each, and three statuses' colors of three; the background's two, three
       // kinds of text, a divider and hover.
       palette: 4 * 4 + 3 * 3 + 2 + 3 + 1 + 1,
-      // A font family, and nine type styles of three.
-      typography: 1 + 9 * 3,
+      // A font family, and eleven type styles of three.
+      typography: 1 + 11 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
       // A small pin's core of four and glow of two, for each of three statuses, and its fire outline's size, width and two opacities.

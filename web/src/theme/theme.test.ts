@@ -300,7 +300,7 @@ describe('resolveTheme', () => {
     json.components.PlaceNames.city.size = { '4': 'caption', '11': 12 }
     json.components.GamePanel.cutCorner.size = 'xl'
     json.components.ScoreCard.corner = 'huge'
-    const styles = 'h6, subtitle1, subtitle2, body1, body2, button, caption, overline, footnote'
+    const styles = 'h6, subtitle1, subtitle2, body1, body2, button, caption, overline, footnote, small, tiny'
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [

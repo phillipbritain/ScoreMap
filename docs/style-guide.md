@@ -275,21 +275,23 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | --- | --- | --- |
 | `h6` | Scores on the game panel; a score card's scores take its weight | 700, 20 |
 | `subtitle1` | Team names on the game panel; a score card's team abbreviations take its weight | 700, 16 |
-| `subtitle2` | A score card's clock line, and the rest of its text | 600, 12 |
+| `subtitle2` | A score card's text takes its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
 | `body2` | The game panel, the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
 | `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on, the game panel's close button | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips; the game panel's close button takes its size | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
-| `footnote` | The smallest on the page: a score card's header line, and the game panel's labels on a phone | 400, 11 |
+| `footnote` | The game panel's labels on a phone | 400, 11 |
+| `small` | A score card's text: its team abbreviations and scores, in their own weights, and the rest in `subtitle2`'s | 600, 10 |
+| `tiny` | The smallest on the page: a score card's header line | 400, 9 |
 
-`footnote` is ScoreMap's own, smaller than MUI's `caption`. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
+`footnote`, `small` and `tiny` are ScoreMap's own, smaller than MUI's `caption`. Score cards are kept small so more of them fit on the globe, a phone's above all: this is variant B of the comparison preserved on the throwaway branch `prototype/smaller-cards`, chosen by the user on November 12, 2026, for every screen size. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
 
 Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-globe)), but its sizes are type styles' sizes.
 
 ## Spacing and shape
 
-- **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a few units and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 2, 4, 6, 8, 12, 16, 24 and 32 pixels (half a unit to 8).
+- **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a unit or less and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 1, 2, 3, 4, 6, 8, 12, 16, 24 and 32 pixels (a quarter of a unit to 8).
 - **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters) stay circles whatever it is.
 - **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers and league chips are `thin`, a color swatch's ring `medium`, the game panel's top edge `thick`. The dark theme's are 1, 2 and 3.
 
@@ -315,7 +317,7 @@ Every team logo, on a score card and in the game panel, sits on a **plate**: a b
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
 | `components.ScoreCard.logo.plate.fill`, `components.GamePanel.logo.plate.fill` | The plate's color (a color job) | `offWhite.500`, `offWhite.500` |
-| `components.ScoreCard.logo.plate.padding`, `components.GamePanel.logo.plate.padding` | How far the plate reaches past the logo on each side, in spacing units. The logo keeps its size (`size.logo`); the plate adds to it | 0.5 (2px), 1 (4px) |
+| `components.ScoreCard.logo.plate.padding`, `components.GamePanel.logo.plate.padding` | How far the plate reaches past the logo on each side, in spacing units. The logo keeps its size (`size.logo`); the plate adds to it | 0.25 (1px), 1 (4px) |
 | `components.ScoreCard.logo.plate.corner`, `components.GamePanel.logo.plate.corner` | The plate's corners, in corner radii or `"pill"` | 0.5 (2px), 1 (4px) |
 
 The logos are ESPN's usual ones, drawn for a light background, which the plate gives them. ESPN also lists a logo for dark backgrounds for most teams, but for about half of them it's the same picture, and the feed's scoreboard doesn't carry it, so ScoreMap doesn't use it: the plate is the fix for every team alike.
@@ -373,8 +375,8 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.GamePanel.size.logo` | A team's logo | 28 |
 | `components.GamePanel.size.close.width`, `.height` | The close button's tab, above the panel's top right corner | 28, 18 |
 | `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
-| `components.ScoreCard.size.minWidth` | A score card's narrowest | 92 |
-| `components.ScoreCard.size.logo` | A team's logo on a score card | 16 |
+| `components.ScoreCard.size.minWidth` | A score card's narrowest | 64 |
+| `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon; the Feedback button too, round | 36, 18 |

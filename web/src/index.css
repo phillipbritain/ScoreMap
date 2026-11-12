@@ -687,14 +687,14 @@ body {
   /* How far a hovered card's border reaches beyond its own: none until hovered. */
   --card-hover-ring: 0px;
   display: grid;
-  gap: calc(0.5 * var(--spacing));
+  gap: calc(0.25 * var(--spacing));
   min-width: var(--score-card-size-min-width);
-  padding: 0 0 var(--spacing);
+  padding: 0 0 calc(0.75 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--card-color);
   border-radius: var(--score-card-corner);
   color: color-mix(in srgb, var(--card-ink), var(--card-surface) var(--fade));
   font-family: var(--typography-font-family);
-  font-size: var(--typography-subtitle2-font-size);
+  font-size: var(--typography-small-font-size);
   font-weight: var(--typography-subtitle2-font-weight);
   line-height: 1.2;
   text-transform: uppercase;
@@ -743,12 +743,12 @@ body {
   display: flex;
   align-items: center;
   gap: var(--spacing);
-  margin-bottom: calc(0.5 * var(--spacing));
-  padding: calc(0.5 * var(--spacing)) calc(1.5 * var(--spacing));
+  margin-bottom: calc(0.25 * var(--spacing));
+  padding: calc(0.25 * var(--spacing)) var(--spacing);
   border-bottom: var(--shape-border-width-thin) solid var(--card-color);
   background: color-mix(in srgb, var(--card-color) calc(var(--score-card-header-tint) * var(--frost) * 100%), transparent);
   color: color-mix(in srgb, var(--header-text, var(--card-ink)), var(--card-surface) var(--fade));
-  font-size: var(--typography-footnote-font-size);
+  font-size: var(--typography-tiny-font-size);
   letter-spacing: var(--score-card-header-letter-spacing);
 }
 
@@ -831,8 +831,8 @@ body {
   display: grid;
   grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) 1fr auto;
   align-items: center;
-  gap: var(--spacing);
-  padding: 0 calc(1.5 * var(--spacing));
+  gap: calc(0.75 * var(--spacing));
+  padding: 0 var(--spacing);
 }
 
 /* On its plate, so a logo near the card's fill can still be seen. Faded with the rest of the card,

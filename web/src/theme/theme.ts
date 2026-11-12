@@ -187,9 +187,9 @@ const fontFamily: Setting<string> = {
 
 /**
  * The theme's type styles, by name, as MUI names its typography variants (plus footnote, smaller than
- * a caption).
+ * a caption, and small and tiny, smaller again, for score cards).
  */
-const typeStyles = ['h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline', 'footnote'] as const
+const typeStyles = ['h6', 'subtitle1', 'subtitle2', 'body1', 'body2', 'button', 'caption', 'overline', 'footnote', 'small', 'tiny'] as const
 
 /**
  * A type style: its weight, its size in pixels, and how far apart its letters are spaced, in ems.
@@ -382,8 +382,8 @@ const settings = {
    * The page's text, shaped as MUI's typography is: one font family, and type styles, each a weight,
    * size and letter spacing. Body text is body1, and the game panel and menus body2; the game panel's
    * team names are subtitle1, its scores h6, and its league, labels and progress line overline (the
-   * labels tracked out, like the country names on the globe); a score card's clock line is subtitle2,
-   * its team abbreviations subtitle1's weight and scores h6's; tabs, chips, buttons and the scenario
+   * labels tracked out, like the country names on the globe); a score card's text is small in
+   * subtitle2's weight, its clock line tiny, its team abbreviations subtitle1's weight and scores h6's; tabs, chips, buttons and the scenario
    * pill are button, and the scenario clock body2; captions and footnotes are the smaller lines.
    */
   typography: {

@@ -2131,10 +2131,6 @@ body {
   color: var(--palette-text-primary);
 }
 
-.feedback[hidden] {
-  display: none;
-}
-
 /* A round icon button, the size of the rail's. */
 .feedback__button {
   display: flex;
@@ -2272,7 +2268,7 @@ body {
 /* On wide screens the game panel narrows, on both sides so it stays centered, to leave the corner to
    the Feedback button. */
 @media (min-width: 641px) {
-  .feedback:not([hidden]) ~ .game-panel {
+  .feedback ~ .game-panel {
     width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
   }
 }
@@ -2315,10 +2311,6 @@ body {
   box-shadow: var(--controls-shadow);
   pointer-events: none;
   user-select: none;
-}
-
-.demo-label[hidden] {
-  display: none;
 }
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps

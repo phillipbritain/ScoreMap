@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useId, useState, type CSSProperties } from 'react'
 import { pickableColors } from '../settings/gameColor'
 import {
   hasColors,
@@ -22,10 +22,11 @@ interface DisplaySettingsProps {
 }
 
 /**
- * The rail's Display Settings popover: a "Display venue photo on Game Panel" switch for the game panel's photo, then each sport, then its leagues, by name, with a swatch of its games'
- * color, which opens a grid of the colors there are to pick (see pickableColors) under its row, and
- * a control to clear it; a league with no color of its own shows its sport's, marked as taken from
- * the sport. One grid is open at a time. "Reset colors" clears every color.
+ * The rail's Display Settings popover: a "Display venue photo on Game Panel" switch for the game
+ * panel's photo, then, under "Card colors", each sport, then its leagues, by name, with a swatch of
+ * its games' color, which opens a grid of the colors there are to pick (see pickableColors) under its
+ * row, and a control to clear it; a league with no color of its own shows its sport's, marked as
+ * taken from the sport. One grid is open at a time. "Reset colors" clears every color.
  */
 export function DisplaySettings({ leagues, settings, onChange, accent }: DisplaySettingsProps) {
   // Whose grid is open: a sport's or league's, as "sport:Football" or "league:NFL".
@@ -63,6 +64,7 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
     )
   }
   const photos = settings.venuePhotos
+  const colorsHeading = useId()
   return (
     <>
       <button
@@ -75,29 +77,34 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
         Display venue photo on Game Panel
         <span className={photos ? 'switch switch--on' : 'switch switch--off'} aria-hidden="true" />
       </button>
-      {leaguesBySport(leagues).map((group) => {
-        const sportColor = settings.sportColors[group.sport] ?? null
-        // What a league with no color of its own shows in: its sport's, else the theme's.
-        const fromSport = sportColor ? { color: sportColor, takes: `${group.sport}'s color` } : fromTheme
-        return (
-          <div key={group.sport} className="rail-sport">
-            {row('sport', group.sport, sportColor, fromTheme, (color) => withSportColor(settings, group.sport, color))}
-            {group.leagues.map((league) =>
-              row('league', league.name, settings.leagueColors[league.name] ?? null, fromSport, (color) =>
-                withLeagueColor(settings, league.name, color),
-              ),
-            )}
-          </div>
-        )
-      })}
-      <button
-        type="button"
-        className="colors-reset"
-        disabled={!hasColors(settings)}
-        onClick={() => onChange(withoutColors(settings))}
-      >
-        Reset colors
-      </button>
+      <h3 id={colorsHeading} className="display-section">
+        Card colors
+      </h3>
+      <div role="group" aria-labelledby={colorsHeading}>
+        {leaguesBySport(leagues).map((group) => {
+          const sportColor = settings.sportColors[group.sport] ?? null
+          // What a league with no color of its own shows in: its sport's, else the theme's.
+          const fromSport = sportColor ? { color: sportColor, takes: `${group.sport}'s color` } : fromTheme
+          return (
+            <div key={group.sport} className="rail-sport">
+              {row('sport', group.sport, sportColor, fromTheme, (color) => withSportColor(settings, group.sport, color))}
+              {group.leagues.map((league) =>
+                row('league', league.name, settings.leagueColors[league.name] ?? null, fromSport, (color) =>
+                  withLeagueColor(settings, league.name, color),
+                ),
+              )}
+            </div>
+          )
+        })}
+        <button
+          type="button"
+          className="colors-reset"
+          disabled={!hasColors(settings)}
+          onClick={() => onChange(withoutColors(settings))}
+        >
+          Reset colors
+        </button>
+      </div>
     </>
   )
 }

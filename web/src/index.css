@@ -1560,6 +1560,15 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
+/* Display Settings: a section's label, "Card colors", in the switch's type, above the sports' small capitals. */
+.display-section {
+  margin: 0 0 calc(3 * var(--spacing));
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
 /* Display Settings: a sport's or league's name, then the swatch of its games' color and its clear control. */
 .colors-row {
   display: flex;

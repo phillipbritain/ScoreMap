@@ -42,6 +42,13 @@ aspire stop       # when you're done
 
 A run is also open to other devices on your network, such as a phone: open `http://<this machine's address>:5173` there. The first time, Windows asks whether to let `dcp` (Aspire's proxy) through the firewall: allow it on private networks, with the network itself set to Private. To keep a run to this machine only, start it with `OpenToNetwork=false` in the environment (`$env:OpenToNetwork='false'; aspire start` in PowerShell).
 
+To drive a browser on the app as an agent does (the `run-scoremap` skill), install agent-browser and its Chrome once per machine:
+
+```sh
+npm install -g agent-browser
+agent-browser install   # downloads its Chrome
+```
+
 Run locally, the app shows a scenario rather than real games. The `run-scoremap` skill (`.claude/skills/run-scoremap/SKILL.md`) covers the scenarios and their controls, several runs side by side, and driving a browser on the app.
 
 ## Configuration

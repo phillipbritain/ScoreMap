@@ -39,11 +39,11 @@ function displayName(name: string) {
 }
 
 /**
- * Whether the scenario controls show: only when the server has scenarios (never on the deployed site),
- * and not hidden. The media keys and the clock among them show only where play can be controlled.
+ * Whether the scenario controls show: only when the server has scenarios (never on the deployed site).
+ * The media keys and the clock among them show only where play can be controlled.
  */
-export function showsScenarioControls(listing: ScenarioListing | null, controls: { hidden: boolean }): boolean {
-  return listing !== null && listing.scenarios.length > 0 && !controls.hidden
+export function showsScenarioControls(listing: ScenarioListing | null): boolean {
+  return listing !== null && listing.scenarios.length > 0
 }
 
 /** The scenario pill's text, before its ▾. */
@@ -93,25 +93,4 @@ export function untilNextSecond(listing: ScenarioListing, now: number): number |
 
 function speedTimes(listing: ScenarioListing): number {
   return listing.speeds.find((speed) => speed.name === listing.speed)?.times ?? 1
-}
-
-/** The parts of a keydown event that decide whether it hides or shows the scenario controls. */
-export interface KeyPress {
-  key: string
-  shiftKey: boolean
-  ctrlKey: boolean
-  altKey: boolean
-  metaKey: boolean
-  target: { tagName: string; isContentEditable: boolean } | null
-}
-
-const textFields = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
-
-/**
- * Whether a key press hides or shows the scenario controls: Shift+S, unless typed
- * into a text field.
- */
-export function togglesScenarioControls(press: KeyPress): boolean {
-  if (press.target && (textFields.has(press.target.tagName) || press.target.isContentEditable)) return false
-  return press.key.toUpperCase() === 'S' && press.shiftKey && !press.ctrlKey && !press.altKey && !press.metaKey
 }

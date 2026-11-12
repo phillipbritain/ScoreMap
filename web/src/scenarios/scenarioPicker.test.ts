@@ -5,7 +5,6 @@ import {
   pickerEntries,
   pillLabel,
   showsScenarioControls,
-  togglesScenarioControls,
   type ScenarioListing,
 } from './scenarioPicker'
 
@@ -37,7 +36,7 @@ const deployed: ScenarioListing = {
 
 describe('the scenario pill', () => {
   it('shows the running scenario when the server has scenarios', () => {
-    expect(showsScenarioControls(local, { hidden: false })).toBe(true)
+    expect(showsScenarioControls(local)).toBe(true)
     expect(pillLabel(local)).toBe('Scenario: crowded')
   })
 
@@ -46,8 +45,8 @@ describe('the scenario pill', () => {
   })
 
   it('never shows when the server has no scenarios, or before it has said', () => {
-    expect(showsScenarioControls(deployed, { hidden: false })).toBe(false)
-    expect(showsScenarioControls(null, { hidden: false })).toBe(false)
+    expect(showsScenarioControls(deployed)).toBe(false)
+    expect(showsScenarioControls(null)).toBe(false)
   })
 })
 
@@ -114,32 +113,5 @@ describe('the next tick of the scenario clock', () => {
   it('lands on or after the change, never just before it', () => {
     // At Faster, 1000 ms of reading is 31.25 ms of real time; from :00.001 the change is 31.22 ms away.
     expect(untilNextSecond({ ...local, speed: 'Faster', clock: { ...clock, reads: '2026-10-04T20:00:00.001Z' } }, at)).toBe(32)
-  })
-})
-
-describe('Shift+S', () => {
-  const shiftS = { key: 'S', shiftKey: true, ctrlKey: false, altKey: false, metaKey: false, target: null }
-
-  it('hides and shows the pills and the clock', () => {
-    expect(togglesScenarioControls(shiftS)).toBe(true)
-    expect(showsScenarioControls(local, { hidden: true })).toBe(false)
-  })
-
-  it('does nothing while typing in a text field', () => {
-    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'INPUT', isContentEditable: false } })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'TEXTAREA', isContentEditable: false } })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'SELECT', isContentEditable: false } })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'DIV', isContentEditable: true } })).toBe(false)
-  })
-
-  it('works with the focus on a button', () => {
-    expect(togglesScenarioControls({ ...shiftS, target: { tagName: 'BUTTON', isContentEditable: false } })).toBe(true)
-  })
-
-  it('is only S with Shift alone', () => {
-    expect(togglesScenarioControls({ ...shiftS, key: 's', shiftKey: false })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, ctrlKey: true })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, altKey: true })).toBe(false)
-    expect(togglesScenarioControls({ ...shiftS, metaKey: true })).toBe(false)
   })
 })

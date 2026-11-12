@@ -1,5 +1,6 @@
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
+import { comingOpacity, stillComing, type CardComing } from './cardComings'
 
 export const trailLayerId = 'trails'
 
@@ -16,6 +17,8 @@ export interface TrailOnGlobe {
   end: [number, number]
   /** Whether it ends at a ringed dot of its own, rather than a venue cluster. */
   dot: boolean
+  /** Its card coming in or going out, which it fades in or out with (see cardComings). */
+  coming?: CardComing
 }
 
 /** A trail where it's drawn on screen, in pixels. */
@@ -24,6 +27,8 @@ export interface TrailOnScreen {
   from: { x: number; y: number }
   to: { x: number; y: number }
   dot: boolean
+  /** How far it's shown, as its card comes in or goes out: 1 when it's neither. */
+  opacity?: number
 }
 
 /** The moved cards' trails and venue dots, drawn by the map beneath the place names (ADR-0010). */
@@ -61,11 +66,12 @@ export function trailLayer(theme: () => Theme): TrailLayer {
   let hovered: string | null = null
   let selected: string | null = null
 
-  const onScreen = (): TrailOnScreen[] => {
+  const onScreen = (now = performance.now()): TrailOnScreen[] => {
     if (!map) return []
-    return trails.map(({ gameId, venue, start, end, dot }) => {
+    return trails.map(({ gameId, venue, start, end, dot, coming }) => {
       const at = map!.project(venue)
-      return { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot }
+      const opacity = coming ? comingOpacity(coming, now) : 1
+      return { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot, opacity }
     })
   }
 
@@ -102,7 +108,10 @@ export function trailLayer(theme: () => Theme): TrailLayer {
     render(context) {
       if (!map || !program || !uniforms || trails.length === 0) return
       const pixelRatio = map.getPixelRatio()
-      const shapes = trailShapes(onScreen(), trails.map(({ color }) => color), [hovered, selected], theme().components)
+      const now = performance.now()
+      // While a trail fades in or out with its card, each frame draws it a little further along.
+      if (trails.some(({ coming }) => coming && stillComing(coming, now))) map.triggerRepaint()
+      const shapes = trailShapes(onScreen(now), trails.map(({ color }) => color), [hovered, selected], theme().components)
       const triangles = vertices(shapes, pixelRatio)
       context.useProgram(program)
       context.uniform2f(uniforms.viewport, map.getCanvas().width / pixelRatio, map.getCanvas().height / pixelRatio)
@@ -135,7 +144,7 @@ export function trailLayer(theme: () => Theme): TrailLayer {
       map?.triggerRepaint()
     },
 
-    drawn: onScreen,
+    drawn: () => onScreen(),
   }
 }
 
@@ -159,12 +168,13 @@ type Rgba = [number, number, number, number]
 /** A line or a circle of a trail, as MapLibre would draw it in a line or circle layer. */
 export type TrailShape =
   | { kind: 'line'; from: Point; to: Point; width: number; blur: number; color: string; opacity: number }
-  | { kind: 'circle'; at: Point; radius: number; strokeWidth: number; blur: number; color: string; opacity: number; stroke: string }
+  | { kind: 'circle'; at: Point; radius: number; strokeWidth: number; blur: number; color: string; opacity: number; stroke: string; strokeOpacity: number }
 
 /**
  * What's drawn of the trails, from the bottom up as the map's trail layers were stacked: every glow,
  * then every line, then each venue's dot, its glow (while picked out) and ring beneath it, in the
  * theme's sizes and opacities, those of the games picked out (hovered or selected) from the hover settings.
+ * A trail fading in or out with its card has every shape's opacity scaled by how far it's shown.
  */
 export function trailShapes(
   screen: readonly TrailOnScreen[],
@@ -174,12 +184,13 @@ export function trailShapes(
 ): TrailShape[] {
   const shapes: TrailShape[] = []
   const isPickedOut = (i: number) => pickedOut.includes(screen[i].gameId)
+  const shown = (i: number) => screen[i].opacity ?? 1
   screen.forEach(({ from, to }, i) =>
-    shapes.push({ kind: 'line', from, to, width: trail.glow.width, blur: trail.glow.blur, color: colors[i], opacity: trail.glow.opacity }),
+    shapes.push({ kind: 'line', from, to, width: trail.glow.width, blur: trail.glow.blur, color: colors[i], opacity: trail.glow.opacity * shown(i) }),
   )
   screen.forEach(({ from, to }, i) => {
     const look = isPickedOut(i) ? hover.trail : trail
-    shapes.push({ kind: 'line', from, to, width: look.width, blur: 0, color: colors[i], opacity: look.opacity })
+    shapes.push({ kind: 'line', from, to, width: look.width, blur: 0, color: colors[i], opacity: look.opacity * shown(i) })
   })
   const circle = (at: Point, radius: number, look: Partial<Extract<TrailShape, { kind: 'circle' }>>): TrailShape => ({
     kind: 'circle',
@@ -190,14 +201,18 @@ export function trailShapes(
     color: 'transparent',
     opacity: 1,
     stroke: 'transparent',
+    strokeOpacity: 1,
     ...look,
   })
   screen.forEach(({ to, dot }, i) => {
     if (!dot) return
     const color = colors[i]
-    if (isPickedOut(i)) shapes.push(circle(to, hover.venue.glow.radius, { color, blur: 1, opacity: hover.venue.glow.opacity }))
-    shapes.push(circle(to, trail.venue.ring.radius, { strokeWidth: isPickedOut(i) ? hover.trail.width : trail.venue.ring.width, stroke: color }))
-    shapes.push(circle(to, isPickedOut(i) ? hover.venue.radius : trail.venue.radius, { color }))
+    const opacity = shown(i)
+    if (isPickedOut(i)) shapes.push(circle(to, hover.venue.glow.radius, { color, blur: 1, opacity: hover.venue.glow.opacity * opacity }))
+    shapes.push(
+      circle(to, trail.venue.ring.radius, { strokeWidth: isPickedOut(i) ? hover.trail.width : trail.venue.ring.width, stroke: color, strokeOpacity: opacity }),
+    )
+    shapes.push(circle(to, isPickedOut(i) ? hover.venue.radius : trail.venue.radius, { color, opacity }))
   })
   return shapes
 }
@@ -232,11 +247,11 @@ function line(out: number[], { from, to, width, blur, color, opacity }: Extract<
  * A circle `radius` pixels across with a stroke `strokeWidth` wide outside it, blurred by `blur` (a
  * share of its radius), as MapLibre draws a circle layer's.
  */
-function circle(out: number[], { at, radius, strokeWidth, blur, color, opacity, stroke }: Extract<TrailShape, { kind: 'circle' }>, pixelRatio: number): void {
+function circle(out: number[], { at, radius, strokeWidth, blur, color, opacity, stroke, strokeOpacity }: Extract<TrailShape, { kind: 'circle' }>, pixelRatio: number): void {
   const reach = radius + strokeWidth
   if (reach <= 0) return
   const fill = premultiplied(rgba(color), opacity)
-  const strokeColor = premultiplied(rgba(stroke), 1)
+  const strokeColor = premultiplied(rgba(stroke), strokeOpacity)
   // MapLibre's circle smooths its edge over a pixel, or blurs it further.
   const antialiasBlur = -Math.max(1 / pixelRatio / reach, blur)
   const shape = [circleKind, radius / reach, antialiasBlur, strokeWidth]

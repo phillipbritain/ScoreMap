@@ -121,7 +121,7 @@ The stadium, arena, track or course where a game is physically played, with its 
 _Avoid_: Stadium, arena, location, home city
 
 **Feedback**:
-A note a viewer writes and sends from ScoreMap, from the Feedback button at the bottom right, posted publicly to the project's issues for the owner to sort through, with what the viewer was looking at (such as the open game). Shift+S hides the button, as it does the scenario controls.
+A note a viewer writes and sends from ScoreMap, from the Feedback button at the bottom right, posted publicly to the project's issues for the owner to sort through, with what the viewer was looking at (such as the open game).
 _Avoid_: Bug report (it may be anything), comment, support request
 
 **City label**:
@@ -215,7 +215,7 @@ A named set of made-up games between real teams of their league at real venues, 
 _Avoid_: Dummy data, fake data, simulation, demo (a demo shows one scenario; it isn't one)
 
 **Demo**:
-ScoreMap showing the worldwide scenario in place of real games, for anyone who opens it with `?demo` in its link, on the live site or locally. Everyone in a demo watches the same games, playing at Normal speed, from the scenario's start for whoever opens the first one. There are no scenario controls, a label (which Shift+S hides) says the games are made up, the viewer's saved settings are left alone, and feedback sent from it says it came from a demo.
+ScoreMap showing the worldwide scenario in place of real games, for anyone who opens it with `?demo` in its link, on the live site or locally. Everyone in a demo watches the same games, playing at Normal speed, from the scenario's start for whoever opens the first one. There are no scenario controls, a label says the games are made up, the viewer's saved settings are left alone, and feedback sent from it says it came from a demo.
 _Avoid_: Demo mode, showcase, preview
 
 **Scenario clock**:

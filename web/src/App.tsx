@@ -165,11 +165,10 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             </p>
           )}
         </div>
-        {demo && <DemoLabel hidden={!scenarios.feedbackShown} />}
+        {demo && <DemoLabel />}
         {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
             hides while a game panel is open instead). */}
         <Feedback
-          hidden={!scenarios.feedbackShown}
           context={() =>
             feedbackContext({
               screen: { width: window.innerWidth, height: window.innerHeight },

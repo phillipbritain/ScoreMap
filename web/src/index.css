@@ -893,6 +893,50 @@ body {
   }
 }
 
+/* A score card coming in as its game arrives on the board (or is shown again), or going out as it
+   leaves (see globe/cardComings.ts): it drops in from a little above as it fades in, landing on its
+   trail, which fades in with it, and lifts up and away as it fades out. On the marker MapLibre moves, by
+   its own translate and opacity, so neither clashes with the marker's transform nor the card's own
+   animations; the duration and delay are set from cardComingDuration. */
+.score-card-coming {
+  animation-name: score-card-coming;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.score-card-going {
+  animation-name: score-card-going;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
+@keyframes score-card-coming {
+  from {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}
+
+@keyframes score-card-going {
+  to {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}
+
+@keyframes score-card-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes score-card-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
 /* Rings drawn over a small pin or a cluster (see globe/pinPulse.ts); --pulse-color is set per ring. */
 .pin-pulse {
   box-sizing: border-box;
@@ -1024,6 +1068,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .score-card {
     transition: none;
+  }
+
+  /* A card coming in or going out fades in place, without dropping in or lifting away. */
+  .score-card-coming {
+    animation-name: score-card-fade-in;
+  }
+
+  .score-card-going {
+    animation-name: score-card-fade-out;
   }
 
   .score-card__flames::before,
@@ -2008,10 +2061,6 @@ body {
   color: var(--palette-text-primary);
 }
 
-.feedback[hidden] {
-  display: none;
-}
-
 /* A round icon button, the size of the rail's. */
 .feedback__button {
   display: flex;
@@ -2149,7 +2198,7 @@ body {
 /* On wide screens the game panel narrows, on both sides so it stays centered, to leave the corner to
    the Feedback button. */
 @media (min-width: 641px) {
-  .feedback:not([hidden]) ~ .game-panel {
+  .feedback ~ .game-panel {
     width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
   }
 }
@@ -2192,10 +2241,6 @@ body {
   box-shadow: var(--controls-shadow);
   pointer-events: none;
   user-select: none;
-}
-
-.demo-label[hidden] {
-  display: none;
 }
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps

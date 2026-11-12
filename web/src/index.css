@@ -273,10 +273,17 @@ body {
   transform: skewX(-10deg);
 }
 
-.game-panel__progress {
-  justify-self: start;
-  max-width: calc(100% - 2 * var(--spacing));
+/* The progress line at the left, and ESPN's logo at the right, under the scores. */
+.game-panel__progress-row {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+  min-width: 0;
   margin-top: var(--spacing);
+}
+
+.game-panel__progress {
+  min-width: 0;
 }
 
 /* The progress line, and in the band each of a tennis match's sets, in the game's color. */
@@ -375,31 +382,21 @@ body {
   color: var(--palette-text-link);
 }
 
-/* The link to the game's page on ESPN, ESPN's logo, in the panel's top right corner under the close button,
-   its foot level with the foot of the venue name's first line (1.3em tall), clear of the close button; the venue's
-   name keeps clear of it. */
+/* The link to the game's page on ESPN: ESPN's logo, right-aligned under the scores. */
 .game-panel__espn-link {
-  --espn-logo-height: calc(3 * var(--spacing));
-  position: absolute;
-  top: calc(3 * var(--spacing) + 1.3em - var(--espn-logo-height));
-  right: calc(4 * var(--spacing));
-  z-index: 3;
-  display: block;
+  flex-shrink: 0;
+  margin-left: auto;
   line-height: 0;
 }
 
 .game-panel__espn-link img {
   display: block;
-  height: var(--espn-logo-height);
+  height: calc(3 * var(--spacing));
   filter: drop-shadow(0 1px 2px var(--palette-background-default));
 }
 
 .game-panel__espn-link:hover img {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
-}
-
-.game-panel--espn .game-panel__venue {
-  padding-right: calc(14 * var(--spacing));
 }
 
 .game-panel__unofficial {
@@ -552,7 +549,7 @@ body {
     padding-right: 0;
   }
 
-  .game-panel__progress,
+  .game-panel__progress-row,
   .game-panel__last-score {
     margin-top: calc(0.5 * var(--spacing));
   }
@@ -637,21 +634,6 @@ body {
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     text-align: right;
-  }
-
-  /* Its foot level with the foot of the league's line at the top of the score block (its overline text at
-     its normal line height, about 1.36em), which keeps clear of it. */
-  .game-panel__espn-link {
-    top: calc(2 * var(--spacing) + 1.36 * var(--typography-overline-font-size) - var(--espn-logo-height));
-    right: calc(2 * var(--spacing));
-  }
-
-  .game-panel--espn .game-panel__league {
-    padding-right: calc(14 * var(--spacing));
-  }
-
-  .game-panel--espn .game-panel__venue {
-    padding-right: calc(2 * var(--spacing));
   }
 
   .game-panel__watch > .game-panel__label {

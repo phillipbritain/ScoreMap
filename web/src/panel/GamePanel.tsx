@@ -34,8 +34,8 @@ interface PanelLink {
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
  * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
- * and the last score) and the venue and its watch links (if it lists any) over the venue's photo, with a link to the
- * game's ESPN page in the top right corner, under the close button; under it, a band for a
+ * with a link to the game's ESPN page beside it, and the last score) and the venue and its watch links (if it lists
+ * any) over the venue's photo; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
  * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
  * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
@@ -62,7 +62,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
   const colorStyle = { '--game-color': color, '--text-on-game-color': textOnColor } as CSSProperties
 
   return (
-    <aside ref={ref} className={game.espnUrl ? 'game-panel game-panel--espn' : 'game-panel'} style={colorStyle} aria-label="Game panel" onKeyDown={(event) => {
+    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" onKeyDown={(event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose()
@@ -80,9 +80,19 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
               ))}
             {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
             {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
-            {progress && (
-              <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
-                {progress}
+            {/* The progress line, and under the scores at the right the link to the game's page on ESPN, when ESPN lists one. */}
+            {(progress || game.espnUrl) && (
+              <div className="game-panel__progress-row">
+                {progress && (
+                  <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
+                    {progress}
+                  </div>
+                )}
+                {game.espnUrl && (
+                  <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
+                    <img src={espnLogoUrl} alt="The game on ESPN" />
+                  </a>
+                )}
               </div>
             )}
             <LastScore game={game} />
@@ -118,12 +128,6 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
       <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
         ×
       </button>
-      {/* The game's page on ESPN, in the top right corner under the close button, when ESPN lists one. */}
-      {game.espnUrl && (
-        <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
-          <img src={espnLogoUrl} alt="The game on ESPN" />
-        </a>
-      )}
     </aside>
   )
 }

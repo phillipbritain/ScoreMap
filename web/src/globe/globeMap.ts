@@ -1,6 +1,4 @@
 import {
-  LngLat,
-  LngLatBounds,
   Map as MapLibreMap,
   setWorkerUrl,
   type LayerSpecification,
@@ -19,6 +17,7 @@ import type { Theme } from '../theme/theme'
 import { animationTarget } from './animationTarget'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
+import { CameraMoves, type SelectionIntent } from './cameraMoves'
 import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
@@ -26,7 +25,7 @@ import { globeStyle } from './globeStyle'
 import { fadeNearHorizon, fadedOut } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { globeSettling, type GlobeSettling } from './globeSettling'
-import { clearCenter, liftClearOf, smallPinReach, type ScreenBox } from './panelClearance'
+import { smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { drawFlamesOnDemand } from './flames'
 import {
@@ -43,10 +42,8 @@ import { pulse } from './pinPulse'
 import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
-import type { Showing } from './cardLayout'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import {
-  centerLatitude,
   hasCard,
   cityNamesFrom,
   pinSize,
@@ -111,15 +108,6 @@ export interface GlobeMapOptions {
 export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready' | 'styleError' | 'constructionError'
 
 /**
- * How far past the card zoom a game picked from the Games list eases to at least: a hair, since an
- * ease can land a hair short of its zoom, where the game would still be a small pin.
- */
-const pickedGamePastCardZoom = 0.01
-
-/** Room left around a card cluster's games when zooming in to them. */
-const cardClusterZoomPadding = 120
-
-/**
  * MapLibre globe with a pin at each game's venue. Zoomed out, pins are small and nearby ones form
  * pin clusters; zoomed in, each pin near the center of the view becomes a score card, and cards with
  * no room form card clusters, while the pins farther out stay small and form pin clusters among
@@ -156,8 +144,7 @@ export class GlobeMap {
   /** The globe's two pin sets' sources, added once the style loads (see addPins). */
   private pins: PinSources | null = null
   private selectedGameId: string | null = null
-  /** A game picked from the Games list, to be centered when it's selected rather than just lifted clear of the panel. */
-  private centerNext: string | null = null
+  private readonly moves: CameraMoves
   /** The furthest in the globe zooms (see FittedZoom), which changes with setZoomLimits. */
   private maxZoom: number
   /** The zoom score cards show from (see FittedZoom), measured at the equator (see pinSize), which changes with setZoomLimits. */
@@ -233,6 +220,19 @@ export class GlobeMap {
         (gameId) => this.onSelect(gameId),
         this.settling,
       )
+      this.moves = new CameraMoves(map, {
+        game: (gameId) => this.shown.get(gameId),
+        cards: this.cards,
+        cardZoom: () => this.cardZoom,
+        pinOnPage: (game) => this.pinOnPage(game, map.project([game.venue.longitude, game.venue.latitude])),
+        onPick: (gameId) => this.onSelect(gameId),
+        onSelection: (gameId) => {
+          this.unsettle()
+          this.selectedGameId = gameId
+          this.cards.setSelected(gameId)
+          this.pins?.select(gameId)
+        },
+      })
       drawFlamesOnDemand(map)
 
       map.on('style.load', this.addPins)
@@ -303,82 +303,14 @@ export class GlobeMap {
     }
   }
 
-  /**
-   * Highlights the selected game's pin (a ring around its small pin, or its score card highlighted).
-   * The globe stays where it is, unless the game panel (its box on the page) would cover the pin:
-   * then it lifts just far enough to clear it (see liftClearOf). Selecting the game already
-   * selected does nothing, so later games arriving don't move the camera. A game not on the globe
-   * (its venue not placed) is selected without moving it, and stays so once placed. A game marked by
-   * centerOn is centered instead.
-   */
-  select(gameId: string | null, panel: ScreenBox | null = null): void {
-    if (gameId === this.selectedGameId) return
-    const center = gameId !== null && gameId === this.centerNext
-    this.centerNext = null
-    this.unsettle()
-    this.selectedGameId = gameId
-    this.cards.setSelected(gameId)
-    this.pins?.select(gameId)
-    const game = gameId === null ? undefined : this.shown.get(gameId)
-    if (!game) return
-    if (center) return this.center(game, panel)
-    const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
-    const { x, y } = this.map.project(venue)
-    const lift = liftClearOf(this.pinOnPage(game, { x, y }), panel)
-    if (lift <= 0) return
-    // The venue straight up from where it is: panning by the lift would land short on the curved globe.
-    const { width, height } = this.map.getContainer().getBoundingClientRect()
-    this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
+  /** Highlights the selected game and brings it clear of its rendered panel, according to its intent. */
+  select(gameId: string | null, panel: ScreenBox | null = null, intent?: SelectionIntent): void {
+    this.moves.select(gameId, panel, intent)
   }
 
-  /**
-   * Centers a game picked from the Games list in the part of the globe the game panel leaves clear (see
-   * clearCenter), zoomed in far enough for its score card to show: now if it's already selected, else
-   * as it's selected next.
-   */
-  centerOn(gameId: string, panel: ScreenBox | null): void {
-    if (gameId !== this.selectedGameId) {
-      this.centerNext = gameId
-      return
-    }
-    const game = this.shown.get(gameId)
-    if (game) this.center(game, panel)
-  }
-
-  /**
-   * Eases to the game at this zoom (measured at the equator, see zoomAtEquator), by default just past the card zoom or
-   * further in if it's there already, so the game has a score card. Where it still has no room for its card on arriving (in a card cluster or alone as its small pin), it zooms a level further in
-   * and again, as a card cluster does (see zoomToCardCluster), until the card shows or the globe can
-   * zoom no further in. A move by the viewer along the way, or another game picked, stops it.
-   */
-  private center(
-    game: PlacedGame,
-    panel: ScreenBox | null,
-    atEquator = Math.max(zoomAtEquator(this.camera()), this.cardZoom + pickedGamePastCardZoom),
-  ): void {
-    const globe = this.map.getContainer().getBoundingClientRect()
-    const { x, y } = clearCenter(globe, panel)
-    const middle = { x: globe.left + globe.width / 2, y: globe.top + globe.height / 2 }
-    const offset: [number, number] = [x - middle.x, y - middle.y]
-    const center = new LngLat(game.venue.longitude, game.venue.latitude)
-    const zoom = this.zoomPlacing(center, offset, atEquator)
-    this.map.easeTo({ center, offset, zoom, duration: 600 })
-    this.map.once('idle', () => {
-      const maxZoom = this.map.getMaxZoom()
-      const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01
-      if (this.destroyed || !arrived || zoom >= maxZoom || this.selectedGameId !== game.id) return
-      if (hasNoRoom(this.cards.shows(game.id))) this.center(game, panel, atEquator + 1)
-    })
-  }
-
-  /**
-   * MapLibre's zoom (no further in than it allows) for a zoom measured at the equator, with the globe
-   * turned so `lngLat` is `offset` pixels from the middle of the view, as easeTo turns it: the view's
-   * center is then off `lngLat`, and its latitude sets the zoom (see centerLatitude and zoomAt).
-   */
-  private zoomPlacing(lngLat: LngLat, [, below]: [number, number], atEquator: number): number {
-    const view = { height: this.map.getContainer().clientHeight, fov: this.map.getVerticalFieldOfView() }
-    return Math.min(this.map.getMaxZoom(), zoomAt(centerLatitude(lngLat.lat, below, atEquator, view), atEquator))
+  /** Picks a game from the Games list, opening its panel before centering it above the panel. */
+  pickGame(gameId: string, panel: ScreenBox | null): void {
+    this.moves.pickGame(gameId, panel)
   }
 
   /** MapLibre's zoom, and the latitude the view is centered at. */
@@ -456,6 +388,7 @@ export class GlobeMap {
    * the window is resized, see fittedZoomSettings, and as the map type changes).
    */
   setZoomLimits({ minZoom, maxZoom, cardZoom }: FittedZoom): void {
+    this.moves.cancel()
     this.map.setMinZoom(minZoom)
     this.maxZoom = maxZoom
     // Zoomed in past the new limit (on the satellite map, switching back to the plain map's): eases
@@ -514,11 +447,13 @@ export class GlobeMap {
 
   /** Zooms in one step, as MapLibre's own zoom button does (the rail's zoom in). */
   zoomIn(): void {
+    this.moves.cancel()
     this.map.zoomIn()
   }
 
   /** Zooms out one step, as MapLibre's own zoom button does (the rail's zoom out). */
   zoomOut(): void {
+    this.moves.cancel()
     this.map.zoomOut()
   }
 
@@ -527,6 +462,7 @@ export class GlobeMap {
    * selected.
    */
   flyTo(camera: Camera): void {
+    this.moves.cancel()
     this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
 
@@ -534,6 +470,7 @@ export class GlobeMap {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
+    this.moves?.destroy()
     this.map.off('error', this.initialStyleError)
     window.removeEventListener('pagehide', this.saveCamera)
     this.cards?.clear()
@@ -660,35 +597,7 @@ export class GlobeMap {
   private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
     const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
     const showing = typeof firstGameId === 'string' ? this.cards.shows(firstGameId) : undefined
-    if (showing?.as === 'inCardCluster') this.zoomToCardCluster(showing.cardCluster)
-  }
-
-  /**
-   * Zooms in until a card cluster splits: to fit its games, at least a level in, and again
-   * from there while some of them still have no room for their cards, in a card cluster or alone as
-   * their small pins, to fit those and the card clusters they're in (until the globe can zoom no
-   * further in). A move by the viewer along the way stops it.
-   */
-  private zoomToCardCluster(gameIds: readonly string[]): void {
-    const bounds = new LngLatBounds()
-    for (const gameId of gameIds) {
-      const venue = this.shown.get(gameId)?.venue
-      if (venue) bounds.extend([venue.longitude, venue.latitude])
-    }
-    if (bounds.isEmpty()) return
-    const fitted = this.map.cameraForBounds(bounds, { padding: cardClusterZoomPadding })?.zoom ?? 0
-    const maxZoom = this.map.getMaxZoom()
-    const zoom = Math.min(maxZoom, Math.max(this.map.getZoom() + 1, fitted))
-    const center = bounds.getCenter()
-    this.map.easeTo({ center, zoom })
-    this.map.once('idle', () => {
-      const arrived = Math.abs(this.map.getZoom() - zoom) < 0.01 && this.map.getCenter().distanceTo(center) < 1
-      if (!arrived || zoom >= maxZoom) return
-      const noRoom = gameIds.filter((id) => hasNoRoom(this.cards.shows(id)))
-      const clusters = this.cards.cardClusters().filter((cluster) => cluster.some((id) => noRoom.includes(id)))
-      const still = [...new Set([...noRoom, ...clusters.flat()])]
-      if (still.length > 0) this.zoomToCardCluster(still)
-    })
+    if (showing?.as === 'inCardCluster') this.moves.zoomToCardCluster(showing.cardCluster)
   }
 
   /**
@@ -760,9 +669,4 @@ const noColors: PickedColors = { sportColors: {}, leagueColors: {} }
 function gameLayersIn(theme: Theme, selectedGameId: string | null, size: PinSize): LayerSpecification[] {
   const { belowNames, belowGameNames, onTop } = gameLayers(theme, selectedGameId, size)
   return [...belowNames, ...belowGameNames, ...onTop]
-}
-
-/** Whether a game has no room for its card: it's counted in a card cluster, or shows as its small pin. */
-function hasNoRoom(showing: Showing): boolean {
-  return showing.as === 'inCardCluster' || showing.as === 'smallPin'
 }

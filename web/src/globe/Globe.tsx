@@ -60,8 +60,8 @@ export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
-  /** Centers a game picked from the Games list clear of the game panel (see GlobeMap.centerOn). */
-  centerOn: (gameId: string) => void
+  /** Opens a game picked from the Games list and centers it clear of its panel (see GlobeMap.pickGame). */
+  pickGame: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
   shownScoreCards: () => ShownScoreCard[]
 }
@@ -115,7 +115,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, games,
       zoomIn: () => globe.current?.zoomIn(),
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
-      centerOn: (gameId) => globe.current?.centerOn(gameId, panel.current?.getBoundingClientRect() ?? null),
+      pickGame: (gameId) => globe.current?.pickGame(gameId, panel.current?.getBoundingClientRect() ?? null),
       shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
     [panel],

@@ -539,8 +539,7 @@ describe('selection', () => {
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centerOn('A', panel)
-    globe.select('A', panel)
+    globe.select('A', panel, 'center')
     await moved
 
     const page = container.getBoundingClientRect()
@@ -560,8 +559,7 @@ describe('selection', () => {
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centerOn('A', panel)
-    globe.select('A', panel)
+    globe.select('A', panel, 'center')
     await moved
 
     // The view's center is south of the game, where the globe is the size of the card zoom.
@@ -579,8 +577,7 @@ describe('selection', () => {
     await cardShown('A')
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centerOn('A', null)
-    globe.select('A', null)
+    globe.select('A', null, 'center')
     await moved
 
     expect(map.getCenter().lng).toBeCloseTo(3)
@@ -597,7 +594,7 @@ describe('selection', () => {
     expect(map.getCenter().lng).toBeCloseTo(0)
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
-    globe.centerOn('A', null)
+    globe.select('A', null, 'center')
     await moved
 
     expect(map.getCenter().lng).toBeCloseTo(30)
@@ -613,6 +610,109 @@ describe('selection', () => {
     await userEvent.click(map.getCanvas(), { position: { x: 400, y: 300 } })
 
     expect(onSelect).toHaveBeenCalledWith('A')
+  })
+})
+
+describe('camera movement lifetime', () => {
+  const crowdedGames = () => [
+    game('NE', { longitude: 0.5, latitude: 0.5 }),
+    game('SW', { longitude: -0.5, latitude: -0.5 }),
+    ...Array.from({ length: 40 }, (_, i) => game(`V${i}`)),
+  ]
+
+  it('opens a list pick before centering it with the rendered panel, and centers a repeated pick', async () => {
+    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const a = game('A', { longitude: 30, latitude: 10 })
+    globe.show([a])
+    await pinsDrawn(map, smallPinLayer, a)
+
+    globe.pickGame('A', null)
+    expect(onSelect).toHaveBeenCalledWith('A')
+    expect(map.isMoving()).toBe(false)
+    // The same notification as Globe's effect, after React has opened the panel.
+    const panel = panelAcrossBottom()
+    globe.select('A', panel)
+    await new Promise((resolve) => map.once('idle', resolve))
+    const page = container.getBoundingClientRect()
+    expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
+    map.jumpTo({ center: [0, 0] })
+
+    globe.pickGame('A', panel)
+    await new Promise((resolve) => map.once('idle', resolve))
+    expect(onSelect).toHaveBeenCalledTimes(2)
+    expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
+  })
+
+  it('retires the earlier move when another game is picked during an ease', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+    const b = game('B', { longitude: -20 })
+    globe.show([...crowdedGames(), b])
+    await pinsDrawn(map, pinClusterLayer, game('V0'))
+
+    globe.select('V0', null, 'center')
+    expect(map.isMoving()).toBe(true)
+    globe.select('B', null, 'center')
+    await new Promise((resolve) => map.once('idle', resolve))
+
+    expect(map.getCenter().lng).toBeCloseTo(-20)
+    expect(map.getCenter().lat).toBeCloseTo(0)
+    expect(map.getZoom()).toBeCloseTo(cardZoom + 0.01)
+    await cardShown('B')
+  })
+
+  it('leaves the viewer where they move during a selected-game ease, even at its intended zoom', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 }, smallGlobe)
+    globe.show(crowdedGames())
+    await pinsDrawn(map, pinClusterLayer, game('V0'))
+
+    globe.select('V0', null, 'center')
+    expect(map.isMoving()).toBe(true)
+    // A pan away at the same zoom must retire the retry, not recenter the selected game on idle.
+    map.jumpTo({ center: [20, 0], zoom: cardZoom + 0.01 })
+    await new Promise((resolve) => map.once('idle', resolve))
+
+    expect(map.getCenter().lng).toBeCloseTo(20)
+    expect(map.getZoom()).toBeCloseTo(cardZoom + 0.01)
+  })
+
+  it('retires a pending retry when the zoom limit changes during the move', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 }, smallGlobe)
+    globe.show(crowdedGames())
+    await pinsDrawn(map, pinClusterLayer, game('V0'))
+    const starts = vi.fn()
+    map.on('movestart', starts)
+
+    globe.select('V0', null, 'center')
+    expect(map.isMoving()).toBe(true)
+    globe.setZoomLimits({ ...testZoom, maxZoom: cardZoom + 0.5 })
+    await new Promise((resolve) => map.once('idle', resolve))
+
+    expect(map.getMaxZoom()).toBe(cardZoom + 0.5)
+    expect(map.getZoom()).toBeCloseTo(cardZoom + 0.01)
+    expect(starts).toHaveBeenCalledTimes(1)
+  })
+
+  it('disposes a card-cluster retry when the globe is destroyed mid-move', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: cardZoom }, smallGlobe)
+    globe.show(crowdedGames())
+    const cluster = await cardClusterDrawn(map)
+    let starts = 0
+    const destroyed = new Promise<void>((resolve) => {
+      map.on('movestart', () => {
+        starts++
+        if (starts === 2) queueMicrotask(() => {
+          globe.destroy()
+          resolve()
+        })
+      })
+    })
+
+    await userEvent.click(map.getCanvas(), { position: cluster })
+    await destroyed
+    // A late idle must not resume the disposed move against a removed map.
+    expect(() => map.fire('idle')).not.toThrow()
+    expect(starts).toBe(2)
+    expect(container.querySelector('canvas')).toBeNull()
   })
 })
 

@@ -23,6 +23,7 @@ import { finishedTour } from './finishedTour.ts'
 import { panArgs } from './panArgs.ts'
 import { pageCheck, type PageCheck } from './pageCheck.ts'
 import { panGlobe } from './panGlobe.ts'
+import { resetUrls } from './resetUrls.ts'
 
 const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | score | finish | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
@@ -37,9 +38,9 @@ function main([command, ...args]: string[]): void {
   const panRequest = command === 'pan' ? panArgs(args) : null
   if (command === 'reset' && (args.length === 1 || (args.length === 2 && args[1] === '--toured'))) {
     // The app writes its saved camera back as it leaves, so storage is cleared from a page that isn't the app.
-    const url = args[0].replace(/\/$/, '')
+    const { clear, open: url } = resetUrls(args[0])
     const toured = args.length === 2
-    browser(['open', `${url}/favicon.svg`])
+    browser(['open', clear])
     evaluate('localStorage.clear()')
     if (toured) evaluate(`localStorage.setItem(${JSON.stringify(finishedTour.key)}, ${JSON.stringify(finishedTour.value)})`)
     browser(['open', url])

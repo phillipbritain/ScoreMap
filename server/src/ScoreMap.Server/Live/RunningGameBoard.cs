@@ -5,6 +5,7 @@ using ScoreMap.Server.Hubs;
 using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Venues;
 using ScoreMap.Server.WatchLinks;
+using ScenarioListing = ScoreMap.Server.Scenarios.ScenarioEndpoints.ScenarioListing;
 
 namespace ScoreMap.Server.Live;
 
@@ -71,8 +72,8 @@ public sealed partial class RunningGameBoard : BackgroundService
     public bool IsWatching(string connectionId) => _connections.IsConnected(connectionId);
     public void Leave(string connectionId) => _connections.Disconnected(connectionId);
 
-    /// <summary>Starts a scenario (or real games) afresh, canceling the old generation first.</summary>
-    public async Task StartAfreshAsync(string name, Speed? speed, CancellationToken cancellationToken)
+    /// <summary>Starts afresh, canceling the old generation first, then publishes and returns the scenario listing under the gate.</summary>
+    public async Task<ScenarioListing> StartAfreshAsync(string name, Speed? speed, CancellationToken cancellationToken)
     {
         var switcher = _switcher ?? throw new InvalidOperationException("This board has no scenario controls");
         // Reading/validating a scenario file must not delay delivery or retire a working source on failure.
@@ -82,12 +83,13 @@ public sealed partial class RunningGameBoard : BackgroundService
         {
             RetireGeneration();
             SetPolling(switcher.SwitchTo(name, scenario, speed));
+            return await PublishScenarioAsync(cancellationToken);
         }
         finally { _lock.Release(); }
     }
 
-    /// <summary>Continues the scenario at a new speed, retiring work on its old clock first.</summary>
-    public async Task ChangeSpeedAsync(Speed speed, CancellationToken cancellationToken)
+    /// <summary>Continues at a new speed, retiring old-clock work first, then publishes and returns the scenario listing under the gate.</summary>
+    public async Task<ScenarioListing> ChangeSpeedAsync(Speed speed, CancellationToken cancellationToken)
     {
         var switcher = _switcher ?? throw new InvalidOperationException("This board has no scenario controls");
         await _lock.WaitAsync(cancellationToken);
@@ -95,8 +97,31 @@ public sealed partial class RunningGameBoard : BackgroundService
         {
             RetireGeneration();
             SetPolling(switcher.ChangeSpeed(speed));
+            return await PublishScenarioAsync(cancellationToken);
         }
         finally { _lock.Release(); }
+    }
+
+    /// <summary>A coherent listing of the scenario controls, serialized with changes to them.</summary>
+    public async Task<ScenarioListing> ScenarioListingAsync(CancellationToken cancellationToken)
+    {
+        await _lock.WaitAsync(cancellationToken);
+        try { return ListScenario(); }
+        finally { _lock.Release(); }
+    }
+
+    private ScenarioListing ListScenario() => _switcher is { } switcher
+        ? new(switcher.Running, switcher.Scenarios, switcher.Speed.Name, Speed.All, switcher.CanControlPlay,
+            switcher.Clock, StartsSlowly: switcher.SlowStart > TimeSpan.Zero)
+        : new(ScenarioSwitcher.RealGames, [], Speed.Normal.Name, [], CanControlPlay: false, ClockAnchor.RealTime(_clock));
+
+    // Called under the board's gate: publication completes before the next control change takes effect,
+    // just as snapshots and game changes are ordered. No external fetch is awaited here.
+    private async Task<ScenarioListing> PublishScenarioAsync(CancellationToken cancellationToken)
+    {
+        var listing = ListScenario();
+        await _hub.Clients.Group(_connections.Group).SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
+        return listing;
     }
 
     private void SetPolling(PollingOptions polling) =>

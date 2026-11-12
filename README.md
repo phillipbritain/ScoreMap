@@ -27,6 +27,8 @@ aspire certs trust
 
 The install script puts `aspire.exe` on the PATH, which every shell finds. `dotnet tool install -g Aspire.Cli` works too, but installs it as `aspire.cmd`, which Git Bash can't run as `aspire`: there, run it as `aspire.cmd`.
 
+For the tests and type checks, run `npm ci` in `web/` once per checkout; a worktree Orca creates does it already, through `orca.yaml`.
+
 Then, from the repo root:
 
 ```sh

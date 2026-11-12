@@ -55,7 +55,7 @@ function Selection({ games }: { games: Game[] }) {
     createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
     createElement(GameNavigation, { games, onSelect: selectGame }),
     selectedGame && createElement(GamePanel, { ref: panel, game: selectedGame,
-      color: '#d4ac63', textOnColor: '#000e28', showPhoto: true, onClose: closeGame }),
+      color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, onClose: closeGame }),
   )
 }
 async function show(games: Game[]) {

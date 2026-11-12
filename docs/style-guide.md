@@ -171,7 +171,7 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
-| `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
+| `components.Rail.hint` | The hint beside "All leagues" and "Venue photos" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
 | `components.Rail.chip.badge` | The badge counting leagues, after a sport's name and on the "All leagues" chip | `primary.dark` |
 | `components.Rail.on.fill`, `.outline`, `.text` | A league chip that's on, lit as a Live score card is: its fill, with `Rail.on.tint` of its outline's color mixed in (0.14), its outline and glow (`Rail.on.glow.radius` and `.opacity`, 8 and 0.35), and its text. The chosen "Top Events" or "My leagues" is underlined in the outline's color, and the welcome tour's Next and Done buttons are lit the same way | `primary.dark`, `secondary.main`, `secondary.light` |

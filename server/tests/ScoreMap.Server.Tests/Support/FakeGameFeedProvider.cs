@@ -39,6 +39,21 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     public void HoldAllScoreboards() { lock (_scoreboards) _holdAll = true; }
     public void HoldTopEvents() { lock (_scoreboards) _topEventsGate = NewSignal(); }
     public void ReleaseTopEvents() { lock (_scoreboards) _topEventsGate?.TrySetResult(); }
+    /// <summary>Lets one fetch in progress under <see cref="HoldTopEvents"/> or <see cref="HoldAllScoreboards"/> finish.</summary>
+    public void ReleaseOneHeldFetch()
+    {
+        lock (_scoreboards)
+        {
+            if (_topEventsFetches > 0 && _topEventsGate is { Task.IsCompleted: false } topEvents)
+            {
+                topEvents.TrySetResult();
+                return;
+            }
+            var (leagueKey, gate) = _gates.First();
+            _gates.Remove(leagueKey);
+            gate.TrySetResult();
+        }
+    }
     public int TotalFetches { get { lock (_scoreboards) return _fetches.Values.Sum() + _topEventsFetches; } }
     public Task WaitForTotalFetchesAsync(int count) => WaitForAsync(() => TotalFetches >= count);
 

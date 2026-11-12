@@ -33,6 +33,13 @@ public sealed partial class RunningGameBoard
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var stopped = stoppingToken.Register(() => _lifetime.Cancel());
+        try { await PollAsync(stoppingToken); }
+        // Stopping is not a fault, even when the board is stopped before its host.
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+    }
+
+    private async Task PollAsync(CancellationToken stoppingToken)
+    {
         while (!stoppingToken.IsCancellationRequested)
         {
             await _connections.WhenAnyConnectedAsync(stoppingToken);

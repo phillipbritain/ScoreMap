@@ -25,7 +25,6 @@ public sealed record Game(
     bool ClutchTime,
     bool Hot,
     GameVenue Venue,
-    IReadOnlyList<GameBroadcaster> Broadcasters,
     IReadOnlyList<StreamLink> StreamLinks)
 {
     /// <summary>
@@ -48,6 +47,9 @@ public sealed record Game(
 
     /// <summary>Tennis: the score set by set, with tiebreaks; null in other sports and before play.</summary>
     public GameScoreline? Scoreline { get; init; }
+
+    /// <summary>The game's page on ESPN's website, linked from the game panel; null when ESPN lists none.</summary>
+    public string? EspnUrl { get; init; }
 }
 
 /// <summary>
@@ -170,12 +172,6 @@ public sealed record VenuePhoto(string Url, PhotoCredit? Credit);
 /// own page, where its full license terms are.
 /// </summary>
 public sealed record PhotoCredit(string Author, string License, string? LicenseUrl, string SourceUrl);
-
-/// <summary>
-/// A channel or streaming service showing a game, the country it broadcasts to when known,
-/// and its official watch link when the owner has listed one.
-/// </summary>
-public sealed record GameBroadcaster(string Name, string? Country, string? WatchUrl);
 
 /// <summary>
 /// Where play stands in a Live game, each part null (or false) where it doesn't apply: the last play

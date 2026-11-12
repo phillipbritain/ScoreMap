@@ -119,7 +119,6 @@ public class ClockLineTests
         DisplayClock: "0'",
         Period: innings,
         Venue: new ProviderVenue("Wankhede Stadium", "Mumbai", null, "India"),
-        Broadcasters: [],
         Phase: phase);
 
     private static ProviderTeam CricketTeam(string abbreviation, string? score)
@@ -150,7 +149,6 @@ public class ClockLineTests
             DisplayClock: clock,
             Period: period,
             Venue: new ProviderVenue("Stadium", "City", null, "Country"),
-            Broadcasters: [],
             Phase: phase));
 
         await using var client = await server.ConnectClientAsync();

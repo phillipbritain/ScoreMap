@@ -35,7 +35,6 @@ function game(id: string): Game {
     clutchTime: false,
     hot: false,
     venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
-    broadcasters: [],
     streamLinks: [],
     note: null,
     situation: null,
@@ -43,6 +42,7 @@ function game(id: string): Game {
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 
@@ -251,14 +251,18 @@ it("shows a field's whole leaderboard with Show all, and the next game selected 
   expect(panelText()).not.toContain('Rider L')
 })
 
-it('shows a Watch line in the panel only for a game that lists somewhere to watch', async () => {
-  const listed: Game = { ...game('W'), broadcasters: [{ name: 'ESPN', country: null, watchUrl: 'https://www.espn.com/watch/' }] }
-  await show([game('N'), listed])
+it("links the panel to a game's StreamEast stream and ESPN page, and has no links for a game with neither", async () => {
+  const linked: Game = {
+    ...game('W'),
+    streamLinks: [{ site: 'StreamEast', url: 'https://streameast.test/nfl/game/1' }],
+    espnUrl: 'https://www.espn.com/nfl/game/_/gameId/1',
+  }
+  const links = () => [...document.querySelectorAll<HTMLAnchorElement>('.game-panel__watch a')].map((a) => a.href)
+  await show([game('N'), linked])
 
   await open('N')
-  expect(panelText()).not.toContain('Watch')
+  expect(links()).toEqual([])
 
   await open('W')
-  expect(panelText()).toContain('Watch')
-  expect(panelText()).toContain('ESPN')
+  expect(links()).toEqual(['https://streameast.test/nfl/game/1', 'https://www.espn.com/nfl/game/_/gameId/1'])
 })

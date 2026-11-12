@@ -70,7 +70,6 @@ public class ClutchTimeTests
             DisplayClock: clock,
             Period: period,
             Venue: new ProviderVenue("Arena", "City", null, "Country"),
-            Broadcasters: [],
             Phase: Playing));
 
         await using var client = await server.ConnectClientAsync();

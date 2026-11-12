@@ -94,7 +94,6 @@ public sealed record ScenarioGame(
         DisplayClock: Clock,
         Period: Period,
         Venue: Venue,
-        Broadcasters: [],
         Phase: Phase)
     {
         Sets = Sets,

@@ -28,7 +28,7 @@ namespace ScoreMap.Server.Tests.Support;
 /// client receives.
 /// </summary>
 public sealed class ScoreMapServer(
-    string? savedVenueLocationsPath = null, bool useShippedWatchLinks = false, string? savedVenuePhotosPath = null)
+    string? savedVenueLocationsPath = null, string? savedVenuePhotosPath = null)
     : WebApplicationFactory<Program>
 {
     private readonly bool _ownsSavedVenueLocations = savedVenueLocationsPath is null;
@@ -97,23 +97,6 @@ public sealed class ScoreMapServer(
     /// Unset, the server has no browser app (as in development, where Vite serves it).
     /// </summary>
     public string? BrowserAppFolder { get; init; }
-
-    /// <summary>
-    /// The owner's watch links file: a fresh temp file, written by <see cref="AddWatchLink"/>,
-    /// unless the server was started with the watch links file that ships with ScoreMap.
-    /// </summary>
-    public string WatchLinksPath { get; } =
-        Path.Combine(Path.GetTempPath(), $"scoremap-watch-links-{Guid.NewGuid():N}.json");
-
-    private readonly List<object> _watchLinks = [];
-
-    /// <summary>Adds an entry to the watch links file, as the owner would by editing it.</summary>
-    public void AddWatchLink(string url, params string[] names)
-    {
-        _watchLinks.Add(new { names, url });
-        File.WriteAllText(WatchLinksPath, JsonSerializer.Serialize(_watchLinks,
-            new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true }));
-    }
 
     /// <summary>Made-up sites the unofficial stream finder reads; see <see cref="AddStreamSite"/>.</summary>
     public FakeStreamSites StreamSites { get; } = new();
@@ -216,8 +199,6 @@ public sealed class ScoreMapServer(
         builder.UseSetting("FORWARDEDHEADERS_ENABLED", "true");
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.UseSetting("Venues:LeagueLocationsPath", LeagueVenueLocationsPath);
-        if (!useShippedWatchLinks)
-            builder.UseSetting("WatchLinks:Path", WatchLinksPath);
         if (!UseShippedScenarios)
         {
             builder.UseSetting("Scenario", Scenario ?? "real");
@@ -282,7 +263,6 @@ public sealed class ScoreMapServer(
         File.Delete(VenueCorrectionsPath);
         File.Delete(ScenarioVenueLocationsPath);
         File.Delete(LeagueVenueLocationsPath);
-        File.Delete(WatchLinksPath);
         if (Directory.Exists(ScenariosFolder))
             Directory.Delete(ScenariosFolder, recursive: true);
     }

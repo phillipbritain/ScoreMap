@@ -24,8 +24,7 @@ public class RacingTests
         Status: status,
         DisplayClock: null,
         Period: lap,
-        Venue: Talladega,
-        Broadcasters: [])
+        Venue: Talladega)
     {
         Note = "NASCAR Cup Series at Talladega",
     };

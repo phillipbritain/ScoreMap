@@ -142,7 +142,6 @@ const bills: PlacedGame = {
   clutchTime: false,
   hot: false,
   venue: { name: null, city: null, region: null, country: null, latitude: 20, longitude: -35, timeZone: null, photo: null, court: null },
-  broadcasters: [],
   streamLinks: [],
   note: null,
   situation: null,
@@ -150,6 +149,7 @@ const bills: PlacedGame = {
   keyEvents: [],
   topEvent: false,
   scoreline: null,
+  espnUrl: null,
 }
 
 it("points at a card on the globe, named as the card's own button names its game, and opens it", async () => {

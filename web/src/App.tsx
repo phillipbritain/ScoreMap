@@ -206,10 +206,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           inert={touring}
           games={visible}
           gamesReady={loadingScreenGone}
-          onSelectGame={(gameId) => {
-            globe.current?.centerOn(gameId)
-            selectGame(gameId)
-          }}
+          onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail

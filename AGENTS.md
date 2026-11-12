@@ -37,7 +37,7 @@ Single-context: one root `GLOSSARY.md` plus `docs/adr/`. See `docs/agents/domain
 
 ### Style guide
 
-Making or changing the theme, or any color, font, size or status look: see `docs/style-guide.md`.
+Making or changing the theme, or any color, font, size or status look: read the contents at the top of `docs/style-guide.md`, then only the sections you need.
 
 ### Card layout
 

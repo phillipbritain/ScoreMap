@@ -22,6 +22,8 @@ export interface ViewerSettings {
   leagueColors: Readonly<Record<string, string>>
   /** What the globe is drawn as (see MapType): the plain map unless the viewer switched to satellite. */
   mapType: MapType
+  /** Whether the game panel shows the venue's photo behind its details: on unless the viewer switched it off in Display Settings. */
+  venuePhotos: boolean
 }
 
 /**
@@ -36,13 +38,14 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on, Top Events off, no colors picked and the plain map. */
+/** Every league on, Top Events off, no colors picked, the plain map and venue photos on. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
   sportColors: {},
   leagueColors: {},
   mapType: 'plain',
+  venuePhotos: true,
 }
 
 /** Each map type's name, as Map Type on the rail lists it. */

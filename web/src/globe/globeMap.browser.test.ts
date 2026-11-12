@@ -119,6 +119,7 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 

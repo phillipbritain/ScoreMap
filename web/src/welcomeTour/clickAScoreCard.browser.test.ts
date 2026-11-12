@@ -150,6 +150,7 @@ const bills: PlacedGame = {
   keyEvents: [],
   topEvent: false,
   scoreline: null,
+  espnUrl: null,
 }
 
 it("points at a card on the globe, named as the card's own button names its game, and opens it", async () => {

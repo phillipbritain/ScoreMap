@@ -43,6 +43,7 @@ function game(id: string): Game {
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 

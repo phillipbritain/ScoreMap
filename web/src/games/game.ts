@@ -221,6 +221,8 @@ export interface Game {
   topEvent: boolean
   /** Tennis: the score set by set; null in other sports and before play. */
   scoreline: GameScoreline | null
+  /** The game's page on ESPN's website, linked from the game panel; null when ESPN lists none. */
+  espnUrl: string | null
 }
 
 /**

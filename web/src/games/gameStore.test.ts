@@ -39,6 +39,7 @@ function game(id: string, homeScore: string | null = null): Game {
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 

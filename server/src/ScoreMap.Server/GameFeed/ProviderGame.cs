@@ -44,6 +44,9 @@ public sealed record ProviderGame(
 
     /// <summary>Tennis: why a Final match ended before its sets were played out, and who advanced; null when it was played out.</summary>
     public ProviderEarlyEnding? EarlyEnding { get; init; }
+
+    /// <summary>The game's page on ESPN's website (its summary or gamecast); null when ESPN lists none.</summary>
+    public string? EspnUrl { get; init; }
 }
 
 /// <summary>

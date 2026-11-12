@@ -29,6 +29,7 @@ const arrowhead: Game = {
   keyEvents: [],
   topEvent: false,
   scoreline: null,
+  espnUrl: null,
 }
 const sides = arrowhead.contest as GameSides
 

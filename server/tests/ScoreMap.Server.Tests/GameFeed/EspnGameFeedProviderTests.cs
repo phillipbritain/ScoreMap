@@ -486,6 +486,26 @@ public class EspnGameFeedProviderTests
         Assert.Equal("NLDS - Game 2", Assert.Single(games, g => g.Id == "401908014").Note);
     }
 
+    [Theory]
+    [InlineData("nfl-scheduled-odds.json", Nfl, "https://www.espn.com/nfl/game/_/gameId/401872995/seahawks-broncos")]
+    [InlineData("mlb-live.json", "baseball/mlb", "https://www.espn.com/mlb/game/_/gameId/401908032")]
+    [InlineData("nba-live.json", "basketball/nba", "https://www.espn.com/nba/game?gameId=401898405")]
+    [InlineData("cricket-live.json", "cricket/8656", "https://www.espn.in/cricket/series/8656/game/1551869/knights-vs-easterns-pool-a-csa-pro20-cup-2026-27")]
+    public async Task Game_carries_its_ESPN_game_page(string fixture, string leagueKey, string page)
+    {
+        var games = await FetchFixtureAsync(fixture, leagueKey);
+
+        Assert.Equal(page, games[0].EspnUrl);
+    }
+
+    [Fact]
+    public async Task Game_with_no_ESPN_page_listed_has_none()
+    {
+        var games = await FetchFixtureAsync("nfl.json", Nfl);
+
+        Assert.All(games, g => Assert.Null(g.EspnUrl));
+    }
+
     [Fact]
     public async Task Game_without_notes_has_no_note()
     {

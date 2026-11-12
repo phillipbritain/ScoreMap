@@ -48,6 +48,9 @@ public sealed record Game(
 
     /// <summary>Tennis: the score set by set, with tiebreaks; null in other sports and before play.</summary>
     public GameScoreline? Scoreline { get; init; }
+
+    /// <summary>The game's page on ESPN's website, linked from the game panel; null when ESPN lists none.</summary>
+    public string? EspnUrl { get; init; }
 }
 
 /// <summary>

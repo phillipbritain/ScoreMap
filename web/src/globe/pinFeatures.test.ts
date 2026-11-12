@@ -42,6 +42,7 @@ const arrowhead: PlacedGame = {
   keyEvents: [],
   topEvent: false,
   scoreline: null,
+  espnUrl: null,
 }
 
 describe('pinFeatures', () => {

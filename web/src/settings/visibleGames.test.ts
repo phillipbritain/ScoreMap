@@ -30,6 +30,7 @@ function game(id: string, league: string, sport: string, status: GameStatus = 'L
     keyEvents: [],
     topEvent,
     scoreline: null,
+    espnUrl: null,
   }
 }
 

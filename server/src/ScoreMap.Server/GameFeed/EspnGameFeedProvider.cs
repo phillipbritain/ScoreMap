@@ -59,50 +59,68 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         // Today's scoreboard comes first, so a game listed on more than one day is reported as today has it.
         foreach (var e in scoreboards.SelectMany(s => s?.Events ?? []).DistinctBy(e => e.Id))
         {
-            if (league.StartsWith("tennis/", StringComparison.Ordinal))
-            {
-                games.AddRange(ToMatches(e, leagueKey));
-                continue;
-            }
-            var golf = league.StartsWith("golf/", StringComparison.Ordinal);
-            if (golf || league.StartsWith("racing/", StringComparison.Ordinal))
-            {
-                if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is not { } fieldGame)
-                    continue;
-                if (league == IndyCar)
-                {
-                    // ESPN has no IndyCar venue, on the scoreboard or in the core API's event, so a race is at its
-                    // track in the track list, and one missing from it (logged there) is left out, having no pin.
-                    if (indyCarTracks?.Find(fieldGame.Note) is { } track)
-                        games.Add(fieldGame with { Venue = track });
-                    continue;
-                }
-                games.Add(fieldGame.Venue is null
-                    ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
-                    : fieldGame);
-                continue;
-            }
-            if (league.StartsWith("mma/", StringComparison.Ordinal))
-            {
-                if (ToFightCard(e, leagueKey) is { } fightCard)
-                    games.Add(fightCard);
-                continue;
-            }
-            if (ToGame(e, leagueKey) is not { } game)
-                continue;
-            // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
-            if (game.Venue is null && game.Contest is ProviderSides sides && HomeTeamId(e) is { } teamId)
-            {
-                var homeCity = await HomeCityAsync(leagueKey, teamId, cancellationToken);
-                game = game with { Contest = sides with { Home = sides.Home with { HomeCity = homeCity } } };
-            }
-            games.Add(game);
+            var page = EspnPage(e);
+            games.AddRange((await EventGamesAsync(e, league, leagueKey, cancellationToken)).Select(game => game with { EspnUrl = page }));
         }
         ForgetLastScoresNoLongerReported(leagueKey, games);
         return games.Select(game => game.LastScore is not null ? game : game with
         {
             LastScore = _lastScores.GetValueOrDefault($"{game.LeagueKey}/{game.Id}").Play,
         }).ToList();
+    }
+
+    /// <summary>
+    /// The games an event on a scoreboard makes: a tennis tournament's matches, else one game, or none
+    /// when it can't be shown.
+    /// </summary>
+    private async Task<IReadOnlyList<ProviderGame>> EventGamesAsync(Event e, string league, string leagueKey, CancellationToken cancellationToken)
+    {
+        if (league.StartsWith("tennis/", StringComparison.Ordinal))
+            return ToMatches(e, leagueKey).ToList();
+        var golf = league.StartsWith("golf/", StringComparison.Ordinal);
+        if (golf || league.StartsWith("racing/", StringComparison.Ordinal))
+        {
+            if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is not { } fieldGame)
+                return [];
+            if (league == IndyCar)
+            {
+                // ESPN has no IndyCar venue, on the scoreboard or in the core API's event, so a race is at its
+                // track in the track list, and one missing from it (logged there) is left out, having no pin.
+                return indyCarTracks?.Find(fieldGame.Note) is { } track ? [fieldGame with { Venue = track }] : [];
+            }
+            return [fieldGame.Venue is null
+                ? fieldGame with { Venue = await EventVenueAsync(league, fieldGame.Id, cancellationToken) }
+                : fieldGame];
+        }
+        if (league.StartsWith("mma/", StringComparison.Ordinal))
+            return ToFightCard(e, leagueKey) is { } fightCard ? [fightCard] : [];
+        if (ToGame(e, leagueKey) is not { } game)
+            return [];
+        // The pin falls back to the home team's city only when there's no venue, so only then is it worth asking.
+        if (game.Venue is null && game.Contest is ProviderSides sides && HomeTeamId(e) is { } teamId)
+        {
+            var homeCity = await HomeCityAsync(leagueKey, teamId, cancellationToken);
+            game = game with { Contest = sides with { Home = sides.Home with { HomeCity = homeCity } } };
+        }
+        return [game];
+    }
+
+    /// <summary>The kinds of ESPN page for an event the game panel links to, the most useful first.</summary>
+    private static readonly string[] EspnPageKinds = ["summary", "gamecast", "live", "boxscore"];
+
+    /// <summary>
+    /// The event's page on an ESPN website (espn.com, espn.in and the like): of its desktop links, its summary
+    /// (or gamecast, live or box score page, whichever it has first); null when it lists none, as for a tennis
+    /// match, or a NASCAR race whose only link is to buy tickets.
+    /// </summary>
+    private static string? EspnPage(Event e)
+    {
+        var pages = (e.Links ?? []).Where(link => link.Rel is { } rel && rel.Contains("desktop")
+            && Uri.TryCreate(link.Href, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
+            && uri.Host.Split('.').Contains("espn")).ToList();
+        return EspnPageKinds
+            .Select(kind => pages.FirstOrDefault(link => link.Rel!.Contains(kind))?.Href)
+            .FirstOrDefault(href => href is not null);
     }
 
     public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
@@ -905,7 +923,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record HeaderLeague(List<HeaderEvent>? Events);
     private sealed record HeaderEvent(string? Id, string? CompetitionId);
     private sealed record Event(string? Id, DateTimeOffset? Date, List<Competition>? Competitions, Status? Status,
-        string? Name, List<EventGrouping>? Groupings, Venue? Circuit);
+        string? Name, List<EventGrouping>? Groupings, Venue? Circuit, List<Link>? Links);
+    private sealed record Link(List<string>? Rel, string? Href);
     private sealed record Competition(string? Id, DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
         List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts,
         Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type, Format? Format);

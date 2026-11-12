@@ -212,6 +212,7 @@ public sealed partial class RunningGameBoard
                 KeyEvents = game.KeyEvents.Select(k => new KeyEvent(k.Kind, k.Team, k.Player, k.Clock)).ToList(),
                 TopEvent = _topEvents.Contains(game.Id),
                 Scoreline = Scoreline.For(game, league),
+                EspnUrl = game.EspnUrl,
             };
         }
 

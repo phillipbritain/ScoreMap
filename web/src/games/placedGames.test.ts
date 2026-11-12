@@ -40,6 +40,7 @@ function game(id: string, venue: Partial<GameVenue> = {}): Game {
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 

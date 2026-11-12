@@ -375,6 +375,11 @@ body {
   color: var(--palette-text-link);
 }
 
+/* The link to the game's page on ESPN, at the end of the league line, in the watch links' color. */
+.game-panel__espn-link {
+  color: var(--palette-text-link);
+}
+
 .game-panel__unofficial {
   color: var(--game-panel-unofficial);
   font-size: var(--typography-caption-font-size);

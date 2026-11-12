@@ -30,7 +30,7 @@ interface PanelLink {
 
 /**
  * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
+ * (see .game-panel in index.css). The strip is the score block (the league with a link to the game's ESPN page, the score, the progress line
  * and the last score) and the venue and its watch links (if it lists any) over the venue's photo; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
  * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
@@ -70,6 +70,15 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
           <div className="game-panel__score">
             <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
               {game.league}
+              {/* The game's own page on ESPN, when ESPN lists one. */}
+              {game.espnUrl && (
+                <>
+                  {' · '}
+                  <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
+                    ESPN
+                  </a>
+                </>
+              )}
             </div>
             {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
                 <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />

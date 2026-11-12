@@ -28,6 +28,7 @@ const arrowhead: Game = {
   keyEvents: [],
   topEvent: false,
   scoreline: null,
+  espnUrl: null,
 }
 
 describe('gameLabel', () => {

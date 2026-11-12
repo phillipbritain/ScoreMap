@@ -388,7 +388,7 @@ body {
 
 .game-panel__espn-link img {
   display: block;
-  height: calc(4 * var(--spacing));
+  height: calc(3 * var(--spacing));
   filter: drop-shadow(0 1px 2px var(--palette-background-default));
 }
 
@@ -397,7 +397,7 @@ body {
 }
 
 .game-panel--espn .game-panel__venue {
-  padding-right: calc(17 * var(--spacing));
+  padding-right: calc(14 * var(--spacing));
 }
 
 .game-panel__unofficial {
@@ -644,7 +644,7 @@ body {
   }
 
   .game-panel--espn .game-panel__league {
-    padding-right: calc(17 * var(--spacing));
+    padding-right: calc(14 * var(--spacing));
   }
 
   .game-panel--espn .game-panel__venue {

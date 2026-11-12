@@ -4,6 +4,22 @@ How ScoreMap's look is made, so a theme can be made or changed without reading t
 
 The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
+## Contents
+
+The guide is long: read this list, then only the sections the task needs (`grep -n '^## ' docs/style-guide.md` gives each one's line).
+
+- [What a theme is](#what-a-theme-is): the theme's JSON shape and parts, where it reaches (CSS custom properties, the globe, switching themes), and motion: score changes, cards coming and going, reduce motion.
+- [The theme's colors](#the-themes-colors): base colors and how their light-to-dark steps are worked out; the dark theme's colors.
+- [The palette](#the-palette): what each main color is for (`primary`, status colors, background, text), with the dark theme's values.
+- [Color jobs](#color-jobs): what a color job may name, and every part's color jobs: the globe, games on the globe, panels and controls.
+- [How a game's status shows](#how-a-games-status-shows): Live, upcoming and final by brightness and glow; hot games' flames, glass, tooltips and hover.
+- [Typography](#typography): the font family and each type style, and which text uses it.
+- [Spacing and shape](#spacing-and-shape): the spacing unit, corner radius and border widths; the cut corner and logo plates.
+- [Other sizes](#other-sizes): free sizes on the globe (pins, clusters, trails, halo) and on the page.
+- [Text on the globe](#text-on-the-globe): globe fonts from the map's font server, and which it has.
+- [What checking rejects](#what-checking-rejects): every way a theme fails its check.
+- [Making or changing a theme](#making-or-changing-a-theme): editing the built-in theme, trying it on a local run, adding a setting, and what stays in code.
+
 ## What a theme is
 
 A **theme** is the whole of how ScoreMap looks, the globe included: one JSON file, checked when it's loaded. ScoreMap has one, the dark theme, built into the app and resolved as it starts, so the first paint is themed with no wait on the network. Loading other themes, a theme setting and a theme picker are later work.

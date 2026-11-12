@@ -9,8 +9,8 @@ export type TopRailPopover = 'scenario'
 
 interface TopRailProps {
   /**
-   * The scenario controls, which the Scenario button opens in a popover; with none (hidden by
-   * Shift+S, or during the welcome tour) there's no Scenario button.
+   * The scenario controls, which the Scenario button opens in a popover; with none (on the deployed
+   * site, or during the welcome tour) there's no Scenario button.
    */
   scenarioControls?: ReactNode
 }
@@ -23,7 +23,7 @@ interface TopRailProps {
  */
 export function TopRail({ scenarioControls }: TopRailProps) {
   const [chosen, setOpen] = useState<TopRailPopover | null>(null)
-  // A popover closes if what it holds goes (Shift+S).
+  // A popover closes if what it holds goes (the welcome tour starting).
   const open = chosen === 'scenario' && !scenarioControls ? null : chosen
   const popover = useRef<HTMLDivElement>(null)
   const popoverEvent = (event: PopoverEvent<TopRailPopover>) => setOpen((current) => nextPopover(current, event))

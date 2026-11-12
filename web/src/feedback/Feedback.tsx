@@ -2,8 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { lengthCounter, lengthProblem, sendFeedback, type FeedbackContext } from './feedbackForm'
 
 interface FeedbackProps {
-  /** Hidden by Shift+S: hidden, not unmounted, so a half-written draft survives. */
-  hidden: boolean
   /** What the viewer is looking at as they send, for the issue's Context section. */
   context: () => FeedbackContext
 }
@@ -14,7 +12,7 @@ interface FeedbackProps {
  * thanks the viewer with a link to the issue and stays open until closed. Submitting too little or too
  * much text says so; if sending fails, the text stays and a short error shows.
  */
-export function Feedback({ hidden, context }: FeedbackProps) {
+export function Feedback({ context }: FeedbackProps) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
   // The honeypot, which only a bot fills in.
@@ -57,7 +55,7 @@ export function Feedback({ hidden, context }: FeedbackProps) {
   }
 
   return (
-    <div className="feedback" hidden={hidden}>
+    <div className="feedback">
       {open && (
         <div id="feedback-panel" className="feedback__panel" role="dialog" aria-label="Feedback">
           {issueUrl ? (

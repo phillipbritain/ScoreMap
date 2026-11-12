@@ -59,7 +59,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         // Today's scoreboard comes first, so a game listed on more than one day is reported as today has it.
         foreach (var e in scoreboards.SelectMany(s => s?.Events ?? []).DistinctBy(e => e.Id))
         {
-            var page = EspnPage(e);
+            var page = EspnUrl(e);
             games.AddRange((await EventGamesAsync(e, league, leagueKey, cancellationToken)).Select(game => game with { EspnUrl = page }));
         }
         ForgetLastScoresNoLongerReported(leagueKey, games);
@@ -105,7 +105,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         return [game];
     }
 
-    /// <summary>The kinds of ESPN page for an event the game panel links to, the most useful first.</summary>
+    /// <summary>The kinds of ESPN page for an event, as its links' <c>rel</c> names them, the fullest first.</summary>
     private static readonly string[] EspnPageKinds = ["summary", "gamecast", "live", "boxscore"];
 
     /// <summary>
@@ -113,7 +113,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// (or gamecast, live or box score page, whichever it has first); null when it lists none, as for a tennis
     /// match, or a NASCAR race whose only link is to buy tickets.
     /// </summary>
-    private static string? EspnPage(Event e)
+    private static string? EspnUrl(Event e)
     {
         var pages = (e.Links ?? []).Where(link => link.Rel is { } rel && rel.Contains("desktop")
             && Uri.TryCreate(link.Href, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps

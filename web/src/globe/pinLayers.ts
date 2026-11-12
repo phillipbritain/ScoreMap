@@ -10,45 +10,54 @@ import { flameImage } from './flames'
 import { fadedByHorizon } from './horizon'
 import { smallPinReach } from './panelClearance'
 import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
-import { clusterMaxZoom, type PinLayout } from './zoomLevels'
-
-export const pinSource = 'pins'
-export const pinClusterLayer = 'pin-clusters'
-export const smallPinLayer = 'pins'
+import { clusterMaxZoom } from './zoomLevels'
 
 /**
- * The source of games far from the center of the view at card zoom, which show as small pins rather
- * than score cards (see hasCard), clustered among themselves. GlobeMap keeps it up to date as the
- * globe turns.
+ * The source of every game shown, never clustered, for score cards to be read from (see
+ * ScoreCardMarkers.sync). It draws nothing itself: a game far from the center of the view shows as an
+ * outer pin instead.
+ */
+export const pinSource = 'pins'
+
+/**
+ * The one layer on the pin source, drawing nothing: it keeps the source's tiles loaded, for the score
+ * cards to be read from. MapLibre loads a source's tiles only while a layer showing it uses them.
+ */
+export const cardPinsLayerSpec: CircleLayerSpecification = {
+  id: 'card-pins',
+  type: 'circle',
+  source: pinSource,
+  paint: { 'circle-radius': 0, 'circle-opacity': 0, 'circle-stroke-width': 0 },
+}
+
+/**
+ * The source of games far from the center of the view, which show as small pins rather than score
+ * cards (see hasCard), clustered among themselves. GlobeMap keeps it up to date as the globe turns.
  */
 export const outerPinSource = 'outer-pins'
 export const outerPinClusterLayer = 'outer-pin-clusters'
 export const outerSmallPinLayer = 'outer-pins'
 
 /**
- * A set of small pins and pin clusters: the games' own while zoomed out, or the outer games' at card
- * zoom. Each has its own source and layers, drawn alike, and fades out near the horizon (see
- * fadeNearHorizon).
+ * A set of small pins and pin clusters: the outer games', or those of games with no room for a card
+ * (see cardlessPins). Each has its own source and layers, drawn alike, and fades out near the horizon
+ * (see fadeNearHorizon).
  */
 export interface PinSet {
   source: string
   /** Before each of the set's layer ids. */
   prefix: string
-  minzoom?: number
-  /**
-   * Past which its small pins don't show. Its pin clusters' layers stay on: zoomed in, the pin source
-   * doesn't cluster, so they draw nothing, but they keep its tiles loaded for the score cards to be
-   * read from (see ScoreCardMarkers.sync).
-   */
-  maxzoom?: number
   /** Which of the source's features are small pins, if not all that aren't pin clusters. */
   only?: ExpressionSpecification
 }
 
-/** The games' own pins, shown until the zoom score cards show from (see FittedZoom). */
-export const zoomedOutPins = (cardZoom: number): PinSet => ({ source: pinSource, prefix: '', maxzoom: cardZoom })
-/** The outer games' pins, shown from the zoom score cards show from. */
-export const outerPins = (cardZoom: number): PinSet => ({ source: outerPinSource, prefix: 'outer-', minzoom: cardZoom })
+/** The outer games' pins. */
+export const outerPins: PinSet = { source: outerPinSource, prefix: 'outer-' }
+
+// A pin set's layers' ids, after its prefix.
+const pinClusterLayer = 'pin-clusters'
+const smallPinLayer = 'pins'
+const selectedPinLayer = 'pin-selected'
 
 /** The set's small pins: its features that aren't pin clusters, as many as it says. */
 function smallPinsOf({ only }: PinSet): ExpressionSpecification {
@@ -56,22 +65,17 @@ function smallPinsOf({ only }: PinSet): ExpressionSpecification {
   return only ? ['all', single, only] : single
 }
 
-/** A layer in a pin set: its id, source and zooms (a pin cluster layer's without the maxzoom). */
-function inSet({ source, prefix, minzoom, maxzoom }: PinSet, id: string, { clusters = false } = {}) {
-  return {
-    id: prefix + id,
-    source,
-    ...(minzoom === undefined ? {} : { minzoom }),
-    ...(maxzoom === undefined || clusters ? {} : { maxzoom }),
-  }
+/** A layer in a pin set: its id and source. */
+function inSet({ source, prefix }: PinSet, id: string) {
+  return { id: prefix + id, source }
 }
 
-/** The pins' source, clustering small pins as the pin layout at the zoom it's added at says. */
-export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], { size, clusterRadius }: PinLayout): GeoJSONSourceSpecification {
+/** A source of small pins, clustering them this far apart (see pinClusterRadius). */
+export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], clusterRadius: number): GeoJSONSourceSpecification {
   return {
     type: 'geojson',
     data,
-    cluster: size === 'small',
+    cluster: true,
     clusterRadius,
     clusterMaxZoom,
     // Each pin by its game, each pin cluster by its cluster_id, for fading them near the horizon (see fadeNearHorizon).
@@ -117,7 +121,7 @@ export function pinClusterLayers(
   const clusterOpacity = fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.clusterOpacity))
   return [
     {
-      ...inSet(set, 'pin-cluster-glows', { clusters: true }),
+      ...inSet(set, 'pin-cluster-glows'),
       type: 'circle',
       filter: ['has', 'point_count'],
       paint: {
@@ -128,7 +132,7 @@ export function pinClusterLayers(
       },
     },
     {
-      ...inSet(set, 'pin-cluster-flames', { clusters: true }),
+      ...inSet(set, 'pin-cluster-flames'),
       type: 'symbol',
       filter: ['all', ['has', 'point_count'], ['>', ['get', flameGamesProperty], 0]],
       layout: clusterFlameLayout([
@@ -143,7 +147,7 @@ export function pinClusterLayers(
       paint: { 'icon-opacity': clusterOpacity },
     },
     {
-      ...inSet(set, pinClusterLayer, { clusters: true }),
+      ...inSet(set, pinClusterLayer),
       type: 'circle',
       filter: ['has', 'point_count'],
       layout: { 'circle-sort-key': byStatus(theme, 'pinCluster', (look) => look.stacking) },
@@ -157,7 +161,7 @@ export function pinClusterLayers(
       },
     },
     {
-      ...inSet(set, 'pin-cluster-counts', { clusters: true }),
+      ...inSet(set, 'pin-cluster-counts'),
       type: 'symbol',
       filter: ['has', 'point_count'],
       layout: {
@@ -175,9 +179,9 @@ export function pinClusterLayers(
 const gameColor: ExpressionSpecification = ['get', 'color']
 
 /**
- * Small pins for single games, each a bright core in a soft glow (see StatusLook): every game's
- * while zoomed out, and zoomed in, those far from the center of the view, as score cards take over
- * near it (see scoreCardMarkers). The glows are a layer beneath the cores, so a core is never dimmed
+ * Small pins for single games, each a bright core in a soft glow (see StatusLook): those far from
+ * the center of the view, as score cards show near it (see scoreCardMarkers), and those with no room
+ * for a card (see cardlessPins). The glows are a layer beneath the cores, so a core is never dimmed
  * by a neighbor's glow. Glow, ring and core are in the game's color, but for a core the theme gives
  * a status of its own, apart from the status's color (Live's paler core, say): color stands for the
  * game's league, and status shows by glow and brightness (ADR-0017). A game showing flames has a
@@ -228,7 +232,6 @@ export function smallPinLayers(
   ]
 }
 
-export const selectedPinLayer = 'pin-selected'
 export const outerSelectedPinLayer = 'outer-pin-selected'
 
 /**
@@ -336,7 +339,7 @@ export function clusterFootprintSizes(theme: Theme): Theme['components']['Cluste
 /** Each pin cluster in a pin set (see clusterFootprintLayout). */
 export function pinClusterFootprintLayerSpec(theme: Theme, set: PinSet): SymbolLayerSpecification {
   return {
-    ...inSet(set, 'pin-cluster-footprints', { clusters: true }),
+    ...inSet(set, 'pin-cluster-footprints'),
     type: 'symbol',
     filter: ['has', 'point_count'],
     layout: clusterFootprintLayout(byCount(clusterFootprintSizes(theme))),

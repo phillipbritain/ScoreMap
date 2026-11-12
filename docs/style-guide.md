@@ -448,7 +448,7 @@ Some of the look is in code on purpose, as behavior or layout rather than a them
 - the game panel's fade behind each line on a phone, and how far a scoring row's light reaches;
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
-- score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`text-radial-offset: 1.2` ems zoomed out, `text-radial-offset: 1` zoomed in) and where it wraps (as the base map style has them);
+- score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`cityNameOffset` in `placeNames.ts`, 1 em) and where it wraps (as the base map style has them);
 - that a glow on the globe (a small pin's, a pin cluster's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
 - a flame's drawing, and a score card's tongues of flame: how many, their heights and pace (see [Hot games' flames](#hot-games-flames));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;

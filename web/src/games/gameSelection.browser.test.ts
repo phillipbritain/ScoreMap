@@ -3,7 +3,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 import { GlobeMap } from '../globe/globeMap'
-import { pinClusterLayer } from '../globe/pinLayers'
+import { outerPinClusterLayer } from '../globe/pinLayers'
+import { zoomSettings } from '../globe/zoomLevels'
 import { userEvent } from 'vitest/browser'
 import type { Game } from './game'
 import { GameNavigation } from './GameNavigation'
@@ -180,15 +181,20 @@ it('selects a game from the list while its pin belongs to a cluster', async () =
   document.body.append(mapContainer)
   const globe = new GlobeMap(mapContainer, {
     style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0b1526' } }] },
-    theme: builtInTheme, startCamera: { longitude: 0, latitude: 0, zoom: 2 }, onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
+    // Turned 50° from the games, past the card radius, so they show as a pin cluster, short of where
+    // pins fade near the horizon.
+    // Let out to zoom 2, the whole globe, so the cluster is on the map.
+    zoomSettings: { ...zoomSettings, minZoom: 2 },
+    theme: builtInTheme, startCamera: { longitude: 50, latitude: 0, zoom: 2 }, onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
   })
   try {
     globe.show(games)
     const map = (globe as unknown as { map: MapLibreMap }).map
     // As long as a globe takes to start up and draw, as the globe's own tests wait.
     await vi.waitFor(() => {
-      expect(map.getLayer(pinClusterLayer)).toBeDefined()
-      expect(map.queryRenderedFeatures([[390, 290], [410, 310]], { layers: [pinClusterLayer] }).length).toBeGreaterThan(0)
+      expect(map.getLayer(outerPinClusterLayer)).toBeDefined()
+      const { x, y } = map.project([0, 0])
+      expect(map.queryRenderedFeatures([[x - 10, y - 10], [x + 10, y + 10]], { layers: [outerPinClusterLayer] }).length).toBeGreaterThan(0)
     }, { timeout: 10_000 })
     await show(games)
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')

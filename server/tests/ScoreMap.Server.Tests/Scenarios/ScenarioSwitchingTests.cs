@@ -99,9 +99,13 @@ public class ScenarioSwitchingTests
         await using var other = await server.ConnectClientAsync();
         await other.NextSnapshotAsync();
 
-        (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        Assert.Equal("second", (await client.NextScenarioChangeAsync()).Running);
-        Assert.Equal("second", (await other.NextScenarioChangeAsync()).Running);
+        var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name = "second" }, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        var listing = await response.Content.ReadFromJsonAsync<ScenarioListing>(TestContext.Current.CancellationToken);
+        Assert.NotNull(listing);
+        Assert.Equal("second", listing.Running);
+        Assert.Equivalent(listing, await client.NextScenarioChangeAsync());
+        Assert.Equivalent(listing, await other.NextScenarioChangeAsync());
 
         (await http.PutAsJsonAsync("/api/scenarios/running", new { name = "real" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         Assert.Equal("real", (await other.NextScenarioChangeAsync()).Running);

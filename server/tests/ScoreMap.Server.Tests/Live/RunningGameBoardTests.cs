@@ -110,26 +110,98 @@ public class RunningGameBoardTests
         Assert.Equal(TimeSpan.Zero, board.SlowStart);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Overlapping_controls_publish_coherent_listings_in_change_order_and_return_the_published_listing(
+        bool firstChangesSpeed, bool secondChangesSpeed)
+    {
+        await using var server = new ScoreMapServer { Scenario = "playing" };
+        server.WriteScenario("playing", """{ "timeline": { "length": "1h", "changes": [] }, "games": [] }""");
+        server.WriteScenario("slow", """{ "timeline": { "length": "1h", "changes": [] }, "slowStart": "12s", "games": [] }""");
+        var switcher = server.Services.GetRequiredService<ScenarioSwitcher>();
+        var delivery = new JoinDelivery { HoldScenarioChange = true };
+        var source = new BoardSource(switcher, switcher.BoardClock, switcher.Polling, switcher);
+        using var board = ActivatorUtilities.CreateInstance<RunningGameBoard>(server.Services, source, delivery);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        var first = firstChangesSpeed
+            ? board.ChangeSpeedAsync(Speed.Fast, cancellationToken)
+            : board.StartAfreshAsync("slow", Speed.Paused, cancellationToken);
+        try
+        {
+            await delivery.Publishing.Task.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            var second = secondChangesSpeed
+                ? board.ChangeSpeedAsync(Speed.Faster, cancellationToken)
+                : board.StartAfreshAsync("real", Speed.Normal, cancellationToken);
+            // These calls run up to their first await: the second change is waiting on the held publication.
+            Assert.False(first.IsCompleted);
+            Assert.False(second.IsCompleted);
+            Assert.Equal(firstChangesSpeed ? "playing" : "slow", switcher.Running);
+            Assert.Equal(firstChangesSpeed ? Speed.Fast : Speed.Paused, switcher.Speed);
+            Assert.Empty(delivery.ScenarioChanges);
+            server.Clock.Advance(TimeSpan.FromSeconds(10));
+            delivery.Release.TrySetResult();
+
+            var results = await Task.WhenAll(first, second).WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            Assert.Equal(results, delivery.ScenarioChanges.ToArray());
+            var initial = results[0];
+            Assert.Equal((firstChangesSpeed ? "playing" : "slow", firstChangesSpeed ? "Fast" : "Paused", true,
+                !firstChangesSpeed, ScenarioClock.StartsAt),
+                (initial.Running, initial.Speed, initial.CanControlPlay, initial.StartsSlowly, initial.Clock.Reads));
+            Assert.Equal(server.Clock.GetUtcNow().AddSeconds(-10), initial.Clock.At);
+            var next = results[1];
+            Assert.Equal((secondChangesSpeed ? initial.Running : "real", secondChangesSpeed ? "Faster" : "Normal",
+                secondChangesSpeed, secondChangesSpeed && !firstChangesSpeed),
+                (next.Running, next.Speed, next.CanControlPlay, next.StartsSlowly));
+            Assert.Equal(server.Clock.GetUtcNow(), next.Clock.At);
+            Assert.Equal(secondChangesSpeed
+                ? ScenarioClock.StartsAt.AddSeconds(firstChangesSpeed ? 40 : 0)
+                : server.Clock.GetUtcNow(), next.Clock.Reads);
+            Assert.Equal(initial.Scenarios, next.Scenarios);
+            Assert.Equal(Speed.All, initial.Speeds);
+            Assert.Equal(Speed.All, next.Speeds);
+            Assert.Equal([GamesHub.RealGamesGroup, GamesHub.RealGamesGroup], delivery.ScenarioGroups);
+        }
+        finally { delivery.Release.TrySetResult(); }
+    }
+
     // A transport adapter at the module's SignalR seam, so failed/partial delivery is controllable.
     private sealed class JoinDelivery : IHubContext<GamesHub>, IHubClients, IGroupManager, IClientProxy
     {
         public bool FailGroupAdd { get; init; }
         public bool FailGroupRemove { get; init; }
         public bool HoldGroupAdd { get; init; }
+        public bool HoldScenarioChange { get; init; }
+        public ConcurrentQueue<ScenarioEndpoints.ScenarioListing> ScenarioChanges { get; } = new();
+        public ConcurrentQueue<string> ScenarioGroups { get; } = new();
+        public TaskCompletionSource Publishing { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public ConcurrentQueue<string> Calls { get; } = new();
         public TaskCompletionSource Adding { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         IHubClients IHubContext<GamesHub>.Clients => this;
         IGroupManager IHubContext<GamesHub>.Groups => this;
         public IClientProxy Client(string connectionId) => this;
-        public IClientProxy Group(string groupName) => this;
+        public IClientProxy Group(string groupName)
+        {
+            ScenarioGroups.Enqueue(groupName);
+            return this;
+        }
 
-        public Task SendCoreAsync(string method, object?[] args, CancellationToken cancellationToken = default)
+        public async Task SendCoreAsync(string method, object?[] args, CancellationToken cancellationToken = default)
         {
             // Initial game changes have no subscribed viewers; only record the snapshot hand-off.
             if (method == GamesHub.SnapshotMessage)
                 Calls.Enqueue(method);
-            return Task.CompletedTask;
+            if (method == GamesHub.ScenarioChangedMessage)
+            {
+                Publishing.TrySetResult();
+                if (HoldScenarioChange)
+                    await Release.Task.WaitAsync(cancellationToken);
+                ScenarioChanges.Enqueue(Assert.IsType<ScenarioEndpoints.ScenarioListing>(Assert.Single(args)));
+            }
         }
 
         public async Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)

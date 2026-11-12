@@ -183,6 +183,20 @@ describe('live games', () => {
     expect(changeSince(second.live.state.justHappened, 'a', played)).toBe('ScoreChanged')
   })
 
+  it('takes a change it’s given as if the server had sent it, and none before the first snapshot', async () => {
+    const { live, hub } = start()
+    live.receive({ kind: 'ScoreChanged', game: game('a', '1') })
+    expect(live.state.games).toBeNull()
+
+    await hub.latest.connect()
+    hub.latest.events.snapshot([game('a'), game('b')])
+    live.receive({ kind: 'ScoreChanged', game: game('a', '1') })
+
+    expect(live.state.games).toEqual([game('a', '1'), game('b')])
+    expect(changeSince(live.state.justHappened, 'a', 0)).toBe('ScoreChanged')
+    expect(scorerOf(live.state.justHappened, 'a')).toEqual({ side: 'home', at: clock })
+  })
+
   it('drops a change that comes before any snapshot, as it has nothing to apply to', async () => {
     const { live, hub } = start()
     await hub.latest.connect()

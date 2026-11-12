@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Live;
+using ScoreMap.Server.WatchLinks;
 
 namespace ScoreMap.Server.Scenarios;
 
@@ -11,7 +12,8 @@ public static class ScenarioRegistration
     /// (ADR-0009), starting on the scenario named by the "Scenario" setting, or on real games when it is
     /// unset or "real", with the scenario clock at the speed named by the "ScenarioSpeed" setting (Normal when unset). The game
     /// board then takes the switcher's clock, so a scenario's pin windows and end times are on the
-    /// scenario clock. Anywhere else nothing scenario-related is registered and the settings are ignored.
+    /// scenario clock, and a scenario's games get made-up ESPN and stream links (see <see cref="ScenarioLinks"/>).
+    /// Anywhere else nothing scenario-related is registered and the settings are ignored.
     /// Call after the real game feed provider and the game board are registered.
     /// </summary>
     public static WebApplicationBuilder AddScenarios(this WebApplicationBuilder builder)
@@ -30,6 +32,11 @@ public static class ScenarioRegistration
         services.Add(Keyed(realGames, ScenarioSwitcher.RealGamesKey));
         services.AddSingleton(sp => ActivatorUtilities.CreateInstance<ScenarioSwitcher>(sp, startWith, speed));
         services.Replace(ServiceDescriptor.Singleton<IGameFeedProvider>(sp => sp.GetRequiredService<ScenarioSwitcher>()));
+        // While a scenario runs its games get made-up stream links (ScenarioLinks); on real games, the real source's.
+        var realStreams = services.Last(d => d.ServiceType == typeof(IStreamLinkSource) && !d.IsKeyedService);
+        services.Add(Keyed(realStreams, ScenarioSwitcher.RealGamesKey));
+        services.Replace(ServiceDescriptor.Singleton<IStreamLinkSource>(sp => new ScenarioStreamLinks(
+            sp.GetRequiredKeyedService<IStreamLinkSource>(ScenarioSwitcher.RealGamesKey), sp.GetRequiredService<ScenarioSwitcher>())));
         services.Replace(ServiceDescriptor.Singleton<BoardSource>(sp =>
         {
             var switcher = sp.GetRequiredService<ScenarioSwitcher>();

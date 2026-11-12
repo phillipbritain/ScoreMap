@@ -35,8 +35,7 @@ public class ScenarioVenueLocationTests : IDisposable
         Status: ProviderStatus.InProgress,
         DisplayClock: "40'",
         Period: 1,
-        Venue: venue,
-        Broadcasters: []);
+        Venue: venue);
 
     [Fact]
     public async Task A_venue_in_the_checked_in_lookups_is_placed_without_a_place_search()

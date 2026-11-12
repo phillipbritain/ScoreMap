@@ -8,7 +8,6 @@ import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
 import { addPlaceNames, cityNameLook, clusterClearOffset, placeNameLayers } from './placeNames'
-import { cardZoom, fittedZoomSettings, zoomSettings } from './zoomLevels'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -166,28 +165,10 @@ describe('addPlaceNames', () => {
     expect(cardCities()).toEqual([])
   })
 
-  it('names cities from the zoom score cards show from, a phone’s further out than a laptop’s', () => {
-    const ranges = new Map<string, [number, number]>()
-    const map = {
-      getSource: () => undefined,
-      getLayer: () => ({}),
-      setLayerZoomRange: (id: string, min: number, max: number) => ranges.set(id, [min, max]),
-      getZoom: () => 2.5,
-      on: () => map,
-      off: () => map,
-    } as unknown as MapLibreMap
-    // The style names them from a laptop's.
-    expect(placeNameLayers(base, builtInTheme).find((l) => l.id === 'city_names')?.minzoom).toBe(cardZoom)
-    const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings, cardZoom)
-    expect(names.nameBoxes()).toEqual([])
-
-    const phone = fittedZoomSettings(zoomSettings, { width: 390, height: 844 }).cardZoom
-    names.showFrom(phone)
-    expect([...ranges.values()]).toEqual([
-      [phone, 24],
-      [phone, 24],
-      [phone, 24],
-    ])
-    expect(phone).toBeLessThan(2.5)
+  it('names cities at every zoom, as score cards show at every zoom', () => {
+    for (const layer of placeNameLayers(base, builtInTheme).filter((l) => l.id.startsWith('city_names'))) {
+      expect(layer.minzoom, layer.id).toBeUndefined()
+      expect(layer.maxzoom, layer.id).toBeUndefined()
+    }
   })
 })

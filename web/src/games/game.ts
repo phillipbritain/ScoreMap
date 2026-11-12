@@ -48,15 +48,6 @@ export interface PhotoCredit {
   sourceUrl: string
 }
 
-/** A channel or streaming service showing a game. */
-export interface GameBroadcaster {
-  name: string
-  /** The country it broadcasts to (ISO 3166 alpha-2, e.g. "US"), when known. */
-  country: string | null
-  /** The service's official watch page, when the server's watch links file lists it. */
-  watchUrl: string | null
-}
-
 /** An unofficial stream for a game, found by the server's stream finder (ADR-0002: hobby v1 only). */
 export interface StreamLink {
   /** The owner's name for the site the link was found on. */
@@ -206,7 +197,6 @@ export interface Game {
    */
   hot: boolean
   venue: GameVenue
-  broadcasters: GameBroadcaster[]
   /** Unofficial stream links; empty when the stream finder found none or is switched off. */
   streamLinks: StreamLink[]
   /** What's special about the game, as the feed puts it: a playoff round ("NLDS - Game 2"), a game abroad ("NFL London Games"). */
@@ -221,6 +211,8 @@ export interface Game {
   topEvent: boolean
   /** Tennis: the score set by set; null in other sports and before play. */
   scoreline: GameScoreline | null
+  /** The game's page on ESPN's website, linked from the game panel; null when ESPN lists none. */
+  espnUrl: string | null
 }
 
 /**

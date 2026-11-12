@@ -25,6 +25,7 @@ describe('settingsStore', () => {
       sportColors: { Football: '#123456', Soccer: '#abcdef' },
       leagueColors: { NFL: '#fedcba' },
       mapType: 'satellite' as const,
+      venuePhotos: false,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -115,6 +116,24 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
+  it('shows venue photos to a first-time visitor', () => {
+    expect(settingsStore(() => memoryStorage()).load().venuePhotos).toBe(true)
+  })
+
+  it('shows venue photos to a viewer whose settings were saved before they could be switched off', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
+
+    expect(settingsStore(() => storage).load().venuePhotos).toBe(true)
+  })
+
+  it.each([['no'], [0], [null]])('shows venue photos for a saved switch it doesn\'t understand (%j)', (venuePhotos) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ venuePhotos }))
+
+    expect(settingsStore(() => storage).load().venuePhotos).toBe(true)
+  })
+
   it('keeps each saved setting it understands and defaults the rest', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA', 7], topEventsOnly: 'yes' }))
@@ -125,6 +144,7 @@ describe('settingsStore', () => {
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
+      venuePhotos: true,
     })
   })
 
@@ -138,6 +158,7 @@ describe('settingsStore', () => {
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
+      venuePhotos: true,
     })
   })
 
@@ -215,6 +236,7 @@ describe('settingsStore', () => {
         sportColors: {},
         leagueColors: {},
         mapType: 'plain',
+        venuePhotos: true,
       })
     },
   )

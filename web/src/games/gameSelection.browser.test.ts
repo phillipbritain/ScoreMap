@@ -3,7 +3,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 import { GlobeMap } from '../globe/globeMap'
-import { pinClusterLayer } from '../globe/pinLayers'
+import { outerPinClusterLayer } from '../globe/pinLayers'
+import { zoomSettings } from '../globe/zoomLevels'
 import { userEvent } from 'vitest/browser'
 import type { Game } from './game'
 import { GameNavigation } from './GameNavigation'
@@ -35,7 +36,6 @@ function game(id: string): Game {
     clutchTime: false,
     hot: false,
     venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
-    broadcasters: [],
     streamLinks: [],
     note: null,
     situation: null,
@@ -43,6 +43,7 @@ function game(id: string): Game {
     keyEvents: [],
     topEvent: false,
     scoreline: null,
+    espnUrl: null,
   }
 }
 
@@ -55,7 +56,7 @@ function Selection({ games }: { games: Game[] }) {
     createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
     createElement(GameNavigation, { games, onSelect: selectGame }),
     selectedGame && createElement(GamePanel, { ref: panel, game: selectedGame,
-      color: '#d4ac63', textOnColor: '#000e28', onClose: closeGame }),
+      color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, onClose: closeGame }),
   )
 }
 async function show(games: Game[]) {
@@ -180,15 +181,20 @@ it('selects a game from the list while its pin belongs to a cluster', async () =
   document.body.append(mapContainer)
   const globe = new GlobeMap(mapContainer, {
     style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0b1526' } }] },
-    theme: builtInTheme, startCamera: { longitude: 0, latitude: 0, zoom: 2 }, onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
+    // Turned 50° from the games, past the card radius, so they show as a pin cluster, short of where
+    // pins fade near the horizon.
+    // Let out to zoom 2, the whole globe, so the cluster is on the map.
+    zoomSettings: { ...zoomSettings, minZoom: 2 },
+    theme: builtInTheme, startCamera: { longitude: 50, latitude: 0, zoom: 2 }, onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
   })
   try {
     globe.show(games)
     const map = (globe as unknown as { map: MapLibreMap }).map
     // As long as a globe takes to start up and draw, as the globe's own tests wait.
     await vi.waitFor(() => {
-      expect(map.getLayer(pinClusterLayer)).toBeDefined()
-      expect(map.queryRenderedFeatures([[390, 290], [410, 310]], { layers: [pinClusterLayer] }).length).toBeGreaterThan(0)
+      expect(map.getLayer(outerPinClusterLayer)).toBeDefined()
+      const { x, y } = map.project([0, 0])
+      expect(map.queryRenderedFeatures([[x - 10, y - 10], [x + 10, y + 10]], { layers: [outerPinClusterLayer] }).length).toBeGreaterThan(0)
     }, { timeout: 10_000 })
     await show(games)
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')
@@ -251,14 +257,18 @@ it("shows a field's whole leaderboard with Show all, and the next game selected 
   expect(panelText()).not.toContain('Rider L')
 })
 
-it('shows a Watch line in the panel only for a game that lists somewhere to watch', async () => {
-  const listed: Game = { ...game('W'), broadcasters: [{ name: 'ESPN', country: null, watchUrl: 'https://www.espn.com/watch/' }] }
-  await show([game('N'), listed])
+it("links the panel to a game's StreamEast stream and ESPN page, and has no links for a game with neither", async () => {
+  const linked: Game = {
+    ...game('W'),
+    streamLinks: [{ site: 'StreamEast', url: 'https://streameast.test/nfl/game/1' }],
+    espnUrl: 'https://www.espn.com/nfl/game/_/gameId/1',
+  }
+  const links = () => [...document.querySelectorAll<HTMLAnchorElement>('.game-panel__watch a')].map((a) => a.href)
+  await show([game('N'), linked])
 
   await open('N')
-  expect(panelText()).not.toContain('Watch')
+  expect(links()).toEqual([])
 
   await open('W')
-  expect(panelText()).toContain('Watch')
-  expect(panelText()).toContain('ESPN')
+  expect(links()).toEqual(['https://streameast.test/nfl/game/1', 'https://www.espn.com/nfl/game/_/gameId/1'])
 })

@@ -26,8 +26,7 @@ public class TennisTests
         Status: status,
         DisplayClock: null,
         Period: period,
-        Venue: Shanghai,
-        Broadcasters: [])
+        Venue: Shanghai)
     {
         Note = "Rolex Shanghai Masters · QF",
         Sets = sets,

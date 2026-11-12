@@ -88,6 +88,14 @@ public sealed class EspnFightCardTests
     }
 
     [Fact]
+    public async Task A_card_carries_its_ESPN_fight_center_page()
+    {
+        var game = await FetchOnly(Fixture("ufc.json"));
+
+        Assert.Equal("https://www.espn.com/mma/fightcenter/_/id/600061420/league/ufc", game.EspnUrl);
+    }
+
+    [Fact]
     public async Task A_card_is_at_its_bouts_venue()
     {
         var game = await FetchOnly(Fixture("ufc.json"));

@@ -39,7 +39,7 @@ public sealed class SupportedSportTests
         var main = new ProviderBout("main", new("First", "First", null, null), new("Second", "Second", null, null),
             null, 3, ProviderStatus.InProgress, 3, "4:59");
         var game = new ProviderGame("card", league.Key, DateTimeOffset.UnixEpoch, new ProviderBouts([main]),
-            ProviderStatus.InProgress, null, null, null, []);
+            ProviderStatus.InProgress, null, null, null);
 
         Assert.Equal("R3", ClockLine.For(game, league));
         Assert.True(HotGame.For(game, league));

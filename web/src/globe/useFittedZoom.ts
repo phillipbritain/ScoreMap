@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fittedZoomSettings, type FittedZoom, type ZoomSettings } from './zoomLevels'
+import { fittedZoomSettings, type ZoomSettings } from './zoomLevels'
 
 /** The window's size now. */
 function windowSize() {
@@ -10,7 +10,7 @@ function windowSize() {
  * These zoom settings fitted to the window (see fittedZoomSettings), refitted as it's resized or a
  * phone is turned.
  */
-export function useFittedZoom(settings: ZoomSettings): FittedZoom {
+export function useFittedZoom(settings: ZoomSettings): ZoomSettings {
   const [size, setSize] = useState(windowSize)
   useEffect(() => {
     const resized = () => setSize(windowSize())

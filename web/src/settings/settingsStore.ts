@@ -131,7 +131,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, mapType } = fields
+  const { hiddenLeagues, topEventsOnly, mapType, venuePhotos } = fields
   const sportColors = fields.sportColors ?? fields.sportColours
   const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
@@ -142,6 +142,7 @@ function fromSaved(saved: unknown): ViewerSettings {
     sportColors: colorsFromSaved(sportColors),
     leagueColors: colorsFromSaved(leagueColors),
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
+    venuePhotos: typeof venuePhotos === 'boolean' ? venuePhotos : firstVisitSettings.venuePhotos,
   }
 }
 

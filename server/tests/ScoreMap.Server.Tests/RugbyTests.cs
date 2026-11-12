@@ -24,7 +24,6 @@ public class RugbyTests
         DisplayClock: clock,
         Period: period,
         Venue: new ProviderVenue("Aviva Stadium", "Dublin", "Ireland", null),
-        Broadcasters: [],
         Phase: phase);
 
     /// <summary>The game as a connected client is sent it, the feed reporting <paramref name="match"/>.</summary>

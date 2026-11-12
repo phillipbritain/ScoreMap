@@ -36,6 +36,14 @@ public sealed class EspnRacingTests : IDisposable
         (CoreVenue, Fixture("nascar-core-venue.json")));
 
     [Fact]
+    public async Task A_race_whose_only_link_is_off_ESPN_has_no_ESPN_page()
+    {
+        var game = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        Assert.Null(game.EspnUrl);
+    }
+
+    [Fact]
     public async Task A_race_is_one_game_with_its_field_in_order_and_its_last_lap()
     {
         var game = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));

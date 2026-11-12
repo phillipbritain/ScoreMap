@@ -7,7 +7,7 @@ import { Globe } from './Globe'
 import { type LoadingStage } from './globeMap'
 import { baseStyleUrl } from './globeStyle'
 import { cityLabelSettings } from './cityLabels'
-import { unfittedZoom } from './zoomLevels'
+import { zoomSettings } from './zoomLevels'
 import { LoadingScreen } from '../loading/LoadingScreen'
 import { builtInTheme } from '../theme/builtInTheme'
 import { applyTheme } from '../theme/applyTheme'
@@ -44,7 +44,7 @@ function LoadingGlobe() {
       key: `globe-${attempt}`,
       theme: builtInTheme,
       cityLabels: cityLabelSettings,
-      zoomSettings: { ...unfittedZoom, minZoom: 2 },
+      zoomSettings: { ...zoomSettings, minZoom: 2 },
       colors: { sportColors: {}, leagueColors: {} }, mapType: 'plain',
       games: [], justHappened: noneJustHappened, selectedGameId: null,
       panel: { current: null }, onSelectGame: () => {},

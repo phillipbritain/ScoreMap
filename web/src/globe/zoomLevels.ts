@@ -3,35 +3,12 @@ import type { MapType } from '../settings/viewerSettings'
 import limits from './zoomSettings.json'
 
 /**
- * Small pins when zoomed out; score cards once a country fills the screen, for games near the center
- * of the view (see hasCard).
- */
-export type PinSize = 'small' | 'card'
-
-export interface PinLayout {
-  /**
-   * Small pins form pin clusters; score cards don't, since cards find room among themselves and
-   * form card clusters only when there is none (see cardLayout).
-   */
-  size: PinSize
-  /** The pin source's cluster radius while small pins show, in pixels at the whole zoom level below (see pinLayout). */
-  clusterRadius: number
-}
-
-/**
- * Zoom at which pins switch from small markers to score cards (about one country on screen), measured
- * at the equator wherever the globe is turned (see zoomAt), in a view the size of a laptop's browser window: a smaller one, such as a phone's, switches further out
- * (see fittedZoomSettings).
- */
-export const cardZoom = 3
-
-/**
  * How far from the center of the view a game's venue can be, in degrees of arc, and still have a score
- * card. Farther games show as small pins, so cards don't crowd the globe's rim.
+ * card, at any zoom. Farther games show as small pins (outer pins), so cards don't crowd the globe's rim.
  */
 export const cardRadius = 40
 
-/** Whether a game has a score card at card zoom: its venue is within cardRadius of the view's center. */
+/** Whether a game has a score card: its venue is within cardRadius of the view's center. */
 export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
   return degreesApart(center, venue) <= cardRadius
 }
@@ -39,8 +16,7 @@ export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
 /** How far out and in the globe zooms, and where it starts. */
 export interface ZoomSettings {
   /**
-   * The furthest out: just short of cardZoom, so small pins and their clusters still show.
-   * MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the globe
+   * The furthest out: about the whole globe on screen. MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the globe
    * stays the same size on screen (see furthestOutZoom). It's for a view the size of a laptop's
    * browser window: a smaller one, such as a phone's, can zoom further out (see fittedZoomSettings).
    */
@@ -70,24 +46,14 @@ export const { minZoom, maxZoom } = zoomSettings
  */
 export const minZoomView = 800
 
-/** Zoom settings fitted to a view (see fittedZoomSettings), with the zoom score cards show from. */
-export interface FittedZoom extends ZoomSettings {
-  /** Where pins switch from small markers to score cards: cardZoom, fitted to the view as minZoom is. */
-  cardZoom: number
-}
-
-/** The app's zoom settings as they are, for a laptop-sized view or larger. */
-export const unfittedZoom: FittedZoom = { ...zoomSettings, cardZoom }
-
 /**
  * The zoom settings for a view this size. A zoom is a scale in pixels, so the globe at a zoom is the
  * same number of pixels across in any view, and would fill a phone far more than a laptop. A view
  * whose shorter side is under minZoomView zooms out further, in proportion, so the globe zoomed fully
- * out fills it as it fills a laptop's. Score cards show from further out alike, and the start zoom
- * (and Home) is as far out alike: each comes at the same size of globe on screen as on a laptop.
+ * out fills it as it fills a laptop's. The start zoom (and Home) is as far out alike: each comes at the same size of globe on screen as on a laptop.
  * The furthest in stays as it is: a city on a phone. A larger view keeps the settings as they are.
  */
-export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): FittedZoom {
+export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): ZoomSettings {
   const shorter = Math.min(view.width, view.height)
   // A view with no size yet (a hidden page) has nothing to fit.
   const fit = shorter > 0 && shorter < minZoomView ? Math.log2(shorter / minZoomView) : 0
@@ -95,7 +61,6 @@ export function fittedZoomSettings(settings: ZoomSettings, view: { width: number
     ...settings,
     minZoom: settings.minZoom + fit,
     startZoom: settings.startZoom + fit,
-    cardZoom: cardZoom + fit,
   }
 }
 
@@ -111,7 +76,7 @@ export function zoomForMapType<Z extends ZoomSettings>(settings: Z, mapType: Map
  * MapLibre's zoom with the view centered at this latitude for a zoom measured at the equator: the same
  * size of globe on screen. Its globe grows away from the equator at the same zoom (by one over the
  * cosine of the latitude), so the zoom there is lower for the same globe. Every zoom the app sets,
- * such as cardZoom and minZoom, is measured at the equator, so it stands for one size of globe
+ * such as minZoom, is measured at the equator, so it stands for one size of globe
  * wherever the globe is turned.
  */
 export function zoomAt(latitude: number, atEquator: number): number {
@@ -165,47 +130,25 @@ export function furthestOutZoom(latitude: number, furthestOut = minZoom): number
 }
 
 /**
- * Highest zoom at which the pin source clusters. Small pins stop showing well before it, at the card
- * zoom, and score cards aren't in pin clusters, so this only needs to be past it.
+ * Highest zoom at which the outer pin source clusters. Score cards aren't in pin clusters, so outer
+ * pins only need to stop clustering by the furthest in.
  */
 export const clusterMaxZoom = maxZoom - 1
-
-/**
- * Small pins or score cards, by the size of the globe on screen: the camera's zoom measured at the
- * equator (see zoomAtEquator) against the zoom cards show from (see FittedZoom). So turning the globe
- * never brings cards in or takes them away; only zooming does. Within a millionth of a zoom level
- * counts as there, so a zoom set to the card zoom at some latitude (see zoomAt) has cards.
- */
-export function pinSize(camera: GlobeCamera, cardsFrom: number): PinSize {
-  return zoomAtEquator(camera) >= cardsFrom - 1e-6 ? 'card' : 'small'
-}
-
-/**
- * The zoom city names show from (see PlaceNames.showFrom), in MapLibre's zoom, for the pins showing
- * now: with score cards, from any zoom (MapLibre takes a minimum of 0 as none, as its zoom goes below
- * 0 near the poles); with small pins, from past the furthest in. A layer's zoom range is in MapLibre's
- * zoom, which changes as the globe turns (see zoomAt), so it can't hold the card zoom itself.
- */
-export function cityNamesFrom(size: PinSize): number {
-  return size === 'card' ? 0 : 24
-}
 
 // The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
 // times per zoom level rather than on every frame of a zoom.
 const zoomStep = 0.25
 
 /**
- * Small pins or score cards (see pinSize), and how close small pins must be to cluster: closer on screen than the
- * spacing, which keeps small pins and pin clusters from overlapping (see pinClusterSpacing).
- * MapLibre clusters pins at whole zoom levels only, and shows zoom 3's clusters all the way to 3.99,
- * where pins are nearly twice as far apart on screen. So the radius is shrunk by how far past the
- * whole level the zoom is (rounded down to a step, erring toward clustering) to keep pins
- * clustering only as close as they'd be on screen now.
+ * How close small pins must be to cluster at MapLibre's zoom `zoom`, in pixels at the whole zoom level
+ * below: closer on screen than the spacing, which keeps small pins and pin clusters from overlapping
+ * (see pinClusterSpacing). MapLibre clusters pins at whole zoom levels only, and shows zoom 3's
+ * clusters all the way to 3.99, where pins are nearly twice as far apart on screen. So the radius is
+ * shrunk by how far past the whole level the zoom is (rounded down to a step, erring toward
+ * clustering) to keep pins clustering only as close as they'd be on screen now. It's MapLibre's own
+ * zoom, as it clusters at its whole zoom levels wherever the globe is turned.
  */
-export function pinLayout(camera: GlobeCamera, spacing: number, cardsFrom: number): PinLayout {
-  const size = pinSize(camera, cardsFrom)
-  // MapLibre's own zoom: it clusters at its whole zoom levels, wherever the globe is turned.
-  const { zoom } = camera
+export function pinClusterRadius(zoom: number, spacing: number): number {
   const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
-  return { size, clusterRadius: Math.round(spacing / 2 ** pastWholeLevel) }
+  return Math.round(spacing / 2 ** pastWholeLevel)
 }

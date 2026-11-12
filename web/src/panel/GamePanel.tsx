@@ -104,7 +104,7 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
               <div className="game-panel__foot">
                 {game.espnUrl && (
                   <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer">
-                    Game page on ESPN
+                    More details
                   </a>
                 )}
                 {links.length > 0 && (

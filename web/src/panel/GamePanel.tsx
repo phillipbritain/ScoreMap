@@ -24,7 +24,7 @@ interface GamePanelProps {
 /** A link in the panel's Watch column: an official channel or service, or an unofficial stream. */
 interface PanelLink {
   name: string
-  url: string | null
+  url: string
   unofficial: boolean
 }
 
@@ -47,9 +47,9 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
   const progress = progressLine(game, 'full')
   const { contest } = game
   const links: PanelLink[] = [
-    ...watchLinks(game.broadcasters, viewerCountry(navigator.languages)).map((link) => ({ ...link, unofficial: false })),
     // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
     ...streamLinks(game.streamLinks).map((link) => ({ name: link.site, url: link.url, unofficial: true })),
+    ...watchLinks(game.broadcasters, viewerCountry(navigator.languages)).map((link) => ({ ...link, unofficial: false })),
   ]
   // A photo that fails to load is left out rather than shown broken. Its credit isn't shown (ADR-0025).
   const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null)
@@ -128,8 +128,9 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
 }
 
 /**
- * Official watch links, then unofficial streams, on one line: as links where there's a web address and
- * plain names otherwise. The first few are listed; the rest are named on hover over "+N more".
+ * Unofficial streams first so their direct links stay visible, then official watch links.
+ * Only clickable links are included. The first few are listed; the rest are named
+ * on hover over "+N more".
  */
 function WatchLinks({ links }: { links: PanelLink[] }) {
   const { listed, folded } = listedWatchLinks(links)
@@ -138,18 +139,13 @@ function WatchLinks({ links }: { links: PanelLink[] }) {
       {listed.map((link, i) => (
         <span key={`${link.name} ${link.url}`} data-tooltip={link.unofficial ? `${link.name} (unofficial stream)` : link.name} data-tooltip-when-clipped>
           {i > 0 && ', '}
-          {link.url ? (
-            <a
-              href={link.url}
-              target="_blank"
-              rel={link.unofficial ? 'noopener noreferrer nofollow' : 'noopener noreferrer'}
-            >
-              {link.name}
-            </a>
-          ) : (
-            link.name
-          )}
-          {link.unofficial && <span className="game-panel__unofficial"> · unofficial</span>}
+          <a
+            href={link.url}
+            target="_blank"
+            rel={link.unofficial ? 'noopener noreferrer nofollow' : 'noopener noreferrer'}
+          >
+            {link.name}
+          </a>
         </span>
       ))}
       {folded.length > 0 && (

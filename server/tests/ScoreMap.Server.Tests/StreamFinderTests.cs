@@ -1,3 +1,4 @@
+using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Tests.Support;
 using ScoreMap.Server.WatchLinks;
@@ -67,6 +68,39 @@ public class StreamFinderTests
         var change = await client.NextChangeAsync();
         Assert.Equal(GameChangeKind.Updated, change.Kind);
         Assert.Equal([new StreamLink("Streams One", "https://streams-one.test/watch/bills-vs-chiefs")], change.Game.StreamLinks);
+    }
+
+    [Theory]
+    [InlineData("Ottawa Senators", "Washington Capitals", "hockey/nhl", "https://streameast.cool/nhl/ottawa-senators-washington-capitals/48573312")]
+    [InlineData("Washington Capitals", "Ottawa Senators", "hockey/nhl", "https://streameast.cool/nhl/ottawa-senators-washington-capitals/48573312")]
+    [InlineData("Montreal Canadiens", "Minnesota Wild", "hockey/nhl", "https://streameast.cool/nhl/montreal-canadiens-minnesota-wild/48573280")]
+    [InlineData("Buffalo Sabres", "Boston Bruins", "hockey/nhl", null)]
+    [InlineData("Ottawa Senators", "Washington Capitals", "football/nfl", null)]
+    [InlineData("Ball State Cardinals", "Buffalo Bulls", "football/college-football", "https://streameast.cool/cfb/buffalo-bulls-ball-state-cardinals/49241152")]
+    public async Task The_shipped_StreamEast_site_sends_only_a_matching_event_link_to_the_panel(
+        string home, string away, string leagueKey, string? expectedUrl)
+    {
+        await using var server = new ScoreMapServer { UseShippedStreamSites = true };
+        server.StreamSites.Serve("streameast.cool", await File.ReadAllTextAsync(
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "StreamEast", "schedule.html"), TestContext.Current.CancellationToken));
+        var game = LiveGame(server.Clock, "401", leagueKey: leagueKey).WithSides(
+            home: new ProviderTeam("HOME", home, null, 0),
+            away: new ProviderTeam("AWAY", away, null, 0));
+        server.Feed.SetScoreboard(leagueKey, game);
+        await using var client = await server.ConnectClientAsync();
+        await client.NextSnapshotAsync();
+
+        await server.StreamSearchesFinishedAsync();
+        // A score change also gives the no-match case a game update to inspect.
+        server.Feed.SetScoreboard(leagueKey, game.WithSides(home: game.Sides().Home with { Score = 1 }));
+        server.Clock.Advance(TimeSpan.FromSeconds(15));
+
+        var updated = (await client.NextChangeAsync()).Game;
+        if (expectedUrl is null)
+            Assert.Empty(updated.StreamLinks);
+        else
+            Assert.Equal([new StreamLink("StreamEast", expectedUrl)], updated.StreamLinks);
+        Assert.Equal("https://streameast.cool/", Assert.Single(server.StreamSites.Requests).AbsoluteUri);
     }
 
     [Fact]

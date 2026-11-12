@@ -10,28 +10,47 @@ describe('watchLinks', () => {
   })
 
   it("hides broadcasts for another country than the viewer's", () => {
-    const sky: GameBroadcaster = { name: 'Sky Sports', country: 'GB', watchUrl: null }
+    const sky: GameBroadcaster = { name: 'Sky Sports', country: 'GB', watchUrl: 'https://www.skysports.com/watch' }
 
-    expect(watchLinks([prime, sky], 'GB')).toEqual([{ name: 'Sky Sports', url: null }])
+    expect(watchLinks([prime, sky], 'GB')).toEqual([{ name: 'Sky Sports', url: 'https://www.skysports.com/watch' }])
   })
 
-  it("lists every broadcast when none is for the viewer's country", () => {
-    const tsn: GameBroadcaster = { name: 'TSN', country: 'CA', watchUrl: null }
+  it("lists every linked broadcast when none is for the viewer's country", () => {
+    const tsn: GameBroadcaster = { name: 'TSN', country: 'CA', watchUrl: 'https://www.tsn.ca/watch' }
 
     expect(watchLinks([prime, tsn], 'DE')).toEqual([
       { name: 'Prime Video', url: 'https://www.amazon.com/primevideo' },
-      { name: 'TSN', url: null },
+      { name: 'TSN', url: 'https://www.tsn.ca/watch' },
     ])
   })
 
   it('keeps broadcasts whose country the data leaves out', () => {
-    const tsn: GameBroadcaster = { name: 'TSN', country: null, watchUrl: null }
+    const tsn: GameBroadcaster = { name: 'TSN', country: null, watchUrl: 'https://www.tsn.ca/watch' }
 
-    expect(watchLinks([tsn], 'CA')).toEqual([{ name: 'TSN', url: null }])
+    expect(watchLinks([tsn], 'CA')).toEqual([{ name: 'TSN', url: 'https://www.tsn.ca/watch' }])
   })
 
   it("keeps every broadcast when the viewer's country is unknown", () => {
     expect(watchLinks([prime], null)).toEqual([{ name: 'Prime Video', url: 'https://www.amazon.com/primevideo' }])
+  })
+
+  it('omits broadcasters with missing or blank watch URLs', () => {
+    const unlinked = [null, '', '   '].map((watchUrl) => ({ name: 'DAZN', country: 'US', watchUrl }))
+
+    expect(watchLinks([...unlinked, prime], 'US')).toEqual([
+      { name: 'Prime Video', url: 'https://www.amazon.com/primevideo' },
+    ])
+    expect(watchLinks(unlinked, 'US')).toEqual([])
+  })
+
+  it('does not let an unlinked duplicate hide the linked broadcaster', () => {
+    expect(watchLinks([{ ...prime, watchUrl: null }, prime], 'US')).toEqual([
+      { name: 'Prime Video', url: 'https://www.amazon.com/primevideo' },
+    ])
+  })
+
+  it('keeps country restrictions when local broadcasts have no watch URL', () => {
+    expect(watchLinks([prime, { name: 'DAZN', country: 'GB', watchUrl: null }], 'GB')).toEqual([])
   })
 
   it('matches countries whatever their case', () => {

@@ -118,14 +118,19 @@ public sealed class ScoreMapServer(
     /// <summary>Made-up sites the unofficial stream finder reads; see <see cref="AddStreamSite"/>.</summary>
     public FakeStreamSites StreamSites { get; } = new();
 
-    private readonly List<(string Name, string SearchUrl, string LinkPattern)> _streamSites = [];
+    private readonly List<StreamSite> _streamSites = [];
+
+    /// <summary>Exercises the shipped site configuration over fake HTTP.</summary>
+    public bool UseShippedStreamSites { get; init; }
 
     /// <summary>
     /// Adds a site to the stream finder's site list, as the owner would in configuration.
     /// Call before connecting.
     /// </summary>
     public void AddStreamSite(string name, string searchUrl, string linkPattern) =>
-        _streamSites.Add((name, searchUrl, linkPattern));
+        AddStreamSite(new StreamSite { Name = name, SearchUrl = searchUrl, LinkPattern = linkPattern });
+
+    public void AddStreamSite(StreamSite site) => _streamSites.Add(site);
 
     /// <summary>Stands in for the stream finder behind its seam, when a test sets it.</summary>
     public IStreamLinkSource? StreamLinkSource { get; init; }
@@ -201,12 +206,6 @@ public sealed class ScoreMapServer(
             builder.UseWebRoot(BrowserAppFolder);
         builder.UseSetting("Venues:SavedLocationsPath", SavedVenueLocationsPath);
         builder.UseSetting("Venues:SavedPhotosPath", SavedVenuePhotosPath);
-        for (var i = 0; i < _streamSites.Count; i++)
-        {
-            builder.UseSetting($"StreamFinder:Sites:{i}:Name", _streamSites[i].Name);
-            builder.UseSetting($"StreamFinder:Sites:{i}:SearchUrl", _streamSites[i].SearchUrl);
-            builder.UseSetting($"StreamFinder:Sites:{i}:LinkPattern", _streamSites[i].LinkPattern);
-        }
         if (StreamSiteTimeout is { } timeout)
             builder.UseSetting("StreamFinder:TimeoutSeconds", timeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
         if (FeedbackToken is not null)
@@ -251,6 +250,8 @@ public sealed class ScoreMapServer(
             services.AddSingleton<IPlaceSearch>(Places);
             services.RemoveAll<IVenuePhotoSearch>();
             services.AddSingleton<IVenuePhotoSearch>(Photos);
+            if (!UseShippedStreamSites)
+                services.PostConfigure<StreamFinderOptions>(settings => settings.Sites = _streamSites.ToList());
             services.AddHttpClient(StreamFinder.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => StreamSites);
             services.AddHttpClient(GitHubFeedbackSink.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => GitHub);
             if (StreamLinkSource is not null)

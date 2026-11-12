@@ -164,7 +164,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.scoreBlock.top`, `.bottom` | The game panel's score block, shading from top to bottom: on a desktop the tint of its glass (see [Glass](#glass)) | `primary.dark`, `primary.dark` |
 | `components.GamePanel.score.fill`, `.text` | A team's score box on the game panel; on a desktop the box is a pane of the score block's glass instead, only its text this color | `navy.600`, `text.primary` |
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
-| `components.GamePanel.photo.glow` | The glow behind the venue and its watch links when the venue has no photo | `navy.600` |
+| `components.GamePanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario popover too | `background.paper` |
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
@@ -366,7 +366,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
-| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its watch links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
+| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |
 | `components.GamePanel.size.height` | The strip's minimum height on a desktop; it grows for wrapped names. On a phone the panel is as tall as its contents | 140 |
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |

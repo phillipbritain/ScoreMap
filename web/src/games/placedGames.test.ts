@@ -32,7 +32,6 @@ function game(id: string, venue: Partial<GameVenue> = {}): Game {
       court: null,
       ...venue,
     },
-    broadcasters: [],
     streamLinks: [],
     note: null,
     situation: null,

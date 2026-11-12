@@ -32,13 +32,9 @@ A game written out in a scenario file must be at a venue in this list (by name a
 
 The venue list, team list and venue lookups ship to production with the `worldwide` scenario file (and no other), since a demo shows it on the live site (ADR-0019).
 
-## Watch links
-
-The server links each channel or streaming service to its official watch page when it is listed in `watch-links.json`, though the game panel doesn't show these for now (it shows only StreamEast's stream links, below), for example `{ "names": ["Peacock"], "url": "https://www.peacocktv.com/" }` (names match ESPN's spelling, ignoring case). Services without a watch URL are omitted. Edits take effect without a restart. When the feed lists broadcasts for the viewer's country (taken from the browser's language settings), broadcasts it marks for other countries are hidden; otherwise every channel with a watch URL is listed.
-
 ## Stream links
 
-The game panel can also show unofficial stream links (hobby v1 only, ADR-0002). `StreamFinder:Sites` in `appsettings.json` configures the sites; the shipped site reads StreamEast's schedule at `https://streameast.cool/` and extracts direct game links. Remove the configured sites to switch the finder off. The game panel shows only StreamEast's links, each as StreamEast's logo, the first two shown and the rest counted in “+N more.” Stream-finder settings are read at startup; restart the server after editing them.
+The game panel shows unofficial stream links (hobby v1 only, ADR-0002). `StreamFinder:Sites` in `appsettings.json` configures the sites; the shipped site reads StreamEast's schedule at `https://streameast.cool/` and extracts direct game links. Remove the configured sites to switch the finder off. The game panel shows only StreamEast's links, each as StreamEast's logo, the first two shown and the rest counted in “+N more.” Stream-finder settings are read at startup; restart the server after editing them.
 
 The finder starts a background fetch when an Upcoming or Live game with two sides needs an uncached schedule. All games and viewers using the same site and resolved page URL share that fetch and its parsed listings. A fetch has a short timeout (`TimeoutSeconds`, default 3); successful, empty and failed results are cached for `CacheMinutes` (default 10, shipped setting 2). Expired listings are omitted while refreshing, and failed refreshes remove old links. No fetch blocks scores. New links reach the browser on the next league poll after discovery, normally within 15 seconds for live leagues or 3 minutes for quiet leagues. Fetches happen only when games need them, rather than on a separate timer.
 

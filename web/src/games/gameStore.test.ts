@@ -31,7 +31,6 @@ function game(id: string, homeScore: string | null = null): Game {
       photo: null,
       court: null,
     },
-    broadcasters: [],
     streamLinks: [],
     note: null,
     situation: null,

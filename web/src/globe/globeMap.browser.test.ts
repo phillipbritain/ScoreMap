@@ -111,7 +111,6 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     clutchTime: false,
     hot: false,
     venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
-    broadcasters: [],
     streamLinks: [],
     note: null,
     situation: null,

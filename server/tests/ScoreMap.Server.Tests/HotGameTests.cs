@@ -171,7 +171,6 @@ public class HotGameTests
         DisplayClock: clock,
         Period: period,
         Venue: new ProviderVenue("Arena", "City", null, "Country"),
-        Broadcasters: [],
         Phase: phase);
 
     private static ProviderGame Baseball(int inning, ProviderPeriodPhase half, int home, int away, int runners, string league = Mlb) =>

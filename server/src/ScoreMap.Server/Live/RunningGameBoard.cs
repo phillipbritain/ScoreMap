@@ -32,10 +32,10 @@ public sealed partial class RunningGameBoard : BackgroundService
     private TimeSpan _quietInterval;
 
     public RunningGameBoard(
-        BoardSource source, VenueLocator venues, VenuePhotos photos, OfficialWatchLinks watchLinks,
+        BoardSource source, VenueLocator venues, VenuePhotos photos,
         IStreamLinkSource streams, IOptions<List<League>> leagues, TimeProvider clock,
         IHubContext<GamesHub> hub, ILogger<RunningGameBoard> logger)
-        : this(new BoardState(source.Feed, venues, photos, watchLinks, streams, leagues, source.GameClock),
+        : this(new BoardState(source.Feed, venues, photos, streams, leagues, source.GameClock),
             new BrowserConnections(GamesHub.RealGamesGroup), hub, clock,
             source.Polling, logger, source.Controls)
     { }

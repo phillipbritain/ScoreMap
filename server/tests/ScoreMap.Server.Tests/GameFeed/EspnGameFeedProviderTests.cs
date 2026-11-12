@@ -44,7 +44,7 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
-    public async Task Final_game_abroad_carries_its_real_venue_teams_scores_and_broadcasters()
+    public async Task Final_game_abroad_carries_its_real_venue_teams_and_scores()
     {
         var games = await FetchFixtureAsync("nfl.json", Nfl);
 
@@ -59,7 +59,6 @@ public class EspnGameFeedProviderTests
         Assert.Equal("0:00", london.DisplayClock);
         Assert.Equal(4, london.Period);
         Assert.Equal(new ProviderVenue("Tottenham Hotspur Stadium", "London", null, "England", "5534"), london.Venue);
-        Assert.Equal([new ProviderBroadcaster("NFL Net", "US")], london.Broadcasters);
     }
 
     [Fact]

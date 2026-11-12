@@ -10,7 +10,7 @@ public sealed class RugbyScenarioTests
 
     private static ProviderGame Match(int score) => new("same-id", League.Key, DateTimeOffset.UnixEpoch,
         new ProviderSides(new("H", "Home", null, score), new("A", "Away", null, 0)),
-        ProviderStatus.InProgress, "75'", 2, null, []);
+        ProviderStatus.InProgress, "75'", 2, null);
 
     [Fact]
     public void Scenario_detail_sessions_keep_their_own_event_history()

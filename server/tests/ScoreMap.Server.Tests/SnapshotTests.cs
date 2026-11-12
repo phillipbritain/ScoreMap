@@ -24,8 +24,7 @@ public class SnapshotTests
             Status: ProviderStatus.InProgress,
             DisplayClock: "4:12",
             Period: 3,
-            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA"),
-            Broadcasters: [new ProviderBroadcaster("CBS", "USA")]));
+            Venue: new ProviderVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "MO", "USA")));
 
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
@@ -40,7 +39,6 @@ public class SnapshotTests
         Assert.Equal("Q3 4:12", game.Clock);
         Assert.Equal(3, game.Period);
         Assert.Equal(new GameVenue("GEHA Field at Arrowhead Stadium", "Kansas City", "Missouri", "USA", 39.0489, -94.4839, "America/Chicago"), game.Venue);
-        Assert.Equal([new GameBroadcaster("CBS", "USA", null)], game.Broadcasters);
     }
 
     [Fact]

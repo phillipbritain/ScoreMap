@@ -16,7 +16,6 @@ public sealed partial class RunningGameBoard
         IGameFeedProvider feed,
         VenueLocator venues,
         VenuePhotos photos,
-        OfficialWatchLinks watchLinks,
         IStreamLinkSource streams,
         IOptions<List<League>> leagues,
         TimeProvider clock)
@@ -201,7 +200,6 @@ public sealed partial class RunningGameBoard
                 ClutchTime.For(game, league),
                 HotGame.For(game, league),
                 ToVenue(game.Venue, location) with { Photo = photos.PhotoFor(league.Key, game.Venue) },
-                game.Broadcasters.Select(b => new GameBroadcaster(b.Name, b.Country, watchLinks.Find(b.Name))).ToList(),
                 StreamLinks: [])
             {
                 Note = game.Note,

@@ -339,7 +339,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             started ? status?.DisplayClock : null,
             started ? status?.Period : null,
             ToVenue(competition!.Venue),
-            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts),
             status?.Type?.State == "in" ? ToPhase(status.Type) : ProviderPeriodPhase.Playing)
         {
             Note = ToNote(competition.Notes),
@@ -385,8 +384,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
                 status,
                 null,
                 started ? match.Status?.Period : null,
-                new ProviderVenue(name, NullIfBlank(match.Venue?.FullName), null, null, Court: NullIfBlank(match.Venue?.Court)),
-                ToBroadcasters(match.Broadcasts, match.GeoBroadcasts))
+                new ProviderVenue(name, NullIfBlank(match.Venue?.FullName), null, null, Court: NullIfBlank(match.Venue?.Court)))
             {
                 Note = string.Join(" · ", new[] { name, ShortRound(round) }.OfType<string>()) is { Length: > 0 } note ? note : null,
                 Sets = sets,
@@ -429,8 +427,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             ToStatus(status?.Type),
             null,
             started ? status?.Period : null,
-            ToVenue(e.Circuit),
-            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts))
+            ToVenue(e.Circuit))
         {
             Note = NullIfBlank(e.Name),
         };
@@ -460,8 +457,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             card.Status(ToStatus(e.Status?.Type)),
             null,
             null,
-            ToVenue(competitions.Select(c => c.Venue).FirstOrDefault(venue => venue is not null)),
-            ToBroadcasters(main.Broadcasts, main.GeoBroadcasts))
+            ToVenue(competitions.Select(c => c.Venue).FirstOrDefault(venue => venue is not null)))
         {
             Note = NullIfBlank(e.Name),
         };
@@ -539,7 +535,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             null,
             period,
             null,
-            ToBroadcasters(competition.Broadcasts, competition.GeoBroadcasts),
             phase)
         {
             Note = NullIfBlank(e.Name),
@@ -904,18 +899,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private static ProviderVenue? ToVenue(Venue? venue) =>
         venue is null ? null : new ProviderVenue(venue.FullName, venue.Address?.City, venue.Address?.State, venue.Address?.Country, venue.Id);
 
-    private static IReadOnlyList<ProviderBroadcaster> ToBroadcasters(List<Broadcast>? broadcasts, List<GeoBroadcast>? geoBroadcasts)
-    {
-        var geo = (geoBroadcasts ?? [])
-            .Where(b => b.Media?.ShortName is not null && !string.Equals(b.Type?.ShortName, "Radio", StringComparison.OrdinalIgnoreCase))
-            .Select(b => new ProviderBroadcaster(b.Media!.ShortName!, b.Region?.ToUpperInvariant()));
-        var plain = (broadcasts ?? [])
-            .SelectMany(b => b.Names ?? [])
-            .Select(name => new ProviderBroadcaster(name, null));
-        var broadcasters = geo.Any() ? geo : plain;
-        return broadcasters.Distinct().ToList();
-    }
-
     // ESPN response shape (only the fields ScoreMap reads).
     private sealed record Scoreboard(List<Event>? Events);
     private sealed record Header(List<HeaderSport>? Sports);
@@ -926,7 +909,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         string? Name, List<EventGrouping>? Groupings, Venue? Circuit, List<Link>? Links);
     private sealed record Link(List<string>? Rel, string? Href);
     private sealed record Competition(string? Id, DateTimeOffset? Date, Venue? Venue, List<Competitor>? Competitors, Status? Status,
-        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts,
         Situation? Situation, List<Detail>? Details, List<Note>? Notes, CompetitionType? Type, Format? Format);
     // F1: which session of the weekend a competition is ("FP1", "Qual", "Race"); MMA: a bout's weight class.
     private sealed record CompetitionType(string? Abbreviation);
@@ -947,7 +929,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record EventGrouping(GroupingType? Grouping, List<Match>? Competitions);
     private sealed record GroupingType(string? Slug);
     private sealed record Match(string? Id, DateTimeOffset? Date, Venue? Venue, List<MatchSide>? Competitors, Status? Status,
-        List<Broadcast>? Broadcasts, List<GeoBroadcast>? GeoBroadcasts, Round? Round);
+        Round? Round);
     private sealed record Round(string? DisplayName);
     private sealed record MatchSide(string? HomeAway, Player? Athlete, List<Linescore>? Linescores, bool? Winner);
     private sealed record Player(string? DisplayName, string? ShortName, Flag? Flag);
@@ -986,8 +968,4 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record CoreEvent(List<CoreLink>? Venues, List<CoreCourse>? Courses);
     private sealed record CoreCourse(string? Id, string? Name, Address? Address);
     private sealed record CoreLink([property: System.Text.Json.Serialization.JsonPropertyName("$ref")] string? Ref);
-    private sealed record Broadcast(string? Market, List<string>? Names);
-    private sealed record GeoBroadcast(GeoBroadcastType? Type, GeoMedia? Media, string? Region);
-    private sealed record GeoBroadcastType(string? ShortName);
-    private sealed record GeoMedia(string? ShortName);
 }

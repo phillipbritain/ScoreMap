@@ -142,7 +142,6 @@ const bills: PlacedGame = {
   clutchTime: false,
   hot: false,
   venue: { name: null, city: null, region: null, country: null, latitude: 20, longitude: -35, timeZone: null, photo: null, court: null },
-  broadcasters: [],
   streamLinks: [],
   note: null,
   situation: null,

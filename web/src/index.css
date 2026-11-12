@@ -371,24 +371,33 @@ body {
   text-decoration: underline;
 }
 
-/* The watch links, and the link to the game's page on ESPN. */
-.game-panel__watch a,
-.game-panel__espn-link {
+.game-panel__watch a {
   color: var(--palette-text-link);
 }
 
-/* The link to the game's page on ESPN in the panel's top right corner, under the close button, level with
-   the venue's name; the venue's name keeps clear of it. */
+/* The link to the game's page on ESPN, ESPN's logo, in the panel's top right corner under the close button,
+   level with the venue's name; the venue's name keeps clear of it. */
 .game-panel__espn-link {
   position: absolute;
   top: calc(3 * var(--spacing));
   right: calc(4 * var(--spacing));
   z-index: 3;
-  text-shadow: 0 1px 3px var(--palette-background-default);
+  display: block;
+  line-height: 0;
+}
+
+.game-panel__espn-link img {
+  display: block;
+  height: calc(4 * var(--spacing));
+  filter: drop-shadow(0 1px 2px var(--palette-background-default));
+}
+
+.game-panel__espn-link:hover img {
+  filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
 }
 
 .game-panel--espn .game-panel__venue {
-  padding-right: calc(10 * var(--spacing));
+  padding-right: calc(17 * var(--spacing));
 }
 
 .game-panel__unofficial {
@@ -635,7 +644,7 @@ body {
   }
 
   .game-panel--espn .game-panel__league {
-    padding-right: calc(10 * var(--spacing));
+    padding-right: calc(17 * var(--spacing));
   }
 
   .game-panel--espn .game-panel__venue {

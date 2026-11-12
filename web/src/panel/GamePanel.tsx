@@ -8,6 +8,9 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import { listedWatchLinks, viewerCountry, watchLinks } from './watchLinks'
 
+/** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
+const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
+
 interface GamePanelProps {
   game: Game
   /** The side that last scored, lit up for a moment (see justHappened.ts); none since the last snapshot. */
@@ -117,8 +120,8 @@ export function GamePanel({ game, scorer, color, textOnColor, onClose, ref }: Ga
       </button>
       {/* The game's page on ESPN, in the top right corner under the close button, when ESPN lists one. */}
       {game.espnUrl && (
-        <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer">
-          ESPN
+        <a className="game-panel__espn-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
+          <img src={espnLogoUrl} alt="The game on ESPN" />
         </a>
       )}
     </aside>

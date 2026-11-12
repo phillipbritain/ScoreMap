@@ -3,6 +3,7 @@ import type { Game, GameTeam } from './game'
 import { gameLabel, gameMatchup, matchesSearch } from './gameLabel'
 import { moveByArrows } from '../menus/arrowKeys'
 import { sidesTopFirst } from './sides'
+import { isPinned, onCardsPrototypeChange, togglePinned } from '../globe/cardsPrototype'
 
 /**
  * The Games popover's list (see Rail): every filtered game, independent of the camera and of which pins
@@ -22,6 +23,9 @@ export function GameNavigation({ games, onSelect }: {
   const search = useRef<HTMLInputElement>(null)
   const focusedGame = useRef<HTMLElement | null>(null)
   const [query, setQuery] = useState('')
+  // PROTOTYPE: redrawn as games are pinned.
+  const [, redraw] = useState(0)
+  useEffect(() => onCardsPrototypeChange(() => redraw((n) => n + 1)), [])
   useEffect(() => {
     if (window.matchMedia(finePointer).matches) search.current?.focus({ preventScroll: true })
   }, [])
@@ -59,6 +63,19 @@ export function GameNavigation({ games, onSelect }: {
                 </span>
                 <span className="game-navigation__chevron" aria-hidden="true">›</span>
               </button>
+              {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="game-navigation__proto-pin"
+                  aria-pressed={isPinned(game.id)}
+                  aria-label={`${isPinned(game.id) ? 'Unpin' : 'Pin'} ${gameLabel(game)}`}
+                  title={isPinned(game.id) ? 'Unpin: card shows only as usual' : 'Pin: card always shows'}
+                  onClick={() => togglePinned(game.id)}
+                >
+                  📌
+                </button>
+              )}
             </li>
           )),
         ])}

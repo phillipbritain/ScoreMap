@@ -1,6 +1,7 @@
 import { degreesApart, type GlobePoint } from './geo'
 import type { MapType } from '../settings/viewerSettings'
 import limits from './zoomSettings.json'
+import { cardsVariant } from './cardsPrototype'
 
 /**
  * Small pins when zoomed out; score cards once a country fills the screen, for games near the center
@@ -33,7 +34,7 @@ export const cardRadius = 40
 
 /** Whether a game has a score card at card zoom: its venue is within cardRadius of the view's center. */
 export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
-  return degreesApart(center, venue) <= cardRadius
+  return degreesApart(center, venue) <= cardsVariant().radius // PROTOTYPE: was cardRadius
 }
 
 /** How far out and in the globe zooms, and where it starts. */
@@ -177,6 +178,7 @@ export const clusterMaxZoom = maxZoom - 1
  * counts as there, so a zoom set to the card zoom at some latitude (see zoomAt) has cards.
  */
 export function pinSize(camera: GlobeCamera, cardsFrom: number): PinSize {
+  if (cardsVariant().everyZoom) return 'card' // PROTOTYPE
   return zoomAtEquator(camera) >= cardsFrom - 1e-6 ? 'card' : 'small'
 }
 

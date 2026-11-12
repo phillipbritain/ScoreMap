@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
@@ -33,6 +33,11 @@ import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
+
+// PROTOTYPE, throw away: the cards-at-every-zoom bar (see globe/cardsPrototype.ts), local runs only.
+const CardsPrototypeBar = import.meta.env.DEV
+  ? lazy(() => import('./globe/CardsPrototypeBar').then(({ CardsPrototypeBar }) => ({ default: CardsPrototypeBar })))
+  : null
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -118,6 +123,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {CardsPrototypeBar && (
+        <Suspense>
+          <CardsPrototypeBar />
+        </Suspense>
+      )}
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

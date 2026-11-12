@@ -43,6 +43,7 @@ import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
+import { cardsVariant, onCardsPrototypeChange } from './cardsPrototype'
 import {
   hasCard,
   cityNamesFrom,
@@ -239,6 +240,16 @@ export class GlobeMap {
       // On every move, not just zooms: turning the globe changes MapLibre's zoom, and with it how
       // far past a whole level it is (see pinLayout), and games cross the card radius.
       map.on('move', this.cameraMoved)
+      // PROTOTYPE: a change of variant or pins re-lays the pins and cards out.
+      this.stopCardsPrototype = onCardsPrototypeChange(() => {
+        this.unsettle()
+        if (this.pins?.cameraMoved()) this.switchLayers()
+        this.switchLayers()
+        this.compactNow()
+        this.cards.restyle()
+        map.triggerRepaint()
+      })
+      this.compactNow()
       // Cards follow the clustered source, which changes as the camera moves and data arrives.
       map.on('render', this.syncCards)
       // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
@@ -470,6 +481,7 @@ export class GlobeMap {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
+    this.stopCardsPrototype()
     this.moves?.destroy()
     this.map.off('error', this.initialStyleError)
     window.removeEventListener('pagehide', this.saveCamera)
@@ -509,6 +521,20 @@ export class GlobeMap {
   /** The pin sources recluster and the outer pins follow (see PinSources.cameraMoved), switching the layers over with the pin size. */
   private readonly cameraMoved = () => {
     if (this.pins?.cameraMoved()) this.switchLayers()
+    this.compactNow()
+  }
+
+  /** PROTOTYPE: stops listening for the cards prototype's changes. */
+  private stopCardsPrototype: () => void = () => {}
+  private compact = false
+
+  /** PROTOTYPE: in variant D, cards are compact zoomed out past the real card zoom, measured afresh as that changes. */
+  private compactNow(): void {
+    const compact = cardsVariant().compactZoomedOut && zoomAtEquator(this.camera()) < this.cardZoom - 1e-6
+    if (compact === this.compact) return
+    this.compact = compact
+    this.map.getContainer().classList.toggle('cards-proto-compact', compact)
+    this.cards?.restyle()
   }
 
   /**

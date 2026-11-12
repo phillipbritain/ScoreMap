@@ -1,0 +1,91 @@
+/* PROTOTYPE, throw away: the cards-at-every-zoom and pinned-games prototype (see cardsPrototype.ts). */
+
+/* D: zoomed out, a compact card: no clock header, small logos, small type. */
+.cards-proto-compact .score-card {
+  --score-card-size-logo: 12px;
+  --score-card-size-min-width: 0px;
+  gap: 0;
+  padding: 2px 0;
+  font-size: 10px;
+}
+.cards-proto-compact .score-card__header {
+  display: none;
+}
+.cards-proto-compact .score-card__team {
+  gap: 4px;
+  padding: 0 5px;
+}
+
+/* A pinned game's card: a pin badge on its top right corner. */
+.score-card--proto-pinned::after {
+  content: '📌';
+  position: absolute;
+  top: -9px;
+  right: -7px;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* The Games list's pin button, beside each game. */
+.game-navigation__game:has(.game-navigation__proto-pin) {
+  display: flex;
+  align-items: center;
+}
+.game-navigation__game:has(.game-navigation__proto-pin) > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.game-navigation .game-navigation__proto-pin {
+  flex: none;
+  width: auto;
+  padding: 4px 8px;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.game-navigation .game-navigation__proto-pin:hover {
+  opacity: 0.8;
+}
+.game-navigation .game-navigation__proto-pin[aria-pressed='true'] {
+  opacity: 1;
+  filter: none;
+}
+
+/* The floating bar that switches variants: not part of any design being judged. Top center, clear of
+   the bottom sheets. */
+.cards-prototype {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 12px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.cards-prototype button {
+  padding: 2px 8px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+.cards-prototype__label {
+  font-weight: 600;
+}
+@media (max-width: 500px) {
+  .cards-prototype__label {
+    max-width: 44vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

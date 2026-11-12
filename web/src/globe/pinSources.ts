@@ -18,6 +18,7 @@ import {
   selectedPin,
   selectedPinLayer,
 } from './pinLayers'
+import { isPinned } from './cardsPrototype'
 import { clusterMaxZoom, hasCard, pinLayout, pinSize, type PinLayout, type PinSize } from './zoomLevels'
 
 /**
@@ -88,13 +89,14 @@ export interface PinSourcesOptions {
  * the globe facing the viewer (as `isBehindGlobe` tells). Zoomed out, none: every game's small pin is
  * in the pin source.
  */
-export function outerPinGames<G extends { venue: GlobePoint }>(
+export function outerPinGames<G extends { venue: GlobePoint; id?: string }>(
   games: readonly G[],
   { size, center }: { size: PinSize; center: GlobePoint },
   isBehindGlobe: (venue: GlobePoint) => boolean,
 ): G[] {
   if (size !== 'card') return []
-  return games.filter(({ venue }) => !hasCard(center, venue) && !isBehindGlobe(venue))
+  // PROTOTYPE: a pinned game has its card wherever it is, so no outer pin.
+  return games.filter(({ venue, id }) => !(id && isPinned(id)) && !hasCard(center, venue) && !isBehindGlobe(venue))
 }
 
 /** The pin layout for the map's view now, for small pins and pin clusters as wide as the theme's (see pinLayout). */

@@ -23,6 +23,7 @@ import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scor
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
 import { hasCard, pinSize } from './zoomLevels'
+import { isPinned, pinnedGames } from './cardsPrototype'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -191,9 +192,12 @@ export class ScoreCardMarkers {
     const pinsLoaded = this.map.isSourceLoaded(pinSource)
     let changed = !pinsLoaded
     const pins = pinsLoaded
-      ? pinSize({ zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }, this.cardZoom()) === 'card'
-        ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
-        : []
+      ? withPinned(
+          pinSize({ zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }, this.cardZoom()) === 'card'
+            ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
+            : [],
+          this.games,
+        )
       : // The source reloads after every change of games, and can't be read until it has. Live games
         // can change faster than it loads, so meanwhile the cards placed stay put but still show
         // each change.
@@ -203,8 +207,8 @@ export class ScoreCardMarkers {
     // they as their venues cross the card radius, where they swap with small pins (see GlobeMap).
     const { lng: longitude, lat: latitude } = this.map.getCenter()
     const wanted = pins.filter(
-      ({ lngLat }) =>
-        !isBehindGlobe(this.map, lngLat) && hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }),
+      ({ gameId, lngLat }) =>
+        !isBehindGlobe(this.map, lngLat) && (isPinned(gameId) || hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] })),
     )
 
     const keep = new Set<string>()
@@ -230,6 +234,7 @@ export class ScoreCardMarkers {
         this.placed.set(gameId, placed)
         changed = true
       } else placed.moveTo(lngLat)
+      placed.element.classList.toggle('score-card--proto-pinned', isPinned(gameId)) // PROTOTYPE
       const from = placed.drawnFrom
       if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme && from.scorer === scorer) continue
       placed.drawnFrom = { game, color, flames, selected, theme, scorer }
@@ -242,6 +247,7 @@ export class ScoreCardMarkers {
         placed.markerElement.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
         placed.rows = drawScoreCard(placed.element, card, { color, header }, selected, placed.animation)
         spotlightScorer(placed.rows, game, scorer)
+        placed.element.classList.toggle('score-card--proto-pinned', isPinned(gameId)) // PROTOTYPE
         placed.drawn = drawn
         placed.measure()
         changed = true
@@ -545,4 +551,14 @@ function span(className: string, text: string): HTMLElement {
   element.className = className
   element.textContent = text
   return element
+}
+
+/** PROTOTYPE: the pins read, with every pinned game's added at its venue, at any zoom and in or out of a pin cluster. */
+function withPinned(pins: CardPin[], games: ReadonlyMap<string, PlacedGame>): CardPin[] {
+  const have = new Set(pins.map(({ gameId }) => gameId))
+  const added = [...pinnedGames()].flatMap((gameId): CardPin[] => {
+    const game = games.get(gameId)
+    return game && !have.has(gameId) ? [{ gameId, lngLat: [game.venue.longitude, game.venue.latitude] }] : []
+  })
+  return [...pins, ...added]
 }

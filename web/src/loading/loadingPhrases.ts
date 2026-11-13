@@ -18,7 +18,6 @@ export const loadingPhrases: Record<PhraseScenario, ScenarioPhrases> = {
   // Loading as usual, for the first 10 seconds of each stage of the first load.
   loading: {
     phrases: [
-      'Traveling to space…',
       'Preparing for liftoff…',
       'Counting down to launch…',
       'Fueling up the rocket…',

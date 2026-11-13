@@ -8,9 +8,9 @@ const theme = themeWith((json) => {
   json.components.Hover.venue = { radius: 4, glow: { radius: 14, opacity: 0.7 } }
 })
 
-// a ends at a dot of its own; b at a venue cluster.
+// a ends at a dot of its own; b at a venue cluster. Both run straight, one down and one at 45°, so neither bends.
 const a: TrailOnScreen = { gameId: 'a', from: { x: 100, y: 150 }, to: { x: 100, y: 200 }, dot: true }
-const b: TrailOnScreen = { gameId: 'b', from: { x: 300, y: 150 }, to: { x: 320, y: 200 }, dot: false }
+const b: TrailOnScreen = { gameId: 'b', from: { x: 300, y: 150 }, to: { x: 350, y: 200 }, dot: false }
 const shapesOf = (...pickedOut: (string | null)[]) => trailShapes([a, b], ['#aaaaaa', '#bbbbbb'], pickedOut, theme.components)
 
 describe('trailShapes', () => {
@@ -53,6 +53,19 @@ describe('trailShapes', () => {
     expect(boldLines(shapesOf('a', 'b'))).toEqual([3, 3])
     expect(boldLines(shapesOf(null, 'b'))).toEqual([1.5, 3])
     expect(boldLines(shapesOf(null, null))).toEqual([1.5, 1.5])
+  })
+
+  it('draws a trail that bends in pieces, end to end, from its card to its venue, whichever way it goes first', () => {
+    for (const firstLeg of ['straight', 'diagonal'] as const) {
+      const bending: TrailOnScreen = { gameId: 'c', from: { x: 100, y: 100 }, to: { x: 200, y: 140 }, dot: true, firstLeg }
+      const lines = trailShapes([bending], ['#aaaaaa'], [], theme.components).filter(
+        (shape): shape is Extract<TrailShape, { kind: 'line' }> => shape.kind === 'line' && shape.blur === 0,
+      )
+      expect(lines.length).toBeGreaterThan(1)
+      expect(lines[0].from).toEqual(bending.from)
+      expect(lines.at(-1)!.to).toEqual(bending.to)
+      for (let i = 1; i < lines.length; i++) expect(lines[i].from).toEqual(lines[i - 1].to)
+    }
   })
 
   it('fades a trail and its venue dot with its card as it comes in or goes out', () => {

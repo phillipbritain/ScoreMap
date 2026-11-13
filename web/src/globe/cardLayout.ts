@@ -1,7 +1,9 @@
 import type { GameStatus } from '../games/game'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
+import { routeTrails, untangle } from './crowdTrails'
 import { groupStatus, statusProminence } from './statusLook'
+import type { FirstLeg } from './trailRoute'
 
 /** One game's score card, as the map shows it: its venue on screen and the card's measured size. */
 export interface ScreenCard {
@@ -54,6 +56,8 @@ export interface CardPlacement {
   moved: boolean
   /** From the edge of the card to its venue; null for a card in a card cluster. */
   trail: Segment | null
+  /** Which way the trail goes first from the card, drawn as a transit line (see trailCorners): straight, unless given. */
+  firstLeg?: FirstLeg
   /** For a card in a card cluster, how many layouts ago it last looked for room (see CardScene.moving). */
   lookedAgo?: number
 }
@@ -115,7 +119,7 @@ export interface Gathering {
  * all, as it wasn't given.
  */
 export type Showing =
-  | { as: 'card'; offset: ScreenOffset; moved: boolean; trail: Segment; cardCluster?: readonly string[] }
+  | { as: 'card'; offset: ScreenOffset; moved: boolean; trail: Segment; firstLeg?: FirstLeg; cardCluster?: readonly string[] }
   | { as: 'inCardCluster'; cardCluster: readonly string[] }
   | { as: 'smallPin' }
   | { as: 'notLaidOut' }
@@ -177,7 +181,8 @@ function differs(was: ReadonlyMap<string, Showing>, now: ReadonlyMap<string, Sho
  * Lays out the score cards on screen. Each sits the venue gap above its venue, with a short trail down
  * to it, unless that overlaps another card, a venue or a city's name: then it's moved aside, wholly on
  * screen and as near its venue as it can be but never nearer than the gap, its trail following it (see
- * arrange). Cards get room by status,
+ * arrange). A crowd's cards are then handed round their spots so their trails don't cross (see
+ * untangle), and each moved card's trail is routed round the cards in its way (see routeTrails). Cards get room by status,
  * most prominent first, whichever is selected, so selecting a card never moves it; a card with no
  * room within reach joins a card cluster. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
@@ -216,6 +221,20 @@ export function layOutCards(
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
   const { shifts, cardClusters, lookedAgo } = arrange(pushOnScreen(boxes, scene), names, scene)
+  // Handed round, the cards with room, by rank and then game order as they're placed, each where it's centered.
+  const withRoom = boxes
+    .filter((box) => shifts.has(box.gameId))
+    .sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+    .map((box) => ({ ...box, x: box.x + shifts.get(box.gameId)!.dx, y: box.y + shifts.get(box.gameId)!.dy, moved: isMoved(shifts.get(box.gameId)) }))
+  const venues = boxes.map(({ venueX, venueY }) => ({ x: venueX, y: venueY }))
+  // Only once the camera is still: handing cards round as it moves would have them swap places as it goes.
+  const centers = scene.moving ? new Map(withRoom.map(({ gameId, x, y }) => [gameId, { x, y }])) : untangle(withRoom, { width: scene.width, height: scene.height, venueGap: scene.venueGap, gap, venueRadius, venues, names })
+  const unmoved = new Map(boxes.map((box) => [box.gameId, box]))
+  for (const [gameId, { x, y }] of centers) {
+    const box = unmoved.get(gameId)!
+    shifts.set(gameId, { dx: x - box.x, dy: y - box.y })
+  }
+  const routes = routeTrails(withRoom.map((box) => ({ ...box, ...centers.get(box.gameId)! })))
 
   const placements = new Map(cards.map((card) => [card.gameId, sitting(card)]))
   for (const box of boxes) {
@@ -230,11 +249,13 @@ export function layOutCards(
       })
       continue
     }
+    const { from, firstLeg } = routes.get(box.gameId)!
     placements.set(box.gameId, {
       offset: { dx: shift.dx, dy: shift.dy - scene.venueGap },
       inCardCluster: false,
       moved: isMoved(shift),
-      trail: trail(box, shift),
+      trail: { x1: from.x, y1: from.y, x2: box.venueX, y2: box.venueY },
+      ...(firstLeg === 'diagonal' && { firstLeg }),
     })
   }
   return {
@@ -262,15 +283,6 @@ function lookedAgoOf(placement: CardPlacement | undefined): number | undefined {
   return placement?.inCardCluster ? (placement.lookedAgo ?? 0) : undefined
 }
 
-/** A card's trail: from where a line from the card's center to its venue leaves the card. */
-function trail(box: CardBox, { dx, dy }: ScreenOffset): Segment {
-  const centerX = box.x + dx
-  const centerY = box.y + dy
-  const toVenueX = box.venueX - centerX
-  const toVenueY = box.venueY - centerY
-  const edge = Math.min(1, box.width / 2 / Math.abs(toVenueX), box.height / 2 / Math.abs(toVenueY))
-  return { x1: centerX + toVenueX * edge, y1: centerY + toVenueY * edge, x2: box.venueX, y2: box.venueY }
-}
 
 /** One score card where it would sit undisturbed, in screen pixels. */
 interface CardBox {
@@ -720,8 +732,8 @@ function gather(
   )
   const showing = new Map<string, Showing>()
   for (const card of withTrails) {
-    const { offset, moved, trail } = placements.get(card.gameId)!
-    showing.set(card.gameId, { as: 'card', offset, moved, trail: trail! })
+    const { offset, moved, trail, firstLeg } = placements.get(card.gameId)!
+    showing.set(card.gameId, { as: 'card', offset, moved, trail: trail!, ...(firstLeg && { firstLeg }) })
   }
   const gathered: Gathering[] = []
   const cardClusters: (readonly string[])[] = []

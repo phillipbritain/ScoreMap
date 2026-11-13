@@ -4,6 +4,7 @@ import { cardLayout, layOutCards, type CardPlacements, type CardScene, type Layo
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { gatheringRulesBroken } from './gatheringRules'
+import { trailCorners } from './trailRoute'
 
 const venueGap = 16
 const scene: CardScene = { width: 1000, height: 800, venueGap }
@@ -68,6 +69,15 @@ function lineCrossesCard(x1: number, y1: number, x2: number, y2: number, c: Scre
     if (Math.abs(x - c.x) < c.width / 2 && Math.abs(y - c.y) < c.height / 2) return true
   }
   return false
+}
+
+/** Whether two lines cross, other than where they only touch at an end. */
+function segmentsCross(a: { x1: number; y1: number; x2: number; y2: number }, b: { x1: number; y1: number; x2: number; y2: number }): boolean {
+  const side = (px: number, py: number, qx: number, qy: number, rx: number, ry: number) => Math.sign((qx - px) * (ry - py) - (qy - py) * (rx - px))
+  return (
+    side(a.x1, a.y1, a.x2, a.y2, b.x1, b.y1) * side(a.x1, a.y1, a.x2, a.y2, b.x2, b.y2) < 0 &&
+    side(b.x1, b.y1, b.x2, b.y2, a.x1, a.y1) * side(b.x1, b.y1, b.x2, b.y2, a.x2, a.y2) < 0
+  )
 }
 
 function anyOverlap(cards: ScreenBox[]): boolean {
@@ -312,6 +322,71 @@ describe('layOutCards', () => {
     })
   })
 
+  describe("a crowd's trails", () => {
+    // Eight venues packed in a spiral, whose cards, placed one at a time, leave trails crossing.
+    const crowd: ScreenCard[] = Array.from({ length: 8 }, (_, i) => ({
+      gameId: `c${i}`,
+      status: 'Live',
+      venueX: mx + 10 * Math.sqrt(i) * Math.cos(i * 2.39996),
+      venueY: my + 10 * Math.sqrt(i) * Math.sin(i * 2.39996),
+      width: 106,
+      height: 60,
+    }))
+    const moving = { ...scene, moving: true }
+    // Each card's trail as a line from its center to its venue.
+    const lines = (layout: CardPlacements) =>
+      boxesOf(crowd, layout)
+        .filter(({ gameId }) => !layout.cards.get(gameId)!.inCardCluster)
+        .map((c) => ({ x1: c.x, y1: c.y, x2: c.venueX, y2: c.venueY, gameId: c.gameId }))
+    const crossings = (layout: CardPlacements) => {
+      const all = lines(layout)
+      return all.flatMap((a, i) => all.slice(i + 1).filter((b) => segmentsCross(a, b))).length
+    }
+
+    it('are handed round once the camera is still, so they no longer cross, every card still clear of the others', () => {
+      expect(crossings(layOutCards(crowd, moving))).toBeGreaterThan(0)
+      const still = layOutCards(crowd, scene)
+      expect(crossings(still)).toBe(0)
+      expect(anyOverlap(boxesOf(crowd, still))).toBe(false)
+    })
+
+    it('leave a card above its venue where it is', () => {
+      const placed = layOutCards(crowd, moving)
+      const still = layOutCards(crowd, scene)
+      for (const { gameId } of crowd)
+        if (!placed.cards.get(gameId)!.moved) expect(still.cards.get(gameId)!.offset).toEqual(placed.cards.get(gameId)!.offset)
+    })
+
+    it('stay as they were handed round, laid out again', () => {
+      const still = layOutCards(crowd, scene)
+      const again = layOutCards(crowd, scene, still.cards)
+      for (const { gameId } of crowd) expect(again.cards.get(gameId)!.offset).toEqual(still.cards.get(gameId)!.offset)
+    })
+
+    it("are routed round the cards in a trail's way, where a line from the card's edge straight to its venue would cross them", () => {
+      const still = layOutCards(crowd, scene)
+      const boxes = boxesOf(crowd, still)
+      const crossed = (corners: { x: number; y: number }[], own: string) =>
+        boxes.filter(
+          (other) =>
+            other.gameId !== own &&
+            corners.some((corner, i) => i > 0 && lineCrossesCard(corners[i - 1].x, corners[i - 1].y, corner.x, corner.y, other)),
+        ).length
+      let straight = 0
+      let routed = 0
+      for (const box of boxes) {
+        const { trail, firstLeg } = still.cards.get(box.gameId)!
+        const venue = { x: box.venueX, y: box.venueY }
+        // Straight from where a line from the center to the venue leaves the card, as trails ran before.
+        const edge = Math.min(1, box.width / 2 / Math.abs(box.venueX - box.x), box.height / 2 / Math.abs(box.venueY - box.y))
+        const facing = { x: box.x + (box.venueX - box.x) * edge, y: box.y + (box.venueY - box.y) * edge }
+        straight += crossed([facing, venue], box.gameId)
+        routed += crossed(trailCorners({ x: trail!.x1, y: trail!.y1 }, venue, firstLeg), box.gameId)
+      }
+      expect(routed).toBeLessThan(straight)
+    })
+  })
+
   describe('laid out again, as the globe turns', () => {
     // Two games at one venue: b is moved aside, below the venue.
     const pair = [card('a', mx, my), card('b', mx, my)]
@@ -421,12 +496,14 @@ describe('layOutCards', () => {
             height: 60,
           }
         })
+      // As the camera moves, which a pan is: a crowd's cards are handed round only once it's still (see untangle).
+      const panning = { ...scene, moving: true }
       // How often a card with its venue on screen leaps further than a jump from where it was.
       let jumps = 0
       let previous: CardPlacements['cards'] = new Map()
       for (let frame = 0; frame < 100; frame++) {
         const cards = crowd(frame)
-        const layout = layOutCards(cards, scene, previous)
+        const layout = layOutCards(cards, panning, previous)
         for (const { gameId, venueX, venueY } of cards) {
           const was = previous.get(gameId)
           const now = layout.cards.get(gameId)!

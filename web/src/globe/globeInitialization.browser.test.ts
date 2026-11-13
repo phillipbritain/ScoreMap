@@ -9,6 +9,7 @@ import { baseStyleUrl } from './globeStyle'
 import { cityLabelSettings } from './cityLabels'
 import { zoomSettings } from './zoomLevels'
 import { LoadingScreen } from '../loading/LoadingScreen'
+import { loadingPhrases } from '../loading/loadingPhrases'
 import { builtInTheme } from '../theme/builtInTheme'
 import { applyTheme } from '../theme/applyTheme'
 import '../index.css'
@@ -101,7 +102,7 @@ it.each(['HTTP error', 'network rejection', 'invalid style'])(
     })
     const remove = vi.spyOn(MapLibreMap.prototype, 'remove')
     open()
-    await waitForError('The map couldn’t load')
+    await waitForError(loadingPhrases.styleError.hint!)
     const failedMap = window.scoremap!.map
     expect(remove).toHaveBeenCalledOnce()
     const context = failedMap.getCanvas().getContext('webgl2')
@@ -120,7 +121,7 @@ it('explains WebGL failure and can start once WebGL becomes available', async ()
   const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
   styleService(async () => Response.json(baseStyle))
   open()
-  await waitForError('Check that WebGL is enabled')
+  await waitForError(loadingPhrases.constructionError.hint!)
   expect(container.querySelector('canvas.maplibregl-canvas')).toBeNull()
   getContext.mockRestore()
   retry()!.click()
@@ -135,7 +136,7 @@ it('cleans up a partial map when initialization throws after map construction', 
     throw new Error('Style setup failed')
   })
   open()
-  await waitForError('The globe couldn’t start')
+  await waitForError(loadingPhrases.constructionError.hint!)
   expect(remove).toHaveBeenCalledOnce()
   setStyle.mockRestore()
   retry()!.click()
@@ -185,11 +186,11 @@ it('cleans up each failed retry before creating the next globe', async () => {
   styleService(async () => recovered ? Response.json(baseStyle) : new Response('', { status: 503 }))
   const remove = vi.spyOn(MapLibreMap.prototype, 'remove')
   open()
-  await waitForError('The map couldn’t load')
+  await waitForError(loadingPhrases.styleError.hint!)
   expect(remove).toHaveBeenCalledTimes(1)
   retry()!.click()
   await vi.waitFor(() => expect(remove).toHaveBeenCalledTimes(2))
-  await waitForError('The map couldn’t load')
+  await waitForError(loadingPhrases.styleError.hint!)
   recovered = true
   retry()!.click()
   await vi.waitFor(ready, { timeout: 10_000 })

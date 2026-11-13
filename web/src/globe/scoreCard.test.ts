@@ -44,6 +44,13 @@ describe('scoreCard', () => {
     })
   })
 
+  it("shows a ranked team's poll place before its abbreviation, and none for an unranked team", () => {
+    const card = scoreCard({ ...arrowhead, contest: { ...sides, away: { ...sides.away, rank: 5 } } })
+
+    expect(card.top).toMatchObject({ label: 'BUF', rank: '5' })
+    expect(card.bottom).not.toHaveProperty('rank')
+  })
+
   it('shows a tennis match with the home side on top', () => {
     const card = scoreCard({ ...arrowhead, sport: 'Tennis' })
 

@@ -533,10 +533,12 @@ function logo({ logoUrl }: ScoreCardRow): HTMLImageElement {
   return image
 }
 
-function team({ label, logoUrl, score }: ScoreCardRow): HTMLElement {
+function team(card: ScoreCardRow): HTMLElement {
   const row = document.createElement('div')
   row.className = 'score-card__team'
-  row.append(logo({ label, logoUrl, score }), span('score-card__abbreviation', label), span('score-card__score', score))
+  const label = span('score-card__abbreviation', card.label)
+  if (card.rank) label.prepend(span('score-card__rank', card.rank), ' ')
+  row.append(logo(card), label, span('score-card__score', card.score))
   return row
 }
 

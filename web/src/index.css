@@ -1149,6 +1149,31 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
+/* The rail's buttons under its Hide controls button, which slide off to the right as they fade when
+   it's pressed, leaving that button alone at the top right (Show controls), and come back the same way.
+   Hidden once gone, so they take no pointer; they keep their room, so nothing else moves. */
+.rail__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+  transition: transform 200ms ease-out, opacity 200ms ease-out, visibility 0s;
+}
+
+.rail__buttons--collapsed {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(calc(100% + 3 * var(--spacing)));
+  transition: transform 200ms ease-in, opacity 200ms ease-in, visibility 0s 200ms;
+}
+
+/* With reduce motion the rail's buttons go and come back at once. */
+@media (prefers-reduced-motion: reduce) {
+  .rail__buttons,
+  .rail__buttons--collapsed {
+    transition: none;
+  }
+}
+
 /* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
    on the rail's surface, each popover hanging below the row at the screen's left, whichever button
    opened it. */
@@ -2690,7 +2715,7 @@ body {
 
 /* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
-   rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
+   rail's foot (eight buttons in three gaps below its top), so Your controls' rail is never under it and
    its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
    Feedback button too, which stays usable and never covers the step's own button. */
 @media (max-width: 640px) {
@@ -2700,7 +2725,7 @@ body {
 
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 16 * var(--spacing) - 7 * var(--rail-size-button) - var(--feedback-column));
+    max-height: calc(100% - 18 * var(--spacing) - 8 * var(--rail-size-button) - var(--feedback-column));
     margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }

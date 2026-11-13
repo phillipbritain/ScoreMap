@@ -77,6 +77,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [viewerSettings, setViewerSettings] = useState(store.load)
   // Read before anything is saved, so a first visit (nothing saved yet) can be told apart.
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
+  // Whether the viewer collapsed the rail out of the way after setting up.
+  const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
   const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
@@ -98,6 +100,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   )
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
+  useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
   // The welcome tour, once the loading screen has gone, until it's finished. While it shows, the globe
   // and rail can't be used.
   const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
@@ -208,6 +211,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           games={visible}
           gamesReady={loadingScreenGone}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
+          collapsed={railCollapsed}
+          onCollapsedChange={setRailCollapsed}
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail

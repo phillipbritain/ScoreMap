@@ -62,3 +62,13 @@ export function ScenarioIcon() {
   )
 }
 
+
+/** Hide controls: a chevron pointing right, the way the rail tucks away (Feather's "chevrons-right"). */
+export function HideControlsIcon() {
+  return <path d="m13 17 5-5-5-5M6 17l5-5-5-5" />
+}
+
+/** Show controls: a chevron pointing left, the way the rail comes back (Feather's "chevrons-left"). */
+export function ShowControlsIcon() {
+  return <path d="m11 17-5-5 5-5M18 17l-5-5 5-5" />
+}

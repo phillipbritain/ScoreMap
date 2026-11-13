@@ -10,7 +10,8 @@ import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { MapTypes } from './MapTypes'
 import { railIcon, type RailButtonName } from './railButtons'
-import { HideControlsIcon, RailIcon, ShowControlsIcon } from './railIcons'
+import { ChevronLeftIcon, ChevronsDownIcon, ChevronsUpIcon, CloseIcon, HideControlsIcon, MenuIcon, RailIcon, ShowControlsIcon } from './railIcons'
+import { useRailProto } from './railCollapsePrototype'
 import { canZoom, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -102,37 +103,51 @@ export function Rail({
     () => setOpen((current) => nextPopover(current, 'outside')),
   )
 
-  return (
-    <div
-      ref={rail}
-      className="rail"
-      inert={inert}
-      onKeyDown={(event) => {
-        const key = event.key
-        const onItsButton = open && (event.target as Element).closest(`[data-popover-button="${open}"]`)
-        if (onItsButton && popover.current && (key === 'ArrowDown' || key === 'ArrowUp')) moveByArrows(event.nativeEvent, popover.current)
-      }}
-    >
-      {/* Not one of the welcome tour's controls (see railButtons), which it lights and points at. */}
-      <div className="rail__group rail__group--collapse">
-        <button
-          type="button"
-          className="rail__button"
-          aria-label={collapsed ? 'Show controls' : 'Hide controls'}
-          data-tooltip={collapsed ? 'Show controls' : 'Hide controls'}
-          data-tooltip-side="left"
-          aria-expanded={!collapsed}
-          aria-controls="rail-buttons"
-          onClick={() => {
-            // A popover goes with the rail, and isn't open when it comes back.
-            setOpen(null)
-            onCollapsedChange(!collapsed)
-          }}
-        >
-          <RailIcon className="rail__icon">{collapsed ? <ShowControlsIcon /> : <HideControlsIcon />}</RailIcon>
-        </button>
-      </div>
-      <div id="rail-buttons" className={collapsed ? 'rail__buttons rail__buttons--collapsed' : 'rail__buttons'} inert={collapsed}>
+  // PROTOTYPE, throw away: the variant of collapsing tried (see railCollapsePrototype.ts).
+  const proto = useRailProto()
+  const toggleIcon = {
+    A: collapsed ? <ShowControlsIcon /> : <HideControlsIcon />,
+    B: collapsed ? <ChevronsDownIcon /> : <ChevronsUpIcon />,
+    C: collapsed ? <ShowControlsIcon /> : <HideControlsIcon />,
+    D: collapsed ? <ChevronLeftIcon /> : <HideControlsIcon />,
+    E: collapsed ? <MenuIcon /> : <CloseIcon />,
+  }[proto]
+  // Not one of the welcome tour's controls (see railButtons), which it lights and points at.
+  const toggle = (
+    <div className="rail__group rail__group--collapse">
+      <button
+        type="button"
+        className="rail__button"
+        aria-label={collapsed ? 'Show controls' : 'Hide controls'}
+        data-tooltip={collapsed ? 'Show controls' : 'Hide controls'}
+        data-tooltip-side="left"
+        aria-expanded={!collapsed}
+        aria-controls="rail-buttons"
+        onClick={() => {
+          // A popover goes with the rail, and isn't open when it comes back.
+          setOpen(null)
+          onCollapsedChange(!collapsed)
+        }}
+      >
+        <RailIcon className="rail__icon">{toggleIcon}</RailIcon>
+      </button>
+    </div>
+  )
+  const gamesGroup = (
+    <div className="rail__group">
+      <RailButton
+        label="Games"
+        popover="games"
+        open={open}
+        disabled={!gamesReady}
+        badge={gamesReady ? games.length : undefined}
+        onClick={() => popoverEvent({ press: 'games' })}
+      />
+    </div>
+  )
+  const buttons = (
+    <div id="rail-buttons" className={collapsed ? 'rail__buttons rail__buttons--collapsed' : 'rail__buttons'} inert={collapsed}>
+      <div className="rail__buttons-inner">
         {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
         <div className="rail__group" data-keeps-popovers>
           <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
@@ -144,17 +159,34 @@ export function Rail({
           <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
           <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
         </div>
-        <div className="rail__group">
-          <RailButton
-            label="Games"
-            popover="games"
-            open={open}
-            disabled={!gamesReady}
-            badge={gamesReady ? games.length : undefined}
-            onClick={() => popoverEvent({ press: 'games' })}
-          />
-        </div>
+        {proto !== 'C' && gamesGroup}
       </div>
+    </div>
+  )
+
+  return (
+    <div
+      ref={rail}
+      className={collapsed ? 'rail rail--collapsed' : 'rail'}
+      inert={inert}
+      onKeyDown={(event) => {
+        const key = event.key
+        const onItsButton = open && (event.target as Element).closest(`[data-popover-button="${open}"]`)
+        if (onItsButton && popover.current && (key === 'ArrowDown' || key === 'ArrowUp')) moveByArrows(event.nativeEvent, popover.current)
+      }}
+    >
+      {proto === 'B' ? (
+        <>
+          {buttons}
+          {toggle}
+        </>
+      ) : (
+        <>
+          {toggle}
+          {buttons}
+          {proto === 'C' && gamesGroup}
+        </>
+      )}
       {open && (
         <div
           ref={popover}

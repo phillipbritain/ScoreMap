@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
@@ -33,6 +33,11 @@ import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
+
+// PROTOTYPE, throw away: the bar switching ways to collapse the rail (local runs only).
+const RailCollapsePrototypeBar = import.meta.env.DEV
+  ? lazy(() => import('./rail/RailCollapsePrototypeBar').then(({ RailCollapsePrototypeBar }) => ({ default: RailCollapsePrototypeBar })))
+  : null
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -169,6 +174,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           )}
         </div>
         {demo && <DemoLabel />}
+        {RailCollapsePrototypeBar && !demo && (
+          <Suspense>
+            <RailCollapsePrototypeBar />
+          </Suspense>
+        )}
         {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
             hides while a game panel is open instead). */}
         <Feedback

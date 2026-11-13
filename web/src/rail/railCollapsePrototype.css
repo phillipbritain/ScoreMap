@@ -1,0 +1,121 @@
+/* PROTOTYPE, throw away: ways to collapse and expand the rail (see railCollapsePrototype.ts).
+   A is today's, in index.css. */
+
+.rail__buttons-inner {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+/* B, C and E: the buttons fold away rather than slide off, so what's left closes up. The inner box's
+   padding keeps the Games count's badge from being clipped. */
+:root:is([data-rail-proto='B'], [data-rail-proto='C'], [data-rail-proto='E']) .rail__buttons {
+  display: grid;
+  grid-template-rows: 1fr;
+  transform: none;
+  transition: grid-template-rows 220ms ease-out, margin 220ms ease-out, opacity 220ms ease-out, visibility 0s;
+}
+
+:root:is([data-rail-proto='B'], [data-rail-proto='C'], [data-rail-proto='E']) .rail__buttons--collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 220ms ease-in, margin 220ms ease-in, opacity 160ms ease-in, visibility 0s 220ms;
+}
+
+:root:is([data-rail-proto='C'], [data-rail-proto='E']) .rail__buttons--collapsed {
+  margin-top: calc(-2 * var(--spacing));
+}
+
+:root[data-rail-proto='B'] .rail__buttons--collapsed {
+  margin-bottom: calc(-2 * var(--spacing));
+}
+
+:root:is([data-rail-proto='B'], [data-rail-proto='C'], [data-rail-proto='E']) .rail__buttons-inner {
+  min-height: 0;
+  margin: -10px -12px;
+  padding: 10px 12px;
+  overflow: hidden;
+}
+
+/* D: collapsed, the button becomes a slim tab flush with the screen's right edge. */
+:root[data-rail-proto='D'] .rail__group--collapse {
+  align-self: flex-end;
+  transition: transform 200ms ease-out, border-radius 200ms ease-out;
+}
+
+:root[data-rail-proto='D'] .rail--collapsed .rail__group--collapse {
+  transform: translateX(calc(3 * var(--spacing)));
+  border-radius: var(--menu-corner) 0 0 var(--menu-corner);
+}
+
+:root[data-rail-proto='D'] .rail--collapsed .rail__group--collapse .rail__button {
+  width: 22px;
+  height: 56px;
+  border-radius: var(--menu-corner) 0 0 var(--menu-corner);
+}
+
+/* E: a menu button, gold while open, its groups dropping in one after another. */
+:root[data-rail-proto='E'] .rail:not(.rail--collapsed) .rail__group--collapse .rail__button {
+  color: var(--rail-open);
+}
+
+:root[data-rail-proto='E'] .rail__buttons-inner > .rail__group {
+  transition: opacity 180ms ease-out, translate 180ms ease-out;
+}
+
+:root[data-rail-proto='E'] .rail__buttons-inner > .rail__group:nth-child(2) {
+  transition-delay: 50ms;
+}
+
+:root[data-rail-proto='E'] .rail__buttons-inner > .rail__group:nth-child(3) {
+  transition-delay: 100ms;
+}
+
+:root[data-rail-proto='E'] .rail__buttons--collapsed .rail__buttons-inner > .rail__group {
+  opacity: 0;
+  translate: 0 -12px;
+  transition-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-rail-proto] .rail__buttons,
+  :root[data-rail-proto] .rail__group--collapse,
+  :root[data-rail-proto] .rail__buttons-inner > .rail__group {
+    transition: none;
+  }
+}
+
+.rail-collapse-prototype {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 13px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.rail-collapse-prototype button {
+  padding: 2px 9px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .rail-collapse-prototype {
+    top: 64px;
+    font-size: 12px;
+  }
+}

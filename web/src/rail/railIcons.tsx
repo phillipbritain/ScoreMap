@@ -72,3 +72,28 @@ export function HideControlsIcon() {
 export function ShowControlsIcon() {
   return <path d="m11 17-5-5 5-5M18 17l-5-5 5-5" />
 }
+
+// PROTOTYPE, throw away: the icons the rail-collapse variants try (see railCollapsePrototype.ts).
+export function ChevronsUpIcon() {
+  return <path d="m17 11-5-5-5 5M17 18l-5-5-5 5" />
+}
+
+export function ChevronsDownIcon() {
+  return <path d="m7 13 5 5 5-5M7 6l5 5 5-5" />
+}
+
+export function ChevronLeftIcon() {
+  return <path d="m15 18-6-6 6-6" />
+}
+
+export function ChevronRightIcon() {
+  return <path d="m9 18 6-6-6-6" />
+}
+
+export function MenuIcon() {
+  return <path d="M4 6h16M4 12h16M4 18h16" />
+}
+
+export function CloseIcon() {
+  return <path d="M18 6 6 18M6 6l12 12" />
+}

@@ -35,9 +35,11 @@ interface GamePanelProps {
  * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
  * and the last score) and the venue over the venue's photo, with the game's StreamEast streams and its ESPN page as
  * logos in its bottom right corner; under it, a band for a
- * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. Team and
- * player names wrap in place; the panel grows to fit them, and never scrolls. Other clipped
- * details keep their tooltips. Re-renders with each snapshot, so it stays current while open.
+ * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. So that
+ * clicking between games doesn't change its height, every line holds its place whether or not the game
+ * has it (the last score, the venue's place, the watch links), and names and the venue sit on one line
+ * each, cut short with an ellipsis and in full on hover; only the band adds height. Re-renders with each
+ * snapshot, so it stays current while open.
  */
 export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
   const { venue } = game
@@ -93,23 +95,20 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
               <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
                 {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
               </div>
-              {placeLine && (
-                <div className="game-panel__muted game-panel__place" data-tooltip={placeLine} data-tooltip-when-clipped>
-                  <MapsLink query={placeLine}>{placeLine}</MapsLink>
-                </div>
+              {/* Its line held when there's none, so the panel keeps its height. */}
+              <div className="game-panel__muted game-panel__place" data-tooltip={placeLine || undefined} data-tooltip-when-clipped>
+                {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
+              </div>
+            </div>
+            {/* The game's streams on StreamEast, then its page on ESPN, as their logos; empty when it has neither, holding its room on a phone. */}
+            <div className="game-panel__watch">
+              <WatchLinks links={links} />
+              {game.espnUrl && (
+                <a className="game-panel__logo-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
+                  <img className="game-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
+                </a>
               )}
             </div>
-            {/* The game's streams on StreamEast, then its page on ESPN, as their logos; left out when it has neither. */}
-            {(links.length > 0 || game.espnUrl) && (
-              <div className="game-panel__watch">
-                <WatchLinks links={links} />
-                {game.espnUrl && (
-                  <a className="game-panel__logo-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
-                    <img className="game-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
-                  </a>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -164,12 +163,17 @@ function WatchLinks({ links }: { links: StreamLink[] }) {
 
 /**
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
- * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Nothing
- * before a score.
+ * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Before a
+ * score, "None yet", so the panel is as tall either way.
  */
 function LastScore({ game }: { game: Game }) {
   const { lastScore } = game
-  if (!lastScore) return null
+  if (!lastScore) return (
+    <div className="game-panel__last-score">
+      <div className="game-panel__label">Last score</div>
+      <div className="game-panel__one-line game-panel__muted">None yet</div>
+    </div>
+  )
   return (
     <div className="game-panel__last-score">
       <div className="game-panel__label">Last score</div>

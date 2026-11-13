@@ -97,8 +97,9 @@ body {
 /* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
    color (--game-color, set on the panel, with --text-on-game-color for text on it): the score block, then
    the venue and its watch links over the venue's photo, with a band under the strip for a field's
-   leaderboard, a fight card or tennis sets. Full team and player names wrap in their rows; the strip grows
-   to fit them; the panel never scrolls. */
+   leaderboard, a fight card or tennis sets. Every line holds its place whether or not a game has it, and
+   names and the venue take one line each, so the panel is as tall for every game (bar the band) and
+   doesn't jump as the viewer clicks between them; the panel never scrolls. */
 .game-panel {
   position: absolute;
   left: 50%;
@@ -147,8 +148,8 @@ body {
   min-height: var(--game-panel-size-height);
 }
 
-/* The score block at the left, slanted on its right edge. Names wrap within their share of each
-   row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
+/* The score block at the left, slanted on its right edge. Names are cut short within their share of
+   each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
 .game-panel__score {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -238,10 +239,13 @@ body {
   background: var(--game-panel-logo-plate-fill);
 }
 
+/* One line, cut short with an ellipsis and in full on hover, so a long name doesn't make the panel taller. */
 .game-panel__team-name {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   line-height: 1.3;
 }
 
@@ -332,12 +336,11 @@ body {
   opacity: var(--game-panel-photo-opacity);
 }
 
-/* Two lines at most for a venue's name. */
+/* One line for a venue's name, cut short with an ellipsis and in full on hover. */
 .game-panel__value {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   line-height: 1.3;
 }
 
@@ -346,8 +349,9 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* One line under a venue's name. */
+/* One line under a venue's name, held empty when there's no place to name. */
 .game-panel__place {
+  min-height: 1lh;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -625,9 +629,15 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
+  /* Side by side on one line, which is held empty when the game has no links, so the panel is as tall
+     with or without them. */
   .game-panel__watch {
     grid-area: watch;
     align-self: end;
+    flex-direction: row;
+    align-items: center;
+    gap: calc(2 * var(--spacing));
+    min-height: calc(8 * var(--spacing));
     box-sizing: border-box;
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));

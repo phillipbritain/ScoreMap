@@ -853,6 +853,13 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
+/* A ranked college team's poll place, small and muted before its abbreviation, faded with the card's status. */
+.score-card__rank {
+  color: color-mix(in srgb, var(--palette-text-secondary), var(--card-surface) var(--fade));
+  font-size: var(--typography-tiny-font-size);
+  font-weight: var(--typography-tiny-font-weight);
+}
+
 .score-card__score {
   font-family: var(--typography-font-family);
   font-weight: var(--typography-h6-font-weight);

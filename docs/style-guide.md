@@ -108,7 +108,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the game panel, the menus and the controls | `navy.800` |
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
-| `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip | `offWhite.600` |
+| `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip; a ranked team's poll place on a score card | `offWhite.600` |
 | `palette.text.link` | Links (the feedback form's thanks) | `offWhite.500` |
 | `palette.divider` | The lines between a menu's parts (between the rail's buttons, under "All leagues", running on from "Card colors") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
@@ -285,7 +285,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
 | `footnote` | The game panel's labels on a phone | 400, 11 |
 | `small` | A score card's text: its team abbreviations and scores, in their own weights, and the rest in `subtitle2`'s | 600, 10 |
-| `tiny` | The smallest on the page: a score card's header line | 400, 9 |
+| `tiny` | The smallest on the page: a score card's header line, and a ranked college team's poll place before its abbreviation (in `text.secondary`) | 400, 9 |
 
 `footnote`, `small` and `tiny` are ScoreMap's own, smaller than MUI's `caption`. Score cards are kept small so more of them fit on the globe, a phone's above all: this is variant B of the comparison preserved on the throwaway branch `prototype/smaller-cards`, chosen by the user on November 12, 2026, for every screen size. The dark theme writes everything in `'Open Sans Variable', 'Open Sans', sans-serif`, so the app looks the same on Windows, Mac and phones. The theme gives only the family: the font itself has to be loaded by the app. Open Sans is bundled with it (`@fontsource-variable/open-sans`, imported in `web/src/main.tsx`, weights 300 to 800), so a theme using another web font needs its loading added in code. Scores keep their digits lined up as they change: the CSS asks for tabular figures, and Open Sans's figures are already tabular.
 

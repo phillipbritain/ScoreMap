@@ -11,6 +11,8 @@ export interface ScoreCardRow {
    * ("J. Jones"), or a game's name before its field is listed.
    */
   label: string
+  /** A college team's place in its poll ("5"), shown before its abbreviation; absent when unranked. */
+  rank?: string
   logoUrl: string | null
   /** Blank until the game has a score; for a bout's side, "W" once they've won it. */
   score: string
@@ -77,8 +79,9 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
   return [first, second ?? blank]
 }
 
-function cardTeam({ abbreviation, logoUrl, score }: GameTeam): ScoreCardRow {
-  return { label: abbreviation, logoUrl, score: score ?? '' }
+function cardTeam({ abbreviation, logoUrl, score, rank }: GameTeam): ScoreCardRow {
+  const row = { label: abbreviation, logoUrl, score: score ?? '' }
+  return rank === null ? row : { ...row, rank: String(rank) }
 }
 
 function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRow {

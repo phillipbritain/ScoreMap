@@ -114,42 +114,63 @@ function fitsAt(card: PlacedBox, at: ReadonlyMap<string, Point>, cards: readonly
   return !clear.names.some((name) => inside(name.x, name.y, name.width / 2 + clear.gap, name.height / 2 + clear.gap))
 }
 
-/** A card's trail as routed: where it leaves the card, and which way it goes first (see trailCorners). */
-export interface Route {
-  from: Point
+/** Where on its card a trail leaves: where the card faces its venue, or the middle of a side. */
+export type TrailExit = 'facing' | 'top' | 'bottom' | 'left' | 'right'
+
+/** How a card's trail is routed: where it leaves the card, and which way it goes first (see trailCorners). */
+export interface RouteChoice {
+  exit: TrailExit
   firstLeg: FirstLeg
+}
+
+/** A card's trail as routed: its choice, and the point on screen it leaves the card at. */
+export interface Route extends RouteChoice {
+  from: Point
 }
 
 // What a route costs, to pick the cheapest: crossing its own card, crossing another card, crossing a
 // trail routed already, and each pixel of its length.
 const cost = { ownCard: 1000, card: 100, trail: 20, pixel: 0.05 }
+// How much cheaper another route must be to take over from the one a card's trail had last time: once
+// the camera is still, less than a card crossed, so a trail moves off a card in its way, but more than
+// trails crossed or length alone; as it moves, less only than its own card crossed, so trails don't
+// flip back and forth as cards pass each other, but never run back through their own card.
+const keepLastRoute = { still: 90, moving: cost.ownCard - 1 }
 
 /**
  * Routes each moved card's trail to its venue, in the order given: leaving the card where it faces its
  * venue, or from the middle of a side, and going straight or at 45° first, whichever crosses the fewest
- * cards, then the fewest trails routed already, then is shortest. A card that isn't moved keeps its
- * trail straight down to its venue below.
+ * cards, then the fewest trails routed already, then is shortest. A trail keeps the route it had last
+ * time (`last`) unless another would cross fewer cards, or, while the camera is `moving`, unless it
+ * would cross its own card. A card that isn't moved keeps its trail
+ * straight down to its venue below.
  */
-export function routeTrails(cards: readonly PlacedBox[]): Map<string, Route> {
+export function routeTrails(
+  cards: readonly PlacedBox[],
+  last: ReadonlyMap<string, RouteChoice> = new Map(),
+  moving = false,
+): Map<string, Route> {
   const routes = new Map<string, Route>()
   const routed: Point[][] = []
   for (const card of cards) {
     const venue = { x: card.venueX, y: card.venueY }
     const facing = facingEdge(card)
     if (!card.moved) {
-      routes.set(card.gameId, { from: facing, firstLeg: 'straight' })
+      routes.set(card.gameId, { exit: 'facing', from: facing, firstLeg: 'straight' })
       routed.push([facing, venue])
       continue
     }
-    const exits = [
-      facing,
-      { x: card.x, y: card.y - card.height / 2 },
-      { x: card.x, y: card.y + card.height / 2 },
-      { x: card.x - card.width / 2, y: card.y },
-      { x: card.x + card.width / 2, y: card.y },
+    const exits: [TrailExit, Point][] = [
+      ['facing', facing],
+      ['top', { x: card.x, y: card.y - card.height / 2 }],
+      ['bottom', { x: card.x, y: card.y + card.height / 2 }],
+      ['left', { x: card.x - card.width / 2, y: card.y }],
+      ['right', { x: card.x + card.width / 2, y: card.y }],
     ]
+    const was = last.get(card.gameId)
     let best: { route: Route; corners: Point[]; cost: number } | undefined
-    for (const from of exits)
+    let kept: typeof best
+    for (const [exit, from] of exits)
       for (const firstLeg of ['straight', 'diagonal'] as const) {
         const corners = trailCorners(from, venue, firstLeg)
         let total = 0
@@ -161,10 +182,13 @@ export function routeTrails(cards: readonly PlacedBox[]): Map<string, Route> {
           for (const trail of routed) for (let j = 1; j < trail.length; j++) if (linesCross(a, b, trail[j - 1], trail[j])) total += cost.trail
           total += Math.hypot(b.x - a.x, b.y - a.y) * cost.pixel
         }
-        if (!best || total < best.cost) best = { route: { from, firstLeg }, corners, cost: total }
+        const route = { route: { exit, from, firstLeg }, corners, cost: total }
+        if (!best || total < best.cost) best = route
+        if (was?.exit === exit && was.firstLeg === firstLeg) kept = route
       }
-    routes.set(card.gameId, best!.route)
-    routed.push(best!.corners)
+    const chosen = kept && kept.cost < best!.cost + (moving ? keepLastRoute.moving : keepLastRoute.still) ? kept : best!
+    routes.set(card.gameId, chosen.route)
+    routed.push(chosen.corners)
   }
   return routes
 }

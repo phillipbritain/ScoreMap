@@ -517,6 +517,45 @@ describe('layOutCards', () => {
       // that makes fewer should lower this, so the next one can't make more unseen.
       expect(jumps).toBeLessThanOrEqual(5)
     })
+
+    it('keeps trails leaving their cards where they did, and bending the same way, as the globe pans', () => {
+      // The forty venues of the pan above.
+      const statuses: GameStatus[] = ['Live', 'Upcoming', 'Final']
+      const crowd = (frame: number): ScreenCard[] =>
+        Array.from({ length: 40 }, (_, i) => {
+          const r = 14 * Math.sqrt(i) * (1 + frame / 1000)
+          const angle = i * 2.39996
+          return {
+            gameId: `g${String(i).padStart(2, '0')}`,
+            status: statuses[i % 3],
+            venueX: 900 - 4 * frame + r * Math.cos(angle),
+            venueY: my + r * Math.sin(angle),
+            width: 106,
+            height: 60,
+          }
+        })
+      const panning = { ...scene, moving: true }
+      // How often a trail leaps to another part of its card, or turns the other way first.
+      let flips = 0
+      let previous: CardPlacements['cards'] = new Map()
+      for (let frame = 0; frame < 100; frame++) {
+        const cards = crowd(frame)
+        const layout = layOutCards(cards, panning, previous)
+        for (const { gameId, venueX, venueY } of cards) {
+          const was = previous.get(gameId)
+          const now = layout.cards.get(gameId)!
+          if (!was?.trail || !now.trail) continue
+          // Where the trail leaves the card, from the card's bottom center.
+          const leaves = ({ trail, offset }: typeof now) => ({ x: trail!.x1 - venueX - offset.dx, y: trail!.y1 - venueY - offset.dy })
+          const [before, after] = [leaves(was), leaves(now)]
+          if (Math.hypot(after.x - before.x, after.y - before.y) > 8) flips++
+          if ((was.firstLeg ?? 'straight') !== (now.firstLeg ?? 'straight')) flips++
+        }
+        previous = layout.cards
+      }
+      // No jumpier than the layout is now: trails routed afresh every frame made 54 here.
+      expect(flips).toBeLessThanOrEqual(6)
+    })
   })
 
   it("leaves cards well off screen where they'd sit, however they overlap", () => {

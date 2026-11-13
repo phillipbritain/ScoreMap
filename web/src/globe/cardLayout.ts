@@ -1,7 +1,7 @@
 import type { GameStatus } from '../games/game'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
-import { routeTrails, untangle } from './crowdTrails'
+import { routeTrails, untangle, type TrailExit } from './crowdTrails'
 import { groupStatus, statusProminence } from './statusLook'
 import type { FirstLeg } from './trailRoute'
 
@@ -30,6 +30,13 @@ export interface CardScene {
    * card clusters take turns to look for room, one a layout, as looking takes a while (see arrange).
    */
   moving?: boolean
+  /**
+   * Whether the camera is in the middle of a move (a pan, a zoom, or its easing out), whether or not it
+   * moved since the cards were last laid out. Crowds' cards are handed round (see untangle), and trails
+   * routed afresh (see routeTrails), only once it's still, so cards don't swap places or trails flip
+   * as it goes.
+   */
+  cameraMoving?: boolean
 }
 
 /** A distance on screen, in pixels. */
@@ -58,6 +65,8 @@ export interface CardPlacement {
   trail: Segment | null
   /** Which way the trail goes first from the card, drawn as a transit line (see trailCorners): straight, unless given. */
   firstLeg?: FirstLeg
+  /** Where on the card the trail leaves (see routeTrails): where the card faces its venue, unless given. */
+  exit?: TrailExit
   /** For a card in a card cluster, how many layouts ago it last looked for room (see CardScene.moving). */
   lookedAgo?: number
 }
@@ -228,13 +237,24 @@ export function layOutCards(
     .map((box) => ({ ...box, x: box.x + shifts.get(box.gameId)!.dx, y: box.y + shifts.get(box.gameId)!.dy, moved: isMoved(shifts.get(box.gameId)) }))
   const venues = boxes.map(({ venueX, venueY }) => ({ x: venueX, y: venueY }))
   // Only once the camera is still: handing cards round as it moves would have them swap places as it goes.
-  const centers = scene.moving ? new Map(withRoom.map(({ gameId, x, y }) => [gameId, { x, y }])) : untangle(withRoom, { width: scene.width, height: scene.height, venueGap: scene.venueGap, gap, venueRadius, venues, names })
+  const cameraMoving = scene.moving === true || scene.cameraMoving === true
+  const centers = cameraMoving ? new Map(withRoom.map(({ gameId, x, y }) => [gameId, { x, y }])) : untangle(withRoom, { width: scene.width, height: scene.height, venueGap: scene.venueGap, gap, venueRadius, venues, names })
   const unmoved = new Map(boxes.map((box) => [box.gameId, box]))
   for (const [gameId, { x, y }] of centers) {
     const box = unmoved.get(gameId)!
     shifts.set(gameId, { dx: x - box.x, dy: y - box.y })
   }
-  const routes = routeTrails(withRoom.map((box) => ({ ...box, ...centers.get(box.gameId)! })))
+  // Each trail's route last time, which it keeps unless another crosses fewer cards (see routeTrails).
+  const lastRoutes = new Map(
+    [...previous].flatMap(([gameId, { trail, exit, firstLeg }]) =>
+      trail ? [[gameId, { exit: exit ?? 'facing', firstLeg: firstLeg ?? 'straight' }] as const] : [],
+    ),
+  )
+  const routes = routeTrails(
+    withRoom.map((box) => ({ ...box, ...centers.get(box.gameId)! })),
+    lastRoutes,
+    cameraMoving,
+  )
 
   const placements = new Map(cards.map((card) => [card.gameId, sitting(card)]))
   for (const box of boxes) {
@@ -249,13 +269,14 @@ export function layOutCards(
       })
       continue
     }
-    const { from, firstLeg } = routes.get(box.gameId)!
+    const { from, firstLeg, exit } = routes.get(box.gameId)!
     placements.set(box.gameId, {
       offset: { dx: shift.dx, dy: shift.dy - scene.venueGap },
       inCardCluster: false,
       moved: isMoved(shift),
       trail: { x1: from.x, y1: from.y, x2: box.venueX, y2: box.venueY },
       ...(firstLeg === 'diagonal' && { firstLeg }),
+      ...(exit !== 'facing' && { exit }),
     })
   }
   return {

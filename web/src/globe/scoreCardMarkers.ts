@@ -118,6 +118,8 @@ export class ScoreCardMarkers {
     this.onSelect = onSelect
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
     map.on('move', this.cameraMoved)
+    // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
+    map.on('moveend', this.cameraStopped)
     map.on('resize', this.resized)
   }
 
@@ -267,6 +269,11 @@ export class ScoreCardMarkers {
     this.settling.settleAfresh()
   }
 
+  private readonly cameraStopped = () => {
+    this.settling.settleAfresh()
+    this.map.triggerRepaint()
+  }
+
   /** Where the cards placed now are. */
   private placedPins(): CardPin[] {
     return [...this.placed].map(([gameId, { lngLat }]) => ({ gameId, lngLat }))
@@ -292,6 +299,7 @@ export class ScoreCardMarkers {
       venueGap: theme.components.ScoreCard.size.venueGap,
       names: this.placeNames.nameBoxes(),
       moving: this.moving,
+      cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
     }
     this.moving = false

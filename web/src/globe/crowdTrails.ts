@@ -131,6 +131,12 @@ export interface Route extends RouteChoice {
 // What a route costs, to pick the cheapest: crossing its own card, crossing another card, crossing a
 // trail routed already, and each pixel of its length.
 const cost = { ownCard: 1000, card: 100, trail: 20, pixel: 0.05 }
+// How far a trail keeps from the edges of cards, its own once it's left it, so it's plain which card it
+// belongs to: running along its own card's edge, or brushing past another's, counts as crossing it.
+const clearOfCards = 2
+// How far, along a trail, it may stay that near its own card as it leaves: a trail leaving straight out
+// or at 45° is clear of it within this.
+const leaving = 4
 // How much cheaper another route must be to take over from the one a card's trail had last time: once
 // the camera is still, less than a card crossed, so a trail moves off a card in its way, but more than
 // trails crossed or length alone; as it moves, less only than its own card crossed, so trails don't
@@ -174,14 +180,17 @@ export function routeTrails(
       for (const firstLeg of ['straight', 'diagonal'] as const) {
         const corners = trailCorners(from, venue, firstLeg)
         let total = 0
+        // How far along the trail stays near its own card: past the first few pixels, it's running along
+        // the card's edge, or back across it.
+        let nearOwn = 0
         for (let i = 1; i < corners.length; i++) {
           const [a, b] = [corners[i - 1], corners[i]]
-          // A piece leaving along the card's edge doesn't cross it: the card shrunk a little.
-          if (lineCrossesBox(a, b, card, -1.5)) total += cost.ownCard
-          for (const other of cards) if (other !== card && lineCrossesBox(a, b, other, 0)) total += cost.card
+          nearOwn += lengthWithin(a, b, card, clearOfCards)
+          for (const other of cards) if (other !== card && lengthWithin(a, b, other, clearOfCards) > 0) total += cost.card
           for (const trail of routed) for (let j = 1; j < trail.length; j++) if (linesCross(a, b, trail[j - 1], trail[j])) total += cost.trail
           total += Math.hypot(b.x - a.x, b.y - a.y) * cost.pixel
         }
+        if (nearOwn > leaving) total += cost.ownCard
         const route = { route: { exit, from, firstLeg }, corners, cost: total }
         if (!best || total < best.cost) best = route
         if (was?.exit === exit && was.firstLeg === firstLeg) kept = route
@@ -207,8 +216,8 @@ function linesCross(a: Point, b: Point, c: Point, d: Point): boolean {
   return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0
 }
 
-/** Whether a line passes through a box, given by its center and size, grown by `grow` pixels each way. */
-function lineCrossesBox(a: Point, b: Point, box: { x: number; y: number; width: number; height: number }, grow: number): boolean {
+/** How much of a line, in pixels, is inside a box, given by its center and size, grown by `grow` pixels each way. */
+function lengthWithin(a: Point, b: Point, box: { x: number; y: number; width: number; height: number }, grow: number): number {
   let from = 0
   let to = 1
   for (const [start, delta, low, high] of [
@@ -216,14 +225,14 @@ function lineCrossesBox(a: Point, b: Point, box: { x: number; y: number; width: 
     [a.y, b.y - a.y, box.y - box.height / 2 - grow, box.y + box.height / 2 + grow],
   ]) {
     if (delta === 0) {
-      if (start <= low || start >= high) return false
+      if (start <= low || start >= high) return 0
       continue
     }
     const p = (low - start) / delta
     const q = (high - start) / delta
     from = Math.max(from, Math.min(p, q))
     to = Math.min(to, Math.max(p, q))
-    if (from >= to) return false
+    if (from >= to) return 0
   }
-  return true
+  return (to - from) * Math.hypot(b.x - a.x, b.y - a.y)
 }

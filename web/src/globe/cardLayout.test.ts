@@ -363,9 +363,64 @@ describe('layOutCards', () => {
       for (const { gameId } of crowd) expect(again.cards.get(gameId)!.offset).toEqual(still.cards.get(gameId)!.offset)
     })
 
+    it('leave their cards straight away, never running along an edge, so each is plainly attached to its own', () => {
+      // A spiral of forty venues, the crowd above and the pan's, laid out still and as the globe pans.
+      const spiral = (frame: number): ScreenCard[] =>
+        Array.from({ length: 40 }, (_, i) => ({
+          gameId: `g${String(i).padStart(2, '0')}`,
+          status: 'Live',
+          venueX: 900 - 4 * frame + 14 * Math.sqrt(i) * Math.cos(i * 2.39996),
+          venueY: my + 14 * Math.sqrt(i) * Math.sin(i * 2.39996),
+          width: 106,
+          height: 60,
+        }))
+      const layouts: [ScreenCard[], CardPlacements][] = [[crowd, layOutCards(crowd, scene)]]
+      let previous: CardPlacements['cards'] = new Map()
+      for (let frame = 0; frame < 100; frame += 1) {
+        const cards = spiral(frame)
+        const layout = layOutCards(cards, frame % 10 === 9 ? scene : moving, previous)
+        layouts.push([cards, layout])
+        previous = layout.cards
+      }
+      // Past its first few pixels, a trail keeps this far from its card's edge.
+      const clearBy = 2
+      const leaving = 4
+      let along = 0
+      for (const [cards, layout] of layouts)
+        for (const box of boxesOf(cards, layout)) {
+          const { trail, firstLeg, inCardCluster } = layout.cards.get(box.gameId)!
+          if (inCardCluster) continue
+          const corners = trailCorners({ x: trail!.x1, y: trail!.y1 }, { x: box.venueX, y: box.venueY }, firstLeg)
+          let travelled = 0
+          pieces: for (let i = 1; i < corners.length; i++) {
+            const [a, b] = [corners[i - 1], corners[i]]
+            const length = Math.hypot(b.x - a.x, b.y - a.y)
+            for (let t = 0; t <= length; t += 0.5) {
+              const x = a.x + ((b.x - a.x) * t) / length
+              const y = a.y + ((b.y - a.y) * t) / length
+              if (travelled + t > leaving && Math.abs(x - box.x) < box.width / 2 + clearBy && Math.abs(y - box.y) < box.height / 2 + clearBy) {
+                along++
+                break pieces
+              }
+            }
+            travelled += length
+          }
+        }
+      expect(along).toBe(0)
+    })
+
     it("are routed round the cards in a trail's way, where a line from the card's edge straight to its venue would cross them", () => {
-      const still = layOutCards(crowd, scene)
-      const boxes = boxesOf(crowd, still)
+      // Forty venues packed in a spiral, as the crowd above: room enough round them for some trails to go round.
+      const forty: ScreenCard[] = Array.from({ length: 40 }, (_, i) => ({
+        gameId: `f${String(i).padStart(2, '0')}`,
+        status: 'Live',
+        venueX: mx + 10 * Math.sqrt(i) * Math.cos(i * 2.39996),
+        venueY: my + 10 * Math.sqrt(i) * Math.sin(i * 2.39996),
+        width: 106,
+        height: 60,
+      }))
+      const still = layOutCards(forty, scene)
+      const boxes = boxesOf(forty, still).filter(({ gameId }) => !still.cards.get(gameId)!.inCardCluster)
       const crossed = (corners: { x: number; y: number }[], own: string) =>
         boxes.filter(
           (other) =>

@@ -1,5 +1,5 @@
 {
-  "minZoom": 2.9,
+  "furthestOutFill": 0.8,
   "startZoom": 4,
   "maxZoom": 11,
   "satelliteMaxZoom": 13

@@ -2,12 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
   cardRadius,
   centerLatitude,
+  fieldOfView,
   fittedZoomSettings,
+  furthestOutFill,
   furthestOutZoom,
   hasCard,
   minZoom,
   minZoomView,
+  laptopView,
   pinClusterRadius,
+  wholeGlobeZoom,
   zoomAt,
   zoomAtEquator,
   zoomForMapType,
@@ -87,22 +91,46 @@ describe('furthestOutZoom', () => {
   })
 })
 
+describe('wholeGlobeZoom', () => {
+  // The globe's width on screen, in pixels, at a zoom in a view this tall: its rim as MapLibre's camera sees it.
+  const seenAcross = (zoom: number, height: number) => {
+    const camera = (0.5 / Math.tan((fieldOfView * Math.PI) / 360)) * height
+    const radius = (512 * 2 ** zoom) / (2 * Math.PI)
+    return 2 * camera * Math.tan(Math.asin(radius / (camera + radius)))
+  }
+
+  it('is the zoom at which the whole globe is that wide on screen', () => {
+    expect(seenAcross(wholeGlobeZoom(312, 844), 844)).toBeCloseTo(312)
+    expect(seenAcross(wholeGlobeZoom(640, 800), 800)).toBeCloseTo(640)
+  })
+
+  it('zooms further in for the same width in a shorter view, whose camera is nearer the globe', () => {
+    expect(wholeGlobeZoom(400, 600)).toBeGreaterThan(wholeGlobeZoom(400, 1200))
+  })
+})
+
 describe('fittedZoomSettings', () => {
-  // The globe's size on screen, in pixels across, at a zoom.
-  const globeAcross = (zoom: number) => (512 * 2 ** zoom) / Math.PI
-  const laptop = fittedZoomSettings(zoomSettings, { width: 1440, height: minZoomView })
+  const laptop = fittedZoomSettings(zoomSettings, laptopView)
   const phone = fittedZoomSettings(zoomSettings, { width: 390, height: 844 })
+  // The globe's size on screen, in pixels across, at a zoom (leaving aside the camera's perspective).
+  const globeAcross = (zoom: number) => (512 * 2 ** zoom) / Math.PI
   // How much of the view's shorter side the globe fills at a zoom.
   const filling = (zoom: number, shorter: number) => globeAcross(zoom) / shorter
 
-  it('keeps the settings as they are for a laptop-sized view or larger', () => {
+  it('is the app’s zoom settings for a laptop’s browser window', () => {
     expect(laptop).toEqual(zoomSettings)
-    expect(fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 })).toEqual(zoomSettings)
   })
 
-  it('lets a phone zoom further out, until the globe fills it as it fills a laptop', () => {
-    expect(phone.minZoom).toBeLessThan(minZoom)
-    expect(filling(phone.minZoom, 390)).toBeCloseTo(filling(laptop.minZoom, minZoomView))
+  it('zooms out until the whole globe fills part of the view’s shorter side, with space around it', () => {
+    expect(furthestOutFill).toBeLessThan(1)
+    expect(laptop.minZoom).toBe(wholeGlobeZoom(furthestOutFill * 800, 800))
+    expect(phone.minZoom).toBe(wholeGlobeZoom(furthestOutFill * 390, 844))
+    const monitor = fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 })
+    expect(monitor.minZoom).toBe(wholeGlobeZoom(furthestOutFill * 1440, 1440))
+  })
+
+  it('lets a phone zoom further out than a laptop', () => {
+    expect(phone.minZoom).toBeLessThan(laptop.minZoom)
   })
 
   it('starts a phone, and takes it Home, as far out as a laptop for the size of its screen', () => {
@@ -110,15 +138,21 @@ describe('fittedZoomSettings', () => {
     expect(phone.startZoom).toBeGreaterThan(phone.minZoom)
   })
 
+  it('keeps the start zoom as it is for a laptop-sized view or larger', () => {
+    expect(fittedZoomSettings(zoomSettings, { width: 2560, height: 1440 }).startZoom).toBe(zoomSettings.startZoom)
+  })
+
   it('leaves the furthest in as it is', () => {
     expect(phone.maxZoom).toBe(zoomSettings.maxZoom)
   })
 
-  it('fits a phone the same turned either way', () => {
-    expect(fittedZoomSettings(zoomSettings, { width: 844, height: 390 })).toEqual(phone)
+  it('fits a phone the same turned either way, but for the camera’s height', () => {
+    const turned = fittedZoomSettings(zoomSettings, { width: 844, height: 390 })
+    expect(turned.startZoom).toBe(phone.startZoom)
+    expect(turned.minZoom).toBe(wholeGlobeZoom(furthestOutFill * 390, 390))
   })
 
-  it('leaves a view with no size yet alone', () => {
+  it('fits a view with no size yet as a laptop’s', () => {
     expect(fittedZoomSettings(zoomSettings, { width: 0, height: 0 })).toEqual(zoomSettings)
   })
 })

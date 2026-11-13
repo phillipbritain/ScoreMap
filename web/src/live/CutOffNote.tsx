@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Dimmed } from '../loading/LoadingScreen'
+import { usePhrase } from '../loading/loadingPhrases'
 import { cutOffNoteView } from './cutOffNoteView'
 
 /** How often the note looks again at how long ScoreMap has been cut off. */
@@ -27,7 +28,7 @@ export function CutOffNote({ cutOffSince, waking }: CutOffNoteProps) {
     return () => clearInterval(timer)
   }, [cutOffSince])
 
-  const message = cutOffNoteView(cutOffSince === null ? null : Math.max(0, now - cutOffSince), waking)
+  const message = usePhrase(cutOffNoteView(cutOffSince === null ? null : Math.max(0, now - cutOffSince), waking))
   if (!message) return null
   return <Dimmed message={message} movable label={waking ? 'Waking ScoreMap up' : 'Reconnecting to ScoreMap'} />
 }

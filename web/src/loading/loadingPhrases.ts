@@ -22,9 +22,7 @@ export const loadingPhrases: Record<PhraseScenario, ScenarioPhrases> = {
       'Counting down to launch…',
       'Fueling up the rocket…',
       'Climbing into orbit…',
-      'Blasting off…',
       'Leaving the launch pad…',
-      'Riding the rocket to ScoreMap…',
     ],
   },
   // Can't reach the server, while loading or after a drop, for 10 seconds or more; still trying.
@@ -53,7 +51,6 @@ export const loadingPhrases: Record<PhraseScenario, ScenarioPhrases> = {
     phrases: [
       'Waking up the crew…',
       'Warming up the engines…',
-      'Rise and shine, astronauts…',
       'Back from hypersleep…',
       'Powering up the cockpit…',
     ],

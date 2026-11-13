@@ -119,3 +119,42 @@
     font-size: 12px;
   }
 }
+
+/* Glass on the rail's and the top rail's groups of buttons (?railGlass=), as a score card's (see
+   .score-card in index.css): a tint as solid as the frost, a sheen from the top left, lit edges and a
+   soft shadow. Their popovers stay solid. */
+:root:is([data-rail-glass='2'], [data-rail-glass='3'], [data-rail-glass='4'], [data-rail-glass='5']) .rail__group {
+  --frost: var(--score-card-frost);
+  --glass-shine: calc(1 - var(--frost));
+  --glass-tint: var(--score-card-fill);
+  --glass-fill: color-mix(in srgb, var(--glass-tint) calc(var(--frost) * 100%), transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
+    linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
+    var(--glass-fill);
+  box-shadow:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent),
+    inset -1px -1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(6% + 22% * var(--glass-shine)), transparent),
+    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+}
+
+/* 3 and 4: the globe behind blurred, as the game panel's score block is on a desktop. */
+:root:is([data-rail-glass='3'], [data-rail-glass='4']) .rail__group {
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+}
+
+/* 4: clearer, the blur keeping the icons readable. */
+:root[data-rail-glass='4'] .rail__group {
+  --frost: 0.3;
+}
+
+/* 5: clear glass, as a score card at frost 0: only its lit edges and sheen, the globe sharp behind. */
+:root[data-rail-glass='5'] .rail__group {
+  --frost: 0;
+}
+
+/* The lines between buttons, fainter on glass so they don't box the icons in. */
+:root:is([data-rail-glass='2'], [data-rail-glass='3'], [data-rail-glass='4'], [data-rail-glass='5']) .rail__group > .rail__button + .rail__button {
+  border-top-color: color-mix(in srgb, var(--palette-text-primary) 12%, transparent);
+}

@@ -1,7 +1,7 @@
-// PROTOTYPE, throw away: the floating bar switching ways to collapse the rail (see railCollapsePrototype.ts).
+// PROTOTYPE, throw away: the floating bar switching glass looks on the rail (collapse fixed at E) (see railCollapsePrototype.ts).
 // Local runs only.
 import { useEffect, useState } from 'react'
-import { railProtoVariant, railProtoVariants, setRailProtoVariant } from './railCollapsePrototype'
+import { railGlassVariant as railProtoVariant, railGlassVariants as railProtoVariants, setRailGlassVariant as setRailProtoVariant } from './railCollapsePrototype'
 
 export function RailCollapsePrototypeBar() {
   const [variant, setVariant] = useState(railProtoVariant)

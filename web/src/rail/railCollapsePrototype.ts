@@ -42,4 +42,28 @@ export function useRailProto(): string {
   )
 }
 
-if (import.meta.env.DEV) setRailProtoVariant(new URL(window.location.href).searchParams.get('railProto') ?? 'A')
+// E, the menu button, is the one picked: the glass looks are tried on it.
+if (import.meta.env.DEV) setRailProtoVariant(new URL(window.location.href).searchParams.get('railProto') ?? 'E')
+
+/** Glass on the rail's buttons and the Scenario button, as score cards have (?railGlass=). */
+export const railGlassVariants: readonly RailProtoVariant[] = [
+  { key: '1', name: 'Solid (today)' },
+  { key: '2', name: "Score cards' glass, unblurred" },
+  { key: '3', name: "Score cards' glass, blurred" },
+  { key: '4', name: 'Clearer glass, blurred' },
+  { key: '5', name: 'Clear glass, rim only' },
+]
+
+let glass = railGlassVariants[0]
+
+export const railGlassVariant = (): RailProtoVariant => glass
+
+export function setRailGlassVariant(key: string): void {
+  glass = railGlassVariants.find((variant) => variant.key === key) ?? railGlassVariants[0]
+  document.documentElement.dataset.railGlass = glass.key
+  const url = new URL(window.location.href)
+  url.searchParams.set('railGlass', glass.key)
+  window.history.replaceState(window.history.state, '', url)
+}
+
+if (import.meta.env.DEV) setRailGlassVariant(new URL(window.location.href).searchParams.get('railGlass') ?? '1')

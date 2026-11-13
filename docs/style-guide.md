@@ -178,7 +178,7 @@ Beside the palette's background, text, divider and hover:
 | `components.LoadingScreen.dim.color` | The dim over the globe while ScoreMap loads, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's color) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
-| `components.LoadingScreen.message` | The message under the loading screen's rocket when loading is slow | `text.primary` |
+| `components.LoadingScreen.message` | The message under the loading screen's rocket | `text.primary` |
 
 A league that's on is lit in gold, as a game is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
 

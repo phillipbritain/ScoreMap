@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react'
 import type { LoadingStage } from '../globe/globeMap'
+import { usePhrase } from './loadingPhrases'
 import { loadingScreenView } from './loadingScreenView'
 
 /** How often the loading screen looks again at how long it's been in a stage. */
@@ -28,6 +29,7 @@ export function LoadingScreen({ stage, onRetry, onGone }: LoadingScreenProps) {
   const [elapsed, setElapsed] = useState({ stage, ms: 0 })
   const msInStage = elapsed.stage === stage ? elapsed.ms : 0
   const view = loadingScreenView(stage, msInStage)
+  const message = usePhrase(view.message)
   const leaving = !view.shown
   const failed = stage === 'styleError' || stage === 'constructionError'
 
@@ -64,12 +66,12 @@ export function LoadingScreen({ stage, onRetry, onGone }: LoadingScreenProps) {
   if (failed) return (
     <div className="loading-screen" role="alert">
       <div className="loading-screen__error">
-        <p>{view.message}</p>
+        <p>{message}</p>
         <button type="button" className="loading-screen__retry" onClick={onRetry}>Try again</button>
       </div>
     </div>
   )
-  return <Dimmed ref={element} message={view.message} leaving={leaving} label="Loading ScoreMap" />
+  return <Dimmed ref={element} message={message} leaving={leaving} label="Loading ScoreMap" />
 }
 
 interface DimmedProps {

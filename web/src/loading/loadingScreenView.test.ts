@@ -12,11 +12,11 @@ describe('loadingScreenView', () => {
   it('says it can’t reach ScoreMap after 10 seconds waiting for games', () => {
     expect(loadingScreenView('waitingForGames', seconds(10))).toEqual({
       shown: true,
-      message: 'Can’t reach ScoreMap. Still trying…',
+      message: 'cutOff',
     })
     expect(loadingScreenView('waitingForGames', seconds(60))).toEqual({
       shown: true,
-      message: 'Can’t reach ScoreMap. Still trying…',
+      message: 'cutOff',
     })
   })
 
@@ -28,7 +28,7 @@ describe('loadingScreenView', () => {
   it('says the map is slow after 10 seconds drawing', () => {
     expect(loadingScreenView('drawing', seconds(10))).toEqual({
       shown: true,
-      message: 'The map is slow to load. Still trying…',
+      message: 'slowDrawing',
     })
   })
 
@@ -40,14 +40,14 @@ describe('loadingScreenView', () => {
   it('offers immediate recovery guidance when the initial style fails', () => {
     expect(loadingScreenView('styleError', 0)).toEqual({
       shown: true,
-      message: 'The map couldn’t load. Check your connection and try again.',
+      message: 'styleError',
     })
   })
 
   it('explains how to recover when the browser cannot create the globe', () => {
     expect(loadingScreenView('constructionError', 0)).toEqual({
       shown: true,
-      message: 'The globe couldn’t start. Check that WebGL is enabled in your browser, then try again.',
+      message: 'constructionError',
     })
   })
 

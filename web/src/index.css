@@ -2847,8 +2847,11 @@ body {
   scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
 }
 
-/* The games, scrolling under the search. */
+/* The games, scrolling under the search. Its own stacking context, so the pinned league headings, lifted
+   over the games, stay under its scrollbar: Safari on iPhone draws the scrollbar over the list, and
+   drew it behind them. */
 .game-navigation ul {
+  isolation: isolate;
   min-height: 0;
   margin: 0;
   padding: 0;

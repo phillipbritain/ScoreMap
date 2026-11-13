@@ -1,6 +1,7 @@
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 import { comingOpacity, stillComing, type CardComing } from './cardComings'
+import { trailPoints, type FirstLeg } from './trailRoute'
 
 export const trailLayerId = 'trails'
 
@@ -17,6 +18,8 @@ export interface TrailOnGlobe {
   end: [number, number]
   /** Whether it ends at a ringed dot of its own, rather than a venue cluster. */
   dot: boolean
+  /** Which way it goes first from its card (see trailCorners): straight, unless given. */
+  firstLeg?: FirstLeg
   /** Its card coming in or going out, which it fades in or out with (see cardComings). */
   coming?: CardComing
 }
@@ -27,6 +30,8 @@ export interface TrailOnScreen {
   from: { x: number; y: number }
   to: { x: number; y: number }
   dot: boolean
+  /** Which way it goes first from its card (see trailCorners): straight, unless given. */
+  firstLeg?: FirstLeg
   /** How far it's shown, as its card comes in or goes out: 1 when it's neither. */
   opacity?: number
 }
@@ -53,6 +58,7 @@ export interface TrailLayer extends CustomLayerInterface {
  *
  * Drawn as MapLibre would draw them as lines and circles (see cardLayoutLayers' trail looks, from the
  * theme `theme` gives each frame): a trail is a thin line lit in its game's color, in a soft glow,
+ * drawn as a transit map's line (across, up or down and at 45°, its bend rounded off; see trailPoints),
  * to a point ringed in it; while the pointer is on its card, or its game is selected, the trail and dot
  * are bolder, the dot lit in a glow of its own.
  */
@@ -68,10 +74,11 @@ export function trailLayer(theme: () => Theme): TrailLayer {
 
   const onScreen = (now = performance.now()): TrailOnScreen[] => {
     if (!map) return []
-    return trails.map(({ gameId, venue, start, end, dot, coming }) => {
+    return trails.map(({ gameId, venue, start, end, dot, firstLeg, coming }) => {
       const at = map!.project(venue)
       const opacity = coming ? comingOpacity(coming, now) : 1
-      return { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot, opacity }
+      const trail: TrailOnScreen = { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot, opacity }
+      return firstLeg ? { ...trail, firstLeg } : trail
     })
   }
 
@@ -172,7 +179,7 @@ export type TrailShape =
 
 /**
  * What's drawn of the trails, from the bottom up as the map's trail layers were stacked: every glow,
- * then every line, then each venue's dot, its glow (while picked out) and ring beneath it, in the
+ * then every line, each in pieces along the trail's points (see trailPoints), then each venue's dot, its glow (while picked out) and ring beneath it, in the
  * theme's sizes and opacities, those of the games picked out (hovered or selected) from the hover settings.
  * A trail fading in or out with its card has every shape's opacity scaled by how far it's shown.
  */
@@ -185,12 +192,18 @@ export function trailShapes(
   const shapes: TrailShape[] = []
   const isPickedOut = (i: number) => pickedOut.includes(screen[i].gameId)
   const shown = (i: number) => screen[i].opacity ?? 1
-  screen.forEach(({ from, to }, i) =>
-    shapes.push({ kind: 'line', from, to, width: trail.glow.width, blur: trail.glow.blur, color: colors[i], opacity: trail.glow.opacity * shown(i) }),
-  )
-  screen.forEach(({ from, to }, i) => {
+  // Each trail's pieces, from its card to its venue.
+  const pieces = screen.map(({ from, to, firstLeg }) => {
+    const points = trailPoints(from, to, firstLeg)
+    return points.slice(1).map((point, k) => ({ from: points[k], to: point }))
+  })
+  pieces.forEach((trailPieces, i) => {
+    for (const { from, to } of trailPieces)
+      shapes.push({ kind: 'line', from, to, width: trail.glow.width, blur: trail.glow.blur, color: colors[i], opacity: trail.glow.opacity * shown(i) })
+  })
+  pieces.forEach((trailPieces, i) => {
     const look = isPickedOut(i) ? hover.trail : trail
-    shapes.push({ kind: 'line', from, to, width: look.width, blur: 0, color: colors[i], opacity: look.opacity * shown(i) })
+    for (const { from, to } of trailPieces) shapes.push({ kind: 'line', from, to, width: look.width, blur: 0, color: colors[i], opacity: look.opacity * shown(i) })
   })
   const circle = (at: Point, radius: number, look: Partial<Extract<TrailShape, { kind: 'circle' }>>): TrailShape => ({
     kind: 'circle',

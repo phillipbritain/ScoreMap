@@ -57,7 +57,7 @@ At any zoom, the panel a pin near the center of the view shows as, a little abov
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
-The line from a score card to its game's venue, ending at a ringed venue dot.
+The line from a score card to its game's venue, ending at a ringed venue dot. Drawn as a transit map's line: across, up or down and at 45°, its one bend rounded off. It leaves its card straight out or at 45°, never along the card's edge, where it crosses the fewest other cards and trails.
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
@@ -77,7 +77,7 @@ A cluster where score cards' trails meet, in place of their venue dots, which wo
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Card layout**:
-Where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out each frame from the last so cards don't jump about.
+Where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out each frame from the last so cards don't jump about. Once the camera is still, the cards moved aside around a city are handed round their spots so they go round it in the same order as their venues, and their trails don't cross.
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:

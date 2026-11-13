@@ -97,7 +97,15 @@ export function cardLayoutDrawing(
       const showing = layout.shows(card.gameId)
       if (showing.as !== 'card') continue
       const start = { dx: showing.trail.x1 - card.venueX, dy: showing.trail.y1 - card.venueY }
-      trails.push({ gameId: card.gameId, color: card.color, venue: card.lngLat, start, end: lngLat, dot: kind === 'venueDot' })
+      trails.push({
+        gameId: card.gameId,
+        color: card.color,
+        venue: card.lngLat,
+        start,
+        end: lngLat,
+        dot: kind === 'venueDot',
+        ...(showing.firstLeg && { firstLeg: showing.firstLeg }),
+      })
     }
     if (kind === 'venueDot') continue
     if (kind === 'smallPin') {

@@ -66,4 +66,28 @@ export function setRailGlassVariant(key: string): void {
   window.history.replaceState(window.history.state, '', url)
 }
 
-if (import.meta.env.DEV) setRailGlassVariant(new URL(window.location.href).searchParams.get('railGlass') ?? '1')
+// 2, score cards' glass unblurred, is the one picked: the count chip's looks are tried on it.
+if (import.meta.env.DEV) setRailGlassVariant(new URL(window.location.href).searchParams.get('railGlass') ?? '2')
+
+/** Looks for the count chip on the Games button (?badgeGlass=). */
+export const badgeGlassVariants: readonly RailProtoVariant[] = [
+  { key: '1', name: 'Solid gold (today)' },
+  { key: '2', name: 'Gold glass, dark count' },
+  { key: '3', name: 'Rail glass, gold rim and count' },
+  { key: '4', name: 'Rail glass, gold rim and glow' },
+  { key: '5', name: 'Clear glass, gold count' },
+]
+
+let badge = badgeGlassVariants[0]
+
+export const badgeGlassVariant = (): RailProtoVariant => badge
+
+export function setBadgeGlassVariant(key: string): void {
+  badge = badgeGlassVariants.find((variant) => variant.key === key) ?? badgeGlassVariants[0]
+  document.documentElement.dataset.badgeGlass = badge.key
+  const url = new URL(window.location.href)
+  url.searchParams.set('badgeGlass', badge.key)
+  window.history.replaceState(window.history.state, '', url)
+}
+
+if (import.meta.env.DEV) setBadgeGlassVariant(new URL(window.location.href).searchParams.get('badgeGlass') ?? '1')

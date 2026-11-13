@@ -158,3 +158,44 @@
 :root:is([data-rail-glass='2'], [data-rail-glass='3'], [data-rail-glass='4'], [data-rail-glass='5']) .rail__group > .rail__button + .rail__button {
   border-top-color: color-mix(in srgb, var(--palette-text-primary) 12%, transparent);
 }
+
+/* The count chip on the Games button (?badgeGlass=), as glass (see the rail's glass above). */
+:root:is([data-badge-glass='2'], [data-badge-glass='3'], [data-badge-glass='4'], [data-badge-glass='5']) .rail__badge {
+  --frost: var(--score-card-frost);
+  --glass-shine: calc(1 - var(--frost));
+  --glass-fill: color-mix(in srgb, var(--glass-tint) calc(var(--frost) * 100%), transparent);
+  --glass-tint: var(--score-card-fill);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(14% * var(--glass-shine)), transparent) 0%, transparent 45%),
+    var(--glass-fill);
+  box-shadow:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent),
+    inset -1px -1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(6% + 22% * var(--glass-shine)), transparent);
+}
+
+/* 2: tinted gold, as solid as a card's frost, its count dark. */
+:root[data-badge-glass='2'] .rail__badge {
+  --glass-tint: var(--rail-open);
+  color: var(--palette-background-default);
+}
+
+/* 3: the rail's own glass, a gold rim and a gold count, as a score card's outline. */
+:root:is([data-badge-glass='3'], [data-badge-glass='4']) .rail__badge {
+  color: var(--rail-open);
+  box-shadow:
+    inset 0 0 0 1px var(--rail-open),
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent);
+}
+
+/* 4: and a gold glow, as a Live score card's. */
+:root[data-badge-glass='4'] .rail__badge {
+  box-shadow:
+    inset 0 0 0 1px var(--rail-open),
+    0 0 8px color-mix(in srgb, var(--rail-open) 55%, transparent);
+}
+
+/* 5: clear glass, only its lit edges, the count gold. */
+:root[data-badge-glass='5'] .rail__badge {
+  --frost: 0;
+  color: var(--rail-open);
+}

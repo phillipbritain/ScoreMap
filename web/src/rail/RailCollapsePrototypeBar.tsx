@@ -1,7 +1,7 @@
-// PROTOTYPE, throw away: the floating bar switching glass looks on the rail (collapse fixed at E) (see railCollapsePrototype.ts).
+// PROTOTYPE, throw away: the floating bar switching looks for the Games count chip (collapse E, rail glass 2) (see railCollapsePrototype.ts).
 // Local runs only.
 import { useEffect, useState } from 'react'
-import { railGlassVariant as railProtoVariant, railGlassVariants as railProtoVariants, setRailGlassVariant as setRailProtoVariant } from './railCollapsePrototype'
+import { badgeGlassVariant as railProtoVariant, badgeGlassVariants as railProtoVariants, setBadgeGlassVariant as setRailProtoVariant } from './railCollapsePrototype'
 
 export function RailCollapsePrototypeBar() {
   const [variant, setVariant] = useState(railProtoVariant)

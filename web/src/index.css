@@ -1183,10 +1183,11 @@ body {
   left: 0;
 }
 
-/* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width, which
-   the top rail would lie over: it hides while one is open. */
+/* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width from
+   the rail's top, which the top rail would lie over: it hides while one is open. Not for Map Type's,
+   which sits level with its own button, lower down and only as wide as its two pictures. */
 @media (max-width: 640px) {
-  .globe-area:has(> .rail .rail__popover) > .top-rail {
+  .globe-area:has(> .rail .rail__popover:not(.rail__popover--map-type)) > .top-rail {
     display: none;
   }
 }

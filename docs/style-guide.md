@@ -59,7 +59,7 @@ When a game's score changes, nothing on its score card moves: the card's edge gl
 
 A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves, or as it moves into or out of a card cluster, just appears or goes.
 
-The rail's Hide controls button, above its other buttons, slides them off to the right as they fade, over 200 ms, leaving itself alone at the top right as Show controls, which brings them back the same way; with reduce motion they go and come back at once. The rail stays collapsed on the viewer's next visit, but is open while the welcome tour shows.
+The rail's Hide controls button, a cross above its other buttons, gold while they show, folds them up into itself over 220 ms, their groups rising and fading one after another, leaving itself alone at the top right as Show controls, a menu, which drops them back down the same way; with reduce motion they go and come back at once. The rail stays collapsed on the viewer's next visit, but is open while the welcome tour shows.
 
 With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
@@ -110,7 +110,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | `palette.text.primary` | Main text on the game panel, the rail and the scenario controls | `offWhite.500` |
 | `palette.text.secondary` | Secondary text: the game panel's league and labels and the lines under a venue or a time; league chips that are off, and the count on the "All leagues" chip; a ranked team's poll place on a score card | `offWhite.600` |
 | `palette.text.link` | Links (the feedback form's thanks) | `offWhite.500` |
-| `palette.divider` | The lines between a menu's parts (between the rail's buttons, under "All leagues", running on from "Card colors") | `navy.600` |
+| `palette.divider` | The lines between a menu's parts (under "All leagues", running on from "Card colors") | `navy.600` |
 | `palette.action.hover` | Behind a control under the pointer (a scenario in the list, a speed key) | `navy.600` |
 
 The statuses' colors and `text.link` are ScoreMap's own, beside MUI's. MUI works out a color's `light`, `dark` and `contrastText` from its `main` when they're left out; ScoreMap's palette gives them all (a status's color has no `contrastText`), so each is a step that can be seen and changed.
@@ -168,10 +168,10 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
 | `components.GamePanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's groups of buttons and its popovers (Leagues, Display Settings and Games); on local runs, the top rail and its Scenario popover too | `background.paper` |
+| `components.Rail.surface` | The rail's popovers (Leagues, Display Settings and Games); on local runs, the top rail's Scenario popover too. The rail's groups of buttons are score cards' glass instead (see [Glass](#glass)) | `background.paper` |
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
-| `components.Rail.open` | A rail button's icon while its popover is open, the count on the Games button, and the ring round the map showing in Map Type | `secondary.main` (gold) |
+| `components.Rail.open` | A rail button's icon while its popover is open, and Hide controls' while the rail's buttons show; the count on the Games button and its ring; and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
@@ -250,7 +250,7 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So, on a desktop, is the game panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its top and left edges lit; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the game panel, the rail's groups and popovers (including Map Type, Games, Leagues and Display Settings, and the top rail on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
+Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So are the rail's groups of buttons (and the top rail's, on local runs), as a score card's glass, tinted with its fill as solid as its frost, the lines between their buttons faint, and the count on the Games button, a chip of the same glass ringed and numbered in `components.Rail.open`. So, on a desktop, is the game panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its top and left edges lit; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the game panel, the rail's popovers (Map Type, Games, Leagues and Display Settings, and the top rail's Scenario popover on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
 
 A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`, 0.6 in the dark theme):
 

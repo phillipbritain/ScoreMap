@@ -54,7 +54,8 @@ interface RailProps {
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
  *
- * Above them all, a button collapses the rail out of the way and, staying where it is, brings it back.
+ * Above them all, Hide controls folds the rest of the rail up into itself and, staying where it is as
+ * Show controls, drops them back down.
  */
 export function Rail({
   leagues,
@@ -133,26 +134,29 @@ export function Rail({
         </button>
       </div>
       <div id="rail-buttons" className={collapsed ? 'rail__buttons rail__buttons--collapsed' : 'rail__buttons'} inert={collapsed}>
-        {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
-        <div className="rail__group" data-keeps-popovers>
-          <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
-          <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
-          <RailButton label="Home" disabled={!camera} onClick={onHome} />
-        </div>
-        <div className="rail__group">
-          <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
-          <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
-          <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
-        </div>
-        <div className="rail__group">
-          <RailButton
-            label="Games"
-            popover="games"
-            open={open}
-            disabled={!gamesReady}
-            badge={gamesReady ? games.length : undefined}
-            onClick={() => popoverEvent({ press: 'games' })}
-          />
+        {/* Folds away to nothing, its groups clipped as they go (see .rail__buttons). */}
+        <div className="rail__buttons-inner">
+          {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
+          <div className="rail__group" data-keeps-popovers>
+            <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
+            <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
+            <RailButton label="Home" disabled={!camera} onClick={onHome} />
+          </div>
+          <div className="rail__group">
+            <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
+            <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
+            <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
+          </div>
+          <div className="rail__group">
+            <RailButton
+              label="Games"
+              popover="games"
+              open={open}
+              disabled={!gamesReady}
+              badge={gamesReady ? games.length : undefined}
+              onClick={() => popoverEvent({ press: 'games' })}
+            />
+          </div>
         </div>
       </div>
       {open && (

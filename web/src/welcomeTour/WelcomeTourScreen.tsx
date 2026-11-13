@@ -266,7 +266,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
 }
 
 /** The rail's groups of buttons, which Your controls lights and points at. */
-const railGroups = () => document.querySelectorAll('.rail__buttons > .rail__group')
+const railGroups = () => document.querySelectorAll('.rail__buttons-inner > .rail__group')
 
 /** Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at. */
 function ControlsStep({ onNext }: { onNext: () => void }) {

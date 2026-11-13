@@ -4,9 +4,9 @@ import { loadingScreenView } from './loadingScreenView'
 const seconds = (n: number) => n * 1000
 
 describe('loadingScreenView', () => {
-  it('shows without a message while waiting for games, before 10 seconds', () => {
-    expect(loadingScreenView('waitingForGames', 0)).toEqual({ shown: true, message: null })
-    expect(loadingScreenView('waitingForGames', seconds(9.9))).toEqual({ shown: true, message: null })
+  it('says it’s loading while waiting for games, before 10 seconds', () => {
+    expect(loadingScreenView('waitingForGames', 0)).toEqual({ shown: true, message: 'loading' })
+    expect(loadingScreenView('waitingForGames', seconds(9.9))).toEqual({ shown: true, message: 'loading' })
   })
 
   it('says it can’t reach ScoreMap after 10 seconds waiting for games', () => {
@@ -20,9 +20,9 @@ describe('loadingScreenView', () => {
     })
   })
 
-  it('shows without a message while the globe is drawing, before 10 seconds', () => {
-    expect(loadingScreenView('drawing', 0)).toEqual({ shown: true, message: null })
-    expect(loadingScreenView('drawing', seconds(9.9))).toEqual({ shown: true, message: null })
+  it('says it’s loading while the globe is drawing, before 10 seconds', () => {
+    expect(loadingScreenView('drawing', 0)).toEqual({ shown: true, message: 'loading' })
+    expect(loadingScreenView('drawing', seconds(9.9))).toEqual({ shown: true, message: 'loading' })
   })
 
   it('says the map is slow after 10 seconds drawing', () => {
@@ -32,9 +32,9 @@ describe('loadingScreenView', () => {
     })
   })
 
-  it('clears the message when games arrive, as the time in the new stage starts again', () => {
+  it('goes back to saying it’s loading when games arrive, as the time in the new stage starts again', () => {
     expect(loadingScreenView('waitingForGames', seconds(15)).message).not.toBeNull()
-    expect(loadingScreenView('drawing', 0)).toEqual({ shown: true, message: null })
+    expect(loadingScreenView('drawing', 0)).toEqual({ shown: true, message: 'loading' })
   })
 
   it('offers immediate recovery guidance when the initial style fails', () => {

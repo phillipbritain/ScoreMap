@@ -16,8 +16,8 @@ interface LoadingScreenProps {
 }
 
 /**
- * The loading screen (see GLOSSARY.md): the globe dimmed, with a flying rocket, until it's ready, and a
- * message under the rocket if a stage takes too long. Then
+ * The loading screen (see GLOSSARY.md): the globe dimmed, with a flying rocket and a message under it
+ * saying it's loading, or what's holding it up if a stage takes too long, until it's ready. Then
  * the dim fades away (at once with reduce motion: the CSS has no fade then) and the loading screen is
  * gone for good. What it shows comes from loadingScreenView; this only draws it.
  */

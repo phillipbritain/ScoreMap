@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
  * Each thing the loading screen or cut-off note can say under its rocket (see GLOSSARY.md "Loading
  * screen"), as a playful space phrase picked at random each time it's shown.
  */
-export type PhraseScenario = 'cutOff' | 'slowDrawing' | 'waking' | 'styleError' | 'constructionError'
+export type PhraseScenario = 'loading' | 'cutOff' | 'slowDrawing' | 'waking' | 'styleError' | 'constructionError'
 
 interface ScenarioPhrases {
   /** One of these is shown, picked at random. Each must still say what's happening. */
@@ -15,6 +15,19 @@ interface ScenarioPhrases {
 
 /** The phrases, by scenario: edit them here. */
 export const loadingPhrases: Record<PhraseScenario, ScenarioPhrases> = {
+  // Loading as usual, for the first 10 seconds of each stage of the first load.
+  loading: {
+    phrases: [
+      'Traveling to space…',
+      'Preparing for liftoff…',
+      'Counting down to launch…',
+      'Fueling up the rocket…',
+      'Climbing into orbit…',
+      'Blasting off…',
+      'Leaving the launch pad…',
+      'Riding the rocket to ScoreMap…',
+    ],
+  },
   // Can't reach the server, while loading or after a drop, for 10 seconds or more; still trying.
   cutOff: {
     phrases: [

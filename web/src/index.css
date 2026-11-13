@@ -1258,6 +1258,11 @@ body {
   color: var(--rail-open);
 }
 
+/* Not Hide controls, which says the rail is open but opens no popover. */
+.rail__group--collapse > .rail__button[aria-expanded='true'] {
+  color: var(--palette-text-primary);
+}
+
 /* A count on a button's corner (the Games button's games), in the open color. */
 .rail__button { position: relative; }
 

@@ -22,6 +22,7 @@ import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
+import { ScopePrototypeSwitcher } from './rail/ScopePrototypeSwitcher'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
@@ -118,6 +119,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {/* PROTOTYPE, throwaway: the Top Events / My leagues looks' switcher. */}
+      {import.meta.env.DEV && <ScopePrototypeSwitcher />}
       <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

@@ -8,6 +8,7 @@ import {
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
+import { ScopeControl } from './ScopeVariants'
 
 interface LeaguesProps {
   leagues: readonly League[]
@@ -27,30 +28,8 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
   const top = settings.topEventsOnly
   return (
     <>
-      <div className="leagues-scope" role="radiogroup" aria-label="Show">
-        <button
-          type="button"
-          role="radio"
-          aria-checked={top}
-          className="leagues-scope__option"
-          onClick={() => onChange({ ...settings, topEventsOnly: true })}
-        >
-          <svg className="leagues-scope__star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-          Top Events
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={!top}
-          className="leagues-scope__option"
-          onClick={() => onChange({ ...settings, topEventsOnly: false })}
-        >
-          My leagues
-        </button>
-      </div>
-      {top && <p className="leagues-scope__note">The games ESPN picks as the most important right now, in every sport.</p>}
+      {/* PROTOTYPE, throwaway: the looks on ?scopeProto= (see scopePrototype). */}
+      <ScopeControl top={top} onPick={(topEventsOnly) => onChange({ ...settings, topEventsOnly })} />
       <div className={top ? 'leagues-list leagues-list--off' : 'leagues-list'} inert={top}>
         <div className="leagues-master">
           {/* Switches every league on, or off when they're all on already, like a sport's name. */}

@@ -1,0 +1,288 @@
+/* PROTOTYPE, throwaway: the Top Events / My leagues looks on ?scopeProto= (see scopePrototype.ts). */
+
+.scope-proto__block {
+  margin-bottom: calc(3 * var(--spacing));
+  padding-bottom: calc(3 * var(--spacing));
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.scope-proto__label {
+  display: block;
+  margin-bottom: calc(2 * var(--spacing));
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.scope-proto__note {
+  margin: calc(2 * var(--spacing)) 0 0;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+.scope-proto__star,
+.scope-proto__check {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.scope-seg__option:focus-visible,
+.scope-radio__option:focus-visible,
+.scope-switch__row:focus-visible,
+.scope-select__box:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
+}
+
+/* Segmented: one track, a lit thumb sliding under the chosen half. */
+.scope-seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: calc(0.75 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--palette-text-primary) 4%, transparent);
+}
+
+.scope-seg__thumb {
+  position: absolute;
+  top: calc(0.75 * var(--spacing));
+  bottom: calc(0.75 * var(--spacing));
+  left: calc(0.75 * var(--spacing));
+  width: calc(50% - 0.75 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
+  transition: transform 0.18s ease;
+}
+
+.scope-seg--second .scope-seg__thumb {
+  transform: translateX(100%);
+}
+
+.scope-seg__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1.5 * var(--spacing));
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scope-seg__option[aria-checked='true'] {
+  color: var(--rail-on-text);
+}
+
+@media (hover: hover) {
+  .scope-seg__option[aria-checked='false']:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
+/* Radio cards: a dot, a name and a line on what it shows. */
+.scope-radio {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+}
+
+.scope-radio__option {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(3 * var(--spacing));
+  padding: calc(2.5 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scope-radio__option[aria-checked='true'] {
+  border-color: var(--rail-on-outline);
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
+  color: var(--rail-on-text);
+}
+
+@media (hover: hover) {
+  .scope-radio__option[aria-checked='false']:hover {
+    border-color: var(--palette-text-secondary);
+    background: var(--palette-action-hover);
+    color: var(--palette-text-primary);
+  }
+}
+
+.scope-radio__dot {
+  position: relative;
+  flex: none;
+  width: calc(4.5 * var(--spacing));
+  height: calc(4.5 * var(--spacing));
+  margin-top: calc(0.25 * var(--spacing));
+  border: var(--shape-border-width-medium) solid currentColor;
+  border-radius: 50%;
+}
+
+.scope-radio__option[aria-checked='true'] .scope-radio__dot {
+  border-color: var(--rail-on-outline);
+}
+
+.scope-radio__option[aria-checked='true'] .scope-radio__dot::after {
+  content: '';
+  position: absolute;
+  inset: calc(0.75 * var(--spacing));
+  border-radius: 50%;
+  background: var(--rail-on-outline);
+}
+
+.scope-radio__text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.5 * var(--spacing));
+}
+
+.scope-radio__name {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.scope-radio__note {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+/* "Show:" with chips, the chosen one checked. */
+.scope-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+}
+
+.scope-chips__label {
+  color: var(--palette-text-primary);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.scope-chips__chip {
+  display: flex;
+  padding: var(--spacing) calc(2.5 * var(--spacing));
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+}
+
+/* Switch: "Show Top Events only", its switch at the right. */
+.scope-switch__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  cursor: pointer;
+}
+
+.scope-switch__name {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+}
+
+/* Dropdown: a field box with the choice and a caret. */
+.scope-select {
+  position: relative;
+}
+
+.scope-select__box {
+  width: 100%;
+  padding: calc(2 * var(--spacing)) calc(9 * var(--spacing)) calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: var(--controls-corner);
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  color: var(--rail-on-text);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
+  appearance: none;
+  cursor: pointer;
+}
+
+.scope-select__box option {
+  background: var(--palette-background-paper, #1a1a1a);
+  color: var(--palette-text-primary);
+}
+
+.scope-select__caret {
+  position: absolute;
+  top: 50%;
+  right: calc(3 * var(--spacing));
+  width: 1.1em;
+  height: 1.1em;
+  transform: translateY(-50%);
+  color: var(--rail-on-text);
+  pointer-events: none;
+}
+
+/* The switcher bar: a white pill at the top center. On a phone, a thin strip at the very top edge, above
+   the Leagues popover's content and clear of the bottom sheets. */
+.scope-proto-bar {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: 600 13px system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.scope-proto-bar__step {
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .scope-proto-bar {
+    top: 1px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+}

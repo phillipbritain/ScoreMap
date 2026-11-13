@@ -1453,42 +1453,91 @@ body {
   }
 }
 
-/* Leagues: "Top Events | My leagues" at the top, as two tabs, the choice underlined and lit. */
+/* Leagues: "Show on the globe", then Top Events and My leagues as two stacked radio options, each a dot,
+   its name and what it shows; the chosen one lit as a league chip that's on is. */
+.leagues-scope__label {
+  margin-bottom: calc(2 * var(--spacing));
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
 .leagues-scope {
   display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
   margin-bottom: calc(3 * var(--spacing));
+  padding-bottom: calc(3 * var(--spacing));
   border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .leagues-scope__option {
   display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: calc(1.5 * var(--spacing));
-  margin-bottom: calc(-1 * var(--shape-border-width-thin));
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
-  border: none;
-  border-bottom: var(--shape-border-width-medium) solid transparent;
-  background: none;
+  align-items: flex-start;
+  gap: calc(3 * var(--spacing));
+  padding: calc(2.5 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border-radius: var(--controls-corner);
+  background: transparent;
   color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
-  white-space: nowrap;
+  text-align: left;
   cursor: pointer;
 }
 
+.leagues-scope__option[aria-checked='true'] {
+  border-color: var(--rail-on-outline);
+  background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
+  box-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
+  color: var(--rail-on-text);
+}
+
 @media (hover: hover) {
-  .leagues-scope__option:hover {
+  .leagues-scope__option[aria-checked='false']:hover {
+    border-color: var(--palette-text-secondary);
+    background: var(--palette-action-hover);
     color: var(--palette-text-primary);
   }
 }
 
-.leagues-scope__option[aria-checked='true'] {
-  border-bottom-color: var(--rail-on-outline);
-  color: var(--rail-on-text);
-  text-shadow: 0 0 var(--rail-on-glow-radius) color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-glow-opacity) * 100%), transparent);
+/* The radio dot: a ring, filled in the lit color when chosen. */
+.leagues-scope__dot {
+  position: relative;
+  flex: none;
+  width: calc(4.5 * var(--spacing));
+  height: calc(4.5 * var(--spacing));
+  margin-top: calc(0.25 * var(--spacing));
+  border: var(--shape-border-width-medium) solid currentColor;
+  border-radius: 50%;
+}
+
+.leagues-scope__option[aria-checked='true'] .leagues-scope__dot {
+  border-color: var(--rail-on-outline);
+}
+
+.leagues-scope__option[aria-checked='true'] .leagues-scope__dot::after {
+  content: '';
+  position: absolute;
+  inset: calc(0.75 * var(--spacing));
+  border-radius: 50%;
+  background: var(--rail-on-outline);
+}
+
+.leagues-scope__text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.5 * var(--spacing));
+}
+
+.leagues-scope__name {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  font-size: var(--typography-button-font-size);
+  font-weight: var(--typography-button-font-weight);
 }
 
 .leagues-scope__star {
@@ -1497,8 +1546,52 @@ body {
 }
 
 .leagues-scope__note {
-  margin: 0 0 calc(3 * var(--spacing));
   color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+/* The leagues under the choice. While Top Events is on, a click on them shows a note on why they're off. */
+.leagues-list-area {
+  position: relative;
+}
+
+.leagues-list-area--off {
+  cursor: not-allowed;
+}
+
+/* The note, across the popover where the click landed, fading out over 4 s (offNoteDuration, in Leagues.tsx). */
+.leagues-off-note {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin: 0;
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: var(--controls-corner);
+  background: var(--palette-background-default);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--palette-background-default) 70%, transparent);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  transform: translateY(-50%);
+  animation: leagues-off-note 4s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes leagues-off-note {
+  0% {
+    opacity: 0;
+  }
+
+  5%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 /* The leagues, grayed out and out of reach while Top Events decides instead. */

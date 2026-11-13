@@ -286,3 +286,36 @@
     font-size: 11px;
   }
 }
+
+/* A click on the grayed-out leagues while Top Events is on: a note on why, where the click landed. */
+.leagues-off-area {
+  position: relative;
+}
+
+.leagues-off-area--off {
+  cursor: not-allowed;
+}
+
+.leagues-off-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin: 0;
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: var(--controls-corner);
+  background: var(--palette-background-default);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  color: var(--palette-text-primary);
+  font-size: var(--typography-caption-font-size);
+  transform: translateY(-50%);
+  animation: leagues-off-hint 4s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes leagues-off-hint {
+  0% { opacity: 0; }
+  5%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}

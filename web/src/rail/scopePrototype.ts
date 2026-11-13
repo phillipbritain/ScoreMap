@@ -45,3 +45,15 @@ export function useScopeVariant(): ScopeVariant {
   }, [])
   return current
 }
+
+/** Why the leagues can't be picked while Top Events is on, and how to pick them, in each look's words. */
+export function offHintText(variant: ScopeVariant): string {
+  switch (variant) {
+    case 'switch':
+      return 'Top Events is on, so your leagues are off. Turn off "Show Top Events only" above to pick your own.'
+    case 'show-chips':
+      return 'Top Events is on, so your leagues are off. Pick "My leagues" above to choose your own.'
+    default:
+      return 'Top Events is on, so your leagues are off. Choose "My leagues" above to pick your own.'
+  }
+}

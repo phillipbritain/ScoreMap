@@ -3,9 +3,9 @@ import { firstVisitSettings } from '../settings/viewerSettings'
 import { feedbackContext, lengthCounter, lengthProblem, sendFeedback } from './feedbackForm'
 
 const leagues = [
-  { name: 'NFL', sport: 'Football' },
-  { name: 'NBA', sport: 'Basketball' },
-  { name: 'MLS', sport: 'Soccer' },
+  { name: 'NFL', sport: 'Football', conferences: [] },
+  { name: 'NBA', sport: 'Basketball', conferences: [] },
+  { name: 'MLS', sport: 'Soccer', conferences: [] },
 ]
 
 describe('lengthProblem', () => {

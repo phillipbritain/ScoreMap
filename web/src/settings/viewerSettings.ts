@@ -24,6 +24,11 @@ export interface ViewerSettings {
   mapType: MapType
   /** Whether the game panel shows the venue's photo behind its details: on unless the viewer switched it off in Display Settings. */
   venuePhotos: boolean
+  /**
+   * The conferences the viewer narrowed a league's games to, by league name: the league shows only its games
+   * with a team in one of them. A league not listed shows all its games, as does every league on Top Events.
+   */
+  chosenConferences: Readonly<Record<string, readonly string[]>>
 }
 
 /**
@@ -38,7 +43,7 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on, Top Events off, no colors picked, the plain map and venue photos on. */
+/** Every league on with all its conferences, Top Events off, no colors picked, the plain map and venue photos on. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
@@ -46,6 +51,7 @@ export const firstVisitSettings: ViewerSettings = {
   leagueColors: {},
   mapType: 'plain',
   venuePhotos: true,
+  chosenConferences: {},
 }
 
 /** Each map type's name, as Map Type on the rail lists it. */
@@ -90,6 +96,27 @@ export function withAllLeagues(settings: ViewerSettings, leagues: readonly Leagu
   )
 }
 
+/** The conferences chosen in a league; empty when it shows all of them. */
+export function chosenConferences(settings: ViewerSettings, league: string): readonly string[] {
+  return settings.chosenConferences[league] ?? []
+}
+
+/** The settings with one conference in a league chosen, or unchosen. With none left chosen, the league shows all of them. */
+export function withConference(settings: ViewerSettings, league: string, conference: string, chosen: boolean): ViewerSettings {
+  const others = chosenConferences(settings, league).filter((other) => other !== conference)
+  return withChosenConferences(settings, league, chosen ? [...others, conference] : others)
+}
+
+/** "All conferences": the settings with a league showing all of its conferences again. */
+export function withAllConferences(settings: ViewerSettings, league: string): ViewerSettings {
+  return withChosenConferences(settings, league, [])
+}
+
+function withChosenConferences(settings: ViewerSettings, league: string, conferences: readonly string[]): ViewerSettings {
+  const { [league]: _cleared, ...others } = settings.chosenConferences
+  return { ...settings, chosenConferences: conferences.length === 0 ? others : { ...others, [league]: conferences } }
+}
+
 /** The settings with a sport's color picked, or cleared (null) so its games take the theme's colors again. */
 export function withSportColor(settings: ViewerSettings, sport: string, color: string | null): ViewerSettings {
   const { [sport]: _cleared, ...others } = settings.sportColors
@@ -121,6 +148,8 @@ function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: b
 export interface League {
   name: string
   sport: string
+  /** The conferences its games can be narrowed to (college leagues), by name in order; empty for a league without them. */
+  conferences: readonly string[]
 }
 
 export interface SportGroup {

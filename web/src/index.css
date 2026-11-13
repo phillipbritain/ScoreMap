@@ -1536,6 +1536,44 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
+/* After a college league's chip: opens its conferences. Plain text, as a sport's name is, lit while some are chosen. */
+.leagues-conferences__toggle {
+  padding: var(--spacing) 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-caption-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.leagues-conferences__toggle--chosen {
+  color: var(--rail-on-text);
+}
+
+@media (hover: hover) {
+  .leagues-conferences__toggle:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
+.leagues-conferences__toggle:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
+  outline-offset: var(--shape-border-width-medium);
+}
+
+/* A league's conferences, opened under its sport's leagues: chips set in from a line down their left. */
+.leagues-conferences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(2 * var(--spacing));
+  margin-top: calc(2 * var(--spacing));
+  padding-left: calc(3 * var(--spacing));
+  border-left: var(--shape-border-width-medium) solid var(--palette-divider);
+}
+
 /* Display Settings: "Display venue photo on Game Panel", its switch at the right, above "Card colors". */
 .display-photos {
   display: flex;

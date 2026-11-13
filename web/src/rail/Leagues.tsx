@@ -1,8 +1,12 @@
+import { Fragment, useState } from 'react'
 import {
+  chosenConferences,
   isLeagueOn,
   leaguesBySport,
   sportSwitch,
+  withAllConferences,
   withAllLeagues,
+  withConference,
   withLeague,
   withSport,
   type League,
@@ -19,9 +23,13 @@ interface LeaguesProps {
  * The rail's Leagues popover: a "Top Events | My leagues" switch, as on ESPN's front page, then, for
  * My leagues, an "All leagues" chip to switch every league at once, then leagues
  * grouped under their sport, each a chip to switch on or off, and each sport's name switching all of
- * its leagues. On Top Events the leagues stay in view, grayed out, as they'll be when switched back.
+ * its leagues. A league with conferences (college leagues) has a toggle after its chip that opens its
+ * conferences under its sport, to narrow its games to some of them. On Top Events the leagues stay in
+ * view, grayed out, as they'll be when switched back.
  */
 export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
+  // The league whose conferences are open, one at a time; none when the popover opens.
+  const [openConferences, setOpenConferences] = useState<string | null>(null)
   const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
   const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
   const top = settings.topEventsOnly
@@ -88,22 +96,100 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
                 {group.leagues.map((league) => {
                   const leagueOn = isLeagueOn(settings, league.name)
                   return (
-                    <button
-                      key={league.name}
-                      type="button"
-                      aria-pressed={leagueOn}
-                      className="rail-chip"
-                      onClick={() => onChange(withLeague(settings, league.name, !leagueOn))}
-                    >
-                      {league.name}
-                    </button>
+                    <Fragment key={league.name}>
+                      <button
+                        type="button"
+                        aria-pressed={leagueOn}
+                        className="rail-chip"
+                        onClick={() => onChange(withLeague(settings, league.name, !leagueOn))}
+                      >
+                        {league.name}
+                      </button>
+                      {league.conferences.length > 0 && (
+                        <ConferencesToggle
+                          league={league.name}
+                          chosen={chosenConferences(settings, league.name)}
+                          open={openConferences === league.name}
+                          onClick={() => setOpenConferences(openConferences === league.name ? null : league.name)}
+                        />
+                      )}
+                    </Fragment>
                   )
                 })}
               </div>
+              {group.leagues
+                .filter((league) => league.name === openConferences && league.conferences.length > 0)
+                .map((league) => (
+                  <Conferences key={league.name} league={league} settings={settings} onChange={onChange} />
+                ))}
             </div>
           )
         })}
       </div>
     </>
+  )
+}
+
+interface ConferencesToggleProps {
+  league: string
+  chosen: readonly string[]
+  open: boolean
+  onClick: () => void
+}
+
+/** Opens or closes a league's conferences, naming those chosen ("SEC", "SEC +1"), or "Conferences" when it shows all. */
+function ConferencesToggle({ league, chosen, open, onClick }: ConferencesToggleProps) {
+  const label = chosen.length === 0 ? 'Conferences' : chosen.length === 1 ? chosen[0] : `${chosen[0]} +${chosen.length - 1}`
+  return (
+    <button
+      type="button"
+      aria-expanded={open}
+      aria-label={`${league} conferences: ${chosen.length === 0 ? 'all' : chosen.join(', ')}`}
+      className={chosen.length === 0 ? 'leagues-conferences__toggle' : 'leagues-conferences__toggle leagues-conferences__toggle--chosen'}
+      onClick={onClick}
+    >
+      {label}
+      <span aria-hidden="true">{open ? ' ▾' : ' ▸'}</span>
+    </button>
+  )
+}
+
+interface ConferencesProps {
+  league: League
+  settings: ViewerSettings
+  onChange: (settings: ViewerSettings) => void
+}
+
+/**
+ * A league's conferences, each a chip to choose: its games then show only with a team in one chosen. "All
+ * conferences" first, lit while none is chosen, goes back to all of them.
+ */
+function Conferences({ league, settings, onChange }: ConferencesProps) {
+  const chosen = chosenConferences(settings, league.name)
+  return (
+    <div className="leagues-conferences" role="group" aria-label={`${league.name} conferences`}>
+      <button
+        type="button"
+        aria-pressed={chosen.length === 0}
+        className="rail-chip"
+        onClick={() => onChange(withAllConferences(settings, league.name))}
+      >
+        All conferences
+      </button>
+      {league.conferences.map((conference) => {
+        const isChosen = chosen.includes(conference)
+        return (
+          <button
+            key={conference}
+            type="button"
+            aria-pressed={isChosen}
+            className="rail-chip"
+            onClick={() => onChange(withConference(settings, league.name, conference, !isChosen))}
+          >
+            {conference}
+          </button>
+        )
+      })}
+    </div>
   )
 }

@@ -94,8 +94,9 @@ body {
   box-shadow: var(--glass-rim);
 }
 
-/* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   color (--game-color, set on the panel, with --text-on-game-color for text on it): the score block, then
+/* The game panel: a TV-style strip across the bottom of the globe, a thin neutral line along its top and
+   a glow in the game's color (--game-color, set on the panel, with --text-on-game-color for text on it)
+   around it: the score block, then
    the venue and its watch links over the venue's photo, with a band under the strip for a field's
    leaderboard, a fight card or tennis sets. Every line holds its place whether or not a game has it, and
    names and the venue take one line each, so the panel is as tall for every game (bar the band) and
@@ -115,7 +116,7 @@ body {
      as a phone on its side, it keeps a quarter of the screen. */
   max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  border-top: var(--shape-border-width-thick) solid var(--game-color);
+  border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
   border-radius: var(--game-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
@@ -418,10 +419,9 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* The close button in the game's color, in the panel's top right corner under its lit top edge, over the
-   details and the photo; the panel's corner rounds its top right, and its bottom left is rounded to match
-   the tab it once was. The text it would cover keeps clear of it (see .game-panel__venue, and on a phone
-   .game-panel__league). */
+/* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
+   the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
+   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). */
 .game-panel__close {
   position: absolute;
   top: 0;
@@ -429,19 +429,20 @@ body {
   z-index: 3;
   width: var(--game-panel-size-close-width);
   height: var(--game-panel-size-close-height);
+  padding: 0;
   border: none;
-  border-radius: 0 0 0 calc(1.5 * var(--shape-border-radius));
-  background: var(--game-color);
-  color: var(--text-on-game-color);
+  background: none;
+  color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-body2-font-weight);
   line-height: 1;
+  text-shadow: 0 1px 3px var(--palette-background-default);
   cursor: pointer;
 }
 
 .game-panel__close:hover {
-  filter: brightness(1.15);
+  color: var(--palette-text-primary);
 }
 
 /* A field's leaderboard, a fight card or tennis sets below the strip, on the panel's own surface (no

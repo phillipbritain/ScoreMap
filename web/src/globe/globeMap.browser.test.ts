@@ -397,16 +397,18 @@ describe('shown score cards', () => {
     await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
   })
 
-  it('gives the cards of games near the center zoomed all the way out on a phone', async () => {
+  it('gives cards zoomed all the way out on a phone only to games within a region of the center', async () => {
     const phone = { width: 390, height: 844 }
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 0 }, phone)
     globe.setZoomLimits(fittedZoomSettings(zoomSettings, phone))
     map.jumpTo({ zoom: 0 })
-    globe.show([game('A'), game('B', { longitude: 20, latitude: 10 })])
+    // B is some 22° from the center: past the card radius zoomed all the way out.
+    const games = [game('A'), game('B', { longitude: 20, latitude: 10 })]
+    globe.show(games)
     await cardShown('A')
-    await cardShown('B')
+    await pinsDrawn(map, outerSmallPinLayer, games[1])
 
-    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
+    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId)).toEqual(['A']))
   })
 })
 

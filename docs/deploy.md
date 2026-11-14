@@ -31,7 +31,7 @@ The template is scoped to the resource group, so a deploy needs rights on that g
 
 ```sh
 export SCOREMAP_IMAGE=ghcr.io/phillipbritain/scoremap:<commit>
-export SCOREMAP_FEEDBACK_TOKEN=<token>   # optional; leave unset to only log feedback
+export SCOREMAP_FEEDBACK_TOKEN=<token>   # or SCOREMAP_ALLOW_NO_FEEDBACK=true to only log feedback
 az deployment group create -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
 ```
 
@@ -39,7 +39,7 @@ The outputs give the app's address (`url`) and the identity's client ID (`github
 
 ### Running the template again
 
-Running it again changes nothing unless the template changed, so change settings in the template and run it again, not in the portal: a setting changed in the portal is put back by the next run. Every run replaces the app's settings, secret and image, so pass the image that's running now, and the feedback token if filing is on:
+Running it again changes nothing unless the template changed, so change settings in the template and run it again, not in the portal: a setting changed in the portal is put back by the next run. Every run replaces the app's settings, secret and image, so pass the image that's running now, and the feedback token (a run without it fails, see [configuration.md](configuration.md#feedback)):
 
 ```sh
 export SCOREMAP_IMAGE=$(az containerapp show -g $rg -n scoremap --query 'properties.template.containers[0].image' -o tsv)

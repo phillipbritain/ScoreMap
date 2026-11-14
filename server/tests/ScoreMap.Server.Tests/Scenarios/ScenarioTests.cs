@@ -91,11 +91,11 @@ public class ScenarioTests
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
 
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.NextSnapshotAsync();
+        // The snapshot holds only the leagues fetched within its 250 ms budget, so wait for the rest.
+        var games = await client.GamesMatchingAsync(games =>
+            games.Select(g => g.League).Distinct().Count() >= 3 && games.Select(g => g.Status).Distinct().Count() >= 3);
 
-        Assert.DoesNotContain(snapshot, g => g.Id == "real-game");
-        Assert.True(snapshot.Select(g => g.League).Distinct().Count() >= 3, "games in at least 3 leagues");
-        Assert.True(snapshot.Select(g => g.Status).Distinct().Count() >= 3, "games in at least 3 statuses");
+        Assert.DoesNotContain(games, g => g.Id == "real-game");
     }
 
     [Fact]

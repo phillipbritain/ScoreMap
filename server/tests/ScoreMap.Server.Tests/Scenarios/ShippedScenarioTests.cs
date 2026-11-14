@@ -128,16 +128,20 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Worldwide_busy_shows_a_game_at_every_worldwide_venue_Upcoming_Live_and_Final()
+    public async Task Worldwide_busy_shows_a_college_saturday_mostly_live_college_games_over_the_US()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await StartAsync(server, "worldwide-busy");
-        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 150);
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 60);
 
-        Assert.InRange(snapshot.Count, 150, 160);
-        Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
-        Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 20, "games in at least 20 countries");
+        Assert.InRange(snapshot.Count, 60, 70);
+        var college = snapshot.Where(g => g.League.StartsWith("NCAA", StringComparison.Ordinal)).ToList();
+        Assert.True(college.Count >= 55, $"only {college.Count} college games");
+        Assert.All(college, g => Assert.Equal("USA", g.Venue.Country));
+        Assert.True(snapshot.Count(g => g.Status == GameStatus.Live) >= 55, "nearly all Live");
+        Assert.Contains(snapshot, g => g.League == "PGA Tour");
+        Assert.Contains(snapshot, g => g.League == "LPGA Tour");
     }
 
     [Fact]

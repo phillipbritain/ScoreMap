@@ -1,5 +1,4 @@
 {
-  "Augusta National Golf Club, Augusta": { "latitude": 33.502, "longitude": -82.020 },
   "AAMI Park, Melbourne": {
     "latitude": -37.8251046,
     "longitude": 144.983743
@@ -11,6 +10,10 @@
   "Abbey Stadium, Cambridge": {
     "latitude": 52.2120297,
     "longitude": 0.1541831
+  },
+  "Abessinio Court at Eleanor R. Baldwin Arena, Boca Raton": {
+    "latitude": 26.3586885,
+    "longitude": -80.0830984
   },
   "Accor Arena, Paris": {
     "latitude": 48.8387085,
@@ -28,6 +31,10 @@
     "latitude": 24.7291958,
     "longitude": 46.6237712
   },
+  "Alico Arena, Fort Myers": {
+    "latitude": 26.640628,
+    "longitude": -81.8723084
+  },
   "Allianz Arena, Munich": {
     "latitude": 48.2187901,
     "longitude": 11.6236227
@@ -44,6 +51,10 @@
     "latitude": 45.1095759,
     "longitude": 7.6421338
   },
+  "Alumni Hall (Navy), Annapolis": {
+    "latitude": 38.9786401,
+    "longitude": -76.492786
+  },
   "Amerant Bank Arena, Sunrise": {
     "latitude": 26.1583702,
     "longitude": -80.3254289
@@ -55,6 +66,10 @@
   "Amman International Stadium, Amman": {
     "latitude": 31.985153,
     "longitude": 35.9027482
+  },
+  "Amon G. Carter Stadium, Fort Worth": {
+    "latitude": 32.7097507,
+    "longitude": -97.3680395
   },
   "Anfield, Liverpool": {
     "latitude": 53.4309011,
@@ -75,6 +90,10 @@
   "Audi Field, Washington": {
     "latitude": 38.8682612,
     "longitude": -77.0126092
+  },
+  "Augusta National Golf Club, Augusta": {
+    "latitude": 33.502,
+    "longitude": -82.02
   },
   "Aviva Stadium, Dublin": {
     "latitude": 53.3352254,
@@ -100,9 +119,17 @@
     "latitude": 40.6825106,
     "longitude": -73.9752519
   },
+  "Beasley Coliseum, Pullman": {
+    "latitude": 46.735244,
+    "longitude": -117.1581126
+  },
   "Bell Centre, Montreal": {
     "latitude": 45.4960358,
     "longitude": -73.5692029
+  },
+  "Bodford Arena, Greensboro": {
+    "latitude": 36.0726355,
+    "longitude": -79.7919754
   },
   "Brisbane Road, London": {
     "latitude": 51.5600713,
@@ -111,6 +138,10 @@
   "Broadfield Stadium, Crawley": {
     "latitude": 51.0995727,
     "longitude": -0.1947428
+  },
+  "Brooks Stadium (SC), Conway": {
+    "latitude": 33.7929212,
+    "longitude": -79.0174511
   },
   "Bryant-Denny Stadium, Tuscaloosa": {
     "latitude": 33.2077203,
@@ -124,13 +155,29 @@
     "latitude": 30.0690313,
     "longitude": 31.3122096
   },
+  "Calihan Hall, Detroit": {
+    "latitude": 42.4143433,
+    "longitude": -83.1359254
+  },
   "Cardiff City Stadium, Cardiff": {
     "latitude": 51.4728209,
     "longitude": -3.2029602
   },
+  "Carnesecca Arena, Queens": {
+    "latitude": 40.7135078,
+    "longitude": -73.8283132
+  },
+  "Carter-Finley Stadium, Raleigh": {
+    "latitude": 35.8008464,
+    "longitude": -78.7196045
+  },
   "Celtic Park, Glasgow": {
     "latitude": 55.8501815,
     "longitude": -4.2068227
+  },
+  "Chaifetz Arena, St. Louis": {
+    "latitude": 38.6325255,
+    "longitude": -90.2281769
   },
   "Chase Center, San Francisco": {
     "latitude": 37.7679001,
@@ -140,6 +187,10 @@
     "latitude": 26.1932426,
     "longitude": -80.16068
   },
+  "Christl Arena, West Point": {
+    "latitude": 41.3912693,
+    "longitude": -73.9658803
+  },
   "Citi Field, Queens": {
     "latitude": 40.7570308,
     "longitude": -73.8457626
@@ -148,13 +199,29 @@
     "latitude": 51.9234391,
     "longitude": 0.8976478
   },
+  "Colonial Hall, White Sulphur Springs": {
+    "latitude": 37.7965149,
+    "longitude": -80.2975734
+  },
+  "Colonial Life Arena, Columbia": {
+    "latitude": 33.9947839,
+    "longitude": -81.0373546
+  },
   "CommBank Stadium, Parramatta": {
     "latitude": -33.8086679,
     "longitude": 151.0007291
   },
+  "Convocation Center (OH), Athens": {
+    "latitude": 39.323211,
+    "longitude": -82.1056777
+  },
   "Coopers Stadium, Adelaide": {
     "latitude": -34.9075037,
     "longitude": 138.5689336
+  },
+  "Corbett Sports Center, Greensboro": {
+    "latitude": 36.0726355,
+    "longitude": -79.7919754
   },
   "Craven Cottage, London": {
     "latitude": 51.4749218,
@@ -163,6 +230,10 @@
   "Crypto.com Arena, Los Angeles": {
     "latitude": 34.0429979,
     "longitude": -118.2671352
+  },
+  "Curry Arena, Charlotte": {
+    "latitude": 35.2272086,
+    "longitude": -80.8430827
   },
   "Dignity Health Sports Park, Carson": {
     "latitude": 33.8623767,
@@ -175,6 +246,10 @@
   "Eden Park, Auckland": {
     "latitude": -36.8750352,
     "longitude": 174.7440567
+  },
+  "Elliott T. Bowers Stadium, Huntsville": {
+    "latitude": 30.7235263,
+    "longitude": -95.5507771
   },
   "Emirates Stadium, London": {
     "latitude": 51.5550404,
@@ -276,9 +351,25 @@
     "latitude": -26.2347063,
     "longitude": 27.9826439
   },
+  "Farris Center, Conway": {
+    "latitude": 35.0818836,
+    "longitude": -92.4595613
+  },
   "Fenway Park, Boston": {
     "latitude": 42.3464614,
     "longitude": -71.0970999
+  },
+  "First Community Arena, Edwardsville": {
+    "latitude": 38.8114364,
+    "longitude": -89.953157
+  },
+  "FirstBank Stadium, Nashville": {
+    "latitude": 36.1439196,
+    "longitude": -86.8089205
+  },
+  "Ford Center, Evansville": {
+    "latitude": 37.9721866,
+    "longitude": -87.5678291
   },
   "Franklin's Gardens, Northampton": {
     "latitude": 52.2394934,
@@ -288,6 +379,10 @@
     "latitude": 50.7963238,
     "longitude": -1.0638836
   },
+  "Gallagher Center, Niagara Falls": {
+    "latitude": 43.084841,
+    "longitude": -79.0701786
+  },
   "Gander Green Lane, Sutton": {
     "latitude": 51.3641973,
     "longitude": -0.2062369
@@ -296,6 +391,18 @@
     "latitude": -6.2185958,
     "longitude": 106.802607
   },
+  "Gentile Arena, Chicago": {
+    "latitude": 41.8755616,
+    "longitude": -87.6244212
+  },
+  "Gentry Center, Nashville": {
+    "latitude": 36.1622767,
+    "longitude": -86.7742984
+  },
+  "Gerald J. Ford Stadium, Dallas": {
+    "latitude": 32.8377899,
+    "longitude": -96.782791
+  },
   "Go Media Stadium, Auckland": {
     "latitude": -36.9178349,
     "longitude": 174.8122802
@@ -303,6 +410,10 @@
   "Gocheok Sky Dome, Seoul": {
     "latitude": 37.4981936,
     "longitude": 126.8670731
+  },
+  "Groniger Arena, Charleston": {
+    "latitude": 39.4961458,
+    "longitude": -88.1761521
   },
   "Grosvenor Vale, Ruislip": {
     "latitude": 51.5683609,
@@ -332,6 +443,10 @@
     "latitude": 33.9442586,
     "longitude": -118.3421719
   },
+  "Jack Trice Stadium, Ames": {
+    "latitude": 42.0140049,
+    "longitude": -93.6357593
+  },
   "Jan Breydelstadion, Bruges": {
     "latitude": 51.1933461,
     "longitude": 3.1805853
@@ -340,9 +455,17 @@
     "latitude": 9.9980608,
     "longitude": 76.3004362
   },
+  "Jerry Richardson Stadium, Charlotte": {
+    "latitude": 35.310474,
+    "longitude": -80.7400756
+  },
   "Johan Cruijff ArenA, Amsterdam": {
     "latitude": 52.314353,
     "longitude": 4.9428431
+  },
+  "John W. Pope Jr. Convocation Center, Buies Creek": {
+    "latitude": 35.4123325,
+    "longitude": -78.7366506
   },
   "Karaiskakis Stadium, Piraeus": {
     "latitude": 37.9464689,
@@ -368,6 +491,18 @@
     "latitude": 51.3063222,
     "longitude": -0.5588831
   },
+  "Knights Hall, Louisville": {
+    "latitude": 38.2215512,
+    "longitude": -85.7051739
+  },
+  "Knott Arena, Emmitsburg": {
+    "latitude": 39.7045417,
+    "longitude": -77.3269307
+  },
+  "Kress Center, Green Bay": {
+    "latitude": 44.5299289,
+    "longitude": -87.9167277
+  },
   "Lambeau Field, Green Bay": {
     "latitude": 44.5009705,
     "longitude": -88.0619681
@@ -375,6 +510,10 @@
   "Lamex Stadium, Stevenage": {
     "latitude": 51.8896479,
     "longitude": -0.1937405
+  },
+  "Leede Arena, Hanover": {
+    "latitude": 43.7023545,
+    "longitude": -72.2892164
   },
   "Levi's Stadium, Santa Clara": {
     "latitude": 37.4029867,
@@ -408,6 +547,14 @@
     "latitude": 25.4131991,
     "longitude": 51.4942435
   },
+  "M&T Bank Arena, Hamden": {
+    "latitude": 41.4139878,
+    "longitude": -72.9111709
+  },
+  "M.A.C. Center, Kent": {
+    "latitude": 46.4831028,
+    "longitude": -64.7178086
+  },
   "Madison Square Garden, New York": {
     "latitude": 40.7505129,
     "longitude": -73.9935159
@@ -416,6 +563,10 @@
     "latitude": -22.9121619,
     "longitude": -43.2311861
   },
+  "McArthur Center, St. Petersburg": {
+    "latitude": 27.718312,
+    "longitude": -82.6905313
+  },
   "Meadow Park, Borehamwood": {
     "latitude": 51.6620315,
     "longitude": -0.2724395
@@ -423,6 +574,10 @@
   "Melbourne Cricket Ground, Melbourne": {
     "latitude": -37.819909,
     "longitude": 144.983225
+  },
+  "Memorial Stadium (Clemson, SC), Clemson": {
+    "latitude": 34.6850749,
+    "longitude": -82.8364111
   },
   "Mercedes-Benz Stadium, Atlanta": {
     "latitude": 33.7554123,
@@ -444,9 +599,21 @@
     "latitude": -19.865962,
     "longitude": -43.9711239
   },
+  "Moby Arena, Fort Collins": {
+    "latitude": 40.5756841,
+    "longitude": -105.0932166
+  },
+  "Moody Center, Austin": {
+    "latitude": 30.2809367,
+    "longitude": -97.7306522
+  },
   "Moses Mabhida Stadium, Durban": {
     "latitude": -29.8290201,
     "longitude": 31.0313741
+  },
+  "Mullins Center, Amherst": {
+    "latitude": 42.3895203,
+    "longitude": -72.5334498
   },
   "Murrayfield Stadium, Edinburgh": {
     "latitude": 55.9423133,
@@ -476,6 +643,10 @@
     "latitude": 53.4631096,
     "longitude": -2.2913865
   },
+  "Omni Barton Creek Resort & Spa (Fazio Canyons Course), Austin": {
+    "latitude": 30.2649261,
+    "longitude": -97.7474086
+  },
   "Oracle Park, San Francisco": {
     "latitude": 37.7786059,
     "longitude": -122.3894716
@@ -496,6 +667,18 @@
     "latitude": 48.8413634,
     "longitude": 2.2530693
   },
+  "Patrick Gymnasium, Burlington": {
+    "latitude": 44.4700892,
+    "longitude": -73.1947872
+  },
+  "Paul Porter Arena, Boiling Springs": {
+    "latitude": 35.254292,
+    "longitude": -81.6670407
+  },
+  "Pelican Golf Club, Belleair": {
+    "latitude": 27.9307193,
+    "longitude": -82.8081218
+  },
   "Philips Stadion, Eindhoven": {
     "latitude": 51.4417077,
     "longitude": 5.4674257
@@ -507,6 +690,10 @@
   "Portman Road, Ipswich": {
     "latitude": 52.057277,
     "longitude": 1.1458453
+  },
+  "Pratt & Whitney Stadium, East Hartford": {
+    "latitude": 41.7596011,
+    "longitude": -72.6188311
   },
   "Priestfield Stadium, Gillingham": {
     "latitude": 51.3842253,
@@ -528,6 +715,10 @@
     "latitude": 40.7334302,
     "longitude": -74.1711482
   },
+  "Qubein Center, High Point": {
+    "latitude": 35.9782697,
+    "longitude": -79.996878
+  },
   "RAMS Park, Istanbul": {
     "latitude": 41.103369,
     "longitude": 28.9909522
@@ -539,6 +730,10 @@
   "Recreation Ground, Aldershot": {
     "latitude": 51.2483133,
     "longitude": -0.7549202
+  },
+  "Reilly Center, Saint Bonaventure": {
+    "latitude": 42.08047,
+    "longitude": -78.4772369
   },
   "Riyadh Air Metropolitano, Madrid": {
     "latitude": 40.4360102,
@@ -564,6 +759,14 @@
     "latitude": 34.1613492,
     "longitude": -118.1676674
   },
+  "SECU Stadium, College Park": {
+    "latitude": 38.9902987,
+    "longitude": -76.9474534
+  },
+  "SHI Stadium, Piscataway": {
+    "latitude": 40.5135037,
+    "longitude": -74.4651433
+  },
   "Saitama Stadium 2002, Saitama": {
     "latitude": 35.9030742,
     "longitude": 139.7176057
@@ -579,6 +782,10 @@
   "San Siro, Milan": {
     "latitude": 45.4782003,
     "longitude": 9.123964
+  },
+  "Sanford Pentagon, Sioux Falls": {
+    "latitude": 43.5916439,
+    "longitude": -96.7547673
   },
   "Santiago Bernabéu, Madrid": {
     "latitude": 40.4523667,
@@ -615,6 +822,10 @@
   "Sixfields Stadium, Northampton": {
     "latitude": 52.2352633,
     "longitude": -0.9335741
+  },
+  "Skip Chappelle Court in Memorial Gymnasium, Orono": {
+    "latitude": 44.883607,
+    "longitude": -68.672791
   },
   "SoFi Stadium, Inglewood": {
     "latitude": 33.9534074,
@@ -708,6 +919,10 @@
     "latitude": -27.4648602,
     "longitude": 153.0096055
   },
+  "Swisher Gymnasium, Jacksonville": {
+    "latitude": 30.3502514,
+    "longitude": -81.6050056
+  },
   "TD Garden, Boston": {
     "latitude": 42.3662986,
     "longitude": -71.0621622
@@ -715,6 +930,10 @@
   "Teslim Balogun Stadium, Lagos": {
     "latitude": 6.4997711,
     "longitude": 3.3607844
+  },
+  "The Dedmon Center, Radford": {
+    "latitude": 37.1343148,
+    "longitude": -80.5749169
   },
   "The Den, London": {
     "latitude": 51.4859656,
@@ -748,6 +967,10 @@
     "latitude": 40.7116942,
     "longitude": -73.7259229
   },
+  "UNF Arena, Jacksonville": {
+    "latitude": 30.3262247,
+    "longitude": -81.6579179
+  },
   "Ullevaal Stadion, Oslo": {
     "latitude": 59.949136,
     "longitude": 10.7343487
@@ -755,6 +978,14 @@
   "United Center, Chicago": {
     "latitude": 41.8806831,
     "longitude": -87.6741851
+  },
+  "United Supermarkets Arena, Lubbock": {
+    "latitude": 33.5812506,
+    "longitude": -101.886571
+  },
+  "Veikkaus Arena, Helsinki": {
+    "latitude": 60.2054771,
+    "longitude": 24.9291488
   },
   "Vicarage Road, Watford": {
     "latitude": 51.6501435,
@@ -776,6 +1007,14 @@
     "latitude": 52.5644502,
     "longitude": -0.2400569
   },
+  "William R. Johnson Coliseum, Nacogdoches": {
+    "latitude": 31.6222614,
+    "longitude": -94.6408794
+  },
+  "Winthrop Coliseum, Rock Hill": {
+    "latitude": 34.9481423,
+    "longitude": -81.0149231
+  },
   "Workers' Stadium, Beijing": {
     "latitude": 39.9323548,
     "longitude": 116.4442038
@@ -787,6 +1026,14 @@
   "Yankee Stadium, Bronx": {
     "latitude": 40.8295828,
     "longitude": -73.9265212
+  },
+  "Yuengling Center, Tampa": {
+    "latitude": 28.0592444,
+    "longitude": -82.4066241
+  },
+  "Zidian Family Arena at Beeghly Center, Youngstown": {
+    "latitude": 41.1035786,
+    "longitude": -80.6520161
   },
   "loanDepot park, Miami": {
     "latitude": 25.7780733,

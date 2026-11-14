@@ -159,6 +159,18 @@ public sealed class ScenarioPlayTests : IDisposable
     }
 
     [Fact]
+    public void New_games_come_from_the_fills_league_shares()
+    {
+        var feed = Watched(Read("""
+            { "fill": { "count": 20, "group": "worldwide", "mix": { "live": 1, "final": 1 }, "leagues": { "NBA": 1, "NHL": 1 } }, "play": true }
+            """), TimeSpan.FromMinutes(30));
+
+        var shown = feed.SelectMany(games => games).DistinctBy(game => game.Id).ToList();
+        Assert.True(shown.Count > 30, "new games came on");
+        Assert.All(shown, game => Assert.Contains(game.LeagueKey, new[] { "basketball/nba", "hockey/nhl" }));
+    }
+
+    [Fact]
     public void No_team_is_ever_in_two_games_showing_at_once()
     {
         var feed = Watched(Read(SixtyLiveGames), TimeSpan.FromMinutes(30));

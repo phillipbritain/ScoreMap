@@ -12,7 +12,8 @@ public static partial class ScenarioReader
     /// Expands a <c>fill</c> (ADR-0009): <c>count</c> games, each at a different venue from the named
     /// group of the venue list, between teams from the team list that no other game (filled, or in
     /// <paramref name="writtenOutGames"/>) has, in statuses shared out by the <c>mix</c>
-    /// (all Live without one). The same scenario file gives the same games each time, since every
+    /// (all Live without one), in leagues picked by its <c>leagues</c> shares (any league without them).
+    /// The same scenario file gives the same games each time, since every
     /// choice is seeded by the scenario's name. Filled games are numbered <c>&lt;scenario&gt;-fill-&lt;n&gt;</c>.
     /// </summary>
     private static IReadOnlyList<ScenarioGame> ReadFill(
@@ -37,9 +38,11 @@ public static partial class ScenarioReader
             throw Problem($"asks for {entry.Count} games from \"{entry.Group}\", which has only {inGroup.Length} venues; "
                 + "each filled game is at a different venue");
         StatusMix mix;
+        IReadOnlyDictionary<string, double>? leagueShares;
         try
         {
             mix = entry.Mix is null ? StatusMix.AllLive : ReadMix(entry.Mix);
+            leagueShares = ReadLeagueShares(entry.Leagues, leagues);
         }
         catch (InvalidDataException e)
         {
@@ -47,7 +50,7 @@ public static partial class ScenarioReader
         }
 
         var random = new Random(Scenario.StableSeed(scenario));
-        var maker = new ScenarioGameMaker(leagues, teams);
+        var maker = new ScenarioGameMaker(leagues, teams, leagueShares);
         random.Shuffle(inGroup);
         var statuses = mix.Split(entry.Count, random);
         var filled = new List<ScenarioGame>();
@@ -86,5 +89,29 @@ public static partial class ScenarioReader
         return new StatusMix(shares);
     }
 
-    private sealed record FillEntry(int Count, string? Group, Dictionary<string, double>? Mix);
+    /// <summary>
+    /// The fill's league shares (<c>"leagues"</c>, by league name or key) as weights by league key:
+    /// <c>{ "NCAA Football": 1, "NFL": 2 }</c> makes about two NFL games for each college one, and none
+    /// in leagues left out. Null without them, when every league is as likely.
+    /// </summary>
+    private static Dictionary<string, double>? ReadLeagueShares(Dictionary<string, double>? entry, IReadOnlyList<League> leagues)
+    {
+        if (entry is null)
+            return null;
+        var shares = new Dictionary<string, double>();
+        foreach (var (name, share) in entry)
+        {
+            var league = leagues.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase) || l.Key == name)
+                ?? throw new InvalidDataException(
+                    $"has unknown league \"{name}\"; the configured leagues are {string.Join(", ", leagues.Select(l => l.Name))}");
+            if (share < 0)
+                throw new InvalidDataException($"gives {name} share {share}; shares can't be negative");
+            shares[league.Key] = share;
+        }
+        if (shares.Values.Sum() <= 0)
+            throw new InvalidDataException("has league shares that give no games to any league");
+        return shares;
+    }
+
+    private sealed record FillEntry(int Count, string? Group, Dictionary<string, double>? Mix, Dictionary<string, double>? Leagues);
 }

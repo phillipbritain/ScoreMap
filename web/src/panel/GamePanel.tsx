@@ -8,6 +8,7 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { listedWatchLinks } from './watchLinks'
+import { hasLastScoreSlot } from './lastScoreSlot'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -37,7 +38,7 @@ interface GamePanelProps {
  * logos in its bottom right corner; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. So that
  * clicking between games doesn't change its height, every line holds its place whether or not the game
- * has it (the last score, the venue's place, the watch links), and names and the venue sit on one line
+ * has it (the last score where the sport has one, the venue's place, the watch links), and names and the venue sit on one line
  * each, cut short with an ellipsis and in full on hover; only the band adds height. Re-renders with each
  * snapshot, so it stays current while open.
  */
@@ -83,7 +84,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
                 {progress}
               </div>
             )}
-            <LastScore game={game} />
+            {hasLastScoreSlot(game) && <LastScore game={game} />}
           </div>
 
           {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none or the viewer switched photos off. */}
@@ -164,7 +165,8 @@ function WatchLinks({ links }: { links: StreamLink[] }) {
 /**
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
  * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Before a
- * score, "None yet", so the panel is as tall either way.
+ * score, "None yet", so the panel is as tall either way. Only for sports that score in plays (see
+ * hasLastScoreSlot).
  */
 function LastScore({ game }: { game: Game }) {
   const { lastScore } = game

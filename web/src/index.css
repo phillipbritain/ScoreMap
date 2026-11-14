@@ -211,11 +211,13 @@ body {
   text-transform: uppercase;
 }
 
-/* Let long league names grow with the score block too. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long league name doesn't make the panel taller. */
 .game-panel__league {
   margin-bottom: var(--spacing);
   padding-right: calc(5 * var(--spacing));
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .game-panel__label {
@@ -249,7 +251,7 @@ body {
   background: var(--game-panel-logo-plate-fill);
 }
 
-/* One line, cut short with an ellipsis and in full on hover, so a long name doesn't make the panel taller. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel taller. */
 .game-panel__team-name {
   flex: 1;
   min-width: 0;
@@ -351,7 +353,7 @@ body {
   padding-right: calc(var(--game-panel-size-close-width) - 2 * var(--spacing));
 }
 
-/* One line for a venue's name, cut short with an ellipsis and in full on hover. */
+/* One line for a venue's name, cut short with an ellipsis and in full on hover or a tap. */
 .game-panel__value {
   overflow: hidden;
   white-space: nowrap;
@@ -409,10 +411,8 @@ body {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
 }
 
-/* StreamEast's logo, a red badge, a little taller than ESPN's wordmark so its name reads at the same size;
-   a look being tried, so its size is here rather than in the theme. */
+/* StreamEast's logo, a red badge, with the theme's corners. */
 .game-panel__logo-link img.game-panel__stream-logo {
-  height: calc(5 * var(--spacing));
   border-radius: var(--shape-border-radius);
 }
 
@@ -2391,7 +2391,7 @@ body {
   white-space: nowrap;
 }
 
-/* A tooltip (see tooltip/Tooltips.tsx): a small solid panel above what it's for, or below where
+/* A tooltip (see tooltip/Tooltips.tsx): a small solid panel, outlined to stand off a panel under it, above what it's for, or below where
    there's no room, on its left for the rail's buttons, or on the right of the Games list for its games, easing in from it. Over everything but the local-run tools' own. */
 .tooltip {
   position: fixed;
@@ -2401,6 +2401,7 @@ body {
   box-sizing: border-box;
   max-width: 280px;
   padding: var(--spacing) calc(2.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--tooltip-outline);
   border-radius: var(--menu-corner);
   background: var(--tooltip-surface);
   color: var(--palette-text-primary);

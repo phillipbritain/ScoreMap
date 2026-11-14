@@ -177,7 +177,7 @@
       "message": { "corner": 2 },
       "size": { "key": 34, "icon": 14 }
     },
-    "Tooltip": { "surface": "background.paper" },
+    "Tooltip": { "surface": "navy.700", "outline": "navy.500" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },

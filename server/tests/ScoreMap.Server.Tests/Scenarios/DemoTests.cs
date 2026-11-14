@@ -138,11 +138,13 @@ public class DemoTests
     public async Task On_the_live_site_a_demo_shows_the_shipped_worldwide_scenario()
     {
         await using var server = new ScoreMapServer { Environment = "Production", UseShippedScenarios = true };
+        await using var demo = await server.ConnectClientAsync(demo: true);
 
-        var games = await server.SnapshotOnceAsync(demo: true);
+        // The first viewer's snapshot holds only the leagues fetched within its 250 ms budget, so wait for
+        // the rest; worldwide's own count is checked in ShippedScenarioTests.
+        var games = await demo.GamesMatchingAsync(games => games.Count >= 55);
 
         Assert.Contains(games, game => game.Id == "worldwide-raptors-celtics");
-        Assert.True(games.Count > 40, $"Only {games.Count} games");
     }
 
     [Fact]

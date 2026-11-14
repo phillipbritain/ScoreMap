@@ -27,8 +27,6 @@ import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
 import { Tooltips } from './tooltip/Tooltips'
-import { TruncationTapPrototype } from './tooltip/TruncationTapPrototype'
-import { withTruncationDummy } from './tooltip/truncationDummyPrototype'
 import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
@@ -108,8 +106,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
 
-  // PROTOTYPE: a made-up game with every panel line too long, in a local run.
-  const visible = useMemo(() => visibleGames(withTruncationDummy(games ?? []), viewerSettings), [games, viewerSettings])
+  const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
@@ -127,7 +124,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      {import.meta.env.DEV && <TruncationTapPrototype />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

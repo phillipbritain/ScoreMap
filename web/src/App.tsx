@@ -27,6 +27,7 @@ import { ScenarioPill } from './scenarios/ScenarioPill'
 import { SpeedKeys } from './scenarios/SpeedKeys'
 import { useScenarioControls } from './scenarios/useScenarioControls'
 import { Tooltips } from './tooltip/Tooltips'
+import { TruncationTapPrototype } from './tooltip/TruncationTapPrototype'
 import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
@@ -124,6 +125,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {import.meta.env.DEV && <TruncationTapPrototype />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

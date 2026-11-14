@@ -19,6 +19,7 @@ import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
+import { useRailClearance } from './panel/useRailClearance'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -116,11 +117,14 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
   const selectedColor = selectedGame && gameColor(colors, selectedGame, theme)
+  // Where the rail ends, so the game panel stops short of it.
+  const globeArea = useRef<HTMLDivElement>(null)
+  useRailClearance(globeArea)
 
   return (
     <div className="app">
       <Tooltips />
-      <div className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
+      <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}
           ref={globe}

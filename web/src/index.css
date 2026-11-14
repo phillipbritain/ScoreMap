@@ -94,23 +94,30 @@ body {
   box-shadow: var(--glass-rim);
 }
 
-/* The game panel: a TV-style strip across the bottom of the globe, lit along its top in the game's
-   color (--game-color, set on the panel, with --text-on-game-color for text on it): the score block, then
+/* The game panel: a TV-style strip across the bottom of the globe, a thin neutral line along its top and
+   a glow in the game's color (--game-color, set on the panel, with --text-on-game-color for text on it)
+   around it: the score block, then
    the venue and its watch links over the venue's photo, with a band under the strip for a field's
-   leaderboard, a fight card or tennis sets. Full team and player names wrap in their rows; the strip grows
-   to fit them; the panel never scrolls. */
+   leaderboard, a fight card or tennis sets. Every line holds its place whether or not a game has it, and
+   names and the venue take one line each, so the panel is as tall for every game (bar the band) and
+   doesn't jump as the viewer clicks between them; the panel never scrolls. */
 .game-panel {
+  /* How far it sits above the screen's foot: none on a phone (see below). */
+  --game-panel-bottom: calc(3 * var(--spacing));
   position: absolute;
   left: 50%;
-  bottom: calc(3 * var(--spacing));
+  bottom: var(--game-panel-bottom);
   z-index: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  /* Never so tall that it reaches the rail above its right end (--rail-bottom, see useRailClearance):
+     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, such
+     as a phone on its side, it keeps a quarter of the screen. */
+  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  border-top: var(--shape-border-width-thick) solid var(--game-color);
-  /* Square at the top right, where the close button's tab rises from it. */
-  border-radius: var(--game-panel-corner) 0 var(--game-panel-corner) var(--game-panel-corner);
+  border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
+  border-radius: var(--game-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
@@ -119,12 +126,14 @@ body {
     0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
 }
 
-/* Everything in the panel but the close button, which sits on its tab above it, clipped to the panel's
-   corners: it clips rather than the panel, which would cut off the tab. Its own surfaces (the score
-   block's glass, the details and the band) paint the panel: on a desktop it has none of its own. */
+/* Everything in the panel, clipped to its corners, the close button in its top right corner. Its own
+   surfaces (the score block's glass, the details and the band) paint the panel: on a desktop it has none
+   of its own. */
 .game-panel__body {
+  position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   overflow: clip;
   border-radius: inherit;
 }
@@ -147,8 +156,8 @@ body {
   min-height: var(--game-panel-size-height);
 }
 
-/* The score block at the left, slanted on its right edge. Names wrap within their share of each
-   row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
+/* The score block at the left, slanted on its right edge. Names are cut short within their share of
+   each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
 .game-panel__score {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -238,10 +247,13 @@ body {
   background: var(--game-panel-logo-plate-fill);
 }
 
+/* One line, cut short with an ellipsis and in full on hover, so a long name doesn't make the panel taller. */
 .game-panel__team-name {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   line-height: 1.3;
 }
 
@@ -332,12 +344,16 @@ body {
   opacity: var(--game-panel-photo-opacity);
 }
 
-/* Two lines at most for a venue's name. */
+/* The venue at the details' top right keeps clear of the close button in the panel's corner. */
+.game-panel__venue {
+  padding-right: calc(var(--game-panel-size-close-width) - 2 * var(--spacing));
+}
+
+/* One line for a venue's name, cut short with an ellipsis and in full on hover. */
 .game-panel__value {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   line-height: 1.3;
 }
 
@@ -346,8 +362,9 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* One line under a venue's name. */
+/* One line under a venue's name, held empty when there's no place to name. */
 .game-panel__place {
+  min-height: 1lh;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -402,27 +419,30 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* The close button on a tab in the game's color rising from the panel's lit top edge at its right end,
-   clear of the photo. */
+/* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
+   the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
+   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). */
 .game-panel__close {
   position: absolute;
+  top: 0;
   right: 0;
-  bottom: 100%;
+  z-index: 3;
   width: var(--game-panel-size-close-width);
   height: var(--game-panel-size-close-height);
+  padding: 0;
   border: none;
-  border-radius: calc(1.5 * var(--shape-border-radius)) calc(1.5 * var(--shape-border-radius)) 0 0;
-  background: var(--game-color);
-  color: var(--text-on-game-color);
+  background: none;
+  color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-body2-font-weight);
   line-height: 1;
+  text-shadow: 0 1px 3px var(--palette-background-default);
   cursor: pointer;
 }
 
 .game-panel__close:hover {
-  filter: brightness(1.15);
+  color: var(--palette-text-primary);
 }
 
 /* A field's leaderboard, a fight card or tennis sets below the strip, on the panel's own surface (no
@@ -431,9 +451,12 @@ body {
   display: flex;
   gap: calc(4 * var(--spacing));
   box-sizing: border-box;
-  flex-shrink: 0;
+  /* The part of the panel that gives way, scrolling, when the panel would reach the rail. */
+  flex-shrink: 1;
+  min-height: 0;
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
   background: var(--game-panel-surface-bottom);
   line-height: 1.3;
@@ -508,6 +531,11 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
+/* Cricket's room for a last score, sized as one but left empty (see lastScoreSlot). */
+.game-panel__last-score--held {
+  visibility: hidden;
+}
+
 /* One line, cut short with an ellipsis, such as a last score's description. */
 .game-panel__one-line {
   overflow: hidden;
@@ -542,9 +570,10 @@ body {
     clip-path: none;
   }
 
+  /* The league, at the panel's top, keeps clear of the close button in its corner. */
   .game-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
-    padding-right: 0;
+    padding-right: calc(var(--game-panel-size-close-width) + var(--spacing));
   }
 
   .game-panel__progress,
@@ -604,6 +633,8 @@ body {
   .game-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    /* The band's row gives way, scrolling, when the panel would reach the rail. */
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       'score score'
       'band band'
@@ -625,9 +656,15 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
+  /* Side by side on one line, which is held empty when the game has no links, so the panel is as tall
+     with or without them. */
   .game-panel__watch {
     grid-area: watch;
     align-self: end;
+    flex-direction: row;
+    align-items: center;
+    gap: calc(2 * var(--spacing));
+    min-height: calc(8 * var(--spacing));
     box-sizing: border-box;
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
@@ -2497,7 +2534,7 @@ body {
 /* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
 @media (max-width: 640px) {
   .game-panel {
-    bottom: 0;
+    --game-panel-bottom: 0px;
     width: 100%;
     border-radius: 0;
   }

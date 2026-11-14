@@ -8,6 +8,7 @@
 // Venues it can't find are listed at the end and left out of the file; fix their name or city in
 // the venue list and run it again. Exits with 1 while any are missing.
 #:sdk Microsoft.NET.Sdk.Web
+#:property StaticWebAssetsEnabled=false
 #:property PublishAot=false
 #:project ../server/src/ScoreMap.Server/ScoreMap.Server.csproj
 

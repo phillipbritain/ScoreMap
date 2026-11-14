@@ -15,6 +15,7 @@
 // error or timeout) are listed at the end and left out, so the next run asks them again; it exits with 1
 // while there are any. The server never runs this: ESPN and Nominatim are only asked here, by hand.
 #:sdk Microsoft.NET.Sdk.Web
+#:property StaticWebAssetsEnabled=false
 #:property PublishAot=false
 #:project ../server/src/ScoreMap.Server/ScoreMap.Server.csproj
 

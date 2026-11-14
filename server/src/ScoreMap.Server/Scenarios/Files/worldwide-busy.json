@@ -1,11 +1,295 @@
-// worldwide-busy: the worst case, a game at every one of worldwide's venues (about 160) at once, in
-// worldwide's mix of Upcoming, Live and Final, playing as worldwide's do. For the globe at its most
-// crowded: pins, clusters and score cards everywhere, and the app under heavy, steady change.
+// worldwide-busy: a busy Saturday afternoon in the college season, as the real games stood on
+// 14 November 2026 (the common case in production): about 65 games, nearly all of them two-sided college
+// games packed over the eastern and central US, at that day's venues (the "us-college" group), in its
+// mix of leagues (15 NCAA Football, 19 NCAA Men's Basketball, 27 NCAA Women's Basketball) and statuses
+// (almost all Live, two Upcoming, one Final). Beside them, that day's PGA Tour (Austin) and LPGA Tour
+// (Belleair, between rounds) leaderboards and an NHL game in Helsinki. For the globe as it usually is
+// when it's busy: score cards and card clusters over the US, and the app under heavy, steady change.
+// The games play like real games; a finished game drops out and a new college game takes its place.
 {
+  "games": [
+    {
+      "id": "worldwide-busy-pga",
+      "league": "PGA Tour",
+      "note": "Austin Championship",
+      "field": [
+        {
+          "name": "Erik van Rooyen",
+          "shortName": "E. van Rooyen",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/rsa.png",
+          "score": -13,
+          "thru": 8
+        },
+        {
+          "name": "Brian Harman",
+          "shortName": "B. Harman",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -13,
+          "thru": 8
+        },
+        {
+          "name": "Trace Crowe",
+          "shortName": "T. Crowe",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -13,
+          "thru": 8
+        },
+        {
+          "name": "Max Greyserman",
+          "shortName": "M. Greyserman",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -12,
+          "thru": 10
+        },
+        {
+          "name": "Sami Välimäki",
+          "shortName": "S. Välimäki",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png",
+          "score": -12,
+          "thru": 9
+        },
+        {
+          "name": "Kevin Yu",
+          "shortName": "K. Yu",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/tpe.png",
+          "score": -12,
+          "thru": 8
+        },
+        {
+          "name": "John VanDerLaan",
+          "shortName": "J. VanDerLaan",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -11,
+          "thru": 12
+        },
+        {
+          "name": "Chad Ramey",
+          "shortName": "C. Ramey",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -11,
+          "thru": 12
+        },
+        {
+          "name": "Ben Kohles",
+          "shortName": "B. Kohles",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -11,
+          "thru": 10
+        },
+        {
+          "name": "Jordan Smith",
+          "shortName": "J. Smith",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png",
+          "score": -11,
+          "thru": 9
+        },
+        {
+          "name": "Kristoffer Ventura",
+          "shortName": "K. Ventura",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/nor.png",
+          "score": -11,
+          "thru": 8
+        },
+        {
+          "name": "Zac Blair",
+          "shortName": "Z. Blair",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -10,
+          "thru": 17
+        },
+        {
+          "name": "Pierceson Coody",
+          "shortName": "P. Coody",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -10,
+          "thru": 16
+        },
+        {
+          "name": "Will Gordon",
+          "shortName": "W. Gordon",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -10,
+          "thru": 15
+        },
+        {
+          "name": "Austin Smotherman",
+          "shortName": "A. Smotherman",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -10,
+          "thru": 15
+        }
+      ],
+      "venue": {
+        "name": "Omni Barton Creek Resort & Spa (Fazio Canyons Course)",
+        "city": "Austin",
+        "region": "TX",
+        "country": "USA"
+      },
+      "startsIn": "-54h",
+      "status": "live",
+      "period": 3
+    },
+    {
+      "id": "worldwide-busy-lpga",
+      "league": "LPGA Tour",
+      "note": "The ANNIKA at Pelican",
+      "field": [
+        {
+          "name": "Lindy Duncan",
+          "shortName": "L. Duncan",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -12,
+          "thru": 18
+        },
+        {
+          "name": "Carlota Ciganda",
+          "shortName": "C. Ciganda",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
+          "score": -12,
+          "thru": 18
+        },
+        {
+          "name": "Hye-Jin Choi",
+          "shortName": "H. Choi",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/sko.png",
+          "score": -12,
+          "thru": 18
+        },
+        {
+          "name": "Minami Katsu",
+          "shortName": "M. Katsu",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+          "score": -10,
+          "thru": 18
+        },
+        {
+          "name": "Gaby López",
+          "shortName": "G. López",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/mex.png",
+          "score": -9,
+          "thru": 18
+        },
+        {
+          "name": "Julia López Ramirez",
+          "shortName": "J. López Ramirez",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png",
+          "score": -9,
+          "thru": 18
+        },
+        {
+          "name": "Ina Yoon",
+          "shortName": "I. Yoon",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/sko.png",
+          "score": -9,
+          "thru": 18
+        },
+        {
+          "name": "Yuri Yoshida",
+          "shortName": "Y. Yoshida",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+          "score": -8,
+          "thru": 18
+        },
+        {
+          "name": "Lottie Woad",
+          "shortName": "L. Woad",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/eng.png",
+          "score": -7,
+          "thru": 18
+        },
+        {
+          "name": "Aki Iwai",
+          "shortName": "A. Iwai",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+          "score": -7,
+          "thru": 18
+        },
+        {
+          "name": "Melanie Green",
+          "shortName": "M. Green",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -7,
+          "thru": 18
+        },
+        {
+          "name": "Frida Kinhult",
+          "shortName": "F. Kinhult",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/swe.png",
+          "score": -6,
+          "thru": 18
+        },
+        {
+          "name": "Jing Yan",
+          "shortName": "J. Yan",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+          "score": -6,
+          "thru": 18
+        },
+        {
+          "name": "Erika Hara",
+          "shortName": "E. Hara",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/jpn.png",
+          "score": -5,
+          "thru": 18
+        },
+        {
+          "name": "Haeran Ryu",
+          "shortName": "H. Ryu",
+          "flag": "https://a.espncdn.com/i/teamlogos/countries/500/sko.png",
+          "score": -4,
+          "thru": 18
+        }
+      ],
+      "venue": {
+        "name": "Pelican Golf Club",
+        "city": "Belleair",
+        "region": "FL",
+        "country": "USA"
+      },
+      "startsIn": "-42h",
+      "status": "live",
+      "period": 2,
+      "phase": "break"
+    },
+    {
+      "id": "worldwide-busy-kraken-hurricanes",
+      "league": "NHL",
+      "home": {
+        "name": "Carolina Hurricanes",
+        "abbreviation": "CAR",
+        "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/car.png",
+        "score": 2
+      },
+      "away": {
+        "name": "Seattle Kraken",
+        "abbreviation": "SEA",
+        "logo": "https://a.espncdn.com/i/teamlogos/nhl/500/sea.png",
+        "score": 0
+      },
+      "venue": {
+        "name": "Veikkaus Arena",
+        "city": "Helsinki",
+        "country": "Finland"
+      },
+      "startsIn": "-45m",
+      "status": "live",
+      "clock": "18:40",
+      "period": 2
+    }
+  ],
   "fill": {
-    "count": 159,
-    "group": "worldwide",
-    "mix": { "live": 4, "upcoming": 3, "final": 2 }
+    "count": 61,
+    "group": "us-college",
+    "mix": {
+      "live": 58,
+      "upcoming": 2,
+      "final": 1
+    },
+    "leagues": {
+      "NCAA Football": 15,
+      "NCAA Men's Basketball": 19,
+      "NCAA Women's Basketball": 27
+    }
   },
   "play": true
 }

@@ -18,6 +18,9 @@ export interface SettingsStore {
    */
   loadTourProgress(): TourProgress
   saveTourProgress(progress: TourProgress): void
+  /** Whether the viewer collapsed the rail out of the way: open on a first visit. */
+  loadRailCollapsed(): boolean
+  saveRailCollapsed(collapsed: boolean): void
 }
 
 const key = 'scoremap.settings'
@@ -25,6 +28,8 @@ const key = 'scoremap.settings'
 const cameraKey = 'scoremap.camera'
 // Kept apart from the settings, so settings saved before the tour existed can be told from a first visit.
 const tourKey = 'scoremap.welcomeTour'
+// Kept apart from the settings: it's how the page is laid out, not what the globe shows.
+const railCollapsedKey = 'scoremap.railCollapsed'
 
 /**
  * Saves viewer settings in browser storage. Storage is reached through a function because merely
@@ -82,6 +87,20 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
         // The tour will just show again from Welcome next time.
       }
     },
+    loadRailCollapsed() {
+      try {
+        return storage().getItem(railCollapsedKey) === 'true'
+      } catch {
+        return false
+      }
+    },
+    saveRailCollapsed(collapsed) {
+      try {
+        storage().setItem(railCollapsedKey, String(collapsed))
+      } catch {
+        // The rail will just open again next time.
+      }
+    },
   }
 }
 
@@ -97,6 +116,8 @@ export function unsavedSettingsStore(): SettingsStore {
     saveCamera() {},
     loadTourProgress: () => 'welcome',
     saveTourProgress() {},
+    loadRailCollapsed: () => false,
+    saveRailCollapsed() {},
   }
 }
 

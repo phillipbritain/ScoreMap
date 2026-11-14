@@ -1,6 +1,6 @@
 import { degreesApart, type GlobePoint } from './geo'
 import type { MapType } from '../settings/viewerSettings'
-import limits from './zoomSettings.json'
+import settingsFile from './zoomSettings.json'
 
 /**
  * How far from the center of the view a game's venue can be, in degrees of arc, and still have a score
@@ -16,9 +16,10 @@ export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
 /** How far out and in the globe zooms, and where it starts. */
 export interface ZoomSettings {
   /**
-   * The furthest out: about the whole globe on screen. MapLibre's globe measures this at the equator: elsewhere the zoom can go lower while the globe
-   * stays the same size on screen (see furthestOutZoom). It's for a view the size of a laptop's
-   * browser window: a smaller one, such as a phone's, can zoom further out (see fittedZoomSettings).
+   * The furthest out: the whole globe on screen with space around it, at furthestOutFill of the view's
+   * shorter side, so it depends on the view's size (see fittedZoomSettings). MapLibre's globe measures
+   * this at the equator: elsewhere the zoom can go lower while the globe stays the same size on screen
+   * (see furthestOutZoom).
    */
   minZoom: number
   /**
@@ -35,34 +36,64 @@ export interface ZoomSettings {
   satelliteMaxZoom: number
 }
 
-/** The app's zoom settings, from zoomSettings.json. */
-export const zoomSettings: ZoomSettings = limits
+/**
+ * How much of the view's shorter side the whole globe fills zoomed fully out (see minZoom), from
+ * zoomSettings.json.
+ */
+export const { furthestOutFill } = settingsFile
+const { furthestOutFill: _, ...limits } = settingsFile
 
-export const { minZoom, maxZoom } = zoomSettings
+/** MapLibre's vertical field of view, in degrees: its default (about 36.87), which the globe keeps. */
+export const fieldOfView = (Math.atan(0.75) * 180) / Math.PI
 
 /**
- * The shorter side of the view, in pixels, that minZoom is set for: a laptop's browser window, where
- * the globe zoomed fully out is a little taller than the view.
+ * The zoom, measured at the equator, at which the whole globe is `across` pixels across in a view
+ * `height` pixels tall. MapLibre's camera sits above the middle of the view, so the globe's rim is
+ * nearer the camera than its center and the globe looks smaller than its radius at the zoom: by
+ * more in a short view, whose camera is nearer (see centerLatitude).
+ */
+export function wholeGlobeZoom(across: number, height: number): number {
+  const cameraHeight = (0.5 / Math.tan((fieldOfView * Math.PI) / 360)) * height
+  const seen = across / 2
+  // The globe's radius whose rim, seen from the camera, is `seen` pixels from the middle of the view.
+  const radius = (seen * seen + seen * Math.hypot(seen, cameraHeight)) / cameraHeight
+  return Math.log2((2 * Math.PI * radius) / tileSize)
+}
+
+/**
+ * The shorter side of the view, in pixels, that startZoom is set for: a laptop's browser window.
  */
 export const minZoomView = 800
 
+/** A laptop's browser window, the view the app's zoom settings are for until fitted to the window's. */
+export const laptopView = { width: 1280, height: minZoomView }
+
 /**
- * The zoom settings for a view this size. A zoom is a scale in pixels, so the globe at a zoom is the
- * same number of pixels across in any view, and would fill a phone far more than a laptop. A view
- * whose shorter side is under minZoomView zooms out further, in proportion, so the globe zoomed fully
- * out fills it as it fills a laptop's. The start zoom (and Home) is as far out alike: each comes at the same size of globe on screen as on a laptop.
- * The furthest in stays as it is: a city on a phone. A larger view keeps the settings as they are.
+ * The zoom settings for a view this size. The furthest out is the whole globe filling furthestOutFill
+ * of the view's shorter side, in any view. A zoom is a scale in pixels, so a start zoom would fill a
+ * phone far more than a laptop: a view whose shorter side is under minZoomView starts further out
+ * (and Home is as far out), in proportion, at the same size of globe on screen as on a laptop. The
+ * furthest in stays as it is: a city on a phone.
  */
-export function fittedZoomSettings(settings: ZoomSettings, view: { width: number; height: number }): ZoomSettings {
-  const shorter = Math.min(view.width, view.height)
-  // A view with no size yet (a hidden page) has nothing to fit.
-  const fit = shorter > 0 && shorter < minZoomView ? Math.log2(shorter / minZoomView) : 0
+export function fittedZoomSettings(settings: Omit<ZoomSettings, 'minZoom'>, view: { width: number; height: number }): ZoomSettings {
+  // A view with no size yet (a hidden page) is fitted as a laptop's.
+  const { width, height } = Math.min(view.width, view.height) > 0 ? view : laptopView
+  const shorter = Math.min(width, height)
+  const fit = shorter < minZoomView ? Math.log2(shorter / minZoomView) : 0
   return {
     ...settings,
-    minZoom: settings.minZoom + fit,
+    minZoom: wholeGlobeZoom(furthestOutFill * shorter, height),
     startZoom: settings.startZoom + fit,
   }
 }
+
+/** MapLibre's tiles' size in pixels, which sets how big the globe is at a zoom. */
+const tileSize = 512
+
+/** The app's zoom settings, from zoomSettings.json, for a laptop's browser window (see fittedZoomSettings). */
+export const zoomSettings: ZoomSettings = fittedZoomSettings(limits, laptopView)
+
+export const { minZoom, maxZoom } = zoomSettings
 
 /**
  * The zoom settings for a map type: the furthest in is the satellite map's on satellite
@@ -117,9 +148,6 @@ export function centerLatitude(latitude: number, below: number, atEquator: numbe
   const center = latitude + Math.sign(below) * ((apart * 180) / Math.PI)
   return Math.max(-maxLatitude, Math.min(maxLatitude, center))
 }
-
-/** MapLibre's tiles' size in pixels, which sets how big the globe is at a zoom. */
-const tileSize = 512
 
 /** The furthest from the equator MapLibre centers the view. */
 const maxLatitude = 85.051129

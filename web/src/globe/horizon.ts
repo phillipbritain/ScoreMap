@@ -4,6 +4,7 @@ import {
   type GeoJSONFeature,
   type LngLatLike,
   type Map as MapLibreMap,
+  type MapSourceDataEvent,
 } from 'maplibre-gl'
 import { degreesApart, radians, type GlobePoint } from './geo'
 
@@ -84,7 +85,7 @@ const fadeStep = 0.02
  * Fades the features of these GeoJSON sources as they near the horizon, frame by frame (see
  * horizonFade), through a feature state their layers' opacities read (see fadedByHorizon), but for
  * those `whole` says to show whole in this view. Each feature, a pin cluster included, needs an id.
- * A feature in tiles new this frame shows whole for the frame. Returns a function that stops it.
+ * Returns a function that stops it.
  */
 export function fadeNearHorizon(
   map: MapLibreMap,
@@ -110,14 +111,23 @@ export function fadeNearHorizon(
       }
     }
   }
+  // A source's new data (pins reloaded as games cross the card radius, or reclustered) is faded as
+  // soon as it arrives, before the frame that first draws it: else that frame draws a feature new to
+  // the source whole, and one back in it, or a pin cluster whose id now names another, at the fade it
+  // last had, so pins and pin clusters near the horizon flash in and out as the globe turns.
+  const arrived = (event: MapSourceDataEvent) => {
+    if (event.tile && sources.includes(event.sourceId)) fade()
+  }
   // A new style has fresh sources, with no feature state.
   const forget = () => {
     for (const was of set.values()) was.clear()
   }
   map.on('render', fade)
+  map.on('sourcedata', arrived)
   map.on('style.load', forget)
   return () => {
     map.off('render', fade)
+    map.off('sourcedata', arrived)
     map.off('style.load', forget)
   }
 }

@@ -10,7 +10,7 @@ import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { MapTypes } from './MapTypes'
 import { railIcon, type RailButtonName } from './railButtons'
-import { RailIcon } from './railIcons'
+import { HideControlsIcon, RailIcon, ShowControlsIcon } from './railIcons'
 import { canZoom, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -38,6 +38,12 @@ interface RailProps {
   gamesReady: boolean
   /** Opens a game picked from the Games popover. */
   onSelectGame: (gameId: string) => void
+  /**
+   * Whether the viewer collapsed the rail out of the way, leaving only its Show controls button. The
+   * rail is open while it can't be used (the welcome tour points at its buttons), whatever this says.
+   */
+  collapsed: boolean
+  onCollapsedChange: (collapsed: boolean) => void
 }
 
 /**
@@ -47,8 +53,28 @@ interface RailProps {
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
+ *
+ * Above them all, Hide controls folds the rest of the rail up into itself and, staying where it is as
+ * Show controls, drops them back down.
  */
-export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings, onZoomIn, onZoomOut, onHome, inert = false, games, gamesReady, onSelectGame }: RailProps) {
+export function Rail({
+  leagues,
+  settings,
+  onChange,
+  accent,
+  camera,
+  zoomSettings,
+  onZoomIn,
+  onZoomOut,
+  onHome,
+  inert = false,
+  games,
+  gamesReady,
+  onSelectGame,
+  collapsed: collapsedSaved,
+  onCollapsedChange,
+}: RailProps) {
+  const collapsed = collapsedSaved && !inert
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   const popover = useRef<HTMLDivElement>(null)
@@ -88,26 +114,50 @@ export function Rail({ leagues, settings, onChange, accent, camera, zoomSettings
         if (onItsButton && popover.current && (key === 'ArrowDown' || key === 'ArrowUp')) moveByArrows(event.nativeEvent, popover.current)
       }}
     >
-      {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
-      <div className="rail__group" data-keeps-popovers>
-        <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
-        <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
-        <RailButton label="Home" disabled={!camera} onClick={onHome} />
+      {/* Not one of the welcome tour's controls (see railButtons), which it lights and points at. */}
+      <div className="rail__group rail__group--collapse">
+        <button
+          type="button"
+          className="rail__button"
+          aria-label={collapsed ? 'Show controls' : 'Hide controls'}
+          data-tooltip={collapsed ? 'Show controls' : 'Hide controls'}
+          data-tooltip-side="left"
+          aria-expanded={!collapsed}
+          aria-controls="rail-buttons"
+          onClick={() => {
+            // A popover goes with the rail, and isn't open when it comes back.
+            setOpen(null)
+            onCollapsedChange(!collapsed)
+          }}
+        >
+          <RailIcon className="rail__icon">{collapsed ? <ShowControlsIcon /> : <HideControlsIcon />}</RailIcon>
+        </button>
       </div>
-      <div className="rail__group">
-        <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
-        <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
-        <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
-      </div>
-      <div className="rail__group">
-        <RailButton
-          label="Games"
-          popover="games"
-          open={open}
-          disabled={!gamesReady}
-          badge={gamesReady ? games.length : undefined}
-          onClick={() => popoverEvent({ press: 'games' })}
-        />
+      <div id="rail-buttons" className={collapsed ? 'rail__buttons rail__buttons--collapsed' : 'rail__buttons'} inert={collapsed}>
+        {/* Folds away to nothing, its groups clipped as they go (see .rail__buttons). */}
+        <div className="rail__buttons-inner">
+          {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
+          <div className="rail__group" data-keeps-popovers>
+            <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
+            <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
+            <RailButton label="Home" disabled={!camera} onClick={onHome} />
+          </div>
+          <div className="rail__group">
+            <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
+            <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
+            <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
+          </div>
+          <div className="rail__group">
+            <RailButton
+              label="Games"
+              popover="games"
+              open={open}
+              disabled={!gamesReady}
+              badge={gamesReady ? games.length : undefined}
+              onClick={() => popoverEvent({ press: 'games' })}
+            />
+          </div>
+        </div>
       </div>
       {open && (
         <div

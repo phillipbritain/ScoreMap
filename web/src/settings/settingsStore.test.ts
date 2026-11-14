@@ -349,6 +349,48 @@ describe('settingsStore welcome tour progress', () => {
   })
 })
 
+describe('settingsStore: the collapsed rail', () => {
+  it('shows a first-time visitor the rail open', () => {
+    expect(settingsStore(() => memoryStorage()).loadRailCollapsed()).toBe(false)
+  })
+
+  it('keeps the rail collapsed, or open again, after a page reload', () => {
+    const storage = memoryStorage()
+
+    settingsStore(() => storage).saveRailCollapsed(true)
+    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(true)
+
+    settingsStore(() => storage).saveRailCollapsed(false)
+    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(false)
+  })
+
+  it('keeps the rail apart from the settings, so collapsing it changes none of them', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
+
+    store.saveRailCollapsed(true)
+
+    expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
+  })
+
+  it('opens the rail when what was saved is unreadable', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.railCollapsed', '{not json')
+
+    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(false)
+  })
+
+  it('still works when the browser blocks storage, with the rail open', () => {
+    const store = settingsStore(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    })
+
+    expect(() => store.saveRailCollapsed(true)).not.toThrow()
+    expect(store.loadRailCollapsed()).toBe(false)
+  })
+})
+
 describe('unsavedSettingsStore', () => {
   it("opens on first-visit settings and the viewer's region, and saves neither the settings nor the camera", () => {
     const storage = memoryStorage()
@@ -377,5 +419,16 @@ describe('unsavedSettingsStore', () => {
     expect(store.loadTourProgress()).toBe('welcome')
     expect(unsavedSettingsStore().loadTourProgress()).toBe('welcome')
     expect(saved.loadTourProgress()).toBe('finished')
+  })
+
+  it('opens the rail every time and saves none of its collapsing', () => {
+    const storage = memoryStorage()
+    const saved = settingsStore(() => storage)
+    const store = unsavedSettingsStore()
+
+    store.saveRailCollapsed(true)
+
+    expect(store.loadRailCollapsed()).toBe(false)
+    expect(saved.loadRailCollapsed()).toBe(false)
   })
 })

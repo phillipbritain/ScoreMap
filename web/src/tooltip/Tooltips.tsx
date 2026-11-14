@@ -5,6 +5,9 @@ import { tooltipPlace, type Box, type TooltipPrefer } from './tooltipPlace'
 /** How long the pointer rests on something before its tooltip shows, as the browser's own waits. */
 const hoverDelay = 500
 
+/** How long a tooltip shown by a tap stays, unless something puts it away sooner. */
+const tapShowFor = 5000
+
 /** What a tooltip is showing, for what, and the side of it asked for. */
 interface Shown {
   text: string
@@ -19,7 +22,9 @@ interface Shown {
  * only the local-run tools, which keep the browser's, do. An element marked
  * data-tooltip-side="left" or "right" has its tooltip on that side (see tooltipPlace), past that edge
  * of the nearest element marked data-tooltip-edge around it, if any (the Games list), rather than its own. One marked data-tooltip-when-clipped shows its tooltip only while its
- * text is cut off (see isClipped).
+ * text is cut off (see isClipped); on a touch screen, where nothing hovers, a tap on it shows the tooltip
+ * then, in place of whatever the tap would do, for a few seconds, and a second tap does what a tap does
+ * (a link goes where it goes).
  */
 export function Tooltips() {
   const [shown, setShown] = useState<Shown | null>(null)
@@ -28,6 +33,11 @@ export function Tooltips() {
   useEffect(() => {
     let target: HTMLElement | null = null
     let timer = 0
+    // The kind of pointer last pressed, so a click can tell a tap from a mouse's.
+    let pointerType = 'mouse'
+    // The cut-off text a tap is showing in full, so the next tap on it does what it would have done.
+    let tapped: Element | null = null
+    let tapTimer = 0
 
     const observer = new MutationObserver(() => {
       const text = target?.dataset.tooltip
@@ -36,6 +46,8 @@ export function Tooltips() {
 
     const hide = () => {
       window.clearTimeout(timer)
+      window.clearTimeout(tapTimer)
+      tapped = null
       observer.disconnect()
       target = null
       setShown(null)
@@ -60,8 +72,9 @@ export function Tooltips() {
       if (element) show(element, hoverDelay)
       else if (target) hide()
     }
+    // A touch leaves what it pressed as it lifts, before its click, so only a mouse's leaving counts.
     const onPointerOut = (event: PointerEvent) => {
-      if (target && !target.contains(event.relatedTarget as Node | null)) hide()
+      if (event.pointerType === 'mouse' && target && !target.contains(event.relatedTarget as Node | null)) hide()
     }
     const onFocusIn = (event: FocusEvent) => {
       const element = tipped(event.target)
@@ -70,7 +83,29 @@ export function Tooltips() {
     // Put away until the pointer leaves and comes back, as the browser's own tooltips are.
     const dismiss = () => {
       window.clearTimeout(timer)
+      window.clearTimeout(tapTimer)
+      tapped = null
       setShown(null)
+    }
+    // A press puts a tooltip away, but the click it makes still needs to know what a tap was showing.
+    const onPointerDown = (event: PointerEvent) => {
+      pointerType = event.pointerType
+      const showing = tapped
+      dismiss()
+      tapped = showing
+    }
+    // A tap on text cut off shows it in full, rather than doing what a tap does there.
+    const onClick = (event: MouseEvent) => {
+      if (pointerType === 'mouse') return
+      const element = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-tooltip-when-clipped]') : null
+      const again = element !== null && element === tapped
+      tapped = null
+      if (!element || again || !isClipped(element)) return
+      event.preventDefault()
+      event.stopPropagation()
+      show(element, 0)
+      tapped = element
+      tapTimer = window.setTimeout(dismiss, tapShowFor)
     }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') dismiss()
@@ -78,7 +113,8 @@ export function Tooltips() {
 
     document.addEventListener('pointerover', onPointerOver)
     document.addEventListener('pointerout', onPointerOut)
-    document.addEventListener('pointerdown', dismiss, true)
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('click', onClick, true)
     document.addEventListener('focusin', onFocusIn)
     document.addEventListener('focusout', hide)
     document.addEventListener('keydown', onKeyDown)
@@ -87,7 +123,8 @@ export function Tooltips() {
       hide()
       document.removeEventListener('pointerover', onPointerOver)
       document.removeEventListener('pointerout', onPointerOut)
-      document.removeEventListener('pointerdown', dismiss, true)
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('click', onClick, true)
       document.removeEventListener('focusin', onFocusIn)
       document.removeEventListener('focusout', hide)
       document.removeEventListener('keydown', onKeyDown)

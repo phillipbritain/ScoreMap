@@ -9,7 +9,7 @@ import type { GlobePoint } from './geo'
 import { isBehindGlobe } from './horizon'
 import { pinFeatures } from './pinFeatures'
 import { outerPinSource, outerSelectedPinLayer, pinClusterSpacing, pinFootprint, pinSource, pinSourceSpec, selectedPin } from './pinLayers'
-import { clusterMaxZoom, hasCard, pinClusterRadius } from './zoomLevels'
+import { cardRadius, cardRadiusOn, clusterMaxZoom, hasCard, pinClusterRadius } from './zoomLevels'
 
 /**
  * The pin sources on the map: every game's, for the score cards to be read from (the pin source), and
@@ -40,12 +40,12 @@ export interface PinSources {
   /** Whether both sources have loaded the games last given them, for the globe's settling. */
   loaded(): boolean
   /**
-   * Where a pulse for a game at this venue looks: the outer pin source if the game is an outer pin's
+   * Where a pulse for this game looks: the outer pin source if the game is an outer pin's
    * now, else the pin source, with the features it has now. Not waiting for it to load: it's still
    * taking in the games just shown, and until then it has the pins as they were, which are where the
    * changed games still are.
    */
-  pulseSource(venue: GlobePoint): PulseSource
+  pulseSource(game: { id: string; venue: GlobePoint }): PulseSource
 }
 
 /** A pin source a pulse looks in (see PinSources.pulseSource). */
@@ -65,15 +65,18 @@ export interface PinSourcesOptions {
 }
 
 /**
- * Which games are outer pins: those with no score card (see hasCard), on the side of the globe facing
- * the viewer (as `isBehindGlobe` tells).
+ * Which games are outer pins: those with no score card, cards reaching `radius` (see hasCard), on the
+ * side of the globe facing the viewer (as `isBehindGlobe` tells). The selected game's card reaches
+ * as far as zoomed in (see hasCard).
  */
-export function outerPinGames<G extends { venue: GlobePoint }>(
+export function outerPinGames<G extends { id: string; venue: GlobePoint }>(
   games: readonly G[],
   center: GlobePoint,
   isBehindGlobe: (venue: GlobePoint) => boolean,
+  radius = cardRadius,
+  selectedGameId: string | null = null,
 ): G[] {
-  return games.filter(({ venue }) => !hasCard(center, venue) && !isBehindGlobe(venue))
+  return games.filter(({ id, venue }) => !hasCard(center, venue, radius, id === selectedGameId) && !isBehindGlobe(venue))
 }
 
 /** How close small pins cluster in the map's view now, for small pins and pin clusters as wide as the theme's (see pinClusterRadius). */
@@ -90,6 +93,8 @@ const selectedPinLayers = [outerSelectedPinLayer, cardlessSelectedPinLayer]
  */
 export function addPinSources(map: MapLibreMap, { games, theme, colorOf }: PinSourcesOptions): PinSources {
   let shown = games
+  // The selected game, whose card reaches as far as zoomed in (see hasCard).
+  let selectedGameId: string | null = null
   let clusterRadius = pinClusterRadiusOn(map, theme)
   const center = (): GlobePoint => {
     const { lng: longitude, lat: latitude } = map.getCenter()
@@ -111,7 +116,13 @@ export function addPinSources(map: MapLibreMap, { games, theme, colorOf }: PinSo
    * as games cross the card radius or the horizon.
    */
   const showOuterPins = () => {
-    const outer = outerPinGames(shown, center(), ({ longitude, latitude }) => isBehindGlobe(map, [longitude, latitude]))
+    const outer = outerPinGames(
+      shown,
+      center(),
+      ({ longitude, latitude }) => isBehindGlobe(map, [longitude, latitude]),
+      cardRadiusOn(map),
+      selectedGameId,
+    )
     const pins = pinFeatures(outer, colorOf)
     const key = JSON.stringify(pins)
     if (key === outerPinsKey) return
@@ -148,7 +159,7 @@ export function addPinSources(map: MapLibreMap, { games, theme, colorOf }: PinSo
     },
     cameraMoved() {
       recluster()
-      // Games cross the card radius as the globe turns.
+      // Games cross the card radius as the globe turns, and as it zooms (see cardRadiusAt).
       showOuterPins()
     },
     themeChanged(changed) {
@@ -164,6 +175,8 @@ export function addPinSources(map: MapLibreMap, { games, theme, colorOf }: PinSo
       showPins()
     },
     select(gameId) {
+      selectedGameId = gameId
+      showOuterPins()
       for (const layer of selectedPinLayers) {
         if (map.getLayer(layer)) map.setFilter(layer, selectedPin(gameId))
       }
@@ -172,8 +185,8 @@ export function addPinSources(map: MapLibreMap, { games, theme, colorOf }: PinSo
       const loaded = (id: string) => !!map.getSource(id) && map.isSourceLoaded(id)
       return loaded(pinSource) && loaded(outerPinSource)
     },
-    pulseSource(venue) {
-      const id = hasCard(center(), venue) ? pinSource : outerPinSource
+    pulseSource({ id: gameId, venue }) {
+      const id = hasCard(center(), venue, cardRadiusOn(map), gameId === selectedGameId) ? pinSource : outerPinSource
       return {
         features: map.querySourceFeatures(id) as Feature<Point>[],
         clusterLeaves: async (clusterId) => (await source(id)?.getClusterLeaves(clusterId, Infinity, 0).catch(() => [])) ?? [],

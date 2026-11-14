@@ -25,7 +25,7 @@ import {
   outerSmallPinLayer,
   pinSource,
 } from './pinLayers'
-import { maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
+import { fieldOfView, fittedZoomSettings, maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
 
 // About one country on screen: a zoom the tests look closer at the cards from.
 const countryZoom = 3
@@ -375,13 +375,47 @@ describe('shown score cards', () => {
     expect(globe.shownScoreCards()).toEqual([])
   })
 
-  it('gives the cards of games near the center zoomed all the way out', async () => {
-    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+  it('gives cards zoomed all the way out only to games within a region of the center, the rest small pins', async () => {
+    // B is some 22° from the center: within the card radius zoomed in, past it zoomed all the way out.
+    const games = [game('A'), game('B', { longitude: 20, latitude: 10 })]
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: testZoom.minZoom })
+    globe.show(games)
+    await cardShown('A')
+    await pinsDrawn(map, outerSmallPinLayer, games[1])
+
+    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId)).toEqual(['A']))
+  })
+
+  it('gives cards farther from the center as the view zooms in from all the way out', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: testZoom.minZoom })
     globe.show([game('A'), game('B', { longitude: 20, latitude: 10 })])
     await cardShown('A')
+
+    map.jumpTo({ zoom: testZoom.minZoom + 1 })
     await cardShown('B')
 
     await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
+  })
+
+  it('gives cards zoomed all the way out on a phone only to games within a region of the center', async () => {
+    const phone = { width: 390, height: 844 }
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 0 }, phone)
+    globe.setZoomLimits(fittedZoomSettings(zoomSettings, phone))
+    map.jumpTo({ zoom: 0 })
+    // B is some 22° from the center: past the card radius zoomed all the way out.
+    const games = [game('A'), game('B', { longitude: 20, latitude: 10 })]
+    globe.show(games)
+    await cardShown('A')
+    await pinsDrawn(map, outerSmallPinLayer, games[1])
+
+    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId)).toEqual(['A']))
+  })
+})
+
+describe('the furthest out', () => {
+  it('is fitted to the field of view MapLibre draws the globe with', () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 3 })
+    expect(map.getVerticalFieldOfView()).toBeCloseTo(fieldOfView)
   })
 })
 
@@ -502,7 +536,8 @@ describe('selection', () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    await cardShown('A')
+    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
+    await pinsDrawn(map, outerSmallPinLayer, a)
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
@@ -511,6 +546,8 @@ describe('selection', () => {
 
     const page = container.getBoundingClientRect()
     expect(offBy(venueOnPage(map, a).y, (page.top + panel.top) / 2)).toBeLessThan(2)
+    // Picked, its card shows wherever it lands.
+    await cardShown('A')
     expect(offBy(venueOnPage(map, a).x, page.left + page.width / 2)).toBeLessThan(2)
     expect(zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat })).toBeCloseTo(2)
     await cardShown('A')
@@ -554,7 +591,8 @@ describe('selection', () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    await cardShown('A')
+    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
+    await pinsDrawn(map, outerSmallPinLayer, a)
     globe.select('A')
     await pause(500)
     expect(map.getCenter().lng).toBeCloseTo(0)
@@ -579,7 +617,8 @@ describe('camera movement lifetime', () => {
     const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    await cardShown('A')
+    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
+    await pinsDrawn(map, outerSmallPinLayer, a)
 
     globe.pickGame('A', null)
     expect(onSelect).toHaveBeenCalledWith('A')

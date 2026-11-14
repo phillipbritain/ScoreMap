@@ -92,13 +92,18 @@ export function Rail({
   const popover = useRef<HTMLDivElement>(null)
   const rail = useRef<HTMLDivElement>(null)
   // Map Type's and More's popovers sit level with their buttons, their few choices beside them, rather
-  // than with the rail's top.
+  // than with the rail's top. On a screen too short for that, such as a phone on its side, they rise
+  // until their foot is as far above the screen's as the rail's top is below its top.
   const beside = open === 'mapType' || open === 'more'
   const [besideTop, setBesideTop] = useState(0)
   useLayoutEffect(() => {
     const button = rail.current?.querySelector(`[data-popover-button="${open}"]`)
-    if (!beside || !button || !rail.current) return
-    setBesideTop(button.getBoundingClientRect().top - rail.current.getBoundingClientRect().top)
+    const area = rail.current?.parentElement
+    if (!beside || !button || !rail.current || !area || !popover.current) return
+    const railTop = rail.current.getBoundingClientRect().top
+    const areaBox = area.getBoundingClientRect()
+    const lowest = areaBox.bottom - (railTop - areaBox.top) - popover.current.offsetHeight - railTop
+    setBesideTop(Math.max(0, Math.min(button.getBoundingClientRect().top - railTop, lowest)))
   }, [open, beside])
   const popoverEvent = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
 

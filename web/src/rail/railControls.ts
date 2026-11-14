@@ -18,9 +18,10 @@ export function canZoom({ latitude, zoom }: Camera, limits: ZoomSettings = zoomS
 /**
  * The rail's popovers: Leagues (which leagues show), Display Settings (the colors picked
  * for sports and leagues), Map Type (the plain map or the satellite
- * map) and Games (every game shown, to find one and go to it).
+ * map), Games (every game shown, to find one and go to it), More (what's rarely needed: sending
+ * feedback, seeing the welcome tour again) and the Feedback panel, which opens from More in its place.
  */
-export type RailPopover = 'leagues' | 'display' | 'mapType' | 'games'
+export type RailPopover = 'leagues' | 'display' | 'mapType' | 'games' | 'more' | 'feedback'
 
 /** What opens or closes a popover: its button pressed, Escape, or a click outside the open one. */
 export type PopoverEvent<P extends string = RailPopover> = { press: P } | 'escape' | 'outside'
@@ -32,4 +33,12 @@ export type PopoverEvent<P extends string = RailPopover> = { press: P } | 'escap
 export function nextPopover<P extends string = RailPopover>(open: P | null, event: PopoverEvent<P>): P | null {
   if (typeof event === 'string') return null
   return open === event.press ? null : event.press
+}
+
+/**
+ * What pressing the More button does: opens More, or closes it, or the Feedback panel opened from it,
+ * as the Feedback panel is More's own.
+ */
+export function morePress(open: RailPopover | null): PopoverEvent {
+  return { press: open === 'feedback' ? 'feedback' : 'more' }
 }

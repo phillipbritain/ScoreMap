@@ -22,7 +22,7 @@ import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
-import { hasCard } from './zoomLevels'
+import { cardRadiusOn, hasCard } from './zoomLevels'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -196,9 +196,11 @@ export class ScoreCardMarkers {
     // room in the layout with it): cards pop in and out as their venues cross the horizon. So do
     // they as their venues cross the card radius, where they swap with small pins (see GlobeMap).
     const { lng: longitude, lat: latitude } = this.map.getCenter()
+    const radius = cardRadiusOn(this.map)
     const wanted = pins.filter(
-      ({ lngLat }) =>
-        !isBehindGlobe(this.map, lngLat) && hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }),
+      ({ gameId, lngLat }) =>
+        !isBehindGlobe(this.map, lngLat) &&
+        hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }, radius, gameId === this.selectedGameId),
     )
 
     const keep = new Set<string>()

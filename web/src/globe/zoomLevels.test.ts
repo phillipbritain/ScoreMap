@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   cardRadius,
+  cardRadiusAt,
+  cardRadiusWidening,
+  furthestOutCardRadius,
   centerLatitude,
   fittedZoomSettings,
   furthestOutZoom,
@@ -159,5 +162,39 @@ describe('hasCard', () => {
     expect(hasCard(equator, { longitude: 0, latitude: -cardRadius })).toBe(true)
     expect(hasCard(equator, { longitude: cardRadius + 0.5, latitude: 0 })).toBe(false)
     expect(hasCard(equator, { longitude: 0, latitude: cardRadius + 0.5 })).toBe(false)
+  })
+
+  it('gives the selected game its card as far out as zoomed in, whatever the radius it is given', () => {
+    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 }, furthestOutCardRadius, true)).toBe(true) // New York
+    expect(hasCard(kansas, { longitude: -0.1, latitude: 51.5 }, furthestOutCardRadius, true)).toBe(false) // London
+  })
+
+  it('gives cards only within the radius it is given, as zoomed out', () => {
+    expect(hasCard(kansas, { longitude: -90.2, latitude: 38.6 }, furthestOutCardRadius)).toBe(true) // St. Louis
+    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 }, furthestOutCardRadius)).toBe(false) // New York
+  })
+})
+
+describe('cardRadiusAt', () => {
+  it('reaches about a region zoomed all the way out, short of the reach zoomed in', () => {
+    expect(cardRadiusAt(0)).toBe(furthestOutCardRadius)
+    expect(furthestOutCardRadius).toBeLessThan(cardRadius)
+  })
+
+  it('widens as the view zooms in, to the full card radius', () => {
+    expect(cardRadiusAt(cardRadiusWidening / 2)).toBeGreaterThan(furthestOutCardRadius)
+    expect(cardRadiusAt(cardRadiusWidening / 2)).toBeLessThan(cardRadius)
+    expect(cardRadiusAt(cardRadiusWidening)).toBe(cardRadius)
+  })
+
+  it('stays at the full card radius from there in', () => {
+    expect(cardRadiusAt(cardRadiusWidening + 5)).toBe(cardRadius)
+  })
+
+  it('reaches as far as the full card radius at the zoom the globe starts at, on a laptop and a phone', () => {
+    for (const view of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
+      const { minZoom, startZoom } = fittedZoomSettings(zoomSettings, view)
+      expect(cardRadiusAt(startZoom - minZoom)).toBe(cardRadius)
+    }
   })
 })

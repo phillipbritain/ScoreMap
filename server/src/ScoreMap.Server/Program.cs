@@ -128,6 +128,9 @@ app.MapFeedback();
 // The scenario picker's list and switch (ADR-0009); in Development only.
 app.MapScenarios();
 
+// The board's games, one line each, for an agent driving a local run; in Development only.
+app.MapGameList();
+
 app.Run();
 
 /// <summary>Exposed so tests can start the server with WebApplicationFactory.</summary>

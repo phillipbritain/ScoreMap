@@ -23,9 +23,9 @@ public class ScenarioVenueListTests
     }
 
     [Fact]
-    public void About_150_venues_across_every_continent_plus_more_around_london()
+    public void About_150_venues_across_every_continent_plus_more_around_london_and_a_us_college_saturdays()
     {
-        Assert.InRange(Venues.Count, 140, 200);
+        Assert.InRange(Venues.Count, 200, 280);
         Assert.Equal(Venues.Count, Venues.Select(v => VenueLocator.VenueQuery(v.ToProviderVenue())).Distinct().Count());
         // One country per inhabited continent, standing in for it.
         Assert.Superset(new HashSet<string> { "England", "USA", "Brazil", "South Africa", "Japan", "Australia" },
@@ -33,10 +33,11 @@ public class ScenarioVenueListTests
     }
 
     [Fact]
-    public void Every_venue_is_worldwide_in_a_big_city_or_near_london_and_the_dense_areas_have_groups_of_their_own()
+    public void Every_venue_is_worldwide_in_a_big_city_near_london_or_busy_and_the_dense_areas_have_groups_of_their_own()
     {
         Assert.All(Venues, v => Assert.True(
-            v.Groups.Contains("worldwide") || v.Groups.Contains("big-cities") || v.Groups.Contains("london-and-nearby"), v.Name));
+            v.Groups.Contains("worldwide") || v.Groups.Contains("big-cities") || v.Groups.Contains("london-and-nearby")
+                || v.Groups.Contains("us-college") || v.Groups.Contains("worldwide-busy"), v.Name));
         int InGroup(string group) => Venues.Count(v => v.Groups.Contains(group));
         Assert.InRange(InGroup("worldwide"), 150, 200);
         // Spread across the world: London's own venues are in, the many around it are not.
@@ -48,6 +49,9 @@ public class ScenarioVenueListTests
             Venues.Where(v => v.Groups.Contains("london-and-nearby")).Select(v => v.Name).ToHashSet());
         Assert.InRange(InGroup("new-york"), 6, 20);
         Assert.InRange(InGroup("los-angeles"), 6, 20);
+        // worldwide-busy fills every one, as a college Saturday's games do.
+        Assert.InRange(InGroup("us-college"), 55, 70);
+        Assert.All(Venues.Where(v => v.Groups.Contains("us-college")), v => Assert.Equal("USA", v.Country));
     }
 
     [Fact]

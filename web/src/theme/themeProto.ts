@@ -98,6 +98,7 @@ const specs: Spec[] = [
         {
           Globe: { surface: 'ink.500', coastlines: { color: 'ink.300' }, countryBorders: { color: 'ink.300' } },
           Selection: { color: 'cloud.500' },
+          Tooltip: { surface: 'ink.700', outline: 'ink.500' },
           Cluster: { fill: 'ink.700' },
           ScoreCard: { fill: 'ink.700' },
           GamePanel: { scoreBlock: { top: 'ink.600', bottom: 'ink.800' } },
@@ -152,6 +153,7 @@ const specs: Spec[] = [
         {
           Globe: { surface: 'sand.500', coastlines: { color: 'sea.600' }, countryBorders: { color: 'slate.300' } },
           Selection: { color: 'slate.800' },
+          Tooltip: { surface: 'sand.100', outline: 'sand.600' },
           Cluster: { fill: 'sand.100' },
           ScoreCard: { fill: 'sand.100', shadow: 'slate.400', frost: 0.85 },
           GamePanel: {
@@ -215,6 +217,7 @@ const specs: Spec[] = [
         {
           Globe: { surface: 'pine.500', coastlines: { color: 'pine.300' }, countryBorders: { color: 'pine.300' } },
           Selection: { color: 'frost.500' },
+          Tooltip: { surface: 'pine.800', outline: 'pine.500' },
           Cluster: { fill: 'pine.800' },
           ScoreCard: { fill: 'pine.800' },
           GamePanel: { scoreBlock: { top: 'pine.700', bottom: 'violet.800' } },
@@ -269,6 +272,7 @@ const specs: Spec[] = [
         {
           Globe: { surface: 'plum.500', coastlines: { color: 'magenta.600' }, countryBorders: { color: 'magenta.700' } },
           Selection: { color: 'haze.500' },
+          Tooltip: { surface: 'plum.800', outline: 'plum.500' },
           Cluster: { fill: 'plum.800' },
           ScoreCard: { fill: 'plum.800' },
           GamePanel: { scoreBlock: { top: 'plum.600', bottom: 'plum.800' } },

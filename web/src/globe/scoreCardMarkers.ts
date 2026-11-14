@@ -8,6 +8,7 @@ import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHapp
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardComings } from './cardComings'
+import { cardMoves } from './cardMoves'
 import { cardPins, type CardPin } from './cardPins'
 import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
@@ -59,11 +60,18 @@ export class ScoreCardMarkers {
   private selectedGameId: string | null = null
   /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
   private hoveredGameId: string | null = null
-  /** Which cards are coming in or going out, as their games arrive on the board or leave it (see cardComings). */
-  private readonly comings = cardComings()
   /**
-   * Cards going out, their games gone from the board: out of the layout, so they hold no room, and
-   * drawn with the trail they had until they've gone.
+   * Which cards are coming in or going out, as their games arrive on the board or leave it, or their
+   * venues come into view or go out of it (see cardComings).
+   */
+  private readonly comings = cardComings()
+  /** Which cards are gliding to where the card layout moved them (see cardMoves). */
+  private moves = cardMoves()
+  /** Whether the viewer asks for less motion: cards then go straight where they're moved. */
+  private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+  /**
+   * Cards going out, their games gone from the board or their venues out of view: out of the layout,
+   * so they hold no room, and drawn with the trail they had until they've gone.
    */
   private readonly goingOut = new Map<string, PlacedCard>()
   /** The trails of the cards laid out, as last drawn (see drawLayout). */
@@ -193,8 +201,9 @@ export class ScoreCardMarkers {
         // each change.
         this.placedPins()
     // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
-    // room in the layout with it): cards pop in and out as their venues cross the horizon. So do
-    // they as their venues cross the card radius, where they swap with small pins (see GlobeMap).
+    // room in the layout with it): cards fade in and out as their venues cross the horizon, out of
+    // the layout at once. So do they as their venues cross the card radius, where they swap with
+    // small pins (see GlobeMap).
     const { lng: longitude, lat: latitude } = this.map.getCenter()
     const radius = cardRadiusOn(this.map)
     const wanted = pins.filter(
@@ -222,7 +231,12 @@ export class ScoreCardMarkers {
             else if (this.hoveredGameId === gameId) this.hover(null)
           },
         })
-        if (this.comings.cardPlaced(gameId, performance.now())) placed.comeIn(this.comingsOver)
+        const now = performance.now()
+        const comes = this.comings.cardPlaced(gameId, now)
+        // Its old card, still fading out of view, goes at once: the new one fades in from as far as that got.
+        this.removeGoingOut(gameId)
+        if (comes === 'comesIn') placed.comeIn(this.comingsOver)
+        else placed.appear(now - this.comings.coming(gameId)!.at, this.comingsOver)
         this.placed.set(gameId, placed)
         changed = true
       } else placed.moveTo(lngLat)
@@ -252,9 +266,16 @@ export class ScoreCardMarkers {
     const held = this.settling.holdsLayout({ everyCardLaidOut: [...keep].every((gameId) => this.placed.get(gameId)!.offset) })
     if (!held && this.layOut(keep)) changed = true
 
-    for (const gameId of this.placed.keys()) {
+    const now = performance.now()
+    for (const [gameId, placed] of this.placed) {
       if (keep.has(gameId)) continue
-      this.takeOff(gameId)?.dispose()
+      // A card on screen whose venue has gone out of view (behind the globe, or past the card radius)
+      // fades out; one with no room, or not yet laid out, just goes.
+      if (this.games.has(gameId) && placed.offset && !placed.inCardCluster) this.goOut(gameId, now, true)
+      else {
+        this.takeOff(gameId)?.dispose()
+        this.moves.forget(gameId)
+      }
       changed = true
     }
     // Still unsettled, but asking for no frames: the map can go idle.
@@ -308,12 +329,22 @@ export class ScoreCardMarkers {
     traceLayout({ cards, scene })
     const changed = this.layout.layOut(cards, scene)
 
-    // Hidden at the venue gap above its venue while there's no room for it.
+    // Hidden at the venue gap above its venue while there's no room for it. A card moved further than
+    // a step glides there (see cardMoves), unless the viewer asks for less motion.
     const noRoom = { dx: 0, dy: -scene.venueGap }
+    const now = performance.now()
+    const glides = !this.reducedMotion.matches
     for (const gameId of gameIds) {
       const placed = this.placed.get(gameId)!
       const showing = this.layout.shows(gameId)
-      placed.placeAt(showing.as === 'card' ? showing.offset : noRoom, showing.as === 'card' && showing.moved)
+      if (showing.as === 'card') {
+        placed.placeAt(showing.offset, showing.moved)
+        const move = glides ? this.moves.placeAt(gameId, showing.offset, now) : undefined
+        if (move) placed.glide(move)
+      } else {
+        placed.placeAt(noRoom, false)
+        this.moves.forget(gameId)
+      }
       placed.setInCardCluster(showing.as !== 'card')
     }
     const onGlobe = cards.map((card): CardOnGlobe => {
@@ -386,20 +417,27 @@ export class ScoreCardMarkers {
     return placed
   }
 
-  /** A game gone from the board: its card, on screen, goes out, out of the layout so it holds no room. */
-  private goOut(gameId: string, now: number): void {
+  /**
+   * A game gone from the board, or its venue out of view: its card, on screen, goes out, out of the
+   * layout so it holds no room.
+   */
+  private goOut(gameId: string, now: number, outOfView = false): void {
     const placed = this.takeOff(gameId)
     if (!placed) return
     this.comings.goOut(gameId, now)
-    placed.goOut(now - this.comings.coming(gameId)!.at, this.layoutTrails.find((trail) => trail.gameId === gameId), this.comingsOver)
+    const trail = this.layoutTrails.find((trail) => trail.gameId === gameId)
+    placed.goOut(now - this.comings.coming(gameId)!.at, trail, this.comingsOver, outOfView)
     this.goingOut.set(gameId, placed)
     this.layoutTrails = this.layoutTrails.filter((trail) => trail.gameId !== gameId)
     this.showTrails()
   }
 
   private removeGoingOut(gameId: string): void {
-    this.goingOut.get(gameId)?.dispose()
+    const placed = this.goingOut.get(gameId)
+    if (!placed) return
+    placed.dispose()
     this.goingOut.delete(gameId)
+    this.moves.forget(gameId)
   }
 
   /** Cards done coming in are left as they are; those done going out are removed, and their trails with them. */
@@ -410,11 +448,17 @@ export class ScoreCardMarkers {
     if (cameIn.length > 0 || wentOut.length > 0) this.showTrails()
   }
 
-  /** Gives the trail layer the laid-out cards' trails and those going out, each fading with its card if it's coming in or going out. */
+  /**
+   * Gives the trail layer the laid-out cards' trails and those going out, each fading with its card if
+   * it's coming in or going out, and gliding with it if it's gliding.
+   */
   private showTrails(): void {
+    const now = performance.now()
     const withComing = (trail: TrailOnGlobe): TrailOnGlobe => {
       const coming = this.comings.coming(trail.gameId)
-      return coming ? { ...trail, coming } : trail
+      const move = this.moves.move(trail.gameId, now)
+      if (!coming && !move) return trail
+      return { ...trail, ...(coming && { coming }), ...(move && { move }) }
     }
     const goingOut = [...this.goingOut.values()].flatMap(({ trail }) => (trail ? [trail] : []))
     this.trails.show([...this.layoutTrails, ...goingOut].map(withComing))
@@ -465,6 +509,7 @@ export class ScoreCardMarkers {
     for (const gameId of [...this.goingOut.keys()]) this.removeGoingOut(gameId)
     this.layoutTrails = []
     this.layout = cardLayout()
+    this.moves = cardMoves()
     this.cardClustersDrawn = []
   }
 }

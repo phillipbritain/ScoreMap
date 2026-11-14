@@ -5,6 +5,7 @@ import type { Scorer } from '../games/scorers'
 import type { Theme } from '../theme/theme'
 import { cardComingDuration } from './cardComings'
 import type { ScreenOffset } from './cardLayout'
+import { cardMoveDuration, cardMoveEasing, type CardMove } from './cardMoves'
 import type { PinAnimation } from './pinAnimation'
 import type { TrailOnGlobe } from './trailLayer'
 
@@ -18,8 +19,8 @@ export interface PlacedCardEvents {
 
 /**
  * One game's score card on the globe, from being placed at its venue until it's disposed: its marker
- * and element, the pulse playing on it (kept as it's redrawn), its coming in and going out, the trail
- * it keeps while going out, and letting go of keyboard focus as it leaves or joins a card cluster.
+ * and element, the pulse playing on it (kept as it's redrawn), its coming in and going out (or into
+ * view and out of it), its glide as the card layout moves it, the trail it keeps while going out, and letting go of keyboard focus as it leaves or joins a card cluster.
  * Whichever way it leaves the globe (no longer wanted, gone out, or the globe cleared), it's through
  * dispose, which does it all once.
  *
@@ -52,6 +53,8 @@ export class PlacedCard {
   private playing: PinAnimation | undefined
   /** The trail the card had when it started going out, drawn until it's gone. */
   private trailGoingOut: TrailOnGlobe | undefined
+  /** The card's glide to where the card layout last moved it, while it plays. */
+  private gliding: Animation | undefined
   private disposed = false
 
   /** Places a card for a game at its venue, empty until it's drawn. */
@@ -122,6 +125,19 @@ export class PlacedCard {
   }
 
   /**
+   * Glides the card to where it's been put (see placeAt), from as far off it as the move gives (see
+   * cardMoves): the card itself is shown off its place and eased back, in place of any glide playing.
+   * Played by the browser, so it takes no frames of the map's.
+   */
+  glide({ from }: CardMove): void {
+    this.gliding?.cancel()
+    this.gliding = this.element.animate([{ translate: `${from.dx}px ${from.dy}px` }, { translate: '0px 0px' }], {
+      duration: cardMoveDuration,
+      easing: cardMoveEasing,
+    })
+  }
+
+  /**
    * Hides the card while there's no room for it (its game counted in a card cluster, or shown as its
    * small pin), or shows it again. Hidden rather than removed, so it keeps its size for laying out the
    * next frame; its focus goes back to the Games list as it hides.
@@ -160,24 +176,33 @@ export class PlacedCard {
     this.transition('score-card-coming', 0, over)
   }
 
-  /** Leaves the card as it is, now it's come in. */
+  /**
+   * Fades the card in, `since` milliseconds in, as it's come into view (see cardComings). `over` is
+   * called once it's had time to (see CardComings.over).
+   */
+  appear(since: number, over: () => void): void {
+    this.transition('score-card-appearing', since, over)
+  }
+
+  /** Leaves the card as it is, now it's come in or appeared. */
   cameIn(): void {
-    if (!this.disposed) this.markerElement.classList.remove('score-card-coming')
+    if (!this.disposed) this.markerElement.classList.remove('score-card-coming', 'score-card-appearing')
   }
 
   /**
-   * Starts the card going out, its game gone from the board, `since` milliseconds in (going out from
-   * partway in), drawn with the trail it had until it's disposed. It can't be selected or focused
-   * meanwhile. `over` is called once it's had time to go (see CardComings.over).
+   * Starts the card going out, `since` milliseconds in (going out from partway in), drawn with the
+   * trail it had until it's disposed: lifting away, its game gone from the board, or fading in place,
+   * gone out of view. It can't be selected or focused meanwhile. `over` is called once it's had time
+   * to go (see CardComings.over).
    */
-  goOut(since: number, trail: TrailOnGlobe | undefined, over: () => void): void {
+  goOut(since: number, trail: TrailOnGlobe | undefined, over: () => void, outOfView = false): void {
     const element = this.markerElement
     this.releaseFocus()
     this.playing = undefined
     this.trailGoingOut = trail
     element.inert = true
     element.setAttribute('aria-hidden', 'true')
-    this.transition('score-card-going', since, over)
+    this.transition(outOfView ? 'score-card-fading' : 'score-card-going', since, over)
   }
 
   /** Sends keyboard focus on the card back to the Games list, or failing that the globe. */
@@ -194,18 +219,20 @@ export class PlacedCard {
     this.disposed = true
     this.releaseFocus()
     this.marker.remove()
+    this.gliding?.cancel()
+    this.gliding = undefined
     this.playing = undefined
     this.trailGoingOut = undefined
   }
 
   /**
-   * Plays a coming in or going out: the look is the CSS's class, played over cardComingDuration,
+   * Plays a coming in or going out (or into view or out of it): the look is the CSS's class, played over cardComingDuration,
    * `delay` milliseconds in. `over` is called once it's over, even if the card has been disposed by
    * then, as which cards came in and went out is the board's to forget (see CardComings.over).
    */
-  private transition(className: 'score-card-coming' | 'score-card-going', delay: number, over: () => void): void {
+  private transition(className: 'score-card-coming' | 'score-card-going' | 'score-card-appearing' | 'score-card-fading', delay: number, over: () => void): void {
     const element = this.markerElement
-    element.classList.remove('score-card-coming')
+    element.classList.remove('score-card-coming', 'score-card-appearing')
     element.style.animationDuration = `${cardComingDuration}ms`
     element.style.animationDelay = `${-delay}ms`
     element.classList.add(className)

@@ -47,6 +47,21 @@ public class ScenarioTeamListTests
     }
 
     [Fact]
+    public void Every_team_in_a_league_with_conferences_is_in_one_of_them_so_scenarios_can_be_narrowed_to_one()
+    {
+        var conferenceIds = JsonDocument
+            .Parse(File.ReadAllText(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "appsettings.json")))
+            .RootElement.GetProperty("Leagues").EnumerateArray()
+            .Where(league => league.TryGetProperty("Conferences", out _))
+            .ToDictionary(league => league.GetProperty("Name").GetString()!, league => league.GetProperty("Conferences")
+                .EnumerateArray().Select(conference => conference.GetProperty("Id").GetString()).ToHashSet());
+
+        Assert.Equal(["NCAA Football", "NCAA Men's Basketball", "NCAA Women's Basketball"], conferenceIds.Keys.Order());
+        Assert.All(conferenceIds, league => Assert.All(Teams[league.Key], team =>
+            Assert.True(league.Value.Contains(team.ConferenceId), $"{league.Key}: {team.Name} has conference {team.ConferenceId ?? "none"}")));
+    }
+
+    [Fact]
     public void There_are_teams_enough_for_a_game_at_every_worldwide_venue_at_once()
     {
         var worldwide = ScenarioVenue.ReadList(Path.Combine(ScenarioVenueListTests.ServerProjectFolder, "scenario-venues.json"))

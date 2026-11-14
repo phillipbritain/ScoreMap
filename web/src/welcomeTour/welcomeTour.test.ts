@@ -55,9 +55,9 @@ describe('isTourProgress', () => {
   })
 })
 
-const nfl = { name: 'NFL', sport: 'Football' }
-const nba = { name: 'NBA', sport: 'Basketball' }
-const mls = { name: 'MLS', sport: 'Soccer' }
+const nfl = { name: 'NFL', sport: 'Football', conferences: [] }
+const nba = { name: 'NBA', sport: 'Basketball', conferences: [] }
+const mls = { name: 'MLS', sport: 'Soccer', conferences: [] }
 const leagues = [nfl, nba, mls]
 
 /** Settings a viewer might have before choosing: some leagues off, colors picked. */

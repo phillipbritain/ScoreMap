@@ -8,13 +8,15 @@ import {
   withMapType,
   withLeague,
   withSport,
+  withAllConferences,
+  withConference,
 } from './viewerSettings'
 
-const nfl = { name: 'NFL', sport: 'Football' }
-const ncaaf = { name: 'NCAA Football', sport: 'Football' }
-const nba = { name: 'NBA', sport: 'Basketball' }
-const mls = { name: 'MLS', sport: 'Soccer' }
-const epl = { name: 'Premier League', sport: 'Soccer' }
+const nfl = { name: 'NFL', sport: 'Football', conferences: [] }
+const ncaaf = { name: 'NCAA Football', sport: 'Football', conferences: [] }
+const nba = { name: 'NBA', sport: 'Basketball', conferences: [] }
+const mls = { name: 'MLS', sport: 'Soccer', conferences: [] }
+const epl = { name: 'Premier League', sport: 'Soccer', conferences: [] }
 
 describe('leaguesBySport', () => {
   it('groups leagues under their sport, keeping the configured order', () => {
@@ -101,5 +103,32 @@ describe('all-leagues switch', () => {
     const on = withAllLeagues(someOff, leagues, true)
 
     expect(leagues.every((league) => isLeagueOn(on, league.name))).toBe(true)
+  })
+})
+
+describe('conferences', () => {
+  it('chooses a conference in a league, keeping those already chosen', () => {
+    const settings = withConference(withConference(firstVisitSettings, 'NCAA Football', 'SEC', true), 'NCAA Football', 'ACC', true)
+
+    expect(settings.chosenConferences).toEqual({ 'NCAA Football': ['SEC', 'ACC'] })
+  })
+
+  it('keeps each league\'s choice apart', () => {
+    const settings = withConference(withConference(firstVisitSettings, 'NCAA Football', 'SEC', true), "NCAA Men's Basketball", 'ACC', true)
+
+    expect(settings.chosenConferences).toEqual({ 'NCAA Football': ['SEC'], "NCAA Men's Basketball": ['ACC'] })
+  })
+
+  it('unchooses a conference, and forgets the league once none is left', () => {
+    const both = { ...firstVisitSettings, chosenConferences: { 'NCAA Football': ['SEC', 'ACC'] } }
+
+    expect(withConference(both, 'NCAA Football', 'SEC', false).chosenConferences).toEqual({ 'NCAA Football': ['ACC'] })
+    expect(withConference(withConference(both, 'NCAA Football', 'SEC', false), 'NCAA Football', 'ACC', false).chosenConferences).toEqual({})
+  })
+
+  it('goes back to all conferences in a league, leaving other leagues as they were', () => {
+    const settings = { ...firstVisitSettings, chosenConferences: { 'NCAA Football': ['SEC'], "NCAA Men's Basketball": ['ACC'] } }
+
+    expect(withAllConferences(settings, 'NCAA Football').chosenConferences).toEqual({ "NCAA Men's Basketball": ['ACC'] })
   })
 })

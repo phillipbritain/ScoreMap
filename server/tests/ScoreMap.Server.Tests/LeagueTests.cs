@@ -83,6 +83,40 @@ public class LeagueTests
     }
 
     [Fact]
+    public async Task The_browser_can_list_each_college_leagues_conferences_by_name()
+    {
+        await using var server = new ScoreMapServer();
+        using var http = server.CreateClient();
+
+        var leagues = await http.GetFromJsonAsync<ConferenceListing[]>("/api/leagues", TestContext.Current.CancellationToken);
+
+        var football = Assert.Single(leagues!, league => league.Name == "NCAA Football").Conferences;
+        Assert.Contains("SEC", football);
+        Assert.Contains("ACC", football);
+        Assert.Equal(football.Order(StringComparer.Ordinal), football);
+        Assert.Contains("Big East", Assert.Single(leagues!, league => league.Name == "NCAA Women's Basketball").Conferences);
+        Assert.Empty(Assert.Single(leagues!, league => league.Name == "NFL").Conferences);
+    }
+
+    [Fact]
+    public async Task A_college_game_reaches_the_browser_with_each_teams_conference_by_name()
+    {
+        // ESPN's SEC is 8 in football and 23 in basketball; a team in no configured conference has none.
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard("football/college-football", LiveGame(server, "cfb", "football/college-football", "8", "999"));
+        server.Feed.SetScoreboard("basketball/mens-college-basketball?groups=50",
+            LiveGame(server, "mbb", "basketball/mens-college-basketball?groups=50", "23", null));
+
+        await using var client = await server.ConnectClientAsync();
+        var snapshot = await client.NextSnapshotAsync();
+
+        var football = Assert.Single(snapshot, g => g.Id == "cfb").Sides();
+        Assert.Equal(("SEC", null), (football.Home.Conference, football.Away.Conference));
+        var basketball = Assert.Single(snapshot, g => g.Id == "mbb").Sides();
+        Assert.Equal(("SEC", null), (basketball.Home.Conference, basketball.Away.Conference));
+    }
+
+    [Fact]
     public async Task A_league_configured_with_an_unknown_sport_stops_the_server_from_starting()
     {
         await using var server = new ScoreMapServer();
@@ -96,13 +130,16 @@ public class LeagueTests
 
     private sealed record LeagueListing(string Name, string Sport);
 
-    private static ProviderGame LiveGame(ScoreMapServer server, string id, string leagueKey) => new(
+    private sealed record ConferenceListing(string Name, string[] Conferences);
+
+    private static ProviderGame LiveGame(ScoreMapServer server, string id, string leagueKey,
+        string? homeConferenceId = null, string? awayConferenceId = null) => new(
         Id: id,
         LeagueKey: leagueKey,
         StartTime: server.Clock.GetUtcNow().AddMinutes(-30),
         Contest: new ProviderSides(
-            new ProviderTeam("HOM", "Home Team", null, 1),
-            new ProviderTeam("AWY", "Away Team", null, 0)),
+            new ProviderTeam("HOM", "Home Team", null, 1, ConferenceId: homeConferenceId),
+            new ProviderTeam("AWY", "Away Team", null, 0, ConferenceId: awayConferenceId)),
         Status: ProviderStatus.InProgress,
         DisplayClock: "10:00",
         Period: 1,

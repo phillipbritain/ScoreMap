@@ -1724,6 +1724,41 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
+/* A college league's chip with its conferences toggle joined onto its right end, as one split pill, so
+   the two always wrap together. */
+.leagues-league {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.leagues-league > .rail-chip:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* The toggle: the pill's smaller right half, naming the conferences chosen ("All", "SEC +1"), lit while some are. */
+.leagues-conferences__toggle {
+  margin-left: calc(-1 * var(--shape-border-width-thin));
+  padding: var(--spacing) calc(2 * var(--spacing));
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  font-size: var(--typography-caption-font-size);
+}
+
+.leagues-conferences__toggle--chosen {
+  color: var(--rail-on-text);
+}
+
+/* A league's conferences, opened under its sport's leagues: chips set in from a line down their left. */
+.leagues-conferences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(2 * var(--spacing));
+  margin-top: calc(2 * var(--spacing));
+  padding-left: calc(3 * var(--spacing));
+  border-left: var(--shape-border-width-medium) solid var(--palette-divider);
+}
+
 /* Display Settings: "Display venue photo on Game Panel", its switch at the right, above "Card colors". */
 .display-photos {
   display: flex;

@@ -16,8 +16,8 @@ const arrowhead: PlacedGame = {
   endTime: null,
   contest: {
     kind: 'sides',
-    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: '21', rank: null, record: null },
-    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: '17', rank: null, record: null },
+    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: '21', rank: null, record: null, conference: null },
+    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: '17', rank: null, record: null, conference: null },
   },
   clock: '4:12',
   period: 3,

@@ -152,7 +152,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, mapType, venuePhotos } = fields
+  const { hiddenLeagues, topEventsOnly, mapType, venuePhotos, chosenConferences } = fields
   const sportColors = fields.sportColors ?? fields.sportColours
   const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
@@ -164,7 +164,21 @@ function fromSaved(saved: unknown): ViewerSettings {
     leagueColors: colorsFromSaved(leagueColors),
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
     venuePhotos: typeof venuePhotos === 'boolean' ? venuePhotos : firstVisitSettings.venuePhotos,
+    chosenConferences: conferencesFromSaved(chosenConferences),
   }
+}
+
+/** Saved conference choices by league, keeping each conference that is a name and each league left with one. */
+function conferencesFromSaved(saved: unknown): Record<string, string[]> {
+  if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return {}
+  return Object.fromEntries(
+    Object.entries(saved)
+      .map(([league, conferences]): [string, string[]] => [
+        league,
+        Array.isArray(conferences) ? conferences.filter((conference): conference is string => typeof conference === 'string') : [],
+      ])
+      .filter(([, conferences]) => conferences.length > 0),
+  )
 }
 
 /** Saved colors by name, keeping each that is a #rrggbb color. */

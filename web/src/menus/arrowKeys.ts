@@ -34,12 +34,13 @@ type KeyEvent = Pick<KeyboardEvent, 'key' | 'target' | 'preventDefault' | 'defau
 /**
  * Moves focus in a menu for an arrow key, Home or End pressed in it (or on the button that opened it);
  * other keys, and ones another handler has taken, pass by. In a text box, Home and End still move its
- * cursor.
+ * cursor; in a box for a note (the Feedback panel's), all of them do, up and down its lines too.
  */
 export function moveByArrows(event: KeyEvent, menu: HTMLElement): void {
   if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
   const target = event.target as HTMLElement
-  if ((event.key === 'Home' || event.key === 'End') && target.matches('input, textarea')) return
+  if (target.matches('textarea')) return
+  if ((event.key === 'Home' || event.key === 'End') && target.matches('input')) return
   const all = controls(menu)
   const next = arrowStep(event.key, all.indexOf(target), all.length)
   if (next === undefined) return

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { furthestOutZoom, maxZoom, minZoom } from '../globe/zoomLevels'
-import { canZoom, nextPopover } from './railControls'
+import { canZoom, morePress, nextPopover } from './railControls'
 
 describe('canZoom', () => {
   it('zooms either way between the limits', () => {
@@ -51,5 +51,21 @@ describe('nextPopover', () => {
     expect(nextPopover('leagues', 'escape')).toBeNull()
     expect(nextPopover('display', 'outside')).toBeNull()
     expect(nextPopover(null, 'outside')).toBeNull()
+  })
+})
+
+describe('the More button', () => {
+  it('opens More, closing any other popover', () => {
+    expect(nextPopover(null, morePress(null))).toBe('more')
+    expect(nextPopover('leagues', morePress('leagues'))).toBe('more')
+  })
+
+  it('opens the Feedback panel from More, in its place', () => {
+    expect(nextPopover('more', { press: 'feedback' })).toBe('feedback')
+  })
+
+  it('closes More, or the Feedback panel opened from it', () => {
+    expect(nextPopover('more', morePress('more'))).toBeNull()
+    expect(nextPopover('feedback', morePress('feedback'))).toBeNull()
   })
 })

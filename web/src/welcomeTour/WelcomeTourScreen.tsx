@@ -263,6 +263,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   'Display Settings': 'Display Settings: colors for each sport and league',
   'Map Type': 'Map Type: the plain map or satellite imagery',
   Games: 'Games: find any game and go to it',
+  More: 'More: send feedback, or see this tour again',
 }
 
 /** The rail's groups of buttons, which Your controls lights and points at. */

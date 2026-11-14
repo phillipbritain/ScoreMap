@@ -189,8 +189,8 @@ describe('applyTheme', () => {
       rail: 10 + 4 + 6,
       // The controls' surface, shadow, on (fill and text), opacity when off, two corners and two sizes.
       controls: 1 + 1 + 2 + 1 + 2 + 2,
-      // A tooltip's surface.
-      tooltip: 1,
+      // A tooltip's surface and outline.
+      tooltip: 2,
       // The loading screen's dim (a color and an opacity), rocket (two colors and a size) and message.
       loadingScreen: 2 + 3 + 1,
       // The welcome tour's dim opacity and arrow width.

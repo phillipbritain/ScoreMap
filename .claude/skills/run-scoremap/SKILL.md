@@ -59,7 +59,7 @@ npm run page -- score                       # a Live game on screen scores (`fin
    A query on the web URL (`$web/?variant=A`) stays on the app's page. If `localhost` is refused, use `127.0.0.1`: a run open to the network listens on IPv4 only.
 2. **Wait until it's drawn** before a measurement (`ready`): the page is Ready once the first games are on the globe and everything on it has stopped moving, and stays so. For screenshots to compare, start the scenario Paused too (see Scenarios).
 3. **Go somewhere with `camera`**, as `camera -74,40.7 6` for New York, rather than scrolling. Score cards and city labels show at every zoom near the center of the view, so look where the scenario has games: `crowded` over New York, London or Los Angeles.
-4. **Open a game panel.** Pins are drawn by WebGL, so they have no element refs. Take a screenshot, then click the center of a single pin: `mouse move <x> <y>`, `mouse down left`, `mouse up left`. A circle with a number is a cluster, and clicking it zooms in instead. Confirm with `npm run page -- read .game-panel`.
+4. **Open a game panel from the Games popover** (the rail's Games button), the reliable way in automation: a score card or pin off screen takes no click. Open it, then `click '[data-game-id="<id>"]'`, with the id from [the game list](#which-games-are-on). Confirm with `npm run page -- read .game-panel`. To click a pin itself (drawn by WebGL, so no refs): screenshot, then `mouse move <x> <y>`, `mouse down left`, `mouse up left` on a single pin's center; a circle with a number is a cluster, which zooms in.
 5. **Pick from the scenario pill by ref.** The scenario controls are in the Scenario popover, from the top rail at the top left (local runs only): open it, open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
 6. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
 7. **Measure with `npm run page -- read`** where a screenshot can only suggest: an element's size (`read <selector> rect`), whether an image loaded (`read <selector> naturalWidth`, more than 0), which URL it came from (`read <selector> currentSrc`).
@@ -112,6 +112,10 @@ Each set needs nonnegative `home` and `away` games; tiebreak points are optional
 
 `earlyEnding` is only for Final tennis games: `reason` is `retired` or `walkover`, and optional `winner` is the advancing side's abbreviation, whatever the score. A walkover can have no sets. A timeline can set `earlyEnding` alongside `status: "final"`. With no written sets, a standing or timeline game keeps its shorthand scores and has no set scoreline; under play, the existing deterministic rule makes completed sets from those scores (seeded by game id), then starts a 0–0 set.
 
+## Which games are on
+
+`curl "$server/api/games"` lists the games the run is showing, one line each: id, league, status, the sides (away @ home, with poll rank, conference and score), venue and city. `?league=ncaa` keeps the leagues whose name contains it. Read it rather than naming games from memory: a scenario's games change as it plays, and between versions; on real games, with the day.
+
 ## Demos
 
 A **demo** (`GLOSSARY.md`, ADR-0019) is the web URL with `?demo` (any value): `npm run page -- reset "$web/?demo"`. It shows `worldwide` from its own game board, apart from the pill's scenario, which other tabs keep on: switching or pausing that changes nothing in a demo. Every demo tab shares one demo board at Normal, started afresh (clock at noon Eastern) when the first opens, and stopped a minute after the last closes. A demo has no pill, media keys or clock, uses the built-in theme, opens on first-visit settings and the viewer's region, and saves nothing to localStorage. A label at the top says the games are made up. On the live site the same link opens one.
@@ -125,7 +129,12 @@ When no run is going for this clone. Setup and the basic commands (`aspire start
 - **First time on a machine:** set up as the README says. Trusting the development certificate is a Windows prompt the user must accept: ask them to run `! aspire certs trust`. Untrusted, the server shows Unhealthy and `web` waits for it forever.
 - **Start it from a shell clear of `NODE_USE_SYSTEM_CA`** (`Remove-Item Env:NODE_USE_SYSTEM_CA -ErrorAction SilentlyContinue` first, in the same PowerShell call; bash: `unset NODE_USE_SYSTEM_CA`, in the same call). An agent's shell can have it set where the user's doesn't (it isn't a Windows user or machine variable), the run hands it on to Vite, and with it Node ignores the certificate Aspire gives it (`NODE_EXTRA_CA_CERTS`). The run then looks healthy, but every `/api` and `/hubs` request through `web` is a 502, and `aspire logs web` says `self-signed certificate`.
 - **A run watches the server** (`features.defaultWatchEnabled` in `aspire.config.json`): a saved change under `server/` restarts it within seconds, with no `aspire start`. The restart puts it back on `worldwide` at Normal, so switch the scenario and speed again after each change. `dotnet build` and `dotnet test` work alongside a run with `-c Release`: the run holds the Debug build's files, so a Debug build fails to copy over them after a server change.
-- **Stop a run you started** with `aspire stop`; done means `aspire ps` no longer lists it. `aspire stop --all` stops every run on the machine, the user's included.
+
+## Stopping a run
+
+Stop a run you started with `aspire stop` from its root; done means `aspire ps` no longer lists it. **Stop it before its worktree is removed**: with the folder gone, neither `aspire stop` nor `--apphost` can find the run.
+
+An **orphaned run** (still in `aspire ps`, its folder gone) takes `aspire stop --all`, which stops every run on the machine, the user's included: use it only once `aspire ps` shows the orphan is the only run, and ask the user otherwise. Its watched server (`dotnet run` and `ScoreMap.Server`) can outlive it and keep its ports (5147 and 5173 for a plain run). Find what still listens on each with `lsof -nP -iTCP:<port> -sTCP:LISTEN` (PowerShell: `Get-NetTCPConnection -LocalPort <port> -State Listen`, its `OwningProcess`) and stop it; done means nothing listens there.
 
 ## Saved data
 

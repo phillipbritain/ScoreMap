@@ -169,7 +169,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's popovers (Leagues, Display Settings, Games, More and the Feedback panel); on local runs, the top rail's Scenario popover too. The rail's groups of buttons are score cards' glass instead (see [Glass](#glass)) | `background.paper` |
-| `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
+| `components.Tooltip.surface`, `.outline` | A tooltip (see [Tooltips](#tooltips)), a step lighter than the panels it may sit over, and its thin outline, which sets it off from them | `navy.700`, `navy.500` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, and Hide controls' while the rail's buttons show; the count on the Games button and its ring; and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |

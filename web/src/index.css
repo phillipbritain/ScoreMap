@@ -1145,8 +1145,6 @@ body {
 
 /* The globe with the rail and the no-pins message laid over it. */
 .globe-area {
-  /* How wide the Feedback button is at the bottom right, which the game panel keeps clear of too. */
-  --feedback-column: var(--rail-size-button);
   position: relative;
   display: flex;
   flex: 1;
@@ -1170,7 +1168,7 @@ body {
    it, their groups rising and fading one after another, leaving it alone at the top right as Show
    controls (a menu); they drop back down the same way. Folded, they take no room and no pointer. The
    inner box clips them as they fold; its padding, reaching past them, leaves room for the Games count's
-   corner and their shadow, and takes no pointer itself, so the globe beside the rail stays usable. */
+   corner, and takes no pointer itself, so the globe beside the rail stays usable. */
 .rail__buttons {
   display: grid;
   grid-template-rows: 1fr;
@@ -1207,6 +1205,10 @@ body {
 
 .rail__buttons-inner > .rail__group:nth-child(3) {
   transition-delay: 100ms;
+}
+
+.rail__buttons-inner > .rail__group:nth-child(4) {
+  transition-delay: 150ms;
 }
 
 .rail__buttons--collapsed .rail__buttons-inner > .rail__group {
@@ -1250,9 +1252,9 @@ body {
 
 /* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width from
    the rail's top, which the top rail would lie over: it hides while one is open. Not for Map Type's,
-   which sits level with its own button, lower down and only as wide as its two pictures. */
+   which sits level with its own button, lower down and only as wide as its two pictures, nor More's. */
 @media (max-width: 640px) {
-  .globe-area:has(> .rail .rail__popover:not(.rail__popover--map-type)) > .top-rail {
+  .globe-area:has(> .rail .rail__popover:not(.rail__popover--map-type, .rail__popover--more)) > .top-rail {
     display: none;
   }
 }
@@ -1266,8 +1268,8 @@ body {
 }
 
 /* The rail's and the top rail's groups of buttons are glass, as a score card is (see .score-card): its
-   fill as solid as its frost, a sheen from the top left, lit edges and a soft shadow, with the globe
-   behind left sharp. Their popovers stay solid (ADR-0023). So is the Games count (see .rail__badge). */
+   fill as solid as its frost, a sheen from the top left and lit edges, with the globe behind left
+   sharp. Unlike a card, they cast no shadow. Their popovers stay solid (ADR-0023). So is the Games count (see .rail__badge). */
 .rail__group,
 .rail__badge {
   --frost: var(--score-card-frost);
@@ -1283,9 +1285,23 @@ body {
     linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
     linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
     var(--glass-fill);
-  box-shadow:
-    var(--glass-edges),
-    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+  box-shadow: var(--glass-edges);
+}
+
+/* A group's buttons are square where they meet, so the lines between them run straight across; the
+   ends keep the group's corners. */
+.rail__group > .rail__button {
+  border-radius: 0;
+}
+
+.rail__group > .rail__button:first-child {
+  border-top-left-radius: var(--menu-corner);
+  border-top-right-radius: var(--menu-corner);
+}
+
+.rail__group > .rail__button:last-child {
+  border-bottom-left-radius: var(--menu-corner);
+  border-bottom-right-radius: var(--menu-corner);
 }
 
 /* The lines between buttons, faint on the glass so they don't box the icons in. */
@@ -1380,6 +1396,54 @@ body {
 @media (max-width: 640px) {
   .rail__popover {
     width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
+  }
+}
+
+/* The More popover (see More): its few choices as a list of rows, level with its button (Rail sets its
+   top), as narrow as they are, on a phone too. */
+.rail__popover--more {
+  width: auto;
+  padding: var(--spacing);
+}
+
+.more {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A line between the rows, straight across. */
+.more > li + li {
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+}
+
+.more__item {
+  display: flex;
+  align-items: center;
+  gap: calc(2.5 * var(--spacing));
+  width: 100%;
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: none;
+  border-radius: var(--menu-corner);
+  background: none;
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-body2-font-size);
+  font-weight: var(--typography-body2-font-weight);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.more__icon {
+  flex: none;
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+@media (hover: hover) {
+  .more__item:hover {
+    background: var(--palette-action-hover);
   }
 }
 
@@ -2343,57 +2407,7 @@ body {
   }
 }
 
-/* The Feedback button at the bottom right, and its panel opening above it, on the controls' surface.
-   Above the game panel, which narrows to keep clear of the button (see below). */
-.feedback {
-  position: absolute;
-  right: calc(3 * var(--spacing));
-  bottom: calc(3 * var(--spacing));
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: calc(2 * var(--spacing));
-  color: var(--palette-text-primary);
-}
-
-/* A round icon button, the size of the rail's. */
-.feedback__button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: var(--feedback-column);
-  height: var(--feedback-column);
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--controls-surface);
-  box-shadow: var(--controls-shadow);
-  color: var(--palette-text-primary);
-  cursor: pointer;
-}
-
-.feedback__button[hidden] {
-  display: none;
-}
-
-.feedback__icon {
-  width: var(--rail-size-icon);
-  height: var(--rail-size-icon);
-}
-
-.feedback__panel {
-  box-sizing: border-box;
-  width: var(--rail-size-width);
-  max-width: calc(100vw - 6 * var(--spacing));
-  padding: calc(3 * var(--spacing));
-  border-radius: var(--menu-corner);
-  background: var(--controls-surface);
-  box-shadow: var(--controls-shadow);
-  font-size: var(--typography-body2-font-size);
-}
-
+/* The Feedback panel, in the rail's popover from More (see Feedback). */
 .feedback__title {
   display: block;
   margin-bottom: calc(2 * var(--spacing));
@@ -2485,17 +2499,8 @@ body {
 }
 
 @media (hover: hover) {
-  .feedback__button:hover,
   .feedback__action:not(.feedback__action--submit):hover {
     background: var(--palette-action-hover);
-  }
-}
-
-/* On wide screens the game panel narrows, on both sides so it stays centered, to leave the corner to
-   the Feedback button. */
-@media (min-width: 641px) {
-  .feedback ~ .game-panel {
-    width: min(var(--game-panel-size-width), calc(100% - 2 * (var(--feedback-column) + 6 * var(--spacing))));
   }
 }
 
@@ -2505,14 +2510,6 @@ body {
     bottom: 0;
     width: 100%;
     border-radius: 0;
-  }
-}
-
-/* On a phone the Feedback button hides while a game panel is open (for now: to revisit when trying
-   phone sizes). */
-@media (max-width: 640px) {
-  .feedback:has(~ .game-panel) {
-    display: none;
   }
 }
 
@@ -2553,10 +2550,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.globe-area--touring > .feedback {
-  z-index: 3;
 }
 
 /* A light dim, so the live pins still show behind the panel, which catches every press. */
@@ -2923,9 +2916,8 @@ body {
 
 /* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
-   rail's foot (eight buttons in three gaps below its top), so Your controls' rail is never under it and
-   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
-   Feedback button too, which stays usable and never covers the step's own button. */
+   rail's foot (nine buttons in four gaps below its top), so Your controls' rail is never under it and
+   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). */
 @media (max-width: 640px) {
   .welcome-tour {
     align-items: flex-end;
@@ -2933,8 +2925,8 @@ body {
 
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 18 * var(--spacing) - 8 * var(--rail-size-button) - var(--feedback-column));
-    margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
+    max-height: calc(100% - 20 * var(--spacing) - 9 * var(--rail-size-button));
+    margin-bottom: calc(3 * var(--spacing));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }
 }

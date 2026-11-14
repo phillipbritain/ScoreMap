@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Feedback } from '../feedback/Feedback'
+import type { FeedbackContext } from '../feedback/feedbackForm'
 import type { Game } from '../games/game'
 import { GameNavigation } from '../games/GameNavigation'
 import type { Camera } from '../globe/camera'
@@ -9,9 +11,10 @@ import type { League, ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { MapTypes } from './MapTypes'
+import { More } from './More'
 import { railIcon, type RailButtonName } from './railButtons'
 import { HideControlsIcon, RailIcon, ShowControlsIcon } from './railIcons'
-import { canZoom, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
+import { canZoom, morePress, nextPopover, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
   leagues: readonly League[]
@@ -44,12 +47,17 @@ interface RailProps {
    */
   collapsed: boolean
   onCollapsedChange: (collapsed: boolean) => void
+  /** What the viewer is looking at, sent with their feedback (see Feedback). */
+  feedbackContext: () => FeedbackContext
+  /** Starts the welcome tour afresh, from More. */
+  onTourAgain: () => void
 }
 
 /**
- * The rail: a column of icon buttons at the top right of the globe, in three groups: zoom in, zoom
- * out and Home, which move the camera; Leagues, Display Settings and Map Type; and Games (with its
- * count of games on it). Each of the last four opens a popover to the left of the rail: one at a time, closed by
+ * The rail: a column of icon buttons at the top right of the globe, in four groups: zoom in, zoom
+ * out and Home, which move the camera; Leagues, Display Settings and Map Type; Games (with its
+ * count of games on it); and More (sending feedback, the welcome tour again), whose Send feedback opens
+ * the Feedback panel in its place. Each of the last five opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
@@ -73,19 +81,25 @@ export function Rail({
   onSelectGame,
   collapsed: collapsedSaved,
   onCollapsedChange,
+  feedbackContext,
+  onTourAgain,
 }: RailProps) {
   const collapsed = collapsedSaved && !inert
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
+  // The Feedback panel's note, kept while it's closed, so Cancel or a click away keeps it for next time.
+  const [feedbackDraft, setFeedbackDraft] = useState('')
   const popover = useRef<HTMLDivElement>(null)
   const rail = useRef<HTMLDivElement>(null)
-  // Map Type's popover sits level with its button, its two choices beside it, rather than with the rail's top.
-  const [mapTypeTop, setMapTypeTop] = useState(0)
+  // Map Type's and More's popovers sit level with their buttons, their few choices beside them, rather
+  // than with the rail's top.
+  const beside = open === 'mapType' || open === 'more'
+  const [besideTop, setBesideTop] = useState(0)
   useLayoutEffect(() => {
-    const button = rail.current?.querySelector('[data-popover-button="mapType"]')
-    if (open !== 'mapType' || !button || !rail.current) return
-    setMapTypeTop(button.getBoundingClientRect().top - rail.current.getBoundingClientRect().top)
-  }, [open])
+    const button = rail.current?.querySelector(`[data-popover-button="${open}"]`)
+    if (!beside || !button || !rail.current) return
+    setBesideTop(button.getBoundingClientRect().top - rail.current.getBoundingClientRect().top)
+  }, [open, beside])
   const popoverEvent = (event: PopoverEvent) => setOpen((current) => nextPopover(current, event))
 
   useEffect(() => {
@@ -157,20 +171,41 @@ export function Rail({
               onClick={() => popoverEvent({ press: 'games' })}
             />
           </div>
+          <div className="rail__group">
+            <RailButton
+              label="More"
+              popover="more"
+              // Lit while the Feedback panel it opened shows, as that's its own.
+              open={open === 'feedback' ? 'more' : open}
+              onClick={() => popoverEvent(morePress(open))}
+            />
+          </div>
         </div>
       </div>
       {open && (
         <div
           ref={popover}
           id="rail-popover"
-          className={open === 'games' || open === 'mapType' ? `rail__popover rail__popover--${open === 'games' ? 'games' : 'map-type'}` : 'rail__popover'}
-          style={open === 'mapType' ? { top: mapTypeTop } : undefined}
+          className={open in popoverClasses ? `rail__popover rail__popover--${popoverClasses[open]}` : 'rail__popover'}
+          style={beside ? { top: besideTop } : undefined}
           role="dialog"
           aria-label={popoverNames[open]}
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
         >
           {open === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {open === 'mapType' && <MapTypes settings={settings} onChange={onChange} onPicked={() => setOpen(null)} />}
+          {open === 'more' && (
+            <More
+              onFeedback={() => popoverEvent({ press: 'feedback' })}
+              onTourAgain={() => {
+                setOpen(null)
+                onTourAgain()
+              }}
+            />
+          )}
+          {open === 'feedback' && (
+            <Feedback context={feedbackContext} draft={feedbackDraft} onDraftChange={setFeedbackDraft} onClose={() => setOpen(null)} />
+          )}
           {open === 'display' && <DisplaySettings leagues={leagues} settings={settings} onChange={onChange} accent={accent} />}
           {open === 'games' && (
             <GameNavigation
@@ -191,7 +226,17 @@ export function Rail({
 /** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px). */
 const phoneScreen = '(max-width: 640px)'
 
-const popoverNames: Record<RailPopover, string> = { leagues: 'Leagues', display: 'Display Settings', mapType: 'Map Type', games: 'Games' }
+/** The popovers with a look of their own, by their class's modifier. */
+const popoverClasses: Partial<Record<RailPopover, string>> = { games: 'games', mapType: 'map-type', more: 'more' }
+
+const popoverNames: Record<RailPopover, string> = {
+  leagues: 'Leagues',
+  display: 'Display Settings',
+  mapType: 'Map Type',
+  games: 'Games',
+  more: 'More',
+  feedback: 'Feedback',
+}
 
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A popover's

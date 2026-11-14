@@ -14,7 +14,6 @@ import { cityLabelSettings } from './globe/cityLabels'
 import { zoomForMapType, zoomSettings, type ZoomSettings } from './globe/zoomLevels'
 import { asleepSettings } from './live/asleep'
 import { DemoLabel } from './demo/DemoLabel'
-import { Feedback } from './feedback/Feedback'
 import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
@@ -169,22 +168,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           )}
         </div>
         {demo && <DemoLabel />}
-        {/* At the bottom right, before the game panel, which narrows to keep clear of it (on a phone, it
-            hides while a game panel is open instead). */}
-        <Feedback
-          context={() =>
-            feedbackContext({
-              screen: { width: window.innerWidth, height: window.innerHeight },
-              phoneLayout: window.matchMedia(phoneLayout).matches,
-              gameId: selectedGame?.id ?? null,
-              leagues,
-              settings: viewerSettings,
-              demo,
-            })
-          }
-        />
-        {/* Over the bottom of the globe, after the Feedback button so it can sit clear of it. Before the
-            rail, so an open popover lies over it on a phone. */}
+        {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
         {selectedGame && selectedColor && (
           <GamePanel
             ref={panel}
@@ -213,6 +197,17 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
           collapsed={railCollapsed}
           onCollapsedChange={setRailCollapsed}
+          feedbackContext={() =>
+            feedbackContext({
+              screen: { width: window.innerWidth, height: window.innerHeight },
+              phoneLayout: window.matchMedia(phoneLayout).matches,
+              gameId: selectedGame?.id ?? null,
+              leagues,
+              settings: viewerSettings,
+              demo,
+            })
+          }
+          onTourAgain={() => setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))}
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail
@@ -232,8 +227,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             )
           }
         />
-        {/* Over the globe and the rail, which come before it; the Feedback button is lifted above it
-            (see .globe-area--touring). */}
+        {/* Over the globe and the rail, which come before it. */}
         {tourStep && (
           <WelcomeTourScreen
             progress={tourStep}

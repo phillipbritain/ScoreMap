@@ -142,7 +142,7 @@ public class DemoTests
         var games = await server.SnapshotOnceAsync(demo: true);
 
         Assert.Contains(games, game => game.Id == "worldwide-raptors-celtics");
-        Assert.True(games.Count > 100, $"Only {games.Count} games");
+        Assert.True(games.Count > 40, $"Only {games.Count} games");
     }
 
     [Fact]

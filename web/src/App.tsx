@@ -20,6 +20,8 @@ import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
+// PROTOTYPE, throw away: the game panel's close button and top edge (?closeProto=, ?edgeProto=).
+import { PanelLookPrototypeBar } from './panel/PanelLookPrototypeBar'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -124,6 +126,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {import.meta.env.DEV && <PanelLookPrototypeBar />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

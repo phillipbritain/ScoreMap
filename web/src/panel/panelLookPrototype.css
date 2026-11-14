@@ -1,0 +1,158 @@
+/* PROTOTYPE, throw away: the game panel's close button and top edge variants (see panelLookPrototype.ts). */
+
+/* ---- Close button. A is today's (index.css). ---- */
+
+/* B: a frosted circle, inset from the corner, a larger ×. */
+:root[data-close-proto='B'] .game-panel__close {
+  top: calc(2 * var(--spacing));
+  right: calc(2 * var(--spacing));
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--palette-background-default) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
+  color: var(--palette-text-primary);
+  font-size: 18px;
+}
+
+/* C: a bare ×, no fill, quiet until hovered. */
+:root[data-close-proto='C'] .game-panel__close {
+  top: var(--spacing);
+  right: var(--spacing);
+  width: 32px;
+  height: 32px;
+  background: none;
+  color: var(--palette-text-secondary);
+  font-size: 24px;
+  font-weight: 400;
+  text-shadow: 0 1px 3px var(--palette-background-default);
+}
+
+:root[data-close-proto='C'] .game-panel__close:hover {
+  filter: none;
+  color: var(--palette-text-primary);
+}
+
+/* D: an outlined square in the game's color, on a dim pane, inset. */
+:root[data-close-proto='D'] .game-panel__close {
+  top: calc(2 * var(--spacing));
+  right: calc(2 * var(--spacing));
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid var(--game-color);
+  border-radius: var(--shape-border-radius);
+  background: color-mix(in srgb, var(--palette-background-paper) 70%, transparent);
+  color: var(--game-color);
+  font-size: 16px;
+}
+
+/* E: a small disc in the game's color, inset, lifted by a shadow. */
+:root[data-close-proto='E'] .game-panel__close {
+  top: calc(2 * var(--spacing));
+  right: calc(2 * var(--spacing));
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  font-size: 14px;
+}
+
+/* The inset buttons reach further in, so the text beside them keeps further off. */
+:root:is([data-close-proto='B'], [data-close-proto='C'], [data-close-proto='D'], [data-close-proto='E']) .game-panel__venue {
+  padding-right: calc(8 * var(--spacing));
+}
+
+@media (max-width: 960px) {
+  :root:is([data-close-proto='B'], [data-close-proto='C'], [data-close-proto='D'], [data-close-proto='E']) .game-panel__league {
+    padding-right: calc(10 * var(--spacing));
+  }
+}
+
+/* ---- Top edge. A is today's (index.css). The glow in the game's color stays in every one. ---- */
+
+/* B: no top edge. */
+:root[data-edge-proto='B'] .game-panel {
+  border-top: none;
+}
+
+/* C: a thin hairline in the game's color. */
+:root[data-edge-proto='C'] .game-panel {
+  border-top-width: var(--shape-border-width-thin);
+}
+
+/* D: no edge across the panel, only a short accent in the game's color at its top left. */
+:root[data-edge-proto='D'] .game-panel {
+  border-top: none;
+}
+
+:root[data-edge-proto='D'] .game-panel__body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  width: min(30%, 160px);
+  height: var(--shape-border-width-thick);
+  background: var(--game-color);
+  pointer-events: none;
+}
+
+/* E: a neutral divider, no color. */
+:root[data-edge-proto='E'] .game-panel {
+  border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
+}
+
+/* ---- The floating bar that switches variants: not part of any design being judged. Top center, clear
+   of the bottom sheets and between the top rail and the rail. ---- */
+.look-prototype {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 12px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.look-prototype__group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.look-prototype__axis {
+  color: #666;
+}
+
+.look-prototype button {
+  padding: 2px 7px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* One line at phone width: the keys alone, the names on hover. */
+@media (max-width: 700px) {
+  .look-prototype {
+    gap: 6px;
+    padding: 3px 6px;
+  }
+
+  .look-prototype__name {
+    display: none;
+  }
+}

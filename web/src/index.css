@@ -1156,6 +1156,64 @@ body {
   gap: calc(2 * var(--spacing));
 }
 
+/* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
+   it, their groups rising and fading one after another, leaving it alone at the top right as Show
+   controls (a menu); they drop back down the same way. Folded, they take no room and no pointer. The
+   inner box clips them as they fold; its padding, reaching past them, leaves room for the Games count's
+   corner and their shadow, and takes no pointer itself, so the globe beside the rail stays usable. */
+.rail__buttons {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 220ms ease-out, margin 220ms ease-out, opacity 220ms ease-out, visibility 0s;
+}
+
+.rail__buttons--collapsed {
+  grid-template-rows: 0fr;
+  margin-top: calc(-2 * var(--spacing));
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 220ms ease-in, margin 220ms ease-in, opacity 160ms ease-in, visibility 0s 220ms;
+}
+
+.rail__buttons-inner {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+  min-height: 0;
+  margin: calc(-2.5 * var(--spacing)) calc(-3 * var(--spacing));
+  padding: calc(2.5 * var(--spacing)) calc(3 * var(--spacing));
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rail__buttons-inner > .rail__group {
+  pointer-events: auto;
+  transition: opacity 180ms ease-out, translate 180ms ease-out;
+}
+
+.rail__buttons-inner > .rail__group:nth-child(2) {
+  transition-delay: 50ms;
+}
+
+.rail__buttons-inner > .rail__group:nth-child(3) {
+  transition-delay: 100ms;
+}
+
+.rail__buttons--collapsed .rail__buttons-inner > .rail__group {
+  opacity: 0;
+  translate: 0 calc(-3 * var(--spacing));
+  transition-delay: 0ms;
+}
+
+/* With reduce motion the rail's buttons go and come back at once. */
+@media (prefers-reduced-motion: reduce) {
+  .rail__buttons,
+  .rail__buttons--collapsed,
+  .rail__buttons-inner > .rail__group {
+    transition: none;
+  }
+}
+
 /* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
    on the rail's surface, each popover hanging below the row at the screen's left, whichever button
    opened it. */
@@ -1195,12 +1253,34 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--menu-corner);
-  background: var(--rail-surface);
-  box-shadow: var(--rail-shadow);
 }
 
+/* The rail's and the top rail's groups of buttons are glass, as a score card is (see .score-card): its
+   fill as solid as its frost, a sheen from the top left, lit edges and a soft shadow, with the globe
+   behind left sharp. Their popovers stay solid (ADR-0023). So is the Games count (see .rail__badge). */
+.rail__group,
+.rail__badge {
+  --frost: var(--score-card-frost);
+  --glass-shine: calc(1 - var(--frost));
+  --glass-fill: color-mix(in srgb, var(--score-card-fill) calc(var(--frost) * 100%), transparent);
+  --glass-edges:
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent),
+    inset -1px -1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(6% + 22% * var(--glass-shine)), transparent);
+}
+
+.rail__group {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
+    linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
+    var(--glass-fill);
+  box-shadow:
+    var(--glass-edges),
+    0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+}
+
+/* The lines between buttons, faint on the glass so they don't box the icons in. */
 .rail__group > .rail__button + .rail__button {
-  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
+  border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 12%, transparent);
 }
 
 .rail__button {
@@ -1228,12 +1308,15 @@ body {
   cursor: default;
 }
 
-/* A popover's button, while its popover is open, in the theme's open color (gold). */
+/* A popover's button, while its popover is open, in the theme's open color (gold); Hide controls too,
+   while the rail's buttons show. */
 .rail__button[aria-expanded='true'] {
   color: var(--rail-open);
 }
 
-/* A count on a button's corner (the Games button's games), in the open color. */
+
+/* A count on a button's corner (the Games button's games): a chip of the rail's glass, ringed and
+   numbered in the open color, as a score card is outlined in its game's. */
 .rail__button { position: relative; }
 
 .rail__badge {
@@ -1244,8 +1327,13 @@ body {
   min-width: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--rail-open);
-  color: var(--palette-background-default);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(14% * var(--glass-shine)), transparent) 0%, transparent 45%),
+    var(--glass-fill);
+  box-shadow:
+    inset 0 0 0 var(--shape-border-width-thin) var(--rail-open),
+    inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent);
+  color: var(--rail-open);
   font-size: 11px;
   font-weight: 700;
   line-height: 16px;
@@ -2829,7 +2917,7 @@ body {
 
 /* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
    the game panel sits there, its arrows running up from its top edge. It stops a little short of the
-   rail's foot (seven buttons in two gaps below its top), so Your controls' rail is never under it and
+   rail's foot (eight buttons in three gaps below its top), so Your controls' rail is never under it and
    its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). It stops above the
    Feedback button too, which stays usable and never covers the step's own button. */
 @media (max-width: 640px) {
@@ -2839,7 +2927,7 @@ body {
 
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 16 * var(--spacing) - 7 * var(--rail-size-button) - var(--feedback-column));
+    max-height: calc(100% - 18 * var(--spacing) - 8 * var(--rail-size-button) - var(--feedback-column));
     margin-bottom: calc(5 * var(--spacing) + var(--feedback-column));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }
@@ -2885,8 +2973,11 @@ body {
   scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
 }
 
-/* The games, scrolling under the search. */
+/* The games, scrolling under the search. Its own stacking context, so the pinned league headings, lifted
+   over the games, stay under its scrollbar: Safari on iPhone draws the scrollbar over the list, and
+   drew it behind them. */
 .game-navigation ul {
+  isolation: isolate;
   min-height: 0;
   margin: 0;
   padding: 0;

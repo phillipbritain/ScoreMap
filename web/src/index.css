@@ -407,10 +407,8 @@ body {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
 }
 
-/* StreamEast's logo, a red badge, a little taller than ESPN's wordmark so its name reads at the same size;
-   a look being tried, so its size is here rather than in the theme. */
+/* StreamEast's logo, a red badge, with the theme's corners. */
 .game-panel__logo-link img.game-panel__stream-logo {
-  height: calc(5 * var(--spacing));
   border-radius: var(--shape-border-radius);
 }
 

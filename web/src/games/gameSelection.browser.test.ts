@@ -28,8 +28,8 @@ function game(id: string): Game {
     endTime: null,
     contest: {
       kind: 'sides',
-      home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: home, rank: null, record: null },
-      away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: away, rank: null, record: null },
+      home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: null, score: home, rank: null, record: null, conference: null },
+      away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: null, score: away, rank: null, record: null, conference: null },
     },
     clock,
     period: null,
@@ -219,8 +219,8 @@ it("names a tennis match's home player first in its panel, as its score card doe
     sport: 'Tennis',
     contest: {
       kind: 'sides',
-      home: { abbreviation: 'SIN', fullName: 'Jannik Sinner', logoUrl: null, score: '1', rank: null, record: null },
-      away: { abbreviation: 'ALC', fullName: 'Carlos Alcaraz', logoUrl: null, score: '0', rank: null, record: null },
+      home: { abbreviation: 'SIN', fullName: 'Jannik Sinner', logoUrl: null, score: '1', rank: null, record: null, conference: null },
+      away: { abbreviation: 'ALC', fullName: 'Carlos Alcaraz', logoUrl: null, score: '0', rank: null, record: null, conference: null },
     },
   }
   await show([match])

@@ -13,8 +13,8 @@ const arrowhead: Game = {
   endTime: null,
   contest: {
     kind: 'sides',
-    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21', rank: null, record: null },
-    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17', rank: null, record: null },
+    home: { abbreviation: 'KC', fullName: 'Kansas City Chiefs', logoUrl: 'https://a.espncdn.com/kc.png', score: '21', rank: null, record: null, conference: null },
+    away: { abbreviation: 'BUF', fullName: 'Buffalo Bills', logoUrl: 'https://a.espncdn.com/buf.png', score: '17', rank: null, record: null, conference: null },
   },
   clock: '4:12',
   period: 3,

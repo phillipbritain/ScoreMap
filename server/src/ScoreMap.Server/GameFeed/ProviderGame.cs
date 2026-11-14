@@ -181,10 +181,12 @@ public enum EarlyEndingReason
 /// cricket, <see cref="Score"/> is the team's runs and <see cref="Innings"/> the rest of its innings;
 /// it's null in every other sport, and in cricket before the team bats. <see cref="Rank"/> is its place
 /// in its league's poll (college sports), and <see cref="Record"/> its season so far as its sport writes
-/// it: wins and losses ("5-2"), in soccer wins, draws and losses ("2-2-3").
+/// it: wins and losses ("5-2"), in soccer wins, draws and losses ("2-2-3"). <see cref="ConferenceId"/> is the
+/// ESPN group id of its conference, in the college leagues that give one.
 /// </summary>
 public sealed record ProviderTeam(string Abbreviation, string FullName, string? LogoUrl, int? Score,
-    ProviderCity? HomeCity = null, ProviderInnings? Innings = null, int? Rank = null, string? Record = null);
+    ProviderCity? HomeCity = null, ProviderInnings? Innings = null, int? Rank = null, string? Record = null,
+    string? ConferenceId = null);
 
 /// <summary>
 /// A cricket team's innings beyond its runs. <see cref="Wickets"/> is null when the side is all out, as

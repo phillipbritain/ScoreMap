@@ -458,6 +458,24 @@ public class EspnGameFeedProviderTests
     }
 
     [Fact]
+    public async Task College_teams_carry_their_conference_id()
+    {
+        // Villanova (Big East, 4) at Notre Dame (ACC, 2): ESPN's ids are its basketball ones.
+        var games = await FetchFixtureAsync("mens-college-basketball.json", "basketball/mens-college-basketball?groups=50");
+
+        var game = Assert.Single(games);
+        Assert.Equal(("4", "2"), (game.Sides().Home.ConferenceId, game.Sides().Away.ConferenceId));
+    }
+
+    [Fact]
+    public async Task Teams_in_a_feed_without_conferences_have_none()
+    {
+        var games = await FetchFixtureAsync("college-hockey.json", "hockey/mens-college-hockey");
+
+        Assert.All(games, game => Assert.Equal((null, null), (game.Sides().Home.ConferenceId, game.Sides().Away.ConferenceId)));
+    }
+
+    [Fact]
     public async Task Unranked_teams_have_no_rank()
     {
         // ESPN ranks every team outside its poll 99.

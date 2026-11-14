@@ -205,6 +205,21 @@ public sealed class ScenarioGameMakerTests
         Assert.NotNull(final.Sides.Away.Score);
     }
 
+    [Fact]
+    public void A_made_up_game_carries_each_teams_conference()
+    {
+        var league = new League { Key = "football/college-football", Name = "NCAA Football", Sport = Sport.Football };
+        var teams = new ScenarioTeamList(new Dictionary<string, IReadOnlyList<ScenarioTeam>>
+        {
+            [league.Name] = [new ScenarioTeam("Alabama Crimson Tide", "ALA", null, "8"), new ScenarioTeam("Clemson Tigers", "CLEM", null, "1")],
+        });
+        var maker = new ScenarioGameMaker([league], teams);
+
+        var game = maker.Make("made", At, GameStatus.Live, [], new Random(1));
+
+        Assert.Equal(["1", "8"], new[] { game.Sides.Home.ConferenceId, game.Sides.Away.ConferenceId }.Order());
+    }
+
     private static void AssertClockFits(ScenarioGame game, League league)
     {
         Assert.InRange(game.Period!.Value, 1, league.Regulation);

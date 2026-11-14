@@ -21,6 +21,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     [Theory]
     [InlineData("crowded")]
     [InlineData("worldwide")]
+    [InlineData("worldwide-busy")]
     public async Task Live_games_usually_finish_with_regular_finals(string name)
     {
         using var server = new ScoreMapServer { UseShippedScenarios = true };
@@ -70,7 +71,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
-        Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "worldwide"], listing.Scenarios);
+        Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "worldwide", "worldwide-busy"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
@@ -81,6 +82,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     [Theory]
     [InlineData("crowded", true)]
     [InlineData("worldwide", true)]
+    [InlineData("worldwide-busy", true)]
     [InlineData("slow-initial-load", true)]
     [InlineData("edge-cases", false)]
     [InlineData("empty", false)]
@@ -113,14 +115,27 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Worldwide_shows_about_150_games_Upcoming_Live_and_Final()
+    public async Task Worldwide_shows_about_60_games_Upcoming_Live_and_Final()
     {
         await using var server = new ScoreMapServer { UseShippedScenarios = true };
 
         await using var client = await server.ConnectClientAsync();
-        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 140);
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 55);
 
-        Assert.InRange(snapshot.Count, 140, 160);
+        Assert.InRange(snapshot.Count, 55, 65);
+        Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
+        Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 15, "games in at least 15 countries");
+    }
+
+    [Fact]
+    public async Task Worldwide_busy_shows_a_game_at_every_worldwide_venue_Upcoming_Live_and_Final()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "worldwide-busy");
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 150);
+
+        Assert.InRange(snapshot.Count, 150, 160);
         Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
         Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 20, "games in at least 20 countries");
     }
@@ -132,7 +147,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        // At 1×, worldwide scores every ~15 s or so (see the run-scoremap skill).
+        // At 1×, worldwide scores within half a minute (see the run-scoremap skill).
         await AdvanceUntilAsync(server, client, "a score change", c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
     }
 

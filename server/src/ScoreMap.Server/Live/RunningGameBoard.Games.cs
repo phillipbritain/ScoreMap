@@ -194,7 +194,7 @@ public sealed partial class RunningGameBoard
                 status,
                 game.Status == ProviderStatus.Delayed,
                 endTime,
-                ToContest(game.Contest),
+                ToContest(game.Contest, league),
                 ClockLine.For(game, league),
                 game.Period,
                 ClutchTime.For(game, league),
@@ -227,9 +227,9 @@ public sealed partial class RunningGameBoard
             };
         }
 
-        private static GameContest ToContest(ProviderContest contest) => contest switch
+        private static GameContest ToContest(ProviderContest contest, League league) => contest switch
         {
-            ProviderSides sides => new GameSides(ToTeam(sides.Home), ToTeam(sides.Away)),
+            ProviderSides sides => new GameSides(ToTeam(sides.Home, league), ToTeam(sides.Away, league)),
             ProviderField field => new GameField(field.Entries
                 .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl, ToParText(entrant.ToPar)))
                 .ToList()),
@@ -243,8 +243,9 @@ public sealed partial class RunningGameBoard
 
         private static GameBoutSide ToBoutSide(ProviderBoutSide side) => new(side.Name, side.ShortName, side.FlagUrl, side.Record, side.Winner);
 
-        private static GameTeam ToTeam(ProviderTeam team) =>
-            new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record);
+        private static GameTeam ToTeam(ProviderTeam team, League league) =>
+            new(team.Abbreviation, team.FullName, team.LogoUrl, ScoreText(team), team.Rank, team.Record,
+                league.ConferenceName(team.ConferenceId));
 
         /// <summary>A score to par as golf writes it: "-12", "E" (level) or "+3".</summary>
         private static string? ToParText(int? toPar) => toPar switch

@@ -91,7 +91,8 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
 
     private static TimeSpan Minutes(int minutes) => TimeSpan.FromMinutes(minutes);
 
-    private static ProviderTeam Team(ScenarioTeam team) => new(team.Abbreviation, team.Name, team.LogoUrl, null);
+    private static ProviderTeam Team(ScenarioTeam team) =>
+        new(team.Abbreviation, team.Name, team.LogoUrl, null, ConferenceId: team.ConferenceId);
 }
 
 /// <summary>A team in a game showing, by its league's key and its name, which the game maker won't put in another game.</summary>

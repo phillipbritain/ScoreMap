@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { GameSides, GameTeam } from './game'
 import { sidesTopFirst } from './sides'
 
-const side = (abbreviation: string): GameTeam => ({ abbreviation, fullName: abbreviation, logoUrl: null, score: null, rank: null, record: null })
+const side = (abbreviation: string): GameTeam => ({ abbreviation, fullName: abbreviation, logoUrl: null, score: null, rank: null, record: null, conference: null })
 const home = side('HOM')
 const away = side('AWY')
 const sides: GameSides = { kind: 'sides', home, away }

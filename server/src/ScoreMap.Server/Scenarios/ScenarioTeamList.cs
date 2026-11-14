@@ -22,5 +22,5 @@ public sealed class ScenarioTeamList(IReadOnlyDictionary<string, IReadOnlyList<S
             ?? throw new InvalidDataException($"The scenario team list {path} is empty"));
 }
 
-/// <summary>A real team: full name, abbreviation and ESPN logo URL.</summary>
-public sealed record ScenarioTeam(string Name, string Abbreviation, string? LogoUrl);
+/// <summary>A real team: full name, abbreviation, ESPN logo URL and, in a college league, its conference's ESPN group id.</summary>
+public sealed record ScenarioTeam(string Name, string Abbreviation, string? LogoUrl, string? ConferenceId = null);

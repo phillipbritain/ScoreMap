@@ -37,4 +37,22 @@ public sealed class League
     /// the first time the board sees it is estimated to have ended at this planned end.
     /// </summary>
     public TimeSpan PlannedLength { get; init; } = TimeSpan.FromHours(3);
+
+    /// <summary>
+    /// The league's conferences the viewer can filter its games by (college leagues), each by its ESPN group
+    /// id, which differs from sport to sport; none for a league without them.
+    /// </summary>
+    public IReadOnlyList<Conference> Conferences { get; init; } = [];
+
+    /// <summary>The name of the conference with this ESPN group id; null when the id is null or not one of <see cref="Conferences"/>.</summary>
+    public string? ConferenceName(string? id) =>
+        id is null ? null : Conferences.FirstOrDefault(conference => conference.Id == id)?.Name;
+}
+
+/// <summary>A conference in a college league: its ESPN group id and the short name the viewer picks it by ("SEC").</summary>
+public sealed class Conference
+{
+    public required string Id { get; init; }
+
+    public required string Name { get; init; }
 }

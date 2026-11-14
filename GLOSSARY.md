@@ -10,7 +10,11 @@ _Avoid_: American football, football (for soccer), rugby union (say rugby)
 
 **League**:
 A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Premier League or the World Cup. A league belongs to exactly one sport, and it is the unit users show or hide in Leagues on the rail.
-_Avoid_: Competition, tournament, conference, governing body (e.g. "NCAA" or "FIFA" alone)
+_Avoid_: Competition, tournament, conference (a part of a league), governing body (e.g. "NCAA" or "FIFA" alone)
+
+**Conference**:
+A group of teams within a college league, such as the SEC or the ACC in NCAA Football, as ESPN groups them. In Leagues on the rail a viewer can narrow a league with conferences to some of them: it then shows only its games with a team, either side, in a chosen one.
+_Avoid_: Division, group (ESPN's word for it in its feed)
 
 **Game**:
 A single contest in a league at one venue, starting at a scheduled time, between two sides, among a field, or as a fight card. In tennis, a game is one match, not the tournament it's part of; in F1, it is the race, not practice or qualifying (ADR-0020).

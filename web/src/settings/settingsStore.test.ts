@@ -26,6 +26,7 @@ describe('settingsStore', () => {
       leagueColors: { NFL: '#fedcba' },
       mapType: 'satellite' as const,
       venuePhotos: false,
+      chosenConferences: { 'NCAA Football': ['SEC', 'ACC'] },
     }
 
     settingsStore(() => storage).save(chosen)
@@ -145,6 +146,7 @@ describe('settingsStore', () => {
       leagueColors: {},
       mapType: 'plain',
       venuePhotos: true,
+      chosenConferences: {},
     })
   })
 
@@ -159,6 +161,7 @@ describe('settingsStore', () => {
       leagueColors: {},
       mapType: 'plain',
       venuePhotos: true,
+      chosenConferences: {},
     })
   })
 
@@ -187,6 +190,23 @@ describe('settingsStore', () => {
     storage.setItem('scoremap.settings', JSON.stringify({ leagueColors: { NFL: '#abcdef', NBA: 'blue', MLS: 3 } }))
 
     expect(settingsStore(() => storage).load().leagueColors).toEqual({ NFL: '#abcdef' })
+  })
+
+  it('keeps each saved conference choice it understands and drops the rest', () => {
+    const storage = memoryStorage()
+    storage.setItem(
+      'scoremap.settings',
+      JSON.stringify({ chosenConferences: { 'NCAA Football': ['SEC', 3], "NCAA Men's Basketball": 'ACC', NFL: null } }),
+    )
+
+    expect(settingsStore(() => storage).load().chosenConferences).toEqual({ 'NCAA Football': ['SEC'] })
+  })
+
+  it('loads settings saved before conferences could be chosen with none chosen', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
+
+    expect(settingsStore(() => storage).load().chosenConferences).toEqual({})
   })
 
   it('loads colors saved under their old British names, sportColours and leagueColours', () => {
@@ -237,6 +257,7 @@ describe('settingsStore', () => {
         leagueColors: {},
         mapType: 'plain',
         venuePhotos: true,
+        chosenConferences: {},
       })
     },
   )

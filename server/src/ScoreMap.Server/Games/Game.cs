@@ -138,10 +138,12 @@ public sealed record GameSet(string Name, string Score, string? Winner);
 /// ("24"), in cricket runs and wickets ("186/6"), runs alone when the side is all out, and in tennis sets
 /// won; null before it scores anything (before the game starts, or in cricket before the team bats). <see cref="Rank"/> is its place
 /// in its league's poll (college sports), and <see cref="Record"/> its season so far ("5-2"; in soccer
-/// wins, draws and losses, "2-2-3"); each null where the feed gives none.
+/// wins, draws and losses, "2-2-3"); each null where the feed gives none. <see cref="Conference"/> is the
+/// name of its conference among its league's configured ones ("SEC"); null in a league without them, or
+/// for a team in none of them.
 /// </summary>
 public sealed record GameTeam(string Abbreviation, string FullName, string? LogoUrl, string? Score,
-    int? Rank = null, string? Record = null);
+    int? Rank = null, string? Record = null, string? Conference = null);
 
 /// <summary>
 /// Where a game is played. <see cref="Region"/> is its state, province or the like, spelled out in full

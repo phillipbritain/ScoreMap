@@ -3189,7 +3189,7 @@ body {
 /* Too short for the rail's buttons in one column: Games and More move to a second column, left of the
    rest, level with the zoom buttons (Games with Zoom in, More with Home), so the rail ends well above the
    screen's foot. Its gap leaves room for the Games count's corner. */
-@media (max-height: 420px) {
+@media (max-height: 370px) {
   .rail {
     align-items: flex-end;
   }
@@ -3198,7 +3198,7 @@ body {
     display: grid;
     grid-template-columns: auto auto;
     align-items: start;
-    gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+    gap: var(--rail-group-gap) calc(3 * var(--spacing));
   }
 
   .rail__buttons-inner > .rail__group:nth-child(1) {

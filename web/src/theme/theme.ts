@@ -585,8 +585,8 @@ const settings = {
       message: { corner },
       size: { key: pixels, icon: pixels },
     },
-    /** A tooltip: its surface (solid, not glass: ADR-0023). */
-    Tooltip: { surface: color },
+    /** A tooltip: its surface (solid, not glass: ADR-0023) and the outline that sets it off from a panel under it. */
+    Tooltip: { surface: color, outline: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed

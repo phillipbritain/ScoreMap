@@ -267,6 +267,21 @@ describe('globeStyle', () => {
     }
   })
 
+  it('names each state and country once, in English, falling back to its Latin spelling, then its own name', () => {
+    const named = (id: string, properties: Record<string, string>) => {
+      const parsed = createExpression(layout(id)['text-field'] as ExpressionSpecification, id)
+      if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
+      return parsed.value.evaluate({ zoom: 3 }, { type: 'Point', properties } as never)
+    }
+    const russia = { name: 'Россия', 'name:latin': 'Rossiya', 'name:nonlatin': 'Россия', 'name:en': 'Russia', name_en: 'Russia' }
+    for (const id of ['label_state', 'label_country_1']) {
+      expect(named(id, russia), id).toBe('Russia')
+      expect(named(id, { name: 'Монгол улс', name_en: 'Mongolia' }), id).toBe('Mongolia')
+      expect(named(id, { name: 'Ελλάδα', 'name:latin': 'Elláda' }), id).toBe('Elláda')
+      expect(named(id, { name: 'Chile' }), id).toBe('Chile')
+    }
+  })
+
   it('writes state and country names in capitals, city names as they are', () => {
     for (const id of ['label_state', 'label_country_1']) expect(layout(id)['text-transform'], id).toBe('uppercase')
     for (const id of ['city_names', 'city_names_game', 'city_names_card']) expect(layout(id)['text-transform'], id).toBe('none')

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   chosenConferences,
   isLeagueOn,
@@ -26,7 +26,7 @@ const offNoteDuration = 4000
  * The rail's Leagues popover: what to show on the globe, Top Events (as on ESPN's front page) or My
  * leagues, as two radio options each saying what it shows, then, for My leagues, an "All leagues" chip to switch every league at once, then leagues
  * grouped under their sport, each a chip to switch on or off, and each sport's name switching all of
- * its leagues. A league with conferences (college leagues) has a toggle after its chip that opens its
+ * its leagues. A league with conferences (college leagues) has a toggle joined onto its chip that opens its
  * conferences under its sport, to narrow its games to some of them. On Top Events the leagues stay in
  * view, grayed out, as they'll be when switched back; a click on them says why they're off and how to
  * pick them.
@@ -117,25 +117,29 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
                 <div className="leagues-chips">
                   {group.leagues.map((league) => {
                     const leagueOn = isLeagueOn(settings, league.name)
+                    const chip = (
+                      <button
+                        key={league.name}
+                        type="button"
+                        aria-pressed={leagueOn}
+                        className="rail-chip"
+                        onClick={() => onChange(withLeague(settings, league.name, !leagueOn))}
+                      >
+                        {league.name}
+                      </button>
+                    )
+                    if (league.conferences.length === 0) return chip
                     return (
-                      <Fragment key={league.name}>
-                        <button
-                          type="button"
-                          aria-pressed={leagueOn}
-                          className="rail-chip"
-                          onClick={() => onChange(withLeague(settings, league.name, !leagueOn))}
-                        >
-                          {league.name}
-                        </button>
-                        {league.conferences.length > 0 && (
-                          <ConferencesToggle
-                            league={league.name}
-                            chosen={chosenConferences(settings, league.name)}
-                            open={openConferences === league.name}
-                            onClick={() => setOpenConferences(openConferences === league.name ? null : league.name)}
-                          />
-                        )}
-                      </Fragment>
+                      // A college league: its chip and conferences toggle as one split pill.
+                      <span key={league.name} className="leagues-league">
+                        {chip}
+                        <ConferencesToggle
+                          league={league.name}
+                          chosen={chosenConferences(settings, league.name)}
+                          open={openConferences === league.name}
+                          onClick={() => setOpenConferences(openConferences === league.name ? null : league.name)}
+                        />
+                      </span>
                     )
                   })}
                 </div>
@@ -189,15 +193,19 @@ interface ConferencesToggleProps {
   onClick: () => void
 }
 
-/** Opens or closes a league's conferences, naming those chosen ("SEC", "SEC +1"), or "Conferences" when it shows all. */
+/** Opens or closes a league's conferences, naming those chosen ("SEC", "SEC +1"), or "All" when it shows all of them. */
 function ConferencesToggle({ league, chosen, open, onClick }: ConferencesToggleProps) {
-  const label = chosen.length === 0 ? 'Conferences' : chosen.length === 1 ? chosen[0] : `${chosen[0]} +${chosen.length - 1}`
+  const label = chosen.length === 0 ? 'All' : chosen.length === 1 ? chosen[0] : `${chosen[0]} +${chosen.length - 1}`
   return (
     <button
       type="button"
       aria-expanded={open}
       aria-label={`${league} conferences: ${chosen.length === 0 ? 'all' : chosen.join(', ')}`}
-      className={chosen.length === 0 ? 'leagues-conferences__toggle' : 'leagues-conferences__toggle leagues-conferences__toggle--chosen'}
+      className={
+        chosen.length === 0
+          ? 'rail-chip leagues-conferences__toggle'
+          : 'rail-chip leagues-conferences__toggle leagues-conferences__toggle--chosen'
+      }
       onClick={onClick}
     >
       {label}

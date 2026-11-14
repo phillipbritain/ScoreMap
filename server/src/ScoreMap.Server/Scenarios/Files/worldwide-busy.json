@@ -1,0 +1,11 @@
+// worldwide-busy: the worst case, a game at every one of worldwide's venues (about 160) at once, in
+// worldwide's mix of Upcoming, Live and Final, playing as worldwide's do. For the globe at its most
+// crowded: pins, clusters and score cards everywhere, and the app under heavy, steady change.
+{
+  "fill": {
+    "count": 159,
+    "group": "worldwide",
+    "mix": { "live": 4, "upcoming": 3, "final": 2 }
+  },
+  "play": true
+}

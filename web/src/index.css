@@ -1547,7 +1547,7 @@ body {
 
 .leagues-scope__option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: calc(3 * var(--spacing));
   padding: calc(2.5 * var(--spacing)) calc(3 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
@@ -1574,13 +1574,12 @@ body {
   }
 }
 
-/* The radio dot: a ring, filled in the lit color when chosen. */
+/* The radio dot: a ring, filled in the lit color when chosen, centered beside its name and note. */
 .leagues-scope__dot {
   position: relative;
   flex: none;
   width: calc(4.5 * var(--spacing));
   height: calc(4.5 * var(--spacing));
-  margin-top: calc(0.25 * var(--spacing));
   border: var(--shape-border-width-medium) solid currentColor;
   border-radius: 50%;
 }

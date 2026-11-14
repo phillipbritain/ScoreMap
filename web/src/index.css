@@ -101,13 +101,19 @@ body {
    names and the venue take one line each, so the panel is as tall for every game (bar the band) and
    doesn't jump as the viewer clicks between them; the panel never scrolls. */
 .game-panel {
+  /* How far it sits above the screen's foot: none on a phone (see below). */
+  --game-panel-bottom: calc(3 * var(--spacing));
   position: absolute;
   left: 50%;
-  bottom: calc(3 * var(--spacing));
+  bottom: var(--game-panel-bottom);
   z-index: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  /* Never so tall that its close tab, at its top right, reaches the rail above it (--rail-bottom, see
+     useRailClearance): its band gives way and scrolls instead (see .game-panel__band). On a screen too
+     short for both, such as a phone on its side, it keeps a quarter of the screen. */
+  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-size-close-height) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   border-top: var(--shape-border-width-thick) solid var(--game-color);
   /* Square at the top right, where the close button's tab rises from it. */
@@ -126,6 +132,7 @@ body {
 .game-panel__body {
   display: flex;
   flex-direction: column;
+  min-height: 0;
   overflow: clip;
   border-radius: inherit;
 }
@@ -435,9 +442,12 @@ body {
   display: flex;
   gap: calc(4 * var(--spacing));
   box-sizing: border-box;
-  flex-shrink: 0;
+  /* The part of the panel that gives way, scrolling, when the panel would reach the rail. */
+  flex-shrink: 1;
+  min-height: 0;
   padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
   background: var(--game-panel-surface-bottom);
   line-height: 1.3;
@@ -510,6 +520,11 @@ body {
 .game-panel__last-score {
   margin-top: var(--spacing);
   font-size: var(--typography-caption-font-size);
+}
+
+/* Cricket's room for a last score, sized as one but left empty (see lastScoreSlot). */
+.game-panel__last-score--held {
+  visibility: hidden;
 }
 
 /* One line, cut short with an ellipsis, such as a last score's description. */
@@ -608,6 +623,8 @@ body {
   .game-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    /* The band's row gives way, scrolling, when the panel would reach the rail. */
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       'score score'
       'band band'
@@ -2507,7 +2524,7 @@ body {
 /* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
 @media (max-width: 640px) {
   .game-panel {
-    bottom: 0;
+    --game-panel-bottom: 0px;
     width: 100%;
     border-radius: 0;
   }

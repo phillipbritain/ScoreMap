@@ -8,7 +8,7 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { listedWatchLinks } from './watchLinks'
-import { hasLastScoreSlot } from './lastScoreSlot'
+import { lastScoreSlot } from './lastScoreSlot'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -84,7 +84,14 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
                 {progress}
               </div>
             )}
-            {hasLastScoreSlot(game) && <LastScore game={game} />}
+            {lastScoreSlot(game) === 'shown' && <LastScore game={game} />}
+            {/* Cricket's room for it, left empty, so its panel is as tall as the other team sports'. */}
+            {lastScoreSlot(game) === 'held' && (
+              <div className="game-panel__last-score game-panel__last-score--held" aria-hidden="true">
+                <div className="game-panel__label">Last score</div>
+                <div className="game-panel__one-line">None yet</div>
+              </div>
+            )}
           </div>
 
           {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none or the viewer switched photos off. */}
@@ -166,7 +173,7 @@ function WatchLinks({ links }: { links: StreamLink[] }) {
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
  * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Before a
  * score, "None yet", so the panel is as tall either way. Only for sports that score in plays (see
- * hasLastScoreSlot).
+ * lastScoreSlot).
  */
 function LastScore({ game }: { game: Game }) {
   const { lastScore } = game

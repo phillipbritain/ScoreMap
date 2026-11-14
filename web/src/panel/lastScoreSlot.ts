@@ -1,13 +1,17 @@
 import type { Game } from '../games/game'
 
-/** Sports with two sides whose feeds give no scoring plays: tennis's sets show in the band, cricket's score is its runs. */
-const sportsWithoutScoringPlays = new Set(['Tennis', 'Cricket'])
-
 /**
- * Whether the game panel has a Last score slot for the game: only where a game scores in plays (a goal,
- * a basket, a touchdown), so a field (a race, a golf tournament), a fight card, tennis and cricket have
- * none. Held with "None yet" before the first score, so the panel keeps its height as the game goes on.
+ * What the game panel's score block has where the last score goes:
+ * - `shown`: the last score, or "None yet" before one, for sports that score in plays (a goal, a basket,
+ *   a touchdown);
+ * - `held`: its room left empty, for cricket, whose feed gives no scoring plays (its runs are its score),
+ *   so its panel is as tall as the other team sports';
+ * - `none`: nothing, for a field (a race, a golf tournament), a fight card and tennis, whose bands under
+ *   the strip make their panels taller anyway.
  */
-export function hasLastScoreSlot(game: Pick<Game, 'sport' | 'contest'>): boolean {
-  return game.contest.kind === 'sides' && !sportsWithoutScoringPlays.has(game.sport)
+export type LastScoreSlot = 'shown' | 'held' | 'none'
+
+export function lastScoreSlot(game: Pick<Game, 'sport' | 'contest'>): LastScoreSlot {
+  if (game.contest.kind !== 'sides' || game.sport === 'Tennis') return 'none'
+  return game.sport === 'Cricket' ? 'held' : 'shown'
 }

@@ -10,11 +10,11 @@ export interface LookVariant {
 }
 
 export const closeVariants: readonly LookVariant[] = [
-  { key: 'A', name: 'Today: game-color block in the corner' },
-  { key: 'B', name: 'Frosted circle, inset' },
-  { key: 'C', name: 'Bare ×, no fill' },
-  { key: 'D', name: 'Outlined square in the game color' },
-  { key: 'E', name: 'Game-color disc, inset' },
+  { key: 'A', name: 'Before: game-color tab at the top right' },
+  { key: 'B', name: 'Labeled tab: CLOSE ×' },
+  { key: 'C', name: 'Frosted circle floating above the corner' },
+  { key: 'D', name: 'Tab in the panel\'s own surface' },
+  { key: 'E', name: 'Pull tab at the top center, ⌄' },
 ]
 
 export const edgeVariants: readonly LookVariant[] = [

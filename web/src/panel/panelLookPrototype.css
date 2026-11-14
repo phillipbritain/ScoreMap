@@ -1,74 +1,88 @@
 /* PROTOTYPE, throw away: the game panel's close button and top edge variants (see panelLookPrototype.ts). */
 
-/* ---- Close button. A is today's (index.css). ---- */
+/* ---- Close button, outside the panel. A is the one from before (index.css): a tab in the game's color
+   rising from the panel's top edge at its right end, the panel's corner square under it. Each variant
+   says how far it reaches above the panel (--game-panel-close-reach), which the panel keeps clear of the
+   rail too. ---- */
 
-/* B: a frosted circle, inset from the corner, a larger ×. */
+/* B: a wider tab, labeled. */
 :root[data-close-proto='B'] .game-panel__close {
-  top: calc(2 * var(--spacing));
-  right: calc(2 * var(--spacing));
+  width: auto;
+  padding: 0 calc(2.5 * var(--spacing));
+  font-size: 0;
+}
+
+:root[data-close-proto='B'] .game-panel__close::before {
+  content: 'Close  ×';
+  white-space: pre;
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+/* C: a frosted circle floating just above the panel's top right corner, the panel's corners all round. */
+:root[data-close-proto='C'] .game-panel {
+  --game-panel-close-reach: calc(28px + 2 * var(--spacing));
+  border-radius: var(--game-panel-corner);
+}
+
+:root[data-close-proto='C'] .game-panel__close {
+  bottom: calc(100% + 2 * var(--spacing));
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--palette-background-default) 55%, transparent);
+  background: color-mix(in srgb, var(--palette-background-default) 60%, transparent);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 25%, transparent),
+    0 2px 8px rgb(0 0 0 / 0.4);
   color: var(--palette-text-primary);
   font-size: 18px;
 }
 
-/* C: a bare ×, no fill, quiet until hovered. */
-:root[data-close-proto='C'] .game-panel__close {
-  top: var(--spacing);
-  right: var(--spacing);
+/* D: a tab in the panel's own surface rather than the game's color, its × quiet until hovered. */
+:root[data-close-proto='D'] .game-panel__close {
   width: 32px;
-  height: 32px;
-  background: none;
+  height: 20px;
+  background: var(--game-panel-surface-top);
   color: var(--palette-text-secondary);
-  font-size: 24px;
-  font-weight: 400;
-  text-shadow: 0 1px 3px var(--palette-background-default);
+  font-size: 14px;
 }
 
-:root[data-close-proto='C'] .game-panel__close:hover {
+:root[data-close-proto='D'] .game-panel {
+  --game-panel-close-reach: 20px;
+}
+
+:root[data-close-proto='D'] .game-panel__close:hover {
   filter: none;
   color: var(--palette-text-primary);
 }
 
-/* D: an outlined square in the game's color, on a dim pane, inset. */
-:root[data-close-proto='D'] .game-panel__close {
-  top: calc(2 * var(--spacing));
-  right: calc(2 * var(--spacing));
-  box-sizing: border-box;
-  width: 26px;
-  height: 26px;
-  border: 1.5px solid var(--game-color);
-  border-radius: var(--shape-border-radius);
-  background: color-mix(in srgb, var(--palette-background-paper) 70%, transparent);
-  color: var(--game-color);
-  font-size: 16px;
+/* E: a pull tab at the top center, a chevron down, as a bottom sheet's handle; the panel's corners all round. */
+:root[data-close-proto='E'] .game-panel {
+  border-radius: var(--game-panel-corner);
 }
 
-/* E: a small disc in the game's color, inset, lifted by a shadow. */
 :root[data-close-proto='E'] .game-panel__close {
-  top: calc(2 * var(--spacing));
-  right: calc(2 * var(--spacing));
-  width: 22px;
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+  width: 72px;
   height: 22px;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
-  font-size: 14px;
+  font-size: 0;
 }
 
-/* The inset buttons reach further in, so the text beside them keeps further off. */
-:root:is([data-close-proto='B'], [data-close-proto='C'], [data-close-proto='D'], [data-close-proto='E']) .game-panel__venue {
-  padding-right: calc(8 * var(--spacing));
+:root[data-close-proto='E'] .game-panel {
+  --game-panel-close-reach: 22px;
 }
 
-@media (max-width: 960px) {
-  :root:is([data-close-proto='B'], [data-close-proto='C'], [data-close-proto='D'], [data-close-proto='E']) .game-panel__league {
-    padding-right: calc(10 * var(--spacing));
-  }
+:root[data-close-proto='E'] .game-panel__close::before {
+  content: '⌄';
+  display: block;
+  font-size: 24px;
+  line-height: 12px;
 }
 
 /* ---- Top edge. A is today's (index.css). The glow in the game's color stays in every one. ---- */

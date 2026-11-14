@@ -67,7 +67,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
         onClose()
       }
     }}>
-      {/* Everything in the panel, clipped to its corners, the close button in its top right corner. */}
+      {/* Everything but the close button, clipped to the panel's corners. */}
       <div className="game-panel__body">
         <div className="game-panel__main">
           <div className="game-panel__score">
@@ -121,11 +121,12 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
         </div>
 
         <GameBand game={game} />
-
-        <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
-          ×
-        </button>
       </div>
+
+      {/* Outside the panel's body, which clips to its corners, so it can sit above the panel. */}
+      <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
+        ×
+      </button>
     </aside>
   )
 }

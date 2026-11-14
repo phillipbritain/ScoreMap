@@ -20,8 +20,6 @@ import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
-// PROTOTYPE, throw away: the rail's group spacing (?railGapProto=).
-import { RailGapPrototypeBar } from './rail/RailGapPrototypeBar'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -126,7 +124,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      {import.meta.env.DEV && <RailGapPrototypeBar />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

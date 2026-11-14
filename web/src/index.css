@@ -1257,25 +1257,29 @@ body {
 
 /* The rail's and the top rail's groups of buttons are glass, as a score card is (see .score-card): its
    fill as solid as its frost, a sheen from the top left, lit edges and a soft shadow, with the globe
-   behind left sharp. Their popovers stay solid (ADR-0023). So is the Games count (see .rail__badge). */
+   behind left sharp. Their popovers stay solid (ADR-0023). So are the Games count (see .rail__badge)
+   and the Feedback button (see .feedback__button). */
 .rail__group,
-.rail__badge {
+.rail__badge,
+.feedback__button {
   --frost: var(--score-card-frost);
   --glass-shine: calc(1 - var(--frost));
   --glass-fill: color-mix(in srgb, var(--score-card-fill) calc(var(--frost) * 100%), transparent);
   --glass-edges:
     inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(18% + 50% * var(--glass-shine)), transparent),
     inset -1px -1px 0 0 color-mix(in srgb, var(--palette-text-primary) calc(6% + 22% * var(--glass-shine)), transparent);
-}
-
-.rail__group {
-  background:
+  --rail-glass:
     linear-gradient(135deg, color-mix(in srgb, var(--palette-text-primary) calc(10% * var(--glass-shine)), transparent) 0%, transparent 35%),
     linear-gradient(315deg, color-mix(in srgb, var(--palette-text-primary) calc(8% * var(--glass-shine)), transparent) 0%, transparent 30%),
     var(--glass-fill);
-  box-shadow:
+  --rail-glass-shadow:
     var(--glass-edges),
     0 6px 22px 0 color-mix(in srgb, var(--palette-background-default) 35%, transparent);
+}
+
+.rail__group {
+  background: var(--rail-glass);
+  box-shadow: var(--rail-glass-shadow);
 }
 
 /* The lines between buttons, faint on the glass so they don't box the icons in. */
@@ -2333,8 +2337,8 @@ body {
   }
 }
 
-/* The Feedback button at the bottom right, and its panel opening above it, on the controls' surface.
-   Above the game panel, which narrows to keep clear of the button (see below). */
+/* The Feedback button at the bottom right, of the rail's glass, and its panel opening above it, on the
+   controls' surface. Above the game panel, which narrows to keep clear of the button (see below). */
 .feedback {
   position: absolute;
   right: calc(3 * var(--spacing));
@@ -2347,7 +2351,7 @@ body {
   color: var(--palette-text-primary);
 }
 
-/* A round icon button, the size of the rail's. */
+/* A round icon button, the size of the rail's and of its glass (see .rail__group). */
 .feedback__button {
   display: flex;
   align-items: center;
@@ -2358,8 +2362,8 @@ body {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--controls-surface);
-  box-shadow: var(--controls-shadow);
+  background: var(--rail-glass);
+  box-shadow: var(--rail-glass-shadow);
   color: var(--palette-text-primary);
   cursor: pointer;
 }
@@ -2474,8 +2478,12 @@ body {
   cursor: default;
 }
 
+/* Under the pointer the Feedback button lights as a rail button does, the hover over its glass. */
 @media (hover: hover) {
-  .feedback__button:hover,
+  .feedback__button:hover {
+    background: linear-gradient(var(--palette-action-hover), var(--palette-action-hover)), var(--rail-glass);
+  }
+
   .feedback__action:not(.feedback__action--submit):hover {
     background: var(--palette-action-hover);
   }

@@ -159,7 +159,7 @@ Beside the palette's background, text, divider and hover:
 
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
-| `components.Controls.surface` | The "No games right now." message, and the Feedback button and panel | `background.paper` |
+| `components.Controls.surface` | The "No games right now." message, and the Feedback panel | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
 | `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
 | `components.GamePanel.surface.top`, `.bottom` | The game panel (on a desktop, its venue part and band), shading from top to bottom | `background.paper`, `background.paper` (solid) |
@@ -168,7 +168,7 @@ Beside the palette's background, text, divider and hover:
 | `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
 | `components.GamePanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
 | `components.GamePanel.shadow.color` | The game panel's drop shadow | `transparent` |
-| `components.Rail.surface` | The rail's popovers (Leagues, Display Settings and Games); on local runs, the top rail's Scenario popover too. The rail's groups of buttons are score cards' glass instead (see [Glass](#glass)) | `background.paper` |
+| `components.Rail.surface` | The rail's popovers (Leagues, Display Settings and Games); on local runs, the top rail's Scenario popover too. The rail's groups of buttons, and the Feedback button, are score cards' glass instead (see [Glass](#glass)) | `background.paper` |
 | `components.Tooltip.surface` | A tooltip (see [Tooltips](#tooltips)) | `background.paper` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
 | `components.Rail.open` | A rail button's icon while its popover is open, and Hide controls' while the rail's buttons show; the count on the Games button and its ring; and the ring round the map showing in Map Type | `secondary.main` (gold) |
@@ -250,7 +250,7 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So are the rail's groups of buttons (and the top rail's, on local runs), as a score card's glass, tinted with its fill as solid as its frost, the lines between their buttons faint, and the count on the Games button, a chip of the same glass ringed and numbered in `components.Rail.open`. So, on a desktop, is the game panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its top and left edges lit; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the game panel, the rail's popovers (Map Type, Games, Leagues and Display Settings, and the top rail's Scenario popover on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback button and panel, and tooltips. Pins are unchanged.
+Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So are the rail's groups of buttons (and the top rail's, on local runs), as a score card's glass, tinted with its fill as solid as its frost, the lines between their buttons faint, and the count on the Games button, a chip of the same glass ringed and numbered in `components.Rail.open`, and the round Feedback button, a pane of the same glass. So, on a desktop, is the game panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its top and left edges lit; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the game panel, the rail's popovers (Map Type, Games, Leagues and Display Settings, and the top rail's Scenario popover on local runs), welcome tour panels, the no-pins message, the demo label, the Feedback panel, and tooltips. Pins are unchanged.
 
 A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`, 0.6 in the dark theme):
 

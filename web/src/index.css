@@ -112,8 +112,9 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   /* Never so tall that it reaches the rail above its right end (--rail-bottom, see useRailClearance):
-     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, such
-     as a phone on its side, it keeps a quarter of the screen. */
+     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, it keeps
+     a quarter of the screen; a short screen on its side has it beside the rail instead (see "A short
+     screen" at the end). */
   max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
@@ -140,7 +141,7 @@ body {
 
 /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it: beveled rather than
    clipped, as a clip path would stop the score block's glass seeing the globe behind the panel. */
-@media (min-width: 961px) {
+@media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
   @container style(--game-panel-cut-corner-on: 1) {
     .game-panel__body {
       border-bottom-left-radius: var(--game-panel-cut-corner-size);
@@ -172,9 +173,10 @@ body {
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
-/* On a desktop the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
+/* On a desktop, and on a short screen on its side, which takes the desktop's strip (see "A short screen"
+   at the end), the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
    its colors as solid as the panel's frost, its edges lit from the top left. */
-@media (min-width: 961px) {
+@media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
   .game-panel__score {
     background: linear-gradient(
       180deg,
@@ -544,8 +546,10 @@ body {
 }
 
 /* On narrow screens: give names the full panel width, with the details (and the photo) below, and
-   tighter spacing than on a desktop, so the panel takes less of the screen. */
-@media (max-width: 960px) {
+   tighter spacing than on a desktop, so the panel takes less of the screen. Not on a short screen on its
+   side, such as a phone in landscape, which has the width for the desktop's strip but not the height for
+   this (see "A short screen" at the end). */
+@media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
   .game-panel__main {
     flex-direction: column;
     min-height: 0;
@@ -1064,7 +1068,7 @@ body {
 
 /* On a phone the score block's padding is tighter, so the light reaches less far out to stay within it, still
    as far beyond the logo as beyond the score. */
-@media (max-width: 960px) {
+@media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
   .game-panel__team--scored {
     --reach-x: var(--spacing);
   }
@@ -3107,4 +3111,108 @@ body {
 .game-panel a:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--spacing);
+}
+
+/* A short screen: a phone on its side, or a short desktop window. Here, after the rules it changes, so it
+   wins over them. The screen is wide but short, so things lie side by side rather than stacked: the game
+   panel takes the desktop's strip (see .game-panel__main) at the screen's foot left of the rail, as tall as
+   it needs rather than stopping short of the rail's foot; the popovers, the Games list and the welcome
+   tour's steps use the height there is (the dynamic viewport's, so not under a phone browser's bars). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-panel {
+    --game-panel-bottom: calc(3 * var(--spacing));
+    left: calc(3 * var(--spacing));
+    max-height: calc(100% - 2 * var(--game-panel-bottom));
+    width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 5 * var(--spacing)));
+    border-radius: var(--game-panel-corner);
+    transform: none;
+  }
+
+  /* Spaced as tightly as on a phone held upright, so the strip takes less of the height. */
+  .game-panel__main {
+    min-height: 0;
+  }
+
+  /* Half the strip, so names have room on a phone. */
+  .game-panel__score {
+    width: min(var(--game-panel-size-score-block), 50%);
+    gap: var(--spacing);
+    padding-block: calc(2 * var(--spacing));
+  }
+
+  .game-panel__details {
+    gap: var(--spacing);
+    padding-block: calc(2 * var(--spacing));
+  }
+
+  .rail__popover,
+  .rail__popover--games {
+    max-width: calc(100vw - var(--rail-left-inset, 0px) - 5 * var(--spacing));
+    max-height: calc(100dvh - 6 * var(--spacing));
+  }
+
+  /* In the middle of the screen left of the rail, with room for an arrow to it, wider and using more of
+     the height, each of Welcome's choices on a line, its name then what it shows. */
+  .welcome-tour {
+    align-items: center;
+    padding-right: calc(var(--rail-left-inset, 0px) + 14 * var(--spacing));
+  }
+
+  .welcome-tour__panel {
+    width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
+    max-height: calc(100% - 6 * var(--spacing));
+    margin-bottom: 0;
+    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+  }
+
+  .welcome-tour__question {
+    margin-top: calc(3 * var(--spacing));
+  }
+
+  /* The star's room held on every line, so the names and what they show line up. */
+  .welcome-tour__choice {
+    grid-template-columns: 1.3em 7em 1fr;
+    padding: calc(2 * var(--spacing)) calc(3.5 * var(--spacing));
+  }
+
+  .welcome-tour__choice span {
+    grid-column: 3;
+  }
+
+  .welcome-tour__star {
+    grid-row: auto;
+  }
+}
+
+/* Too short for the rail's buttons in one column: Games and More move to a second column, left of the
+   rest, level with the zoom buttons (Games with Zoom in, More with Home), so the rail ends well above the
+   screen's foot. Its gap leaves room for the Games count's corner. */
+@media (max-height: 420px) {
+  .rail {
+    align-items: flex-end;
+  }
+
+  .rail__buttons-inner {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: start;
+    gap: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  }
+
+  .rail__buttons-inner > .rail__group:nth-child(1) {
+    grid-area: 1 / 2;
+  }
+
+  .rail__buttons-inner > .rail__group:nth-child(2) {
+    grid-area: 2 / 2;
+  }
+
+  .rail__buttons-inner > .rail__group:nth-child(3) {
+    grid-area: 1 / 1;
+  }
+
+  .rail__buttons-inner > .rail__group:nth-child(4) {
+    grid-area: 1 / 1;
+    align-self: end;
+  }
 }

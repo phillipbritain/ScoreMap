@@ -1,16 +1,46 @@
+import type { Map as MapLibreMap } from 'maplibre-gl'
 import { degreesApart, type GlobePoint } from './geo'
 import type { MapType } from '../settings/viewerSettings'
 import settingsFile from './zoomSettings.json'
 
 /**
  * How far from the center of the view a game's venue can be, in degrees of arc, and still have a score
- * card, at any zoom. Farther games show as small pins (outer pins), so cards don't crowd the globe's rim.
+ * card, zoomed in. Farther games show as small pins (outer pins), so cards don't crowd the globe's rim.
  */
 export const cardRadius = 40
 
-/** Whether a game has a score card: its venue is within cardRadius of the view's center. */
-export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
-  return degreesApart(center, venue) <= cardRadius
+/**
+ * How far cards reach zoomed all the way out, in degrees of arc: about a region, such as the eastern
+ * US, so cards don't come from every region on the globe at once.
+ */
+export const furthestOutCardRadius = 15
+
+/** How many zoom levels in from the furthest out cards reach as far as cardRadius. */
+export const cardRadiusWidening = 1
+
+/**
+ * How far cards reach, `pastFurthestOut` zoom levels in from the furthest out the view zooms (both
+ * measured at the equator): furthestOutCardRadius at the furthest out, widening evenly to cardRadius
+ * cardRadiusWidening levels in, and cardRadius from there in.
+ */
+export function cardRadiusAt(pastFurthestOut: number): number {
+  const widened = Math.max(0, Math.min(1, pastFurthestOut / cardRadiusWidening))
+  return furthestOutCardRadius + (cardRadius - furthestOutCardRadius) * widened
+}
+
+/** How far cards reach on this map now (see cardRadiusAt), from how far in it is from its furthest out. */
+export function cardRadiusOn(map: MapLibreMap): number {
+  return cardRadiusAt(zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat }) - map.getMinZoom())
+}
+
+/**
+ * Whether a game has a score card: its venue is within `radius` (see cardRadiusOn) of the view's
+ * center, or within cardRadius for the selected game. Zoomed out, where cards reach less far, a game
+ * picked from the list is turned to above the game panel, which can be past `radius`: it keeps its card
+ * as zoomed in.
+ */
+export function hasCard(center: GlobePoint, venue: GlobePoint, radius = cardRadius, selected = false): boolean {
+  return degreesApart(center, venue) <= (selected ? Math.max(radius, cardRadius) : radius)
 }
 
 /** How far out and in the globe zooms, and where it starts. */

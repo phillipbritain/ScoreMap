@@ -8,6 +8,7 @@ import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
 import { addPlaceNames, cityNameLook, clusterClearOffset, placeNameLayers } from './placeNames'
+import { cardRadius, furthestOutCardRadius } from './zoomLevels'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -137,10 +138,12 @@ describe('addPlaceNames', () => {
     expect(gameCities()).toEqual(['Miami'])
     const miami = 0
     // The game within the card radius of the center of the view (over Texas), and far out of it (over Tokyo).
-    expect(names.namesACard(miami, { longitude: -99, latitude: 31 })).toBe(true)
-    expect(names.namesACard(miami, { longitude: 139.7, latitude: 35.7 })).toBe(false)
+    expect(names.namesACard(miami, { longitude: -99, latitude: 31 }, cardRadius)).toBe(true)
+    expect(names.namesACard(miami, { longitude: 139.7, latitude: 35.7 }, cardRadius)).toBe(false)
+    // Zoomed all the way out, cards reach less far: not from Texas to Miami.
+    expect(names.namesACard(miami, { longitude: -99, latitude: 31 }, furthestOutCardRadius)).toBe(false)
     // A Big city with no game near names no card.
-    expect(names.namesACard(1, { longitude: -99, latitude: 31 })).toBe(false)
+    expect(names.namesACard(1, { longitude: -99, latitude: 31 }, cardRadius)).toBe(false)
   })
 
   it("marks a game's city as naming a score card while the card is on screen, giving the cities again only when that changes", () => {

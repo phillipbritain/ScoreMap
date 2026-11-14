@@ -43,7 +43,7 @@ import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
-import { hasCard, zoomSettings as appZoomSettings, zoomAt, zoomAtEquator, type GlobeCamera, type ZoomSettings } from './zoomLevels'
+import { cardRadiusOn, hasCard, zoomSettings as appZoomSettings, zoomAt, zoomAtEquator, type GlobeCamera, type ZoomSettings } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
@@ -192,7 +192,7 @@ export class GlobeMap {
       this.stopHorizonFade = fadeNearHorizon(
         map,
         [cityNameSource, outerPinSource],
-        (source, id, { center }) => source === cityNameSource && this.names.namesACard(id, center),
+        (source, id, { center }) => source === cityNameSource && this.names.namesACard(id, center, cardRadiusOn(map)),
       )
       this.trails = trailLayer(currentTheme)
       this.cards = new ScoreCardMarkers(
@@ -537,8 +537,8 @@ export class GlobeMap {
   private async animate(game: PlacedGame, animation: PinAnimation): Promise<void> {
     const map = this.map
     const { lng: longitude, lat: latitude } = map.getCenter()
-    const card = hasCard({ longitude, latitude }, game.venue)
-    const source = this.pins?.pulseSource(game.venue)
+    const card = hasCard({ longitude, latitude }, game.venue, cardRadiusOn(map), game.id === this.selectedGameId)
+    const source = this.pins?.pulseSource(game)
     if (!source) return
     const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
     const target = animationTarget(game.id, venue, source.features)

@@ -157,7 +157,9 @@ it("points at a card on the globe, named as the card's own button names its game
   map.style.cssText = 'position: fixed; inset: 0'
   document.body.append(map)
   const globe = new GlobeMap(map, {
-    style: plainStyle, theme: builtInTheme, zoomSettings, startCamera: { longitude: 0, latitude: 0, zoom: 3 },
+    style: plainStyle, theme: builtInTheme, startCamera: { longitude: 0, latitude: 0, zoom: 3 },
+    // Let out to zoom 2, so at 3 cards reach as far as zoomed in (see cardRadiusAt), to the card off to the side clear of the step.
+    zoomSettings: { ...zoomSettings, minZoom: 2 },
     onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
   })
   opened.push(globe)

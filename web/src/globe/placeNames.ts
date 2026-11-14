@@ -248,10 +248,10 @@ export interface PlaceNames {
   setSettings(settings: CityLabelSettings): void
   /**
    * Whether the city name source's feature with this id is a game's city with a game in reach that
-   * has a score card, looking at `center` (see hasCard): a card is always shown with its city's name,
-   * so the name doesn't fade near the horizon while the card shows.
+   * has a score card, looking at `center` with cards reaching `radius` (see hasCard): a card is always
+   * shown with its city's name, so the name doesn't fade near the horizon while the card shows.
    */
-  namesACard(id: string | number, center: GlobePoint): boolean
+  namesACard(id: string | number, center: GlobePoint, radius: number): boolean
   /**
    * Always writes the names of the games' cities with a score card on screen, at these venues; the
    * other games' cities give way where there's no room, to clusters and other names (see
@@ -319,8 +319,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       if (now.size === carded.size && [...now].every((id) => carded.has(id))) return
       showLabels()
     },
-    namesACard(id, center) {
-      return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(center, venue)) ?? false)
+    namesACard(id, center, radius) {
+      return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(center, venue, radius)) ?? false)
     },
     nameBoxes() {
       const zoom = map.getZoom()

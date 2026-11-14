@@ -62,6 +62,16 @@ export function ScenarioIcon() {
   )
 }
 
+/** More: three dots, more to come (Feather's "more-horizontal"). */
+export function MoreIcon() {
+  return (
+    <>
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+      <circle cx="5" cy="12" r="1" />
+    </>
+  )
+}
 
 /** Hide controls: a cross, closing the rail's buttons up into it (Feather's "x"). */
 export function HideControlsIcon() {

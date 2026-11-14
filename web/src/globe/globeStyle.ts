@@ -1,5 +1,6 @@
 import type { LayerSpecification, LineLayerSpecification, RasterSourceSpecification, StyleSpecification } from 'maplibre-gl'
 import type { MapType } from '../settings/viewerSettings'
+import { oceanColor } from '../theme/themeProto'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
@@ -62,6 +63,16 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
     sources: { ...base.sources, [satelliteSource]: satelliteSourceSpec, [cityNameSource]: cityNameSourceSpec },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
+      // PROTOTYPE (themeProto): the sea in its own color; land and sea alike where a scheme gives none.
+      {
+        id: 'proto-ocean',
+        type: 'fill',
+        source: 'openmaptiles',
+        'source-layer': 'water',
+        filter: ['in', ['get', 'class'], ['literal', ['ocean', 'lake']]],
+        layout: { visibility: shownOn('plain') },
+        paint: { 'fill-color': oceanColor(theme) ?? globe.surface, 'fill-antialias': false },
+      },
       { id: satelliteLayer, type: 'raster', source: satelliteSource, layout: { visibility: shownOn('satellite') } },
       // Coastlines: the edges of the sea, which is the same color as the land. Lakes and rivers
       // aren't outlined; at a distance they read as clutter.

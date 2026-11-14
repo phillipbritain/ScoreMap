@@ -25,7 +25,7 @@ import {
   outerSmallPinLayer,
   pinSource,
 } from './pinLayers'
-import { maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
+import { fieldOfView, fittedZoomSettings, maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
 
 // About one country on screen: a zoom the tests look closer at the cards from.
 const countryZoom = 3
@@ -395,6 +395,25 @@ describe('shown score cards', () => {
     await cardShown('B')
 
     await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
+  })
+
+  it('gives the cards of games near the center zoomed all the way out on a phone', async () => {
+    const phone = { width: 390, height: 844 }
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 0 }, phone)
+    globe.setZoomLimits(fittedZoomSettings(zoomSettings, phone))
+    map.jumpTo({ zoom: 0 })
+    globe.show([game('A'), game('B', { longitude: 20, latitude: 10 })])
+    await cardShown('A')
+    await cardShown('B')
+
+    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
+  })
+})
+
+describe('the furthest out', () => {
+  it('is fitted to the field of view MapLibre draws the globe with', () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 3 })
+    expect(map.getVerticalFieldOfView()).toBeCloseTo(fieldOfView)
   })
 })
 

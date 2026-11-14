@@ -1,0 +1,93 @@
+/* PROTOTYPE, throw away: the rail's group spacing variants (see railGapPrototype.ts). A is today's
+   (index.css). Each sets --proto-gap, the space between the rail's groups and under Hide controls. */
+
+:root[data-rail-gap-proto] .rail,
+:root[data-rail-gap-proto] .rail__buttons-inner {
+  gap: var(--proto-gap);
+}
+
+:root[data-rail-gap-proto] .rail__buttons--collapsed {
+  margin-top: calc(-1 * var(--proto-gap));
+}
+
+:root[data-rail-gap-proto] { --proto-gap: calc(2 * var(--spacing)); }
+:root[data-rail-gap-proto='B'] { --proto-gap: var(--spacing); }
+:root[data-rail-gap-proto='C'] { --proto-gap: 2px; }
+
+/* D (and E on a phone): the groups joined into one column, a divider between them a little stronger
+   than the lines between buttons. Hide controls keeps 4px above them, as it isn't one of them. */
+:root[data-rail-gap-proto='D'] .rail { gap: var(--spacing); }
+:root[data-rail-gap-proto='D'] .rail__buttons--collapsed { margin-top: calc(-1 * var(--spacing)); }
+:root[data-rail-gap-proto='D'] .rail__buttons-inner { gap: 0; }
+:root[data-rail-gap-proto='D'] .rail__buttons-inner > .rail__group + .rail__group {
+  border-top: 2px solid color-mix(in srgb, var(--palette-text-primary) 28%, transparent);
+}
+:root[data-rail-gap-proto='D'] .rail__buttons-inner > .rail__group:not(:first-child),
+:root[data-rail-gap-proto='D'] .rail__buttons-inner > .rail__group:not(:first-child) > .rail__button:first-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+:root[data-rail-gap-proto='D'] .rail__buttons-inner > .rail__group:not(:last-child),
+:root[data-rail-gap-proto='D'] .rail__buttons-inner > .rail__group:not(:last-child) > .rail__button:last-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:root[data-rail-gap-proto='E'] { --proto-gap: var(--spacing); }
+@media (max-width: 640px) {
+  :root[data-rail-gap-proto='E'] .rail { gap: var(--spacing); }
+  :root[data-rail-gap-proto='E'] .rail__buttons--collapsed { margin-top: calc(-1 * var(--spacing)); }
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner { gap: 0; }
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner > .rail__group + .rail__group {
+    border-top: 2px solid color-mix(in srgb, var(--palette-text-primary) 28%, transparent);
+  }
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner > .rail__group:not(:first-child),
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner > .rail__group:not(:first-child) > .rail__button:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner > .rail__group:not(:last-child),
+  :root[data-rail-gap-proto='E'] .rail__buttons-inner > .rail__group:not(:last-child) > .rail__button:last-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+/* The bar: top center, clear of the bottom sheets. */
+.gap-prototype {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 12px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.gap-prototype__axis {
+  color: #666;
+}
+
+.gap-prototype button {
+  padding: 2px 7px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* One line at phone width: the key alone. */
+@media (max-width: 700px) {
+  .gap-prototype { padding: 3px 6px; }
+  .gap-prototype__name { display: none; }
+}

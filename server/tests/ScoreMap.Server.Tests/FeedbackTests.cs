@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ScoreMap.Server.Feedback;
 using ScoreMap.Server.GameFeed;
@@ -518,6 +519,24 @@ public class FeedbackTests
         Assert.Empty(server.GitHub.Issues);
         var logged = Assert.Single(server.Logs.Entries, e => e.Message.Contains("Lovely globe, thank you"));
         Assert.Contains("### Context", logged.Message);
+    }
+
+    [Fact]
+    public async Task Production_with_no_token_warns_at_startup_that_feedback_is_only_logged()
+    {
+        await using var server = new ScoreMapServer { Environment = "Production" };
+        _ = server.Services;
+
+        Assert.Single(server.Logs.Entries, e => e.Level == LogLevel.Warning && e.Message.Contains("Feedback:GitHubToken"));
+    }
+
+    [Fact]
+    public async Task Production_with_a_token_does_not_warn_about_feedback()
+    {
+        await using var server = new ScoreMapServer { Environment = "Production", FeedbackToken = "token" };
+        _ = server.Services;
+
+        Assert.DoesNotContain(server.Logs.Entries, e => e.Message.Contains("Feedback:GitHubToken"));
     }
 
     [Fact]

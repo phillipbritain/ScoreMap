@@ -39,7 +39,7 @@ param githubIdentityName string = 'scoremap-github'
 param githubSubject string
 
 @secure()
-@description('Fine-grained GitHub token that can only write this repo\'s issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged.')
+@description('Fine-grained GitHub token that can only write this repo\'s issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged; main.bicepparam refuses that unless it\'s meant.')
 param feedbackGitHubToken string = ''
 
 // The app's logs, and Container Apps' own, for `az containerapp logs show`. The daily cap keeps it

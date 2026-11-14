@@ -1,0 +1,357 @@
+/* PROTOTYPE, throw away: the loading text variants (see loadingTextPrototype.ts). A is today's (index.css). */
+
+/* ---- B: Mission readout. Monospace capitals in gold, typed out behind a block cursor, in HUD corner brackets. ---- */
+
+.ltp-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+}
+
+.ltp-readout__label {
+  color: var(--palette-text-secondary);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.ltp-readout__label::before,
+.ltp-readout__label::after {
+  content: '';
+  display: inline-block;
+  width: calc(6 * var(--spacing));
+  height: var(--shape-border-width-thin);
+  margin: 0 calc(2 * var(--spacing));
+  vertical-align: middle;
+  background: var(--palette-secondary-main);
+  opacity: 0.6;
+}
+
+.ltp-readout__text {
+  position: relative;
+  width: fit-content;
+  max-width: 34em;
+  margin: 0 auto;
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  box-sizing: border-box;
+  color: var(--palette-secondary-main);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  text-wrap: balance;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--palette-secondary-main) 55%, transparent);
+  /* Corner brackets. */
+  background:
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) top left / 10px 1px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) top left / 1px 10px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) top right / 10px 1px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) top right / 1px 10px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) bottom left / 10px 1px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) bottom left / 1px 10px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) bottom right / 10px 1px,
+    linear-gradient(var(--palette-secondary-main), var(--palette-secondary-main)) bottom right / 1px 10px;
+  background-repeat: no-repeat;
+}
+
+.ltp-readout__cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 1px;
+  vertical-align: -0.2em;
+  background: var(--palette-secondary-main);
+  box-shadow: 0 0 8px var(--palette-secondary-main);
+  animation: ltp-blink 1s steps(1) infinite;
+}
+
+.ltp-readout__rest {
+  visibility: hidden;
+}
+
+@keyframes ltp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---- C: Title card. Large light type with a gold shimmer sweeping over it, twinkling sparkles and a rule drawn from the middle. ---- */
+
+.ltp-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(3 * var(--spacing));
+  animation: ltp-rise 0.7s ease-out both;
+}
+
+.ltp-title__text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(3 * var(--spacing));
+  max-width: 30em;
+  margin: 0;
+}
+
+.ltp-title__words {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  text-wrap: balance;
+  background: linear-gradient(
+      100deg,
+      var(--palette-text-primary) 0%,
+      var(--palette-text-primary) 40%,
+      var(--palette-secondary-light) 50%,
+      var(--palette-text-primary) 60%,
+      var(--palette-text-primary) 100%
+    )
+    0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ltp-shimmer 3.2s ease-in-out infinite;
+}
+
+.ltp-title__sparkle {
+  flex: none;
+  color: var(--palette-secondary-main);
+  font-size: 14px;
+  text-shadow: 0 0 10px var(--palette-secondary-main);
+  animation: ltp-twinkle 2.4s ease-in-out infinite;
+}
+
+.ltp-title__ornament {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
+}
+
+.ltp-title__rule {
+  width: calc(16 * var(--spacing));
+  height: var(--shape-border-width-thin);
+  background: linear-gradient(90deg, transparent, var(--palette-secondary-main), transparent);
+  animation: ltp-draw 0.9s 0.2s ease-out both;
+}
+
+@keyframes ltp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes ltp-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
+}
+
+@keyframes ltp-twinkle {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.7) rotate(45deg);
+  }
+}
+
+@keyframes ltp-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- D: Broadcast plaque. A solid panel with a gold edge, a Mission Control label and a live dot. ---- */
+
+.ltp-plaque-place {
+  display: flex;
+  justify-content: center;
+}
+
+.ltp-plaque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing);
+  max-width: 28em;
+  padding: calc(2.5 * var(--spacing)) calc(4 * var(--spacing));
+  border-left: var(--shape-border-width-thick) solid var(--palette-secondary-main);
+  border-radius: 0 calc(2 * var(--shape-border-radius)) calc(2 * var(--shape-border-radius)) 0;
+  background: var(--palette-background-paper);
+  box-shadow: 0 8px 30px color-mix(in srgb, var(--palette-background-default) 80%, transparent);
+  text-align: left;
+  animation: ltp-slide 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ltp-plaque__label {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  color: var(--palette-secondary-main);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+.ltp-plaque__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--palette-secondary-main);
+  box-shadow: 0 0 0 0 var(--palette-secondary-main);
+  animation: ltp-pulse 1.4s ease-out infinite;
+}
+
+.ltp-plaque__text {
+  margin: 0;
+  color: var(--palette-text-primary);
+  font-size: var(--typography-body1-font-size);
+  font-weight: 600;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+@keyframes ltp-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes ltp-pulse {
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ---- E: Drifting words. Each word drifts up out of a blur in turn, glowing; the ellipsis is three dots lit in turn. ---- */
+
+.ltp-drift {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  text-wrap: balance;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--palette-secondary-main) 45%, transparent);
+}
+
+.ltp-drift__word {
+  display: inline-block;
+  white-space: pre;
+  animation: ltp-drift-in 0.6s ease-out both;
+}
+
+.ltp-drift__dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: ltp-drift-in 0.6s ease-out both;
+}
+
+.ltp-drift__dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--palette-secondary-main);
+  box-shadow: 0 0 6px var(--palette-secondary-main);
+  animation: ltp-dot 1.2s ease-in-out infinite;
+}
+
+.ltp-drift__dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ltp-drift__dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes ltp-drift-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(10px);
+  }
+}
+
+@keyframes ltp-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* Reduce motion: everything stands still, the cursor and dots steady. */
+@media (prefers-reduced-motion: reduce) {
+  .ltp-readout__cursor,
+  .ltp-title,
+  .ltp-title__words,
+  .ltp-title__sparkle,
+  .ltp-title__rule,
+  .ltp-plaque,
+  .ltp-plaque__dot,
+  .ltp-drift__word,
+  .ltp-drift__dots,
+  .ltp-drift__dots span {
+    animation: none;
+  }
+}
+
+/* ---- The floating bar. ---- */
+
+.ltp-bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.5);
+  font: 12px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.ltp-bar button {
+  padding: 2px 7px;
+  border: 1px solid #bbb;
+  border-radius: 999px;
+  background: #f4f4f4;
+  color: #111;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* One line at phone width: the key alone, the name on hover. */
+@media (max-width: 700px) {
+  .ltp-bar {
+    gap: 4px;
+    padding: 3px 6px;
+  }
+
+  .ltp-bar__name {
+    display: none;
+  }
+}

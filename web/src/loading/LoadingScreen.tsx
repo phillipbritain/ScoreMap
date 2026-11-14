@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type Ref } from 'react'
 import type { LoadingStage } from '../globe/globeMap'
 import { usePhrase } from './loadingPhrases'
 import { loadingScreenView } from './loadingScreenView'
+// PROTOTYPE, throw away: the loading text variants (?loadingProto=).
+import { PrototypeMessage } from './LoadingTextPrototypeBar'
 
 /** How often the loading screen looks again at how long it's been in a stage. */
 const tickMs = 250
@@ -97,7 +99,7 @@ export function Dimmed({ ref, message, leaving = false, movable = false, label }
   return (
     <div ref={ref} className={className} role="status" aria-label={leaving ? undefined : label} aria-busy={!leaving}>
       <Rocket />
-      {message && <p className="loading-screen__message">{message}</p>}
+      {message && (import.meta.env.DEV ? <PrototypeMessage text={message} /> : <p className="loading-screen__message">{message}</p>)}
     </div>
   )
 }

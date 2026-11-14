@@ -18,6 +18,8 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
+// PROTOTYPE, throw away: the loading text variants (?loadingProto=).
+import { LoadingTextPreview, LoadingTextPrototypeBar } from './loading/LoadingTextPrototypeBar'
 import { GamePanel } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { Rail } from './rail/Rail'
@@ -124,6 +126,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {import.meta.env.DEV && <LoadingTextPrototypeBar />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}
@@ -163,6 +166,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
         {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
             the rail, which stay usable. */}
         {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}
+        {import.meta.env.DEV && loadingScreenGone && <LoadingTextPreview />}
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
         <div className="bottom-stack">
           {message && (

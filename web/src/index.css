@@ -747,7 +747,8 @@ body {
   position: relative;
   transition:
     box-shadow 120ms ease-out,
-    background-color 120ms ease-out;
+    background-color 120ms ease-out,
+    opacity 200ms ease-out;
   /* Animations grow the card from its bottom middle, nearest its venue as it usually sits. */
   transform-origin: 50% 100%;
 }
@@ -761,9 +762,15 @@ body {
   }
 }
 
-/* No room for this card: its game is counted in a card cluster instead, which the map draws. */
+/* No room for this card: its game is counted in a card cluster instead, which the map draws. It fades
+   out before it's hidden, and fades back in as there's room for it again. */
 [data-in-card-cluster] {
   visibility: hidden;
+  transition: visibility 0s 200ms;
+}
+
+[data-in-card-cluster] > .score-card {
+  opacity: 0;
 }
 
 /* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
@@ -968,6 +975,21 @@ body {
 
 .score-card-going {
   animation-name: score-card-going;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
+/* A score card coming into view or going out of it as the camera moves (see globe/cardComings.ts): it
+   fades in or out in place, its trail with it. */
+.score-card-appearing {
+  animation-name: score-card-fade-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.score-card-fading {
+  animation-name: score-card-fade-out;
   animation-timing-function: ease-in;
   animation-fill-mode: both;
   pointer-events: none;

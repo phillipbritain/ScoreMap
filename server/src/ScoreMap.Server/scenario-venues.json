@@ -668,7 +668,8 @@
     "region": "PA",
     "country": "USA",
     "groups": [
-      "worldwide"
+      "worldwide",
+      "us-college"
     ]
   },
   {
@@ -714,7 +715,8 @@
     "country": "USA",
     "groups": [
       "worldwide",
-      "big-cities"
+      "big-cities",
+      "us-college"
     ]
   },
   {
@@ -750,7 +752,8 @@
     "region": "OH",
     "country": "USA",
     "groups": [
-      "worldwide"
+      "worldwide",
+      "us-college"
     ]
   },
   {
@@ -1891,6 +1894,555 @@
     "country": "Indonesia",
     "groups": [
       "big-cities"
+    ]
+  },
+  {
+    "name": "Gerald J. Ford Stadium",
+    "city": "Dallas",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Jack Trice Stadium",
+    "city": "Ames",
+    "region": "IA",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Carter-Finley Stadium",
+    "city": "Raleigh",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "SECU Stadium",
+    "city": "College Park",
+    "region": "MD",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Pratt & Whitney Stadium",
+    "city": "East Hartford",
+    "region": "CT",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Memorial Stadium (Clemson, SC)",
+    "city": "Clemson",
+    "region": "SC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "SHI Stadium",
+    "city": "Piscataway",
+    "region": "NJ",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "FirstBank Stadium",
+    "city": "Nashville",
+    "region": "TN",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Jerry Richardson Stadium",
+    "city": "Charlotte",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Brooks Stadium (SC)",
+    "city": "Conway",
+    "region": "SC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Amon G. Carter Stadium",
+    "city": "Fort Worth",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Elliott T. Bowers Stadium",
+    "city": "Huntsville",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Beasley Coliseum",
+    "city": "Pullman",
+    "region": "WA",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Skip Chappelle Court in Memorial Gymnasium",
+    "city": "Orono",
+    "region": "ME",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Zidian Family Arena at Beeghly Center",
+    "city": "Youngstown",
+    "region": "OH",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Patrick Gymnasium",
+    "city": "Burlington",
+    "region": "VT",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "McArthur Center",
+    "city": "St. Petersburg",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Christl Arena",
+    "city": "West Point",
+    "region": "NY",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Moby Arena",
+    "city": "Fort Collins",
+    "region": "CO",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "United Supermarkets Arena",
+    "city": "Lubbock",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Abessinio Court at Eleanor R. Baldwin Arena",
+    "city": "Boca Raton",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Curry Arena",
+    "city": "Charlotte",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "UNF Arena",
+    "city": "Jacksonville",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Corbett Sports Center",
+    "city": "Greensboro",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "William R. Johnson Coliseum",
+    "city": "Nacogdoches",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Knights Hall",
+    "city": "Louisville",
+    "region": "KY",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Yuengling Center",
+    "city": "Tampa",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Colonial Life Arena",
+    "city": "Columbia",
+    "region": "SC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Ford Center",
+    "city": "Evansville",
+    "region": "IN",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "The Dedmon Center",
+    "city": "Radford",
+    "region": "VA",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Winthrop Coliseum",
+    "city": "Rock Hill",
+    "region": "SC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Gentry Center",
+    "city": "Nashville",
+    "region": "TN",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Moody Center",
+    "city": "Austin",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Colonial Hall",
+    "city": "White Sulphur Springs",
+    "region": "WV",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Mullins Center",
+    "city": "Amherst",
+    "region": "MA",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Bodford Arena",
+    "city": "Greensboro",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Alumni Hall (Navy)",
+    "city": "Annapolis",
+    "region": "MD",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Calihan Hall",
+    "city": "Detroit",
+    "region": "MI",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Gallagher Center",
+    "city": "Niagara Falls",
+    "region": "NY",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "M.A.C. Center",
+    "city": "Kent",
+    "region": "OH",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Leede Arena",
+    "city": "Hanover",
+    "region": "NH",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Convocation Center (OH)",
+    "city": "Athens",
+    "region": "OH",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Reilly Center",
+    "city": "Saint Bonaventure",
+    "region": "NY",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Sanford Pentagon",
+    "city": "Sioux Falls",
+    "region": "SD",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "John W. Pope Jr. Convocation Center",
+    "city": "Buies Creek",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "First Community Arena",
+    "city": "Edwardsville",
+    "region": "IL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Swisher Gymnasium",
+    "city": "Jacksonville",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Alico Arena",
+    "city": "Fort Myers",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Qubein Center",
+    "city": "High Point",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Chaifetz Arena",
+    "city": "St. Louis",
+    "region": "MO",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Groniger Arena",
+    "city": "Charleston",
+    "region": "IL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Kress Center",
+    "city": "Green Bay",
+    "region": "WI",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Farris Center",
+    "city": "Conway",
+    "region": "AR",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "M&T Bank Arena",
+    "city": "Hamden",
+    "region": "CT",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Knott Arena",
+    "city": "Emmitsburg",
+    "region": "MD",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Carnesecca Arena",
+    "city": "Queens",
+    "region": "NY",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Gentile Arena",
+    "city": "Chicago",
+    "region": "IL",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Paul Porter Arena",
+    "city": "Boiling Springs",
+    "region": "NC",
+    "country": "USA",
+    "groups": [
+      "us-college"
+    ]
+  },
+  {
+    "name": "Omni Barton Creek Resort & Spa (Fazio Canyons Course)",
+    "city": "Austin",
+    "region": "TX",
+    "country": "USA",
+    "groups": [
+      "worldwide-busy"
+    ]
+  },
+  {
+    "name": "Pelican Golf Club",
+    "city": "Belleair",
+    "region": "FL",
+    "country": "USA",
+    "groups": [
+      "worldwide-busy"
+    ]
+  },
+  {
+    "name": "Veikkaus Arena",
+    "city": "Helsinki",
+    "region": null,
+    "country": "Finland",
+    "groups": [
+      "worldwide-busy"
     ]
   }
 ]

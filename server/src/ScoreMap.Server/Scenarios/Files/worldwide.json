@@ -1,6 +1,6 @@
 // worldwide (the default, and what a demo shows): about 60 games at venues on every continent, in a mix
 // of Upcoming, Live and Final. For the globe as a whole: pins everywhere, clusters, every status, without
-// so many that the globe is overwhelming (worldwide-busy has a game at every one of its venues). The
+// so many that the globe is overwhelming (worldwide-busy is a busy college Saturday over the US). The
 // written-out games below play out as described with this fill's count; a new count changes how the
 // shared seed plays them, so check ShippedScenarioTests after changing it.
 // The games play like real games: they score, start and finish, and a finished game soon drops out

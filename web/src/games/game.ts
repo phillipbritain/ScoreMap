@@ -12,6 +12,8 @@ export interface GameTeam {
   rank: number | null
   /** Its season so far: "5-2", in soccer wins, draws and losses ("2-2-3"); null where the feed gives none. */
   record: string | null
+  /** Its conference ("SEC") among its league's (see League); null in a league without them, or for a team in none of them. */
+  conference: string | null
 }
 
 export interface GameVenue {

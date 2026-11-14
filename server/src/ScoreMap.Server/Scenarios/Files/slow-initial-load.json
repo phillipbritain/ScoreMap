@@ -6,7 +6,7 @@
 {
   "slowStart": "15s",
   "fill": {
-    "count": 150,
+    "count": 60,
     "group": "worldwide",
     "mix": { "live": 4, "upcoming": 3, "final": 2 }
   },

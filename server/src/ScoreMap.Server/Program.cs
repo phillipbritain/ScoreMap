@@ -116,7 +116,12 @@ app.MapFallbackToFile("index.html");
 
 // The configured leagues in order, so the browser's Leagues and Colors can list every league, even one with no games now.
 app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
-    leagues.Value.Select(league => new { league.Name, Sport = league.Sport.DisplayName() }));
+    leagues.Value.Select(league => new
+    {
+        league.Name,
+        Sport = league.Sport.DisplayName(),
+        Conferences = league.Conferences.Select(conference => conference.Name).Order(StringComparer.Ordinal),
+    }));
 
 app.MapFeedback();
 

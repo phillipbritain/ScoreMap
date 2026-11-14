@@ -816,7 +816,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             Rank: competitor.CuratedRank?.Current is >= 1 and <= TopRanked ? competitor.CuratedRank.Current : null,
             // Rugby's "total" is the side's form ("LWWWW"), not a record.
             Record: leagueKey.StartsWith("rugby/", StringComparison.Ordinal) ? null
-                : NullIfBlank(competitor.Records?.FirstOrDefault(r => r.Type == "total")?.Summary));
+                : NullIfBlank(competitor.Records?.FirstOrDefault(r => r.Type == "total")?.Summary),
+            ConferenceId: NullIfBlank(competitor.Team.ConferenceId));
         return started && leagueKey.StartsWith("cricket/", StringComparison.Ordinal) ? WithInnings(team, competitor.Score) : team;
     }
 
@@ -956,7 +957,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Play(string? Text, bool? ScoringPlay, TeamRef? Team, PlayPeriod? Period, Clock? Clock,
         int? HomeScore, int? AwayScore);
     private sealed record PlayPeriod(int? Number, string? Type);
-    private sealed record Team(string? Id, string? Abbreviation, string? DisplayName, string? Logo);
+    private sealed record Team(string? Id, string? Abbreviation, string? DisplayName, string? Logo, string? ConferenceId = null);
     private sealed record TeamResponse(TeamDetail? Team);
     private sealed record TeamDetail(string? Location, Franchise? Franchise);
     private sealed record Franchise(Venue? Venue);

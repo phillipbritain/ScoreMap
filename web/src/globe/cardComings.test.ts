@@ -90,6 +90,13 @@ describe('cardComings', () => {
     expect(comings.over(100 + cardComingDuration)).toEqual({ cameIn: ['a'], wentOut: [] })
   })
 
+  it('just shows a card come into view when told it does not fade', () => {
+    const comings = cardComings()
+    comings.showGames(['a'])
+    expect(comings.cardPlaced('a', 100, false)).toBe('appears')
+    expect(comings.coming('a')).toBeUndefined()
+  })
+
   it('fades a card back in from as far as it got fading out of view, as its venue comes back into view', () => {
     const comings = cardComings()
     comings.showGames(['a'])

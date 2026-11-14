@@ -38,9 +38,10 @@ export interface CardComings {
   showGames(gameIds: Iterable<string>): { gone: string[]; back: string[] }
   /**
    * A card was just placed for a game: it comes in, its game having just arrived, or else appears, as
-   * it came into view. One appearing as its old card fades out of view appears from as far as that got.
+   * it came into view, fading in unless `fades` is false (then it's just there). One fading in as its
+   * old card fades out of view fades in from as far as that got.
    */
-  cardPlaced(gameId: string, now: number): 'comesIn' | 'appears'
+  cardPlaced(gameId: string, now: number, fades?: boolean): 'comesIn' | 'appears'
   /**
    * The pins were read with the games last shown in them: a game that arrived and got no card by now
    * (its venue out of view, or far from the center of the view) comes into view later without coming in.
@@ -80,10 +81,14 @@ export function cardComings(): CardComings {
       return { gone, back }
     },
 
-    cardPlaced(gameId, now) {
+    cardPlaced(gameId, now, fades = true) {
       if (arrived.delete(gameId)) {
         comings.set(gameId, { in: true, at: now })
         return 'comesIn'
+      }
+      if (!fades) {
+        comings.delete(gameId)
+        return 'appears'
       }
       const fading = comings.get(gameId)
       const shownNow = fading?.in === false ? comingOpacity(fading, now) : 0

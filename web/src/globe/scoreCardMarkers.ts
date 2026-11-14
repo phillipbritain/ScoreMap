@@ -232,11 +232,11 @@ export class ScoreCardMarkers {
           },
         })
         const now = performance.now()
-        const comes = this.comings.cardPlaced(gameId, now)
+        const comes = this.comings.cardPlaced(gameId, now, this.animates())
         // Its old card, still fading out of view, goes at once: the new one fades in from as far as that got.
         this.removeGoingOut(gameId)
         if (comes === 'comesIn') placed.comeIn(this.comingsOver)
-        else placed.appear(now - this.comings.coming(gameId)!.at, this.comingsOver)
+        else if (this.animates()) placed.appear(now - this.comings.coming(gameId)!.at, this.comingsOver)
         this.placed.set(gameId, placed)
         changed = true
       } else placed.moveTo(lngLat)
@@ -271,7 +271,7 @@ export class ScoreCardMarkers {
       if (keep.has(gameId)) continue
       // A card on screen whose venue has gone out of view (behind the globe, or past the card radius)
       // fades out; one with no room, or not yet laid out, just goes.
-      if (this.games.has(gameId) && placed.offset && !placed.inCardCluster) this.goOut(gameId, now, true)
+      if (this.animates() && this.games.has(gameId) && placed.offset && !placed.inCardCluster) this.goOut(gameId, now, true)
       else {
         this.takeOff(gameId)?.dispose()
         this.moves.forget(gameId)
@@ -283,6 +283,15 @@ export class ScoreCardMarkers {
     // Each frame's layout starts from the last, and the map draws a frame only when something on it
     // changes: so while the cards are still moving, ask for another (see GlobeSettling.cardsSynced).
     if (this.settling.cardsSynced({ changed, pinsLoaded }) === 'askForFrame') this.map.triggerRepaint()
+  }
+
+  /**
+   * Whether cards fade into view and out of it, and glide as they're moved: only once the globe is
+   * Ready. Behind the loading screen no one sees them, and the frames their trails ask for would keep
+   * the globe from settling as it becomes Ready.
+   */
+  private animates(): boolean {
+    return this.settling.stage() === 'ready'
   }
 
   private readonly resized = () => (this.mapSize = null)
@@ -333,7 +342,7 @@ export class ScoreCardMarkers {
     // a step glides there (see cardMoves), unless the viewer asks for less motion.
     const noRoom = { dx: 0, dy: -scene.venueGap }
     const now = performance.now()
-    const glides = !this.reducedMotion.matches
+    const glides = this.animates() && !this.reducedMotion.matches
     for (const gameId of gameIds) {
       const placed = this.placed.get(gameId)!
       const showing = this.layout.shows(gameId)

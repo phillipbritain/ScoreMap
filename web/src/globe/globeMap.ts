@@ -41,6 +41,7 @@ import { addPinSources, type PinSources } from './pinSources'
 import { pulse } from './pinPulse'
 import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
+import { celebrateOnGlobe } from './confettiPrototype'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
 import { cardRadiusOn, hasCard, zoomSettings as appZoomSettings, zoomAt, zoomAtEquator, type GlobeCamera, type ZoomSettings } from './zoomLevels'
@@ -281,7 +282,19 @@ export class GlobeMap {
       const kind = before.has(game.id) ? changeSince(justHappened, game.id, played) : null
       const animation = kind && pinAnimation(kind, game)
       if (animation) void this.animate(game, animation)
+      // PROTOTYPE, throw away: confetti over a game that just finished (see confettiPrototype.ts).
+      if (kind === 'Finished' && import.meta.env.DEV) this.celebrate(game)
     }
+  }
+
+  // PROTOTYPE, throw away: confetti over a game that just finished, from its card or its pin (see confettiPrototype.ts).
+  private celebrate(game: PlacedGame): void {
+    const map = this.map
+    const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
+    const box = map.getContainer().getBoundingClientRect()
+    const { x, y } = map.project(venue)
+    const pin = fadedOut(map, venue) ? null : { x: box.left + x, y: box.top + y }
+    void celebrateOnGlobe(game, this.colorOf({ ...game, status: 'Live' }), this.cards.cardElement(game.id), pin)
   }
 
   /** Highlights the selected game and brings it clear of its rendered panel, according to its intent. */

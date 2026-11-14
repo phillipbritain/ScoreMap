@@ -453,6 +453,11 @@ export class ScoreCardMarkers {
     return true
   }
 
+  // PROTOTYPE, throw away: a game's score card on screen, for confetti over it (see confettiPrototype.ts).
+  cardElement(gameId: string): HTMLElement | undefined {
+    return this.layout.shows(gameId).as === 'card' ? this.placed.get(gameId)?.element : undefined
+  }
+
   /** Draws a game's trail and venue dot bolder, and the last game's no longer (see trailLayer). */
   private hover(gameId: string | null): void {
     this.hoveredGameId = gameId

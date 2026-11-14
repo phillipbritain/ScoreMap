@@ -4,6 +4,9 @@ import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import { scorerOf } from './games/justHappened'
+// PROTOTYPE, throw away: the confetti prototype (see globe/confettiPrototype.ts).
+import { usePanelConfetti } from './panel/confettiPanelPrototype'
+import { ConfettiPrototypeBar } from './panel/ConfettiPrototypeBar'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
@@ -117,6 +120,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
   const selectedColor = selectedGame && gameColor(colors, selectedGame, theme)
+  // PROTOTYPE, throw away: confetti in the panel when its game ends, then its closing (see panel/confettiPanelPrototype.tsx).
+  usePanelConfetti(selectedGame, panel, selectedColor, closeGame)
   // Where the rail ends, so the game panel stops short of it.
   const globeArea = useRef<HTMLDivElement>(null)
   useRailClearance(globeArea)
@@ -124,6 +129,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      {import.meta.env.DEV && !demo && <ConfettiPrototypeBar selectedGameId={selectedGame?.id ?? null} />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

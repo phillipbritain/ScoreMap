@@ -110,14 +110,13 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  /* Never so tall that its close tab, at its top right, reaches the rail above it (--rail-bottom, see
-     useRailClearance): its band gives way and scrolls instead (see .game-panel__band). On a screen too
-     short for both, such as a phone on its side, it keeps a quarter of the screen. */
-  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-size-close-height) - var(--game-panel-bottom)));
+  /* Never so tall that it reaches the rail above its right end (--rail-bottom, see useRailClearance):
+     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, such
+     as a phone on its side, it keeps a quarter of the screen. */
+  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   border-top: var(--shape-border-width-thick) solid var(--game-color);
-  /* Square at the top right, where the close button's tab rises from it. */
-  border-radius: var(--game-panel-corner) 0 var(--game-panel-corner) var(--game-panel-corner);
+  border-radius: var(--game-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
@@ -126,10 +125,11 @@ body {
     0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
 }
 
-/* Everything in the panel but the close button, which sits on its tab above it, clipped to the panel's
-   corners: it clips rather than the panel, which would cut off the tab. Its own surfaces (the score
-   block's glass, the details and the band) paint the panel: on a desktop it has none of its own. */
+/* Everything in the panel, clipped to its corners, the close button in its top right corner. Its own
+   surfaces (the score block's glass, the details and the band) paint the panel: on a desktop it has none
+   of its own. */
 .game-panel__body {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -343,6 +343,11 @@ body {
   opacity: var(--game-panel-photo-opacity);
 }
 
+/* The venue at the details' top right keeps clear of the close button in the panel's corner. */
+.game-panel__venue {
+  padding-right: calc(var(--game-panel-size-close-width) - 2 * var(--spacing));
+}
+
 /* One line for a venue's name, cut short with an ellipsis and in full on hover. */
 .game-panel__value {
   overflow: hidden;
@@ -413,16 +418,19 @@ body {
   font-size: var(--typography-caption-font-size);
 }
 
-/* The close button on a tab in the game's color rising from the panel's lit top edge at its right end,
-   clear of the photo. */
+/* The close button in the game's color, in the panel's top right corner under its lit top edge, over the
+   details and the photo; the panel's corner rounds its top right, and its bottom left is rounded to match
+   the tab it once was. The text it would cover keeps clear of it (see .game-panel__venue, and on a phone
+   .game-panel__league). */
 .game-panel__close {
   position: absolute;
+  top: 0;
   right: 0;
-  bottom: 100%;
+  z-index: 3;
   width: var(--game-panel-size-close-width);
   height: var(--game-panel-size-close-height);
   border: none;
-  border-radius: calc(1.5 * var(--shape-border-radius)) calc(1.5 * var(--shape-border-radius)) 0 0;
+  border-radius: 0 0 0 calc(1.5 * var(--shape-border-radius));
   background: var(--game-color);
   color: var(--text-on-game-color);
   font-family: var(--typography-font-family);
@@ -561,9 +569,10 @@ body {
     clip-path: none;
   }
 
+  /* The league, at the panel's top, keeps clear of the close button in its corner. */
   .game-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
-    padding-right: 0;
+    padding-right: calc(var(--game-panel-size-close-width) + var(--spacing));
   }
 
   .game-panel__progress,

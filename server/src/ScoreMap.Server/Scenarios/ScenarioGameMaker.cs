@@ -9,9 +9,11 @@ namespace ScoreMap.Server.Scenarios;
 /// a random configured league, neither of them already in a game showing (ADR-0009). Its start, score
 /// and clock fit its status, as its sport plays out (see <see cref="SidesPlay"/>), and its start keeps
 /// it inside its pin window when the scenario starts. Used by <c>fill</c>; play uses it to bring on
-/// new games.
+/// new games. Given <paramref name="leagueShares"/> (by league key), it picks only those leagues, each
+/// in proportion to its share; otherwise every league with teams free is as likely.
 /// </summary>
-public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTeamList teams)
+public sealed class ScenarioGameMaker(
+    IReadOnlyList<League> leagues, ScenarioTeamList teams, IReadOnlyDictionary<string, double>? leagueShares = null)
 {
     /// <summary>
     /// A game with id <paramref name="id"/> at <paramref name="venue"/> in <paramref name="status"/>,
@@ -25,13 +27,16 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     {
         var taken = playing.ToHashSet();
         var leaguesWithAGameFree = leagues
+            .Where(league => leagueShares is null || leagueShares.GetValueOrDefault(league.Key) > 0)
             .Select(league => (League: league, Free: teams.For(league).Where(team => !taken.Contains(new(league.Key, team.Name))).ToList()))
             .Where(league => league.Free.Count >= 2)
             .ToList();
         if (leaguesWithAGameFree.Count == 0)
             throw new NotEnoughTeamsException(
                 $"Can't make game \"{id}\": no league has two teams free to play; add teams to the scenario team list or ask for fewer games");
-        var (league, free) = leaguesWithAGameFree[random.Next(leaguesWithAGameFree.Count)];
+        var (league, free) = leagueShares is null
+            ? leaguesWithAGameFree[random.Next(leaguesWithAGameFree.Count)]
+            : Weighted(leaguesWithAGameFree, choice => leagueShares[choice.League.Key], random);
         var home = free[random.Next(free.Count)];
         free.Remove(home);
         var away = free[random.Next(free.Count)];
@@ -90,6 +95,19 @@ public sealed class ScenarioGameMaker(IReadOnlyList<League> leagues, ScenarioTea
     };
 
     private static TimeSpan Minutes(int minutes) => TimeSpan.FromMinutes(minutes);
+
+    /// <summary>One of <paramref name="choices"/> at random, each as likely as its share.</summary>
+    private static T Weighted<T>(IReadOnlyList<T> choices, Func<T, double> share, Random random)
+    {
+        var pick = random.NextDouble() * choices.Sum(share);
+        foreach (var choice in choices)
+        {
+            pick -= share(choice);
+            if (pick < 0)
+                return choice;
+        }
+        return choices[^1];
+    }
 
     private static ProviderTeam Team(ScenarioTeam team) =>
         new(team.Abbreviation, team.Name, team.LogoUrl, null, ConferenceId: team.ConferenceId);

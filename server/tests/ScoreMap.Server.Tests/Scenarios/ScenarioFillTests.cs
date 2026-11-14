@@ -90,6 +90,30 @@ public sealed class ScenarioFillTests : IDisposable
     }
 
     [Fact]
+    public void The_league_shares_give_filled_games_only_their_leagues_roughly_in_proportion()
+    {
+        // Forty teams a league: room for every game, so the shares alone decide the leagues.
+        var scenario = Read(teams: TeamsPerLeague(40), json: """
+            { "fill": { "count": 8, "group": "worldwide", "leagues": { "NBA": 3, "basketball/mens-college-basketball": 1 } } }
+            """);
+
+        var leagues = scenario.Games.GroupBy(g => g.LeagueKey).ToDictionary(g => g.Key, g => g.Count());
+        Assert.Equal(["basketball/mens-college-basketball", "basketball/nba"], leagues.Keys.Order());
+        Assert.True(leagues["basketball/nba"] > leagues["basketball/mens-college-basketball"], $"NBA {leagues["basketball/nba"]} of 8");
+    }
+
+    [Fact]
+    public void Once_a_shared_leagues_teams_are_all_playing_the_other_shared_leagues_fill_on()
+    {
+        // NBA's two teams have room for one game; the rest go to the other league shared.
+        var scenario = Read(teams: TeamsPerLeague(2), json: """
+            { "fill": { "count": 2, "group": "worldwide", "leagues": { "NBA": 100, "NHL": 1 } } }
+            """);
+
+        Assert.Equal(["basketball/nba", "hockey/nhl"], scenario.Games.Select(g => g.LeagueKey).Order());
+    }
+
+    [Fact]
     public void The_same_scenario_file_makes_the_same_games_each_time()
     {
         const string json = """{ "fill": { "count": 8, "group": "worldwide", "mix": { "live": 2, "upcoming": 1, "final": 1 } }, "play": true }""";
@@ -135,6 +159,9 @@ public sealed class ScenarioFillTests : IDisposable
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 1, "disrupted": 1 } } }""", "unknown status \"disrupted\"", "upcoming, live, final")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": -1, "final": 2 } } }""", "share -1")]
     [InlineData("""{ "fill": { "count": 2, "group": "london", "mix": { "live": 0 } } }""", "no games to any status")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "leagues": { "NBL": 1 } } }""", "unknown league \"NBL\"", "NFL, NBA")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "leagues": { "NBA": -1, "NFL": 2 } } }""", "share -1")]
+    [InlineData("""{ "fill": { "count": 2, "group": "london", "leagues": { "NBA": 0 } } }""", "no games to any league")]
     public void A_fill_that_cant_be_made_says_why(string json, params string[] messageParts)
     {
         var error = Assert.Throws<ScenarioFileException>(() => Read(json));

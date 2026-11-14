@@ -1,4 +1,5 @@
 import { degreesApart, type GlobePoint } from './geo'
+import { prototypeCardRadius } from './cardReachPrototype'
 import type { MapType } from '../settings/viewerSettings'
 import settingsFile from './zoomSettings.json'
 
@@ -10,7 +11,8 @@ export const cardRadius = 40
 
 /** Whether a game has a score card: its venue is within cardRadius of the view's center. */
 export function hasCard(center: GlobePoint, venue: GlobePoint): boolean {
-  return degreesApart(center, venue) <= cardRadius
+  // PROTOTYPE: the reach under the card reach prototype's variant (see cardReachPrototype).
+  return degreesApart(center, venue) <= prototypeCardRadius(cardRadius)
 }
 
 /** How far out and in the globe zooms, and where it starts. */

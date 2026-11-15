@@ -139,7 +139,14 @@ interface Piece {
   shape: Shape
   born: number
   life: number
+  /** For confetti kept to a score card: the card's box, read each frame, which the piece's x and y are from and it's clipped to; null once the card's gone. */
+  within?: () => DOMRect | null
+  /** Its gravity, px per frame per frame at 60 fps. */
+  gravity: number
 }
+
+/** How far confetti kept to a card may stray past its edges, px. */
+const cardOverflow = 3
 
 let canvas: HTMLCanvasElement | null = null
 let pieces: Piece[] = []
@@ -196,8 +203,50 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
       shape: variant.shapes[Math.floor(Math.random() * variant.shapes.length)],
       born: now,
       life: variant.duration * (0.7 + Math.random() * 0.3),
+      gravity: 0.32,
     })
   }
+  run(now)
+}
+
+/**
+ * A shower of the variant's confetti kept to a score card: pieces pop out a little inside it and drift
+ * down through it, clipped to its box (a few px past its edges at most) and moving with it. Nothing
+ * with prefers-reduced-motion.
+ */
+export function shower(variant: ConfettiVariant, card: HTMLElement, colors: readonly string[]): void {
+  if (reducedMotion() || !colors.length) return
+  const box = () => (card.isConnected ? card.getBoundingClientRect() : null)
+  const start = box()
+  if (!start || start.width === 0) return
+  const now = performance.now()
+  for (let i = 0; i < variant.cardCount; i++) {
+    const direction = Math.random() * Math.PI * 2
+    const speed = 0.4 + Math.random() * 1.6
+    // Later pieces come in from the top edge, so it keeps falling through the card for a while.
+    const late = i > variant.cardCount * 0.45
+    pieces.push({
+      x: Math.random() * start.width,
+      y: late ? -4 : start.height * (0.15 + Math.random() * 0.5),
+      vx: Math.sin(direction) * speed,
+      vy: late ? 0.3 : -Math.abs(Math.cos(direction)) * speed - 0.6,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.3,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.05 + Math.random() * 0.1,
+      size: 3 + Math.random() * 2.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      shape: variant.shapes[Math.floor(Math.random() * variant.shapes.length)],
+      born: now + (late ? Math.random() * variant.duration * 0.5 : 0),
+      life: variant.duration * (0.6 + Math.random() * 0.4),
+      within: box,
+      gravity: 0.025,
+    })
+  }
+  run(now)
+}
+
+function run(now: number): void {
   if (!running) {
     running = true
     let last = now
@@ -207,18 +256,35 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
       const context = ensureCanvas()
       context.clearRect(0, 0, innerWidth, innerHeight)
       pieces = pieces.filter((piece) => time - piece.born < piece.life)
+      // Each card's box once a frame.
+      const boxes = new Map<() => DOMRect | null, DOMRect | null>()
       for (const piece of pieces) {
+        if (time < piece.born) continue
+        let origin = { x: 0, y: 0 }
+        if (piece.within) {
+          if (!boxes.has(piece.within)) boxes.set(piece.within, piece.within())
+          const box = boxes.get(piece.within)
+          if (!box || box.width === 0) {
+            piece.life = 0
+            continue
+          }
+          origin = { x: box.left, y: box.top }
+          context.save()
+          context.beginPath()
+          context.rect(box.left - cardOverflow, box.top - cardOverflow, box.width + 2 * cardOverflow, box.height + 2 * cardOverflow)
+          context.clip()
+        }
         piece.vx *= Math.pow(0.96, step)
-        piece.vy = piece.vy * Math.pow(0.96, step) + 0.32 * step
+        piece.vy = piece.vy * Math.pow(0.96, step) + piece.gravity * step
         piece.wobble += piece.wobbleSpeed * step
         piece.angle += piece.spin * step
-        piece.x += (piece.vx + Math.sin(piece.wobble) * 0.8) * step
+        piece.x += (piece.vx + Math.sin(piece.wobble) * (piece.within ? 0.25 : 0.8)) * step
         piece.y += piece.vy * step
         const age = (time - piece.born) / piece.life
         context.globalAlpha = age < 0.7 ? 1 : 1 - (age - 0.7) / 0.3
         context.fillStyle = piece.color
         context.save()
-        context.translate(piece.x, piece.y)
+        context.translate(origin.x + piece.x, origin.y + piece.y)
         context.rotate(piece.angle)
         // Turning over: the piece narrows and widens as it flutters.
         context.scale(1, Math.cos(piece.wobble * 1.7))
@@ -232,6 +298,7 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
           context.fillRect(-piece.size / 2, -piece.size / 3, piece.size, piece.size * 0.66)
         }
         context.restore()
+        if (piece.within) context.restore()
       }
       context.globalAlpha = 1
       if (pieces.length) requestAnimationFrame(frame)
@@ -248,9 +315,9 @@ export async function celebrateOnGlobe(game: Game, gameColor: string, card: HTML
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
   const box = card?.isConnected ? card.getBoundingClientRect() : null
-  const at = box && box.width > 0 ? { x: box.left + box.width / 2, y: box.top + 4 } : pin
-  if (!at) return
-  blast(variant, { ...at, angle: 0, spread: 55, count: variant.cardCount, colors, power: 0.7 })
+  if (card && box && box.width > 0) shower(variant, card, colors)
+  // No card: a small pop at the pin, kept close to it.
+  else if (pin) blast(variant, { ...pin, angle: 0, spread: 40, count: Math.round(variant.cardCount / 2), colors, power: 0.25 })
 }
 
 /** Confetti up from both bottom corners of the game panel. */

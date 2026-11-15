@@ -1628,7 +1628,8 @@ describe('pin sources', () => {
     // At the zoom it was, the venue 50° east of the center of the view.
     map.jumpTo({ center: [-30, 0], zoom: countryZoom })
     await pinsDrawn(map, outerSmallPinLayer, a)
-    expect(card('A')).toBeNull()
+    // Its card fades out as its venue leaves the card radius.
+    await vi.waitFor(() => expect(card('A')).toBeNull())
 
     // 120° east, behind the globe.
     map.jumpTo({ center: [-100, 0], zoom: countryZoom })

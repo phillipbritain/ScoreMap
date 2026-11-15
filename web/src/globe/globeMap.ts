@@ -21,7 +21,7 @@ import { CameraMoves, type SelectionIntent } from './cameraMoves'
 import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
-import { globeStyle } from './globeStyle'
+import { globeStyle, showStateLines } from './globeStyle'
 import { fadeNearHorizon, fadedOut } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { globeSettling, type GlobeSettling } from './globeSettling'
@@ -158,7 +158,7 @@ export class GlobeMap {
       attributionControl: false,
       // Place names are placed afresh every frame, not once each fade has played: between placements
       // they turn with the globe, so names gone over the horizon were still written at its edge.
-      // They pop in and out as score cards do.
+      // They pop in and out (score cards fade).
       fadeDuration: 0,
       // A double click while turning the globe is more often a slip than a wish to zoom in.
       doubleClickZoom: false,
@@ -169,7 +169,13 @@ export class GlobeMap {
     this.map = map
     this.theme = theme
     // The map takes keys once the globe is ready (see GlobeSettling.wentIdle).
-    this.settling = globeSettling({ onStage, onReady: () => map.keyboard.enable() })
+    this.settling = globeSettling({
+      onStage,
+      onReady: () => {
+        map.keyboard.enable()
+        showStateLines(map)
+      },
+    })
     try {
       map.touchZoomRotate.disableRotation()
       // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint --deny-warnings",
     "city-list": "node scripts/cityList.ts",
+    "state-lines": "node scripts/stateLines.ts",
     "page": "node scripts/page/page.ts",
     "preview": "vite preview",
     "test": "vitest run --project unit",

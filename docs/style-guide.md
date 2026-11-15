@@ -50,18 +50,24 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 The code reads only the resolved theme, never the JSON:
 
 - **The page** (the game panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colors, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
-- **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
+- **The globe**: its map style (land, sea, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is.
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
 When a game's score changes, nothing on its score card moves: the card's edge glows in the game's color and fades over 1.6 seconds, and the score takes that color as it fades. When a two-sided game's score changes, the side that scored is also lit for 3 seconds, on its score card's row and in the game panel: a tint and inner glow in the game's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
 
-A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves, or as it moves into or out of a card cluster, just appears or goes.
+A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the card radius) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
+
+The message under the loading screen's rocket, and the cut-off note's, drifts in a word at a time: each word rises into place out of a blur over 0.3 seconds, 35 ms after the one before, glowing in `components.LoadingScreen.glow`. A message ending in an ellipsis ends instead in three dots in the glow's color, lit one after another for as long as it shows. This is variant E2 of the comparison preserved on the throwaway branch `prototype/loading-text`, chosen by the user on November 14, 2026.
+
+A rail popover (Leagues, Display Settings, Map Type, Games, More, Feedback, and the top rail's Scenario) opening slides out a little from the rail, or down from the top rail's row, as it fades in over 160 ms; closed, it slides back as it fades out over 120 ms, out of reach as it goes. The game panel opening slides up into place from below the screen's foot over 220 ms, and closed, slides back down off it over 160 ms. It doesn't fade, as the score block's glass would flash as its blur stopped seeing the globe. Picking another game while it's open changes it in place. With reduce motion a popover fades in place as it opens, the panel is there at once, and either goes at once.
 
 The rail's Hide controls button, a cross above its other buttons, gold while they show, folds them up into itself over 220 ms, their groups rising and fading one after another, leaving itself alone at the top right as Show controls, a menu, which drops them back down the same way; with reduce motion they go and come back at once. The rail stays collapsed on the viewer's next visit, but is open while the welcome tour shows.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+On a phone, where the game panel is a bottom sheet, it can be swiped down to close as well as by its close button: a drag down from anywhere on it but its band (which scrolls) moves the panel with the finger, giving only a little upward. Let go past 30% of its height, or flicked down, it slides off the screen over 180 ms and closes; otherwise it springs back over 260 ms, overshooting slightly. There's no handle. This is variant B of the comparison preserved on the throwaway branch `phillipbritain/swipe-close-proto`, chosen by the user on November 14, 2026.
+
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away, and one the card layout moves goes straight there without gliding. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, its message is there at once with its dots steady, and its dim goes at once when ScoreMap is ready instead of fading. A game panel let go after a swipe closes or springs back at once. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colors
 
@@ -123,21 +129,22 @@ A **color job** is what a color is for (the globe's surface, Live's color, main 
 - outside the palette, one of the palette's colors by name, as MUI's `sx` takes one: `"primary.dark"`, `"text.secondary"`, `"background.paper"`, `"divider"`; or
 - a color given directly, in a form both CSS and MapLibre read, since it's passed on to both as written: a hex color of 3, 4, 6 or 8 digits (`#abc`, `#abcd`, `#0b1526`, `#0b152680`); `rgb(…)` or `rgba(…)`, its three channels all numbers or all percentages; `hsl(…)` or `hsla(…)`, a hue (in degrees, `deg` optional) and two percentages; each function's arguments comma-separated with an optional fourth for alpha (`rgba(255, 255, 255, 0.7)`), or space-separated with an optional `/ alpha` (`rgb(10% 20% 30% / 50%)`); or `transparent` (for a shadow or glow that isn't there). Named colors such as `red` aren't taken: `red` would read as a step's name. This is the escape hatch for a one-off the theme's colors don't fit, at the cost of that color no longer following them.
 
-The dark theme names one of the palette's colors where a job is what that palette color is for (a surface is `background.paper`, main text `text.primary`) and a step where it's a shade of its own (place names' paler navies), and gives the four shadows `transparent`. Every color job, by where it shows:
+The dark theme names one of the palette's colors where a job is what that palette color is for (a surface is `background.paper`, main text `text.primary`) and a step where it's a shade of its own (place names' paler navies, the globe's land and lines), gives the sea a color directly, as no step falls where it should, and gives the four shadows `transparent`. Every color job, by where it shows:
 
 ### The globe
 
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
-| `components.Globe.surface` | The globe: land and sea alike | `primary.main` |
-| `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `primary.light` |
-| `components.Globe.countryBorders.color` | Country borders | `primary.light` |
-| `components.Globe.stateLines.color` | State and province lines | `navy.400` |
-| `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.400` |
+| `components.Globe.surface` | The globe's land, a step darker than `primary.main` so the globe reads behind score cards | `navy.600` |
+| `components.Globe.sea` | The sea: oceans and lakes, darker than the land so the coast stands out (rivers stay the land's color; the satellite map shows its own) | `#071a3c`, given directly, between `navy.700` and `navy.800` |
+| `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `navy.200` |
+| `components.Globe.countryBorders.color` | Country borders | `navy.200` |
+| `components.Globe.stateLines.color` | State and province lines, the United States' and Canada's only (ADR-0026) | `navy.300` |
+| `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.300` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |
 | `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | city `navy.200`, state `primary.light`, country `navy.200` |
-| `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.600` for every kind |
+| `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.800` for every kind |
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
 
@@ -181,6 +188,7 @@ Beside the palette's background, text, divider and hover:
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's color) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
 | `components.LoadingScreen.message` | The message under the loading screen's rocket | `text.primary` |
+| `components.LoadingScreen.glow.color` | The glow around the loading screen's message, and the dots of its closing ellipsis | `secondary.main` |
 
 A league that's on is lit in gold, as a game is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
 
@@ -275,11 +283,11 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 
 | Type style | Which text | Dark theme |
 | --- | --- | --- |
-| `h6` | Scores on the game panel; a score card's scores take its weight; the game panel's close button takes its size | 700, 20 |
+| `h6` | Scores on the game panel; a score card's scores take its weight; the game panel's close button and the loading screen's message take its size | 700, 20 |
 | `subtitle1` | Team names on the game panel; a score card's team abbreviations take its weight | 700, 16 |
-| `subtitle2` | A score card's text takes its weight | 600, 12 |
+| `subtitle2` | A score card's text and the loading screen's message take its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
-| `body2` | The game panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
+| `body2` | The game panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |
 | `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
@@ -332,7 +340,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.Globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.6, "8": 1.2 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.6 to 1.2 (zoom 2 to 8), country borders 0.6 to 1.4 (2 to 8), state lines 0.5 to 1 (3 to 8), disputed borders 0.8 |
+| `components.Globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.9, "8": 1.6 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.9 to 1.6 (zoom 2 to 8), country borders 0.9 to 1.8 (2 to 8), state lines 0.6 to 1.2 (3 to 8), disputed borders 0.8 |
 | `components.Globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.2 and 0 |
@@ -370,6 +378,7 @@ A short screen on its side (500px tall or less, wider than tall: a phone in land
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colors" with no colors to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
+| `components.LoadingScreen.glow.radius`, `.opacity` | How far the glow around the loading screen's message reaches, and how strong it is, 0 to 1 (its ellipsis's dots glow half as far, at full strength) | 14, 0.45 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
@@ -384,11 +393,12 @@ A short screen on its side (500px tall or less, wider than tall: a phone in land
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
-| `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's surface, coastline and border colors | 64 |
+| `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's land, sea, coastline and border colors | 64 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth` | The narrowest a count of leagues is, in ems | 3.2 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |
 | `components.LoadingScreen.rocket.size` | The loading screen's rocket, its box across | 64 |
+| `components.LoadingScreen.dot` | Each dot of the loading screen's closing ellipsis, across | 5 |
 
 ## Text on the globe
 

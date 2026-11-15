@@ -1,5 +1,6 @@
 import type {
   DataDrivenPropertyValueSpecification,
+  ExpressionSpecification,
   FilterSpecification,
   GeoJSONSource,
   GeoJSONSourceSpecification,
@@ -72,6 +73,13 @@ type PlaceKind = keyof Theme['components']['PlaceNames']
  */
 const capitals: ReadonlySet<PlaceKind> = new Set(['state', 'country'])
 
+/**
+ * A state's or country's name, once, in English: the base style writes it in its Latin spelling and
+ * again in its own script (Russia, Mongolia, China). Where the tiles have no English name, its Latin
+ * spelling, then its own name.
+ */
+export const englishName: ExpressionSpecification = ['coalesce', ['get', 'name:en'], ['get', 'name_en'], ['get', 'name:latin'], ['get', 'name']]
+
 /** A kind of place's text sizes in the theme, as zoom, size stops (see zoomed), by zoom. */
 const sizeStops = (kind: PlaceKind, theme: Theme): number[] => zoomStops(theme.components.PlaceNames[kind].size).flat()
 
@@ -82,6 +90,7 @@ function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): La
     ...layer,
     layout: {
       ...(layer.type === 'symbol' ? layer.layout : {}),
+      ...(kind === 'city' ? {} : { 'text-field': englishName }),
       'text-font': [look.font.name],
       'text-size': zoomed(...sizeStops(kind, theme)),
       'text-transform': capitals.has(kind) ? 'uppercase' : 'none',

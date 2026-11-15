@@ -42,6 +42,13 @@ declare global {
   }
 }
 
+/**
+ * PROTOTYPE, throw away: games a dev run made finish that stay Final in this tab until they're taken off
+ * the board, whatever the server sends for them meanwhile, as a game that really finished does (see
+ * panel/ConfettiPrototypeBar.tsx). liveGames drops the server's changes to them, but for their removal.
+ */
+export const heldFinished = new Set<string>()
+
 /** Puts `happen` on `window.scoremapGames` in dev runs, feeding its changes to these live games; returns what takes it off. */
 export function offerMadeUpChanges(live: { readonly state: { games: Game[] | null }; receive: (change: GameChange) => void }): () => void {
   if (!import.meta.env.DEV) return () => {}
@@ -49,6 +56,7 @@ export function offerMadeUpChanges(live: { readonly state: { games: Game[] | nul
     happen: (event, onScreen) => {
       const change = madeUpChange(live.state.games ?? [], event, onScreen, new Date())
       if (change) live.receive(change)
+      if (change?.kind === 'Finished') heldFinished.add(change.game.id)
       return change
     },
     remove: (gameId) => {

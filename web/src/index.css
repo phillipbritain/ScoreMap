@@ -1923,12 +1923,13 @@ body {
   color: var(--rail-on-text);
 }
 
-/* A league's conferences, opened under its sport's leagues: chips set in from a line down their left. */
+/* A league's conferences, opened in a full-width row straight after its league among the sport's leagues
+   (the next league wrapping below them): chips set in from a line down their left. */
 .leagues-conferences {
   display: flex;
+  flex-basis: 100%;
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
-  margin-top: calc(2 * var(--spacing));
   padding-left: calc(3 * var(--spacing));
   border-left: var(--shape-border-width-medium) solid var(--palette-divider);
 }

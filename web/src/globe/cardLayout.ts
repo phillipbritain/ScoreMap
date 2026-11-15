@@ -1,5 +1,6 @@
 import type { GameStatus } from '../games/game'
 import { cardJump } from './cardJump'
+import { driftFor, foldedWhileMoving, heldPlacement, nearestToWhereItWas, tidiesOnStop, tidyTrail } from './cardMotionProto'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
 import { groupStatus, statusProminence } from './statusLook'
@@ -279,9 +280,33 @@ export function layOutCards(
       ...(exit !== 'facing' && { exit }),
     })
   }
+  // PROTOTYPE (cardMotionProto, hold): while the camera moves, cards laid out last time keep where they were.
+  let clusters = cardClusters
+  const held = boxes.flatMap((box) => {
+    const placement = heldPlacement(scene, previous.get(box.gameId), box.venueX, box.venueY)
+    return placement ? [[box, placement] as const] : []
+  })
+  if (held.length > 0) {
+    for (const [box, placement] of held) placements.set(box.gameId, placement)
+    clusters = []
+    const ordered = [...boxes].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+    // PROTOTYPE (cardMotionProto, fold): a card lying under one ahead of it counts in a card cluster.
+    const shown = ordered.flatMap((box) => {
+      const { inCardCluster, offset } = placements.get(box.gameId)!
+      return inCardCluster ? [] : [{ gameId: box.gameId, x: box.venueX + offset.dx, y: box.venueY + offset.dy, width: box.width, height: box.height }]
+    })
+    for (const gameId of foldedWhileMoving(scene, shown))
+      placements.set(gameId, { offset: { dx: 0, dy: -scene.venueGap }, inCardCluster: true, moved: false, trail: null, lookedAgo: 0 })
+    for (const box of ordered) {
+      if (!placements.get(box.gameId)!.inCardCluster) continue
+      const cluster = clusters.find((c) => Math.hypot(c.x - box.venueX, c.y - box.venueY) <= cardClusterRadius)
+      if (cluster) cluster.gameIds.push(box.gameId)
+      else clusters.push({ gameIds: [box.gameId], x: box.venueX, y: box.venueY })
+    }
+  }
   return {
     cards: placements,
-    cardClusters: cardClusters.map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
+    cardClusters: clusters.map((cluster) => ({ ...cluster, status: groupStatus(cluster.gameIds.map((id) => statuses.get(id)!)) })),
   }
 }
 
@@ -595,15 +620,28 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // Where a moved card was last time will do while it fits, give or take the drift, trails or not,
     // so a trail edging across a card doesn't send it elsewhere.
     const wasMoved = isMoved(card.previous)
-    const previous = wasMoved && fits(card.previous!, drift) ? card.previous : undefined
+    const keepDrift = driftFor(screen, drift)
+    const previous = wasMoved && fits(card.previous!, keepDrift) ? card.previous : undefined
 
     // Where it would sit, if that's clear (give or take the drift, if it sat there last time); or else
     // the nearest spot clear of trails, while it's little further than the nearest spot at all.
-    let nearest: Spot | undefined = fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
+    let nearest: Spot | undefined = fits(unmovedSpot, card.previous && !wasMoved ? keepDrift : 0) ? unmovedSpot : undefined
     let clear: Spot | undefined = nearest && trailsClear(unmovedSpot) ? unmovedSpot : undefined
     // A card in a card cluster last time looks for room only when its turn comes (see above).
     const looks = card.lookedAgo === undefined || !screen.moving || card === looking
-    if (!clear && !previous && looks) {
+    if (!clear && !previous && looks && wasMoved && nearestToWhereItWas(screen)) {
+      // PROTOTYPE (cardMotionProto, nearby): the room nearest where it was, rather than nearest its venue.
+      markTakenSpots()
+      let distance = nearest ? Math.hypot(card.previous!.dx, card.previous!.dy) : Infinity
+      for (const spot of spotsFor(card)) {
+        const away = Math.hypot(spot.dx - card.previous!.dx, spot.dy - card.previous!.dy)
+        if (away < distance && spotFits(spot)) {
+          distance = away
+          nearest = spot
+        }
+      }
+      clear = nearest
+    } else if (!clear && !previous && looks) {
       markTakenSpots()
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break
@@ -615,8 +653,23 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
         }
       }
     }
+    // PROTOTYPE (cardMotionProto, hold and fold): once still, a held card leaves for a much shorter trail.
+    let kept = previous
+    if (previous && clear !== unmovedSpot && looks && tidiesOnStop(screen)) {
+      const was = trailLength({ ...card, x: card.x + previous.dx, y: card.y + previous.dy })
+      markTakenSpots()
+      for (const spot of spotsFor(card)) {
+        if (spot.trail + tidyTrail >= was) break
+        if (spotFits(spot)) {
+          nearest = spot
+          clear = spot
+          kept = undefined
+          break
+        }
+      }
+    }
     const best = clear ?? nearest
-    const shift = previous && clear !== unmovedSpot ? previous : best && { dx: best.dx, dy: best.dy }
+    const shift = kept && clear !== unmovedSpot ? kept : best && { dx: best.dx, dy: best.dy }
     if (shift) {
       shifts.set(card.gameId, shift)
       const x = card.x + shift.dx

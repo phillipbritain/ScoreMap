@@ -17,6 +17,8 @@ export function panArgs(args: string[]): { file: string; pan: Pan } | { tooLong:
     else if (options[i] === '--zoom' && numbers.length === 1) zoom = numbers[0]
     else if (options[i] === '--by' && numbers.length === 3 && Number.isInteger(numbers[2]) && numbers[2] > 0)
       steps.push({ by: [numbers[0], numbers[1]], frames: numbers[2] })
+    else if (options[i] === '--zoomBy' && numbers.length === 2 && Number.isInteger(numbers[1]) && numbers[1] > 0)
+      steps.push({ by: [0, 0], frames: numbers[1], zoom: numbers[0] })
     else return null
   }
   const pan = { camera: { center, zoom }, steps: steps.length ? steps : defaultPan.steps }

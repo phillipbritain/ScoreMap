@@ -21,6 +21,7 @@ import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
 import { isBehindGlobe } from './horizon'
 import { traceLayout } from './layoutTrace'
+import { mountCardMotionSwitcher } from './cardMotionProto'
 import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
@@ -131,6 +132,11 @@ export class ScoreCardMarkers {
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
     map.on('moveend', this.cameraStopped)
     map.on('resize', this.resized)
+    // PROTOTYPE (cardMotionProto): the variant switcher.
+    mountCardMotionSwitcher(() => {
+      this.settling.settleAfresh()
+      this.map.triggerRepaint()
+    })
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */

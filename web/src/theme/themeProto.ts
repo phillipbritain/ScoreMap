@@ -388,6 +388,12 @@ specs.push(
   darker('F', 'N', 'F, darker cards', 'navy.800', {}, { ScoreCard: { fill: 'navy.800' }, Cluster: { fill: 'navy.800' } }),
 )
 
+// Round 4: F with a lighter sea.
+specs.push(
+  darker('F', 'O', 'F, sea a little lighter', '#071a3c', {}),
+  darker('F', 'P', 'F, lighter sea', 'navy.700', {}),
+)
+
 const oceans = new WeakMap<Theme, string>()
 
 /** The sea's color in a prototype scheme, or undefined for land and sea alike. */
@@ -409,6 +415,7 @@ export const protoThemes: ProtoTheme[] = specs.map(({ key, name, colors, ocean, 
 })
 
 function resolveStep(colors: Json, step: string): string {
+  if (step.startsWith('#')) return step
   const [color, name] = step.split('.')
   const { base } = colors[color] as { base: string }
   return paletteSteps(base)[name as StepName]

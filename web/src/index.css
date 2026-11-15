@@ -3355,6 +3355,13 @@ body {
     padding-block: calc(2 * var(--spacing));
   }
 
+  /* The watch links side by side, as on a phone held upright, rather than stacked. */
+  .game-panel__watch {
+    flex-direction: row;
+    align-items: center;
+    gap: calc(2 * var(--spacing));
+  }
+
   .rail__popover,
   .rail__popover--games {
     max-width: calc(100vw - var(--rail-left-inset, 0px) - 5 * var(--spacing));

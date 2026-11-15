@@ -43,8 +43,8 @@ declare global {
 }
 
 /**
- * PROTOTYPE, throw away: games a dev run made finish that stay Final in this tab until they're taken off
- * the board, whatever the server sends for them meanwhile, as a game that really finished does (see
+ * PROTOTYPE, throw away: games a dev run made finish, which stay Final in this tab until they're taken off
+ * the board, as a game that really finished does, and games it took off the board, which stay off (see
  * panel/ConfettiPrototypeBar.tsx). liveGames drops the server's changes to them, but for their removal.
  */
 export const heldFinished = new Set<string>()
@@ -62,6 +62,8 @@ export function offerMadeUpChanges(live: { readonly state: { games: Game[] | nul
     remove: (gameId) => {
       const game = live.state.games?.find((candidate) => candidate.id === gameId)
       if (game) live.receive({ kind: 'Removed', game })
+      // Kept off the board in this tab, whatever the server sends for it, until the server removes it too.
+      if (game) heldFinished.add(gameId)
       return !!game
     },
   }

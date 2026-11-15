@@ -45,7 +45,7 @@ function closeAnimation(panel: HTMLElement, look: CloseLook, gameId: string): An
  * When the open panel's game ends: confetti up from the panel's bottom corners, then, after the
  * variant's wait, the panel closes itself with the variant's way out, in place of the default one: it
  * sets the panel's data-leave, plays it, and gives its duration, for useLeaving to keep the panel that
- * long (see .game-panel--leaving). Picking another game or closing it first stops it. With reduce
+ * long (see .game-panel--leaving); its card leaves at the same time. Picking another game or closing it first stops it. With reduce
  * motion, no confetti, and the panel goes at once, as any close does.
  */
 export function usePanelConfetti(game: Game | null, panel: RefObject<HTMLElement | null>, color: string | null, close: () => void): number | null {
@@ -72,14 +72,17 @@ export function usePanelConfetti(game: Game | null, panel: RefObject<HTMLElement
     // the server's next change does to a made-up finish).
     const timer = setTimeout(() => {
       pending.current = null
-      if (reducedMotion()) {
-        close()
-        return
+      if (!reducedMotion()) {
+        element.dataset.leave = `confetti-${variant.close}`
+        const animation = closeAnimation(element, variant.close, id)
+        setLeave({ id, duration: Number(animation.effect?.getTiming().duration ?? 0) })
       }
-      element.dataset.leave = `confetti-${variant.close}`
-      const animation = closeAnimation(element, variant.close, id)
-      setLeave({ id, duration: Number(animation.effect?.getTiming().duration ?? 0) })
       close()
+      // The game's card leaves with it: the game comes off the board in this tab now, rather than when
+      // the server drops it (a minute after it ends in a scenario), so the card plays its going-out as
+      // the panel goes. PROTOTYPE: through the dev run's remove; built for real, the app would drop a
+      // game it has celebrated itself.
+      window.scoremapGames?.remove?.(id)
     }, variant.closeAfter)
     pending.current = { id, timer }
     // Only the game and its status matter; close changes with each selection.

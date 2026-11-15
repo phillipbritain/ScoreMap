@@ -33,14 +33,13 @@ export function ConfettiPrototypeBar({ selectedGameId }: { selectedGameId: strin
     }
     const change = happen('finish', (game) => (which === 'panel' ? game.id === selectedGameId : game.id !== selectedGameId && onScreenCard(game.id)))
     setNote(change ? '' : which === 'panel' ? 'open a Live game first' : 'no Live card on screen')
-    // Then the game drops out, as a Final game does (a minute later in a scenario), so its card's going
-    // away can be seen too: a card alone once its celebration is over.
-    // The game stays Final in this tab until then (see heldFinished in madeUpChange.ts). A panel's game
-    // drops out a moment after its panel has closed itself.
-    if (change) {
+    // A card alone then drops out once its celebration is over, as a Final game does (a minute later in
+    // a scenario), so its going away can be seen too; a panel's game drops out as its panel closes
+    // itself (see usePanelConfetti). The game stays Final in this tab until then (see heldFinished in
+    // madeUpChange.ts).
+    if (change && which === 'card') {
       const gameId = change.game.id
-      const variant = confettiVariant()
-      setTimeout(() => window.scoremapGames?.remove?.(gameId), which === 'card' ? variant.duration + 800 : variant.closeAfter + 1500)
+      setTimeout(() => window.scoremapGames?.remove?.(gameId), confettiVariant().duration + 800)
     }
   }
   return (

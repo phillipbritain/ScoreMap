@@ -1,8 +1,9 @@
 // PROTOTYPE, throw away: confetti when a game ends, on its score card and in its game panel, and the
-// game panel then closing itself (?confettiProto=A..D, a floating bar, [ and ] cycle). Local runs only.
+// game panel then closing itself (?confettiProto=, a floating bar, [ and ] cycle). Local runs only.
 //
-// Four variants of density, colors, duration and the panel's close; with prefers-reduced-motion, no
-// confetti and the panel closes with a plain fade.
+// B, the confetti picked (team colors, then the panel slides down), against fireworks in its place (E,
+// F) or with it (G), all in the teams' colors and closing as B does. A, C and D, the confetti not
+// picked, are still there by URL. With prefers-reduced-motion, none of it.
 import type { Game } from '../games/game'
 import { pickableColors } from '../settings/gameColor'
 
@@ -26,6 +27,16 @@ export interface ConfettiVariant {
   /** From the finish to the panel starting to close, in ms. */
   closeAfter: number
   close: CloseLook
+  /** Confetti, fireworks in its place, or both. */
+  effect?: 'confetti' | 'fireworks' | 'both'
+  /** The panel's rockets: how many, over how long (ms), and the sparks in each burst. */
+  rockets?: number
+  rocketsOver?: number
+  sparks?: number
+  /** Where the panel's rockets go up from: its bottom corners, or along its top edge. */
+  rocketsFrom?: 'corners' | 'top'
+  /** The card's bursts, inside it. */
+  cardBursts?: number
 }
 
 export const confettiVariants: readonly ConfettiVariant[] = [
@@ -33,14 +44,20 @@ export const confettiVariants: readonly ConfettiVariant[] = [
   { key: 'B', name: 'Team colors · slide down', panelCount: 90, cardCount: 34, palette: 'team', shapes: ['rect', 'rect', 'circle'], duration: 2800, speed: 16, closeAfter: 3500, close: 'slide' },
   { key: 'C', name: 'Party · shrink into the pin', panelCount: 170, cardCount: 60, palette: 'party', shapes: ['rect', 'circle', 'streamer'], duration: 3600, speed: 19, closeAfter: 4200, close: 'shrink' },
   { key: 'D', name: 'Streamers, gold · fold away', panelCount: 60, cardCount: 24, palette: 'gold', shapes: ['streamer', 'streamer', 'rect'], duration: 2600, speed: 17, closeAfter: 3200, close: 'fold' },
+  { key: 'E', name: 'Fireworks: a rocket from each corner', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1600, speed: 0, closeAfter: 3300, close: 'slide', effect: 'fireworks', rockets: 2, rocketsOver: 250, sparks: 70, rocketsFrom: 'corners', cardBursts: 1 },
+  { key: 'F', name: 'Fireworks show', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1700, speed: 0, closeAfter: 4200, close: 'slide', effect: 'fireworks', rockets: 6, rocketsOver: 1800, sparks: 55, rocketsFrom: 'top', cardBursts: 3 },
+  { key: 'G', name: 'Confetti and fireworks', panelCount: 70, cardCount: 24, palette: 'team', shapes: ['rect', 'rect', 'circle'], duration: 2800, speed: 16, closeAfter: 3800, close: 'slide', effect: 'both', rockets: 3, rocketsOver: 900, sparks: 55, rocketsFrom: 'top', cardBursts: 1 },
 ]
+
+/** The variants the bar cycles through: B, the confetti picked, and the fireworks against it. */
+export const cycledVariants: readonly ConfettiVariant[] = confettiVariants.filter((variant) => 'BEFG'.includes(variant.key))
 
 const param = 'confettiProto'
 const listeners = new Set<() => void>()
 
 export function confettiVariant(): ConfettiVariant {
   const key = new URLSearchParams(location.search).get(param)
-  return confettiVariants.find((variant) => variant.key === key) ?? confettiVariants[0]
+  return confettiVariants.find((variant) => variant.key === key) ?? cycledVariants[0]
 }
 
 export function setConfettiVariant(key: string): void {
@@ -143,6 +160,12 @@ interface Piece {
   within?: () => DOMRect | null
   /** Its gravity, px per frame per frame at 60 fps. */
   gravity: number
+  /** A firework's spark (a glowing streak) or rocket (a bright dot); confetti otherwise. */
+  kind?: 'spark' | 'rocket'
+  /** Drag each frame at 60 fps: how much speed it keeps. */
+  drag?: number
+  /** What it does as its life ends: a rocket bursts. */
+  onEnd?: (piece: Piece, origin: { x: number; y: number }) => void
 }
 
 /** How far confetti kept to a card may stray past its edges, px. */
@@ -259,7 +282,12 @@ function run(now: number): void {
       last = time
       const context = ensureCanvas()
       context.clearRect(0, 0, innerWidth, innerHeight)
+      const ended = pieces.filter((piece) => time - piece.born >= piece.life && piece.onEnd)
       pieces = pieces.filter((piece) => time - piece.born < piece.life)
+      for (const piece of ended) {
+        const box = piece.within?.()
+        piece.onEnd!(piece, box ? { x: box.left, y: box.top } : { x: 0, y: 0 })
+      }
       // Each card's box once a frame.
       const boxes = new Map<() => DOMRect | null, DOMRect | null>()
       for (const piece of pieces) {
@@ -277,6 +305,11 @@ function run(now: number): void {
           context.beginPath()
           context.rect(box.left - cardOverflow, box.top - cardOverflow, box.width + 2 * cardOverflow, box.height + 2 * cardOverflow)
           context.clip()
+        }
+        if (piece.kind) {
+          drawFirework(context, piece, origin, time, step)
+          if (piece.within) context.restore()
+          continue
         }
         piece.vx *= Math.pow(0.96, step)
         piece.vy = piece.vy * Math.pow(0.96, step) + piece.gravity * step
@@ -312,20 +345,167 @@ function run(now: number): void {
   }
 }
 
+// --- Fireworks -----------------------------------------------------------------------------------
+
+function drawFirework(context: CanvasRenderingContext2D, piece: Piece, origin: { x: number; y: number }, time: number, step: number): void {
+  const drag = Math.pow(piece.drag ?? 0.95, step)
+  piece.vx *= drag
+  piece.vy = piece.vy * drag + piece.gravity * step
+  piece.x += piece.vx * step
+  piece.y += piece.vy * step
+  const age = (time - piece.born) / piece.life
+  const x = origin.x + piece.x
+  const y = origin.y + piece.y
+  context.save()
+  context.globalCompositeOperation = 'lighter'
+  context.strokeStyle = piece.color
+  context.fillStyle = piece.color
+  context.lineCap = 'round'
+  if (piece.kind === 'rocket') {
+    // A bright head with a short fading tail.
+    context.globalAlpha = 0.5
+    context.lineWidth = piece.size * 0.6
+    context.beginPath()
+    context.moveTo(x, y)
+    context.lineTo(x - piece.vx * 4, y - piece.vy * 4)
+    context.stroke()
+    context.globalAlpha = 1
+    context.beginPath()
+    context.arc(x, y, piece.size * 0.55, 0, Math.PI * 2)
+    context.fill()
+  } else {
+    // A streak along its way, fading and twinkling as it dies.
+    const twinkle = age > 0.6 ? 0.55 + 0.45 * Math.sin(time / 30 + piece.wobble) : 1
+    context.globalAlpha = Math.max(0, (age < 0.55 ? 1 : 1 - (age - 0.55) / 0.45) * twinkle)
+    context.lineWidth = piece.size
+    context.beginPath()
+    context.moveTo(x, y)
+    context.lineTo(x - piece.vx * 2.5, y - piece.vy * 2.5)
+    context.stroke()
+  }
+  context.restore()
+}
+
+interface Burst {
+  /** Where, on the page, or in the card's box when `within` is given. */
+  x: number
+  y: number
+  sparks: number
+  colors: readonly string[]
+  /** Spark speed, px per frame at 60 fps. */
+  speed: number
+  /** How long the sparks last, ms. */
+  life: number
+  size: number
+  within?: () => DOMRect | null
+  at?: number
+}
+
+/** A firework's burst: a ring of sparks, in one of the colors, with a few of another for depth. */
+function burst({ x, y, sparks, colors, speed, life, size, within, at = performance.now() }: Burst): void {
+  const main = colors[Math.floor(Math.random() * colors.length)]
+  const turn = Math.random() * Math.PI * 2
+  for (let i = 0; i < sparks; i++) {
+    const direction = turn + (i / sparks) * Math.PI * 2 + (Math.random() - 0.5) * 0.15
+    // Most on the ring's edge, some inside it, so it reads as a sphere.
+    const reach = speed * (Math.random() < 0.7 ? 0.9 + Math.random() * 0.15 : 0.35 + Math.random() * 0.5)
+    pieces.push({
+      x, y,
+      vx: Math.cos(direction) * reach,
+      vy: Math.sin(direction) * reach,
+      angle: 0, spin: 0,
+      wobble: Math.random() * Math.PI * 2, wobbleSpeed: 0,
+      size: size * (0.7 + Math.random() * 0.5),
+      color: Math.random() < 0.8 ? main : colors[Math.floor(Math.random() * colors.length)],
+      shape: 'circle',
+      born: at,
+      life: life * (0.75 + Math.random() * 0.25),
+      gravity: within ? 0.012 : 0.05,
+      drag: 0.94,
+      kind: 'spark',
+      within,
+    })
+  }
+}
+
+/** A rocket going up from (x, y) on the page to burst about `height` px above it, after `delay` ms. */
+function rocket(variant: ConfettiVariant, x: number, y: number, height: number, drift: number, colors: readonly string[], delay: number): void {
+  const frames = 38 + Math.random() * 10
+  // Drag 0.97 a frame: what a launch speed covers in that many frames.
+  const travel = (1 - Math.pow(0.97, frames)) / 0.03
+  const vy = -height / travel
+  const now = performance.now()
+  pieces.push({
+    x, y, vx: drift / travel, vy,
+    angle: 0, spin: 0, wobble: 0, wobbleSpeed: 0,
+    size: 4, color: '#fff3d6', shape: 'circle',
+    born: now + delay,
+    life: (frames * 1000) / 60,
+    gravity: 0,
+    drag: 0.97,
+    kind: 'rocket',
+    onEnd: (piece) => {
+      const phone = innerWidth <= 640
+      burst({ x: piece.x, y: piece.y, sparks: variant.sparks ?? 60, colors, speed: phone ? 4.2 : 5.5, life: variant.duration, size: 2.4 })
+    },
+  })
+  run(now)
+}
+
+/** Fireworks over the game panel: rockets from its bottom corners, or from along its top edge, over the variant's time. */
+function panelFireworks(variant: ConfettiVariant, box: DOMRect, colors: readonly string[]): void {
+  const count = variant.rockets ?? 2
+  const phone = innerWidth <= 640
+  const room = Math.max(120, box.top - 60)
+  for (let i = 0; i < count; i++) {
+    const delay = count === 1 ? 0 : (i / (count - 1)) * (variant.rocketsOver ?? 0) + Math.random() * 120
+    const height = Math.min(room, (phone ? 170 : 230) + Math.random() * (phone ? 120 : 170))
+    if (variant.rocketsFrom === 'corners') {
+      const left = i % 2 === 0
+      rocket(variant, left ? box.left + 10 : box.right - 10, box.bottom - 8, height + box.height, (left ? 1 : -1) * box.width * 0.3, colors, delay)
+    } else {
+      const x = box.left + box.width * (0.12 + 0.76 * ((i * 0.618) % 1))
+      rocket(variant, x, box.top, height, (Math.random() - 0.5) * 60, colors, delay)
+    }
+  }
+}
+
+/** Small bursts inside a score card, clipped to it, one after another. */
+function cardFireworks(variant: ConfettiVariant, card: HTMLElement, colors: readonly string[]): void {
+  const box = () => (card.isConnected ? card.getBoundingClientRect() : null)
+  const start = box()
+  if (!start || start.width === 0) return
+  const now = performance.now()
+  const count = variant.cardBursts ?? 1
+  for (let i = 0; i < count; i++) {
+    const x = count === 1 ? start.width / 2 : start.width * (0.25 + 0.5 * Math.random())
+    const y = start.height * (0.3 + 0.25 * Math.random())
+    burst({ x, y, sparks: 34, colors, speed: Math.min(start.width, start.height) / 12, life: 1200, size: 2.2, within: box, at: now + i * 420 })
+  }
+  run(now)
+}
+
 // --- Where it goes off ----------------------------------------------------------------------------
 
 /** Confetti over a game that just finished on the globe: from the top of its score card, or its pin. */
 export async function celebrateOnGlobe(game: Game, gameColor: string, card: HTMLElement | undefined, pin: { x: number; y: number } | null): Promise<void> {
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
+  if (reducedMotion()) return
   const box = card?.isConnected ? card.getBoundingClientRect() : null
-  if (card && box && box.width > 0) shower(variant, card, colors)
+  const effect = variant.effect ?? 'confetti'
+  if (card && box && box.width > 0) {
+    if (effect !== 'fireworks') shower(variant, card, colors)
+    if (effect !== 'confetti') cardFireworks(variant, card, glowing(colors, 0.55))
+  }
+  else if (pin && effect !== 'confetti') burst({ ...pin, sparks: 24, colors: glowing(colors), speed: 2.4, life: 1000, size: 1.6 })
   // No card: a small pop at the pin, kept close to it.
   else if (pin) blast(variant, { ...pin, angle: 0, spread: 40, count: Math.round(variant.cardCount / 2), colors, power: 0.25 })
 }
 
 /** Confetti up from both bottom corners of the game panel. */
 export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor: string): Promise<void> {
+  if (reducedMotion()) return
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
   const box = panel.getBoundingClientRect()
@@ -333,4 +513,20 @@ export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor
   const spread = 18
   blast(variant, { x: box.left + 6, y: box.bottom - 6, angle: phone ? 18 : 28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
   blast(variant, { x: box.right - 6, y: box.bottom - 6, angle: phone ? -18 : -28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
+  if ((variant.effect ?? 'confetti') !== 'confetti') panelFireworks(variant, box, glowing(colors))
+}
+
+/**
+ * Colors lifted toward white for fireworks, which glow: a team's navy would hardly show as light on the
+ * navy globe.
+ */
+function glowing(colors: readonly string[], lift = 0.35): string[] {
+  return colors.map((color) => {
+    const hex = /^#([0-9a-f]{6})$/i.exec(color)
+    const rgb = /^rgb\((\d+) (\d+) (\d+)\)$/.exec(color)
+    const parts = hex ? [0, 2, 4].map((i) => parseInt(hex[1].slice(i, i + 2), 16)) : rgb ? rgb.slice(1, 4).map(Number) : null
+    if (!parts) return color
+    const [r, g, b] = parts.map((part) => Math.round(part + (255 - part) * lift))
+    return `rgb(${r} ${g} ${b})`
+  })
 }

@@ -1,6 +1,6 @@
 // PROTOTYPE, throw away: the floating bar switching confetti variants (see globe/confettiPrototype.ts). Local runs only.
 import { useEffect, useState } from 'react'
-import { confettiVariant, confettiVariants, onConfettiPrototypeChange, setConfettiVariant } from '../globe/confettiPrototype'
+import { confettiVariant, cycledVariants, onConfettiPrototypeChange, setConfettiVariant } from '../globe/confettiPrototype'
 import './confettiPrototype.css'
 
 /** The floating bar: the variant, [ and ] to cycle, and buttons that make a game finish now. */
@@ -10,8 +10,8 @@ export function ConfettiPrototypeBar({ selectedGameId }: { selectedGameId: strin
   useEffect(() => onConfettiPrototypeChange(() => redraw((n) => n + 1)), [])
   const variant = confettiVariant()
   const step = (by: number) => {
-    const at = confettiVariants.indexOf(variant)
-    setConfettiVariant(confettiVariants[(at + by + confettiVariants.length) % confettiVariants.length].key)
+    const at = cycledVariants.indexOf(variant)
+    setConfettiVariant(cycledVariants[(Math.max(0, at) + by + cycledVariants.length) % cycledVariants.length].key)
   }
   // [ and ] cycle: the arrow keys pan the globe.
   useEffect(() => {

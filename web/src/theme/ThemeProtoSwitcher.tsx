@@ -6,7 +6,7 @@ import { param, protoThemes } from './themeProto'
 
 
 export function ThemeProtoSwitcher({ setTheme }: { setTheme: (theme: Theme) => void }) {
-  const key = new URLSearchParams(location.search).get(param) ?? 'A'
+  const key = new URLSearchParams(location.search).get(param) ?? 'F'
   const index = Math.max(0, protoThemes.findIndex((t) => t.key === key))
   const current = protoThemes[index]
 

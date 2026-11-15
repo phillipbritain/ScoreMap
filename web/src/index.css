@@ -2599,12 +2599,23 @@ body {
   }
 }
 
-/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
+/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. It's
+   swiped down to close (see useSwipeToClose), so the browser takes no drag on it for a scroll or zoom,
+   bar a vertical one in the band, which is the band's. */
 @media (max-width: 640px) {
   .game-panel {
     --game-panel-bottom: 0px;
     width: 100%;
     border-radius: 0;
+    touch-action: none;
+  }
+
+  .game-panel__band {
+    touch-action: pan-y;
+  }
+
+  .game-panel[data-dragging] {
+    user-select: none;
   }
 }
 

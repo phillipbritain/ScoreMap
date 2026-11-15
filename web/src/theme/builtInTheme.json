@@ -161,6 +161,7 @@
     "MenuItem": { "corner": 1.5 },
     "Rail": {
       "surface": "background.paper",
+      "outline": "primary.light",
       "shadow": { "x": 0, "y": 0, "blur": 0, "color": "transparent" },
       "open": "secondary.main",
       "count": "text.secondary",

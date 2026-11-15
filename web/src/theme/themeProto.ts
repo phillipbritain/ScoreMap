@@ -368,6 +368,26 @@ specs.push(
   ),
 )
 
+// Round 3: close to F (the user's pick so far), each changing one thing.
+const fLines = (coast: string, border: string, state: string, wide = 0): Json => ({
+  coastlines: { color: coast, width: { '2': 0.9 + wide, '8': 1.6 + wide } },
+  countryBorders: { color: border, width: { '2': 0.9 + wide, '8': 1.8 + wide } },
+  stateLines: { color: state, width: { '3': 0.6 + wide / 2, '8': 1.2 + wide / 2 } },
+})
+
+specs.push(
+  // Brighter, slightly wider lines.
+  darker('F', 'J', 'F, brighter lines', 'navy.800', fLines('navy.100', 'navy.100', 'navy.200', 0.3)),
+  // Land between today's and F's.
+  darker('F', 'K', 'F, lighter land', 'navy.800', { surface: '#1f4170' }),
+  // A darker sea, so land and sea part more.
+  darker('F', 'L', 'F, darker sea', 'navy.900', {}),
+  // Soft white lines in place of pale blue.
+  darker('F', 'M', 'F, soft white lines', 'navy.800', fLines('rgba(244, 245, 247, 0.7)', 'rgba(244, 245, 247, 0.5)', 'navy.300')),
+  // Darker cards and clusters, so they sit apart from the land.
+  darker('F', 'N', 'F, darker cards', 'navy.800', {}, { ScoreCard: { fill: 'navy.800' }, Cluster: { fill: 'navy.800' } }),
+)
+
 const oceans = new WeakMap<Theme, string>()
 
 /** The sea's color in a prototype scheme, or undefined for land and sea alike. */

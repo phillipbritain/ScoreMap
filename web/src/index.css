@@ -1495,7 +1495,7 @@ body {
   box-sizing: border-box;
   width: var(--rail-size-width);
   max-width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
-  max-height: calc(100vh - 6 * var(--spacing));
+  max-height: calc(100dvh - 6 * var(--spacing));
   overflow-y: auto;
   padding: calc(3 * var(--spacing));
   border-radius: var(--menu-corner);
@@ -3193,7 +3193,7 @@ body {
   display: flex;
   flex-direction: column;
   width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
-  max-height: min(70vh, calc(100vh - 6 * var(--spacing)));
+  max-height: min(70dvh, calc(100dvh - 6 * var(--spacing)));
   overflow: hidden;
   padding: calc(1.5 * var(--spacing));
 }

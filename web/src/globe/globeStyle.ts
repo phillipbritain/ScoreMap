@@ -1,16 +1,43 @@
-import type { LayerSpecification, LineLayerSpecification, RasterSourceSpecification, StyleSpecification } from 'maplibre-gl'
+import type {
+  GeoJSONSource,
+  GeoJSONSourceSpecification,
+  Map as MapLibreMap,
+  LayerSpecification,
+  LineLayerSpecification,
+  RasterSourceSpecification,
+  StyleSpecification,
+} from 'maplibre-gl'
 import type { MapType } from '../settings/viewerSettings'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
+import stateLinesUrl from './stateLines.json?url'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
 
 // Layers of the base style that the globe keeps.
 const countryLines = 'boundary_2'
-const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
+
+/**
+ * State and province lines: the United States' and Canada's only, at every zoom (ADR-0026). The map's
+ * own tiles carry every country's, with nothing saying whose, and none at all in their coarsest tiles
+ * (zoom 0), which the globe shows zoomed all the way out and toward its edges. These are Natural
+ * Earth's, made by `npm run state-lines` (scripts/stateLines.ts), a file of their own rather than
+ * built into the page, and fetched only once the globe is ready (see showStateLines), so they never
+ * hold up the first view.
+ */
+export const stateLinesSource = 'state-lines'
+export const stateLinesLayer = 'state-lines'
+export const satelliteStateLinesLayer = 'state-lines-satellite'
+
+const stateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
+
+/** Fetches the state lines into the globe's style, which starts with none (see stateLinesSource). */
+export function showStateLines(map: Pick<MapLibreMap, 'getSource'>): void {
+  map.getSource<GeoJSONSource>(stateLinesSource)?.setData(stateLinesUrl)
+}
 
 /** The satellite map's imagery: EOX's cloudless Sentinel-2 mosaic of 2024, free for non-commercial use with its credit shown (ADR-0022). */
 export const satelliteSource = 'satellite'
@@ -32,11 +59,11 @@ const satelliteSourceSpec: RasterSourceSpecification = {
 }
 
 /**
- * The globe's look, made from the base style in the theme's colors. On the plain map, a plain globe
- * where only thin lines show coastlines, country borders and state lines, with place names (see
- * placeNames): land and sea are the same color, the theme's globe surface. On the satellite map,
- * satellite imagery under the same borders, state lines and names, with no coastlines, which the
- * imagery shows. Everything else in the base style (roads, buildings, land cover) is dropped.
+ * The globe's look, made from the base style in the theme's colors. On the plain map, a plain globe:
+ * land in the theme's globe surface, the sea (oceans and lakes) in its sea color, and lines showing
+ * coastlines, country borders and state lines, with place names (see placeNames). On the satellite map,
+ * satellite imagery under the same borders, state lines and names, with no sea or coastlines, which
+ * the imagery shows. Everything else in the base style (roads, buildings, land cover) is dropped.
  *
  * Both map types' layers are always in the style, those of the other type hidden, so switching
  * between them is a restyle like a theme's (see layerChanges). MapLibre loads no tiles for a source
@@ -53,18 +80,45 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
   const restyled = (id: string, changes: Partial<LayerSpecification>): LayerSpecification =>
     ({ ...layer(id), ...changes }) as LayerSpecification
   const shownOn = (type: MapType) => (type === mapType ? 'visible' : 'none')
+  const stateLinePaint = linePaint(globe.stateLines)
 
   return {
     ...base,
     glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
-    sources: { ...base.sources, [satelliteSource]: satelliteSourceSpec, [cityNameSource]: cityNameSourceSpec },
+    sources: {
+      ...base.sources,
+      [satelliteSource]: satelliteSourceSpec,
+      [stateLinesSource]: stateLinesSourceSpec,
+      [cityNameSource]: cityNameSourceSpec,
+    },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
+      // The globe's own state lines (see stateLinesSource), in place of the base style's (boundary_3).
+      // On the plain map under the sea, which hides where they run over water (Natural Earth's go out
+      // across bays and lakes); on the satellite map over its imagery.
+      { id: stateLinesLayer, type: 'line', source: stateLinesSource, layout: { visibility: shownOn('plain') }, paint: stateLinePaint },
+      // The sea, oceans and lakes alike, so the land stands apart from it.
+      {
+        id: 'sea',
+        type: 'fill',
+        source: 'openmaptiles',
+        'source-layer': 'water',
+        filter: ['in', ['get', 'class'], ['literal', ['ocean', 'lake']]],
+        layout: { visibility: shownOn('plain') },
+        paint: { 'fill-color': globe.sea, 'fill-antialias': false },
+      },
       { id: satelliteLayer, type: 'raster', source: satelliteSource, layout: { visibility: shownOn('satellite') } },
-      // Coastlines: the edges of the sea, which is the same color as the land. Lakes and rivers
-      // aren't outlined; at a distance they read as clutter.
+      {
+        id: satelliteStateLinesLayer,
+        type: 'line',
+        source: stateLinesSource,
+        layout: { visibility: shownOn('satellite') },
+        paint: stateLinePaint,
+      },
+      // Coastlines: the edges of the sea. Lakes and rivers aren't outlined; at a distance they read
+      // as clutter.
       {
         id: 'coastline',
         type: 'line',
@@ -74,8 +128,6 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
         layout: { visibility: shownOn('plain') },
         paint: linePaint(globe.coastlines),
       },
-      // The base style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
-      restyled(stateLines, { minzoom: 0, paint: linePaint(globe.stateLines) }),
       restyled(countryLines, { paint: linePaint(globe.countryBorders) }),
       restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [...globe.disputedBorders.dash] } }),
       ...placeNameLayers(base, theme),

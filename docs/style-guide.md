@@ -50,7 +50,7 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 The code reads only the resolved theme, never the JSON:
 
 - **The page** (the game panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colors, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
-- **The globe**: its map style (surface, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
+- **The globe**: its map style (land, sea, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is.
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
@@ -123,21 +123,22 @@ A **color job** is what a color is for (the globe's surface, Live's color, main 
 - outside the palette, one of the palette's colors by name, as MUI's `sx` takes one: `"primary.dark"`, `"text.secondary"`, `"background.paper"`, `"divider"`; or
 - a color given directly, in a form both CSS and MapLibre read, since it's passed on to both as written: a hex color of 3, 4, 6 or 8 digits (`#abc`, `#abcd`, `#0b1526`, `#0b152680`); `rgb(…)` or `rgba(…)`, its three channels all numbers or all percentages; `hsl(…)` or `hsla(…)`, a hue (in degrees, `deg` optional) and two percentages; each function's arguments comma-separated with an optional fourth for alpha (`rgba(255, 255, 255, 0.7)`), or space-separated with an optional `/ alpha` (`rgb(10% 20% 30% / 50%)`); or `transparent` (for a shadow or glow that isn't there). Named colors such as `red` aren't taken: `red` would read as a step's name. This is the escape hatch for a one-off the theme's colors don't fit, at the cost of that color no longer following them.
 
-The dark theme names one of the palette's colors where a job is what that palette color is for (a surface is `background.paper`, main text `text.primary`) and a step where it's a shade of its own (place names' paler navies), and gives the four shadows `transparent`. Every color job, by where it shows:
+The dark theme names one of the palette's colors where a job is what that palette color is for (a surface is `background.paper`, main text `text.primary`) and a step where it's a shade of its own (place names' paler navies, the globe's land and lines), gives the sea a color directly, as no step falls where it should, and gives the four shadows `transparent`. Every color job, by where it shows:
 
 ### The globe
 
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
-| `components.Globe.surface` | The globe: land and sea alike | `primary.main` |
-| `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `primary.light` |
-| `components.Globe.countryBorders.color` | Country borders | `primary.light` |
-| `components.Globe.stateLines.color` | State and province lines | `navy.400` |
-| `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.400` |
+| `components.Globe.surface` | The globe's land, a step darker than `primary.main` so the globe reads behind score cards | `navy.600` |
+| `components.Globe.sea` | The sea: oceans and lakes, darker than the land so the coast stands out (rivers stay the land's color; the satellite map shows its own) | `#071a3c`, given directly, between `navy.700` and `navy.800` |
+| `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `navy.200` |
+| `components.Globe.countryBorders.color` | Country borders | `navy.200` |
+| `components.Globe.stateLines.color` | State and province lines, the United States' and Canada's only (ADR-0026) | `navy.300` |
+| `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.300` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |
 | `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | city `navy.200`, state `primary.light`, country `navy.200` |
-| `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.600` for every kind |
+| `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.800` for every kind |
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
 
@@ -332,7 +333,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.Globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.6, "8": 1.2 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.6 to 1.2 (zoom 2 to 8), country borders 0.6 to 1.4 (2 to 8), state lines 0.5 to 1 (3 to 8), disputed borders 0.8 |
+| `components.Globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.9, "8": 1.6 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.9 to 1.6 (zoom 2 to 8), country borders 0.9 to 1.8 (2 to 8), state lines 0.6 to 1.2 (3 to 8), disputed borders 0.8 |
 | `components.Globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.2 and 0 |
@@ -382,7 +383,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
-| `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's surface, coastline and border colors | 64 |
+| `components.Rail.size.mapType` | Each map's picture in Map Type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's land, sea, coastline and border colors | 64 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
 | `components.Rail.size.countWidth` | The narrowest a count of leagues is, in ems | 3.2 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |

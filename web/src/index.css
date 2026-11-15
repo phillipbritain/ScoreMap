@@ -1533,6 +1533,10 @@ body {
   background: var(--globe-surface);
 }
 
+.map-type__sea {
+  fill: var(--globe-sea);
+}
+
 .map-type__coast {
   fill: none;
   stroke: var(--globe-coastlines-color);

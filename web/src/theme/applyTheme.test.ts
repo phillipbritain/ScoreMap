@@ -160,8 +160,8 @@ describe('applyTheme', () => {
       shape: 1 + 1 + 3,
       // A small pin's core of four and glow of two, for each of three statuses, and its fire outline's size, width and two opacities.
       pin: 3 * 6 + 4,
-      // A surface, four kinds of line (their colors) and two halo colors.
-      globe: 7,
+      // A surface, the sea, four kinds of line (their colors) and two halo colors.
+      globe: 8,
       // Three kinds of place name (city, state and country), each with a color, an outline (its color, width and blur), a
       // font (its name, family, weight and style) and letter spacing.
       placeNames: 3 * 9,

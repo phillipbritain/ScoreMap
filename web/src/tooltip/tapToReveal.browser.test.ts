@@ -1,6 +1,7 @@
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it } from 'vitest'
+import { userEvent } from 'vitest/browser'
 import { Tooltips } from './Tooltips'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
@@ -39,6 +40,13 @@ beforeEach(async () => {
   document.body.append(container)
   root = createRoot(container)
   await act(() => root.render(createElement(Tooltips)))
+  // The page's real mouse rests wherever an earlier test file left it. Over what the test puts on the
+  // page, the browser moves it there as that changes, and its pointerover puts away a tap's tooltip,
+  // so it waits in a corner of its own.
+  const corner = document.createElement('div')
+  corner.style.cssText = 'position: fixed; right: 0; bottom: 0; width: 8px; height: 8px'
+  document.body.append(corner)
+  await userEvent.hover(corner)
 })
 
 afterEach(async () => {

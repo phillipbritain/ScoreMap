@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import {
   chosenConferences,
   isLeagueOn,
@@ -27,7 +27,7 @@ const offNoteDuration = 4000
  * leagues, as two radio options each saying what it shows, then, for My leagues, an "All leagues" chip to switch every league at once, then leagues
  * grouped under their sport, each a chip to switch on or off, and each sport's name switching all of
  * its leagues. A league with conferences (college leagues) has a toggle joined onto its chip that opens its
- * conferences under its sport, to narrow its games to some of them. On Top Events the leagues stay in
+ * conferences on a row straight after it, to narrow its games to some of them. On Top Events the leagues stay in
  * view, grayed out, as they'll be when switched back; a click on them says why they're off and how to
  * pick them.
  */
@@ -129,25 +129,25 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
                       </button>
                     )
                     if (league.conferences.length === 0) return chip
+                    const open = openConferences === league.name
                     return (
-                      // A college league: its chip and conferences toggle as one split pill.
-                      <span key={league.name} className="leagues-league">
-                        {chip}
-                        <ConferencesToggle
-                          league={league.name}
-                          chosen={chosenConferences(settings, league.name)}
-                          open={openConferences === league.name}
-                          onClick={() => setOpenConferences(openConferences === league.name ? null : league.name)}
-                        />
-                      </span>
+                      // A college league: its chip and conferences toggle as one split pill, its conferences
+                      // opening on a row of their own straight after it, before the sport's next league.
+                      <Fragment key={league.name}>
+                        <span className="leagues-league">
+                          {chip}
+                          <ConferencesToggle
+                            league={league.name}
+                            chosen={chosenConferences(settings, league.name)}
+                            open={open}
+                            onClick={() => setOpenConferences(open ? null : league.name)}
+                          />
+                        </span>
+                        {open && <Conferences league={league} settings={settings} onChange={onChange} />}
+                      </Fragment>
                     )
                   })}
                 </div>
-                {group.leagues
-                  .filter((league) => league.name === openConferences && league.conferences.length > 0)
-                  .map((league) => (
-                    <Conferences key={league.name} league={league} settings={settings} onChange={onChange} />
-                  ))}
               </div>
             )
           })}

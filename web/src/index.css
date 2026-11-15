@@ -3465,3 +3465,8 @@ body {
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
   }
 }
+
+/* PROTOTYPE, throw away: the tour games switcher keeps to one line on a phone. */
+@media (max-width: 640px) {
+  .tour-games-proto__summary { display: none; }
+}

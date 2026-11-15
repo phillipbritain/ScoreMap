@@ -1,23 +1,27 @@
 // PreToolUse hook for the Bash and PowerShell tools: blocks git commands that push to main or
 // force-push, and gh commands that merge a pull request (only the user merges, after reviewing on
-// GitHub). Commands that only change local work, such as reset --hard, are left to the agent. Exits 2 with a message on stderr to block; 0 to allow.
+// GitHub). It also blocks a push to a branch whose pull request is merged or closed (and none is
+// open), which would re-create the branch GitHub deleted on merge; it asks gh, and allows the push
+// if gh is missing, offline or slow. Commands that only change local work, such as reset --hard, are
+// left to the agent. Exits 2 with a message on stderr to block; 0 to allow.
 // It matches command text, so it's an early warning, not a barrier. Nor is GitHub's branch rule
 // for Claude: commands run as the user, whose admin role can bypass it.
 import { execFileSync } from 'node:child_process'
 
 const PROTECTED_BRANCH = 'main'
+const GH_TIMEOUT_MS = 5000
+const FEATURE_BRANCH_ADVICE =
+  'Push a feature branch and open a pull request for the user to review and merge, or ask the user to run it.'
 
 const input = JSON.parse(await readStdin())
 const command = input.tool_input?.command ?? ''
 const cwd = input.cwd ?? process.cwd()
 
 for (const segment of command.split(/&&|\|\||[;|\n]/)) {
-  const reason = blockReason(tokens(segment))
-  if (reason) {
-    process.stderr.write(
-      `BLOCKED: \`${segment.trim()}\` ${reason}. The user has prevented you from doing this. ` +
-        'Push a feature branch and open a pull request for the user to review and merge, or ask the user to run it.\n',
-    )
+  const block = blockReason(tokens(segment))
+  if (block) {
+    const { reason, advice } = typeof block === 'string' ? { reason: block, advice: FEATURE_BRANCH_ADVICE } : block
+    process.stderr.write(`BLOCKED: \`${segment.trim()}\` ${reason}. The user has prevented you from doing this. ${advice}\n`)
     process.exit(2)
   }
 }
@@ -53,6 +57,42 @@ function pushReason(args, dir) {
   if (refspecs.some((r) => landsOnProtected(r, dir))) return `pushes to ${PROTECTED_BRANCH}`
   if (refspecs.length === 0 && currentBranch(dir) === PROTECTED_BRANCH)
     return `pushes to ${PROTECTED_BRANCH} (the checked-out branch)`
+  if (args.includes('--delete') || args.includes('-d')) return null
+  return finishedPullRequestReason(pushedBranches(refspecs, dir), dir)
+}
+
+// The branches a push lands on: each refspec's destination, else the checked-out branch. A refspec
+// with no destination (":branch") deletes, so it's left out.
+function pushedBranches(refspecs, dir) {
+  if (refspecs.length === 0) return [currentBranch(dir)].filter(Boolean)
+  return refspecs
+    .filter((r) => !r.startsWith(':'))
+    .map((r) => (r.includes(':') ? r.slice(r.lastIndexOf(':') + 1) : r))
+    .map((r) => (r === 'HEAD' ? currentBranch(dir) : r?.replace(/^refs\/heads\//, '')))
+    .filter((r) => r && r !== 'HEAD')
+}
+
+// A branch whose pull request is merged or closed, with none open. Fails open: no answer from gh
+// allows the push.
+function finishedPullRequestReason(branches, dir) {
+  for (const branch of branches) {
+    let prs
+    try {
+      const out = execFileSync('gh', ['pr', 'list', '--head', branch, '--state', 'all', '--json', 'state,number'], {
+        cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: GH_TIMEOUT_MS,
+      })
+      prs = JSON.parse(out)
+    } catch {
+      continue
+    }
+    if (!Array.isArray(prs) || prs.length === 0 || prs.some((pr) => pr.state === 'OPEN')) continue
+    const done = prs.find((pr) => pr.state === 'MERGED') ?? prs.find((pr) => pr.state === 'CLOSED')
+    if (!done) continue
+    return {
+      reason: `pushes to ${branch}, whose pull request #${done.number} is ${done.state.toLowerCase()}`,
+      advice: 'Pushing would re-create the branch on GitHub. Open a new branch from origin/main and a new pull request.',
+    }
+  }
   return null
 }
 

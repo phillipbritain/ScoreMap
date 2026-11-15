@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- The browser app (web/), built into the published wwwroot by PublishBrowserApp. -->
     <BrowserAppRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', '..', '..', 'web'))</BrowserAppRoot>
+    <!-- Saved venue lookups from local runs (data/) are runtime data, not part of the app. Left out of
+         the project's files altogether, so `dotnet watch` (under `aspire run`) doesn't restart the
+         whole run each time the server saves one. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);data/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Saved venue lookups from local runs are runtime data, not part of the app. -->
-    <Content Remove="data\**" />
-    <None Remove="data\**" />
     <!-- Scenario files are read from the content root, for the pill in Development only (ADR-0009), so
          only the one a demo shows ships, with the venue list, team list and venue lookups (ADR-0019). -->
     <Content Update="Scenarios\Files\**" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />

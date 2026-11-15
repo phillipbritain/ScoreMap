@@ -32,6 +32,8 @@ const numeric = (score: string | null) => score === null || /^\d+$/.test(score)
 export interface MadeUpChanges {
   /** Makes the event happen to a game on screen, this tab only; returns the change made, or null when no game on screen can. */
   happen: (event: MadeUpEvent, onScreen: (game: Game) => boolean) => GameChange | null
+  /** PROTOTYPE, throw away: takes a game off the board in this tab, as a Final game drops out (see panel/ConfettiPrototypeBar.tsx). */
+  remove?: (gameId: string) => boolean
 }
 
 declare global {
@@ -48,6 +50,11 @@ export function offerMadeUpChanges(live: { readonly state: { games: Game[] | nul
       const change = madeUpChange(live.state.games ?? [], event, onScreen, new Date())
       if (change) live.receive(change)
       return change
+    },
+    remove: (gameId) => {
+      const game = live.state.games?.find((candidate) => candidate.id === gameId)
+      if (game) live.receive({ kind: 'Removed', game })
+      return !!game
     },
   }
   return () => delete window.scoremapGames

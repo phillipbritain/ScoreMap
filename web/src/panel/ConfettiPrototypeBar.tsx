@@ -33,6 +33,12 @@ export function ConfettiPrototypeBar({ selectedGameId }: { selectedGameId: strin
     }
     const change = happen('finish', (game) => (which === 'panel' ? game.id === selectedGameId : game.id !== selectedGameId && onScreenCard(game.id)))
     setNote(change ? '' : which === 'panel' ? 'open a Live game first' : 'no Live card on screen')
+    // A card alone then drops out once its celebration is over, as a Final game does (a minute later in a
+    // scenario), so its going away can be seen too.
+    if (change && which === 'card') {
+      const gameId = change.game.id
+      setTimeout(() => window.scoremapGames?.remove?.(gameId), confettiVariant().duration + 800)
+    }
   }
   return (
     <div className="confetti-prototype" data-keeps-popovers>
@@ -42,7 +48,7 @@ export function ConfettiPrototypeBar({ selectedGameId }: { selectedGameId: strin
       </span>
       <button type="button" title="Next variant (])" onClick={() => step(1)}>→</button>
       <button type="button" title="Finish the open panel's game, in this tab" onClick={() => finish('panel')}>Finish panel</button>
-      <button type="button" title="Finish a Live game with a score card on screen, in this tab" onClick={() => finish('card')}>Finish card</button>
+      <button type="button" title="Finish a Live game with a score card on screen, then take it off the board as a Final game drops out, in this tab" onClick={() => finish('card')}>Finish card</button>
       {note && <span className="confetti-prototype__note">{note}</span>}
     </div>
   )

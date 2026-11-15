@@ -164,6 +164,8 @@ interface Piece {
   kind?: 'spark' | 'rocket'
   /** Drag each frame at 60 fps: how much speed it keeps. */
   drag?: number
+  /** Drawn on the globe's canvas, under the game panel: a score card's or pin's. */
+  globe?: boolean
   /** What it does as its life ends: a rocket bursts. */
   onEnd?: (piece: Piece, origin: { x: number; y: number }) => void
 }
@@ -174,6 +176,33 @@ const cardOverflow = 3
 let canvas: HTMLCanvasElement | null = null
 let pieces: Piece[] = []
 let running = false
+/** The canvas for score cards' confetti and fireworks, in the globe's map, so the game panel (and the rail) lie over it. */
+let globeCanvas: HTMLCanvasElement | null = null
+let globeHost: HTMLElement | null = null
+
+/** The globe's canvas, sized to its map, drawing in page coordinates; null without a map. */
+function ensureGlobeCanvas(): CanvasRenderingContext2D | null {
+  if (!globeHost?.isConnected) return null
+  if (!globeCanvas || globeCanvas.parentElement !== globeHost) {
+    globeCanvas?.remove()
+    globeCanvas = document.createElement('canvas')
+    globeCanvas.className = 'confetti-prototype__globe-canvas'
+    globeHost.append(globeCanvas)
+  }
+  const ratio = devicePixelRatio
+  const box = globeHost.getBoundingClientRect()
+  const [width, height] = [Math.round(box.width), Math.round(box.height)]
+  if (globeCanvas.width !== width * ratio || globeCanvas.height !== height * ratio) {
+    globeCanvas.width = width * ratio
+    globeCanvas.height = height * ratio
+    globeCanvas.style.width = `${width}px`
+    globeCanvas.style.height = `${height}px`
+  }
+  const context = globeCanvas.getContext('2d')!
+  context.setTransform(ratio, 0, 0, ratio, -box.left * ratio, -box.top * ratio)
+  context.clearRect(box.left, box.top, width, height)
+  return context
+}
 
 function ensureCanvas(): CanvasRenderingContext2D {
   if (!canvas) {
@@ -283,8 +312,9 @@ function run(now: number): void {
     const frame = (time: number) => {
       const step = Math.min(3, (time - last) / (1000 / 60))
       last = time
-      const context = ensureCanvas()
-      context.clearRect(0, 0, innerWidth, innerHeight)
+      const onTop = ensureCanvas()
+      onTop.clearRect(0, 0, innerWidth, innerHeight)
+      const onGlobe = ensureGlobeCanvas()
       const ended = pieces.filter((piece) => time - piece.born >= piece.life && piece.onEnd)
       pieces = pieces.filter((piece) => time - piece.born < piece.life)
       for (const piece of ended) {
@@ -295,6 +325,7 @@ function run(now: number): void {
       const boxes = new Map<() => DOMRect | null, DOMRect | null>()
       for (const piece of pieces) {
         if (time < piece.born) continue
+        const context = piece.globe && onGlobe ? onGlobe : onTop
         let origin = { x: 0, y: 0 }
         if (piece.within) {
           if (!boxes.has(piece.within)) boxes.set(piece.within, piece.within())
@@ -340,7 +371,7 @@ function run(now: number): void {
         context.restore()
         if (piece.within) context.restore()
       }
-      context.globalAlpha = 1
+      onTop.globalAlpha = 1
       if (pieces.length) requestAnimationFrame(frame)
       else running = false
     }
@@ -501,10 +532,12 @@ function cardFireworks(variant: ConfettiVariant, card: HTMLElement, colors: read
 // --- Where it goes off ----------------------------------------------------------------------------
 
 /** Confetti over a game that just finished on the globe: from the top of its score card, or its pin. */
-export async function celebrateOnGlobe(game: Game, gameColor: string, card: HTMLElement | undefined, pin: { x: number; y: number } | null): Promise<void> {
+export async function celebrateOnGlobe(map: HTMLElement, game: Game, gameColor: string, card: HTMLElement | undefined, pin: { x: number; y: number } | null): Promise<void> {
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
   if (reducedMotion()) return
+  globeHost = map
+  const from = pieces.length
   const box = card?.isConnected ? card.getBoundingClientRect() : null
   const effect = variant.effect ?? 'confetti'
   if (card && box && box.width > 0) {
@@ -514,6 +547,8 @@ export async function celebrateOnGlobe(game: Game, gameColor: string, card: HTML
   else if (pin && effect !== 'confetti') burst({ ...pin, sparks: 24, colors: glowing(colors), speed: 2.4, life: 1000, size: 1.6 })
   // No card: a small pop at the pin, kept close to it.
   else if (pin) blast(variant, { ...pin, angle: 0, spread: 40, count: Math.round(variant.cardCount / 2), colors, power: 0.25 })
+  // Under the game panel.
+  for (const piece of pieces.slice(from)) piece.globe = true
 }
 
 /** Confetti up from both bottom corners of the game panel, kept to it; and its fireworks, in it too. */

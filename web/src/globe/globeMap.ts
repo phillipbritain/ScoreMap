@@ -300,7 +300,7 @@ export class GlobeMap {
     const box = map.getContainer().getBoundingClientRect()
     const { x, y } = map.project(venue)
     const pin = fadedOut(map, venue) ? null : { x: box.left + x, y: box.top + y }
-    void celebrateOnGlobe(game, this.colorOf({ ...game, status: 'Live' }), this.cards.cardElement(game.id), pin)
+    void celebrateOnGlobe(map.getContainer(), game, this.colorOf({ ...game, status: 'Live' }), this.cards.cardElement(game.id), pin)
   }
 
   /** Highlights the selected game and brings it clear of its rendered panel, according to its intent. */

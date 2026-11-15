@@ -6,6 +6,15 @@
   z-index: 9999;
   pointer-events: none;
 }
+/* Score cards' confetti and fireworks: in the globe's map, over its cards and pins but under the game
+   panel and the rail. */
+.confetti-prototype__globe-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+}
 /* Not part of any design being judged. Top center, clear of the bottom sheets. */
 .confetti-prototype {
   position: fixed;

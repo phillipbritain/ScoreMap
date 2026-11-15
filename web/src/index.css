@@ -437,8 +437,10 @@ body {
 
 /* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
    the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
-   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). */
-.game-panel__close {
+   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). A welcome
+   tour panel's × is the same, in its own top right corner. */
+.game-panel__close,
+.welcome-tour__close {
   position: absolute;
   top: 0;
   right: 0;
@@ -457,7 +459,8 @@ body {
   cursor: pointer;
 }
 
-.game-panel__close:hover {
+.game-panel__close:hover,
+.welcome-tour__close:hover {
   color: var(--palette-text-primary);
 }
 
@@ -2834,6 +2837,8 @@ body {
 
 .welcome-tour__heading {
   margin: 0 0 calc(2 * var(--spacing));
+  /* Clear of the close button in the panel's corner. */
+  padding-right: var(--game-panel-size-close-width);
   font-size: var(--typography-h6-font-size);
   font-weight: var(--typography-h6-font-weight);
 }

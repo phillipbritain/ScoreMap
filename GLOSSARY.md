@@ -93,7 +93,7 @@ The column of buttons down the right of the globe: zoom in and out, Home (back t
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:
-What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen (on a phone, a bottom sheet): Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one, or an example card when none is in view). It can't be closed, only finished, and it carries on where it was left. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo shows it every time.
+What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen (on a phone, a bottom sheet): Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one, or an example card when none is in view). Closing it, by its panel's × or Escape, finishes it as Done does; until it's finished or closed, it carries on where it was left. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo shows it every time.
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 
 **Last score**:

@@ -300,6 +300,74 @@ const specs: Spec[] = [
   },
 ]
 
+// Round 2: darker globes (land and sea), with brighter, clearer map lines so the globe reads behind cards.
+function darker(from: string, key: string, name: string, ocean: string, globe: Json, more: Json = {}): Spec {
+  const base = specs.find((spec) => spec.key === from)!
+  return { ...base, key, name, ocean, over: merged(base.over, { components: merged({ Globe: globe }, more) }) }
+}
+
+const outline = (color: string): Json => ({
+  PlaceNames: { city: { outline: { color } }, state: { outline: { color } }, country: { outline: { color } } },
+})
+
+specs.push(
+  darker(
+    'A',
+    'F',
+    'Navy darker',
+    'navy.800',
+    {
+      surface: 'navy.600',
+      coastlines: { color: 'navy.200', width: { '2': 0.9, '8': 1.6 } },
+      countryBorders: { color: 'navy.200', width: { '2': 0.9, '8': 1.8 } },
+      stateLines: { color: 'navy.300', width: { '3': 0.6, '8': 1.2 } },
+      disputedBorders: { color: 'navy.300' },
+    },
+    outline('navy.800'),
+  ),
+  darker(
+    'A',
+    'G',
+    'Navy darkest, white lines',
+    'navy.900',
+    {
+      surface: 'navy.700',
+      coastlines: { color: 'rgba(244, 245, 247, 0.85)', width: { '2': 1, '8': 1.8 } },
+      countryBorders: { color: 'rgba(244, 245, 247, 0.6)', width: { '2': 0.8, '8': 1.6 } },
+      stateLines: { color: 'navy.300', width: { '3': 0.5, '8': 1 } },
+      disputedBorders: { color: 'navy.300' },
+      halo: { inner: { color: 'navy.300' } },
+    },
+    merged(outline('navy.900'), { ScoreCard: { fill: 'navy.800' }, Cluster: { fill: 'navy.800' } }),
+  ),
+  darker(
+    'B',
+    'H',
+    'Ink darker, teal coasts',
+    'ink.800',
+    {
+      surface: 'ink.700',
+      coastlines: { color: 'cyan.600', width: { '2': 1, '8': 1.8 } },
+      countryBorders: { color: 'ink.300', width: { '2': 0.9, '8': 1.8 } },
+      stateLines: { color: 'ink.400', width: { '3': 0.6, '8': 1.2 } },
+    },
+    merged(outline('ink.800'), { ScoreCard: { fill: 'ink.600' } }),
+  ),
+  darker(
+    'D',
+    'I',
+    'Aurora darker',
+    'pine.800',
+    {
+      surface: 'pine.700',
+      coastlines: { color: 'pine.200', width: { '2': 1, '8': 1.8 } },
+      countryBorders: { color: 'pine.300', width: { '2': 0.9, '8': 1.8 } },
+      stateLines: { color: 'pine.400', width: { '3': 0.6, '8': 1.2 } },
+    },
+    merged(outline('pine.800'), { ScoreCard: { fill: 'pine.600' } }),
+  ),
+)
+
 const oceans = new WeakMap<Theme, string>()
 
 /** The sea's color in a prototype scheme, or undefined for land and sea alike. */

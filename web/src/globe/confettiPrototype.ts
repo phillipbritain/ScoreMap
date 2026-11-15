@@ -163,6 +163,10 @@ function ensureCanvas(): CanvasRenderingContext2D {
     canvas.width = innerWidth * ratio
     canvas.height = innerHeight * ratio
   }
+  // Sized in px to the window as drawn in, not 100vh: on iOS Safari 100vh is taller than the window
+  // while its toolbar shows, which would stretch the canvas and draw everything lower than it should be.
+  canvas.style.width = `${innerWidth}px`
+  canvas.style.height = `${innerHeight}px`
   const context = canvas.getContext('2d')!
   context.setTransform(ratio, 0, 0, ratio, 0, 0)
   return context
@@ -210,7 +214,7 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
 }
 
 /**
- * A shower of the variant's confetti kept to a score card: pieces pop out along its top and drift
+ * A shower of the variant's confetti kept to a score card: pieces pop out along its very top edge and drift
  * down through it, clipped to its box (a few px past its edges at most) and moving with it. Nothing
  * with prefers-reduced-motion.
  */
@@ -227,7 +231,7 @@ export function shower(variant: ConfettiVariant, card: HTMLElement, colors: read
     const late = i > variant.cardCount * 0.45
     pieces.push({
       x: Math.random() * start.width,
-      y: late ? -4 : start.height * Math.random() * 0.12,
+      y: late ? -4 : -1 + Math.random() * 3,
       vx: Math.sin(direction) * speed,
       vy: late ? 0.3 : -Math.abs(Math.cos(direction)) * speed - 0.6,
       angle: Math.random() * Math.PI * 2,

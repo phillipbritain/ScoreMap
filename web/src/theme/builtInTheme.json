@@ -182,7 +182,9 @@
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },
-      "message": "text.primary"
+      "message": "text.primary",
+      "glow": { "color": "secondary.main", "radius": 14, "opacity": 0.45 },
+      "dot": 5
     },
     "WelcomeTour": { "dim": { "opacity": 0.3 }, "arrow": { "width": 2.5 } }
   }

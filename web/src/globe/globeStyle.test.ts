@@ -51,6 +51,7 @@ const theme: Theme = {
     ...builtInTheme.components,
     Globe: {
       surface: '#000001',
+      sea: '#000006',
       coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
       countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
       stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
@@ -85,6 +86,7 @@ describe('globeStyle', () => {
   it("keeps only the lines and state and country names, dropping roads, land cover, points of interest and the base style's cities, towns and villages for its own city names", () => {
     expect(style().layers.map((l) => l.id)).toEqual([
       'background',
+      'sea',
       'satellite',
       'coastline',
       'boundary_3',
@@ -116,27 +118,39 @@ describe('globeStyle', () => {
     expect(satellite.layers.find((l) => l.id === 'satellite')).toMatchObject({ type: 'raster', source: 'satellite' })
     expect(visibility('satellite', 'satellite')).toBe('visible')
     expect(visibility('satellite', 'coastline')).toBe('none')
+    expect(visibility('satellite', 'sea')).toBe('none')
   })
 
   it('keeps the borders, state lines and place names on the satellite map as on the plain map', () => {
     const ids = (mapType: 'plain' | 'satellite') => globeStyle(liberty, theme, mapType).layers.map((l) => l.id)
     expect(ids('satellite')).toEqual(ids('plain'))
     const kept = (mapType: 'plain' | 'satellite') =>
-      globeStyle(liberty, theme, mapType).layers.filter((l) => l.id !== 'satellite' && l.id !== 'coastline')
+      globeStyle(liberty, theme, mapType).layers.filter((l) => !['sea', 'satellite', 'coastline'].includes(l.id))
     expect(kept('satellite')).toEqual(kept('plain'))
   })
 
   it('switches map type by showing and hiding layers, as a restyle in place', () => {
     const toSatellite = layerChanges(globeStyle(liberty, theme, 'plain').layers, globeStyle(liberty, theme, 'satellite').layers)
     expect(toSatellite).toEqual([
+      { layer: 'sea', kind: 'layout', property: 'visibility', value: 'none' },
       { layer: 'satellite', kind: 'layout', property: 'visibility', value: 'visible' },
       { layer: 'coastline', kind: 'layout', property: 'visibility', value: 'none' },
     ])
   })
 
-  it("draws land and sea alike in the theme's globe surface, with coastlines from the water edges", () => {
+  it("draws the land in the theme's globe surface and the sea in its sea color, with coastlines from the water edges", () => {
     expect(paint('background')['background-color']).toBe('#000001')
+    expect(layer('sea')).toMatchObject({ type: 'fill', 'source-layer': 'water' })
+    expect(paint('sea')['fill-color']).toBe('#000006')
     expect(layer('coastline')).toMatchObject({ type: 'line', 'source-layer': 'water' })
+  })
+
+  it('colors oceans and lakes as the sea, not rivers', () => {
+    const { filter } = featureFilter((layer('sea') as { filter: FilterSpecification }).filter, 'sea.filter')
+    const isSea = (waterClass: string) => filter({ zoom: 6 }, { type: 3, properties: { class: waterClass } } as never)
+    expect(isSea('ocean')).toBe(true)
+    expect(isSea('lake')).toBe(true)
+    expect(isSea('river')).toBe(false)
   })
 
   it("draws coastlines, country borders, state lines and disputed borders in the theme's colors", () => {

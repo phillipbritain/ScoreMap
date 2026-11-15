@@ -30,8 +30,6 @@ import { Tooltips } from './tooltip/Tooltips'
 import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
-import { ThemeProtoSwitcher } from './theme/ThemeProtoSwitcher'
-import { protoThemeFromUrl } from './theme/themeProto'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
@@ -67,7 +65,7 @@ interface AppProps {
  * here (see useTheme).
  */
 export default function App({ theme: startTheme, demo = false }: AppProps) {
-  const [theme, setTheme] = useTheme((import.meta.env.DEV && protoThemeFromUrl()) || startTheme)
+  const [theme] = useTheme(startTheme)
   // A demo opens on first-visit settings and saves none.
   const store = demo ? demoStore : savedStore
   // How far the globe's initial load has got, and whether the loading screen has gone since it was ready.
@@ -126,7 +124,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      {import.meta.env.DEV && !demo && <ThemeProtoSwitcher setTheme={setTheme} />}
       <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
         <Globe
           key={`globe-${globeAttempt}`}

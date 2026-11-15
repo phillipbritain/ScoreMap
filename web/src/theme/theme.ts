@@ -400,12 +400,13 @@ const settings = {
   /** How each part of ScoreMap looks, by part, as MUI's components hold each component's own look. */
   components: {
     /**
-     * The globe: its surface (land and sea alike); its coastlines, country borders, state lines and
+     * The globe: its surface (the land) and its sea (oceans and lakes); its coastlines, country borders, state lines and
      * disputed borders, the disputed ones dashed in this pattern; and the halo around its edge, a glow
      * close to the edge and a wider, fainter one outside it.
      */
     Globe: {
       surface: color,
+      sea: color,
       coastlines: globeLine,
       countryBorders: globeLine,
       stateLines: globeLine,

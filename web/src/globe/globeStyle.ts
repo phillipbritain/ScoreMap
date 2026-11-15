@@ -1,6 +1,5 @@
 import type { LayerSpecification, LineLayerSpecification, RasterSourceSpecification, StyleSpecification } from 'maplibre-gl'
 import type { MapType } from '../settings/viewerSettings'
-import { oceanColor } from '../theme/themeProto'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
@@ -33,11 +32,11 @@ const satelliteSourceSpec: RasterSourceSpecification = {
 }
 
 /**
- * The globe's look, made from the base style in the theme's colors. On the plain map, a plain globe
- * where only thin lines show coastlines, country borders and state lines, with place names (see
- * placeNames): land and sea are the same color, the theme's globe surface. On the satellite map,
- * satellite imagery under the same borders, state lines and names, with no coastlines, which the
- * imagery shows. Everything else in the base style (roads, buildings, land cover) is dropped.
+ * The globe's look, made from the base style in the theme's colors. On the plain map, a plain globe:
+ * land in the theme's globe surface, the sea (oceans and lakes) in its sea color, and lines showing
+ * coastlines, country borders and state lines, with place names (see placeNames). On the satellite map,
+ * satellite imagery under the same borders, state lines and names, with no sea or coastlines, which
+ * the imagery shows. Everything else in the base style (roads, buildings, land cover) is dropped.
  *
  * Both map types' layers are always in the style, those of the other type hidden, so switching
  * between them is a restyle like a theme's (see layerChanges). MapLibre loads no tiles for a source
@@ -63,19 +62,19 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
     sources: { ...base.sources, [satelliteSource]: satelliteSourceSpec, [cityNameSource]: cityNameSourceSpec },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
-      // PROTOTYPE (themeProto): the sea in its own color; land and sea alike where a scheme gives none.
+      // The sea, oceans and lakes alike, so the land stands apart from it.
       {
-        id: 'proto-ocean',
+        id: 'sea',
         type: 'fill',
         source: 'openmaptiles',
         'source-layer': 'water',
         filter: ['in', ['get', 'class'], ['literal', ['ocean', 'lake']]],
         layout: { visibility: shownOn('plain') },
-        paint: { 'fill-color': oceanColor(theme) ?? globe.surface, 'fill-antialias': false },
+        paint: { 'fill-color': globe.sea, 'fill-antialias': false },
       },
       { id: satelliteLayer, type: 'raster', source: satelliteSource, layout: { visibility: shownOn('satellite') } },
-      // Coastlines: the edges of the sea, which is the same color as the land. Lakes and rivers
-      // aren't outlined; at a distance they read as clutter.
+      // Coastlines: the edges of the sea. Lakes and rivers aren't outlined; at a distance they read
+      // as clutter.
       {
         id: 'coastline',
         type: 'line',

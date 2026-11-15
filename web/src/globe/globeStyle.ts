@@ -1,8 +1,15 @@
-import type { LayerSpecification, LineLayerSpecification, RasterSourceSpecification, StyleSpecification } from 'maplibre-gl'
+import type {
+  GeoJSONSourceSpecification,
+  LayerSpecification,
+  LineLayerSpecification,
+  RasterSourceSpecification,
+  StyleSpecification,
+} from 'maplibre-gl'
 import type { MapType } from '../settings/viewerSettings'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
+import stateLinesUrl from './stateLines.json?url'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
 export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
@@ -11,6 +18,19 @@ export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
 const countryLines = 'boundary_2'
 const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
+
+/**
+ * State and province lines zoomed out, where the map's own tiles have none: its coarsest tiles (zoom 0),
+ * which the globe shows zoomed all the way out and toward its edges, carry only country borders. These
+ * are Natural Earth's, made by `npm run state-lines` (scripts/stateLines.ts), fetched with the style
+ * as a file of their own rather than built into the page. Below `farStateLinesUntil` they're drawn in
+ * place of the tiles' state lines, and from it on the tiles' are, so the two never show together.
+ */
+export const farStateLinesSource = 'far-state-lines'
+export const farStateLinesLayer = 'far-state-lines'
+export const farStateLinesUntil = 3
+
+const farStateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: stateLinesUrl }
 
 /** The satellite map's imagery: EOX's cloudless Sentinel-2 mosaic of 2024, free for non-commercial use with its credit shown (ADR-0022). */
 export const satelliteSource = 'satellite'
@@ -59,7 +79,12 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
     glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
-    sources: { ...base.sources, [satelliteSource]: satelliteSourceSpec, [cityNameSource]: cityNameSourceSpec },
+    sources: {
+      ...base.sources,
+      [satelliteSource]: satelliteSourceSpec,
+      [farStateLinesSource]: farStateLinesSourceSpec,
+      [cityNameSource]: cityNameSourceSpec,
+    },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
       // The sea, oceans and lakes alike, so the land stands apart from it.
@@ -84,8 +109,10 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
         layout: { visibility: shownOn('plain') },
         paint: linePaint(globe.coastlines),
       },
-      // The base style hides state and province lines below zoom 5; the tiles carry them from zoom 1.
-      restyled(stateLines, { minzoom: 0, paint: linePaint(globe.stateLines) }),
+      // Zoomed out, state and province lines of the globe's own (see farStateLinesSource); from
+      // farStateLinesUntil, the tiles', which the base style hides below zoom 5.
+      { id: farStateLinesLayer, type: 'line', source: farStateLinesSource, maxzoom: farStateLinesUntil, paint: linePaint(globe.stateLines) },
+      restyled(stateLines, { minzoom: farStateLinesUntil, paint: linePaint(globe.stateLines) }),
       restyled(countryLines, { paint: linePaint(globe.countryBorders) }),
       restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [...globe.disputedBorders.dash] } }),
       ...placeNameLayers(base, theme),

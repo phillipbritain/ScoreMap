@@ -89,6 +89,7 @@ describe('globeStyle', () => {
       'sea',
       'satellite',
       'coastline',
+      'far-state-lines',
       'boundary_3',
       'boundary_2',
       'boundary_disputed',
@@ -180,8 +181,11 @@ describe('globeStyle', () => {
     expect(outlined('river')).toBe(false)
   })
 
-  it("shows state lines at every zoom, and state names at the base style's zooms", () => {
-    expect(layer('boundary_3')?.minzoom).toBe(0)
+  it("shows state lines at every zoom, its own zoomed out and the tiles' from zoom 3, and state names at the base style's zooms", () => {
+    expect(layer('far-state-lines')).toMatchObject({ type: 'line', source: 'far-state-lines', maxzoom: 3 })
+    expect(style().sources['far-state-lines']).toMatchObject({ type: 'geojson', data: expect.stringContaining('stateLines') })
+    expect(paint('far-state-lines')['line-color']).toBe('#000004')
+    expect(layer('boundary_3')?.minzoom).toBe(3)
     expect(layer('label_state')).toMatchObject({ minzoom: 5, maxzoom: 8 })
     expect(paint('label_state')).not.toHaveProperty('text-opacity')
   })

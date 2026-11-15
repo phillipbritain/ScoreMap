@@ -101,6 +101,20 @@ describe('pageCheck', () => {
       expect(picked).toEqual([['london', 'paris']])
     })
 
+    it('makes it happen to the open game panel’s game first, its card picked out as selected', async () => {
+      const picked = europe(['paris', 'london'])
+      const selected = document.createElement('div')
+      selected.className = 'score-card score-card--selected'
+      selected.dataset.gameId = 'london'
+      document.body.append(selected)
+      try {
+        expect(await pageCheck({ check: 'happen', event: 'finish' })).toEqual({ happened: { kind: 'Finished', gameId: 'london' } })
+        expect(picked).toEqual([['london']])
+      } finally {
+        selected.remove()
+      }
+    })
+
     it('says so when no game on screen can have it happen', async () => {
       europe([])
       window.scoremapGames = { happen: () => null }

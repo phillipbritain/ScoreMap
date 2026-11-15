@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
 import { noPinsMessage, visibleGames } from './settings/visibleGames'
 import { scorerOf } from './games/justHappened'
+import type { Game } from './games/game'
+import { noneCelebrated, withCelebrated, withoutCelebrated, type Celebrated } from './celebration/celebrated'
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
@@ -20,6 +22,7 @@ import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
+import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
 import { useLeaving } from './motion/useLeaving'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
@@ -107,18 +110,28 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
 
-  const visible = useMemo(() => visibleGames(games ?? [], viewerSettings), [games, viewerSettings])
+  // Games whose celebration has closed their panel leave the globe with it, before the server drops them
+  // (see celebration/celebrated.ts).
+  const [celebrated, setCelebrated] = useState<Celebrated>(noneCelebrated)
+  const boardGames = useMemo(() => games && withoutCelebrated(games, celebrated), [games, celebrated])
+  const visible = useMemo(() => visibleGames(boardGames ?? [], viewerSettings), [boardGames, viewerSettings])
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
   // Not under the loading screen, nor during the welcome tour: only once both have gone.
-  const message = loadingScreenGone && !touring ? noPinsMessage(games, visible, viewerSettings) : null
+  const message = loadingScreenGone && !touring ? noPinsMessage(boardGames, visible, viewerSettings) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
-  // A closed panel stays a moment as it goes (see .game-panel--leaving), out of reach.
-  const { shown: panelGame, leaving: panelLeaving, key: panelKey } = useLeaving(selectedGame, panelLeaveDuration)
+  // A game finishing while its panel is open celebrates there, then the panel closes itself and the game
+  // leaves the globe with it (see usePanelCelebration).
+  const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])
+  usePanelCelebration(selectedGame, panel, selectedGame && gameColor(colors, selectedGame, theme), celebrate)
+  // A closed panel stays a moment as it goes (see .game-panel--leaving), out of reach: longer when it
+  // closed itself after its game's celebration, as it slides away slower.
+  const panelLeave = useCallback((game: Game) => (celebrated.has(game.id) ? celebratedPanelLeaveDuration : panelLeaveDuration), [celebrated])
+  const { shown: panelGame, leaving: panelLeaving, key: panelKey } = useLeaving(selectedGame, panelLeave)
   const panelColor = panelGame && gameColor(colors, panelGame, theme)
   // Where the rail ends, so the game panel stops short of it.
   const globeArea = useRef<HTMLDivElement>(null)
@@ -137,7 +150,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           colors={colors}
           mapType={viewerSettings.mapType}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
-          games={games && visible}
+          games={boardGames && visible}
           justHappened={justHappened}
           selectedGameId={selectedGame?.id ?? null}
           panel={panel}

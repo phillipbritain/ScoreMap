@@ -2710,6 +2710,31 @@ body {
   animation: none;
 }
 
+/* A panel closing itself after its game's celebration (see usePanelCelebration) slides down off the
+   screen as a close does, but slower, over 550 ms (celebratedPanelLeaveDuration keeps it on the page
+   that long), easing in. */
+.game-panel--leaving[data-leave='celebrated'] {
+  animation: game-panel-out 550ms cubic-bezier(0.5, 0, 0.8, 0.4) forwards;
+}
+
+/* A game's celebration (see celebration/celebration.ts): the game panel's fireworks on a canvas filling
+   it, over its content, clipped to its corners; a score card's confetti on a canvas over the card, in
+   its marker, so it goes with the card and lies under the game panel and the rail. Their sizes are set
+   in px as they play. Clicks pass through. */
+.game-panel__celebration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.score-card-celebration {
+  position: absolute;
+  pointer-events: none;
+}
+
 @keyframes game-panel-in {
   from {
     translate: 0 calc(100% + var(--game-panel-bottom));
@@ -2723,7 +2748,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-panel {
+  .game-panel,
+  .game-panel--leaving[data-leave='celebrated'] {
     animation: none;
   }
 }

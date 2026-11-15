@@ -191,8 +191,9 @@ describe('applyTheme', () => {
       controls: 1 + 1 + 2 + 1 + 2 + 2,
       // A tooltip's surface and outline.
       tooltip: 2,
-      // The loading screen's dim (a color and an opacity), rocket (two colors and a size) and message.
-      loadingScreen: 2 + 3 + 1,
+      // The loading screen's dim (a color and an opacity), rocket (two colors and a size), message, its
+      // glow (a color, a radius and an opacity) and its ellipsis's dots (a size).
+      loadingScreen: 2 + 3 + 1 + 3 + 1,
       // The welcome tour's dim opacity and arrow width.
       welcomeTour: 2,
     }

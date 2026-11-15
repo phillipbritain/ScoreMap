@@ -59,9 +59,11 @@ When a game's score changes, nothing on its score card moves: the card's edge gl
 
 A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves, or as it moves into or out of a card cluster, just appears or goes.
 
+The message under the loading screen's rocket, and the cut-off note's, drifts in a word at a time: each word rises into place out of a blur over 0.3 seconds, 35 ms after the one before, glowing in `components.LoadingScreen.glow`. A message ending in an ellipsis ends instead in three dots in the glow's color, lit one after another for as long as it shows. This is variant E2 of the comparison preserved on the throwaway branch `prototype/loading-text`, chosen by the user on November 14, 2026.
+
 The rail's Hide controls button, a cross above its other buttons, gold while they show, folds them up into itself over 220 ms, their groups rising and fading one after another, leaving itself alone at the top right as Show controls, a menu, which drops them back down the same way; with reduce motion they go and come back at once. The rail stays collapsed on the viewer's next visit, but is open while the welcome tour shows.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and with no speed lines, its message is there at once with its dots steady, and its dim goes at once when ScoreMap is ready instead of fading. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colors
 
@@ -182,6 +184,7 @@ Beside the palette's background, text, divider and hover:
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body, fins and speed lines (its window is the dim's color) | `text.primary` |
 | `components.LoadingScreen.rocket.flame` | The flame under the rocket | `secondary.main` |
 | `components.LoadingScreen.message` | The message under the loading screen's rocket | `text.primary` |
+| `components.LoadingScreen.glow.color` | The glow around the loading screen's message, and the dots of its closing ellipsis | `secondary.main` |
 
 A league that's on is lit in gold, as a game is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
 
@@ -276,11 +279,11 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 
 | Type style | Which text | Dark theme |
 | --- | --- | --- |
-| `h6` | Scores on the game panel; a score card's scores take its weight; the game panel's close button takes its size | 700, 20 |
+| `h6` | Scores on the game panel; a score card's scores take its weight; the game panel's close button and the loading screen's message take its size | 700, 20 |
 | `subtitle1` | Team names on the game panel; a score card's team abbreviations take its weight | 700, 16 |
-| `subtitle2` | A score card's text takes its weight | 600, 12 |
+| `subtitle2` | A score card's text and the loading screen's message take its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
-| `body2` | The game panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's message | 400, 14 |
+| `body2` | The game panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |
 | `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on | 600, 14 |
 | `caption` | Secondary lines: the game panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The game panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
@@ -369,6 +372,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colors" with no colors to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
+| `components.LoadingScreen.glow.radius`, `.opacity` | How far the glow around the loading screen's message reaches, and how strong it is, 0 to 1 (its ellipsis's dots glow half as far, at full strength) | 14, 0.45 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
@@ -388,6 +392,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.Rail.size.countWidth` | The narrowest a count of leagues is, in ems | 3.2 |
 | `components.Controls.size.key`, `.icon` | A speed key and its icon | 34, 14 |
 | `components.LoadingScreen.rocket.size` | The loading screen's rocket, its box across | 64 |
+| `components.LoadingScreen.dot` | Each dot of the loading screen's closing ellipsis, across | 5 |
 
 ## Text on the globe
 

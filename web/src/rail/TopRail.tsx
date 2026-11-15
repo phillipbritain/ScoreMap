@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
+import { useLeaving } from '../motion/useLeaving'
 import { RailButton } from './Rail'
-import { nextPopover, type PopoverEvent } from './railControls'
+import { nextPopover, popoverLeaveDuration, type PopoverEvent } from './railControls'
 
 /** The top rail's popover: Scenario (the scenario controls). */
 export type TopRailPopover = 'scenario'
@@ -25,6 +26,7 @@ export function TopRail({ scenarioControls }: TopRailProps) {
   const [chosen, setOpen] = useState<TopRailPopover | null>(null)
   // A popover closes if what it holds goes (the welcome tour starting).
   const open = chosen === 'scenario' && !scenarioControls ? null : chosen
+  const { shown, leaving, key: popoverKey } = useLeaving(open, popoverLeaveDuration)
   const popover = useRef<HTMLDivElement>(null)
   const popoverEvent = (event: PopoverEvent<TopRailPopover>) => setOpen((current) => nextPopover(current, event))
 
@@ -48,13 +50,16 @@ export function TopRail({ scenarioControls }: TopRailProps) {
   const item = (name: TopRailPopover, button: ReactNode, content: ReactNode) => (
     <div className="top-rail__item">
       {button}
-      {open === name && (
+      {shown === name && (
         <div
-          ref={popover}
-          id="top-rail-popover"
-          className={`rail__popover top-rail__popover rail__popover--${name}`}
+          key={popoverKey}
+          ref={leaving ? undefined : popover}
+          id={leaving ? undefined : 'top-rail-popover'}
+          className={`rail__popover top-rail__popover rail__popover--${name}${leaving ? ' rail__popover--leaving' : ''}`}
           role="dialog"
           aria-label="Scenario"
+          aria-hidden={leaving || undefined}
+          inert={leaving}
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
           onClick={(event) => {
             if ((event.target as Element).closest('[data-closes-popover]')) setOpen(null)

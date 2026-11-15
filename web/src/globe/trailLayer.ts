@@ -1,6 +1,7 @@
 import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 import { comingOpacity, stillComing, type CardComing } from './cardComings'
+import { moveLag, stillMoving, type CardMove } from './cardMoves'
 import { trailPoints, type FirstLeg } from './trailRoute'
 
 export const trailLayerId = 'trails'
@@ -22,6 +23,8 @@ export interface TrailOnGlobe {
   firstLeg?: FirstLeg
   /** Its card coming in or going out, which it fades in or out with (see cardComings). */
   coming?: CardComing
+  /** Its card gliding to where it was moved, which its start glides with (see cardMoves). */
+  move?: CardMove
 }
 
 /** A trail where it's drawn on screen, in pixels. */
@@ -74,10 +77,12 @@ export function trailLayer(theme: () => Theme): TrailLayer {
 
   const onScreen = (now = performance.now()): TrailOnScreen[] => {
     if (!map) return []
-    return trails.map(({ gameId, venue, start, end, dot, firstLeg, coming }) => {
+    return trails.map(({ gameId, venue, start, end, dot, firstLeg, coming, move }) => {
       const at = map!.project(venue)
       const opacity = coming ? comingOpacity(coming, now) : 1
-      const trail: TrailOnScreen = { gameId, from: { x: at.x + start.dx, y: at.y + start.dy }, to: map!.project(end), dot, opacity }
+      const lag = move ? moveLag(move, now) : { dx: 0, dy: 0 }
+      const from = { x: at.x + start.dx + lag.dx, y: at.y + start.dy + lag.dy }
+      const trail: TrailOnScreen = { gameId, from, to: map!.project(end), dot, opacity }
       return firstLeg ? { ...trail, firstLeg } : trail
     })
   }
@@ -116,8 +121,8 @@ export function trailLayer(theme: () => Theme): TrailLayer {
       if (!map || !program || !uniforms || trails.length === 0) return
       const pixelRatio = map.getPixelRatio()
       const now = performance.now()
-      // While a trail fades in or out with its card, each frame draws it a little further along.
-      if (trails.some(({ coming }) => coming && stillComing(coming, now))) map.triggerRepaint()
+      // While a trail fades in or out with its card, or glides with it, each frame draws it a little further along.
+      if (trails.some(({ coming, move }) => (coming && stillComing(coming, now)) || (move && stillMoving(move, now)))) map.triggerRepaint()
       const shapes = trailShapes(onScreen(now), trails.map(({ color }) => color), [hovered, selected], theme().components)
       const triangles = vertices(shapes, pixelRatio)
       context.useProgram(program)

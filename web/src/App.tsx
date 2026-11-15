@@ -18,8 +18,9 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
-import { GamePanel } from './panel/GamePanel'
+import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
+import { useLeaving } from './motion/useLeaving'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -116,7 +117,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
-  const selectedColor = selectedGame && gameColor(colors, selectedGame, theme)
+  // A closed panel stays a moment as it goes (see .game-panel--leaving), out of reach.
+  const { shown: panelGame, leaving: panelLeaving, key: panelKey } = useLeaving(selectedGame, panelLeaveDuration)
+  const panelColor = panelGame && gameColor(colors, panelGame, theme)
   // Where the rail ends, so the game panel stops short of it.
   const globeArea = useRef<HTMLDivElement>(null)
   useRailClearance(globeArea)
@@ -173,15 +176,17 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
         </div>
         {demo && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
-        {selectedGame && selectedColor && (
+        {panelGame && panelColor && (
           <GamePanel
-            ref={panel}
-            game={selectedGame}
-            scorer={scorerOf(justHappened, selectedGame.id)}
-            color={selectedColor}
-            textOnColor={textOn(selectedColor, theme.palette.text.primary, theme.palette.background.paper)}
+            key={panelKey}
+            ref={panelLeaving ? undefined : panel}
+            game={panelGame}
+            scorer={scorerOf(justHappened, panelGame.id)}
+            color={panelColor}
+            textOnColor={textOn(panelColor, theme.palette.text.primary, theme.palette.background.paper)}
             venuePhotos={viewerSettings.venuePhotos}
             onClose={closeGame}
+            leaving={panelLeaving}
           />
         )}
         <Rail

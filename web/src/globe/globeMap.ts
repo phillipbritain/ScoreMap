@@ -158,7 +158,7 @@ export class GlobeMap {
       attributionControl: false,
       // Place names are placed afresh every frame, not once each fade has played: between placements
       // they turn with the globe, so names gone over the horizon were still written at its edge.
-      // They pop in and out as score cards do.
+      // They pop in and out (score cards fade).
       fadeDuration: 0,
       // A double click while turning the globe is more often a slip than a wish to zoom in.
       doubleClickZoom: false,

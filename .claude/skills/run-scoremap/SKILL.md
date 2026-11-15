@@ -50,12 +50,13 @@ npm run page -- camera <lng>,<lat> <zoom>   # turns the camera there and waits f
 npm run page -- settled                     # waits for the globe to settle after a camera move
 npm run page -- read <selector> [prop]      # a property of the first match: textContent unless given (innerText for only what shows), rect for its box
 npm run page -- screenshot <file>           # once Ready and settled
-npm run page -- score                       # a Live game on screen scores (`finish`: finishes), in this tab only, until the server's next change to it
+npm run page -- score                       # a Live game on screen (the open panel's first) scores (`finish`: finishes), in this tab only, until the server's next change to it
 ```
 
 1. **Start with `reset`.** The app saves the camera and settings to localStorage, so a run on the same port opens where the last one left off; a dark, empty globe is usually a saved camera over ocean. `reset` also sends the browser daemon's output to files of its own. A session started with a bare agent-browser command instead must send that command's output to a file, from Git Bash (`agent-browser open $web > /tmp/ab.txt 2>&1`): the daemon inherits its stdout, so a pipe, or PowerShell's `>`, waits forever.
    Add `--toured` unless you're checking the welcome tour itself: a first visit shows the tour, and the rail and the Games popover can't be used under it.
    Set the viewport after `reset` (`agent-browser set viewport 1280 800`): the browser opens at its own size, and a size set before it opens can be lost.
+   `score` and `finish` pick the open game panel's game when it's Live. A `finish` plays the game's celebration (`GLOSSARY.md`): confetti on its score card, and with its panel open, fireworks there and then the panel closing itself 4.2 s later, its card with it. The server's next change to the game undoes a made-up finish, and with it a close still to come: if the panel stays, `finish` again.
    A query on the web URL (`$web/?variant=A`) stays on the app's page. If `localhost` is refused, use `127.0.0.1`: a run open to the network listens on IPv4 only.
 2. **Wait until it's drawn** before a measurement (`ready`): the page is Ready once the first games are on the globe and everything on it has stopped moving, and stays so. For screenshots to compare, start the scenario Paused too (see Scenarios).
 3. **Go somewhere with `camera`**, as `camera -74,40.7 6` for New York, rather than scrolling. Score cards and city labels show at every zoom near the center of the view, so look where the scenario has games: `crowded` over New York, London or Los Angeles.

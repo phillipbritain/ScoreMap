@@ -287,6 +287,8 @@ export class GlobeMap {
       const kind = before.has(game.id) ? changeSince(justHappened, game.id, played) : null
       const animation = kind && pinAnimation(kind, game)
       if (animation) void this.animate(game, animation)
+      // A game finishing celebrates on its score card, where it has one on screen.
+      if (kind === 'Finished') this.cards.celebrate(game.id)
     }
   }
 

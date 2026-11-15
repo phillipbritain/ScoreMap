@@ -355,3 +355,9 @@
     display: none;
   }
 }
+
+/* E2: the words drift in faster, each over a shorter drift. */
+.ltp-drift--fast .ltp-drift__word,
+.ltp-drift--fast .ltp-drift__dots {
+  animation-duration: 0.3s;
+}

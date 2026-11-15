@@ -13,9 +13,11 @@ export interface TextVariant {
 export const textVariants: readonly TextVariant[] = [
   { key: 'A', name: 'Today: plain body text' },
   { key: 'B', name: 'Mission readout: typed out, monospace HUD' },
+  { key: 'B2', name: 'Mission readout, typed out faster' },
   { key: 'C', name: 'Title card: large light type, shimmer, sparkles' },
   { key: 'D', name: 'Broadcast plaque: Mission Control label, live dot' },
   { key: 'E', name: 'Drifting words: word by word, glowing dots' },
+  { key: 'E2', name: 'Drifting words, drifting in faster' },
 ]
 
 /** What the bar's Show button pins over the globe, to look at without waiting for a slow load. */

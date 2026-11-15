@@ -22,27 +22,31 @@ export function PrototypeMessage({ text }: { text: string }) {
   const key = `${textVariant().key}:${text}`
   switch (textVariant().key) {
     case 'B':
-      return <Readout key={key} text={text} />
+      return <Readout key={key} text={text} msPerLetter={32} />
+    case 'B2':
+      return <Readout key={key} text={text} msPerLetter={10} />
     case 'C':
       return <TitleCard key={key} text={text} />
     case 'D':
       return <Plaque key={key} text={text} />
     case 'E':
-      return <DriftingWords key={key} text={text} />
+      return <DriftingWords key={key} text={text} msPerWord={90} />
+    case 'E2':
+      return <DriftingWords key={key} text={text} msPerWord={35} fast />
     default:
       return <p className="loading-screen__message">{text}</p>
   }
 }
 
 /** B: typed out a letter at a time behind a block cursor, the untyped rest held in place unseen. */
-function Readout({ text }: { text: string }) {
+function Readout({ text, msPerLetter, lettersPerTick = 1 }: { text: string; msPerLetter: number; lettersPerTick?: number }) {
   const [typed, setTyped] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches ? text.length : 0,
   )
   useEffect(() => {
-    const timer = setInterval(() => setTyped((n) => (n >= text.length ? n : n + 1)), 32)
+    const timer = setInterval(() => setTyped((n) => Math.min(text.length, n + lettersPerTick)), msPerLetter)
     return () => clearInterval(timer)
-  }, [text])
+  }, [text, msPerLetter, lettersPerTick])
   return (
     <div className="loading-screen__message ltp-readout">
       <span className="ltp-readout__label">Transmission</span>
@@ -87,19 +91,19 @@ function Plaque({ text }: { text: string }) {
 }
 
 /** E: the words drift in one after another, the closing ellipsis three glowing dots in turn. */
-function DriftingWords({ text }: { text: string }) {
+function DriftingWords({ text, msPerWord, fast = false }: { text: string; msPerWord: number; fast?: boolean }) {
   const trailing = text.endsWith('…')
   const words = (trailing ? text.slice(0, -1) : text).split(' ')
   return (
-    <p className="loading-screen__message ltp-drift" aria-label={text}>
+    <p className={fast ? 'loading-screen__message ltp-drift ltp-drift--fast' : 'loading-screen__message ltp-drift'} aria-label={text}>
       {words.map((word, at) => (
-        <span key={at} className="ltp-drift__word" style={{ animationDelay: `${at * 90}ms` }} aria-hidden="true">
+        <span key={at} className="ltp-drift__word" style={{ animationDelay: `${at * msPerWord}ms` }} aria-hidden="true">
           {word}
           {at < words.length - 1 ? ' ' : ''}
         </span>
       ))}
       {trailing && (
-        <span className="ltp-drift__dots" style={{ animationDelay: `${words.length * 90}ms` }} aria-hidden="true">
+        <span className="ltp-drift__dots" style={{ animationDelay: `${words.length * msPerWord}ms` }} aria-hidden="true">
           <span />
           <span />
           <span />

@@ -36,6 +36,8 @@ Usually the user already has a run going. Commands run from PowerShell or bash; 
 
 **A white page** after renaming or deleting a file under `web/src`: Vite may hold a stale import, unseen by `console` and `errors`. Restart it with `aspire resource web restart --apphost $apphost`.
 
+**Vite failing to resolve a dependency** that is on disk (seen: `maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url` from `src/globe/globeMap.ts`): `npm ci` or `npm install` ran in a worktree while its run was going, emptying `node_modules` under Vite, which keeps failing once the files are back. Restart it with `aspire resource web restart --apphost $apphost`.
+
 **Server `Finished` with "address already in use"** in `aspire logs server` (and `npm run page -- ready` timing out): a server left over from an earlier watch restart, often one that crashed on a half-made change, holds the port. Stop it (`Get-Process ScoreMap.Server | Stop-Process`; bash: `pkill -f "$(git rev-parse --show-toplevel)/server/src/ScoreMap.Server/bin/"`, which stops only this clone's), then `aspire resource server restart --apphost $apphost`.
 
 ## Drive it in a browser
@@ -51,7 +53,11 @@ npm run page -- settled                     # waits for the globe to settle afte
 npm run page -- read <selector> [prop]      # a property of the first match: textContent unless given (innerText for only what shows), rect for its box
 npm run page -- screenshot <file>           # once Ready and settled
 npm run page -- score                       # a Live game on screen (the open panel's first) scores (`finish`: finishes), in this tab only, until the server's next change to it
+npm run page -- tap <selector|x y>          # a real touch tap on the middle of the first match (or at the point)
+npm run page -- swipe <selector|x y> <dx> <dy> [ms]   # a real touch swipe from there by (dx, dy) px, at a steady speed over ms (500)
 ```
+
+**For anything touch** (a tap's tooltip, swiping the game panel), use `tap` and `swipe`: they send real touch input through the DevTools Protocol, which agent-browser can't, and `swipe` moves once a frame for the time asked, where agent-browser's `mouse` moves arrive too far apart and read as a flick. At 390×844 with a panel open, `swipe .game-panel 0 50` springs back, while `swipe .game-panel 0 160`, or the short one as a flick (`swipe .game-panel 0 50 50`), closes it (why: `web/src/panel/swipeClose.ts`). A tap on cut-off text (`tap .game-panel__team-name` on `edge-cases`' Chicago long-names game) shows its tooltip: `read .tooltip`.
 
 1. **Start with `reset`.** The app saves the camera and settings to localStorage, so a run on the same port opens where the last one left off; a dark, empty globe is usually a saved camera over ocean. `reset` also sends the browser daemon's output to files of its own. A session started with a bare agent-browser command instead must send that command's output to a file, from Git Bash (`agent-browser open $web > /tmp/ab.txt 2>&1`): the daemon inherits its stdout, so a pipe, or PowerShell's `>`, waits forever.
    Add `--toured` unless you're checking the welcome tour itself: a first visit shows the tour, and the rail and the Games popover can't be used under it.
@@ -60,7 +66,7 @@ npm run page -- score                       # a Live game on screen (the open pa
    A query on the web URL (`$web/?variant=A`) stays on the app's page. If `localhost` is refused, use `127.0.0.1`: a run open to the network listens on IPv4 only.
 2. **Wait until it's drawn** before a measurement (`ready`): the page is Ready once the first games are on the globe and everything on it has stopped moving, and stays so. For screenshots to compare, start the scenario Paused too (see Scenarios).
 3. **Go somewhere with `camera`**, as `camera -74,40.7 6` for New York, rather than scrolling. Score cards and city labels show at every zoom near the center of the view, so look where the scenario has games: `crowded` over New York, London or Los Angeles.
-4. **Open a game panel from the Games popover** (the rail's Games button), the reliable way in automation: a score card or pin off screen takes no click. Open it, then `click '[data-game-id="<id>"]'`, with the id from [the game list](#which-games-are-on). Confirm with `npm run page -- read .game-panel`. To click a pin itself (drawn by WebGL, so no refs): screenshot, then `mouse move <x> <y>`, `mouse down left`, `mouse up left` on a single pin's center; a circle with a number is a cluster, which zooms in.
+4. **Open a game panel from the Games popover** (the rail's Games button), the reliable way in automation: a score card or pin off screen takes no click. Open it, then `click '#rail-popover [data-game-id="<id>"]'` (a score card on screen carries the same attribute), with the id from [the game list](#which-games-are-on). Confirm with `npm run page -- read .game-panel`. To click a pin itself (drawn by WebGL, so no refs): screenshot, then `mouse move <x> <y>`, `mouse down left`, `mouse up left` on a single pin's center; a circle with a number is a cluster, which zooms in.
 5. **Pick from the scenario pill by ref.** The scenario controls are in the Scenario popover, from the top rail at the top left (local runs only): open it, open the pill, run `snapshot -i`, and `click @<ref>` on the entry's button.
 6. **Phone width.** Open the panel at 1280×800, then `set viewport 390 844`: the panel stays open, as the bottom sheet.
 7. **Measure with `npm run page -- read`** where a screenshot can only suggest: an element's size (`read <selector> rect`), whether an image loaded (`read <selector> naturalWidth`, more than 0), which URL it came from (`read <selector> currentSrc`).

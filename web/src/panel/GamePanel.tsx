@@ -9,6 +9,7 @@ import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { listedWatchLinks } from './watchLinks'
 import { lastScoreSlot } from './lastScoreSlot'
+import { useSwipeToClose } from './useSwipeToClose'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -40,7 +41,8 @@ interface GamePanelProps {
  * clicking between games doesn't change its height, every line holds its place whether or not the game
  * has it (the last score where the sport has one, the venue's place, the watch links), and the league, names and the venue sit on one line
  * each, cut short with an ellipsis and in full on hover or, on a touch screen, a tap (see Tooltips); only the band adds height. Re-renders with each
- * snapshot, so it stays current while open.
+ * snapshot, so it stays current while open. On a phone, where it's a bottom sheet, it's swiped down to
+ * close as well as by its close button (see useSwipeToClose).
  */
 export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
   const { venue } = game
@@ -59,9 +61,11 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
   const photo = venuePhotos && venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's color, as its score card is.
   const colorStyle = { '--game-color': color, '--text-on-game-color': textOnColor } as CSSProperties
+  // On a phone, swiped down to close (see useSwipeToClose).
+  const swipe = useSwipeToClose(game.id, onClose)
 
   return (
-    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" onKeyDown={(event) => {
+    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" {...swipe} onKeyDown={(event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose()

@@ -1555,6 +1555,10 @@ body {
   background: var(--globe-surface);
 }
 
+.map-type__sea {
+  fill: var(--globe-sea);
+}
+
 .map-type__coast {
   fill: none;
   stroke: var(--globe-coastlines-color);
@@ -2275,8 +2279,9 @@ body {
   animation-delay: 0.6s;
 }
 
-/* Under the rocket when a stage is slow, saying what's holding loading up. Placed from the middle, so
-   the rocket stays where it is when the message comes and goes. */
+/* Under the rocket, saying it's loading or what's holding it up, its words drifting up into place one
+   after another (LoadingScreen.tsx staggers them), glowing. Placed from the middle, so the rocket stays
+   where it is when the message comes and goes. */
 .loading-screen__message {
   position: absolute;
   top: calc(50% + var(--loading-screen-rocket-size) / 2 + var(--spacing));
@@ -2284,8 +2289,45 @@ body {
   left: calc(3 * var(--spacing));
   margin: 0;
   color: var(--loading-screen-message);
-  font-size: var(--typography-body2-font-size);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-subtitle2-font-weight);
+  line-height: 1.4;
   text-align: center;
+  text-shadow: 0 0 var(--loading-screen-glow-radius)
+    color-mix(in srgb, var(--loading-screen-glow-color) calc(var(--loading-screen-glow-opacity) * 100%), transparent);
+  text-wrap: balance;
+}
+
+.loading-screen__word {
+  display: inline-block;
+  white-space: pre;
+  animation: loading-screen-drift-in 0.3s ease-out both;
+}
+
+/* A closing ellipsis: three glowing dots lit one after another, drifting in after the last word. */
+.loading-screen__dots {
+  display: inline-flex;
+  gap: var(--spacing);
+  margin-left: var(--spacing);
+  vertical-align: middle;
+  animation: loading-screen-drift-in 0.3s ease-out both;
+}
+
+.loading-screen__dots span {
+  width: var(--loading-screen-dot);
+  height: var(--loading-screen-dot);
+  border-radius: 50%;
+  background: var(--loading-screen-glow-color);
+  box-shadow: 0 0 calc(var(--loading-screen-glow-radius) / 2) var(--loading-screen-glow-color);
+  animation: loading-screen-dot 1.2s ease-in-out infinite;
+}
+
+.loading-screen__dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-screen__dots span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 /* An initialization failure takes the rocket's place until the viewer retries. */
@@ -2348,6 +2390,26 @@ body {
   }
 }
 
+@keyframes loading-screen-drift-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(10px);
+  }
+}
+
+@keyframes loading-screen-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
 /* The rocket standing still: it fades in and out in place, for reduce motion. */
 @keyframes loading-screen-rocket-still {
   50% {
@@ -2355,15 +2417,18 @@ body {
   }
 }
 
-/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, and the dim
-   goes at once. */
+/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, the message
+   is there at once, its dots steady, and the dim goes at once. */
 @media (prefers-reduced-motion: reduce) {
   .loading-screen__rocket-ship {
     animation: loading-screen-rocket-still 1.6s ease-in-out infinite;
   }
 
   .loading-screen__rocket-flame,
-  .loading-screen__rocket-lines line {
+  .loading-screen__rocket-lines line,
+  .loading-screen__word,
+  .loading-screen__dots,
+  .loading-screen__dots span {
     animation: none;
   }
 
@@ -2556,12 +2621,23 @@ body {
   }
 }
 
-/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
+/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. It's
+   swiped down to close (see useSwipeToClose), so the browser takes no drag on it for a scroll or zoom,
+   bar a vertical one in the band, which is the band's. */
 @media (max-width: 640px) {
   .game-panel {
     --game-panel-bottom: 0px;
     width: 100%;
     border-radius: 0;
+    touch-action: none;
+  }
+
+  .game-panel__band {
+    touch-action: pan-y;
+  }
+
+  .game-panel[data-dragging] {
+    user-select: none;
   }
 }
 

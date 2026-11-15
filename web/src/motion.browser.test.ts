@@ -41,6 +41,14 @@ const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pul
 const pinAnimations = ['score', 'start'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
+const messageWord = () => element('loading-screen', 'loading-screen__message', 'loading-screen__word')
+
+/** A closing ellipsis's three dots, in its box, inside a loading screen's message. */
+function messageDots(): HTMLElement {
+  const dots = element('loading-screen', 'loading-screen__message', 'loading-screen__dots')
+  dots.append(document.createElement('span'), document.createElement('span'), document.createElement('span'))
+  return dots
+}
 
 describe('with reduce motion off', () => {
   it('animates a hot game’s fire outline and glow', () => {
@@ -60,6 +68,20 @@ describe('with reduce motion off', () => {
 
     expect(new Set(transforms).size).toBeGreaterThan(1)
     expect(ship.getAnimations()[0].effect?.getComputedTiming().iterations).toBe(Infinity)
+  })
+
+  it('drifts each word of the loading screen’s message up into place', () => {
+    const transforms = keyframesOf(messageWord()).map((keyframe) => keyframe.transform)
+
+    expect(new Set(transforms.filter((transform) => transform !== undefined)).size).toBeGreaterThan(1)
+  })
+
+  it('lights the dots of the message’s ellipsis one after another, for as long as it shows', () => {
+    const dots = [...messageDots().children] as HTMLElement[]
+    const timings = dots.map((dot) => dot.getAnimations()[0].effect!.getComputedTiming())
+
+    expect(timings.every((timing) => timing.iterations === Infinity)).toBe(true)
+    expect(new Set(timings.map((timing) => timing.delay)).size).toBe(3)
   })
 
   it('fades the loading screen out as it leaves', () => {
@@ -100,6 +122,13 @@ describe('with reduce motion on', () => {
     expect(keyframes.filter((keyframe) => 'transform' in keyframe)).toEqual([])
     const opacities = keyframes.map((keyframe) => Number(keyframe.opacity))
     expect(Math.min(...opacities)).toBeLessThan(Math.max(...opacities))
+  })
+
+  it('shows the loading screen’s message at once, its ellipsis’s dots steady', () => {
+    const dots = messageDots()
+
+    expect(messageWord().getAnimations()).toEqual([])
+    expect(dots.getAnimations({ subtree: true })).toEqual([])
   })
 
   it('takes the loading screen away at once as it leaves, without fading', () => {

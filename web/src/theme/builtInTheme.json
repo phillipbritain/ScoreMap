@@ -40,11 +40,12 @@
   },
   "components": {
     "Globe": {
-      "surface": "primary.main",
-      "coastlines": { "color": "primary.light", "width": { "2": 0.6, "8": 1.2 } },
-      "countryBorders": { "color": "primary.light", "width": { "2": 0.6, "8": 1.4 } },
-      "stateLines": { "color": "navy.400", "width": { "3": 0.5, "8": 1 } },
-      "disputedBorders": { "color": "navy.400", "width": { "0": 0.8 }, "dash": [2, 2] },
+      "surface": "navy.600",
+      "sea": "#071a3c",
+      "coastlines": { "color": "navy.200", "width": { "2": 0.9, "8": 1.6 } },
+      "countryBorders": { "color": "navy.200", "width": { "2": 0.9, "8": 1.8 } },
+      "stateLines": { "color": "navy.300", "width": { "3": 0.6, "8": 1.2 } },
+      "disputedBorders": { "color": "navy.300", "width": { "0": 0.8 }, "dash": [2, 2] },
       "halo": {
         "inner": { "color": "navy.400", "blur": { "share": 0.12, "max": 60 }, "spread": { "share": 0.04, "max": 20 } },
         "outer": { "color": "primary.dark", "blur": { "share": 0.35, "max": 160 }, "spread": { "share": 0.08, "max": 40 } }
@@ -53,21 +54,21 @@
     "PlaceNames": {
       "city": {
         "color": "navy.200",
-        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
+        "outline": { "color": "navy.800", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
         "size": { "4": "caption", "7": "body2", "11": "h6" },
         "letterSpacing": 0
       },
       "state": {
         "color": "primary.light",
-        "outline": { "color": "navy.600", "width": 1.2, "blur": 0 },
+        "outline": { "color": "navy.800", "width": 1.2, "blur": 0 },
         "font": "Open Sans Regular",
         "size": { "3": "footnote", "8": "body2" },
         "letterSpacing": 0.25
       },
       "country": {
         "color": "navy.200",
-        "outline": { "color": "navy.600", "width": 2, "blur": 0.5 },
+        "outline": { "color": "navy.800", "width": 2, "blur": 0.5 },
         "font": "Open Sans Bold",
         "size": { "1": "footnote", "4": "body1" },
         "letterSpacing": 0.12
@@ -177,7 +178,7 @@
       "message": { "corner": 2 },
       "size": { "key": 34, "icon": 14 }
     },
-    "Tooltip": { "surface": "background.paper" },
+    "Tooltip": { "surface": "navy.700", "outline": "navy.500" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
       "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },

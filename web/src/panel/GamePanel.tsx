@@ -38,8 +38,8 @@ interface GamePanelProps {
  * logos in its bottom right corner; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. So that
  * clicking between games doesn't change its height, every line holds its place whether or not the game
- * has it (the last score where the sport has one, the venue's place, the watch links), and names and the venue sit on one line
- * each, cut short with an ellipsis and in full on hover; only the band adds height. Re-renders with each
+ * has it (the last score where the sport has one, the venue's place, the watch links), and the league, names and the venue sit on one line
+ * each, cut short with an ellipsis and in full on hover or, on a touch screen, a tap (see Tooltips); only the band adds height. Re-renders with each
  * snapshot, so it stays current while open.
  */
 export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
@@ -171,7 +171,7 @@ function WatchLinks({ links }: { links: StreamLink[] }) {
 
 /**
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
- * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Before a
+ * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover or a tap. Before a
  * score, "None yet", so the panel is as tall either way. Only for sports that score in plays (see
  * lastScoreSlot).
  */

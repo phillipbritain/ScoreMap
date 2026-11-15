@@ -207,10 +207,12 @@ export interface Blast {
   colors: readonly string[]
   /** Scales the variant's launch speed. */
   power?: number
+  /** A box to keep it to, read each frame: x and y are then in the box, and the pieces are clipped to it and move with it. */
+  within?: () => DOMRect | null
 }
 
 /** Fires a blast of the variant's confetti. Nothing with prefers-reduced-motion. */
-export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, colors, power = 1 }: Blast): void {
+export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, colors, power = 1, within }: Blast): void {
   if (reducedMotion() || !colors.length) return
   const now = performance.now()
   for (let i = 0; i < count; i++) {
@@ -231,6 +233,7 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
       born: now,
       life: variant.duration * (0.7 + Math.random() * 0.3),
       gravity: 0.32,
+      within,
     })
   }
   run(now)
@@ -513,16 +516,20 @@ export async function celebrateOnGlobe(game: Game, gameColor: string, card: HTML
   else if (pin) blast(variant, { ...pin, angle: 0, spread: 40, count: Math.round(variant.cardCount / 2), colors, power: 0.25 })
 }
 
-/** Confetti up from both bottom corners of the game panel. */
+/** Confetti up from both bottom corners of the game panel, kept to it; and its fireworks, in it too. */
 export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor: string): Promise<void> {
   if (reducedMotion()) return
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
-  const box = panel.getBoundingClientRect()
-  const phone = innerWidth <= 640
+  // Kept to the panel: from just inside its bottom corners, reaching most of the way up it at the
+  // fastest (a piece rises about 10.5 px per unit of launch speed, at drag 0.96 and gravity 0.32).
+  const within = () => (panel.isConnected ? panel.getBoundingClientRect() : null)
+  const box = within()
+  if (!box || box.width === 0) return
+  const power = variant.speed ? box.height / 14 / variant.speed : 1
   const spread = 18
-  blast(variant, { x: box.left + 6, y: box.bottom - 6, angle: phone ? 18 : 28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
-  blast(variant, { x: box.right - 6, y: box.bottom - 6, angle: phone ? -18 : -28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
+  blast(variant, { x: 6, y: box.height - 4, angle: 22, spread, count: variant.panelCount, colors, power, within })
+  blast(variant, { x: box.width - 6, y: box.height - 4, angle: -22, spread, count: variant.panelCount, colors, power, within })
   if ((variant.effect ?? 'confetti') !== 'confetti') panelFireworks(variant, panel, glowing(colors))
 }
 

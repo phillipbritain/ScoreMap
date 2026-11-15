@@ -164,6 +164,8 @@ interface Piece {
   kind?: 'spark' | 'rocket'
   /** Drag each frame at 60 fps: how much speed it keeps. */
   drag?: number
+  /** How far past its box's top it may go, px; a few px otherwise. */
+  above?: number
   /** Drawn on the globe's canvas, under the game panel: a score card's or pin's. */
   globe?: boolean
   /** What it does as its life ends: a rocket bursts. */
@@ -238,10 +240,12 @@ export interface Blast {
   power?: number
   /** A box to keep it to, read each frame: x and y are then in the box, and the pieces are clipped to it and move with it. */
   within?: () => DOMRect | null
+  /** How far past the box's top the pieces may go, px. */
+  above?: number
 }
 
 /** Fires a blast of the variant's confetti. Nothing with prefers-reduced-motion. */
-export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, colors, power = 1, within }: Blast): void {
+export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, colors, power = 1, within, above }: Blast): void {
   if (reducedMotion() || !colors.length) return
   const now = performance.now()
   for (let i = 0; i < count; i++) {
@@ -263,6 +267,7 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
       life: variant.duration * (0.7 + Math.random() * 0.3),
       gravity: 0.32,
       within,
+      above,
     })
   }
   run(now)
@@ -337,7 +342,8 @@ function run(now: number): void {
           origin = { x: box.left, y: box.top }
           context.save()
           context.beginPath()
-          context.rect(box.left - cardOverflow, box.top - cardOverflow, box.width + 2 * cardOverflow, box.height + 2 * cardOverflow)
+          const above = piece.above ?? cardOverflow
+          context.rect(box.left - cardOverflow, box.top - above, box.width + 2 * cardOverflow, box.height + above + cardOverflow)
           context.clip()
         }
         if (piece.kind) {
@@ -556,15 +562,17 @@ export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor
   if (reducedMotion()) return
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
-  // Kept to the panel: from just inside its bottom corners, reaching most of the way up it at the
-  // fastest (a piece rises about 10.5 px per unit of launch speed, at drag 0.96 and gravity 0.32).
+  // Kept to the panel: from just inside its bottom corners, the fastest pieces shooting a little past its
+  // top, a fifth of its height at most (a piece rises about 10.5 px per unit of launch speed, at drag
+  // 0.96 and gravity 0.32), and clipped there.
   const within = () => (panel.isConnected ? panel.getBoundingClientRect() : null)
   const box = within()
   if (!box || box.width === 0) return
-  const power = variant.speed ? box.height / 14 / variant.speed : 1
+  const power = variant.speed ? box.height / 9.5 / variant.speed : 1
+  const above = box.height * 0.2
   const spread = 18
-  blast(variant, { x: 6, y: box.height - 4, angle: 22, spread, count: variant.panelCount, colors, power, within })
-  blast(variant, { x: box.width - 6, y: box.height - 4, angle: -22, spread, count: variant.panelCount, colors, power, within })
+  blast(variant, { x: 6, y: box.height - 4, angle: 22, spread, count: variant.panelCount, colors, power, within, above })
+  blast(variant, { x: box.width - 6, y: box.height - 4, angle: -22, spread, count: variant.panelCount, colors, power, within, above })
   if ((variant.effect ?? 'confetti') !== 'confetti') panelFireworks(variant, panel, glowing(colors))
 }
 

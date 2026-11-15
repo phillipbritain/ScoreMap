@@ -385,7 +385,7 @@ At viewport widths up to 960px, the photo fills the whole panel, behind the scor
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
 | `components.GamePanel.size.logo` | A team's logo | 28 |
 | `components.GamePanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
-| `components.GamePanel.size.scoreWidth` | A team's score box, in ems of its digits: wide enough for three, so a score of 100 moves nothing | 2.6 |
+| `components.GamePanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest | 64 |
 | `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |

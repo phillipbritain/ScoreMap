@@ -272,10 +272,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Wide enough for three digits, so a score of 100 doesn't move anything. */
+/* Wide enough for three digits, so a score of 100 doesn't move anything, and wider for a longer score
+   (cricket's "170/6"), as wide as the widest of its rows' scores, which lie unseen in each chip (see
+   ScoreChip), so every row's chip is the same width. */
 .game-panel__team-score {
+  display: inline-grid;
+  justify-items: center;
   box-sizing: border-box;
-  width: var(--game-panel-size-score-width);
+  min-width: var(--game-panel-size-score-width);
+  padding-inline: 0.3em;
   flex-shrink: 0;
   background: var(--game-panel-score-fill);
   color: var(--game-panel-score-text);
@@ -285,6 +290,15 @@ body {
   font-variant-numeric: tabular-nums;
   text-align: center;
   transform: skewX(-10deg);
+}
+
+/* The score and the unseen scores under it, in the same place. */
+.game-panel__team-score > * {
+  grid-area: 1 / 1;
+}
+
+.game-panel__team-score-sizer {
+  visibility: hidden;
 }
 
 .game-panel__progress {

@@ -90,7 +90,11 @@ export function useSwipeToClose(gameId: string, onClose: () => void) {
       const closing = gameId
       const after = settle(panel, '0 100%', slideOffDuration)
       setTimeout(() => {
-        if (shownGame.current === closing) onClose()
+        // Already off the screen, it doesn't play the default way out as well (see .game-panel--leaving).
+        if (shownGame.current === closing) {
+          panel.dataset.leave = 'swiped-off'
+          onClose()
+        }
         else settle(panel, '', 0)
       }, after)
     },

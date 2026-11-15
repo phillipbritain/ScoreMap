@@ -1277,6 +1277,49 @@ body {
   }
 }
 
+/* A rail popover opening slides out a little from the rail as it fades in, over 160 ms; closed, it slides
+   back as it fades out, over 120 ms (popoverLeaveDuration, in web/src/rail/railControls.ts, keeps it on
+   the page that long), out of reach meanwhile. The top rail's drops from its row. With reduce motion it
+   fades in place, and goes at once. */
+.rail__popover {
+  animation: rail-popover-in 160ms ease-out;
+}
+
+.rail__popover--leaving {
+  animation: rail-popover-out 120ms ease-in forwards;
+  pointer-events: none;
+}
+
+.top-rail__popover {
+  --popover-from: 0 calc(-2 * var(--spacing));
+}
+
+@keyframes rail-popover-in {
+  from {
+    opacity: 0;
+    translate: var(--popover-from, calc(2 * var(--spacing)) 0);
+  }
+}
+
+@keyframes rail-popover-out {
+  to {
+    opacity: 0;
+    translate: var(--popover-from, calc(2 * var(--spacing)) 0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail__popover {
+    animation-name: fade-in;
+  }
+}
+
 /* The top rail (see TopRail, local runs only): the local-run tools' buttons in a row at the top left,
    on the rail's surface, each popover hanging below the row at the screen's left, whichever button
    opened it. */
@@ -2638,6 +2681,53 @@ body {
 
   .game-panel[data-dragging] {
     user-select: none;
+  }
+}
+
+/* The game panel opening rises a little into place as it fades in, over 220 ms; closed, it sinks as it
+   fades out, over 160 ms (panelLeaveDuration, in web/src/panel/GamePanel.tsx, keeps it on the page that
+   long), out of reach meanwhile. On a phone, a bottom sheet, it slides up from the screen's foot and
+   back down. That way out is the default: a close with its own sets the panel's data-leave, and plays
+   it in place of this one (a swipe, which has already slid it off the screen, sets "swiped-off" and
+   plays nothing more). With reduce motion it fades in place, and goes at once. On the panel's
+   translate, as a swipe moves it, so neither clashes with its centering. */
+.game-panel {
+  --panel-from: 0 calc(4 * var(--spacing));
+  animation: game-panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.game-panel--leaving {
+  animation: game-panel-out 160ms ease-in forwards;
+  pointer-events: none;
+}
+
+.game-panel--leaving[data-leave] {
+  animation: none;
+}
+
+@media (max-width: 640px) {
+  .game-panel {
+    --panel-from: 0 100%;
+  }
+}
+
+@keyframes game-panel-in {
+  from {
+    opacity: 0;
+    translate: var(--panel-from);
+  }
+}
+
+@keyframes game-panel-out {
+  to {
+    opacity: 0;
+    translate: var(--panel-from);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-panel {
+    animation-name: fade-in;
   }
 }
 

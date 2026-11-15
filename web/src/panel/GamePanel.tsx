@@ -17,6 +17,9 @@ const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x
 /** StreamEast's logo ("STREAM" and "EAST" on a pill, on its red), as the link to a game's stream there. */
 const streamEastLogoUrl = '/streameast-logo.png'
 
+/** How long a closed panel takes to go, in milliseconds: its way out is the CSS's (`.game-panel--leaving`). */
+export const panelLeaveDuration = 160
+
 interface GamePanelProps {
   game: Game
   /** The side that last scored, lit up for a moment (see justHappened.ts); none since the last snapshot. */
@@ -28,6 +31,11 @@ interface GamePanelProps {
   /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
   venuePhotos: boolean
   onClose: () => void
+  /**
+   * Whether the panel is on its way out, closed (see .game-panel--leaving): it can't be used meanwhile.
+   * It plays the default way out unless whatever closed it set the panel's data-leave to play its own.
+   */
+  leaving?: boolean
   /** The panel's element, so the globe can keep the selected pin clear of it. */
   ref?: Ref<HTMLElement>
 }
@@ -44,7 +52,7 @@ interface GamePanelProps {
  * snapshot, so it stays current while open. On a phone, where it's a bottom sheet, it's swiped down to
  * close as well as by its close button (see useSwipeToClose).
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, leaving = false, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -65,7 +73,15 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
   const swipe = useSwipeToClose(game.id, onClose)
 
   return (
-    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" {...swipe} onKeyDown={(event) => {
+    <aside
+      ref={ref}
+      className={leaving ? 'game-panel game-panel--leaving' : 'game-panel'}
+      style={colorStyle}
+      aria-label="Game panel"
+      aria-hidden={leaving || undefined}
+      inert={leaving}
+      {...swipe}
+      onKeyDown={(event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose()

@@ -1,6 +1,6 @@
 // Drives the dev run's page open in agent-browser, for what would otherwise take an `eval`: resets
 // it to the start view, waits for it to be ready or settled, turns its camera, reads a value from it, screenshots it,
-// pans it for a card trace. See the run-scoremap skill and docs/agents/card-layout-replay.md.
+// pans it for a card trace, touches it as a finger does. See the run-scoremap skill and docs/agents/card-layout-replay.md.
 //
 //   npm run page -- reset <web URL> [--toured]      (in web/) --toured: with the welcome tour finished
 //   npm run page -- ready
@@ -11,6 +11,9 @@
 //   npm run page -- score | finish                 a Live game on screen scores or finishes, in this tab only
 //   npm run page -- pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...
 //                                                  saves the frames the cards were laid out from
+//   npm run page -- tap <selector|x y>             a real touch tap, on the middle of the selector's first match or at the point
+//   npm run page -- swipe <selector|x y> <dx> <dy> [ms]
+//                                                  a real touch swipe from there by (dx, dy) px at a steady speed, over ms (500)
 //
 // It uses agent-browser's session from AGENT_BROWSER_SESSION, as agent-browser itself does. Exits 0
 // when done, 1 when the page doesn't do as asked (nothing matches the selector, or the wait times
@@ -24,8 +27,10 @@ import { panArgs } from './panArgs.ts'
 import { pageCheck, type PageCheck } from './pageCheck.ts'
 import { panGlobe } from './panGlobe.ts'
 import { resetUrls } from './resetUrls.ts'
+import { touchPage } from './touch.ts'
+import { touchArgs, type Touch } from './touchArgs.ts'
 
-const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | score | finish | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]...'
+const usage = 'Usage: npm run page -- reset <web URL> [--toured] | ready | settled | camera <lng>,<lat> <zoom> | read <selector> [property] | screenshot <file> | score | finish | pan <file> [--center <lng>,<lat>] [--zoom <zoom>] [--by <x>,<y>,<frames>]... | tap <selector|x y> | swipe <selector|x y> <dx> <dy> [ms]'
 const scratch = mkdtempSync(join(tmpdir(), 'scoremap-page-'))
 
 const page = agentBrowser({ cwd: process.cwd(), scratch })
@@ -34,8 +39,9 @@ const inPage = (check: PageCheck) => page.inPage(pageCheck, check)
 
 class Failed extends Error {}
 
-function main([command, ...args]: string[]): void {
+async function main([command, ...args]: string[]): Promise<void> {
   const panRequest = command === 'pan' ? panArgs(args) : null
+  const touchRequest = command === 'tap' || command === 'swipe' ? touchArgs(command, args) : null
   if (command === 'reset' && (args.length === 1 || (args.length === 2 && args[1] === '--toured'))) {
     // The app writes its saved camera back as it leaves, so storage is cleared from a page that isn't the app.
     const { clear, open: url } = resetUrls(args[0])
@@ -79,9 +85,40 @@ function main([command, ...args]: string[]): void {
     const { frames } = page.inPage(panGlobe, pan)
     writeFileSync(resolve(file), JSON.stringify(frames))
     console.log(`${frames.length} frames saved to ${resolve(file)}`)
+  } else if (touchRequest) {
+    await touch(touchRequest)
   } else {
     console.error(usage)
     process.exitCode = 2
+  }
+}
+
+/** Makes the touch in the session's open tab, through the DevTools Protocol, which agent-browser can't do. */
+async function touch(request: Touch): Promise<void> {
+  let at: { x: number; y: number }
+  if ('selector' in request.at) {
+    const answer = inPage({ check: 'point', selector: request.at.selector })
+    if ('missing' in answer) throw new Failed(`Nothing matches ${answer.missing}`)
+    if ('unreachable' in answer) throw new Failed(`Can't touch ${(answer as { unreachable: string }).unreachable}`)
+    at = (answer as { point: { x: number; y: number } }).point
+  } else at = request.at
+  // The open tab's own target on the browser agent-browser drives.
+  const browserUrl = new URL(browser(['get', 'cdp-url']).trim())
+  const tabs = JSON.parse(browser(['tab', 'list', '--json'])) as { data: { tabs: { active: boolean; targetId: string }[] } }
+  const tab = tabs.data.tabs.find(({ active }) => active)
+  if (!tab) throw new Error('agent-browser has no open tab')
+  const finger = await touchPage(`ws://${browserUrl.host}/devtools/page/${tab.targetId}`)
+  const where = `${Math.round(at.x)},${Math.round(at.y)}`
+  try {
+    if (request.kind === 'tap') {
+      await finger.tap(at.x, at.y)
+      console.log(`Tapped at ${where}`)
+    } else {
+      const took = await finger.swipe([at.x, at.y], request.by, request.ms)
+      console.log(`Swiped from ${where} by ${request.by.join(',')} over ${Math.round(took)} ms`)
+    }
+  } finally {
+    finger.close()
   }
 }
 
@@ -93,7 +130,7 @@ function cameraArgs([at, zoom]: string[]): { center: [number, number]; zoom: num
 }
 
 try {
-  main(process.argv.slice(2))
+  await main(process.argv.slice(2))
 } catch (error) {
   console.error((error as Error).message)
   process.exitCode = error instanceof Failed || error instanceof TimedOut ? 1 : 2

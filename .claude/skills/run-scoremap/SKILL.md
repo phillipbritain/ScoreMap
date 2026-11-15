@@ -51,7 +51,11 @@ npm run page -- settled                     # waits for the globe to settle afte
 npm run page -- read <selector> [prop]      # a property of the first match: textContent unless given (innerText for only what shows), rect for its box
 npm run page -- screenshot <file>           # once Ready and settled
 npm run page -- score                       # a Live game on screen (the open panel's first) scores (`finish`: finishes), in this tab only, until the server's next change to it
+npm run page -- tap <selector|x y>          # a real touch tap on the middle of the first match (or at the point)
+npm run page -- swipe <selector|x y> <dx> <dy> [ms]   # a real touch swipe from there by (dx, dy) px, at a steady speed over ms (500)
 ```
+
+**For anything touch** (a tap's tooltip, swiping the game panel), use `tap` and `swipe`: they send real touch input through the DevTools Protocol, which agent-browser can't, and `swipe` moves once a frame for the time asked, where agent-browser's `mouse` moves arrive too far apart and read as a flick. At 390×844 with a panel open, `swipe .game-panel 0 50` springs back, while `swipe .game-panel 0 160`, or the short one as a flick (`swipe .game-panel 0 50 50`), closes it (why: `web/src/panel/swipeClose.ts`). A tap on cut-off text (`tap .game-panel__team-name` on `edge-cases`' Chicago long-names game) shows its tooltip: `read .tooltip`.
 
 1. **Start with `reset`.** The app saves the camera and settings to localStorage, so a run on the same port opens where the last one left off; a dark, empty globe is usually a saved camera over ocean. `reset` also sends the browser daemon's output to files of its own. A session started with a bare agent-browser command instead must send that command's output to a file, from Git Bash (`agent-browser open $web > /tmp/ab.txt 2>&1`): the daemon inherits its stdout, so a pipe, or PowerShell's `>`, waits forever.
    Add `--toured` unless you're checking the welcome tour itself: a first visit shows the tour, and the rail and the Games popover can't be used under it.

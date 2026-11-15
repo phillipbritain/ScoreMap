@@ -132,4 +132,38 @@ describe('pageCheck', () => {
     expect(await pageCheck({ check: 'read', selector: '#page-check .logo', property: 'rect' })).toMatchObject({ value: { width: 40 } })
     expect(await pageCheck({ check: 'read', selector: '.game-panel' })).toEqual({ missing: '.game-panel' })
   })
+
+  describe('finding where a touch lands', () => {
+    /** Elements laid out at fixed places in the viewport, each as `[class, left, top, width, height]`, later ones on top. */
+    function laidOut(...boxes: [string, number, number, number, number][]) {
+      const page = document.createElement('div')
+      page.id = 'page-check'
+      for (const [name, left, top, width, height] of boxes) {
+        const box = document.createElement('div')
+        box.className = name
+        Object.assign(box.style, { position: 'fixed', left: `${left}px`, top: `${top}px`, width: `${width}px`, height: `${height}px` })
+        page.append(box)
+      }
+      document.body.append(page)
+    }
+
+    it('lands in the middle of the first element a selector picks', async () => {
+      laidOut(['name', 20, 40, 100, 20], ['name', 200, 40, 100, 20])
+      expect(await pageCheck({ check: 'point', selector: '#page-check .name' })).toEqual({ point: { x: 70, y: 50 } })
+    })
+
+    it('lands in the middle of the part on screen of an element partly off it', async () => {
+      laidOut(['sheet', 0, window.innerHeight - 100, 200, 300])
+      expect(await pageCheck({ check: 'point', selector: '#page-check .sheet' })).toEqual({ point: { x: 100, y: window.innerHeight - 50 } })
+    })
+
+    it('says why it can’t touch an element off screen, or covered at its middle', async () => {
+      laidOut(['gone', -200, 40, 100, 20], ['under', 20, 100, 100, 20], ['over', 0, 90, 200, 40])
+      expect(await pageCheck({ check: 'point', selector: '#page-check .gone' })).toEqual({ unreachable: "#page-check .gone isn't on screen" })
+      expect(await pageCheck({ check: 'point', selector: '#page-check .under' })).toEqual({
+        unreachable: '#page-check .under is covered at its middle, by div.over',
+      })
+      expect(await pageCheck({ check: 'point', selector: '.game-panel' })).toEqual({ missing: '.game-panel' })
+    })
+  })
 })

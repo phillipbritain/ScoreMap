@@ -61,7 +61,11 @@ export function Tooltips() {
       const side = element.dataset.tooltipSide
       const prefer: TooltipPrefer = side === 'left' || side === 'right' ? side : 'above'
       const fits = element.hasAttribute('data-tooltip-when-clipped') && !isClipped(element)
-      if (text && !fits) timer = window.setTimeout(() => setShown({ text, anchor: anchorOf(element, prefer), prefer }), delay)
+      if (!text || fits) return
+      const reveal = () => setShown({ text, anchor: anchorOf(element, prefer), prefer })
+      // No wait shows it at once, in the same task as the tap or focus that asked for it.
+      if (delay === 0) reveal()
+      else timer = window.setTimeout(reveal, delay)
     }
 
     const tipped = (node: EventTarget | null) => (node instanceof Element ? node.closest<HTMLElement>('[data-tooltip]') : null)

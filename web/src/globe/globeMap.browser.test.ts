@@ -1,6 +1,6 @@
 import type { GeoJSONSource, Map as MapLibreMap, StyleSpecification } from 'maplibre-gl'
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { commands, userEvent } from 'vitest/browser'
 import '../index.css'
 import type { Game, GameStatus } from '../games/game'
@@ -300,14 +300,30 @@ describe('score cards', () => {
 describe('score cards coming in and going out', () => {
   const marker = (gameId: string) => card(gameId)?.parentElement ?? null
 
+  /**
+   * Whether the game's card is seen coming in at any time from now. Its class is there only for
+   * cardComingDuration, which a poll on a busy machine can miss; a MutationObserver sees every change.
+   */
+  const watchComing = (gameId: string) => {
+    let came = false
+    const watching = new MutationObserver(() => {
+      came ||= marker(gameId)?.classList.contains('score-card-coming') ?? false
+    })
+    watching.observe(container, { childList: true, subtree: true, attributeFilter: ['class'] })
+    onTestFinished(() => watching.disconnect())
+    return () => came
+  }
+
   it('brings in the card of a game arriving on the board, but not those there when it opened', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    const aCame = watchComing('A')
     globe.show([game('A')])
     await cardShown('A')
-    expect(marker('A')!.classList.contains('score-card-coming')).toBe(false)
+    expect(aCame()).toBe(false)
+    const bCame = watchComing('B')
     globe.show([game('A'), game('B', { longitude: 6 })])
     await cardShown('B')
-    expect(marker('B')!.classList.contains('score-card-coming')).toBe(true)
+    expect(bCame()).toBe(true)
     // Once in, it's left as it is.
     await vi.waitFor(() => expect(marker('B')!.classList.contains('score-card-coming')).toBe(false))
   })
@@ -332,9 +348,11 @@ describe('score cards coming in and going out', () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show([game('A'), game('B', { longitude: 6 })])
     await cardShown('B')
+    await vi.waitFor(() => expect(marker('B')!.classList.contains('score-card-coming')).toBe(false))
+    const cameBack = watchComing('B')
     globe.show([game('A')])
     globe.show([game('A'), game('B', { longitude: 6 })])
-    await vi.waitFor(() => expect(marker('B')?.classList.contains('score-card-coming')).toBe(true))
+    await vi.waitFor(() => expect(cameBack()).toBe(true))
     expect(container.querySelectorAll('.score-card[data-game-id="B"]')).toHaveLength(1)
   })
 })
@@ -521,9 +539,11 @@ describe('selection', () => {
     const a = game('A', { latitude: -40 })
     globe.show([a])
     await pinsDrawn(map, outerSmallPinLayer, a)
+    // Listening before the lift starts, so a busy machine can't miss its end.
+    const lifted = new Promise((resolve) => map.once('moveend', resolve))
     globe.select('A', panelAcrossBottom())
-    await vi.waitFor(() => expect(map.getCenter().lat).toBeLessThan(-1), { timeout: 5_000 })
-    await new Promise((resolve) => map.once('moveend', resolve))
+    await lifted
+    expect(map.getCenter().lat).toBeLessThan(-1)
     map.jumpTo({ center: [-45, 0] })
 
     globe.select('A', panelAcrossBottom())

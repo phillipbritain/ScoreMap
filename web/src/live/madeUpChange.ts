@@ -32,8 +32,6 @@ const numeric = (score: string | null) => score === null || /^\d+$/.test(score)
 export interface MadeUpChanges {
   /** Makes the event happen to a game on screen, this tab only; returns the change made, or null when no game on screen can. */
   happen: (event: MadeUpEvent, onScreen: (game: Game) => boolean) => GameChange | null
-  /** PROTOTYPE, throw away: takes a game off the board in this tab, as a Final game drops out (see panel/ConfettiPrototypeBar.tsx). */
-  remove?: (gameId: string) => boolean
 }
 
 declare global {
@@ -42,13 +40,6 @@ declare global {
   }
 }
 
-/**
- * PROTOTYPE, throw away: games a dev run made finish, which stay Final in this tab until they're taken off
- * the board, as a game that really finished does, and games it took off the board, which stay off (see
- * panel/ConfettiPrototypeBar.tsx). liveGames drops the server's changes to them, but for their removal.
- */
-export const heldFinished = new Set<string>()
-
 /** Puts `happen` on `window.scoremapGames` in dev runs, feeding its changes to these live games; returns what takes it off. */
 export function offerMadeUpChanges(live: { readonly state: { games: Game[] | null }; receive: (change: GameChange) => void }): () => void {
   if (!import.meta.env.DEV) return () => {}
@@ -56,15 +47,7 @@ export function offerMadeUpChanges(live: { readonly state: { games: Game[] | nul
     happen: (event, onScreen) => {
       const change = madeUpChange(live.state.games ?? [], event, onScreen, new Date())
       if (change) live.receive(change)
-      if (change?.kind === 'Finished') heldFinished.add(change.game.id)
       return change
-    },
-    remove: (gameId) => {
-      const game = live.state.games?.find((candidate) => candidate.id === gameId)
-      if (game) live.receive({ kind: 'Removed', game })
-      // Kept off the board in this tab, whatever the server sends for it, until the server removes it too.
-      if (game) heldFinished.add(gameId)
-      return !!game
     },
   }
   return () => delete window.scoremapGames

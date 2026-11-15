@@ -15,9 +15,10 @@ export interface Leaving<T> {
  * Something shown while it's given (a rail popover, the game panel), kept on the page `duration`
  * milliseconds once it's no longer given, so it can play its way out (its look is the CSS's); with the
  * device's reduce motion setting on, it goes at once. `value` should keep its identity from one render
- * to the next while it's the same thing.
+ * to the next while it's the same thing. `duration` can depend on what's leaving, for something that
+ * leaves its own way at times (the game panel closing itself after its game's celebration).
  */
-export function useLeaving<T>(value: T | null, duration: number): Leaving<T> {
+export function useLeaving<T>(value: T | null, duration: number | ((leaving: T) => number)): Leaving<T> {
   const [given, setGiven] = useState<T | null>(value)
   const [going, setGoing] = useState<T | null>(null)
   const [key, setKey] = useState(0)
@@ -32,7 +33,8 @@ export function useLeaving<T>(value: T | null, duration: number): Leaving<T> {
   useEffect(() => {
     if (going === null) return
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const timer = setTimeout(() => setGoing(null), reduce ? 0 : duration)
+    const lasts = typeof duration === 'number' ? duration : duration(going)
+    const timer = setTimeout(() => setGoing(null), reduce ? 0 : lasts)
     return () => clearTimeout(timer)
   }, [going, duration])
   if (value !== null) return { shown: value, leaving: false, key }

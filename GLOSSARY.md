@@ -109,8 +109,12 @@ Soccer's goals and cards, or rugby's tries, conversions, penalty and drop goals 
 _Avoid_: Incidents, timeline
 
 **Pulse**:
-The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes (for a field, when the lead changes hands; for a fight card, when a bout finishes), and when it starts, the same pulse for both; a game finishing plays none. It changes nothing about what's shown. Changes that came while ScoreMap was asleep or cut off don't pulse when it catches up. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
+The short animation a pin, score card or cluster plays to draw the eye to a change in a game: when its score changes (for a field, when the lead changes hands; for a fight card, when a bout finishes), and when it starts, the same pulse for both; a game finishing plays none, but celebrates (see Celebration). It changes nothing about what's shown. Changes that came while ScoreMap was asleep or cut off don't pulse when it catches up. In basketball, a score change pulses only in clutch time. With the device's reduce motion setting on, a pulse fades in place without moving.
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
+
+**Celebration**:
+What a game finishing plays while ScoreMap is watching it: confetti in its teams' colors over its score card, where it has one on screen, and, when its game panel is open, a fireworks show inside the panel, after which the panel closes itself and the game leaves the globe with it, there and then rather than when its pin's time is up (see Final). Like a pulse, it doesn't play for a game that finished while ScoreMap was asleep or cut off. With the device's reduce motion setting on, nothing plays, but the panel still closes itself. How it looks is in `docs/style-guide.md`.
+_Avoid_: Party, confetti (for the whole), animation
 
 **Clutch time**:
 In basketball, the last 5 minutes of the last period of regulation, or any time in overtime, while the score is within 5 points. Borrowed from the NBA's clutch-time stat.
@@ -209,7 +213,7 @@ A game that was postponed, suspended or canceled, so it won't be played or finis
 _Avoid_: Called off, halted, inactive
 
 **Final**:
-A game that finished within the last 5 minutes, so it still gets a pin, showing its final score.
+A game that finished within the last 5 minutes, so it still gets a pin, showing its final score; a game whose game panel closed itself after its celebration leaves the globe at once, in that browser.
 _Avoid_: Finished, completed, over, ended
 
 ### Local runs

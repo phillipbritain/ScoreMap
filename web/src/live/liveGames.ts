@@ -1,4 +1,3 @@
-import { heldFinished } from './madeUpChange'
 import type { Game } from '../games/game'
 import type { GameChange } from '../games/gameChange'
 import { applyChange } from '../games/gameStore'
@@ -97,11 +96,6 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
   // The snapshot always comes first; a change before it has nothing to apply to.
   const receive = (change: GameChange) => {
     if (!state.games) return
-    // PROTOTYPE, throw away: a game a dev run made finish stays Final until it's taken off the board (see madeUpChange.ts).
-    if (heldFinished.has(change.game.id)) {
-      if (change.kind !== 'Removed') return
-      heldFinished.delete(change.game.id)
-    }
     const before = state.games.find((game) => game.id === change.game.id)
     update({
       games: applyChange(state.games, change),

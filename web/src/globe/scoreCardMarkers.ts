@@ -14,6 +14,8 @@ import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Sh
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { PlacedCard, animationClass } from './placedCard'
+import { confettiOnCard } from '../celebration/celebration'
+import { teamColors } from '../celebration/teamColors'
 import { pinSource } from './pinLayers'
 import type { PlaceNames } from './placeNames'
 import { pulse } from './pinPulse'
@@ -506,9 +508,19 @@ export class ScoreCardMarkers {
     return true
   }
 
-  // PROTOTYPE, throw away: a game's score card on screen, for confetti over it (see confettiPrototype.ts).
-  cardElement(gameId: string): HTMLElement | undefined {
-    return this.layout.shows(gameId).as === 'card' ? this.placed.get(gameId)?.element : undefined
+  /**
+   * Plays a game's celebration on its score card as it finishes (see GLOSSARY.md "Celebration"):
+   * confetti in its teams' colors, kept to the card. Only a card on screen celebrates; a game in a card
+   * cluster or on a small pin doesn't.
+   */
+  celebrate(gameId: string): void {
+    const game = this.games.get(gameId)
+    const placed = this.placed.get(gameId)
+    if (!game || !placed || this.layout.shows(gameId).as !== 'card') return
+    // In the color it played in, not Final's.
+    void teamColors(game, this.colorOf({ ...game, status: 'Live' })).then((colors) => {
+      if (this.placed.get(gameId) === placed) confettiOnCard(placed.element, placed.markerElement, colors)
+    })
   }
 
   /** Draws a game's trail and venue dot bolder, and the last game's no longer (see trailLayer). */

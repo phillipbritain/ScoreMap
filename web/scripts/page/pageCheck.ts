@@ -11,6 +11,11 @@ export type PageCheck =
   /** Reads a property (`textContent` unless given; `rect` for the bounding box) of the first element the selector picks. */
   | { check: 'read'; selector: string; property?: string }
   /**
+   * Where a touch on the first element the selector picks lands: the middle of the part of it in the
+   * viewport, as long as it's what a touch there would reach (not covered, nor off screen).
+   */
+  | { check: 'point'; selector: string }
+  /**
    * Once the globe is ready, makes a score (`score`) or a finish (`finish`) happen to a Live game on
    * screen, in this tab only: the open game panel's, if it can, else one with a score card, or with
    * none, one whose pin is in view.
@@ -22,6 +27,10 @@ export type PageCheckAnswer =
   | { settled: true }
   | { camera: true }
   | { value: unknown }
+  /** Where `point` would touch (CSS px in the viewport). */
+  | { point: { x: number; y: number } }
+  /** The element is there, but a touch can't reach it: why. */
+  | { unreachable: string }
   /** What `happen` made happen: the change's kind, and the game's id. */
   | { happened: { kind: string; gameId: string } }
   /** No Live game on screen could have it happen. */
@@ -53,6 +62,22 @@ export async function pageCheck(check: PageCheck, waitMs = 20_000): Promise<Page
     const property = check.property ?? 'textContent'
     if (property === 'rect') return { value: element.getBoundingClientRect().toJSON() }
     return { value: (element as unknown as Record<string, unknown>)[property] }
+  }
+
+  if (check.check === 'point') {
+    const element = document.querySelector(check.selector)
+    if (!element) return { missing: check.selector }
+    const box = element.getBoundingClientRect()
+    const [left, right] = [Math.max(box.left, 0), Math.min(box.right, window.innerWidth)]
+    const [top, bottom] = [Math.max(box.top, 0), Math.min(box.bottom, window.innerHeight)]
+    if (right <= left || bottom <= top) return { unreachable: `${check.selector} isn't on screen` }
+    const point = { x: (left + right) / 2, y: (top + bottom) / 2 }
+    const reached = document.elementFromPoint(point.x, point.y)
+    if (!reached || !element.contains(reached)) {
+      const what = reached ? reached.tagName.toLowerCase() + [...reached.classList].map((name) => `.${name}`).join('') : 'nothing'
+      return { unreachable: `${check.selector} is covered at its middle, by ${what}` }
+    }
+    return { point }
   }
 
   const noGlobe = await until(() => !!window.scoremap?.stage, 'the globe (window.scoremap): is this a dev run?')

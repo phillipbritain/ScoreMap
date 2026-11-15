@@ -3312,6 +3312,32 @@ body {
     transform: none;
   }
 
+  /* On a phone on its side (a touch screen), a sheet at the screen's foot and left edge, its outer
+     corners square, swiped down to close as on a phone held upright (see useSwipeToClose). */
+  @media (pointer: coarse) {
+    .game-panel {
+      --game-panel-bottom: 0px;
+      left: 0;
+      width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 2 * var(--spacing)));
+      max-height: calc(100% - 3 * var(--spacing));
+      border-radius: 0 var(--game-panel-corner) 0 0;
+      touch-action: none;
+    }
+
+    /* No cut corner, as on a phone held upright: it would show the globe at the screen's corner. */
+    .game-panel__body {
+      border-bottom-left-radius: 0;
+    }
+
+    .game-panel__band {
+      touch-action: pan-y;
+    }
+
+    .game-panel[data-dragging] {
+      user-select: none;
+    }
+  }
+
   /* Spaced as tightly as on a phone held upright, so the strip takes less of the height. */
   .game-panel__main {
     min-height: 0;

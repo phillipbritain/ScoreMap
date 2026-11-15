@@ -3,6 +3,7 @@ import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
 import { groupStatus, statusProminence } from './statusLook'
+import { busyRules } from './busyCardsProto'
 import type { FirstLeg } from './trailRoute'
 
 /** One game's score card, as the map shows it: its venue on screen and the card's measured size. */
@@ -14,6 +15,10 @@ export interface ScreenCard {
   venueY: number
   width: number
   height: number
+  /** PROTOTYPE busyCardsProto: which cards get room first, lowest first, in place of their status. */
+  priority?: number
+  /** PROTOTYPE busyCardsProto: the selected game's card, never left out to keep the count down. */
+  keep?: boolean
 }
 
 /** What the cards are laid out around. */
@@ -211,7 +216,7 @@ export function layOutCards(
     trail: { x1: card.venueX, y1: card.venueY - scene.venueGap, x2: card.venueX, y2: card.venueY },
   })
   const statuses = new Map(cards.map((card) => [card.gameId, card.status]))
-  const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
+  const rank = ({ status, priority }: ScreenCard) => priority ?? statusProminence.indexOf(status)
   const boxes = cards
     .filter((card) => nearScreen(card.venueX, card.venueY, scene))
     .map(
@@ -223,9 +228,11 @@ export function layOutCards(
         height: card.height,
         venueX: card.venueX,
         venueY: card.venueY,
-        rank: rank(card),
+        // PROTOTYPE busyCardsProto: a card whose venue is off screen comes after those on it.
+        rank: rank(card) + (card.priority !== undefined && !onScreen(card.venueX, card.venueY, scene) ? 10 : 0),
         previous: shiftOf(previous.get(card.gameId), scene.venueGap),
         lookedAgo: lookedAgoOf(previous.get(card.gameId)),
+        keep: card.keep,
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
@@ -288,6 +295,10 @@ export function layOutCards(
 // Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way.
 const offScreenMargin = 200
 
+function onScreen(x: number, y: number, { width, height }: CardScene): boolean {
+  return x >= 0 && x <= width && y >= 0 && y <= height
+}
+
 /** Whether a point is on screen, or near enough that what's drawn there could reach it. */
 function nearScreen(x: number, y: number, { width, height }: CardScene): boolean {
   return x > -offScreenMargin && x < width + offScreenMargin && y > -offScreenMargin && y < height + offScreenMargin
@@ -322,6 +333,7 @@ interface CardBox {
   previous?: ScreenOffset
   /** If it was in a card cluster last time, how many layouts ago it last looked for room. */
   lookedAgo?: number
+  keep?: boolean
 }
 
 interface Arrangement {
@@ -455,8 +467,14 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
   const trails: Segment[] = []
   const shifts = new Map<string, ScreenOffset>()
   const cardClusters: Omit<CardCluster, 'status'>[] = []
+  const rules = busyRules(screen.width, screen.height)
 
   for (const [index, card] of boxes.entries()) {
+    // PROTOTYPE busyCardsProto: left out to keep the count down, or too near a better card's venue.
+    const culled =
+      !card.keep &&
+      ((rules.cap !== undefined && placed.length >= rules.cap) ||
+        (rules.spacing !== undefined && placed.some((other) => Math.hypot(other.venueX - card.venueX, other.venueY - card.venueY) < rules.spacing!)))
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
@@ -595,18 +613,22 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // Where a moved card was last time will do while it fits, give or take the drift, trails or not,
     // so a trail edging across a card doesn't send it elsewhere.
     const wasMoved = isMoved(card.previous)
-    const previous = wasMoved && fits(card.previous!, drift) ? card.previous : undefined
+    const previous =
+      !culled && wasMoved && fits(card.previous!, drift) && (rules.reach === undefined || trailLength({ ...card, x: card.x + card.previous!.dx, y: card.y + card.previous!.dy }) <= rules.reach)
+        ? card.previous
+        : undefined
 
     // Where it would sit, if that's clear (give or take the drift, if it sat there last time); or else
     // the nearest spot clear of trails, while it's little further than the nearest spot at all.
-    let nearest: Spot | undefined = fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
+    let nearest: Spot | undefined = !culled && fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
     let clear: Spot | undefined = nearest && trailsClear(unmovedSpot) ? unmovedSpot : undefined
     // A card in a card cluster last time looks for room only when its turn comes (see above).
     const looks = card.lookedAgo === undefined || !screen.moving || card === looking
-    if (!clear && !previous && looks) {
+    if (!culled && !clear && !previous && looks) {
       markTakenSpots()
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break
+        if (rules.reach !== undefined && spot.trail > rules.reach) break
         if (!spotFits(spot)) continue
         nearest ??= spot
         if (trailsClear(spot)) {

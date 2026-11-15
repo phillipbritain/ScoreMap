@@ -9,6 +9,7 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardComings } from './cardComings'
 import { cardMoves } from './cardMoves'
+import { busyPriority, busyVariant } from './busyCardsProto'
 import { cardPins, type CardPin } from './cardPins'
 import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
@@ -324,7 +325,10 @@ export class ScoreCardMarkers {
     const cards = [...gameIds].sort().map((gameId): ScreenCard => {
       const { lngLat, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(lngLat)
-      return { gameId, status: this.games.get(gameId)!.status, venueX: venue.x, venueY: venue.y, width, height }
+      const game = this.games.get(gameId)!
+      // PROTOTYPE busyCardsProto: ranked by how worth watching, the selected game always kept.
+      const busy = busyVariant && busyVariant !== 'A' ? { priority: busyPriority(game), keep: gameId === this.selectedGameId } : {}
+      return { gameId, status: game.status, venueX: venue.x, venueY: venue.y, width, height, ...busy }
     })
     this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
     const theme = this.theme()

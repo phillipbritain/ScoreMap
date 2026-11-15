@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, type PointerEvent } from 'react'
 import { closesOnRelease, downwardSpeed, panelOffset, pressMove, type DragSample } from './swipeClose'
 
-/** The app's phone layout (as App's phoneLayout and the CSS's max-width: 640px), where the panel is a bottom sheet. */
-const phoneScreen = '(max-width: 640px)'
+/** Where the panel is a bottom sheet (as index.css has it): the app's phone layout (as App's phoneLayout and the
+ *  CSS's max-width: 640px), and a phone on its side, a short screen on its side with a touch screen. */
+const sheetScreen = '(max-width: 640px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)'
 /** How long the panel takes to slide off the screen when let go to close (ms), and to spring back. */
 const slideOffDuration = 180
 const springBackDuration = 260
@@ -16,7 +17,7 @@ interface Press {
 }
 
 /**
- * Swiping the game panel down to close it, on a phone: a press anywhere on the panel that moves down
+ * Swiping the game panel down to close it, on a phone, upright or on its side: a press anywhere on the panel that moves down
  * becomes a drag the panel follows. Let go past 30% of its height, or flicked down, it slides off the
  * screen and closes; otherwise it springs back (see swipeClose.ts). A press starting in the band (a
  * leaderboard, fight card or sets, which can scroll) is the band's. A drag doesn't follow the link or
@@ -45,7 +46,7 @@ export function useSwipeToClose(gameId: string, onClose: () => void) {
 
   return {
     onPointerDown(event: PointerEvent<HTMLElement>) {
-      if (event.button !== 0 || !window.matchMedia(phoneScreen).matches) return
+      if (event.button !== 0 || !window.matchMedia(sheetScreen).matches) return
       if ((event.target as Element).closest('.game-panel__band')) return
       press.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, dragging: false, samples: [] }
     },

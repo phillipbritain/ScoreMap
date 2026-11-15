@@ -21,7 +21,7 @@ const decimals = 3
 
 type Position = [number, number]
 interface Line {
-  properties: { FEATURECLA: string; MIN_ZOOM: number; ADM0_NAME: string }
+  properties: { MIN_ZOOM: number; ADM0_NAME: string }
   geometry: { type: 'LineString'; coordinates: Position[] } | { type: 'MultiLineString'; coordinates: Position[][] }
 }
 
@@ -53,10 +53,10 @@ if (!response.ok) throw new Error(`Fetching Natural Earth's lines failed: ${resp
 const { features } = (await response.json()) as { features: Line[] }
 
 const lines = features
-  .filter(
-    ({ properties }) =>
-      countries.includes(properties.ADM0_NAME) && properties.MIN_ZOOM <= mostDetailed && !properties.FEATURECLA.includes('meta'),
-  )
+  // Every kind Natural Earth sorts them into (boundary, statistical boundary, statistical meta bounds,
+  // indicator), as each is a real state or province line: the US's "meta bounds", say, are state lines
+  // that also part census regions.
+  .filter(({ properties }) => countries.includes(properties.ADM0_NAME) && properties.MIN_ZOOM <= mostDetailed)
   .flatMap(({ geometry }) => (geometry.type === 'LineString' ? [geometry.coordinates] : geometry.coordinates))
   .map((line) => simplified(line).map(rounded))
   .filter((line) => line.length >= 2)

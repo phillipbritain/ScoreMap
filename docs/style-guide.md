@@ -133,7 +133,7 @@ The dark theme names one of the palette's colors where a job is what that palett
 | `components.Globe.sea` | The sea: oceans and lakes, darker than the land so the coast stands out (rivers stay the land's color; the satellite map shows its own) | `#071a3c`, given directly, between `navy.700` and `navy.800` |
 | `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `navy.200` |
 | `components.Globe.countryBorders.color` | Country borders | `navy.200` |
-| `components.Globe.stateLines.color` | State and province lines: below zoom 3, the United States' and Canada's from Natural Earth, as the map's coarsest tiles have none (ADR-0026); from zoom 3 the tiles' | `navy.300` |
+| `components.Globe.stateLines.color` | State and province lines, the United States' and Canada's only (ADR-0026) | `navy.300` |
 | `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.300` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |

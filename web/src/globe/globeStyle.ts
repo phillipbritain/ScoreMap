@@ -18,27 +18,25 @@ export const baseStyleUrl = 'https://tiles.openfreemap.org/styles/liberty'
 
 // Layers of the base style that the globe keeps.
 const countryLines = 'boundary_2'
-const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
 
 /**
- * The United States' and Canada's state and province lines zoomed out, where the map's own tiles have
- * none: its coarsest tiles (zoom 0), which the globe shows zoomed all the way out and toward its edges,
- * carry only country borders. These are Natural Earth's, made by `npm run state-lines`
- * (scripts/stateLines.ts), a file of their own rather than built into the page, and fetched only once
- * the globe is ready (see showFarStateLines), so they never hold up the first view. Below
- * `farStateLinesUntil` they're drawn in place of the tiles' state lines, and from it on the tiles' are,
- * so the two never show together (ADR-0026).
+ * State and province lines: the United States' and Canada's only, at every zoom (ADR-0026). The map's
+ * own tiles carry every country's, with nothing saying whose, and none at all in their coarsest tiles
+ * (zoom 0), which the globe shows zoomed all the way out and toward its edges. These are Natural
+ * Earth's, made by `npm run state-lines` (scripts/stateLines.ts), a file of their own rather than
+ * built into the page, and fetched only once the globe is ready (see showStateLines), so they never
+ * hold up the first view.
  */
-export const farStateLinesSource = 'far-state-lines'
-export const farStateLinesLayer = 'far-state-lines'
-export const farStateLinesUntil = 3
+export const stateLinesSource = 'state-lines'
+export const stateLinesLayer = 'state-lines'
+export const satelliteStateLinesLayer = 'state-lines-satellite'
 
-const farStateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
+const stateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
-/** Fetches the zoomed-out state lines into the globe's style, which starts with none (see farStateLinesSource). */
-export function showFarStateLines(map: Pick<MapLibreMap, 'getSource'>): void {
-  map.getSource<GeoJSONSource>(farStateLinesSource)?.setData(stateLinesUrl)
+/** Fetches the state lines into the globe's style, which starts with none (see stateLinesSource). */
+export function showStateLines(map: Pick<MapLibreMap, 'getSource'>): void {
+  map.getSource<GeoJSONSource>(stateLinesSource)?.setData(stateLinesUrl)
 }
 
 /** The satellite map's imagery: EOX's cloudless Sentinel-2 mosaic of 2024, free for non-commercial use with its credit shown (ADR-0022). */
@@ -82,6 +80,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
   const restyled = (id: string, changes: Partial<LayerSpecification>): LayerSpecification =>
     ({ ...layer(id), ...changes }) as LayerSpecification
   const shownOn = (type: MapType) => (type === mapType ? 'visible' : 'none')
+  const stateLinePaint = linePaint(globe.stateLines)
 
   return {
     ...base,
@@ -91,11 +90,15 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
     sources: {
       ...base.sources,
       [satelliteSource]: satelliteSourceSpec,
-      [farStateLinesSource]: farStateLinesSourceSpec,
+      [stateLinesSource]: stateLinesSourceSpec,
       [cityNameSource]: cityNameSourceSpec,
     },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },
+      // The globe's own state lines (see stateLinesSource), in place of the base style's (boundary_3).
+      // On the plain map under the sea, which hides where they run over water (Natural Earth's go out
+      // across bays and lakes); on the satellite map over its imagery.
+      { id: stateLinesLayer, type: 'line', source: stateLinesSource, layout: { visibility: shownOn('plain') }, paint: stateLinePaint },
       // The sea, oceans and lakes alike, so the land stands apart from it.
       {
         id: 'sea',
@@ -107,6 +110,13 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
         paint: { 'fill-color': globe.sea, 'fill-antialias': false },
       },
       { id: satelliteLayer, type: 'raster', source: satelliteSource, layout: { visibility: shownOn('satellite') } },
+      {
+        id: satelliteStateLinesLayer,
+        type: 'line',
+        source: stateLinesSource,
+        layout: { visibility: shownOn('satellite') },
+        paint: stateLinePaint,
+      },
       // Coastlines: the edges of the sea. Lakes and rivers aren't outlined; at a distance they read
       // as clutter.
       {
@@ -118,10 +128,6 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
         layout: { visibility: shownOn('plain') },
         paint: linePaint(globe.coastlines),
       },
-      // Zoomed out, state and province lines of the globe's own (see farStateLinesSource); from
-      // farStateLinesUntil, the tiles', which the base style hides below zoom 5.
-      { id: farStateLinesLayer, type: 'line', source: farStateLinesSource, maxzoom: farStateLinesUntil, paint: linePaint(globe.stateLines) },
-      restyled(stateLines, { minzoom: farStateLinesUntil, paint: linePaint(globe.stateLines) }),
       restyled(countryLines, { paint: linePaint(globe.countryBorders) }),
       restyled(disputedLines, { paint: { ...linePaint(globe.disputedBorders), 'line-dasharray': [...globe.disputedBorders.dash] } }),
       ...placeNameLayers(base, theme),

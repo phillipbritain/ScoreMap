@@ -1,7 +1,7 @@
 /**
- * Makes the state and province lines the globe draws zoomed out (see globeStyle), where the map's own
- * tiles have none: Natural Earth's admin-1 lines (public domain) for the United States and Canada only,
- * where most games are, cut down to those it shows by zoom 5 and simplified for a globe seen from afar.
+ * Makes the state and province lines the globe draws at every zoom (see globeStyle): Natural Earth's
+ * admin-1 lines (public domain) for the United States and Canada only, those it shows by zoom 5,
+ * lightly simplified.
  * Run it with `npm run state-lines` from `web/` to fetch the lines again and rewrite
  * `src/globe/stateLines.json`.
  */
@@ -15,9 +15,9 @@ const linesFile = new URL('../src/globe/stateLines.json', import.meta.url)
 const mostDetailed = 5
 /** The countries whose lines are kept, by Natural Earth's names for them. */
 const countries = ['United States of America', 'Canada']
-/** How far a simplified line may stray from the original, in degrees (about 2 km), and how finely positions are kept. */
-const tolerance = 0.02
-const decimals = 2
+/** How far a simplified line may stray from the original, in degrees (about 200 m), and how finely positions are kept. */
+const tolerance = 0.002
+const decimals = 3
 
 type Position = [number, number]
 interface Line {

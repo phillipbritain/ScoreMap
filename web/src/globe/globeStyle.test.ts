@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts, glyphsUrl } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
-import { globeStyle, showFarStateLines } from './globeStyle'
+import { globeStyle, showStateLines } from './globeStyle'
 import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
 import { cityNameFeatures, cityNameSource, clusterClearOffset, firstPlaceNameLayer } from './placeNames'
@@ -86,11 +86,11 @@ describe('globeStyle', () => {
   it("keeps only the lines and state and country names, dropping roads, land cover, points of interest and the base style's cities, towns and villages for its own city names", () => {
     expect(style().layers.map((l) => l.id)).toEqual([
       'background',
+      'state-lines',
       'sea',
       'satellite',
+      'state-lines-satellite',
       'coastline',
-      'far-state-lines',
-      'boundary_3',
       'boundary_2',
       'boundary_disputed',
       'city_names',
@@ -126,15 +126,17 @@ describe('globeStyle', () => {
     const ids = (mapType: 'plain' | 'satellite') => globeStyle(liberty, theme, mapType).layers.map((l) => l.id)
     expect(ids('satellite')).toEqual(ids('plain'))
     const kept = (mapType: 'plain' | 'satellite') =>
-      globeStyle(liberty, theme, mapType).layers.filter((l) => !['sea', 'satellite', 'coastline'].includes(l.id))
+      globeStyle(liberty, theme, mapType).layers.filter((l) => !['state-lines', 'sea', 'satellite', 'state-lines-satellite', 'coastline'].includes(l.id))
     expect(kept('satellite')).toEqual(kept('plain'))
   })
 
   it('switches map type by showing and hiding layers, as a restyle in place', () => {
     const toSatellite = layerChanges(globeStyle(liberty, theme, 'plain').layers, globeStyle(liberty, theme, 'satellite').layers)
     expect(toSatellite).toEqual([
+      { layer: 'state-lines', kind: 'layout', property: 'visibility', value: 'none' },
       { layer: 'sea', kind: 'layout', property: 'visibility', value: 'none' },
       { layer: 'satellite', kind: 'layout', property: 'visibility', value: 'visible' },
+      { layer: 'state-lines-satellite', kind: 'layout', property: 'visibility', value: 'visible' },
       { layer: 'coastline', kind: 'layout', property: 'visibility', value: 'none' },
     ])
   })
@@ -157,7 +159,7 @@ describe('globeStyle', () => {
   it("draws coastlines, country borders, state lines and disputed borders in the theme's colors", () => {
     expect(paint('coastline')['line-color']).toBe('#000002')
     expect(paint('boundary_2')['line-color']).toBe('#000003')
-    expect(paint('boundary_3')['line-color']).toBe('#000004')
+    expect(paint('state-lines')['line-color']).toBe('#000004')
     expect(paint('boundary_disputed')['line-color']).toBe('#000005')
   })
 
@@ -168,7 +170,7 @@ describe('globeStyle', () => {
     expect(width('coastline', 12)).toBeCloseTo(2, 6)
     expect(width('boundary_2', 2)).toBeCloseTo(0.7, 6)
     expect(width('boundary_2', 6)).toBeCloseTo(1.5, 6)
-    expect(width('boundary_3', 5.5)).toBeCloseTo(0.75, 6)
+    expect(width('state-lines', 5.5)).toBeCloseTo(0.75, 6)
     expect(width('boundary_disputed', 3)).toBeCloseTo(0.9, 6)
     expect(width('boundary_disputed', 10)).toBeCloseTo(0.9, 6)
   })
@@ -181,18 +183,20 @@ describe('globeStyle', () => {
     expect(outlined('river')).toBe(false)
   })
 
-  it('fetches the zoomed-out state lines only when told to, once the globe is ready', () => {
+  it('fetches the state lines only when told to, once the globe is ready', () => {
     const setData = vi.fn()
-    showFarStateLines({ getSource: ((id: string) => (id === 'far-state-lines' ? { setData } : undefined)) as never })
+    showStateLines({ getSource: ((id: string) => (id === 'state-lines' ? { setData } : undefined)) as never })
     expect(setData).toHaveBeenCalledWith(expect.stringContaining('stateLines'))
-    expect(() => showFarStateLines({ getSource: (() => undefined) as never })).not.toThrow()
+    expect(() => showStateLines({ getSource: (() => undefined) as never })).not.toThrow()
   })
 
-  it("shows state lines at every zoom, its own zoomed out and the tiles' from zoom 3, and state names at the base style's zooms", () => {
-    expect(layer('far-state-lines')).toMatchObject({ type: 'line', source: 'far-state-lines', maxzoom: 3 })
-    expect(style().sources['far-state-lines']).toEqual({ type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-    expect(paint('far-state-lines')['line-color']).toBe('#000004')
-    expect(layer('boundary_3')?.minzoom).toBe(3)
+  it("draws the globe's own state lines at every zoom, starting with none, in place of the tiles' (under the sea on the plain map, over the imagery on the satellite map), and state names at the base style's zooms", () => {
+    expect(layer('state-lines')).toMatchObject({ type: 'line', source: 'state-lines' })
+    expect(layer('state-lines-satellite')).toMatchObject({ type: 'line', source: 'state-lines', paint: layer('state-lines')?.paint })
+    expect(layer('state-lines')).not.toHaveProperty('minzoom')
+    expect(layer('state-lines')).not.toHaveProperty('maxzoom')
+    expect(style().sources['state-lines']).toEqual({ type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+    expect(layer('boundary_3')).toBeUndefined()
     expect(layer('label_state')).toMatchObject({ minzoom: 5, maxzoom: 8 })
     expect(paint('label_state')).not.toHaveProperty('text-opacity')
   })
@@ -329,7 +333,7 @@ describe('globeStyle', () => {
   })
 
   it('fails loudly when the base style lacks a layer the globe needs', () => {
-    const noStates = base(liberty.layers.filter((l) => l.id !== 'boundary_3'))
-    expect(() => style(noStates)).toThrow(/boundary_3/)
+    const noCountries = base(liberty.layers.filter((l) => l.id !== 'boundary_2'))
+    expect(() => style(noCountries)).toThrow(/boundary_2/)
   })
 })

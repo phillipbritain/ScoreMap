@@ -21,7 +21,7 @@ import { CameraMoves, type SelectionIntent } from './cameraMoves'
 import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
-import { globeStyle, showFarStateLines } from './globeStyle'
+import { globeStyle, showStateLines } from './globeStyle'
 import { fadeNearHorizon, fadedOut } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { globeSettling, type GlobeSettling } from './globeSettling'
@@ -173,7 +173,7 @@ export class GlobeMap {
       onStage,
       onReady: () => {
         map.keyboard.enable()
-        showFarStateLines(map)
+        showStateLines(map)
       },
     })
     try {

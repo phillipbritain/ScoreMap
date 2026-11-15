@@ -428,44 +428,54 @@ function burst({ x, y, sparks, colors, speed, life, size, within, at = performan
   }
 }
 
-/** A rocket going up from (x, y) on the page to burst about `height` px above it, after `delay` ms. */
-function rocket(variant: ConfettiVariant, x: number, y: number, height: number, drift: number, colors: readonly string[], delay: number): void {
-  const frames = 38 + Math.random() * 10
+/**
+ * A rocket going up inside the game panel, from (x, y) in its box, to burst `height` px above that after
+ * `delay` ms, its sparks kept to the panel too (clipped to its box, and moving with it).
+ */
+function rocket(variant: ConfettiVariant, within: () => DOMRect | null, x: number, y: number, height: number, drift: number, colors: readonly string[], delay: number, sparkSpeed: number): void {
+  const frames = 30 + Math.random() * 10
   // Drag 0.97 a frame: what a launch speed covers in that many frames.
   const travel = (1 - Math.pow(0.97, frames)) / 0.03
-  const vy = -height / travel
   const now = performance.now()
   pieces.push({
-    x, y, vx: drift / travel, vy,
+    x, y, vx: drift / travel, vy: -height / travel,
     angle: 0, spin: 0, wobble: 0, wobbleSpeed: 0,
-    size: 4, color: '#fff3d6', shape: 'circle',
+    size: 3.5, color: '#fff3d6', shape: 'circle',
     born: now + delay,
     life: (frames * 1000) / 60,
     gravity: 0,
     drag: 0.97,
     kind: 'rocket',
+    within,
     onEnd: (piece) => {
-      const phone = innerWidth <= 640
-      burst({ x: piece.x, y: piece.y, sparks: variant.sparks ?? 60, colors, speed: phone ? 4.2 : 5.5, life: variant.duration, size: 2.4 })
+      burst({ x: piece.x, y: piece.y, sparks: variant.sparks ?? 60, colors, speed: sparkSpeed * (0.85 + Math.random() * 0.3), life: variant.duration, size: 2.2, within })
     },
   })
   run(now)
 }
 
-/** Fireworks over the game panel: rockets from its bottom corners, or from along its top edge, over the variant's time. */
-function panelFireworks(variant: ConfettiVariant, box: DOMRect, colors: readonly string[]): void {
+/**
+ * Fireworks in the game panel, kept to it: rockets from its bottom corners, or from along its foot,
+ * bursting inside it, over the variant's time.
+ */
+function panelFireworks(variant: ConfettiVariant, panel: HTMLElement, colors: readonly string[]): void {
+  const within = () => (panel.isConnected ? panel.getBoundingClientRect() : null)
+  const box = within()
+  if (!box || box.width === 0) return
   const count = variant.rockets ?? 2
-  const phone = innerWidth <= 640
-  const room = Math.max(120, box.top - 60)
+  // A burst's reach is about 16 times its spark speed (drag 0.94 a frame): about a third of the panel's height.
+  const sparkSpeed = box.height / 48
   for (let i = 0; i < count; i++) {
     const delay = count === 1 ? 0 : (i / (count - 1)) * (variant.rocketsOver ?? 0) + Math.random() * 120
-    const height = Math.min(room, (phone ? 170 : 230) + Math.random() * (phone ? 120 : 170))
+    // Bursting between a fifth and a half of the way down the panel.
+    const burstAt = box.height * (0.2 + Math.random() * 0.3)
+    const from = box.height - 6
     if (variant.rocketsFrom === 'corners') {
       const left = i % 2 === 0
-      rocket(variant, left ? box.left + 10 : box.right - 10, box.bottom - 8, height + box.height, (left ? 1 : -1) * box.width * 0.3, colors, delay)
+      rocket(variant, within, left ? 10 : box.width - 10, from, from - burstAt, (left ? 1 : -1) * box.width * 0.18, colors, delay, sparkSpeed)
     } else {
-      const x = box.left + box.width * (0.12 + 0.76 * ((i * 0.618) % 1))
-      rocket(variant, x, box.top, height, (Math.random() - 0.5) * 60, colors, delay)
+      const x = box.width * (0.12 + 0.76 * ((i * 0.618) % 1))
+      rocket(variant, within, x, from, from - burstAt, (Math.random() - 0.5) * 40, colors, delay, sparkSpeed)
     }
   }
 }
@@ -513,7 +523,7 @@ export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor
   const spread = 18
   blast(variant, { x: box.left + 6, y: box.bottom - 6, angle: phone ? 18 : 28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
   blast(variant, { x: box.right - 6, y: box.bottom - 6, angle: phone ? -18 : -28, spread, count: variant.panelCount, colors, power: phone ? 1.5 : 1.8 })
-  if ((variant.effect ?? 'confetti') !== 'confetti') panelFireworks(variant, box, glowing(colors))
+  if ((variant.effect ?? 'confetti') !== 'confetti') panelFireworks(variant, panel, glowing(colors))
 }
 
 /**

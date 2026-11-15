@@ -12,7 +12,8 @@ export type PageCheck =
   | { check: 'read'; selector: string; property?: string }
   /**
    * Once the globe is ready, makes a score (`score`) or a finish (`finish`) happen to a Live game on
-   * screen, in this tab only: one with a score card, or with none, one whose pin is in view.
+   * screen, in this tab only: the open game panel's, if it can, else one with a score card, or with
+   * none, one whose pin is in view.
    */
   | { check: 'happen'; event: 'score' | 'finish' }
 
@@ -84,9 +85,13 @@ export async function pageCheck(check: PageCheck, waitMs = 20_000): Promise<Page
       const { x, y } = map.project([longitude, latitude])
       return facing && x >= 0 && y >= 0 && x <= canvas.clientWidth && y <= canvas.clientHeight
     }
-    const change = happen(check.event, ({ id, venue: { longitude, latitude } }) =>
-      carded.size > 0 ? carded.has(id) : longitude !== null && latitude !== null && inView(longitude, latitude),
-    )
+    // The open game panel's game first, so its part in a finish (a celebration) can be seen.
+    const selected = document.querySelector<HTMLElement>('.score-card--selected')?.dataset.gameId
+    const change =
+      (selected ? happen(check.event, ({ id }) => id === selected) : null) ??
+      happen(check.event, ({ id, venue: { longitude, latitude } }) =>
+        carded.size > 0 ? carded.has(id) : longitude !== null && latitude !== null && inView(longitude, latitude),
+      )
     return change ? { happened: { kind: change.kind, gameId: change.game.id } } : { noGame: true }
   }
   if (check.check === 'ready') {

@@ -88,7 +88,8 @@ interface DimmedProps {
 
 /**
  * The loading screen's look: the globe dimmed, with a flying rocket in the middle and a message under
- * it. The loading screen draws it, and so does the cut-off note (see live/CutOffNote.tsx).
+ * it, drifting in word by word. The loading screen draws it, and so does the cut-off note (see
+ * live/CutOffNote.tsx).
  */
 export function Dimmed({ ref, message, leaving = false, movable = false, label }: DimmedProps) {
   const className = ['loading-screen', leaving && 'loading-screen--leaving', movable && 'loading-screen--movable']
@@ -97,8 +98,36 @@ export function Dimmed({ ref, message, leaving = false, movable = false, label }
   return (
     <div ref={ref} className={className} role="status" aria-label={leaving ? undefined : label} aria-busy={!leaving}>
       <Rocket />
-      {message && <p className="loading-screen__message">{message}</p>}
+      {message && <Message key={message} text={message} />}
     </div>
+  )
+}
+
+/** How long after one word of the message the next starts drifting in. */
+const msPerWord = 35
+
+/**
+ * The message under the rocket, its words drifting up into place one after another, glowing; a closing
+ * ellipsis is three dots lit in turn. Keyed by the message, so a new one drifts in afresh.
+ */
+function Message({ text }: { text: string }) {
+  const trailing = text.endsWith('…')
+  const words = (trailing ? text.slice(0, -1) : text).split(' ')
+  return (
+    <p className="loading-screen__message">
+      {words.map((word, at) => (
+        <span key={at} className="loading-screen__word" style={{ animationDelay: `${at * msPerWord}ms` }}>
+          {at < words.length - 1 ? `${word} ` : word}
+        </span>
+      ))}
+      {trailing && (
+        <span className="loading-screen__dots" style={{ animationDelay: `${words.length * msPerWord}ms` }} aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+      )}
+    </p>
   )
 }
 

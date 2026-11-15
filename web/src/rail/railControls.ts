@@ -42,3 +42,6 @@ export function nextPopover<P extends string = RailPopover>(open: P | null, even
 export function morePress(open: RailPopover | null): PopoverEvent {
   return { press: open === 'feedback' ? 'feedback' : 'more' }
 }
+
+/** How long a closed popover takes to go, in milliseconds: its way out is the CSS's (`.rail__popover--leaving`). */
+export const popoverLeaveDuration = 120

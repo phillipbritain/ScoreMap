@@ -1,6 +1,6 @@
 # City labels
 
-The globe names cities from a city list included with the app, not from the map's tiles (ADR-0015). Only city names follow these rules; states, countries and everything else are named as the base map names them, in the theme's look.
+The globe names cities from a city list included with the app, not from the map's tiles (ADR-0015). Only city names follow these rules; states and countries are named by the base map, once each in English (its English name, else its Latin spelling, else its own), in the theme's look. Every name reads as on an American map.
 
 ## The rules
 
@@ -26,6 +26,6 @@ A test fails when a Big list entry matches no city in the list. Where a name and
 
 ## The city list
 
-`web/src/globe/cityList.json` is Natural Earth's populated places (`ne_10m_populated_places_simple`, public domain): 7,342 cities, each with its name, country, position, metro population (`pop_max`) and whether it's a national capital (`adm0cap`), most populous first. `npm --prefix web run city-list` fetches the places again and rewrites it. The populations are a little dated, which is fine for ranking.
+`web/src/globe/cityList.json` is Natural Earth's populated places (`ne_10m_populated_places_simple`, public domain): 7,342 cities, each with its name, country, position, metro population (`pop_max`) and whether it's a national capital (`adm0cap`), most populous first. Its names are Natural Earth's, which are mostly English already, except for about 140 places it names in another spelling (København, Makkah, Shenyeng). The script that makes the list gives these their English names (Copenhagen, Mecca, Shenyang) from a hand-picked table, `englishNames`. Natural Earth's own English names are too often wrong to use. Names English writes in their own spelling, accents and all (São Paulo, Kraków), stay as they are. `npm --prefix web run city-list` fetches the places again and rewrites it. The populations are a little dated, which is fine for ranking.
 
 The rules are in `web/src/globe/cityLabels.ts`; how the labels are drawn is in `web/src/globe/placeNames.ts`.

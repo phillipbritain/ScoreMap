@@ -9,12 +9,16 @@ import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { listedWatchLinks } from './watchLinks'
 import { lastScoreSlot } from './lastScoreSlot'
+import { useSwipeToClose } from './useSwipeToClose'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
 
 /** StreamEast's logo ("STREAM" and "EAST" on a pill, on its red), as the link to a game's stream there. */
 const streamEastLogoUrl = '/streameast-logo.png'
+
+/** How long a closed panel takes to go, in milliseconds: its way out is the CSS's (`.game-panel--leaving`). */
+export const panelLeaveDuration = 160
 
 interface GamePanelProps {
   game: Game
@@ -27,6 +31,11 @@ interface GamePanelProps {
   /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
   venuePhotos: boolean
   onClose: () => void
+  /**
+   * Whether the panel is on its way out, closed (see .game-panel--leaving): it can't be used meanwhile.
+   * It plays the default way out unless whatever closed it set the panel's data-leave to play its own.
+   */
+  leaving?: boolean
   /** The panel's element, so the globe can keep the selected pin clear of it. */
   ref?: Ref<HTMLElement>
 }
@@ -38,11 +47,12 @@ interface GamePanelProps {
  * logos in its bottom right corner; under it, a band for a
  * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. So that
  * clicking between games doesn't change its height, every line holds its place whether or not the game
- * has it (the last score where the sport has one, the venue's place, the watch links), and names and the venue sit on one line
- * each, cut short with an ellipsis and in full on hover; only the band adds height. Re-renders with each
- * snapshot, so it stays current while open.
+ * has it (the last score where the sport has one, the venue's place, the watch links), and the league, names and the venue sit on one line
+ * each, cut short with an ellipsis and in full on hover or, on a touch screen, a tap (see Tooltips); only the band adds height. Re-renders with each
+ * snapshot, so it stays current while open. On a phone, where it's a bottom sheet, it's swiped down to
+ * close as well as by its close button (see useSwipeToClose).
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, leaving = false, ref }: GamePanelProps) {
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -59,9 +69,19 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
   const photo = venuePhotos && venue.photo && venue.photo.url !== brokenPhotoUrl ? venue.photo : null
   // Lit in the game's color, as its score card is.
   const colorStyle = { '--game-color': color, '--text-on-game-color': textOnColor } as CSSProperties
+  // On a phone, swiped down to close (see useSwipeToClose).
+  const swipe = useSwipeToClose(game.id, onClose)
 
   return (
-    <aside ref={ref} className="game-panel" style={colorStyle} aria-label="Game panel" onKeyDown={(event) => {
+    <aside
+      ref={ref}
+      className={leaving ? 'game-panel game-panel--leaving' : 'game-panel'}
+      style={colorStyle}
+      aria-label="Game panel"
+      aria-hidden={leaving || undefined}
+      inert={leaving}
+      {...swipe}
+      onKeyDown={(event) => {
       if (event.key === 'Escape') {
         event.stopPropagation()
         onClose()
@@ -171,7 +191,7 @@ function WatchLinks({ links }: { links: StreamLink[] }) {
 
 /**
  * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
- * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover. Before a
+ * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover or a tap. Before a
  * score, "None yet", so the panel is as tall either way. Only for sports that score in plays (see
  * lastScoreSlot).
  */

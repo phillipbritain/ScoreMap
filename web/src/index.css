@@ -112,8 +112,9 @@ body {
   flex-direction: column;
   box-sizing: border-box;
   /* Never so tall that it reaches the rail above its right end (--rail-bottom, see useRailClearance):
-     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, such
-     as a phone on its side, it keeps a quarter of the screen. */
+     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, it keeps
+     a quarter of the screen; a short screen on its side has it beside the rail instead (see "A short
+     screen" at the end). */
   max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
   border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
@@ -140,7 +141,7 @@ body {
 
 /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it: beveled rather than
    clipped, as a clip path would stop the score block's glass seeing the globe behind the panel. */
-@media (min-width: 961px) {
+@media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
   @container style(--game-panel-cut-corner-on: 1) {
     .game-panel__body {
       border-bottom-left-radius: var(--game-panel-cut-corner-size);
@@ -172,9 +173,10 @@ body {
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
-/* On a desktop the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
+/* On a desktop, and on a short screen on its side, which takes the desktop's strip (see "A short screen"
+   at the end), the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
    its colors as solid as the panel's frost, its edges lit from the top left. */
-@media (min-width: 961px) {
+@media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
   .game-panel__score {
     background: linear-gradient(
       180deg,
@@ -209,11 +211,13 @@ body {
   text-transform: uppercase;
 }
 
-/* Let long league names grow with the score block too. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long league name doesn't make the panel taller. */
 .game-panel__league {
   margin-bottom: var(--spacing);
   padding-right: calc(5 * var(--spacing));
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .game-panel__label {
@@ -247,7 +251,7 @@ body {
   background: var(--game-panel-logo-plate-fill);
 }
 
-/* One line, cut short with an ellipsis and in full on hover, so a long name doesn't make the panel taller. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel taller. */
 .game-panel__team-name {
   flex: 1;
   min-width: 0;
@@ -349,7 +353,7 @@ body {
   padding-right: calc(var(--game-panel-size-close-width) - 2 * var(--spacing));
 }
 
-/* One line for a venue's name, cut short with an ellipsis and in full on hover. */
+/* One line for a venue's name, cut short with an ellipsis and in full on hover or a tap. */
 .game-panel__value {
   overflow: hidden;
   white-space: nowrap;
@@ -407,10 +411,8 @@ body {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
 }
 
-/* StreamEast's logo, a red badge, a little taller than ESPN's wordmark so its name reads at the same size;
-   a look being tried, so its size is here rather than in the theme. */
+/* StreamEast's logo, a red badge, with the theme's corners. */
 .game-panel__logo-link img.game-panel__stream-logo {
-  height: calc(5 * var(--spacing));
   border-radius: var(--shape-border-radius);
 }
 
@@ -544,8 +546,10 @@ body {
 }
 
 /* On narrow screens: give names the full panel width, with the details (and the photo) below, and
-   tighter spacing than on a desktop, so the panel takes less of the screen. */
-@media (max-width: 960px) {
+   tighter spacing than on a desktop, so the panel takes less of the screen. Not on a short screen on its
+   side, such as a phone in landscape, which has the width for the desktop's strip but not the height for
+   this (see "A short screen" at the end). */
+@media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
   .game-panel__main {
     flex-direction: column;
     min-height: 0;
@@ -747,7 +751,8 @@ body {
   position: relative;
   transition:
     box-shadow 120ms ease-out,
-    background-color 120ms ease-out;
+    background-color 120ms ease-out,
+    opacity 200ms ease-out;
   /* Animations grow the card from its bottom middle, nearest its venue as it usually sits. */
   transform-origin: 50% 100%;
 }
@@ -761,9 +766,15 @@ body {
   }
 }
 
-/* No room for this card: its game is counted in a card cluster instead, which the map draws. */
+/* No room for this card: its game is counted in a card cluster instead, which the map draws. It fades
+   out before it's hidden, and fades back in as there's room for it again. */
 [data-in-card-cluster] {
   visibility: hidden;
+  transition: visibility 0s 200ms;
+}
+
+[data-in-card-cluster] > .score-card {
+  opacity: 0;
 }
 
 /* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
@@ -973,6 +984,21 @@ body {
   pointer-events: none;
 }
 
+/* A score card coming into view or going out of it as the camera moves (see globe/cardComings.ts): it
+   fades in or out in place, its trail with it. */
+.score-card-appearing {
+  animation-name: score-card-fade-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
+.score-card-fading {
+  animation-name: score-card-fade-out;
+  animation-timing-function: ease-in;
+  animation-fill-mode: both;
+  pointer-events: none;
+}
+
 @keyframes score-card-coming {
   from {
     opacity: 0;
@@ -1064,7 +1090,7 @@ body {
 
 /* On a phone the score block's padding is tighter, so the light reaches less far out to stay within it, still
    as far beyond the logo as beyond the score. */
-@media (max-width: 960px) {
+@media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
   .game-panel__team--scored {
     --reach-x: var(--spacing);
   }
@@ -1177,18 +1203,22 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 0;
+  /* The game panel slides in and out past the screen's foot (see .game-panel), which mustn't make the page scroll. */
+  overflow: clip;
 }
 
-/* The rail at the top right: its groups of buttons stacked down, its popovers to its left.
-   Above the no-pins message along the bottom, which an open popover can reach down to. */
+/* The rail at the top right: its groups of buttons stacked down, close together, its popovers to its
+   left. Above the no-pins message along the bottom, which an open popover can reach down to. */
 .rail {
+  --rail-group-gap: calc(0.5 * var(--spacing));
+
   position: absolute;
   top: calc(3 * var(--spacing));
   right: calc(3 * var(--spacing));
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: calc(2 * var(--spacing));
+  gap: var(--rail-group-gap);
 }
 
 /* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
@@ -1204,7 +1234,7 @@ body {
 
 .rail__buttons--collapsed {
   grid-template-rows: 0fr;
-  margin-top: calc(-2 * var(--spacing));
+  margin-top: calc(-1 * var(--rail-group-gap));
   opacity: 0;
   visibility: hidden;
   transition: grid-template-rows 220ms ease-in, margin 220ms ease-in, opacity 160ms ease-in, visibility 0s 220ms;
@@ -1213,7 +1243,7 @@ body {
 .rail__buttons-inner {
   display: flex;
   flex-direction: column;
-  gap: calc(2 * var(--spacing));
+  gap: var(--rail-group-gap);
   min-height: 0;
   margin: calc(-2.5 * var(--spacing)) calc(-3 * var(--spacing));
   padding: calc(2.5 * var(--spacing)) calc(3 * var(--spacing));
@@ -1250,6 +1280,49 @@ body {
   .rail__buttons--collapsed,
   .rail__buttons-inner > .rail__group {
     transition: none;
+  }
+}
+
+/* A rail popover opening slides out a little from the rail as it fades in, over 160 ms; closed, it slides
+   back as it fades out, over 120 ms (popoverLeaveDuration, in web/src/rail/railControls.ts, keeps it on
+   the page that long), out of reach meanwhile. The top rail's drops from its row. With reduce motion it
+   fades in place, and goes at once. */
+.rail__popover {
+  animation: rail-popover-in 160ms ease-out;
+}
+
+.rail__popover--leaving {
+  animation: rail-popover-out 120ms ease-in forwards;
+  pointer-events: none;
+}
+
+.top-rail__popover {
+  --popover-from: 0 calc(-2 * var(--spacing));
+}
+
+@keyframes rail-popover-in {
+  from {
+    opacity: 0;
+    translate: var(--popover-from, calc(2 * var(--spacing)) 0);
+  }
+}
+
+@keyframes rail-popover-out {
+  to {
+    opacity: 0;
+    translate: var(--popover-from, calc(2 * var(--spacing)) 0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail__popover {
+    animation-name: fade-in;
   }
 }
 
@@ -1529,6 +1602,10 @@ body {
 /* The plain map drawn small, in the globe's own colors. */
 .map-type__picture--plain {
   background: var(--globe-surface);
+}
+
+.map-type__sea {
+  fill: var(--globe-sea);
 }
 
 .map-type__coast {
@@ -2251,8 +2328,9 @@ body {
   animation-delay: 0.6s;
 }
 
-/* Under the rocket when a stage is slow, saying what's holding loading up. Placed from the middle, so
-   the rocket stays where it is when the message comes and goes. */
+/* Under the rocket, saying it's loading or what's holding it up, its words drifting up into place one
+   after another (LoadingScreen.tsx staggers them), glowing. Placed from the middle, so the rocket stays
+   where it is when the message comes and goes. */
 .loading-screen__message {
   position: absolute;
   top: calc(50% + var(--loading-screen-rocket-size) / 2 + var(--spacing));
@@ -2260,8 +2338,45 @@ body {
   left: calc(3 * var(--spacing));
   margin: 0;
   color: var(--loading-screen-message);
-  font-size: var(--typography-body2-font-size);
+  font-size: var(--typography-h6-font-size);
+  font-weight: var(--typography-subtitle2-font-weight);
+  line-height: 1.4;
   text-align: center;
+  text-shadow: 0 0 var(--loading-screen-glow-radius)
+    color-mix(in srgb, var(--loading-screen-glow-color) calc(var(--loading-screen-glow-opacity) * 100%), transparent);
+  text-wrap: balance;
+}
+
+.loading-screen__word {
+  display: inline-block;
+  white-space: pre;
+  animation: loading-screen-drift-in 0.3s ease-out both;
+}
+
+/* A closing ellipsis: three glowing dots lit one after another, drifting in after the last word. */
+.loading-screen__dots {
+  display: inline-flex;
+  gap: var(--spacing);
+  margin-left: var(--spacing);
+  vertical-align: middle;
+  animation: loading-screen-drift-in 0.3s ease-out both;
+}
+
+.loading-screen__dots span {
+  width: var(--loading-screen-dot);
+  height: var(--loading-screen-dot);
+  border-radius: 50%;
+  background: var(--loading-screen-glow-color);
+  box-shadow: 0 0 calc(var(--loading-screen-glow-radius) / 2) var(--loading-screen-glow-color);
+  animation: loading-screen-dot 1.2s ease-in-out infinite;
+}
+
+.loading-screen__dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-screen__dots span:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
 /* An initialization failure takes the rocket's place until the viewer retries. */
@@ -2324,6 +2439,26 @@ body {
   }
 }
 
+@keyframes loading-screen-drift-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(10px);
+  }
+}
+
+@keyframes loading-screen-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
 /* The rocket standing still: it fades in and out in place, for reduce motion. */
 @keyframes loading-screen-rocket-still {
   50% {
@@ -2331,15 +2466,18 @@ body {
   }
 }
 
-/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, and the dim
-   goes at once. */
+/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, the message
+   is there at once, its dots steady, and the dim goes at once. */
 @media (prefers-reduced-motion: reduce) {
   .loading-screen__rocket-ship {
     animation: loading-screen-rocket-still 1.6s ease-in-out infinite;
   }
 
   .loading-screen__rocket-flame,
-  .loading-screen__rocket-lines line {
+  .loading-screen__rocket-lines line,
+  .loading-screen__word,
+  .loading-screen__dots,
+  .loading-screen__dots span {
     animation: none;
   }
 
@@ -2385,7 +2523,7 @@ body {
   white-space: nowrap;
 }
 
-/* A tooltip (see tooltip/Tooltips.tsx): a small solid panel above what it's for, or below where
+/* A tooltip (see tooltip/Tooltips.tsx): a small solid panel, outlined to stand off a panel under it, above what it's for, or below where
    there's no room, on its left for the rail's buttons, or on the right of the Games list for its games, easing in from it. Over everything but the local-run tools' own. */
 .tooltip {
   position: fixed;
@@ -2395,6 +2533,7 @@ body {
   box-sizing: border-box;
   max-width: 280px;
   padding: var(--spacing) calc(2.5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--tooltip-outline);
   border-radius: var(--menu-corner);
   background: var(--tooltip-surface);
   color: var(--palette-text-primary);
@@ -2531,12 +2670,61 @@ body {
   }
 }
 
-/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. */
+/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. It's
+   swiped down to close (see useSwipeToClose), so the browser takes no drag on it for a scroll or zoom,
+   bar a vertical one in the band, which is the band's. */
 @media (max-width: 640px) {
   .game-panel {
     --game-panel-bottom: 0px;
     width: 100%;
     border-radius: 0;
+    touch-action: none;
+  }
+
+  .game-panel__band {
+    touch-action: pan-y;
+  }
+
+  .game-panel[data-dragging] {
+    user-select: none;
+  }
+}
+
+/* The game panel opening slides up into place from below the screen's foot, over 220 ms; closed, it
+   slides back down off it, over 160 ms (panelLeaveDuration, in web/src/panel/GamePanel.tsx, keeps it on
+   the page that long), out of reach meanwhile. It doesn't fade: below full opacity, the score block's
+   glass stops seeing the globe behind it, and its blur would flash off and on. That way out is the default: a close with its own sets the panel's data-leave, and plays
+   it in place of this one (a swipe, which has already slid it off the screen, sets "swiped-off" and
+   plays nothing more). With reduce motion it's there at once, and goes at once. On the panel's
+   translate, as a swipe moves it, so neither clashes with its centering. */
+.game-panel {
+  animation: game-panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.game-panel--leaving {
+  animation: game-panel-out 160ms ease-in forwards;
+  pointer-events: none;
+}
+
+.game-panel--leaving[data-leave] {
+  animation: none;
+}
+
+@keyframes game-panel-in {
+  from {
+    translate: 0 calc(100% + var(--game-panel-bottom));
+  }
+}
+
+@keyframes game-panel-out {
+  to {
+    translate: 0 calc(100% + var(--game-panel-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-panel {
+    animation: none;
   }
 }
 
@@ -3107,4 +3295,132 @@ body {
 .game-panel a:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--spacing);
+}
+
+/* A short screen: a phone on its side, or a short desktop window. Here, after the rules it changes, so it
+   wins over them. The screen is wide but short, so things lie side by side rather than stacked: the game
+   panel takes the desktop's strip (see .game-panel__main) at the screen's foot left of the rail, as tall as
+   it needs rather than stopping short of the rail's foot; the popovers, the Games list and the welcome
+   tour's steps use the height there is (the dynamic viewport's, so not under a phone browser's bars). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-panel {
+    --game-panel-bottom: calc(3 * var(--spacing));
+    left: calc(3 * var(--spacing));
+    max-height: calc(100% - 2 * var(--game-panel-bottom));
+    width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 5 * var(--spacing)));
+    border-radius: var(--game-panel-corner);
+    transform: none;
+  }
+
+  /* On a phone on its side (a touch screen), a sheet at the screen's foot and left edge, its outer
+     corners square, swiped down to close as on a phone held upright (see useSwipeToClose). */
+  @media (pointer: coarse) {
+    .game-panel {
+      --game-panel-bottom: 0px;
+      left: 0;
+      width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 2 * var(--spacing)));
+      max-height: calc(100% - 3 * var(--spacing));
+      border-radius: 0 var(--game-panel-corner) 0 0;
+      touch-action: none;
+    }
+
+    /* No cut corner, as on a phone held upright: it would show the globe at the screen's corner. */
+    .game-panel__body {
+      border-bottom-left-radius: 0;
+    }
+
+    .game-panel__band {
+      touch-action: pan-y;
+    }
+
+    .game-panel[data-dragging] {
+      user-select: none;
+    }
+  }
+
+  /* Spaced as tightly as on a phone held upright, so the strip takes less of the height. */
+  .game-panel__main {
+    min-height: 0;
+  }
+
+  /* Half the strip, so names have room on a phone. */
+  .game-panel__score {
+    width: min(var(--game-panel-size-score-block), 50%);
+    gap: var(--spacing);
+    padding-block: calc(2 * var(--spacing));
+  }
+
+  .game-panel__details {
+    gap: var(--spacing);
+    padding-block: calc(2 * var(--spacing));
+  }
+
+  /* The watch links side by side, as on a phone held upright, rather than stacked. */
+  .game-panel__watch {
+    flex-direction: row;
+    align-items: center;
+    gap: calc(2 * var(--spacing));
+  }
+
+  .rail__popover,
+  .rail__popover--games {
+    max-width: calc(100vw - var(--rail-left-inset, 0px) - 5 * var(--spacing));
+    max-height: calc(100dvh - 6 * var(--spacing));
+  }
+
+  /* In the middle of the screen left of the rail, with room for an arrow to it, wider and using more of
+     the height, each of Welcome's choices on a line, its name then what it shows. */
+  .welcome-tour {
+    align-items: center;
+    padding-right: calc(var(--rail-left-inset, 0px) + 14 * var(--spacing));
+  }
+
+  .welcome-tour__panel {
+    width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
+    max-height: calc(100% - 6 * var(--spacing));
+    margin-bottom: 0;
+    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+  }
+
+  .welcome-tour__question {
+    margin-top: calc(3 * var(--spacing));
+  }
+
+  /* The star's room held on every line, so the names and what they show line up. */
+  .welcome-tour__choice {
+    grid-template-columns: 1.3em 7em 1fr;
+    padding: calc(2 * var(--spacing)) calc(3.5 * var(--spacing));
+  }
+
+  .welcome-tour__choice span {
+    grid-column: 3;
+  }
+
+  .welcome-tour__star {
+    grid-row: auto;
+  }
+}
+
+/* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one
+   column at full size, which scrolls within the screen's height, fading out at its foot so it shows
+   there's more. It takes the pointer there, so it can be scrolled by touch. */
+@media (max-height: 370px) {
+  .rail {
+    max-height: calc(100% - 6 * var(--spacing));
+  }
+
+  .rail__buttons {
+    min-height: 0;
+  }
+
+  /* Room at its foot as deep as the fade, so scrolled to the end its last button is clear of it. */
+  .rail__buttons-inner {
+    padding-bottom: calc(7 * var(--spacing));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    pointer-events: auto;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
+  }
 }

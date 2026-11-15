@@ -400,12 +400,13 @@ const settings = {
   /** How each part of ScoreMap looks, by part, as MUI's components hold each component's own look. */
   components: {
     /**
-     * The globe: its surface (land and sea alike); its coastlines, country borders, state lines and
+     * The globe: its surface (the land) and its sea (oceans and lakes); its coastlines, country borders, state lines and
      * disputed borders, the disputed ones dashed in this pattern; and the halo around its edge, a glow
      * close to the edge and a wider, fainter one outside it.
      */
     Globe: {
       surface: color,
+      sea: color,
       coastlines: globeLine,
       countryBorders: globeLine,
       stateLines: globeLine,
@@ -585,15 +586,22 @@ const settings = {
       message: { corner },
       size: { key: pixels, icon: pixels },
     },
-    /** A tooltip: its surface (solid, not glass: ADR-0023). */
-    Tooltip: { surface: color },
+    /** A tooltip: its surface (solid, not glass: ADR-0023) and the outline that sets it off from a panel under it. */
+    Tooltip: { surface: color, outline: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed
-     * lines, its flame, and how big its box is across), and the text of the message under the rocket
-     * when loading is slow.
+     * lines, its flame, and how big its box is across), the text of the message under the rocket, and
+     * the glow its words drift in with (its color, how far it reaches and how strong it is), which also
+     * lights the dots of a closing ellipsis (how big each is across).
      */
-    LoadingScreen: { dim: { color, opacity }, rocket: { color, flame: color, size: pixels }, message: color },
+    LoadingScreen: {
+      dim: { color, opacity },
+      rocket: { color, flame: color, size: pixels },
+      message: color,
+      glow: { color, radius: pixels, opacity },
+      dot: pixels,
+    },
     /**
      * The welcome tour: how opaque its dim over the globe is (under a step's panel, and around its
      * spotlight), and how wide the arrow from a step's panel is.

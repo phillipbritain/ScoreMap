@@ -210,7 +210,7 @@ export function blast(variant: ConfettiVariant, { x, y, angle, spread, count, co
 }
 
 /**
- * A shower of the variant's confetti kept to a score card: pieces pop out a little inside it and drift
+ * A shower of the variant's confetti kept to a score card: pieces pop out along its top and drift
  * down through it, clipped to its box (a few px past its edges at most) and moving with it. Nothing
  * with prefers-reduced-motion.
  */
@@ -227,7 +227,7 @@ export function shower(variant: ConfettiVariant, card: HTMLElement, colors: read
     const late = i > variant.cardCount * 0.45
     pieces.push({
       x: Math.random() * start.width,
-      y: late ? -4 : start.height * (0.15 + Math.random() * 0.5),
+      y: late ? -4 : start.height * Math.random() * 0.12,
       vx: Math.sin(direction) * speed,
       vy: late ? 0.3 : -Math.abs(Math.cos(direction)) * speed - 0.6,
       angle: Math.random() * Math.PI * 2,

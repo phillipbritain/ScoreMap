@@ -336,7 +336,7 @@ The logos are ESPN's usual ones, drawn for a light background, which the plate g
 
 ## Other sizes
 
-Sizes that aren't a type style's, a number of spacing units or of corner radii are free values: pixels, any number from 0 up (an offset may be negative), or ems where a size goes with its text and should grow with it (letter spacing, which may be negative, and boxes sized to their characters). The dark theme keeps the look before it for all of these.
+Sizes that aren't a type style's, a number of spacing units or of corner radii are free values: pixels, any number from 0 up (an offset may be negative), or ems where a size goes with its text and should grow with it (letter spacing, which may be negative, and boxes sized to their characters). The dark theme keeps the look before it for all of these. A size from the window's height is in `dvh` (the window as it is) or `svh`, never `vh`, which on iOS Safari is taller than the window while its toolbar shows; a unit test (`web/scripts/viewportUnits.test.ts`) fails on a `vh` in `web/src`.
 
 ### On the globe
 

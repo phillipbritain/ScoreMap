@@ -563,13 +563,13 @@ export async function celebrateInPanel(panel: HTMLElement, game: Game, gameColor
   const variant = confettiVariant()
   const colors = await confettiColors(variant, game, gameColor)
   // Kept to the panel: from just inside its bottom corners, the fastest pieces shooting a little past its
-  // top, a fifth of its height at most (a piece rises about 10.5 px per unit of launch speed, at drag
+  // top, a tenth of its height at most (a piece rises about 10.5 px per unit of launch speed, at drag
   // 0.96 and gravity 0.32), and clipped there.
   const within = () => (panel.isConnected ? panel.getBoundingClientRect() : null)
   const box = within()
   if (!box || box.width === 0) return
-  const power = variant.speed ? box.height / 9.5 / variant.speed : 1
-  const above = box.height * 0.2
+  const power = variant.speed ? box.height / 11 / variant.speed : 1
+  const above = box.height * 0.1
   const spread = 18
   blast(variant, { x: 6, y: box.height - 4, angle: 22, spread, count: variant.panelCount, colors, power, within, above })
   blast(variant, { x: box.width - 6, y: box.height - 4, angle: -22, spread, count: variant.panelCount, colors, power, within, above })

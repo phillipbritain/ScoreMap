@@ -35,7 +35,7 @@ export interface ConfettiVariant {
   sparks?: number
   /** Where the panel's rockets go up from: its bottom corners, or along its top edge. */
   rocketsFrom?: 'corners' | 'top'
-  /** The card's bursts, inside it. */
+  /** The card's mini rockets, bursting inside it. */
   cardBursts?: number
 }
 
@@ -44,9 +44,9 @@ export const confettiVariants: readonly ConfettiVariant[] = [
   { key: 'B', name: 'Team colors · slide down', panelCount: 90, cardCount: 34, palette: 'team', shapes: ['rect', 'rect', 'circle'], duration: 2800, speed: 16, closeAfter: 3500, close: 'slide' },
   { key: 'C', name: 'Party · shrink into the pin', panelCount: 170, cardCount: 60, palette: 'party', shapes: ['rect', 'circle', 'streamer'], duration: 3600, speed: 19, closeAfter: 4200, close: 'shrink' },
   { key: 'D', name: 'Streamers, gold · fold away', panelCount: 60, cardCount: 24, palette: 'gold', shapes: ['streamer', 'streamer', 'rect'], duration: 2600, speed: 17, closeAfter: 3200, close: 'fold' },
-  { key: 'E', name: 'Fireworks: a rocket from each corner', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1600, speed: 0, closeAfter: 3300, close: 'slide', effect: 'fireworks', rockets: 2, rocketsOver: 250, sparks: 70, rocketsFrom: 'corners', cardBursts: 1 },
-  { key: 'F', name: 'Fireworks show', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1700, speed: 0, closeAfter: 4200, close: 'slide', effect: 'fireworks', rockets: 6, rocketsOver: 1800, sparks: 55, rocketsFrom: 'top', cardBursts: 3 },
-  { key: 'G', name: 'Confetti and fireworks', panelCount: 70, cardCount: 24, palette: 'team', shapes: ['rect', 'rect', 'circle'], duration: 2800, speed: 16, closeAfter: 3800, close: 'slide', effect: 'both', rockets: 3, rocketsOver: 900, sparks: 55, rocketsFrom: 'top', cardBursts: 1 },
+  { key: 'E', name: 'Fireworks: a rocket from each corner', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1600, speed: 0, closeAfter: 3300, close: 'slide', effect: 'fireworks', rockets: 2, rocketsOver: 250, sparks: 70, rocketsFrom: 'corners', cardBursts: 2 },
+  { key: 'F', name: 'Fireworks show', panelCount: 0, cardCount: 0, palette: 'team', shapes: [], duration: 1700, speed: 0, closeAfter: 4200, close: 'slide', effect: 'fireworks', rockets: 6, rocketsOver: 1800, sparks: 55, rocketsFrom: 'top', cardBursts: 4 },
+  { key: 'G', name: 'Confetti and fireworks', panelCount: 70, cardCount: 24, palette: 'team', shapes: ['rect', 'rect', 'circle'], duration: 2800, speed: 16, closeAfter: 3800, close: 'slide', effect: 'both', rockets: 3, rocketsOver: 900, sparks: 55, rocketsFrom: 'top', cardBursts: 2 },
 ]
 
 /** The variants the bar cycles through: B, the confetti picked, and the fireworks against it. */
@@ -439,10 +439,12 @@ interface Burst {
   size: number
   within?: () => DOMRect | null
   at?: number
+  /** On the globe's canvas, under the game panel. */
+  globe?: boolean
 }
 
 /** A firework's burst: a ring of sparks, in one of the colors, with a few of another for depth. */
-function burst({ x, y, sparks, colors, speed, life, size, within, at = performance.now() }: Burst): void {
+function burst({ x, y, sparks, colors, speed, life, size, within, at = performance.now(), globe }: Burst): void {
   const main = colors[Math.floor(Math.random() * colors.length)]
   const turn = Math.random() * Math.PI * 2
   for (let i = 0; i < sparks; i++) {
@@ -464,6 +466,7 @@ function burst({ x, y, sparks, colors, speed, life, size, within, at = performan
       drag: 0.94,
       kind: 'spark',
       within,
+      globe,
     })
   }
 }
@@ -472,7 +475,7 @@ function burst({ x, y, sparks, colors, speed, life, size, within, at = performan
  * A rocket going up inside the game panel, from (x, y) in its box, to burst `height` px above that after
  * `delay` ms, its sparks kept to the panel too (clipped to its box, and moving with it).
  */
-function rocket(variant: ConfettiVariant, within: () => DOMRect | null, x: number, y: number, height: number, drift: number, colors: readonly string[], delay: number, sparkSpeed: number): void {
+function rocket(variant: ConfettiVariant, within: () => DOMRect | null, x: number, y: number, height: number, drift: number, colors: readonly string[], delay: number, sparkSpeed: number, scale = 1): void {
   const frames = 30 + Math.random() * 10
   // Drag 0.97 a frame: what a launch speed covers in that many frames.
   const travel = (1 - Math.pow(0.97, frames)) / 0.03
@@ -480,7 +483,7 @@ function rocket(variant: ConfettiVariant, within: () => DOMRect | null, x: numbe
   pieces.push({
     x, y, vx: drift / travel, vy: -height / travel,
     angle: 0, spin: 0, wobble: 0, wobbleSpeed: 0,
-    size: 3.5, color: '#fff3d6', shape: 'circle',
+    size: Math.max(1.6, 3.5 * scale), color: '#fff3d6', shape: 'circle',
     born: now + delay,
     life: (frames * 1000) / 60,
     gravity: 0,
@@ -488,51 +491,48 @@ function rocket(variant: ConfettiVariant, within: () => DOMRect | null, x: numbe
     kind: 'rocket',
     within,
     onEnd: (piece) => {
-      burst({ x: piece.x, y: piece.y, sparks: variant.sparks ?? 60, colors, speed: sparkSpeed * (0.85 + Math.random() * 0.3), life: variant.duration, size: 2.2, within })
+      burst({ x: piece.x, y: piece.y, sparks: Math.round((variant.sparks ?? 60) * Math.max(0.4, scale)), colors, speed: sparkSpeed * (0.85 + Math.random() * 0.3), life: variant.duration * Math.max(0.7, scale), size: Math.max(1.3, 2.2 * scale), within, globe: piece.globe })
     },
   })
   run(now)
 }
 
 /**
- * Fireworks in the game panel, kept to it: rockets from its bottom corners, or from along its foot,
- * bursting inside it, over the variant's time.
+ * Fireworks kept to a box: the game panel's, or a score card's, scaled down (`scale`). Rockets from its
+ * bottom corners, or from along its foot, bursting inside it over the variant's time, clipped to it and
+ * moving with it.
  */
-function panelFireworks(variant: ConfettiVariant, panel: HTMLElement, colors: readonly string[]): void {
-  const within = () => (panel.isConnected ? panel.getBoundingClientRect() : null)
+function fireworksIn(variant: ConfettiVariant, element: HTMLElement, colors: readonly string[], count: number, scale = 1): void {
+  const within = () => (element.isConnected ? element.getBoundingClientRect() : null)
   const box = within()
   if (!box || box.width === 0) return
-  const count = variant.rockets ?? 2
-  // A burst's reach is about 16 times its spark speed (drag 0.94 a frame): about a third of the panel's height.
+  // A burst's reach is about 16 times its spark speed (drag 0.94 a frame): about a third of the box's height.
   const sparkSpeed = box.height / 48
+  const over = (variant.rocketsOver ?? 0) * Math.max(0.6, scale)
+  const inset = Math.max(4, 10 * scale)
   for (let i = 0; i < count; i++) {
-    const delay = count === 1 ? 0 : (i / (count - 1)) * (variant.rocketsOver ?? 0) + Math.random() * 120
-    // Bursting between a fifth and a half of the way down the panel.
+    const delay = count === 1 ? 0 : (i / (count - 1)) * over + Math.random() * 120
+    // Bursting between a fifth and a half of the way down the box.
     const burstAt = box.height * (0.2 + Math.random() * 0.3)
-    const from = box.height - 6
+    const from = box.height - Math.max(3, 6 * scale)
     if (variant.rocketsFrom === 'corners') {
       const left = i % 2 === 0
-      rocket(variant, within, left ? 10 : box.width - 10, from, from - burstAt, (left ? 1 : -1) * box.width * 0.18, colors, delay, sparkSpeed)
+      rocket(variant, within, left ? inset : box.width - inset, from, from - burstAt, (left ? 1 : -1) * box.width * 0.18, colors, delay, sparkSpeed, scale)
     } else {
       const x = box.width * (0.12 + 0.76 * ((i * 0.618) % 1))
-      rocket(variant, within, x, from, from - burstAt, (Math.random() - 0.5) * 40, colors, delay, sparkSpeed)
+      rocket(variant, within, x, from, from - burstAt, (Math.random() - 0.5) * 40 * scale, colors, delay, sparkSpeed, scale)
     }
   }
 }
 
-/** Small bursts inside a score card, clipped to it, one after another. */
+/** Fireworks in the game panel, kept to it. */
+function panelFireworks(variant: ConfettiVariant, panel: HTMLElement, colors: readonly string[]): void {
+  fireworksIn(variant, panel, colors, variant.rockets ?? 2)
+}
+
+/** Mini fireworks in a score card: the panel's, scaled down to the card, clipped to it. */
 function cardFireworks(variant: ConfettiVariant, card: HTMLElement, colors: readonly string[]): void {
-  const box = () => (card.isConnected ? card.getBoundingClientRect() : null)
-  const start = box()
-  if (!start || start.width === 0) return
-  const now = performance.now()
-  const count = variant.cardBursts ?? 1
-  for (let i = 0; i < count; i++) {
-    const x = count === 1 ? start.width / 2 : start.width * (0.25 + 0.5 * Math.random())
-    const y = start.height * (0.3 + 0.25 * Math.random())
-    burst({ x, y, sparks: 34, colors, speed: Math.min(start.width, start.height) / 12, life: 1200, size: 2.2, within: box, at: now + i * 420 })
-  }
-  run(now)
+  fireworksIn(variant, card, colors, variant.cardBursts ?? 2, 0.45)
 }
 
 // --- Where it goes off ----------------------------------------------------------------------------

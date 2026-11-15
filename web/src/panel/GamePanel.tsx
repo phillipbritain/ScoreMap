@@ -94,8 +94,8 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
             <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
               {game.league}
             </div>
-            {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i) => (
-                <TeamRow key={i} team={team} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
+            {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i, teams) => (
+                <TeamRow key={i} team={team} scores={teams.map(teamScore)} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
               ))}
             {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
             {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
@@ -221,7 +221,7 @@ function LastScore({ game }: { game: Game }) {
  * A team: its logo, its poll ranking if it has one, its name, its record and its score. Lit up for a
  * moment when it scores (scoredAt, the clock's time), as its score card's row is.
  */
-function TeamRow({ team, scoredAt }: { team: GameTeam; scoredAt: number | null }) {
+function TeamRow({ team, scores, scoredAt }: { team: GameTeam; scores: string[]; scoredAt: number | null }) {
   const name = team.rank !== null ? `#${team.rank} ${team.fullName}` : team.fullName
   const row = useRef<HTMLDivElement>(null)
   // Set on the element rather than rendered, so each score starts the glow afresh and a panel opened
@@ -245,8 +245,27 @@ function TeamRow({ team, scoredAt }: { team: GameTeam; scoredAt: number | null }
         {team.fullName}
       </span>
       {team.record && <span className="game-panel__record">{team.record}</span>}
-      <span className="game-panel__team-score">{team.score ?? '–'}</span>
+      <ScoreChip score={teamScore(team)} scores={scores} />
     </div>
+  )
+}
+
+const teamScore = (team: GameTeam): string => team.score ?? '–'
+
+/**
+ * A row's score on its slanted chip, as wide as the widest of its rows' scores (scores) so every row's chip
+ * is the same width and the scores line up: each of them laid unseen under its own, which sets its width.
+ */
+function ScoreChip({ score, scores }: { score: string; scores: string[] }) {
+  return (
+    <span className="game-panel__team-score">
+      <span>{score}</span>
+      {scores.map((other, i) => (
+        <span key={i} className="game-panel__team-score-sizer" aria-hidden="true">
+          {other}
+        </span>
+      ))}
+    </span>
   )
 }
 
@@ -263,7 +282,9 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
         </span>
       </div>
     )
-  return field.entries.slice(0, 2).map((entrant) => {
+  const shown = field.entries.slice(0, 2)
+  const scores = shown.flatMap((entrant) => (entrant.score === null ? [] : [entrant.score]))
+  return shown.map((entrant) => {
     const position = positionText(entrant, field)
     return (
       <div key={entrant.name} className="game-panel__team">
@@ -272,7 +293,7 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
           <span className="game-panel__rank">{position} </span>
           {entrant.name}
         </span>
-        {entrant.score !== null && <span className="game-panel__team-score">{entrant.score}</span>}
+        {entrant.score !== null && <ScoreChip score={entrant.score} scores={scores} />}
       </div>
     )
   })
@@ -290,7 +311,7 @@ function BoutRows({ bout }: { bout: GameBout }) {
         {side.name}
       </span>
       {side.record && <span className="game-panel__record">{side.record}</span>}
-      <span className="game-panel__team-score">{side.winner ? 'W' : ''}</span>
+      <ScoreChip score={side.winner ? 'W' : ''} scores={['W']} />
     </div>
   ))
 }

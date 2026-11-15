@@ -3394,35 +3394,26 @@ body {
   }
 }
 
-/* Too short for the rail's buttons in one column: Games and More move to a second column, left of the
-   rest, level with the zoom buttons (Games with Zoom in, More with Home), so the rail ends well above the
-   screen's foot. Its gap leaves room for the Games count's corner. */
+/* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one
+   column at full size, which scrolls within the screen's height, fading out at its foot so it shows
+   there's more. It takes the pointer there, so it can be scrolled by touch. */
 @media (max-height: 370px) {
   .rail {
-    align-items: flex-end;
+    max-height: calc(100% - 6 * var(--spacing));
   }
 
+  .rail__buttons {
+    min-height: 0;
+  }
+
+  /* Room at its foot as deep as the fade, so scrolled to the end its last button is clear of it. */
   .rail__buttons-inner {
-    display: grid;
-    grid-template-columns: auto auto;
-    align-items: start;
-    gap: var(--rail-group-gap) calc(3 * var(--spacing));
-  }
-
-  .rail__buttons-inner > .rail__group:nth-child(1) {
-    grid-area: 1 / 2;
-  }
-
-  .rail__buttons-inner > .rail__group:nth-child(2) {
-    grid-area: 2 / 2;
-  }
-
-  .rail__buttons-inner > .rail__group:nth-child(3) {
-    grid-area: 1 / 1;
-  }
-
-  .rail__buttons-inner > .rail__group:nth-child(4) {
-    grid-area: 1 / 1;
-    align-self: end;
+    padding-bottom: calc(7 * var(--spacing));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    pointer-events: auto;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
   }
 }

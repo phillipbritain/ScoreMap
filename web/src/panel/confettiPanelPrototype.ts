@@ -50,6 +50,8 @@ function closeAnimation(panel: HTMLElement, look: CloseLook, gameId: string): An
  */
 export function usePanelConfetti(game: Game | null, panel: RefObject<HTMLElement | null>, color: string | null, close: () => void): number | null {
   const last = useRef<{ id: string; status: string; color: string | null } | null>(null)
+  // A close still to come, and for which game.
+  const pending = useRef<{ id: string; timer: ReturnType<typeof setTimeout> } | null>(null)
   // The way out's duration, for the game whose panel is closing itself.
   const [leave, setLeave] = useState<{ id: string; duration: number } | null>(null)
   const id = game?.id ?? null
@@ -66,9 +68,10 @@ export function usePanelConfetti(game: Game | null, panel: RefObject<HTMLElement
     if (!element) return
     const variant = confettiVariant()
     void celebrateInPanel(element, game, was.color ?? color ?? '#f3ca81')
-    let closing = false
+    // Kept until this panel closes or another game's opens, not undone by the game changing again (as
+    // the server's next change does to a made-up finish).
     const timer = setTimeout(() => {
-      closing = true
+      pending.current = null
       if (reducedMotion()) {
         close()
         return
@@ -78,13 +81,16 @@ export function usePanelConfetti(game: Game | null, panel: RefObject<HTMLElement
       setLeave({ id, duration: Number(animation.effect?.getTiming().duration ?? 0) })
       close()
     }, variant.closeAfter)
-    return () => {
-      // Once closing, the panel plays its way out to the end as it goes.
-      if (closing) return
-      clearTimeout(timer)
-    }
+    pending.current = { id, timer }
     // Only the game and its status matter; close changes with each selection.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, status])
+  // Closing the panel or opening another game's stops a close still to come.
+  useEffect(() => () => {
+    if (pending.current?.id === id) {
+      clearTimeout(pending.current.timer)
+      pending.current = null
+    }
+  }, [id])
   return leave && (id === null || id === leave.id) ? leave.duration : null
 }

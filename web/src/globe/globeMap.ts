@@ -21,7 +21,7 @@ import { CameraMoves, type SelectionIntent } from './cameraMoves'
 import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
-import { globeStyle } from './globeStyle'
+import { globeStyle, showFarStateLines } from './globeStyle'
 import { fadeNearHorizon, fadedOut } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { globeSettling, type GlobeSettling } from './globeSettling'
@@ -169,7 +169,13 @@ export class GlobeMap {
     this.map = map
     this.theme = theme
     // The map takes keys once the globe is ready (see GlobeSettling.wentIdle).
-    this.settling = globeSettling({ onStage, onReady: () => map.keyboard.enable() })
+    this.settling = globeSettling({
+      onStage,
+      onReady: () => {
+        map.keyboard.enable()
+        showFarStateLines(map)
+      },
+    })
     try {
       map.touchZoomRotate.disableRotation()
       // The loading screen's dim takes pointer and touch input until the globe is ready, but not keys.

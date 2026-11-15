@@ -1,5 +1,7 @@
 import type {
+  GeoJSONSource,
   GeoJSONSourceSpecification,
+  Map as MapLibreMap,
   LayerSpecification,
   LineLayerSpecification,
   RasterSourceSpecification,
@@ -20,17 +22,24 @@ const stateLines = 'boundary_3'
 const disputedLines = 'boundary_disputed'
 
 /**
- * State and province lines zoomed out, where the map's own tiles have none: its coarsest tiles (zoom 0),
- * which the globe shows zoomed all the way out and toward its edges, carry only country borders. These
- * are Natural Earth's, made by `npm run state-lines` (scripts/stateLines.ts), fetched with the style
- * as a file of their own rather than built into the page. Below `farStateLinesUntil` they're drawn in
- * place of the tiles' state lines, and from it on the tiles' are, so the two never show together.
+ * The United States' and Canada's state and province lines zoomed out, where the map's own tiles have
+ * none: its coarsest tiles (zoom 0), which the globe shows zoomed all the way out and toward its edges,
+ * carry only country borders. These are Natural Earth's, made by `npm run state-lines`
+ * (scripts/stateLines.ts), a file of their own rather than built into the page, and fetched only once
+ * the globe is ready (see showFarStateLines), so they never hold up the first view. Below
+ * `farStateLinesUntil` they're drawn in place of the tiles' state lines, and from it on the tiles' are,
+ * so the two never show together (ADR-0026).
  */
 export const farStateLinesSource = 'far-state-lines'
 export const farStateLinesLayer = 'far-state-lines'
 export const farStateLinesUntil = 3
 
-const farStateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: stateLinesUrl }
+const farStateLinesSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
+
+/** Fetches the zoomed-out state lines into the globe's style, which starts with none (see farStateLinesSource). */
+export function showFarStateLines(map: Pick<MapLibreMap, 'getSource'>): void {
+  map.getSource<GeoJSONSource>(farStateLinesSource)?.setData(stateLinesUrl)
+}
 
 /** The satellite map's imagery: EOX's cloudless Sentinel-2 mosaic of 2024, free for non-commercial use with its credit shown (ADR-0022). */
 export const satelliteSource = 'satellite'

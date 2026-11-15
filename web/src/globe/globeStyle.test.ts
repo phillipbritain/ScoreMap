@@ -5,11 +5,11 @@ import {
   type FilterSpecification,
 } from '@maplibre/maplibre-gl-style-spec'
 import type { StyleSpecification } from 'maplibre-gl'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts, glyphsUrl } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
-import { globeStyle } from './globeStyle'
+import { globeStyle, showFarStateLines } from './globeStyle'
 import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
 import { cityNameFeatures, cityNameSource, clusterClearOffset, firstPlaceNameLayer } from './placeNames'
@@ -181,9 +181,16 @@ describe('globeStyle', () => {
     expect(outlined('river')).toBe(false)
   })
 
+  it('fetches the zoomed-out state lines only when told to, once the globe is ready', () => {
+    const setData = vi.fn()
+    showFarStateLines({ getSource: ((id: string) => (id === 'far-state-lines' ? { setData } : undefined)) as never })
+    expect(setData).toHaveBeenCalledWith(expect.stringContaining('stateLines'))
+    expect(() => showFarStateLines({ getSource: (() => undefined) as never })).not.toThrow()
+  })
+
   it("shows state lines at every zoom, its own zoomed out and the tiles' from zoom 3, and state names at the base style's zooms", () => {
     expect(layer('far-state-lines')).toMatchObject({ type: 'line', source: 'far-state-lines', maxzoom: 3 })
-    expect(style().sources['far-state-lines']).toMatchObject({ type: 'geojson', data: expect.stringContaining('stateLines') })
+    expect(style().sources['far-state-lines']).toEqual({ type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
     expect(paint('far-state-lines')['line-color']).toBe('#000004')
     expect(layer('boundary_3')?.minzoom).toBe(3)
     expect(layer('label_state')).toMatchObject({ minzoom: 5, maxzoom: 8 })

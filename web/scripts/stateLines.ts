@@ -1,8 +1,9 @@
 /**
  * Makes the state and province lines the globe draws zoomed out (see globeStyle), where the map's own
- * tiles have none: Natural Earth's admin-1 lines (public domain), cut down to those it shows by zoom 5
- * and simplified for a globe seen from afar. Run it with `npm run state-lines` from `web/` to fetch the
- * lines again and rewrite `src/globe/stateLines.json`.
+ * tiles have none: Natural Earth's admin-1 lines (public domain) for the United States and Canada only,
+ * where most games are, cut down to those it shows by zoom 5 and simplified for a globe seen from afar.
+ * Run it with `npm run state-lines` from `web/` to fetch the lines again and rewrite
+ * `src/globe/stateLines.json`.
  */
 import { writeFile } from 'node:fs/promises'
 
@@ -12,13 +13,15 @@ const linesFile = new URL('../src/globe/stateLines.json', import.meta.url)
 
 /** The most detailed lines kept: Natural Earth's own zoom for each, at which it starts showing it. */
 const mostDetailed = 5
+/** The countries whose lines are kept, by Natural Earth's names for them. */
+const countries = ['United States of America', 'Canada']
 /** How far a simplified line may stray from the original, in degrees (about 2 km), and how finely positions are kept. */
 const tolerance = 0.02
 const decimals = 2
 
 type Position = [number, number]
 interface Line {
-  properties: { FEATURECLA: string; MIN_ZOOM: number }
+  properties: { FEATURECLA: string; MIN_ZOOM: number; ADM0_NAME: string }
   geometry: { type: 'LineString'; coordinates: Position[] } | { type: 'MultiLineString'; coordinates: Position[][] }
 }
 
@@ -50,7 +53,10 @@ if (!response.ok) throw new Error(`Fetching Natural Earth's lines failed: ${resp
 const { features } = (await response.json()) as { features: Line[] }
 
 const lines = features
-  .filter(({ properties }) => properties.MIN_ZOOM <= mostDetailed && !properties.FEATURECLA.includes('meta'))
+  .filter(
+    ({ properties }) =>
+      countries.includes(properties.ADM0_NAME) && properties.MIN_ZOOM <= mostDetailed && !properties.FEATURECLA.includes('meta'),
+  )
   .flatMap(({ geometry }) => (geometry.type === 'LineString' ? [geometry.coordinates] : geometry.coordinates))
   .map((line) => simplified(line).map(rounded))
   .filter((line) => line.length >= 2)

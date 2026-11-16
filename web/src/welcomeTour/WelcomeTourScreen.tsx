@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
 import { RailIcon } from '../rail/railIcons'
 import {
@@ -37,8 +37,9 @@ interface WelcomeTourScreenProps {
 
 /**
  * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen, over a
- * light dim that keeps the globe and rail from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
- * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
+ * light dim that keeps the globe and rail from being used beneath it. Each step moves on with its own
+ * choice or button; its panel's ×, or Escape, closes the tour, which finishes it. There is no Skip or
+ * dots. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
@@ -47,27 +48,41 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
     if (choice !== 'myLeagues') onChange(settingsForChoice(settings, choice, leagues))
     onEvent({ kind: 'chose', choice })
   }
+  const close = () => onEvent({ kind: 'closed' })
+  // Escape closes the tour wherever focus is, as the panel's × does.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onEvent({ kind: 'closed' })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onEvent])
   return (
-    <div className={`welcome-tour welcome-tour--${progress}`}>
-      {/* Catches every press, so nothing under the tour can be used. */}
-      <div className="welcome-tour__dim" />
-      {progress === 'welcome' && (
-        <WelcomeStep onChoose={choose} leagueList={leagueList} settings={settings} onChange={onChange} />
-      )}
-      {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
-      {progress === 'scoreCard' && (
-        <ScoreCardStep
-          onDone={() => onEvent({ kind: 'done' })}
-          scoreCards={scoreCards}
-          onOpenGame={(gameId) => {
-            onOpenGame(gameId)
-            onEvent({ kind: 'gameOpened' })
-          }}
-        />
-      )}
-    </div>
+    <TourClose.Provider value={close}>
+      <div className={`welcome-tour welcome-tour--${progress}`}>
+        {/* Catches every press, so nothing under the tour can be used. */}
+        <div className="welcome-tour__dim" />
+        {progress === 'welcome' && (
+          <WelcomeStep onChoose={choose} leagueList={leagueList} settings={settings} onChange={onChange} />
+        )}
+        {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
+        {progress === 'scoreCard' && (
+          <ScoreCardStep
+            onDone={() => onEvent({ kind: 'done' })}
+            scoreCards={scoreCards}
+            onOpenGame={(gameId) => {
+              onOpenGame(gameId)
+              onEvent({ kind: 'gameOpened' })
+            }}
+          />
+        )}
+      </div>
+    </TourClose.Provider>
   )
 }
+
+/** Closes the tour, for each step's panel's ×. */
+const TourClose = createContext<() => void>(() => {})
 
 interface WelcomeStepProps {
   onChoose: (choice: TourChoice) => void
@@ -383,9 +398,13 @@ interface TourPanelProps {
   ref?: Ref<HTMLElement>
 }
 
-/** A step's panel: glass, centered, labeled by its heading. */
+/**
+ * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the game
+ * panel's, that closes the tour.
+ */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
+  const close = useContext(TourClose)
   return (
     <section ref={ref} className="welcome-tour__panel" role="dialog" aria-labelledby={headingId}>
       <Heading id={headingId} className="welcome-tour__heading">
@@ -393,6 +412,9 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
       </Heading>
       {children}
       {action && <div className="welcome-tour__actions">{action}</div>}
+      <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
+        ×
+      </button>
     </section>
   )
 }

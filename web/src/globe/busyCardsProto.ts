@@ -43,7 +43,10 @@ const defaultCap = (width: number, height: number) =>
 const capFor = (width: number, height: number) => pickedCap() ?? defaultCap(width, height)
 
 // Near the center: a venue within this share of the screen's shorter side from its middle.
-const centerRadius = 0.3
+// Picked on the switcher (− / + beside the center button, 5% a step) and kept as `&busyCenterSize=` (percent).
+const centerSizeParam = Number(new URLSearchParams(globalThis.location?.search ?? '').get('busyCenterSize'))
+const centerSize = Number.isInteger(centerSizeParam) && centerSizeParam >= 10 && centerSizeParam <= 60 ? centerSizeParam : 30
+const centerRadius = centerSize / 100
 type CenterTier = 'off' | 'second' | 'first'
 const centerTiers: CenterTier[] = ['off', 'second', 'first']
 const centerParam = new URLSearchParams(globalThis.location?.search ?? '').get('busyCenter') as CenterTier
@@ -170,7 +173,32 @@ export function mountBusySwitcher(): void {
     if (centerTier !== 'off') {
       const ring = document.createElement('div')
       ring.className = 'busy-proto-center'
+      const sizeRing = (size: number) => {
+        ring.style.width = ring.style.height = `${size * 2}vmin`
+      }
+      sizeRing(centerSize)
       document.body.append(ring)
+      // Steps resize the ring at once; the page reloads with the new size once the clicks stop.
+      let size = centerSize
+      let reload: ReturnType<typeof setTimeout> | undefined
+      const sizeLabel = document.createElement('span')
+      sizeLabel.title = 'How far from the middle counts as near: a share of the screen\'s shorter side'
+      const resize = (step: number) => {
+        size = Math.min(60, Math.max(10, size + step * 5))
+        sizeLabel.textContent = `${size}%`
+        sizeRing(size)
+        clearTimeout(reload)
+        reload = setTimeout(() => {
+          const url = new URL(location.href)
+          url.searchParams.set('busyCenterSize', String(size))
+          location.href = url.toString()
+        }, 700)
+      }
+      sizeLabel.textContent = `${size}%`
+      const group = document.createElement('span')
+      group.className = 'busy-proto-group'
+      group.append(centerButton, button('−', () => resize(-1)), sizeLabel, button('+', () => resize(1)))
+      bar.append(group)
     }
   }
   document.body.append(bar)
@@ -184,13 +212,14 @@ export function mountBusySwitcher(): void {
   const style = document.createElement('style')
   style.textContent = `
     .busy-proto-bar { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 10000;
-      max-width: calc(100vw - 120px); flex-wrap: wrap; justify-content: center;
+      width: max-content; max-width: calc(100vw - 120px); flex-wrap: wrap; justify-content: center;
       display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 999px;
       background: #000c; color: #fff; font: 600 13px system-ui; white-space: nowrap; }
     @media (max-width: 599px) { .busy-proto-bar { font-size: 12px; gap: 4px 6px; padding: 4px 6px; border-radius: 12px; } }
-    .busy-proto-center { position: fixed; left: 50%; top: 50%; width: ${centerRadius * 200}vmin;
-      height: ${centerRadius * 200}vmin; transform: translate(-50%, -50%); border-radius: 50%;
-      border: 1px dashed #fff6; pointer-events: none; z-index: 9999; }
+    .busy-proto-center { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      border-radius: 50%; border: 2px dotted #ffffffd0; box-shadow: 0 0 0 1px #0006;
+      pointer-events: none; z-index: 9999; }
+    .busy-proto-group { display: flex; gap: inherit; align-items: center; }
     .busy-proto-bar button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 6px; background: #fff2; }
     .busy-proto-compact .score-card__logo { display: none; }
     .busy-proto-compact .score-card__team { grid-template-columns: 1fr auto; gap: 4px; padding: 0 4px; }

@@ -9,7 +9,7 @@
 //      cards that can't find room that near count in card clusters.
 //   E  Compact on phones: on a narrow screen, cards lose their logos and shrink, and the cap of B applies
 //      (counted for the smaller card); wide screens get B.
-// Ranking (B to E): hot, then clutch time, then close Live games, then other Live games, then Upcoming,
+// Ranking (B to E): hot (clutch time included), then close Live games, then other Live games, then Upcoming,
 // then Final; within each, games with more ranked teams (and higher-ranked) first. The selected game always
 // keeps its card.
 import type { Game } from '../games/game'
@@ -45,11 +45,11 @@ const capFor = (width: number, height: number) => pickedCap() ?? defaultCap(widt
 export function busyPriority(game: Game): number {
   let band: number
   if (game.status === 'Live') {
+    // A basketball game in clutch time is a hot game, so hot covers both.
     if (game.hot) band = 0
-    else if (game.clutchTime) band = 1
-    else if (isClose(game)) band = 2
-    else band = 3
-  } else band = game.status === 'Upcoming' ? 4 : 5
+    else if (isClose(game)) band = 1
+    else band = 2
+  } else band = game.status === 'Upcoming' ? 3 : 4
   return band + rankBonus(game)
 }
 

@@ -29,12 +29,17 @@ export const busyVariant: BusyVariant | null = variants.includes(param as BusyVa
 
 const narrow = () => (globalThis.innerWidth ?? 1280) < 600
 
-// Screen area per card, in thousands of px², for B and E's cap (`&busyArea=`, − / + on the switcher).
-const areaSteps = [110, 90, 75, 65, 55, 47, 40, 34, 29, 25, 21, 18, 15, 12, 10]
-const defaultArea = 55
-const areaParam = Number(new URLSearchParams(globalThis.location?.search ?? '').get('busyArea'))
-const area = areaSteps.includes(areaParam) ? areaParam : defaultArea
-const capFor = (width: number, height: number, perCard: number) => Math.max(4, Math.round((width * height) / perCard))
+// B and E's cap, picked on the switcher (− / +, one card a step) and kept in the URL: `&busyCards=` for
+// wide screens, `&busyPhoneCards=` for narrow ones. Unset, it's one card per 55,000 px² (40,000 for E's
+// compact phone cards), at least 4.
+const capParam = () => (narrow() ? 'busyPhoneCards' : 'busyCards')
+const pickedCap = () => {
+  const picked = Number(new URLSearchParams(globalThis.location?.search ?? '').get(capParam()))
+  return Number.isInteger(picked) && picked >= 1 ? picked : undefined
+}
+const defaultCap = (width: number, height: number) =>
+  Math.max(4, Math.round((width * height) / (busyVariant === 'E' && narrow() ? 40000 : 55000)))
+const capFor = (width: number, height: number) => pickedCap() ?? defaultCap(width, height)
 
 /** Lower comes first. */
 export function busyPriority(game: Game): number {
@@ -78,14 +83,13 @@ export interface BusyRules {
 export function busyRules(width: number, height: number): BusyRules {
   switch (busyVariant) {
     case 'B':
-      return { cap: capFor(width, height, area * 1000) }
+      return { cap: capFor(width, height) }
     case 'C':
       return { spacing: narrow() ? 95 : 120 }
     case 'D':
       return { reach: 40 }
     case 'E':
-      // Phones count for the compact card, which takes about 40/55 of the room.
-      return { cap: capFor(width, height, area * 1000 * (narrow() ? 40 / 55 : 1)) }
+      return { cap: capFor(width, height) }
     default:
       return {}
   }
@@ -109,13 +113,21 @@ export function mountBusySwitcher(): void {
     location.href = url.toString()
   }
   const capped = busyVariant === 'B' || busyVariant === 'E'
+  // Steps show at once; the page reloads with the new cap once the clicks stop.
+  let cap = capFor(innerWidth, innerHeight)
+  let reload: ReturnType<typeof setTimeout> | undefined
   const more = (step: number) => {
-    const next = areaSteps[Math.min(areaSteps.length - 1, Math.max(0, areaSteps.indexOf(area) + step))]
-    if (next === area) return
-    const url = new URL(location.href)
-    url.searchParams.set('busyArea', String(next))
-    location.href = url.toString()
+    cap = Math.max(1, cap + step)
+    capLabel.textContent = capText()
+    clearTimeout(reload)
+    reload = setTimeout(() => {
+      const url = new URL(location.href)
+      url.searchParams.set(capParam(), String(cap))
+      location.href = url.toString()
+    }, 700)
   }
+  const capText = () => `${cap} cards on ${narrow() ? 'phones' : 'wide screens'}`
+  const capLabel = document.createElement('span')
   const bar = document.createElement('div')
   bar.className = 'busy-proto-bar'
   const button = (text: string, act: () => void) => {
@@ -128,11 +140,9 @@ export function mountBusySwitcher(): void {
   label.textContent = `${busyVariant} ${names[busyVariant]}`
   bar.append(button('[', () => go(-1)), label, button(']', () => go(1)))
   if (capped) {
-    const perCard = area * (busyCompact() ? 40 / 55 : 1)
-    const cap = document.createElement('span')
-    cap.textContent = `${capFor(innerWidth, innerHeight, perCard * 1000)} cards (1 per ${Math.round(perCard)}k px²)`
-    cap.title = '− / + or - / = keys: fewer or more cards'
-    bar.append(button('−', () => more(-1)), cap, button('+', () => more(1)))
+    capLabel.textContent = capText()
+    capLabel.title = '− / + or the - / = keys: one card fewer or more'
+    bar.append(button('−', () => more(-1)), capLabel, button('+', () => more(1)))
   }
   document.body.append(bar)
   window.addEventListener('keydown', (event) => {

@@ -139,7 +139,7 @@ export function mountBusySwitcher(): void {
       location.href = url.toString()
     }, 700)
   }
-  const capText = () => `${cap} cards on ${narrow() ? 'phones' : 'wide screens'}`
+  const capText = () => (narrow() ? `${cap} cards` : `${cap} cards on wide screens`)
   const capLabel = document.createElement('span')
   const bar = document.createElement('div')
   bar.className = 'busy-proto-bar'
@@ -150,7 +150,8 @@ export function mountBusySwitcher(): void {
     return b
   }
   const label = document.createElement('span')
-  label.textContent = `${busyVariant} ${names[busyVariant]}`
+  label.textContent = narrow() ? busyVariant : `${busyVariant} ${names[busyVariant]}`
+  label.title = names[busyVariant]
   bar.append(button('[', () => go(-1)), label, button(']', () => go(1)))
   if (capped) {
     capLabel.textContent = capText()
@@ -159,7 +160,7 @@ export function mountBusySwitcher(): void {
   }
   if (busyVariant !== 'A') {
     const next = centerTiers[(centerTiers.indexOf(centerTier) + 1) % centerTiers.length]
-    const centerButton = button(centerNames[centerTier], () => {
+    const centerButton = button(narrow() ? centerNames[centerTier].replace('Center:', 'Ctr') : centerNames[centerTier], () => {
       const url = new URL(location.href)
       url.searchParams.set('busyCenter', next)
       location.href = url.toString()
@@ -183,8 +184,10 @@ export function mountBusySwitcher(): void {
   const style = document.createElement('style')
   style.textContent = `
     .busy-proto-bar { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 10000;
+      max-width: calc(100vw - 120px); flex-wrap: wrap; justify-content: center;
       display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 999px;
       background: #000c; color: #fff; font: 600 13px system-ui; white-space: nowrap; }
+    @media (max-width: 599px) { .busy-proto-bar { font-size: 12px; gap: 4px 6px; padding: 4px 6px; border-radius: 12px; } }
     .busy-proto-center { position: fixed; left: 50%; top: 50%; width: ${centerRadius * 200}vmin;
       height: ${centerRadius * 200}vmin; transform: translate(-50%, -50%); border-radius: 50%;
       border: 1px dashed #fff6; pointer-events: none; z-index: 9999; }

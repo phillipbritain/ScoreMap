@@ -7,6 +7,10 @@ import './index.css'
 import App from './App.tsx'
 import { isDemo } from './demo/demo'
 import { builtInTheme } from './theme/builtInTheme'
+import { mountBusySwitcher } from './globe/busyCardsProto'
+
+// PROTOTYPE busyCardsProto: the variant switcher, with ?busyCardsProto= only.
+mountBusySwitcher()
 
 // A demo (ADR-0019), opened by its link: read once, as the page opens.
 const demo = isDemo(window.location.search)

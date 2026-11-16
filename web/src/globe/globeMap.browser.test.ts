@@ -485,20 +485,20 @@ describe('selection', () => {
     expect(container.querySelector('.score-card--selected')).toBeNull()
   })
 
-  it('leaves every score card where it is when one shown among a crowd is selected', async () => {
+  it('leaves a score card moved aside for its neighbors where it is when it is selected', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
-    // Close enough that some are counted in a card cluster for the card spacing.
+    // Close enough that some cards are moved aside, not so close that any is in a card cluster.
     globe.show(Array.from({ length: 4 }, (_, i) => game(`G${i}`, { longitude: i * 0.4, status: i === 0 ? 'Live' : 'Final' })))
-    await vi.waitFor(() => expect(container.querySelector('[data-in-card-cluster] .score-card')).not.toBeNull(), { timeout: 10_000 })
-    const shown = container.querySelector<HTMLElement>(':not([data-in-card-cluster]) > .score-card')!
-    const before = JSON.stringify(shown.getBoundingClientRect())
+    await vi.waitFor(() => expect(container.querySelector('[data-moved] .score-card')).not.toBeNull(), { timeout: 10_000 })
+    const moved = container.querySelector<HTMLElement>('[data-moved] .score-card')!
+    const before = JSON.stringify(moved.getBoundingClientRect())
     const placed = () => [...container.querySelectorAll('.score-card')].map((c) => JSON.stringify(c.getBoundingClientRect()))
     const everyCard = placed()
 
-    globe.select(shown.dataset.gameId!)
+    globe.select(moved.dataset.gameId!)
     await pause(500)
 
-    expect(JSON.stringify(shown.getBoundingClientRect())).toBe(before)
+    expect(JSON.stringify(moved.getBoundingClientRect())).toBe(before)
     expect(placed()).toEqual(everyCard)
   })
 
@@ -883,8 +883,6 @@ describe('score cards', () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     const [a, b] = [game('A'), game('B')]
     globe.show([a, b])
-    // Selected, B keeps its card beside A's, however near their venues are (see CardScene.cardSpacing).
-    globe.select('B')
 
     await vi.waitFor(() => expect(drawnAt(map, 'venue-clusters', a)).not.toEqual([]), { timeout: 10_000 })
     expect(trailsDrawn(map).map(({ dot }) => dot)).toEqual([false, false])

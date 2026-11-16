@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
 import { RailIcon } from '../rail/railIcons'
 import type { ViewerSettings } from '../settings/viewerSettings'
@@ -37,8 +37,9 @@ interface WelcomeTourScreenProps {
 /**
  * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen (on a
  * phone, a bottom sheet where the game panel sits), over a light dim that keeps the globe and rail
- * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
- * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
+ * from being used beneath it. Each step moves on with its own choice or button; its panel's ×, or
+ * Escape, closes the tour, which finishes it. There is no Skip or dots. What each step does is
+ * welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
@@ -47,27 +48,41 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
     if (choice !== 'myLeagues') onChange(settingsForChoice(settings, choice, leagues))
     onEvent({ kind: 'chose', choice })
   }
+  const close = () => onEvent({ kind: 'closed' })
+  // Escape closes the tour wherever focus is, as the panel's × does.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onEvent({ kind: 'closed' })
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onEvent])
   return (
-    <div className="welcome-tour">
-      {/* Catches every press, so nothing under the tour can be used. */}
-      <div className="welcome-tour__dim" />
-      {progress === 'welcome' && (
-        <WelcomeStep onChoose={choose} leagueList={leagueList} settings={settings} onChange={onChange} />
-      )}
-      {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
-      {progress === 'scoreCard' && (
-        <ScoreCardStep
-          onDone={() => onEvent({ kind: 'done' })}
-          scoreCards={scoreCards}
-          onOpenGame={(gameId) => {
-            onOpenGame(gameId)
-            onEvent({ kind: 'gameOpened' })
-          }}
-        />
-      )}
-    </div>
+    <TourClose.Provider value={close}>
+      <div className="welcome-tour">
+        {/* Catches every press, so nothing under the tour can be used. */}
+        <div className="welcome-tour__dim" />
+        {progress === 'welcome' && (
+          <WelcomeStep onChoose={choose} leagueList={leagueList} settings={settings} onChange={onChange} />
+        )}
+        {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
+        {progress === 'scoreCard' && (
+          <ScoreCardStep
+            onDone={() => onEvent({ kind: 'done' })}
+            scoreCards={scoreCards}
+            onOpenGame={(gameId) => {
+              onOpenGame(gameId)
+              onEvent({ kind: 'gameOpened' })
+            }}
+          />
+        )}
+      </div>
+    </TourClose.Provider>
   )
 }
+
+/** Closes the tour, for each step's panel's ×. */
+const TourClose = createContext<() => void>(() => {})
 
 interface WelcomeStepProps {
   onChoose: (choice: TourChoice) => void
@@ -208,9 +223,10 @@ interface ScoreCardStepProps {
 }
 
 /**
- * Click a score card: what a score card opens, pointing at a real one to try (see scoreCardToTry),
- * lit and pressable as part of the tour; or, with none clear of the panel, an example card in it.
- * Nothing moves the globe to bring a card into view.
+ * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
+ * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
+ * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
+ * to bring a card into view.
  */
 function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
@@ -230,13 +246,10 @@ function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
       <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
-          <>
-            <p className="welcome-tour__text">
-              Each game shows as a score card like this one. Click one to open a panel with details for the event,
-              venue, last score, where to watch, and more
-            </p>
-            <ExampleScoreCard />
-          </>
+          <p className="welcome-tour__text">
+            Each game shows as a score card. Click one to open a panel with details for the event, venue, last score,
+            where to watch, and more
+          </p>
         )}
         {toTry && (
           <p className="welcome-tour__text">
@@ -256,7 +269,7 @@ interface CardToTry {
 
 /**
  * The score card for Click a score card to point at, following the cards as they're laid out: null
- * for none (the example card), undefined until the panel has been measured. Once picked, a card is
+ * for none, undefined until the panel has been measured. Once picked, a card is
  * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards; its name
  * follows its game (a new score, say).
  */
@@ -288,30 +301,6 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () 
   return toTry
 }
 
-/** A score card drawn as the globe draws a Live one, labeled as an example. */
-function ExampleScoreCard() {
-  return (
-    <figure className="welcome-tour__example" aria-label="An example score card">
-      <span className="welcome-tour__example-tag">Example</span>
-      <div className="score-card score-card--live">
-        <div className="score-card__header">
-          <span className="score-card__clock">Q3 4:12</span>
-        </div>
-        {[
-          ['BOS', '88'],
-          ['NYK', '84'],
-        ].map(([abbreviation, score]) => (
-          <div key={abbreviation} className="score-card__team">
-            <span className="score-card__logo" />
-            <span className="score-card__abbreviation">{abbreviation}</span>
-            <span className="score-card__score">{score}</span>
-          </div>
-        ))}
-      </div>
-    </figure>
-  )
-}
-
 interface TourPanelProps {
   heading: string
   headingLevel?: 'h2' | 'h3'
@@ -322,9 +311,13 @@ interface TourPanelProps {
   ref?: Ref<HTMLElement>
 }
 
-/** A step's panel: glass, centered (a bottom sheet on a phone), labeled by its heading. */
+/**
+ * A step's panel: centered (a bottom sheet on a phone), labeled by its heading, with a × in its top
+ * right corner, as the game panel's, that closes the tour.
+ */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
+  const close = useContext(TourClose)
   return (
     <section ref={ref} className="welcome-tour__panel" role="dialog" aria-labelledby={headingId}>
       <Heading id={headingId} className="welcome-tour__heading">
@@ -332,6 +325,9 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
       </Heading>
       {children}
       {action && <div className="welcome-tour__actions">{action}</div>}
+      <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
+        ×
+      </button>
     </section>
   )
 }

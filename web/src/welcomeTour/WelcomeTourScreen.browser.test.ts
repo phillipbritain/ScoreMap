@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { firstVisitSettings, type ViewerSettings } from '../settings/viewerSettings'
 import { useLeagues } from '../settings/leagues'
 import { WelcomeTourScreen } from './WelcomeTourScreen'
+import type { TourProgress } from './welcomeTour'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 let root: Root | undefined
@@ -30,14 +31,14 @@ function pendingResponse() {
   return { promise, resolve }
 }
 
-async function mountTour() {
+async function mountTour(progress: Exclude<TourProgress, 'finished'> = 'welcome') {
   const changed = vi.fn<(settings: ViewerSettings) => void>()
   const event = vi.fn()
   function Tour() {
     const leagueList = useLeagues()
     const [settings, setSettings] = useState(firstVisitSettings)
     return createElement(WelcomeTourScreen, {
-      progress: 'welcome', leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [],
+      progress, leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [],
       onChange: (next) => { changed(next); setSettings(next) },
     })
   }
@@ -180,4 +181,31 @@ it.each([false, true])('aborts an unanswered request on unmount (retry: %s)', as
   await act(async () => { response.resolve(Response.json(leagues)) })
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(fetchList).toHaveBeenCalledTimes(retrying ? 2 : 1)
+})
+
+it.each(['welcome', 'controls', 'scoreCard'] as const)("closes from %s by the panel's ×", async (progress) => {
+  const { changed, event } = await mountTour(progress)
+  const close = document.querySelector<HTMLButtonElement>('[aria-label="Close welcome tour"]')
+  expect(close?.closest('[role="dialog"]')).not.toBeNull()
+  await act(() => close!.click())
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+  expect(changed).not.toHaveBeenCalled()
+})
+
+it.each(['welcome', 'controls', 'scoreCard'] as const)('closes from %s by Escape, wherever focus is', async (progress) => {
+  const { changed, event } = await mountTour(progress)
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+  expect(changed).not.toHaveBeenCalled()
+})
+
+it("closes from My leagues' picker by Escape without applying its picks", async () => {
+  const { changed, event } = await mountTour()
+  await click('My leagues')
+  await click('NCAA Football')
+  await click('NCAA Football conferences: all')
+  await click('SEC')
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+  expect(changed).not.toHaveBeenCalled()
 })

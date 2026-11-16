@@ -1,5 +1,5 @@
 import type { ScreenBox } from '../globe/panelClearance'
-import { isLeagueOn, withAllLeagues, type League, type ViewerSettings } from '../settings/viewerSettings'
+import { isLeagueOn, withAllLeagues, withLeague, type League, type ViewerSettings } from '../settings/viewerSettings'
 import { middleOf } from './tourArrow'
 
 /**
@@ -46,8 +46,8 @@ export function tourProgressAfter(progress: TourProgress, event: TourEvent): Tou
 /**
  * The viewer settings after a choice on Welcome, as Leagues on the rail would set them: Top Events
  * turns "Top Events" on; Everything turns it off with every league on; My leagues turns it off with
- * every league off, for its picker to switch on with the rail's own sport and league switches
- * (withSport, withLeague). Display Settings are left as they were.
+ * every league off, for its picker (the rail's own LeaguePicker) to switch on (see settingsForPicks).
+ * Display Settings are left as they were.
  */
 export function settingsForChoice(settings: ViewerSettings, choice: TourChoice, leagues: readonly League[]): ViewerSettings {
   if (choice === 'topEvents') return { ...settings, topEventsOnly: true }
@@ -95,4 +95,37 @@ function grown(box: ScreenBox, by: number): ScreenBox {
 /** Whether My leagues' "Show these" can be pressed: only once a league is on, so the globe isn't left empty. */
 export function canShowPicks(settings: ViewerSettings, leagues: readonly League[]): boolean {
   return leagues.some((league) => isLeagueOn(settings, league.name))
+}
+
+/**
+ * What My leagues' picker holds until "Show these" applies it: the leagues switched on, by name, and the
+ * conferences chosen in each league, as ViewerSettings.chosenConferences holds them. It starts with none
+ * (noPicks), every league off and showing all its conferences.
+ */
+export interface TourPicks {
+  leagues: readonly string[]
+  conferences: ViewerSettings['chosenConferences']
+}
+
+export const noPicks: TourPicks = { leagues: [], conferences: {} }
+
+/**
+ * The viewer settings My leagues' picker shows, and "Show these" applies: My leagues (settingsForChoice),
+ * with only the picked leagues on and the picked conferences chosen, in place of any chosen before, so
+ * they're saved just as conferences chosen in Leagues on the rail are.
+ */
+export function settingsForPicks(settings: ViewerSettings, picks: TourPicks, leagues: readonly League[]): ViewerSettings {
+  const picked = picks.leagues.reduce(
+    (current, league) => withLeague(current, league, true),
+    settingsForChoice(settings, 'myLeagues', leagues),
+  )
+  return { ...picked, chosenConferences: picks.conferences }
+}
+
+/** The picks a change in My leagues' picker leaves, read back from the settings it changed. */
+export function picksFrom(settings: ViewerSettings, leagues: readonly League[]): TourPicks {
+  return {
+    leagues: leagues.filter((league) => isLeagueOn(settings, league.name)).map((league) => league.name),
+    conferences: settings.chosenConferences,
+  }
 }

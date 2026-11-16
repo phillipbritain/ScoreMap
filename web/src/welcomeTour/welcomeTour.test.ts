@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { firstVisitSettings, isLeagueOn, withLeague, type ViewerSettings } from '../settings/viewerSettings'
+import {
+  firstVisitSettings,
+  isLeagueOn,
+  withConference,
+  withLeague,
+  type ViewerSettings,
+} from '../settings/viewerSettings'
 import {
   canShowPicks,
   isTourProgress,
+  noPicks,
+  picksFrom,
   scoreCardToTry,
   settingsForChoice,
+  settingsForPicks,
   tourProgressAfter,
   type TourEvent,
   type TourProgress,
@@ -62,7 +71,8 @@ describe('isTourProgress', () => {
 const nfl = { name: 'NFL', sport: 'Football', conferences: [] }
 const nba = { name: 'NBA', sport: 'Basketball', conferences: [] }
 const mls = { name: 'MLS', sport: 'Soccer', conferences: [] }
-const leagues = [nfl, nba, mls]
+const ncaaf = { name: 'NCAA Football', sport: 'Football', conferences: ['SEC', 'ACC', 'Big Ten'] }
+const leagues = [nfl, nba, mls, ncaaf]
 
 /** Settings a viewer might have before choosing: some leagues off, colors picked. */
 const before: ViewerSettings = {
@@ -119,6 +129,40 @@ describe('"Show these" on the My leagues picker', () => {
 
   it("can't be pressed before the leagues have loaded", () => {
     expect(canShowPicks(firstVisitSettings, [])).toBe(false)
+  })
+})
+
+describe("My leagues' picks", () => {
+  /** A change made in the picker, as LeaguePicker hands it back, read into the picks. */
+  const change = (picks: typeof noPicks, edit: (settings: ViewerSettings) => ViewerSettings) =>
+    picksFrom(edit(settingsForPicks(before, picks, leagues)), leagues)
+
+  it('start with every league off, showing all their conferences', () => {
+    const shown = settingsForPicks({ ...before, chosenConferences: { 'NCAA Football': ['ACC'] } }, noPicks, leagues)
+
+    expect(leagues.some((league) => isLeagueOn(shown, league.name))).toBe(false)
+    expect(shown.chosenConferences).toEqual({})
+  })
+
+  it('apply the leagues picked and the conferences chosen, as the rail saves them', () => {
+    let picks = change(noPicks, (settings) => withLeague(settings, 'NCAA Football', true))
+    picks = change(picks, (settings) => withConference(settings, 'NCAA Football', 'SEC', true))
+    picks = change(picks, (settings) => withConference(settings, 'NCAA Football', 'Big Ten', true))
+    const applied = settingsForPicks(before, picks, leagues)
+
+    expect(leagues.filter((league) => isLeagueOn(applied, league.name)).map((league) => league.name)).toEqual(['NCAA Football'])
+    expect(applied.chosenConferences).toEqual(
+      withConference(withConference(firstVisitSettings, 'NCAA Football', 'SEC', true), 'NCAA Football', 'Big Ten', true)
+        .chosenConferences,
+    )
+    expect(applied.topEventsOnly).toBe(false)
+    expect(applied.sportColors).toEqual({ Football: '#123456' })
+  })
+
+  it('in place of conferences chosen before the tour', () => {
+    const picks = change(noPicks, (settings) => withLeague(settings, 'NCAA Football', true))
+
+    expect(settingsForPicks({ ...before, chosenConferences: { 'NCAA Football': ['ACC'] } }, picks, leagues).chosenConferences).toEqual({})
   })
 })
 

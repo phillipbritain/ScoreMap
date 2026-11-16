@@ -18,7 +18,6 @@ function game(id: string, homeScore: string | null = null): Game {
     },
     clock: null,
     period: null,
-    clutchTime: false,
     hot: false,
     venue: {
       name: null,

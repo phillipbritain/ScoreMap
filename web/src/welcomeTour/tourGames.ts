@@ -79,7 +79,6 @@ function made(spec: GameSpec, now: number): Game {
     contest: { kind: 'sides', home: side(spec.home), away: side(spec.away) },
     clock: spec.clock ?? null,
     period: null,
-    clutchTime: false,
     hot: false,
     venue: { ...spec.venue, photo: null, court: null },
     streamLinks: [],

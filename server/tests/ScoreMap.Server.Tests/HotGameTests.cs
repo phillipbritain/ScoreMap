@@ -14,6 +14,7 @@ public class HotGameTests
 {
     private const string Nfl = "football/nfl";
     private const string Nba = "basketball/nba";
+    private const string NcaaMen = "basketball/mens-college-basketball?groups=50";
     private const string Mlb = "baseball/mlb";
     private const string Softball = "baseball/college-softball";
     private const string Nhl = "hockey/nhl";
@@ -129,15 +130,40 @@ public class HotGameTests
         Assert.False((await SentAsync(Chase("88", 250, 255, wickets: 8, overLimit: null))).Hot);
 
     [Theory]
+    [InlineData("5:00", 100, 95, true)]
     [InlineData("4:59", 100, 96, true)]
-    [InlineData("5:01", 100, 96, false)]
-    [InlineData("1:00", 100, 94, false)]
-    public async Task Basketball_is_hot_exactly_in_clutch_time(string clock, int home, int away, bool expected)
-    {
-        var sent = await SentAsync(Game(Nba, clock, 4, home, away));
+    [InlineData("0:42", 98, 100, true)]
+    [InlineData("12.4", 100, 100, true)]
+    [InlineData("0.0", 101, 100, true)]
+    [InlineData("5:01", 100, 100, false)]
+    [InlineData("4:00", 100, 94, false)]
+    [InlineData("2:00", 90, 100, false)]
+    public async Task In_basketball_the_last_five_minutes_of_the_fourth_quarter_within_five_points(
+        string clock, int home, int away, bool expected) =>
+        Assert.Equal(expected, (await SentAsync(Game(Nba, clock, 4, home, away))).Hot);
 
-        Assert.Equal((expected, expected), (sent.Hot, sent.ClutchTime));
-    }
+    [Theory]
+    [InlineData(1, "1:00")]
+    [InlineData(3, "0:30")]
+    public async Task Not_in_basketball_before_the_last_period_of_regulation(int period, string clock) =>
+        Assert.False((await SentAsync(Game(Nba, clock, period, 50, 50))).Hot);
+
+    [Theory]
+    [InlineData(5, "4:59", 110, 106, true)]
+    [InlineData(5, "5:00", 110, 110, true)]
+    [InlineData(6, "1:30", 120, 125, true)]
+    [InlineData(5, "3:00", 112, 105, false)]
+    public async Task In_basketball_any_time_in_overtime_within_five_points(
+        int period, string clock, int home, int away, bool expected) =>
+        Assert.Equal(expected, (await SentAsync(Game(Nba, clock, period, home, away))).Hot);
+
+    [Theory]
+    [InlineData(2, "4:30", true)]
+    [InlineData(1, "4:30", false)]
+    [InlineData(3, "4:59", true)]
+    public async Task In_basketball_halves_count_the_second_half_as_the_last_period_of_regulation(
+        int period, string clock, bool expected) =>
+        Assert.Equal(expected, (await SentAsync(Game(NcaaMen, clock, period, 70, 68))).Hot);
 
     [Fact]
     public async Task Never_once_the_game_is_Final() =>

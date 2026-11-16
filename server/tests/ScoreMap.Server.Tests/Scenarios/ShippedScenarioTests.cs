@@ -163,7 +163,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         var snapshot = await client.GamesMatchingAsync(games => games.Any(g => g.Id == "worldwide-raptors-celtics"));
 
         var close = Assert.Single(snapshot, g => g.Id == "worldwide-raptors-celtics");
-        Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.ClutchTime));
+        Assert.Equal((GameStatus.Live, 4, false), (close.Status, close.Period, close.Hot));
         Assert.InRange(Math.Abs(int.Parse(close.Sides().Home.Score!) - int.Parse(close.Sides().Away.Score!)), 0, 5);
 
         // The score keeps playing at random, so its margin need not stay within five points.

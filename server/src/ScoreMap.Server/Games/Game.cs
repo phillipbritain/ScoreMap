@@ -6,10 +6,8 @@ namespace ScoreMap.Server.Games;
 /// <summary>
 /// A game as ScoreMap sends it to browsers. Serialized camelCase over SignalR;
 /// mirrored by <c>web/src/games/game.ts</c>. Its <see cref="Contest"/> is who competes and their scores
-/// (ADR-0020). <see cref="ClutchTime"/> says whether a basketball game is in
-/// clutch time (see <see cref="Games.ClutchTime"/>); it's false in every other sport. <see cref="Hot"/> says
-/// whether the game is hot (see <see cref="HotGame"/>), by its sport's rule. The rest is extra detail for
-/// the game panel, each part null (or empty) when the feed gives none.
+/// (ADR-0020). <see cref="Hot"/> says whether the game is hot (see <see cref="HotGame"/>), by its sport's
+/// rule. The rest is extra detail for the game panel, each part null (or empty) when the feed gives none.
 /// </summary>
 public sealed record Game(
     string Id,
@@ -22,7 +20,6 @@ public sealed record Game(
     GameContest Contest,
     string? Clock,
     int? Period,
-    bool ClutchTime,
     bool Hot,
     GameVenue Venue,
     IReadOnlyList<StreamLink> StreamLinks)

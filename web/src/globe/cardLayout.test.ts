@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { cardLayout, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { cardLayout, cardSpacing, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { gatheringRulesBroken } from './gatheringRules'
@@ -610,6 +610,51 @@ describe('layOutCards', () => {
       }
       // No jumpier than the layout is now: trails routed afresh every frame made 54 here.
       expect(flips).toBeLessThanOrEqual(6)
+    })
+  })
+
+  describe('where it is busy, with a card spacing', () => {
+    const spaced = (cards: ScreenCard[], spacing = 120) => layOutCards(cards, { ...scene, cardSpacing: spacing })
+    const withCards = (layout: CardPlacements) => [...shiftsOf(layout).keys()].sort()
+    const ranked = (gameId: string, x: number, rank: number, y = my): ScreenCard => ({ ...card(gameId, x, y), rank })
+
+    it('counts a game in a card cluster when its venue is within the spacing of a better-ranked card, though there is room for it', () => {
+      const layout = spaced([ranked('best', mx, 1), ranked('near', mx + 100, 2), ranked('far', mx + 130, 3)])
+
+      expect(withCards(layout)).toEqual(['best', 'far'])
+      expect(layout.cards.get('near')).toMatchObject({ inCardCluster: true, trail: null })
+      // With no spacing, all three find room.
+      expect(shiftsOf(lay([ranked('best', mx, 1), ranked('near', mx + 100, 2), ranked('far', mx + 130, 3)])).size).toBe(3)
+    })
+
+    it('gives the best-ranked game in a crowd its card, whatever order the cards come in', () => {
+      const crowd = [ranked('live', mx + 20, 3), ranked('hot', mx + 40, 0), ranked('final', mx, 5)]
+
+      expect(withCards(spaced(crowd))).toEqual(['hot'])
+      expect(spaced([...crowd].reverse())).toEqual(spaced(crowd))
+    })
+
+    it("ranks by status, most prominent first, for cards given no rank", () => {
+      expect(withCards(spaced([card('final', mx, my, 'Final'), card('live', mx + 50, my, 'Live')]))).toEqual(['live'])
+    })
+
+    it("keeps the selected game's card, however near a better-ranked card's venue it is", () => {
+      const layout = spaced([ranked('best', mx, 1), { ...ranked('chosen', mx + 30, 4), selected: true }])
+
+      expect(withCards(layout)).toEqual(['best', 'chosen'])
+    })
+
+    it('lets a card whose venue is on screen space out one whose venue is just off it, whatever their ranks', () => {
+      const layout = spaced([ranked('offScreen', -40, 0), ranked('onScreen', 40, 5)])
+
+      expect(layout.cards.get('onScreen')!.inCardCluster).toBe(false)
+      expect(layout.cards.get('offScreen')!.inCardCluster).toBe(true)
+    })
+
+    it("spaces cards less on a phone's screen than on a wider one", () => {
+      expect(cardSpacing(390)).toBeLessThan(cardSpacing(1280))
+      expect(cardSpacing(640)).toBe(cardSpacing(390))
+      expect(cardSpacing(641)).toBe(cardSpacing(1280))
     })
   })
 

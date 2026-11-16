@@ -9,9 +9,9 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardComings } from './cardComings'
 import { cardMoves } from './cardMoves'
-import { busyPriority, busyVariant } from './busyCardsProto'
 import { cardPins, type CardPin } from './cardPins'
-import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
+import { cardRank } from './cardRank'
+import { cardLayout, cardSpacing, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { PlacedCard, animationClass } from './placedCard'
@@ -33,6 +33,8 @@ import { cardRadiusOn, hasCard } from './zoomLevels'
 // or a footprint as its card moves. Still, less doesn't show; while the camera moves, a little more
 // doesn't either (a footprint is a rough stand-in for its card anyway), and it's given less often.
 const maxDrift = { still: { point: 0.5, footprint: 0.5 }, moving: { point: 1.5, footprint: 4 } }
+// Where the page's CSS lays the page out for a phone, its score cards compact.
+const phoneWidth = '(max-width: 640px)'
 
 /**
  * A score card on the page now that a viewer can see, for pointing at it (Click a score card). Its
@@ -132,6 +134,8 @@ export class ScoreCardMarkers {
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
     map.on('moveend', this.cameraStopped)
     map.on('resize', this.resized)
+    // A phone's cards are compact (the page's CSS), so crossing its width changes every card's size.
+    matchMedia(phoneWidth).addEventListener('change', () => this.restyle())
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -326,9 +330,8 @@ export class ScoreCardMarkers {
       const { lngLat, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(lngLat)
       const game = this.games.get(gameId)!
-      // PROTOTYPE busyCardsProto: ranked by how worth watching, the selected game always kept.
-      const busy = busyVariant && busyVariant !== 'A' ? { priority: busyPriority(game), keep: gameId === this.selectedGameId } : {}
-      return { gameId, status: game.status, venueX: venue.x, venueY: venue.y, width, height, ...busy }
+      const selected = gameId === this.selectedGameId
+      return { gameId, status: game.status, rank: cardRank(game), selected, venueX: venue.x, venueY: venue.y, width, height }
     })
     this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
     const theme = this.theme()
@@ -339,6 +342,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
+      cardSpacing: cardSpacing(this.mapSize.width),
     }
     this.moving = false
     traceLayout({ cards, scene })

@@ -910,6 +910,30 @@ body {
   opacity: calc(1 - var(--status-card-fade));
 }
 
+/* On a phone, the globe's score cards are compact, so a busy map has room for more of them: no logos,
+   and less room round their text. The card layout measures them afresh as the page crosses this width. */
+@media (max-width: 640px) {
+  .maplibregl-marker .score-card {
+    min-width: 0;
+    gap: 0;
+    padding-bottom: calc(0.5 * var(--spacing));
+  }
+
+  .maplibregl-marker .score-card__logo {
+    display: none;
+  }
+
+  .maplibregl-marker .score-card__team {
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing);
+    padding: 0 var(--spacing);
+  }
+
+  .maplibregl-marker .score-card__header {
+    padding: 0 var(--spacing);
+  }
+}
+
 .score-card__abbreviation {
   font-family: var(--typography-font-family);
   font-weight: var(--typography-subtitle1-font-weight);

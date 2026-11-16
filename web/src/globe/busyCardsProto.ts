@@ -9,9 +9,10 @@
 //      cards that can't find room that near count in card clusters.
 //   E  Compact on phones: on a narrow screen, cards lose their logos and shrink, and the cap of B applies
 //      (counted for the smaller card); wide screens get B.
-// Ranking (B to E): hot (clutch time included), then other Live games, then Upcoming,
-// then Final; within each, games with more ranked teams (and higher-ranked) first. The selected game always
-// keeps its card.
+// Ranking (B to E): hot (clutch time included), then other Live games, then Upcoming, then Final (with
+// `&busyCenter=second|first`, games near the middle of the screen a tier after hot games, or first);
+// within each, games with more ranked teams (and higher-ranked) first. The selected game always keeps
+// its card.
 import type { Game } from '../games/game'
 
 export type BusyVariant = 'A' | 'B' | 'C' | 'D' | 'E'
@@ -41,14 +42,37 @@ const defaultCap = (width: number, height: number) =>
   Math.max(4, Math.round((width * height) / (busyVariant === 'E' && narrow() ? 40000 : 55000)))
 const capFor = (width: number, height: number) => pickedCap() ?? defaultCap(width, height)
 
-/** Lower comes first. */
-export function busyPriority(game: Game): number {
-  let band: number
-  if (game.status === 'Live') {
-    // A basketball game in clutch time is a hot game, so hot covers both.
-    band = game.hot ? 0 : 1
-  } else band = game.status === 'Upcoming' ? 2 : 3
-  return band + rankBonus(game)
+// Near the center: a venue within this share of the screen's shorter side from its middle.
+const centerRadius = 0.3
+type CenterTier = 'off' | 'second' | 'first'
+const centerTiers: CenterTier[] = ['off', 'second', 'first']
+const centerParam = new URLSearchParams(globalThis.location?.search ?? '').get('busyCenter') as CenterTier
+const centerTier: CenterTier = centerTiers.includes(centerParam) ? centerParam : 'off'
+const centerNames: Record<CenterTier, string> = { off: 'Center: off', second: 'Center: 2nd', first: 'Center: 1st' }
+
+export interface BusyView {
+  venueX: number
+  venueY: number
+  width: number
+  height: number
+}
+
+function nearCenter({ venueX, venueY, width, height }: BusyView): boolean {
+  return Math.hypot(venueX - width / 2, venueY - height / 2) <= centerRadius * Math.min(width, height)
+}
+
+/**
+ * Lower comes first. Tiers 100 apart, the usual order (hot, Live, Upcoming, Final) 10 apart within a tier,
+ * ranked teams (under 1) within that. With the center on, games near it are a tier of their own: after
+ * hot games (2nd), or ahead of everything (1st, each side in the usual order).
+ */
+export function busyPriority(game: Game, view: BusyView): number {
+  // A basketball game in clutch time is a hot game, so hot covers both.
+  const hot = game.status === 'Live' && game.hot
+  const usual = game.status === 'Live' ? (hot ? 0 : 1) : game.status === 'Upcoming' ? 2 : 3
+  const center = centerTier !== 'off' && nearCenter(view)
+  const tier = centerTier === 'first' ? (center ? 0 : 1) : centerTier === 'second' ? (hot ? 0 : center ? 1 : 2) : 0
+  return tier * 100 + usual * 10 + rankBonus(game)
 }
 
 
@@ -133,6 +157,21 @@ export function mountBusySwitcher(): void {
     capLabel.title = '− / + or the - / = keys: one card fewer or more'
     bar.append(button('−', () => more(-1)), capLabel, button('+', () => more(1)))
   }
+  if (busyVariant !== 'A') {
+    const next = centerTiers[(centerTiers.indexOf(centerTier) + 1) % centerTiers.length]
+    const centerButton = button(centerNames[centerTier], () => {
+      const url = new URL(location.href)
+      url.searchParams.set('busyCenter', next)
+      location.href = url.toString()
+    })
+    centerButton.title = 'Rank games near the middle of the screen: off, after hot games, or first'
+    bar.append(centerButton)
+    if (centerTier !== 'off') {
+      const ring = document.createElement('div')
+      ring.className = 'busy-proto-center'
+      document.body.append(ring)
+    }
+  }
   document.body.append(bar)
   window.addEventListener('keydown', (event) => {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
@@ -146,6 +185,9 @@ export function mountBusySwitcher(): void {
     .busy-proto-bar { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 10000;
       display: flex; gap: 8px; align-items: center; padding: 4px 8px; border-radius: 999px;
       background: #000c; color: #fff; font: 600 13px system-ui; white-space: nowrap; }
+    .busy-proto-center { position: fixed; left: 50%; top: 50%; width: ${centerRadius * 200}vmin;
+      height: ${centerRadius * 200}vmin; transform: translate(-50%, -50%); border-radius: 50%;
+      border: 1px dashed #fff6; pointer-events: none; z-index: 9999; }
     .busy-proto-bar button { all: unset; cursor: pointer; padding: 2px 8px; border-radius: 6px; background: #fff2; }
     .busy-proto-compact .score-card__logo { display: none; }
     .busy-proto-compact .score-card__team { grid-template-columns: 1fr auto; gap: 4px; padding: 0 4px; }

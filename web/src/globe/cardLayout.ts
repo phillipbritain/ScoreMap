@@ -229,7 +229,7 @@ export function layOutCards(
         venueX: card.venueX,
         venueY: card.venueY,
         // PROTOTYPE busyCardsProto: a card whose venue is off screen comes after those on it.
-        rank: rank(card) + (card.priority !== undefined && !onScreen(card.venueX, card.venueY, scene) ? 10 : 0),
+        rank: rank(card) + (card.priority !== undefined && !onScreen(card.venueX, card.venueY, scene) ? 1000 : 0),
         previous: shiftOf(previous.get(card.gameId), scene.venueGap),
         lookedAgo: lookedAgoOf(previous.get(card.gameId)),
         keep: card.keep,

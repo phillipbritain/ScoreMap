@@ -322,12 +322,14 @@ export class ScoreCardMarkers {
   private layOut(gameIds: ReadonlySet<string>): boolean {
     // In game order, as the pins come in any order: the layout lands the same way whatever order they
     // come in, and so then do its trails, so the layout isn't given to the map again for their order alone.
+    this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
     const cards = [...gameIds].sort().map((gameId): ScreenCard => {
       const { lngLat, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(lngLat)
       const game = this.games.get(gameId)!
       // PROTOTYPE busyCardsProto: ranked by how worth watching, the selected game always kept.
-      const busy = busyVariant && busyVariant !== 'A' ? { priority: busyPriority(game), keep: gameId === this.selectedGameId } : {}
+      const view = { venueX: venue.x, venueY: venue.y, ...this.mapSize! }
+      const busy = busyVariant && busyVariant !== 'A' ? { priority: busyPriority(game, view), keep: gameId === this.selectedGameId } : {}
       return { gameId, status: game.status, venueX: venue.x, venueY: venue.y, width, height, ...busy }
     })
     this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }

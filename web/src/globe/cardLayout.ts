@@ -14,6 +14,10 @@ export interface ScreenCard {
   venueY: number
   width: number
   height: number
+  /** Which cards get room first, lowest first (see cardRank); by status, most prominent first, unless given. */
+  rank?: number
+  /** Whether it's the selected game's card, which is never left out for the card count. */
+  selected?: boolean
 }
 
 /** What the cards are laid out around. */
@@ -37,7 +41,22 @@ export interface CardScene {
    * routeTrails), only once it's still, so cards don't swap places or trails flip as it goes.
    */
   cameraMoving?: boolean
+  /**
+   * The most cards with room at once (see cardCount): the rest, least worth watching, are counted in
+   * card clusters. No limit, unless given.
+   */
+  cardCount?: number
 }
+
+/**
+ * The most score cards a screen this wide shows at once where it's busy, so a crowded view keeps to
+ * the games most worth watching (see cardRank): fewer on a phone.
+ */
+export function cardCount(screenWidth: number): number {
+  return screenWidth <= phoneWidth ? 25 : 40
+}
+// The widest screen laid out as a phone's, as the page's CSS has it (max-width: 640px).
+const phoneWidth = 640
 
 /** A distance on screen, in pixels. */
 export interface ScreenOffset {
@@ -223,7 +242,7 @@ const foldOverlap = 8
  * While the camera moves, each card laid out last time holds where it was: its offset from its venue,
  * whether it's in a card cluster, and its trail's route, the trail following its venue. A card with no
  * placement last time (a game just given) is placed as for a still camera, around where the others
- * were. Then, most prominent first (by status, then game order), a card lying under one ahead of it by
+ * were. Then, the selected game's card first and the rest by rank (see rankOf), a card lying under one ahead of it by
  * more than foldOverlap both ways folds into a card cluster, so cards don't pile up as a zoom out
  * brings their venues together; it's placed afresh once the camera stops.
  */
@@ -244,7 +263,12 @@ function holdWhileMoving(cards: readonly ScreenCard[], scene: CardScene, previou
   }
   const ordered = cards
     .filter((card) => nearScreen(card.venueX, card.venueY, scene))
-    .sort((a, b) => statusProminence.indexOf(a.status) - statusProminence.indexOf(b.status) || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+    .sort(
+      (a, b) =>
+        Number(b.selected === true) - Number(a.selected === true) ||
+        rankOf(a, scene) - rankOf(b, scene) ||
+        (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0),
+    )
   // The cards shown, by their boxes on screen, as they're gone through.
   const shown: ScreenBox[] = []
   const under = (box: ScreenBox) =>
@@ -289,16 +313,17 @@ const sitting = (card: ScreenCard, scene: CardScene): CardPlacement => ({
  * to it, unless that overlaps another card, a venue or a city's name: then it's moved aside, wholly on
  * screen and as near its venue as it can be but never nearer than the gap, its trail following it (see
  * arrange). A crowd's cards are then handed round their spots so their trails don't cross (see
- * untangle), and each moved card's trail is routed round the cards in its way (see routeTrails). Cards get room by status,
- * most prominent first, whichever is selected, so selecting a card never moves it; a card with no
- * room within reach joins a card cluster. Cards whose venues are well off screen stay where they'd
+ * untangle), and each moved card's trail is routed round the cards in its way (see routeTrails). Cards get room by rank
+ * (see cardRank; by status, most prominent first, unless given), those whose venues are on screen
+ * first, whichever is selected, so selecting a card never moves it; a card with no room within reach
+ * joins a card cluster, as does every card past the card count (see cardCount) but the selected game's. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
  * card stays where it was while that still has room, moving only back over its venue, a card the
  * globe turns off screen pushes the cards in its way along rather than leave them, and a card looking
  * for room leaves others where they were, so cards don't jump about as the globe turns.
  */
 function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: ReadonlyMap<string, CardPlacement>): Placing {
-  const rank = ({ status }: ScreenCard) => statusProminence.indexOf(status)
+  const rank = (card: ScreenCard) => rankOf(card, scene)
   const boxes = cards
     .filter((card) => nearScreen(card.venueX, card.venueY, scene))
     .map(
@@ -313,6 +338,7 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
         rank: rank(card),
         previous: shiftOf(previous.get(card.gameId), scene.venueGap),
         held: previous.get(card.gameId)?.held === true,
+        selected: card.selected,
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
@@ -370,6 +396,20 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
 
 // Cards whose venues are this far off screen aren't laid out: nothing on screen can get in their way.
 const offScreenMargin = 200
+// Added to the rank of a card whose venue is off screen: more than any card's rank.
+const offScreenRank = 100
+
+/**
+ * Which cards get room first, lowest first: by rank (see cardRank; by status, most prominent first,
+ * unless given), a card whose venue is off screen after those on it, so it never takes their room.
+ */
+function rankOf(card: ScreenCard, scene: CardScene): number {
+  return (card.rank ?? statusProminence.indexOf(card.status)) + (onScreen(card.venueX, card.venueY, scene) ? 0 : offScreenRank)
+}
+
+function onScreen(x: number, y: number, { width, height }: CardScene): boolean {
+  return x >= 0 && x <= width && y >= 0 && y <= height
+}
 
 /** Whether a point is on screen, or near enough that what's drawn there could reach it. */
 function nearScreen(x: number, y: number, { width, height }: CardScene): boolean {
@@ -399,6 +439,8 @@ interface CardBox {
   previous?: ScreenOffset
   /** Whether it was held where it was last time, as the camera moved (see holdWhileMoving). */
   held: boolean
+  /** Whether it's the selected game's card, never left out for the card count. */
+  selected?: boolean
 }
 
 interface Arrangement {
@@ -510,7 +552,7 @@ function trailLength({ width, height, x, y, venueX, venueY }: Pick<CardBox, 'wid
  * gap from its own venue. No card covers a name in `names`; trails may cross them. A spot
  * whose trail crosses no card and that sits on no trail is taken over a nearer one while its trail
  * is at most clearTrailAllowance longer. A card with no spot within reach joins a card cluster
- * instead. So cards don't jump about as the globe turns, a card keeps where it was last time while it
+ * instead, as does a card once the card count have room (but the selected game's). So cards don't jump about as the globe turns, a card keeps where it was last time while it
  * fits, give or take the drift, moving only back over its venue once that's clear; and a card looking
  * for room leaves the cards still to be placed where they were. A card held aside while the camera
  * moved (see holdWhileMoving) takes a spot with a trail at least tidyTrail shorter, if one has opened
@@ -525,6 +567,8 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
   const cardClusters: Omit<CardCluster, 'status'>[] = []
 
   for (const [index, card] of boxes.entries()) {
+    // Past the card count: counted in a card cluster, without looking for room.
+    const counted = !card.selected && screen.cardCount !== undefined && placed.length >= screen.cardCount
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
@@ -663,13 +707,13 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     // Where a moved card was last time will do while it fits, give or take the drift, trails or not,
     // so a trail edging across a card doesn't send it elsewhere.
     const wasMoved = isMoved(card.previous)
-    const previous = wasMoved && fits(card.previous!, drift) ? card.previous : undefined
+    const previous = !counted && wasMoved && fits(card.previous!, drift) ? card.previous : undefined
 
     // Where it would sit, if that's clear (give or take the drift, if it sat there last time); or else
     // the nearest spot clear of trails, while it's little further than the nearest spot at all.
-    let nearest: Spot | undefined = fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
+    let nearest: Spot | undefined = !counted && fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
     let clear: Spot | undefined = nearest && trailsClear(unmovedSpot) ? unmovedSpot : undefined
-    if (!clear && !previous) {
+    if (!counted && !clear && !previous) {
       markTakenSpots()
       for (const spot of spotsFor(card)) {
         if (nearest && spot.trail > nearest.trail + clearTrailAllowance) break

@@ -73,7 +73,7 @@ A cluster of small pins close enough that they, or the pin clusters they'd be in
 _Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
-A cluster of games whose score cards have no room on screen even after nearby cards are moved aside. It depends on room for cards, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.
+A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most 40 cards (25 on a phone), for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), and the selected game's. While the camera moves, no card is moved, so a card that comes to lie under one more worth watching joins a card cluster until the camera stops. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.
 _Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Venue cluster**:

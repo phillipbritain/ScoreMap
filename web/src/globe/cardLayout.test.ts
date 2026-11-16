@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { cardLayout, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { cardCount, cardLayout, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { gatheringRulesBroken } from './gatheringRules'
@@ -683,6 +683,13 @@ describe('layOutCards', () => {
         expect(layout.cards.get('upcoming')!.inCardCluster).toBe(true)
         expect(layout.cards.get('live')!.inCardCluster).toBe(false)
       })
+
+      it("never folds the selected game's card", () => {
+        const picked = pair.map((c) => (c.gameId === 'upcoming' ? { ...c, selected: true } : c))
+        const layout = layOutCards(picked.map(zoomedOut), moving, layOutCards(picked, scene).cards)
+        expect(layout.cards.get('upcoming')!.inCardCluster).toBe(false)
+        expect(layout.cards.get('live')!.inCardCluster).toBe(true)
+      })
     })
 
     it("doesn't fold a card that only edges a few pixels under another", () => {
@@ -872,5 +879,54 @@ describe('cardLayout', () => {
       // Every way of gathering came up along the way.
       expect([...seen].sort()).toEqual(['cardCluster', 'smallPin', 'venueCluster', 'venueDot'])
     })
+  })
+})
+
+describe('the card count, where it is busy', () => {
+  const counted = (cards: ScreenCard[], count: number) => layOutCards(cards, { ...scene, cardCount: count })
+  const withCards = (layout: CardPlacements) => [...shiftsOf(layout).keys()].sort()
+  const ranked = (gameId: string, x: number, y: number, rank: number): ScreenCard => ({ ...card(gameId, x, y), rank })
+  // Spread out with room for every card: x 100 to 900, y 150 and 550.
+  const spread = (ranks: number[]) => ranks.map((rank, i) => ranked(`g${i}`, 100 + (i % 5) * 200, i < 5 ? 150 : 550, rank))
+
+  it('counts the cards past the count in card clusters or as pins, though there is room for them', () => {
+    const cards = spread([0, 1, 2, 3, 4, 5])
+
+    expect(withCards(counted(cards, 4))).toEqual(['g0', 'g1', 'g2', 'g3'])
+    expect(withCards(counted(cards, 4)).length).toBeLessThan(withCards(lay(cards)).length)
+    expect(counted(cards, 4).cards.get('g5')).toMatchObject({ inCardCluster: true, trail: null })
+  })
+
+  it('gives the best-ranked games their cards, whatever order the cards come in', () => {
+    const cards = spread([5, 0, 4, 1, 3, 2])
+
+    expect(withCards(counted(cards, 3))).toEqual(['g1', 'g3', 'g5'])
+    expect(counted([...cards].reverse(), 3)).toEqual(counted(cards, 3))
+  })
+
+  it("ranks by status, most prominent first, for cards given no rank", () => {
+    const cards = [card('final', 200, 200, 'Final'), card('upcoming', 500, 200, 'Upcoming'), card('live', 800, 200, 'Live')]
+
+    expect(withCards(counted(cards, 1))).toEqual(['live'])
+  })
+
+  it("keeps the selected game's card past the count", () => {
+    const cards = spread([0, 1, 2])
+    cards[2] = { ...cards[2], selected: true }
+
+    expect(withCards(counted(cards, 2))).toEqual(['g0', 'g1', 'g2'])
+  })
+
+  it('gives cards whose venues are on screen their room before one whose venue is just off it, whatever their ranks', () => {
+    const layout = counted([ranked('offScreen', -40, my, 0), ranked('onScreen', mx, my, 5)], 1)
+
+    expect(withCards(layout)).toEqual(['onScreen'])
+  })
+
+  it('shows fewer cards at once on a phone than on a wider screen', () => {
+    expect(cardCount(390)).toBe(25)
+    expect(cardCount(640)).toBe(25)
+    expect(cardCount(641)).toBe(40)
+    expect(cardCount(1280)).toBe(40)
   })
 })

@@ -1487,7 +1487,7 @@ body {
 }
 
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
-   surface. */
+   surface, outlined to stand off the globe under it. */
 .rail__popover {
   position: absolute;
   top: 0;
@@ -1498,6 +1498,7 @@ body {
   max-height: calc(100dvh - 6 * var(--spacing));
   overflow-y: auto;
   padding: calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   background: var(--rail-surface);
   color: var(--palette-text-primary);

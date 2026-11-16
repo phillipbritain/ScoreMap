@@ -295,9 +295,10 @@ interface ScoreCardStepProps {
 }
 
 /**
- * Click a score card: what a score card opens, pointing at a real one to try (see scoreCardToTry),
- * lit and pressable as part of the tour; or, with none clear of the panel, an example card in it.
- * Nothing moves the globe to bring a card into view.
+ * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
+ * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
+ * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
+ * to bring a card into view.
  */
 function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
@@ -317,13 +318,10 @@ function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
       <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
-          <>
-            <p className="welcome-tour__text">
-              Each game shows as a score card like this one. Click one to open a panel with details for the event,
-              venue, last score, where to watch, and more
-            </p>
-            <ExampleScoreCard />
-          </>
+          <p className="welcome-tour__text">
+            Each game shows as a score card. Click one to open a panel with details for the event, venue, last score,
+            where to watch, and more
+          </p>
         )}
         {toTry && (
           <p className="welcome-tour__text">
@@ -343,7 +341,7 @@ interface CardToTry {
 
 /**
  * The score card for Click a score card to point at, following the cards as they're laid out: null
- * for none (the example card), undefined until the panel has been measured. Once picked, a card is
+ * for none, undefined until the panel has been measured. Once picked, a card is
  * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards; its name
  * follows its game (a new score, say).
  */
@@ -373,30 +371,6 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () 
     return () => cancelAnimationFrame(frame)
   }, [panel])
   return toTry
-}
-
-/** A score card drawn as the globe draws a Live one, labeled as an example. */
-function ExampleScoreCard() {
-  return (
-    <figure className="welcome-tour__example" aria-label="An example score card">
-      <span className="welcome-tour__example-tag">Example</span>
-      <div className="score-card score-card--live">
-        <div className="score-card__header">
-          <span className="score-card__clock">Q3 4:12</span>
-        </div>
-        {[
-          ['BOS', '88'],
-          ['NYK', '84'],
-        ].map(([abbreviation, score]) => (
-          <div key={abbreviation} className="score-card__team">
-            <span className="score-card__logo" />
-            <span className="score-card__abbreviation">{abbreviation}</span>
-            <span className="score-card__score">{score}</span>
-          </div>
-        ))}
-      </div>
-    </figure>
-  )
 }
 
 interface TourPanelProps {

@@ -1,7 +1,7 @@
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
-import { userEvent } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
 import type { StyleSpecification } from 'maplibre-gl'
 import type { PlacedGame } from '../games/placedGames'
 import { GlobeMap } from '../globe/globeMap'
@@ -11,6 +11,7 @@ import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import { firstVisitSettings } from '../settings/viewerSettings'
 import { WelcomeTourScreen } from './WelcomeTourScreen'
+import { tourCamera, tourGames } from './tourGames'
 import '../index.css'
 
 // Click a score card, pointing at cards the globe gives it (see GlobeMap.shownScoreCards). The cards
@@ -85,11 +86,11 @@ it('points at a card clear of the panel, named as its game, and opens its game w
   expect(onEvent).toHaveBeenCalledWith({ kind: 'gameOpened' })
 })
 
-it('shows the example card, and nothing to press, when no card is clear of the panel', async () => {
+it('says what a card opens, with nothing to press, when no card is clear of the panel', async () => {
   // In the middle of the page, under the panel.
   await mountStep([fakeCard('A', 'NFL · Buffalo Bills vs Kansas City Chiefs', 452, 354)])
 
-  await vi.waitFor(() => expect(document.querySelector('[aria-label="An example score card"]')).not.toBeNull())
+  await vi.waitFor(() => expect(document.querySelector('.welcome-tour__text')?.textContent).toContain('Each game shows as a score card'))
   expect(openButton()).toBeNull()
 })
 
@@ -173,4 +174,31 @@ it("points at a card on the globe, named as the card's own button names its game
   await userEvent.click(openButton()!)
 
   expect(onOpenGame).toHaveBeenCalledWith('A')
+})
+
+it.each([
+  { screen: 'a laptop', width: 1280, height: 800, phone: false },
+  { screen: 'a phone', width: 390, height: 844, phone: true },
+])("points at one of the tour's own games from the tour's camera, on $screen", async ({ width, height, phone }) => {
+  await page.viewport(width, height)
+  try {
+    const map = document.createElement('div')
+    map.style.cssText = 'position: fixed; inset: 0'
+    document.body.append(map)
+    const globe = new GlobeMap(map, {
+      style: plainStyle, theme: builtInTheme, startCamera: tourCamera(phone), zoomSettings,
+      onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
+    })
+    opened.push(globe)
+    globe.show(tourGames(Date.now()))
+    await vi.waitFor(() => expect(globe.shownScoreCards().length).toBeGreaterThan(0), { timeout: 10_000 })
+    const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards())
+
+    await vi.waitFor(() => expect(openButton()).not.toBeNull(), { timeout: 5_000 })
+    await userEvent.click(openButton()!)
+
+    expect(onOpenGame).toHaveBeenCalledWith(expect.stringMatching(/^tour-/))
+  } finally {
+    await page.viewport(1024, 768)
+  }
 })

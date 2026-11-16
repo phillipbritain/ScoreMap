@@ -5,8 +5,7 @@ import { middleOf } from './tourArrow'
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
  * on. Its steps are Welcome, Your controls and Click a score card; once finished it comes back only
- * when the viewer asks for it again, from More on the rail. There is no event to close it: each step
- * moves on only with its own choice or button.
+ * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
 export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'finished'
 
@@ -22,14 +21,16 @@ export type TourEvent =
   | { kind: 'done' }
   /** Click a score card → finished, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
+  /** Any step → finished, by the panel's × or Escape. */
+  | { kind: 'closed' }
   /** Finished → Welcome, by "Welcome tour" in More on the rail. */
   | { kind: 'again' }
 
 /** Each step, with the events that move it on and where they lead. */
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
-  welcome: { chose: 'controls' },
-  controls: { next: 'scoreCard' },
-  scoreCard: { done: 'finished', gameOpened: 'finished' },
+  welcome: { chose: 'controls', closed: 'finished' },
+  controls: { next: 'scoreCard', closed: 'finished' },
+  scoreCard: { done: 'finished', gameOpened: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }
 
@@ -65,7 +66,7 @@ export const cardPickMargin = 16
 
 /**
  * The score card Click a score card points at: of the cards wholly on the screen that the panel
- * leaves clear by a margin, the one nearest the middle of the screen; or none, for the example card.
+ * leaves clear by a margin, the one nearest the middle of the screen; or none.
  * The panel is its box on screen (a centered panel, or a phone's bottom sheet).
  */
 export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox, screen: ScreenBox): string | null {

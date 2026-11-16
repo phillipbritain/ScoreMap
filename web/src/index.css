@@ -437,8 +437,10 @@ body {
 
 /* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
    the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
-   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). */
-.game-panel__close {
+   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). A welcome
+   tour panel's × is the same, in its own top right corner. */
+.game-panel__close,
+.welcome-tour__close {
   position: absolute;
   top: 0;
   right: 0;
@@ -457,7 +459,8 @@ body {
   cursor: pointer;
 }
 
-.game-panel__close:hover {
+.game-panel__close:hover,
+.welcome-tour__close:hover {
   color: var(--palette-text-primary);
 }
 
@@ -1487,7 +1490,7 @@ body {
 }
 
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
-   surface. */
+   surface, outlined to stand off the globe under it. */
 .rail__popover {
   position: absolute;
   top: 0;
@@ -1498,6 +1501,7 @@ body {
   max-height: calc(100dvh - 6 * var(--spacing));
   overflow-y: auto;
   padding: calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   background: var(--rail-surface);
   color: var(--palette-text-primary);
@@ -2834,6 +2838,8 @@ body {
 
 .welcome-tour__heading {
   margin: 0 0 calc(2 * var(--spacing));
+  /* Clear of the close button in the panel's corner. */
+  padding-right: var(--game-panel-size-close-width);
   font-size: var(--typography-h6-font-size);
   font-weight: var(--typography-h6-font-weight);
 }
@@ -3099,36 +3105,6 @@ body {
 
 .welcome-tour__target:focus-visible {
   outline: var(--selection-width) solid var(--selection-color);
-}
-
-/* Click a score card's example card, for when none is clear of the panel: drawn as a Live card is
-   on the globe, with a tag saying it's an example. */
-.welcome-tour__example {
-  position: relative;
-  width: fit-content;
-  margin: calc(4 * var(--spacing)) auto 0;
-}
-
-.welcome-tour__example .score-card {
-  cursor: default;
-}
-
-.welcome-tour__example .score-card__logo {
-  visibility: hidden;
-}
-
-.welcome-tour__example-tag {
-  position: absolute;
-  z-index: 1;
-  top: calc(-2 * var(--spacing));
-  right: calc(1.5 * var(--spacing));
-  padding: 0 calc(1.5 * var(--spacing));
-  border-radius: var(--controls-corner);
-  background: var(--palette-text-secondary);
-  color: var(--palette-background-default);
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
-  text-transform: uppercase;
 }
 
 .welcome-tour__arrow {

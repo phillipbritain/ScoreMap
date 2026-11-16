@@ -3171,20 +3171,23 @@ body {
   }
 }
 
-/* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
-   the game panel sits there, its arrows running up from its top edge. It stops a little short of the
-   rail's foot (nine buttons in four gaps below its top), so Your controls' rail is never under it and
-   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). */
+/* On a phone (the app's phone layout): each step's panel across the screen, in its middle as on a
+   larger screen, laid over the rail rather than kept clear of it; what doesn't fit scrolls in the panel
+   (My leagues' picker). Your controls' panel alone keeps left of the rail it points at, with room for
+   its arrow, so the rail is never under it. */
 @media (max-width: 640px) {
-  .welcome-tour {
-    align-items: flex-end;
-  }
-
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 20 * var(--spacing) - 9 * var(--rail-size-button));
-    margin-bottom: calc(3 * var(--spacing));
+    max-height: calc(100% - 6 * var(--spacing));
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+  }
+
+  .welcome-tour--controls {
+    padding: 0 calc(var(--rail-left-inset, 0px) + 8 * var(--spacing)) 0 calc(3 * var(--spacing));
+  }
+
+  .welcome-tour--controls .welcome-tour__panel {
+    width: 100%;
   }
 }
 
@@ -3420,7 +3423,6 @@ body {
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
-    margin-bottom: 0;
     padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
   }
 

@@ -36,9 +36,8 @@ interface WelcomeTourScreenProps {
 }
 
 /**
- * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen (on a
- * phone, a bottom sheet where the game panel sits), over a light dim that keeps the globe and rail
- * from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
+ * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen, over a
+ * light dim that keeps the globe and rail from being used beneath it. There is no ×, Skip or dots, and Escape does nothing: each step moves
  * on only with its own choice or button. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
@@ -49,7 +48,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
     onEvent({ kind: 'chose', choice })
   }
   return (
-    <div className="welcome-tour">
+    <div className={`welcome-tour welcome-tour--${progress}`}>
       {/* Catches every press, so nothing under the tour can be used. */}
       <div className="welcome-tour__dim" />
       {progress === 'welcome' && (
@@ -410,7 +409,7 @@ interface TourPanelProps {
   ref?: Ref<HTMLElement>
 }
 
-/** A step's panel: glass, centered (a bottom sheet on a phone), labeled by its heading. */
+/** A step's panel: glass, centered, labeled by its heading. */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
   return (

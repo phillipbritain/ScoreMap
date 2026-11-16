@@ -9,7 +9,7 @@
 //      cards that can't find room that near count in card clusters.
 //   E  Compact on phones: on a narrow screen, cards lose their logos and shrink, and the cap of B applies
 //      (counted for the smaller card); wide screens get B.
-// Ranking (B to E): hot (clutch time included), then close Live games, then other Live games, then Upcoming,
+// Ranking (B to E): hot (clutch time included), then other Live games, then Upcoming,
 // then Final; within each, games with more ranked teams (and higher-ranked) first. The selected game always
 // keeps its card.
 import type { Game } from '../games/game'
@@ -46,22 +46,11 @@ export function busyPriority(game: Game): number {
   let band: number
   if (game.status === 'Live') {
     // A basketball game in clutch time is a hot game, so hot covers both.
-    if (game.hot) band = 0
-    else if (isClose(game)) band = 1
-    else band = 2
-  } else band = game.status === 'Upcoming' ? 3 : 4
+    band = game.hot ? 0 : 1
+  } else band = game.status === 'Upcoming' ? 2 : 3
   return band + rankBonus(game)
 }
 
-function isClose(game: Game): boolean {
-  if (game.contest.kind !== 'sides') return false
-  const home = Number(game.contest.home.score)
-  const away = Number(game.contest.away.score)
-  if (!Number.isFinite(home) || !Number.isFinite(away)) return false
-  const margin = Math.abs(home - away)
-  const sport = game.sport.toLowerCase()
-  return margin <= (sport.includes('basketball') ? 8 : sport.includes('football') ? 8 : 1)
-}
 
 /** Between 0 and -0.9: ranked teams pull a game forward within its band. */
 function rankBonus(game: Game): number {

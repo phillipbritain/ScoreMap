@@ -35,8 +35,8 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
+import { showsTourGames, tourCamera, tourGames } from './welcomeTour/tourGames'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
-
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -87,7 +87,10 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
   const zoom = useMemo(() => zoomForMapType(fittedZoom, viewerSettings.mapType), [fittedZoom, viewerSettings.mapType])
-  const [camera] = useState(() => openingCamera(store, zoom))
+  // A tour still to finish opens on its own games (see tourGames), and the camera stays there after it.
+  const [camera] = useState(() =>
+    store.loadTourProgress() === 'finished' ? openingCamera(store, zoom) : tourCamera(window.matchMedia(phoneLayout).matches),
+  )
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
   const { leagues } = leagueList
@@ -109,12 +112,30 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // and rail can't be used.
   const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
+  // The tour's own games show in place of real ones until it's finished, and then until a panel opened
+  // from Click a score card closes (see showsTourGames). Timed from when the tour starts.
+  const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
+  const [openedFromTour, setOpenedFromTour] = useState<string | null>(null)
+  const showTourGames = showsTourGames(tourProgress, openedFromTour)
+  const tourAgain = () => {
+    setTourBoard(tourGames(Date.now()))
+    setOpenedFromTour(null)
+    setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
+    globe.current?.flyTo(tourCamera(window.matchMedia(phoneLayout).matches))
+  }
 
   // Games whose celebration has closed their panel leave the globe with it, before the server drops them
   // (see celebration/celebrated.ts).
   const [celebrated, setCelebrated] = useState<Celebrated>(noneCelebrated)
-  const boardGames = useMemo(() => games && withoutCelebrated(games, celebrated), [games, celebrated])
-  const visible = useMemo(() => visibleGames(boardGames ?? [], viewerSettings), [boardGames, viewerSettings])
+  // The tour's games show whatever the viewer's settings, so every one of them is there to point at.
+  const boardGames = useMemo(
+    () => (showTourGames ? tourBoard : games && withoutCelebrated(games, celebrated)),
+    [showTourGames, tourBoard, games, celebrated],
+  )
+  const visible = useMemo(
+    () => (showTourGames ? tourBoard : visibleGames(boardGames ?? [], viewerSettings)),
+    [showTourGames, tourBoard, boardGames, viewerSettings],
+  )
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
@@ -123,7 +144,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
-  const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
+  const { selectedGame, panel, selectGame, closeGame: closeSelectedGame } = useGameSelection(visible)
+  const closeGame = useCallback(() => {
+    setOpenedFromTour(null)
+    closeSelectedGame()
+  }, [closeSelectedGame])
   // A game finishing while its panel is open celebrates there, then the panel closes itself and the game
   // leaves the globe with it (see usePanelCelebration).
   const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])
@@ -229,7 +254,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
               demo,
             })
           }
-          onTourAgain={() => setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))}
+          onTourAgain={tourAgain}
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail
@@ -257,7 +282,10 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             leagueList={leagueList}
             settings={viewerSettings}
             onChange={setViewerSettings}
-            onOpenGame={selectGame}
+            onOpenGame={(gameId) => {
+              setOpenedFromTour(gameId)
+              selectGame(gameId)
+            }}
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
           />
         )}

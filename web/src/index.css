@@ -438,13 +438,9 @@ body {
 /* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
    the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
    would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). A welcome
-   tour panel's × is the same, in its own top right corner. */
+   tour panel's × looks the same, in line with its heading (see .welcome-tour__title). */
 .game-panel__close,
 .welcome-tour__close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 3;
   width: var(--game-panel-size-close-width);
   height: var(--game-panel-size-close-height);
   padding: 0;
@@ -457,6 +453,13 @@ body {
   line-height: 1;
   text-shadow: 0 1px 3px var(--palette-background-default);
   cursor: pointer;
+}
+
+.game-panel__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
 }
 
 .game-panel__close:hover,
@@ -2836,10 +2839,23 @@ body {
   box-shadow: var(--rail-shadow);
 }
 
-.welcome-tour__heading {
+/* A step's heading with its × at the right, on one line. */
+.welcome-tour__title {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--spacing));
   margin: 0 0 calc(2 * var(--spacing));
-  /* Clear of the close button in the panel's corner. */
-  padding-right: var(--game-panel-size-close-width);
+}
+
+.welcome-tour__close {
+  flex: none;
+  /* Out toward the panel's corner, the × drawing narrower than its button. */
+  margin-right: calc(-3 * var(--spacing));
+}
+
+.welcome-tour__heading {
+  flex: 1;
+  margin: 0;
   font-size: var(--typography-h6-font-size);
   font-weight: var(--typography-h6-font-weight);
 }

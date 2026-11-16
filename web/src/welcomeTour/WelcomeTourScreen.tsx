@@ -400,22 +400,24 @@ interface TourPanelProps {
 }
 
 /**
- * A step's panel: centered (a bottom sheet on a phone), labeled by its heading, with a × in its top
- * right corner, as the game panel's, that closes the tour.
+ * A step's panel: centered (a bottom sheet on a phone), labeled by its heading, with a × in line with
+ * the heading, at its right, that closes the tour.
  */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
   const close = useContext(TourClose)
   return (
     <section ref={ref} className="welcome-tour__panel" role="dialog" aria-labelledby={headingId}>
-      <Heading id={headingId} className="welcome-tour__heading">
-        {heading}
-      </Heading>
+      <div className="welcome-tour__title">
+        <Heading id={headingId} className="welcome-tour__heading">
+          {heading}
+        </Heading>
+        <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
+          ×
+        </button>
+      </div>
       {children}
       {action && <div className="welcome-tour__actions">{action}</div>}
-      <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
-        ×
-      </button>
     </section>
   )
 }

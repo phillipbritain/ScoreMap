@@ -12,7 +12,7 @@ import type { TourProgress } from './welcomeTour'
 
 /** Where the globe looks while the tour's games show: on all six, with the tour's panel clear of them. */
 const camera: Camera = { longitude: -81, latitude: 38, zoom: 4.8 }
-/** On a phone the step's bottom sheet covers the lower half, so the camera sits further south and further out. */
+/** On a phone the step's panel takes the screen's width, so the camera sits further south and further out, the games above it. */
 const phoneCamera: Camera = { longitude: -79.5, latitude: 36.5, zoom: 3.8 }
 
 /** The camera for the tour's games, at a phone's width or wider. */

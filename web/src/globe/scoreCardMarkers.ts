@@ -9,9 +9,9 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import { cardComings } from './cardComings'
 import { cardMoves } from './cardMoves'
-import { busyPriority, busyVariant } from './busyCardsProto'
 import { cardPins, type CardPin } from './cardPins'
-import { cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
+import { cardRank, nearCenter } from './cardRank'
+import { cardCount, cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
 import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { PlacedCard, animationClass } from './placedCard'
@@ -323,16 +323,15 @@ export class ScoreCardMarkers {
     // In game order, as the pins come in any order: the layout lands the same way whatever order they
     // come in, and so then do its trails, so the layout isn't given to the map again for their order alone.
     this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
+    const screen = this.mapSize
     const cards = [...gameIds].sort().map((gameId): ScreenCard => {
       const { lngLat, width, height } = this.placed.get(gameId)!
       const venue = this.map.project(lngLat)
       const game = this.games.get(gameId)!
-      // PROTOTYPE busyCardsProto: ranked by how worth watching, the selected game always kept.
-      const view = { venueX: venue.x, venueY: venue.y, ...this.mapSize! }
-      const busy = busyVariant && busyVariant !== 'A' ? { priority: busyPriority(game, view), keep: gameId === this.selectedGameId } : {}
-      return { gameId, status: game.status, venueX: venue.x, venueY: venue.y, width, height, ...busy }
+      const rank = cardRank(game, nearCenter(venue.x, venue.y, screen.width, screen.height))
+      const selected = gameId === this.selectedGameId
+      return { gameId, status: game.status, rank, selected, venueX: venue.x, venueY: venue.y, width, height }
     })
-    this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
     const theme = this.theme()
     const scene: LayoutScene = {
       ...this.mapSize,
@@ -341,6 +340,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
+      cardCount: cardCount(screen.width),
     }
     this.moving = false
     traceLayout({ cards, scene })

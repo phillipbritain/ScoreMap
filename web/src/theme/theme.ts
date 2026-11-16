@@ -553,7 +553,8 @@ const settings = {
     /** An item's corners in a menu. */
     MenuItem: { corner },
     /**
-     * The rail and its popovers (Leagues, Display Settings and Games): their surface and drop shadow; the
+     * The rail and its popovers (Leagues, Display Settings and Games): their surface, the popovers' thin
+     * outline that sets them off from the globe, and their drop shadow; the
      * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on: lit as a Live score card is, its fill with this share of its outline's color mixed in, its
@@ -563,6 +564,7 @@ const settings = {
      */
     Rail: {
       surface: color,
+      outline: color,
       shadow,
       open: color,
       count: color,

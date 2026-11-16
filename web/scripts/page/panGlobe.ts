@@ -3,7 +3,7 @@ import '../scoremapWindow.ts'
 /** Where the camera starts and how the globe is panned from there, a few pixels a frame, as a slow drag would. */
 export interface Pan {
   camera: { center: [longitude: number, latitude: number]; zoom: number }
-  steps: { by: [x: number, y: number]; frames: number; zoom?: number }[]
+  steps: { by: [x: number, y: number]; frames: number }[]
 }
 
 /** How many frames the page keeps (`framesKept` in src/globe/layoutTrace.ts): a longer pan loses its start. */
@@ -51,14 +51,11 @@ export async function panGlobe({ camera, steps }: Pan, waitMs = 20_000): Promise
     (await until(() => drawn, 'the map to draw the turn')) ?? (await until(settled, 'the globe to settle (window.scoremap.settled())'))
   if (unsettled) return { waiting: unsettled }
   frames.length = 0
-  for (const { by, frames: count, zoom } of steps) {
+  for (const { by, frames: count } of steps) {
     for (let i = 0; i < count; i++) {
-      if (zoom) map.setZoom(map.getZoom() + zoom)
-      if (by[0] || by[1]) map.panBy(by, { animate: false })
+      map.panBy(by, { animate: false })
       await nextFrame()
     }
   }
-  // Then the cards settling once it stops, as the viewer sees them.
-  for (let i = 0; i < 40 && !settled(); i++) await nextFrame()
   return { frames: [...frames] }
 }

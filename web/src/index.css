@@ -3107,36 +3107,6 @@ body {
   outline: var(--selection-width) solid var(--selection-color);
 }
 
-/* Click a score card's example card, for when none is clear of the panel: drawn as a Live card is
-   on the globe, with a tag saying it's an example. */
-.welcome-tour__example {
-  position: relative;
-  width: fit-content;
-  margin: calc(4 * var(--spacing)) auto 0;
-}
-
-.welcome-tour__example .score-card {
-  cursor: default;
-}
-
-.welcome-tour__example .score-card__logo {
-  visibility: hidden;
-}
-
-.welcome-tour__example-tag {
-  position: absolute;
-  z-index: 1;
-  top: calc(-2 * var(--spacing));
-  right: calc(1.5 * var(--spacing));
-  padding: 0 calc(1.5 * var(--spacing));
-  border-radius: var(--controls-corner);
-  background: var(--palette-text-secondary);
-  color: var(--palette-background-default);
-  font-size: var(--typography-caption-font-size);
-  font-weight: var(--typography-button-font-weight);
-  text-transform: uppercase;
-}
-
 .welcome-tour__arrow {
   position: absolute;
   inset: 0;

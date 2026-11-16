@@ -29,6 +29,13 @@ export const busyVariant: BusyVariant | null = variants.includes(param as BusyVa
 
 const narrow = () => (globalThis.innerWidth ?? 1280) < 600
 
+// Screen area per card, in thousands of px², for B and E's cap (`&busyArea=`, − / + on the switcher).
+const areaSteps = [110, 90, 75, 65, 55, 47, 40, 34, 29, 25, 21, 18, 15, 12, 10]
+const defaultArea = 55
+const areaParam = Number(new URLSearchParams(globalThis.location?.search ?? '').get('busyArea'))
+const area = areaSteps.includes(areaParam) ? areaParam : defaultArea
+const capFor = (width: number, height: number, perCard: number) => Math.max(4, Math.round((width * height) / perCard))
+
 /** Lower comes first. */
 export function busyPriority(game: Game): number {
   let band: number
@@ -71,13 +78,14 @@ export interface BusyRules {
 export function busyRules(width: number, height: number): BusyRules {
   switch (busyVariant) {
     case 'B':
-      return { cap: Math.max(4, Math.round((width * height) / 55000)) }
+      return { cap: capFor(width, height, area * 1000) }
     case 'C':
       return { spacing: narrow() ? 95 : 120 }
     case 'D':
       return { reach: 40 }
     case 'E':
-      return { cap: Math.max(4, Math.round((width * height) / (narrow() ? 40000 : 55000))) }
+      // Phones count for the compact card, which takes about 40/55 of the room.
+      return { cap: capFor(width, height, area * 1000 * (narrow() ? 40 / 55 : 1)) }
     default:
       return {}
   }
@@ -100,22 +108,39 @@ export function mountBusySwitcher(): void {
     url.searchParams.set('busyCardsProto', next)
     location.href = url.toString()
   }
+  const capped = busyVariant === 'B' || busyVariant === 'E'
+  const more = (step: number) => {
+    const next = areaSteps[Math.min(areaSteps.length - 1, Math.max(0, areaSteps.indexOf(area) + step))]
+    if (next === area) return
+    const url = new URL(location.href)
+    url.searchParams.set('busyArea', String(next))
+    location.href = url.toString()
+  }
   const bar = document.createElement('div')
   bar.className = 'busy-proto-bar'
-  const button = (text: string, step: number) => {
+  const button = (text: string, act: () => void) => {
     const b = document.createElement('button')
     b.textContent = text
-    b.onclick = () => go(step)
+    b.onclick = act
     return b
   }
   const label = document.createElement('span')
   label.textContent = `${busyVariant} ${names[busyVariant]}`
-  bar.append(button('[', -1), label, button(']', 1))
+  bar.append(button('[', () => go(-1)), label, button(']', () => go(1)))
+  if (capped) {
+    const perCard = area * (busyCompact() ? 40 / 55 : 1)
+    const cap = document.createElement('span')
+    cap.textContent = `${capFor(innerWidth, innerHeight, perCard * 1000)} cards (1 per ${Math.round(perCard)}k px²)`
+    cap.title = '− / + or - / = keys: fewer or more cards'
+    bar.append(button('−', () => more(-1)), cap, button('+', () => more(1)))
+  }
   document.body.append(bar)
   window.addEventListener('keydown', (event) => {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
     if (event.key === '[') go(-1)
     if (event.key === ']') go(1)
+    if (capped && event.key === '-') more(-1)
+    if (capped && (event.key === '=' || event.key === '+')) more(1)
   })
   const style = document.createElement('style')
   style.textContent = `

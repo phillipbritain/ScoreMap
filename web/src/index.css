@@ -2835,7 +2835,7 @@ body {
   background: var(--dim);
 }
 
-/* A step's panel, in the middle of the screen, on the rail's surface as its popovers are. */
+/* A step's panel, in the middle of the screen, on the rail's surface and outlined as its popovers are. */
 .welcome-tour__panel {
   position: relative;
   box-sizing: border-box;
@@ -2843,6 +2843,7 @@ body {
   max-height: calc(100% - 12 * var(--spacing));
   overflow-y: auto;
   padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);

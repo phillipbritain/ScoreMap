@@ -4,10 +4,10 @@ import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
- * on. Its steps are Welcome, Your controls and Click a score card; once finished it comes back only
+ * on. Its steps are Welcome, Your controls, Click a score card and All set; once finished it comes back only
  * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
-export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'finished'
+export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'allSet' | 'finished'
 
 /** What the viewer chose to see on Welcome. */
 export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
@@ -17,9 +17,9 @@ export type TourEvent =
   | { kind: 'chose'; choice: TourChoice }
   /** Your controls → Click a score card. */
   | { kind: 'next' }
-  /** Click a score card → finished, by its Done button. */
+  /** All set → finished, by its Done button. */
   | { kind: 'done' }
-  /** Click a score card → finished, by pressing the lit card, which opens its game's panel. */
+  /** Click a score card → All set, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
   /** Any step → finished, by the panel's × or Escape. */
   | { kind: 'closed' }
@@ -30,7 +30,8 @@ export type TourEvent =
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
   welcome: { chose: 'controls', closed: 'finished' },
   controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { done: 'finished', gameOpened: 'finished', closed: 'finished' },
+  scoreCard: { gameOpened: 'allSet', closed: 'finished' },
+  allSet: { done: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }
 
@@ -67,7 +68,7 @@ export const cardPickMargin = 16
 /**
  * The score card Click a score card points at: of the cards wholly on the screen that the panel
  * leaves clear by a margin, the one nearest the middle of the screen; or none.
- * The panel is its box on screen (a centered panel, or a phone's bottom sheet).
+ * The panel is its box on screen.
  */
 export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox, screen: ScreenBox): string | null {
   const middle = middleOf(screen)

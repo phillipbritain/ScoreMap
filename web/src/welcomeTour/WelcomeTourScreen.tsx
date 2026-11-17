@@ -37,11 +37,10 @@ interface WelcomeTourScreenProps {
 }
 
 /**
- * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen (on a
- * phone, a bottom sheet where the game panel sits), over a light dim that keeps the globe and rail
- * from being used beneath it. Each step moves on with its own choice or button; its panel's ×, or
- * Escape, closes the tour, which finishes it. There is no Skip or dots. What each step does is
- * welcomeTour's; this only draws it.
+ * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen, over a
+ * light dim that keeps the globe and rail from being used beneath it. Each step moves on with its own
+ * choice or button; its panel's ×, or Escape, closes the tour, which finishes it. There is no Skip or
+ * dots. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
@@ -51,6 +50,8 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
     onEvent({ kind: 'chose', choice })
   }
   const close = () => onEvent({ kind: 'closed' })
+  const screen = useRef<HTMLDivElement>(null)
+  useAboveGamePanel(screen, progress === 'allSet')
   // Escape closes the tour wherever focus is, as the panel's × does.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -61,7 +62,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   }, [onEvent])
   return (
     <TourClose.Provider value={close}>
-      <div className="welcome-tour">
+      <div ref={screen} className={`welcome-tour welcome-tour--${progress}`}>
         {/* Catches every press, so nothing under the tour can be used. */}
         <div className="welcome-tour__dim" />
         {progress === 'welcome' && (
@@ -70,7 +71,6 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
         {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
         {progress === 'scoreCard' && (
           <ScoreCardStep
-            onDone={() => onEvent({ kind: 'done' })}
             scoreCards={scoreCards}
             onOpenGame={(gameId) => {
               onOpenGame(gameId)
@@ -78,6 +78,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
             }}
           />
         )}
+        {progress === 'allSet' && <AllSetStep onDone={() => onEvent({ kind: 'done' })} />}
       </div>
     </TourClose.Provider>
   )
@@ -183,18 +184,15 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
         <>
           <h3 className="welcome-tour__question">What would you like to see?</h3>
           <div className="welcome-tour__choices">
-            <button type="button" className="welcome-tour__choice" onClick={() => onChoose('topEvents')}>
-              <svg className="welcome-tour__star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--top-events" onClick={() => onChoose('topEvents')}>
               <strong>Top Events</strong>
               <span>The biggest games right now, in every sport</span>
             </button>
-            <button type="button" className="welcome-tour__choice" onClick={pickMyLeagues}>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--my-leagues" onClick={pickMyLeagues}>
               <strong>My leagues</strong>
               <span>Pick the sports and leagues you follow</span>
             </button>
-            <button type="button" className="welcome-tour__choice" onClick={() => onChoose('everything')}>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--everything" onClick={() => onChoose('everything')}>
               <strong>Everything</strong>
               <span>Every league ScoreMap shows</span>
             </button>
@@ -213,7 +211,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   'Zoom in': 'Zoom in',
   'Zoom out': 'Zoom out',
   Home: 'Home: back to your part of the world',
-  Leagues: 'Leagues: Top Events or your own picks',
+  Leagues: 'Leagues: Select which sports, leagues, and conferences you want to see',
   'Display Settings': 'Display Settings: colors for each sport and league',
   'Map Type': 'Map Type: the plain map or satellite imagery',
   Games: 'Games: find any game and go to it',
@@ -223,16 +221,28 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
 /** The rail's groups of buttons, which Your controls lights and points at. */
 const railGroups = () => document.querySelectorAll('.rail__buttons-inner > .rail__group')
 
+/** The rail's Zoom in and Zoom out buttons, which Your controls' arrow aims at on a phone. */
+const zoomButtons = () => document.querySelectorAll('.rail__buttons-inner > .rail__group:first-child > :nth-child(-n + 2)')
+
+/** The app's phone layout, where Your controls' arrow runs from the top of its panel to the zoom buttons. */
+const phoneScreen = '(max-width: 640px)'
+
 /**
  * Your controls: how to move and zoom the globe, in words for the viewer's touchscreen or mouse, then
- * each of the rail's buttons and what it's for, with the rail lit and pointed at.
+ * each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
+ * phone, from the top of its panel to the zoom buttons, so the arrow rises clear of the panel).
  */
 function ControlsStep({ onNext }: { onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   const [touch] = useState(() => window.matchMedia(touchPointer).matches)
   return (
     <>
-      <TourPointer panel={panel} target={railGroups} />
+      <TourPointer
+        panel={panel}
+        target={railGroups}
+        aim={() => (window.matchMedia(phoneScreen).matches ? zoomButtons() : [])}
+        fromTopWhen={phoneScreen}
+      />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text welcome-tour__move">{moveAndZoomWords(touch)}</p>
         <ul className="welcome-tour__controls">
@@ -248,8 +258,43 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
   )
 }
 
+/** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */
+function AllSetStep({ onDone }: { onDone: () => void }) {
+  return (
+    <TourPanel heading="You're all set" action={<TourButton onClick={onDone}>Done</TourButton>}>
+      <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the games.</p>
+    </TourPanel>
+  )
+}
+
+/**
+ * While `on`, sets the tour's --above-game-panel to how far up from its foot the open game panel's top
+ * is, following it as it slides in or grows, so the step's panel sits right above it (see
+ * .welcome-tour[data-above-game-panel]). With no game panel open, the step's panel stays in the middle.
+ */
+function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
+  useEffect(() => {
+    const element = screen.current
+    if (!on || !element) return
+    let frame = 0
+    const look = () => {
+      frame = requestAnimationFrame(look)
+      const gamePanel = document.querySelector('.game-panel:not(.game-panel--leaving)')
+      const above = gamePanel && element.getBoundingClientRect().bottom - gamePanel.getBoundingClientRect().top
+      // An attribute rather than a class, which React would drop each time it renders the tour.
+      element.toggleAttribute('data-above-game-panel', Boolean(gamePanel))
+      if (above) element.style.setProperty('--above-game-panel', `${above}px`)
+    }
+    look()
+    return () => {
+      cancelAnimationFrame(frame)
+      element.removeAttribute('data-above-game-panel')
+      element.style.removeProperty('--above-game-panel')
+    }
+  }, [screen, on])
+}
+
 interface ScoreCardStepProps {
-  onDone: () => void
   onOpenGame: (gameId: string) => void
   scoreCards: () => ShownScoreCard[]
 }
@@ -258,9 +303,9 @@ interface ScoreCardStepProps {
  * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
  * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
  * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
- * to bring a card into view.
+ * to bring a card into view. It has no Done: pressing the card moves on to All set, and its × closes the tour.
  */
-function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
+function ScoreCardStep({ onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
   const toTry = useScoreCardToTry(panel, scoreCards)
   const card = () => scoreCards().filter((shown) => shown.gameId === toTry?.gameId)
@@ -275,7 +320,7 @@ function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
           targetLabel={`Open ${toTry.label}`}
         />
       )}
-      <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
+      <TourPanel ref={panel} heading="Click a score card">
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
           <p className="welcome-tour__text">
@@ -344,8 +389,8 @@ interface TourPanelProps {
 }
 
 /**
- * A step's panel: centered (a bottom sheet on a phone), labeled by its heading, with a × in its top
- * right corner, as the game panel's, that closes the tour.
+ * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the game
+ * panel's, that closes the tour. Its content scrolls between the heading and the step's buttons.
  */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
@@ -355,7 +400,8 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
       <Heading id={headingId} className="welcome-tour__heading">
         {heading}
       </Heading>
-      {children}
+      {/* Scrolls on its own when it doesn't fit, so the heading and the step's buttons stay in view. */}
+      <div className="welcome-tour__body">{children}</div>
       {action && <div className="welcome-tour__actions">{action}</div>}
       <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
         ×

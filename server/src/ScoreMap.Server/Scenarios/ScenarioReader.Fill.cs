@@ -10,8 +10,8 @@ public static partial class ScenarioReader
 
     /// <summary>
     /// Expands a <c>fill</c> (ADR-0009): <c>count</c> games, each at a different venue from the named
-    /// group of the venue list, between teams from the team list that no other game (filled, or in
-    /// <paramref name="writtenOutGames"/>) has, in statuses shared out by the <c>mix</c>
+    /// group of the venue list, in a league that plays there (ADR-0028), between its home team there and
+    /// another, from the team list, that no other game (filled, or in <paramref name="writtenOutGames"/>) has, in statuses shared out by the <c>mix</c>
     /// (all Live without one), in leagues picked by its <c>leagues</c> shares (any league without them).
     /// The same scenario file gives the same games each time, since every
     /// choice is seeded by the scenario's name. Filled games are numbered <c>&lt;scenario&gt;-fill-&lt;n&gt;</c>.
@@ -54,19 +54,26 @@ public static partial class ScenarioReader
         random.Shuffle(inGroup);
         var statuses = mix.Split(entry.Count, random);
         var filled = new List<ScenarioGame>();
-        try
+        // Each venue in turn, skipping one where no league can play just now (its home teams taken).
+        foreach (var venue in inGroup)
         {
-            foreach (var (venue, i) in inGroup.Take(entry.Count).Select((venue, i) => (venue, i)))
+            if (filled.Count == entry.Count)
+                break;
+            var playing = writtenOutGames.Concat(filled).Where(game => game.Contest is ProviderSides)
+                .SelectMany(game => PlayingTeam.In(game.LeagueKey, game.Sides.Home, game.Sides.Away));
+            try
             {
-                var playing = writtenOutGames.Concat(filled).Where(game => game.Contest is ProviderSides)
-                    .SelectMany(game => PlayingTeam.In(game.LeagueKey, game.Sides.Home, game.Sides.Away));
-                filled.Add(maker.Make($"{scenario}-fill-{i + 1}", venue, statuses[i], playing, random));
+                filled.Add(maker.Make($"{scenario}-fill-{filled.Count + 1}", venue, statuses[filled.Count], playing, random));
+            }
+            catch (NotEnoughTeamsException)
+            {
             }
         }
-        catch (NotEnoughTeamsException e)
+        if (filled.Count < entry.Count)
         {
             var beside = writtenOutGames.Count > 0 ? $" beside the {writtenOutGames.Count} written out" : "";
-            throw Problem($"asks for {entry.Count} games, but the team list has free teams for only {filled.Count} of them{beside}: {e.Message}");
+            throw Problem($"asks for {entry.Count} games from \"{entry.Group}\", but its venues have leagues with teams free for only {filled.Count} of them{beside}; "
+                + "each filled game is at a different venue, in a league that plays there with its home team free");
         }
         return filled;
     }

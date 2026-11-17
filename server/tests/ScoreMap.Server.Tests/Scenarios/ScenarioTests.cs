@@ -143,31 +143,35 @@ public class ScenarioTests
     public async Task A_browser_gets_every_filled_game_at_a_different_venue_in_the_group_between_two_teams_of_its_league()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
-        server.WriteScenario("test", """{ "fill": { "count": 8, "group": "london", "mix": { "live": 4, "upcoming": 2, "final": 2 } }, "play": true }""");
+        server.WriteScenario("test", """{ "fill": { "count": 6, "group": "london", "mix": { "live": 2, "upcoming": 2, "final": 2 } }, "play": true }""");
         var london = ShippedVenues().Where(v => v.Groups.Contains("london")).ToList();
 
         await using var client = await server.ConnectClientAsync();
         var snapshot = await client.NextSnapshotAsync();
 
-        Assert.Equal(8, snapshot.Count);
-        Assert.Equal(8, snapshot.Select(g => g.Venue.Name).Distinct().Count());
+        Assert.Equal(6, snapshot.Count);
+        Assert.Equal(6, snapshot.Select(g => g.Venue.Name).Distinct().Count());
         Assert.All(snapshot, game =>
         {
-            Assert.Single(london, v => v.Name == game.Venue.Name);
+            var venue = Assert.Single(london, v => v.Name == game.Venue.Name);
+            // In a league that plays there, at home to its team there.
+            var there = Assert.IsType<ScenarioVenueLeague>(venue.For(game.League));
+            Assert.Contains(game.Sides().Home.FullName, there.Home ?? []);
             var teams = ShippedTeams[game.League];
             Assert.Contains(teams, team => team.Name == game.Sides().Home.FullName);
             Assert.Contains(teams, team => team.Name == game.Sides().Away.FullName);
             Assert.NotEqual(game.Sides().Home.FullName, game.Sides().Away.FullName);
         });
         Assert.Equal(
-            [(GameStatus.Upcoming, 2), (GameStatus.Live, 4), (GameStatus.Final, 2)],
+            [(GameStatus.Upcoming, 2), (GameStatus.Live, 2), (GameStatus.Final, 2)],
             snapshot.GroupBy(g => g.Status).OrderBy(g => g.Key).Select(g => (g.Key, g.Count())));
     }
 
     [Fact]
-    public async Task Every_game_filled_from_the_whole_venue_list_shows_in_every_status()
+    public async Task Every_game_of_a_fill_from_half_the_worldwide_venues_shows_in_every_status()
     {
-        var count = ShippedVenues().Count(v => v.Groups.Contains("worldwide"));
+        // Not every venue at once: a game needs its home team and another free, and the Six Nations has 6 teams.
+        var count = ShippedVenues().Count(v => v.Groups.Contains("worldwide")) / 2;
         await using var server = new ScoreMapServer { Scenario = "test" };
         server.WriteScenario("test", $$"""{ "fill": { "count": {{count}}, "group": "worldwide", "mix": { "live": 1, "upcoming": 1, "final": 1 } }, "play": true }""");
 

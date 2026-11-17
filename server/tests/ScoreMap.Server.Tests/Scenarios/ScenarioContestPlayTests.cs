@@ -44,8 +44,8 @@ public sealed class ScenarioContestPlayTests
                     { "name": "Rory McIlroy", "shortName": "R. McIlroy", "score": -11 },
                     { "name": "Scottie Scheffler", "shortName": "S. Scheffler", "score": -10 }] }] } }
                 """);
-            var scenario = ScenarioReader.Read(folder, "sample", [new League { Key = "golf/pga", Name = "PGA", Sport = Sport.Golf }],
-                [new ScenarioVenue("Course", "City", null, "USA", [])]);
+            League[] golf = [new League { Key = "golf/pga", Name = "PGA", Sport = Sport.Golf }];
+            var scenario = ScenarioReader.Read(folder, "sample", golf, [ScenarioTestVenues.Neutral("Course", "City", null, "USA", golf)]);
             var game = Assert.Single(scenario.GamesAt(Start, Start.AddMinutes(1)));
             var leader = Assert.IsType<ProviderField>(game.Contest).Entries[0];
             Assert.Equal("Rory McIlroy", leader.Name);

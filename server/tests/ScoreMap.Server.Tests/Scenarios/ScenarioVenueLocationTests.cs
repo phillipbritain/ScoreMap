@@ -18,10 +18,7 @@ public class ScenarioVenueLocationTests : IDisposable
         File.WriteAllText(_venueListPath, System.Text.Json.JsonSerializer.Serialize(venues.Select(v => new
         {
             name = v.Name,
-            city = v.City,
-            region = v.Region,
-            country = v.Country,
-            homeTeam = new { name = "Home Team", abbreviation = "HOM", logoUrl = "https://a.espncdn.com/i/teamlogos/soccer/500/1.png" },
+            leagues = new[] { new { league = "Premier League", city = v.City, region = v.Region, country = v.Country } },
             groups = new[] { "worldwide" },
         })));
 

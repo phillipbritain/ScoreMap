@@ -22,7 +22,7 @@ public sealed class ScenarioGameMakerTests
         new() { Key = "rugby/180659", Name = "Six Nations", Sport = Sport.Rugby, PlannedLength = TimeSpan.FromHours(2) },
     ];
 
-    private static readonly ScenarioVenue At = new("Emirates Stadium", "London", null, "England", ["worldwide"]);
+    private static readonly ScenarioVenue At = ScenarioTestVenues.Neutral("Emirates Stadium", "London", null, "England", Leagues, "worldwide");
 
     // Six made-up teams in each league, named for it ("NFL team 1"), so a game's teams show where they came from.
     private static readonly ScenarioTeamList Teams = new(Leagues.ToDictionary(
@@ -174,7 +174,7 @@ public sealed class ScenarioGameMakerTests
             Assert.Contains(teams, t => (t.Abbreviation, t.Name, t.LogoUrl) == (game.Sides.Away.Abbreviation, game.Sides.Away.FullName, game.Sides.Away.LogoUrl));
             Assert.NotEqual(game.Sides.Home.FullName, game.Sides.Away.FullName);
             Assert.Equal(league.Key, game.LeagueKey);
-            Assert.Equal(At.ToProviderVenue(), game.Venue);
+            Assert.Equal(At.ToProviderVenue(At.For(Assert.Single(Leagues, l => l.Key == game.LeagueKey).Name)!), game.Venue);
             Assert.Equal("made", game.Id);
         }
     }
@@ -194,9 +194,10 @@ public sealed class ScenarioGameMakerTests
             [league.Name] = Enumerable.Range(1, 4).Select(n => new ScenarioTeam($"Side {n}", $"S{n}", null)).ToList(),
         });
         var maker = new ScenarioGameMaker([league], teams);
+        var at = ScenarioTestVenues.Neutral("Emirates Stadium", "London", null, "England", [league]);
 
-        var live = maker.Make("made", At, GameStatus.Live, [], new Random(1));
-        var final = maker.Make("made", At, GameStatus.Final, [], new Random(1));
+        var live = maker.Make("made", at, GameStatus.Live, [], new Random(1));
+        var final = maker.Make("made", at, GameStatus.Final, [], new Random(1));
 
         Assert.Equal(ProviderStatus.InProgress, live.Status);
         Assert.NotNull(live.Sides.Home.Score);
@@ -215,7 +216,7 @@ public sealed class ScenarioGameMakerTests
         });
         var maker = new ScenarioGameMaker([league], teams);
 
-        var game = maker.Make("made", At, GameStatus.Live, [], new Random(1));
+        var game = maker.Make("made", ScenarioTestVenues.Neutral("Emirates Stadium", "London", null, "England", [league]), GameStatus.Live, [], new Random(1));
 
         Assert.Equal(["1", "8"], new[] { game.Sides.Home.ConferenceId, game.Sides.Away.ConferenceId }.Order());
     }
@@ -263,6 +264,54 @@ public sealed class ScenarioGameMakerTests
     private static int Minute(ScenarioGame game) => int.Parse(Regex.Match(game.Clock!, @"^(\d+)'$").Groups[1].Value);
 
     /// <summary>Games made over many seeds, so the checks see the spread of what the maker picks.</summary>
+    // Lambeau Field, home to NFL team 1 alone, as ESPN gives it; and a venue two leagues play at.
+    private static readonly ScenarioVenue Lambeau =
+        new("Lambeau Field", [new ScenarioVenueLeague("NFL", "3798", "Green Bay", "WI", "USA", ["NFL team 1"])], ["worldwide"]);
+
+    private static readonly ScenarioVenue SharedArena = new("Shared Arena",
+    [
+        new ScenarioVenueLeague("NBA", "1", "Somewhere", "XX", null, ["NBA team 2"]),
+        new ScenarioVenueLeague("NHL", "1", "Somewhere", "Xx", "USA", ["NHL team 3"]),
+    ], ["worldwide"]);
+
+    [Fact]
+    public void A_game_is_in_a_league_that_plays_at_its_venue_at_home_to_its_team_there_at_the_venue_as_ESPN_gives_it()
+    {
+        var maker = new ScenarioGameMaker(Leagues, Teams);
+
+        foreach (var seed in Enumerable.Range(0, 50))
+        {
+            var game = maker.Make("made", Lambeau, GameStatus.Live, [], new Random(seed));
+
+            Assert.Equal("football/nfl", game.LeagueKey);
+            Assert.Equal("NFL team 1", game.Sides.Home.FullName);
+            Assert.Equal(new ProviderVenue("Lambeau Field", "Green Bay", "WI", "USA", "3798"), game.Venue);
+        }
+    }
+
+    [Fact]
+    public void A_venue_two_leagues_play_at_has_games_in_both_each_at_home_to_its_team_as_its_league_writes_the_venue()
+    {
+        var maker = new ScenarioGameMaker(Leagues, Teams);
+
+        var games = Enumerable.Range(0, 50).Select(seed => maker.Make("made", SharedArena, GameStatus.Live, [], new Random(seed))).ToList();
+
+        Assert.Equal(["basketball/nba", "hockey/nhl"], games.Select(g => g.LeagueKey).Distinct().Order());
+        Assert.All(games.Where(g => g.LeagueKey == "basketball/nba"), g =>
+            Assert.Equal(("NBA team 2", "XX", (string?)null), (g.Sides.Home.FullName, g.Venue!.Region, g.Venue.Country)));
+        Assert.All(games.Where(g => g.LeagueKey == "hockey/nhl"), g =>
+            Assert.Equal(("NHL team 3", "Xx", (string?)"USA"), (g.Sides.Home.FullName, g.Venue!.Region, g.Venue.Country)));
+    }
+
+    [Fact]
+    public void No_game_is_made_at_a_venue_whose_home_teams_are_all_playing()
+    {
+        var maker = new ScenarioGameMaker(Leagues, Teams);
+
+        Assert.Throws<NotEnoughTeamsException>(() =>
+            maker.Make("made", Lambeau, GameStatus.Live, [new PlayingTeam("football/nfl", "NFL team 1")], new Random(1)));
+    }
+
     private static IEnumerable<(ScenarioGame Game, League League)> Make(string leagueKey, GameStatus status)
     {
         var league = Leagues.Single(l => l.Key == leagueKey);

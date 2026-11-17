@@ -121,7 +121,8 @@ interface GameSpec {
   startsIn: number
   home: SideSpec
   away: SideSpec
-  venue: { name: string; city: string; region: string; country: string; latitude: number; longitude: number; timeZone: string; espnId: string }
+  /** As a real game's scoreboard gives it (so its city, region and country are ESPN's), with ESPN's id for it in the league. */
+  venue: { name: string; city: string; region: string | null; country: string | null; latitude: number; longitude: number; timeZone: string; espnId: string }
 }
 
 function made(spec: GameSpec, now: number): Game {
@@ -175,13 +176,13 @@ const specs: GameSpec[] = [
     id: 'mlb-nyy', league: 'MLB', sport: 'Baseball', status: 'Live', clock: 'Bot 6th', startsIn: -110,
     home: { abbreviation: 'NYY', fullName: 'New York Yankees', logoUrl: logo('mlb', 'nyy'), score: '4' },
     away: { abbreviation: 'BOS', fullName: 'Boston Red Sox', logoUrl: logo('mlb', 'bos'), score: '2' },
-    venue: { name: 'Yankee Stadium', city: 'Bronx', region: 'New York', country: 'USA', latitude: 40.8296, longitude: -73.9262, timeZone: eastern, espnId: '208' },
+    venue: { name: 'Yankee Stadium', city: 'Bronx', region: 'New York', country: null, latitude: 40.8296, longitude: -73.9262, timeZone: eastern, espnId: '208' },
   },
   {
     id: 'nba-bkn', league: 'NBA', sport: 'Basketball', status: 'Upcoming', startsIn: 25,
     home: { abbreviation: 'BKN', fullName: 'Brooklyn Nets', logoUrl: logo('nba', 'bkn') },
     away: { abbreviation: 'MIA', fullName: 'Miami Heat', logoUrl: logo('nba', 'mia') },
-    venue: { name: 'Barclays Center', city: 'Brooklyn', region: 'New York', country: 'USA', latitude: 40.6826, longitude: -73.9754, timeZone: eastern, espnId: '3559' },
+    venue: { name: 'Barclays Center', city: 'Brooklyn', region: 'New York', country: null, latitude: 40.6826, longitude: -73.9754, timeZone: eastern, espnId: '3559' },
   },
   {
     id: 'nhl-tor', league: 'NHL', sport: 'Hockey', status: 'Live', clock: '2nd 8:04', startsIn: -50,
@@ -193,7 +194,7 @@ const specs: GameSpec[] = [
     id: 'mls-chi', league: 'MLS', sport: 'Soccer', status: 'Final', clock: 'FT', startsIn: -130,
     home: { abbreviation: 'CHI', fullName: 'Chicago Fire FC', logoUrl: soccerLogo(182), score: '2' },
     away: { abbreviation: 'CLB', fullName: 'Columbus Crew', logoUrl: soccerLogo(183), score: '0' },
-    venue: { name: 'Soldier Field', city: 'Chicago', region: 'Illinois', country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago', espnId: '1452' },
+    venue: { name: 'Soldier Field', city: 'Chicago, Illinois', region: null, country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago', espnId: '1452' },
   },
   {
     id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95,

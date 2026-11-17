@@ -1,9 +1,9 @@
 import type { Game, GameEntrant, GameTeam } from '../games/game'
 import type { League } from '../settings/viewerSettings'
-// ESPN historical scoreboards joined to coordinates from ScoreMap's venue catalogs.
+// ESPN historical scoreboards joined to coordinates from ScoreMap's venue catalogs; each venue as ESPN's scoreboard gives it.
 import collegeExamples from './tourCollegeExamples.json'
 
-type Venue = Pick<Game['venue'], 'name' | 'city' | 'region' | 'country' | 'latitude' | 'longitude' | 'espnId'>
+type Venue = Pick<Game['venue'], 'name' | 'city' | 'region' | 'country' | 'latitude' | 'longitude'> & Partial<Pick<Game['venue'], 'espnId' | 'court'>>
 type Team = Pick<GameTeam, 'abbreviation' | 'conference' | 'logoUrl'> & { name: string }
 type SidesExample = { venue: Venue; teams: readonly Team[] }
 
@@ -13,24 +13,32 @@ const team = (abbreviation: string, name: string, logoPath: string): Team => ({
   abbreviation, name, logoUrl: `${espn}/${logoPath}.png`, conference: null,
 })
 
-/** A venue, with ESPN's id for it in the example's league where a real game there would carry one. */
-function venue(name: string, city: string, latitude: number, longitude: number, region: string | null = null, country = 'USA', espnId?: string): Venue {
+/**
+ * A venue as a real game's scoreboard gives it (its city, region and country ESPN's, the region in full as
+ * the server sends it), with ESPN's id for it in the example's league where a real game there carries one.
+ */
+function venue(name: string, city: string, latitude: number, longitude: number, region: string | null = null, country: string | null = 'USA', espnId?: string): Venue {
   return { name, city, latitude, longitude, region, country, ...(espnId && { espnId }) }
 }
 
 const emirates = venue('Emirates Stadium', 'London', 51.555, -0.1086, null, 'England', '2267')
-const miami = venue('Hard Rock Stadium', 'Miami Gardens', 25.958, -80.239, 'Florida')
+// ESPN gives a soccer venue's state in its city.
+const hardRock = venue('Hard Rock Stadium', 'Miami Gardens, Florida', 25.958, -80.239, null, 'USA', '4643')
+// An F1 race is at its circuit, which ESPN gives no state.
+const miamiAutodrome = venue('Miami International Autodrome', 'Florida', 25.958, -80.239, null, 'USA', '4243')
+// A tennis match's venue is its tournament, in the city ESPN gives, on its court.
+const usOpen: Venue = { ...venue('US Open', 'New York, USA', 40.7499, -73.847, null, null), court: 'Arthur Ashe Stadium' }
 const msg = venue('Madison Square Garden', 'New York', 40.7505, -73.9934, 'New York', 'USA', '1830')
 
 // Real participants and venues drawn from ScoreMap's scenario catalog. The matchups and scores are simulated.
 const sides: Record<string, SidesExample> = {
-  WNBA: { venue: venue('Wintrust Arena', 'Chicago', 41.8538, -87.6215, 'Illinois', 'USA', '5427'), teams: [
+  WNBA: { venue: venue('Wintrust Arena', 'Chicago', 41.8538, -87.6215, 'Illinois', null, '5427'), teams: [
     team('CHI', 'Chicago Sky', 'wnba/500/chi'), team('ATL', 'Atlanta Dream', 'wnba/500/atl'),
   ] },
-  'NCAA Baseball': { venue: venue('Charles Schwab Field Omaha', 'Omaha', 41.267, -95.932, 'Nebraska', 'USA', '5051'), teams: [
+  'NCAA Baseball': { venue: venue('Charles Schwab Field', 'Omaha', 41.267, -95.932, 'Nebraska', null, '5051'), teams: [
     team('LSU', 'LSU Tigers', 'ncaa/500/99'), team('ARK', 'Arkansas Razorbacks', 'ncaa/500/8'),
   ] },
-  'NCAA Softball': { venue: venue('Devon Park', 'Oklahoma City', 35.527, -97.464, 'Oklahoma', 'USA', '5006'), teams: [
+  'NCAA Softball': { venue: venue('OGE Energy Field at Devon Park', 'Oklahoma City', 35.527, -97.464, 'Oklahoma', null, '5006'), teams: [
     team('OU', 'Oklahoma Sooners', 'ncaa/500/201'), team('TEX', 'Texas Longhorns', 'ncaa/500/251'),
   ] },
   "NCAA Men's Hockey": { venue: venue('Agganis Arena', 'Boston', 42.352, -71.117, 'Massachusetts', 'USA', '990'), teams: [
@@ -42,19 +50,19 @@ const sides: Record<string, SidesExample> = {
   'Champions League': { venue: emirates, teams: [
     team('ARS', 'Arsenal', 'soccer/500/359'), team('BAY', 'Bayern Munich', 'soccer/500/132'),
   ] },
-  'World Cup': { venue: { ...miami, espnId: '4643' }, teams: [
+  'World Cup': { venue: hardRock, teams: [
     team('ARG', 'Argentina', 'countries/500/arg'), team('COL', 'Colombia', 'countries/500/col'),
   ] },
   IPL: { venue: venue('Wankhede Stadium', 'Mumbai', 18.9388, 72.8258, null, 'India'), teams: [
     team('MI', 'Mumbai Indians', 'cricket/500/335978'), team('CSK', 'Chennai Super Kings', 'cricket/500/335974'),
   ] },
-  'Six Nations': { venue: venue('Aviva Stadium', 'Dublin', 53.3352, -6.2285, null, 'Ireland', '16102'), teams: [
+  'Six Nations': { venue: venue('Aviva Stadium', 'Dublin', 53.3352, -6.2285, 'Ireland', null, '16102'), teams: [
     team('IRE', 'Ireland', 'rugby/teams/500/3'), team('FRA', 'France', 'rugby/teams/500/9'),
   ] },
-  ATP: { venue: venue('Arthur Ashe Stadium', 'Queens', 40.7499, -73.847, 'New York'), teams: [
+  ATP: { venue: usOpen, teams: [
     team('J. Sinner', 'Jannik Sinner', 'countries/500/ita'), team('C. Alcaraz', 'Carlos Alcaraz', 'countries/500/esp'),
   ] },
-  WTA: { venue: venue('Arthur Ashe Stadium', 'Queens', 40.7499, -73.847, 'New York'), teams: [
+  WTA: { venue: usOpen, teams: [
     team('C. Gauff', 'Coco Gauff', 'countries/500/usa'), team('I. Świątek', 'Iga Świątek', 'countries/500/pol'),
   ] },
 }
@@ -70,7 +78,7 @@ const fields: Record<string, { venue: Venue; note: string; clock: string; entrie
       ['Chase Elliott', 'C. Elliott', 'usa', null], ['Christopher Bell', 'C. Bell', 'usa', null],
     ]),
   },
-  'Formula 1': { venue: miami, note: 'Miami Grand Prix', clock: 'Lap 42', entries: entrants([
+  'Formula 1': { venue: miamiAutodrome, note: 'Miami Grand Prix', clock: 'Lap 42', entries: entrants([
     ['Lando Norris', 'L. Norris', 'gbr', null], ['Oscar Piastri', 'O. Piastri', 'aus', null],
   ]) },
   'IndyCar Series': {
@@ -112,7 +120,7 @@ export function leagueTourExample(league: League, conference: string | null, see
     lastScore: null,
     topEvent: false,
   }
-  const at = (place: Venue): Game['venue'] => ({ ...place, timeZone: null, court: null, photo: null })
+  const at = (place: Venue): Game['venue'] => ({ ...place, timeZone: null, court: place.court ?? null, photo: null })
   const field = fields[league.name]
   if (field) return { ...game, venue: at(field.venue), note: field.note, clock: field.clock, contest: { kind: 'field', entries: field.entries } }
   if (league.name === 'UFC') return {

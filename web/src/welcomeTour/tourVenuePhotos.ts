@@ -10,10 +10,14 @@ import type { Game, VenuePhoto } from '../games/game'
 // Served by the server (Venues/VenuePhotoEndpoint.cs).
 const venuePhotoPath = '/api/venue-photo'
 
-/** Where to ask for a game's venue photo: by its league's name and its venue's name and city. */
+/**
+ * Where to ask for a game's venue photo: by its league's name, its venue's name and city, and the venue's
+ * ESPN id where it has one, which a real game's scoreboard gives the server.
+ */
 export function venuePhotoAddress(game: Game): string {
   const query = new URLSearchParams({ league: game.league, name: game.venue.name ?? '' })
   if (game.venue.city) query.set('city', game.venue.city)
+  if (game.venue.espnId) query.set('id', game.venue.espnId)
   return `${venuePhotoPath}?${query}`
 }
 

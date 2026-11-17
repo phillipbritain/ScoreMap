@@ -121,7 +121,7 @@ interface GameSpec {
   startsIn: number
   home: SideSpec
   away: SideSpec
-  venue: { name: string; city: string; region: string; country: string; latitude: number; longitude: number; timeZone: string }
+  venue: { name: string; city: string; region: string; country: string; latitude: number; longitude: number; timeZone: string; espnId: string }
 }
 
 function made(spec: GameSpec, now: number): Game {
@@ -169,31 +169,31 @@ const specs: GameSpec[] = [
     id: 'nfl-nyg', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q2 2:31', startsIn: -60,
     home: { abbreviation: 'NYG', fullName: 'New York Giants', logoUrl: logo('nfl', 'nyg'), score: '10' },
     away: { abbreviation: 'WSH', fullName: 'Washington Commanders', logoUrl: logo('nfl', 'wsh'), score: '14' },
-    venue: { name: 'MetLife Stadium', city: 'East Rutherford', region: 'New Jersey', country: 'USA', latitude: 40.8135, longitude: -74.0745, timeZone: eastern },
+    venue: { name: 'MetLife Stadium', city: 'East Rutherford', region: 'New Jersey', country: 'USA', latitude: 40.8135, longitude: -74.0745, timeZone: eastern, espnId: '3839' },
   },
   {
     id: 'mlb-nyy', league: 'MLB', sport: 'Baseball', status: 'Live', clock: 'Bot 6th', startsIn: -110,
     home: { abbreviation: 'NYY', fullName: 'New York Yankees', logoUrl: logo('mlb', 'nyy'), score: '4' },
     away: { abbreviation: 'BOS', fullName: 'Boston Red Sox', logoUrl: logo('mlb', 'bos'), score: '2' },
-    venue: { name: 'Yankee Stadium', city: 'Bronx', region: 'New York', country: 'USA', latitude: 40.8296, longitude: -73.9262, timeZone: eastern },
+    venue: { name: 'Yankee Stadium', city: 'Bronx', region: 'New York', country: 'USA', latitude: 40.8296, longitude: -73.9262, timeZone: eastern, espnId: '208' },
   },
   {
     id: 'nba-bkn', league: 'NBA', sport: 'Basketball', status: 'Upcoming', startsIn: 25,
     home: { abbreviation: 'BKN', fullName: 'Brooklyn Nets', logoUrl: logo('nba', 'bkn') },
     away: { abbreviation: 'MIA', fullName: 'Miami Heat', logoUrl: logo('nba', 'mia') },
-    venue: { name: 'Barclays Center', city: 'Brooklyn', region: 'New York', country: 'USA', latitude: 40.6826, longitude: -73.9754, timeZone: eastern },
+    venue: { name: 'Barclays Center', city: 'Brooklyn', region: 'New York', country: 'USA', latitude: 40.6826, longitude: -73.9754, timeZone: eastern, espnId: '3559' },
   },
   {
     id: 'nhl-tor', league: 'NHL', sport: 'Hockey', status: 'Live', clock: '2nd 8:04', startsIn: -50,
     home: { abbreviation: 'TOR', fullName: 'Toronto Maple Leafs', logoUrl: logo('nhl', 'tor'), score: '1' },
     away: { abbreviation: 'MTL', fullName: 'Montreal Canadiens', logoUrl: logo('nhl', 'mtl'), score: '1' },
-    venue: { name: 'Scotiabank Arena', city: 'Toronto', region: 'Ontario', country: 'Canada', latitude: 43.6435, longitude: -79.3791, timeZone: 'America/Toronto' },
+    venue: { name: 'Scotiabank Arena', city: 'Toronto', region: 'Ontario', country: 'Canada', latitude: 43.6435, longitude: -79.3791, timeZone: 'America/Toronto', espnId: '1838' },
   },
   {
     id: 'mls-chi', league: 'MLS', sport: 'Soccer', status: 'Final', clock: 'FT', startsIn: -130,
     home: { abbreviation: 'CHI', fullName: 'Chicago Fire FC', logoUrl: soccerLogo(182), score: '2' },
     away: { abbreviation: 'CLB', fullName: 'Columbus Crew', logoUrl: soccerLogo(183), score: '0' },
-    venue: { name: 'Soldier Field', city: 'Chicago', region: 'Illinois', country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago' },
+    venue: { name: 'Soldier Field', city: 'Chicago', region: 'Illinois', country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago', espnId: '1452' },
   },
   {
     id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95,
@@ -206,6 +206,6 @@ const specs: GameSpec[] = [
       balls: null, strikes: null, outs: null, onFirst: false, onSecond: false, onThird: false,
     },
     lastScore: { team: 'BAL', text: 'D. Henry 12 yard run (J. Tucker kick)', when: 'Q3 9:47' },
-    venue: { name: 'Acrisure Stadium', city: 'Pittsburgh', region: 'Pennsylvania', country: 'USA', latitude: 40.4468, longitude: -80.0158, timeZone: eastern },
+    venue: { name: 'Acrisure Stadium', city: 'Pittsburgh', region: 'Pennsylvania', country: 'USA', latitude: 40.4468, longitude: -80.0158, timeZone: eastern, espnId: '3752' },
   },
 ]

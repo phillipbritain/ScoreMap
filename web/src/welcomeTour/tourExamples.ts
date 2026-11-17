@@ -3,7 +3,7 @@ import type { League } from '../settings/viewerSettings'
 // ESPN historical scoreboards joined to coordinates from ScoreMap's venue catalogs.
 import collegeExamples from './tourCollegeExamples.json'
 
-type Venue = Pick<Game['venue'], 'name' | 'city' | 'region' | 'country' | 'latitude' | 'longitude'>
+type Venue = Pick<Game['venue'], 'name' | 'city' | 'region' | 'country' | 'latitude' | 'longitude' | 'espnId'>
 type Team = Pick<GameTeam, 'abbreviation' | 'conference' | 'logoUrl'> & { name: string }
 type SidesExample = { venue: Venue; teams: readonly Team[] }
 
@@ -13,26 +13,27 @@ const team = (abbreviation: string, name: string, logoPath: string): Team => ({
   abbreviation, name, logoUrl: `${espn}/${logoPath}.png`, conference: null,
 })
 
-function venue(name: string, city: string, latitude: number, longitude: number, region: string | null = null, country = 'USA'): Venue {
-  return { name, city, latitude, longitude, region, country }
+/** A venue, with ESPN's id for it in the example's league where a real game there would carry one. */
+function venue(name: string, city: string, latitude: number, longitude: number, region: string | null = null, country = 'USA', espnId?: string): Venue {
+  return { name, city, latitude, longitude, region, country, ...(espnId && { espnId }) }
 }
 
-const emirates = venue('Emirates Stadium', 'London', 51.555, -0.1086, null, 'England')
+const emirates = venue('Emirates Stadium', 'London', 51.555, -0.1086, null, 'England', '2267')
 const miami = venue('Hard Rock Stadium', 'Miami Gardens', 25.958, -80.239, 'Florida')
-const msg = venue('Madison Square Garden', 'New York', 40.7505, -73.9934, 'New York')
+const msg = venue('Madison Square Garden', 'New York', 40.7505, -73.9934, 'New York', 'USA', '1830')
 
 // Real participants and venues drawn from ScoreMap's scenario catalog. The matchups and scores are simulated.
 const sides: Record<string, SidesExample> = {
-  WNBA: { venue: venue('Wintrust Arena', 'Chicago', 41.8538, -87.6215, 'Illinois'), teams: [
+  WNBA: { venue: venue('Wintrust Arena', 'Chicago', 41.8538, -87.6215, 'Illinois', 'USA', '5427'), teams: [
     team('CHI', 'Chicago Sky', 'wnba/500/chi'), team('ATL', 'Atlanta Dream', 'wnba/500/atl'),
   ] },
-  'NCAA Baseball': { venue: venue('Charles Schwab Field Omaha', 'Omaha', 41.267, -95.932, 'Nebraska'), teams: [
+  'NCAA Baseball': { venue: venue('Charles Schwab Field Omaha', 'Omaha', 41.267, -95.932, 'Nebraska', 'USA', '5051'), teams: [
     team('LSU', 'LSU Tigers', 'ncaa/500/99'), team('ARK', 'Arkansas Razorbacks', 'ncaa/500/8'),
   ] },
-  'NCAA Softball': { venue: venue('Devon Park', 'Oklahoma City', 35.527, -97.464, 'Oklahoma'), teams: [
+  'NCAA Softball': { venue: venue('Devon Park', 'Oklahoma City', 35.527, -97.464, 'Oklahoma', 'USA', '5006'), teams: [
     team('OU', 'Oklahoma Sooners', 'ncaa/500/201'), team('TEX', 'Texas Longhorns', 'ncaa/500/251'),
   ] },
-  "NCAA Men's Hockey": { venue: venue('Agganis Arena', 'Boston', 42.352, -71.117, 'Massachusetts'), teams: [
+  "NCAA Men's Hockey": { venue: venue('Agganis Arena', 'Boston', 42.352, -71.117, 'Massachusetts', 'USA', '990'), teams: [
     team('BU', 'Boston University Terriers', 'ncaa/500/104'), team('BC', 'Boston College Eagles', 'ncaa/500/103'),
   ] },
   'Premier League': { venue: emirates, teams: [
@@ -41,13 +42,13 @@ const sides: Record<string, SidesExample> = {
   'Champions League': { venue: emirates, teams: [
     team('ARS', 'Arsenal', 'soccer/500/359'), team('BAY', 'Bayern Munich', 'soccer/500/132'),
   ] },
-  'World Cup': { venue: miami, teams: [
+  'World Cup': { venue: { ...miami, espnId: '4643' }, teams: [
     team('ARG', 'Argentina', 'countries/500/arg'), team('COL', 'Colombia', 'countries/500/col'),
   ] },
   IPL: { venue: venue('Wankhede Stadium', 'Mumbai', 18.9388, 72.8258, null, 'India'), teams: [
     team('MI', 'Mumbai Indians', 'cricket/500/335978'), team('CSK', 'Chennai Super Kings', 'cricket/500/335974'),
   ] },
-  'Six Nations': { venue: venue('Aviva Stadium', 'Dublin', 53.3352, -6.2285, null, 'Ireland'), teams: [
+  'Six Nations': { venue: venue('Aviva Stadium', 'Dublin', 53.3352, -6.2285, null, 'Ireland', '16102'), teams: [
     team('IRE', 'Ireland', 'rugby/teams/500/3'), team('FRA', 'France', 'rugby/teams/500/9'),
   ] },
   ATP: { venue: venue('Arthur Ashe Stadium', 'Queens', 40.7499, -73.847, 'New York'), teams: [
@@ -64,7 +65,7 @@ function entrants(names: [string, string, string, string | null][]): GameEntrant
 
 const fields: Record<string, { venue: Venue; note: string; clock: string; entries: GameEntrant[] }> = {
   'NASCAR Cup Series': {
-    venue: venue('Daytona International Speedway', 'Daytona Beach', 29.1852, -81.0705, 'Florida'),
+    venue: venue('Daytona International Speedway', 'Daytona Beach', 29.1852, -81.0705, 'Florida', 'USA', '1'),
     note: 'Daytona 500', clock: 'Lap 42', entries: entrants([
       ['Chase Elliott', 'C. Elliott', 'usa', null], ['Christopher Bell', 'C. Bell', 'usa', null],
     ]),
@@ -79,13 +80,13 @@ const fields: Record<string, { venue: Venue; note: string; clock: string; entrie
     ]),
   },
   'PGA Tour': {
-    venue: venue('Augusta National Golf Club', 'Augusta', 33.503, -82.023, 'Georgia'),
+    venue: venue('Augusta National Golf Club', 'Augusta', 33.503, -82.023, 'Georgia', 'USA', '21'),
     note: 'Masters Tournament', clock: 'Round 2', entries: entrants([
       ['Scottie Scheffler', 'S. Scheffler', 'usa', '-4'], ['Rory McIlroy', 'R. McIlroy', 'nir', '-3'],
     ]),
   },
   'LPGA Tour': {
-    venue: venue('Pelican Golf Club', 'Belleair', 27.939, -82.801, 'Florida'),
+    venue: venue('Pelican Golf Club', 'Belleair', 27.939, -82.801, 'Florida', 'USA', '10955'),
     note: 'The ANNIKA at Pelican', clock: 'Round 2', entries: entrants([
       ['Lindy Duncan', 'L. Duncan', 'usa', '-4'], ['Carlota Ciganda', 'C. Ciganda', 'esp', '-3'],
     ]),

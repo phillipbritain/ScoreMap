@@ -33,6 +33,17 @@ public class VenuePhotoEndpointTests
     }
 
     [Fact]
+    public async Task The_venues_ESPN_id_reaches_the_search_so_ESPNs_photo_is_found_as_for_a_real_game()
+    {
+        await using var server = new ScoreMapServer();
+        using var http = server.CreateClient();
+
+        await http.GetAsync($"{ArrowheadAddress}&id=3622", TestContext.Current.CancellationToken);
+
+        Assert.Equal("3622", Assert.Single(server.Photos.SearchedVenues).Id);
+    }
+
+    [Fact]
     public async Task A_photo_found_for_a_real_game_at_the_venue_is_the_one_the_browser_gets()
     {
         await using var server = new ScoreMapServer();

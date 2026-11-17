@@ -10,11 +10,18 @@ public sealed class FakeVenuePhotoSearch : IVenuePhotoSearch
     private readonly Dictionary<string, VenuePhoto> _photos = new();
     private readonly HashSet<string> _failing = [];
     private readonly List<string> _searches = [];
+    private readonly List<ProviderVenue> _searchedVenues = [];
 
     /// <summary>The names of the venues searched for, in order.</summary>
     public IReadOnlyList<string> Searches
     {
         get { lock (_searches) return _searches.ToList(); }
+    }
+
+    /// <summary>The venues searched for, in order, as the search was given them.</summary>
+    public IReadOnlyList<ProviderVenue> SearchedVenues
+    {
+        get { lock (_searches) return _searchedVenues.ToList(); }
     }
 
     /// <summary>Waits (in real time, briefly) until there have been at least <paramref name="count"/> searches.</summary>
@@ -53,6 +60,7 @@ public sealed class FakeVenuePhotoSearch : IVenuePhotoSearch
         lock (_searches)
         {
             _searches.Add(venue.Name ?? "");
+            _searchedVenues.Add(venue);
             if (_failing.Contains(venue.Name ?? ""))
                 return Task.FromException<VenuePhoto?>(new HttpRequestException("photo sources are down"));
             return Task.FromResult(_photos.GetValueOrDefault(venue.Name ?? ""));

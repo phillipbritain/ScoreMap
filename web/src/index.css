@@ -127,8 +127,8 @@ body {
   box-shadow: var(--glass-rim);
 }
 
-/* The game panel: a TV-style strip across the bottom of the globe, a thin neutral line along its top and
-   a glow in the game's color (--game-color, set on the panel, with --text-on-game-color for text on it)
+/* The game panel: a TV-style strip across the bottom of the globe, a thin neutral line round its edge
+   (see .game-panel__body::after) and a glow in the game's color (--game-color, set on the panel, with --text-on-game-color for text on it)
    around it: the score block, then
    the venue and its watch links over the venue's photo, with a band under the strip for a field's
    leaderboard, a fight card or tennis sets. Every line holds its place whether or not a game has it, and
@@ -150,7 +150,6 @@ body {
      screen" at the end). */
   max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
   width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  border-top: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
   border-radius: var(--game-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
@@ -170,6 +169,22 @@ body {
   min-height: 0;
   overflow: clip;
   border-radius: inherit;
+}
+
+/* The panel's edge: one thin neutral line all the way round, over everything in it, on the body's own
+   corners, so each corner is one unbroken curve. A border on the panel's top alone would thin to nothing
+   round its corners, and the score block's glass, lit at its top and left, would draw a second line
+   beside it. Where the panel meets the screen's edges, on a phone, the line keeps to the edges facing the
+   globe (see the phone's and "A short screen"'s rules). */
+.game-panel__body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
+  border-radius: inherit;
+  corner-bottom-left-shape: inherit;
+  pointer-events: none;
 }
 
 /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it: beveled rather than
@@ -208,7 +223,7 @@ body {
 
 /* On a desktop, and on a short screen on its side, which takes the desktop's strip (see "A short screen"
    at the end), the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
-   its colors as solid as the panel's frost, its edges lit from the top left. */
+   its colors as solid as the panel's frost, its outer edges lit by the panel's edge line. */
 @media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
   .game-panel__score {
     background: linear-gradient(
@@ -218,7 +233,6 @@ body {
     );
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
     backdrop-filter: blur(16px) saturate(1.4);
-    box-shadow: inset 1px 1px 0 0 color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
   }
 
   /* Its scores on panes of the same glass, and its records lifted off it. */
@@ -2780,6 +2794,11 @@ body {
     touch-action: none;
   }
 
+  /* Its edge line along its top alone, the other edges being the screen's. */
+  .game-panel__body::after {
+    border-width: var(--shape-border-width-thin) 0 0;
+  }
+
   .game-panel__band {
     touch-action: pan-y;
   }
@@ -3432,6 +3451,11 @@ body {
     /* No cut corner, as on a phone held upright: it would show the globe at the screen's corner. */
     .game-panel__body {
       border-bottom-left-radius: 0;
+    }
+
+    /* Its edge line along its top and right, the edges facing the globe, meeting in its one round corner. */
+    .game-panel__body::after {
+      border-width: var(--shape-border-width-thin) var(--shape-border-width-thin) 0 0;
     }
 
     .game-panel__band {

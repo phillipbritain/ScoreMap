@@ -129,7 +129,9 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
       action={
         picking && (
           <>
-            <TourButton onClick={() => setPicking(false)}>Back</TourButton>
+            <TourButton onClick={() => setPicking(false)} quiet>
+              Back
+            </TourButton>
             {status === 'failed' && <TourButton onClick={retry}>Retry</TourButton>}
             {nothingPicked !== null && !canShow && (
               <p key={nothingPicked} className="welcome-tour__nothing-picked" role="status">
@@ -415,14 +417,16 @@ interface TourButtonProps {
   disabled?: boolean
   /** Shown as unavailable, but still pressable, to say why ("Show these" with nothing picked). */
   unavailable?: boolean
+  /** A way back rather than on (Back): outlined but not lit, so the step's own button stands out beside it. */
+  quiet?: boolean
   children: ReactNode
 }
 
-function TourButton({ onClick, disabled, unavailable, children }: TourButtonProps) {
+function TourButton({ onClick, disabled, unavailable, quiet, children }: TourButtonProps) {
   return (
     <button
       type="button"
-      className="welcome-tour__button"
+      className={quiet ? 'welcome-tour__button welcome-tour__button--quiet' : 'welcome-tour__button'}
       onClick={onClick}
       disabled={disabled}
       aria-disabled={unavailable || undefined}

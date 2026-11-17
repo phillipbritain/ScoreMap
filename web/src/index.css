@@ -3067,6 +3067,22 @@ body {
   cursor: pointer;
 }
 
+/* Back: a way back rather than on, outlined as an unlit chip, with no fill or glow, so the step's own
+   button beside it stands out. */
+.welcome-tour__button--quiet {
+  border-color: var(--rail-outline);
+  background: none;
+  box-shadow: none;
+  color: var(--palette-text-secondary);
+}
+
+@media (hover: hover) {
+  .welcome-tour__button--quiet:hover {
+    background: var(--palette-action-hover);
+    color: var(--palette-text-primary);
+  }
+}
+
 /* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
 .welcome-tour__button:disabled,
 .welcome-tour__button[aria-disabled='true'] {

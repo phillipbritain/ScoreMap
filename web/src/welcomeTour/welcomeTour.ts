@@ -17,10 +17,8 @@ export type TourEvent =
   | { kind: 'chose'; choice: TourChoice }
   /** Your controls → Click a score card. */
   | { kind: 'next' }
-  /** Click a score card → finished, by its Done button. */
+  /** Click a score card → finished, by its Done button. Pressing the lit card opens its game's panel and leaves the step showing. */
   | { kind: 'done' }
-  /** Click a score card → finished, by pressing the lit card, which opens its game's panel. */
-  | { kind: 'gameOpened' }
   /** Any step → finished, by the panel's × or Escape. */
   | { kind: 'closed' }
   /** Finished → Welcome, by "Welcome tour" in More on the rail. */
@@ -30,7 +28,7 @@ export type TourEvent =
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
   welcome: { chose: 'controls', closed: 'finished' },
   controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { done: 'finished', gameOpened: 'finished', closed: 'finished' },
+  scoreCard: { done: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }
 

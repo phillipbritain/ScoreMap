@@ -293,6 +293,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
               selectGame(gameId)
             }}
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
+            gameOpen={openedFromTour !== null}
           />
         )}
       </div>

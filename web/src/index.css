@@ -3394,6 +3394,18 @@ body {
   }
 }
 
+/* Click a score card with the game's panel it opened: the step at the top of the screen, clear of the
+   game panel at the foot, which is lifted over the tour's dim to be used. After the short screen's
+   centering above, which it overrides. */
+.welcome-tour.welcome-tour--game-open {
+  align-items: flex-start;
+  padding-top: calc(3 * var(--spacing));
+}
+
+.globe-area--touring > .game-panel {
+  z-index: 3;
+}
+
 /* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one
    column at full size, which scrolls within the screen's height, fading out at its foot so it shows
    there's more. It takes the pointer there, so it can be scrolled by touch. */

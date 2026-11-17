@@ -56,20 +56,24 @@ async function mountStepOn(scoreCards: () => ShownScoreCard[]) {
   const container = document.createElement('div')
   document.body.append(container)
   root = createRoot(container)
-  await act(() =>
-    root!.render(
-      createElement(WelcomeTourScreen, {
-        progress: 'scoreCard',
-        onEvent,
-        leagueList: { status: 'ready', leagues: [], retry: () => {} },
-        settings: firstVisitSettings,
-        onChange: () => {},
-        onOpenGame,
-        scoreCards,
-      }),
-    ),
-  )
-  return { onOpenGame, onEvent }
+  // The app opens the game's panel as onOpenGame is called; setGameOpen stands in for that.
+  const render = (gameOpen: boolean) =>
+    act(() =>
+      root!.render(
+        createElement(WelcomeTourScreen, {
+          progress: 'scoreCard',
+          onEvent,
+          leagueList: { status: 'ready', leagues: [], retry: () => {} },
+          settings: firstVisitSettings,
+          onChange: () => {},
+          onOpenGame,
+          scoreCards,
+          gameOpen,
+        }),
+      ),
+    )
+  await render(false)
+  return { onOpenGame, onEvent, setGameOpen: render }
 }
 
 /** The lit card's button, by its name. */
@@ -83,7 +87,21 @@ it('points at a card clear of the panel, named as its game, and opens its game w
   await userEvent.click(openButton()!)
 
   expect(onOpenGame).toHaveBeenCalledWith('A')
-  expect(onEvent).toHaveBeenCalledWith({ kind: 'gameOpened' })
+  // The step stays: only Done or the × moves the tour on.
+  expect(onEvent).not.toHaveBeenCalled()
+})
+
+it("stays with the game's panel open, pointing at nothing, until Done finishes the tour", async () => {
+  const { onEvent, setGameOpen } = await mountStep([fakeCard('A', 'NFL · Buffalo Bills vs Kansas City Chiefs', 40, 40)])
+  await vi.waitFor(() => expect(openButton()).not.toBeNull())
+  await userEvent.click(openButton()!)
+  await setGameOpen(true)
+
+  expect(openButton()).toBeNull()
+  expect(document.querySelector('.welcome-tour__text')?.textContent).toContain('Try this one')
+  expect(onEvent).not.toHaveBeenCalled()
+  await userEvent.click(page.getByRole('button', { name: 'Done' }))
+  expect(onEvent).toHaveBeenCalledWith({ kind: 'done' })
 })
 
 it('says what a card opens, with nothing to press, when no card is clear of the panel', async () => {

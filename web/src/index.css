@@ -2854,7 +2854,9 @@ body {
   overflow: hidden;
   /* Its padding at the sides, which its scrolling content reaches across (see .welcome-tour__body). */
   --panel-side: calc(6 * var(--spacing));
-  padding: calc(5 * var(--spacing)) var(--panel-side);
+  /* Its padding at the foot, which the step's buttons' band reaches across (see .welcome-tour__actions). */
+  --panel-end: calc(5 * var(--spacing));
+  padding: calc(5 * var(--spacing)) var(--panel-side) var(--panel-end);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   color: var(--palette-text-primary);
@@ -3003,7 +3005,12 @@ body {
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
   justify-content: flex-end;
-  margin-top: calc(4 * var(--spacing));
+  /* A band of its own across the panel's foot, set off from the step's content above by a line and a
+     slightly lighter fill. */
+  margin: calc(4 * var(--spacing)) calc(-1 * var(--panel-side)) calc(-1 * var(--panel-end));
+  padding: calc(3 * var(--spacing)) var(--panel-side) var(--panel-end);
+  border-top: var(--shape-border-width-thin) solid var(--rail-outline);
+  background: color-mix(in srgb, var(--palette-text-primary) 4%, var(--rail-surface));
 }
 
 /* A step's own button (Next, Done), lit as a chip that's on. */
@@ -3157,7 +3164,8 @@ body {
     width: calc(100% - 6 * var(--spacing));
     max-height: calc(100% - 6 * var(--spacing));
     --panel-side: calc(5 * var(--spacing));
-    padding: calc(4 * var(--spacing)) var(--panel-side);
+    --panel-end: calc(4 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
   .welcome-tour--controls {
@@ -3426,14 +3434,19 @@ body {
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: end;
-    margin-top: 0;
+    /* Beside the words, so no band. */
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    background: none;
   }
 
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
     --panel-side: calc(5 * var(--spacing));
-    padding: calc(4 * var(--spacing)) var(--panel-side);
+    --panel-end: calc(4 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
   .welcome-tour__question {

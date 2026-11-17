@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tourArrow } from './tourArrow'
+import { endGap, headLength, spotlightPadding, straightRun, tourArrow } from './tourArrow'
 
 // A panel in the middle of a 1600 x 900 screen.
 const panel = { left: 580, top: 300, right: 1020, bottom: 600 }
@@ -63,11 +63,11 @@ describe('the tour arrow', () => {
     expect(to.y).toBe(225)
   })
 
-  it('draws a path from its start to its end', () => {
+  it("draws its line from its start to its head's base, a head's length short of its end", () => {
     const rail = { left: 1550, top: 12, right: 1586, bottom: 340 }
     const { from, to, path } = tourArrow(panel, rail)
     expect(path.startsWith(`M${from.x} ${from.y} `)).toBe(true)
-    expect(path.endsWith(` ${to.x} ${to.y}`)).toBe(true)
+    expect(path.endsWith(` L${to.x - headLength} ${to.y}`)).toBe(true)
   })
 
   it("starts at the middle of the top of the panel when asked, to the side of what's aimed at above it", () => {
@@ -78,5 +78,43 @@ describe('the tour arrow', () => {
     expect(from.y).toBeLessThan(phonePanel.top)
     expect(to.x).toBeLessThan(zoomButtons.left)
     expect(to.y).toBe(88)
+  })
+
+  it("ends its head's tip a set gap clear of the spotlight around what it points at", () => {
+    const teams = { left: 645, top: 228, right: 711, bottom: 257 }
+    const sheet = { left: 420, top: 343, right: 860, bottom: 458 }
+    const { to } = tourArrow(sheet, teams, 'side')
+    expect(teams.left - spotlightPadding - to.x).toBeGreaterThanOrEqual(6)
+    expect(to.x).toBe(teams.left - endGap)
+  })
+
+  it('turns before its end, its line running straight into the head the way the head points', () => {
+    // Started just right of a card's left side and below it, so the line must turn all the way round.
+    const teams = { left: 645, top: 228, right: 711, bottom: 257 }
+    const sheet = { left: 420, top: 343, right: 860, bottom: 458 }
+    const { to, path } = tourArrow(sheet, teams, 'side')
+    const [, turnedX, turnedY, baseX, baseY] = path.match(/ (\S+) (\S+) L(\S+) (\S+)$/)!.map(Number)
+    expect(baseY).toBe(to.y)
+    expect(turnedY).toBe(to.y)
+    expect(to.x - baseX).toBe(headLength)
+    expect(baseX - turnedX).toBe(straightRun)
+  })
+
+  it('starts out past the side it ends at when what it points at is right above, so it turns once rather than hooking back', () => {
+    // A phone's panel across the screen, its middle just right of a card's right side above it.
+    const sheet = { left: 12, top: 359, right: 378, bottom: 484 }
+    const teams = { left: 96, top: 275, right: 161, bottom: 304 }
+    const { from, to, path } = tourArrow(sheet, teams, 'side')
+    const [, turnedX] = path.match(/ (\S+) (\S+) L(\S+) (\S+)$/)!.map(Number)
+    expect(to.x).toBeGreaterThan(teams.right)
+    expect(from.x).toBeGreaterThanOrEqual(turnedX + 30)
+    expect(from.y).toBeLessThan(sheet.top)
+  })
+
+  it("starts no nearer the panel's corner than it must, however far out the side it ends at is", () => {
+    const sheet = { left: 12, top: 359, right: 200, bottom: 484 }
+    const teams = { left: 150, top: 275, right: 215, bottom: 304 }
+    const { from } = tourArrow(sheet, teams, 'side')
+    expect(from.x).toBeLessThanOrEqual(sheet.right - 24)
   })
 })

@@ -1160,13 +1160,13 @@ describe('settling', () => {
 
     // Where each card is from its venue, by game, leaving out those in a card cluster.
     type Frame = Map<string, { dx: number; dy: number }>
-    const cardsFromVenues = (): Frame =>
+    const cardsFromVenues = (layoutOnly = false): Frame =>
       new Map(
         [...container.querySelectorAll<HTMLElement>('.score-card')]
           .filter((element) => !element.parentElement!.hasAttribute('data-in-card-cluster'))
           .map((element) => {
             const gameId = element.dataset.gameId!
-            const { x, y } = element.getBoundingClientRect()
+            const { x, y } = (layoutOnly ? element.parentElement! : element).getBoundingClientRect()
             const venue = venueOnPage(map, games.get(gameId)!)
             return [gameId, { dx: x - venue.x, dy: y - venue.y }]
           }),
@@ -1189,22 +1189,37 @@ describe('settling', () => {
       await new Promise((resolve) => map.once('render', resolve))
     }
     expect(globe.cardsSteady(), 'the pan stopped as the cards settled').toBe(false)
-    // The cards in each frame from the camera stopping until they settle.
-    const frames = [cardsFromVenues()]
-    const record = () => frames.push(cardsFromVenues())
+    // A glide started on the pan's last frame may finish, but must not start again. Measure the
+    // marker's layout position separately: render events can be 16 ms or 33 ms apart, so even one
+    // smooth glide can cross the jump threshold, fall below it, then cross it again.
+    const glidesOnPage = () =>
+      new Map(
+        [...container.querySelectorAll<HTMLElement>('.score-card')]
+          .filter((element) => !element.parentElement!.hasAttribute('data-in-card-cluster'))
+          .map((element) => [
+            element.dataset.gameId!,
+            element.getAnimations().filter((animation) =>
+              animation.effect instanceof KeyframeEffect && animation.effect.getKeyframes().some((frame) => frame.translate !== undefined),
+            ),
+          ]),
+      )
+    const frames = [cardsFromVenues(true)]
+    const glides = [glidesOnPage()]
+    const record = () => {
+      frames.push(cardsFromVenues(true))
+      glides.push(glidesOnPage())
+    }
     map.on('render', record)
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     map.off('render', record)
 
-    // A card the layout moved on the pan's last frame (see layOutCards) glides on there once it stops,
-    // more than a jump in its first frames: so each card may jump in one run of frames, its glide, but
-    // never jump again.
-    const jumpFrames = new Map<string, number[]>()
     frames.slice(1).forEach((now, i) => {
-      for (const gameId of jumped(frames[i], now)) jumpFrames.set(gameId, [...(jumpFrames.get(gameId) ?? []), i + 1])
+      expect(jumped(frames[i], now), `layout jumps in frame ${i + 1}`).toEqual([])
+      for (const [gameId, animations] of glides[i + 1]) {
+        const before = glides[i].get(gameId)
+        if (before) expect(animations.filter((animation) => !before.includes(animation)), `${gameId} started another glide in frame ${i + 1}`).toEqual([])
+      }
     })
-    const jumpedAgain = [...jumpFrames].filter(([, at]) => at.some((frame, i) => i > 0 && frame !== at[i - 1] + 1))
-    expect(jumpedAgain.map(([gameId, at]) => `${gameId} in frames ${at.join(', ')}`)).toEqual([])
 
     // Any glide over, the cards stay where they are.
     await pause(cardMoveDuration)

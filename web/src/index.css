@@ -281,8 +281,9 @@ body {
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
-/* A logo sits on its plate, so a logo near the panel's color can still be seen. With no logo, the
-   space it would take is left empty, plate and all. */
+/* A logo sits on its plate, so a logo near the panel's color can still be seen. A team with no logo,
+   or one that won't load, shows its initial on the plate instead; for a flag, the space is left
+   empty, plate and all. */
 .game-panel__team img,
 .game-panel__logo {
   box-sizing: content-box;
@@ -294,8 +295,19 @@ body {
   flex-shrink: 0;
 }
 
-.game-panel__team img {
+.game-panel__team img,
+.game-panel__logo--mark {
   background: var(--game-panel-logo-plate-fill);
+}
+
+.game-panel__logo--mark {
+  display: grid;
+  place-items: center;
+  color: var(--game-panel-score-block-top);
+  font-family: var(--typography-font-family);
+  font-size: calc(0.7 * var(--game-panel-size-logo));
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel taller. */
@@ -958,6 +970,19 @@ body {
   background: color-mix(in srgb, var(--score-card-logo-plate-fill) calc(var(--frost) * 100%), transparent);
   object-fit: contain;
   opacity: calc(1 - var(--status-card-fade));
+}
+
+/* A team with no logo, or one that won't load, shows its initial in the card's fill on the plate,
+   solid whatever the glass's frost, as a logo is. */
+.score-card__logo--mark {
+  display: grid;
+  place-items: center;
+  background: var(--score-card-logo-plate-fill);
+  color: var(--card-surface);
+  font-family: var(--typography-font-family);
+  font-size: calc(0.85 * var(--score-card-size-logo));
+  font-weight: 700;
+  line-height: 1;
 }
 
 .score-card__abbreviation {

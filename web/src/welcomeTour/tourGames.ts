@@ -12,21 +12,29 @@ import type { TourProgress } from './welcomeTour'
 
 /** Where the globe looks while the tour's games show: on all six, with the tour's panel clear of them. */
 const camera: Camera = { longitude: -81, latitude: 38, zoom: 4.8 }
-/** On a phone the step's bottom sheet covers the lower half, so the camera sits further south and further out. */
+/** On a phone the step's panel takes the screen's width, so the camera sits further south and further out, the games above it. */
 const phoneCamera: Camera = { longitude: -79.5, latitude: 36.5, zoom: 3.8 }
 
-/** The camera for the tour's games, at a phone's width or wider. */
-export function tourCamera(phone: boolean): Camera {
-  return phone ? phoneCamera : camera
+/**
+ * On a short screen on its side (a phone in landscape), Click a score card's panel sits at the foot, so
+ * the camera sits further north and further out, the games in the little height above it.
+ */
+const shortCamera: Camera = { longitude: -79, latitude: 40.5, zoom: 4.2 }
+
+/** The screens the tour's camera is chosen for: a phone held upright, a short screen on its side, or wider. */
+export type TourScreen = 'phone' | 'short' | 'wide'
+
+/** The camera for the tour's games on a screen. */
+export function tourCamera(screen: TourScreen): Camera {
+  return screen === 'phone' ? phoneCamera : screen === 'short' ? shortCamera : camera
 }
 
 /**
  * Whether the globe shows the tour's games in place of real ones (or the scenario's): from the tour's
- * start until it's finished, and after that for as long as a panel opened from Click a score card stays
- * open, so the game it shows doesn't vanish from under it.
+ * start until it's finished, when they go at once, with any panel of theirs still open.
  */
-export function showsTourGames(progress: TourProgress, openedFromTour: string | null): boolean {
-  return progress !== 'finished' || openedFromTour !== null
+export function showsTourGames(progress: TourProgress): boolean {
+  return progress !== 'finished'
 }
 
 /**

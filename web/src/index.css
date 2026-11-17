@@ -1254,6 +1254,12 @@ body {
   gap: var(--rail-group-gap);
 }
 
+/* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
+   controls step brings it in. */
+.globe-area--rail-hidden > .rail {
+  visibility: hidden;
+}
+
 /* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
    it, their groups rising and fading one after another, leaving it alone at the top right as Show
    controls (a menu); they drop back down the same way. Folded, they take no room and no pointer. The
@@ -2835,14 +2841,21 @@ body {
   background: var(--dim);
 }
 
-/* A step's panel, in the middle of the screen, on the rail's surface as its popovers are. */
+/* A step's panel, in the middle of the screen, on the rail's surface and outlined as its popovers are:
+   its heading at the top and its buttons at the foot always in view, what's between scrolling (see
+   .welcome-tour__body). */
 .welcome-tour__panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
   max-height: calc(100% - 12 * var(--spacing));
-  overflow-y: auto;
-  padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
+  overflow: hidden;
+  /* Its padding at the sides, which its scrolling content reaches across (see .welcome-tour__body). */
+  --panel-side: calc(6 * var(--spacing));
+  padding: calc(5 * var(--spacing)) var(--panel-side);
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
@@ -2853,6 +2866,7 @@ body {
 }
 
 .welcome-tour__heading {
+  flex: none;
   margin: 0 0 calc(2 * var(--spacing));
   /* Clear of the close button in the panel's corner. */
   padding-right: var(--game-panel-size-close-width);
@@ -2885,7 +2899,6 @@ body {
 /* A choice on Welcome: its name, and a line under it on what it shows. */
 .welcome-tour__choice {
   display: grid;
-  grid-template-columns: auto 1fr;
   column-gap: calc(2.5 * var(--spacing));
   align-items: center;
   padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
@@ -2900,27 +2913,30 @@ body {
 }
 
 .welcome-tour__choice strong {
-  grid-column: 2;
   font-size: var(--typography-subtitle1-font-size);
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
 .welcome-tour__choice span {
-  grid-column: 2;
   color: var(--palette-text-secondary);
 }
 
-.welcome-tour__star {
-  grid-row: 1 / span 2;
-  grid-column: 1;
-  width: 1.3em;
-  height: 1.3em;
-  color: var(--rail-open);
+/* Each choice outlined in a color of its own (components.WelcomeTour.choice). */
+.welcome-tour__choice--top-events {
+  border-color: var(--welcome-tour-choice-top-events);
 }
 
+.welcome-tour__choice--my-leagues {
+  border-color: var(--welcome-tour-choice-my-leagues);
+}
+
+.welcome-tour__choice--everything {
+  border-color: var(--welcome-tour-choice-everything);
+}
+
+/* Under the pointer, lit behind, its own outline kept. */
 @media (hover: hover) {
   .welcome-tour__choice:hover {
-    border-color: var(--rail-on-outline);
     background: var(--palette-action-hover);
   }
 }
@@ -2967,7 +2983,21 @@ body {
   }
 }
 
+/* A step's content, scrolling when the panel can't fit it. It reaches a little past the panel's padding
+   on every side, padded back in, so focus rings and lit edges at its edge aren't clipped. */
+.welcome-tour__body {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: calc(-1 * var(--spacing));
+  padding: var(--spacing);
+  /* Out to the panel's right edge, so its scrollbar runs there rather than beside the content. */
+  margin-right: calc(-1 * var(--panel-side));
+  padding-right: var(--panel-side);
+}
+
 .welcome-tour__actions {
+  flex: none;
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -3113,20 +3143,24 @@ body {
   }
 }
 
-/* On a phone (the app's phone layout): each step's panel is a bottom sheet across the screen, where
-   the game panel sits there, its arrows running up from its top edge. It stops a little short of the
-   rail's foot (nine buttons in four gaps below its top), so Your controls' rail is never under it and
-   its arrow has room; what doesn't fit scrolls in the sheet (My leagues' picker). */
+/* On a phone (the app's phone layout): each step's panel across the screen, in its middle as on a
+   larger screen, laid over the rail rather than kept clear of it; what doesn't fit scrolls in the panel
+   (My leagues' picker). Your controls' panel alone keeps left of the rail it points at, with room for
+   its arrow, so the rail is never under it. */
 @media (max-width: 640px) {
-  .welcome-tour {
-    align-items: flex-end;
-  }
-
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
-    max-height: calc(100% - 20 * var(--spacing) - 9 * var(--rail-size-button));
-    margin-bottom: calc(3 * var(--spacing));
-    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+    max-height: calc(100% - 6 * var(--spacing));
+    --panel-side: calc(5 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side);
+  }
+
+  .welcome-tour--controls {
+    padding: 0 calc(var(--rail-left-inset, 0px) + 8 * var(--spacing)) 0 calc(3 * var(--spacing));
+  }
+
+  .welcome-tour--controls .welcome-tour__panel {
+    width: 100%;
   }
 }
 
@@ -3359,30 +3393,80 @@ body {
     padding-right: calc(var(--rail-left-inset, 0px) + 14 * var(--spacing));
   }
 
+  /* Click a score card at the foot, leaving the height above it for the cards (the tour's camera on a
+     short screen puts them there, see tourCamera) and the arrow to one. */
+  .welcome-tour--scoreCard {
+    align-items: flex-end;
+    padding-bottom: calc(3 * var(--spacing));
+  }
+
+  /* All set, compact so it fits in the little height above the game panel without covering it: Done
+     beside its words, at the foot of a column of its own, clear of the × above it. */
+  .welcome-tour--allSet .welcome-tour__panel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: calc(4 * var(--spacing));
+    padding-block: calc(3 * var(--spacing));
+  }
+
+  .welcome-tour--allSet .welcome-tour__heading {
+    margin-bottom: var(--spacing);
+  }
+
+  .welcome-tour--allSet .welcome-tour__body {
+    grid-column: 1;
+  }
+
+  .welcome-tour--allSet .welcome-tour__actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+    margin-top: 0;
+  }
+
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
-    margin-bottom: 0;
-    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+    --panel-side: calc(5 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side);
   }
 
   .welcome-tour__question {
     margin-top: calc(3 * var(--spacing));
   }
 
-  /* The star's room held on every line, so the names and what they show line up. */
+  /* The names in a column of their own, so what they show lines up. */
   .welcome-tour__choice {
-    grid-template-columns: 1.3em 7em 1fr;
+    grid-template-columns: 7em 1fr;
     padding: calc(2 * var(--spacing)) calc(3.5 * var(--spacing));
   }
 
   .welcome-tour__choice span {
-    grid-column: 3;
+    grid-column: 2;
   }
+}
 
-  .welcome-tour__star {
-    grid-row: auto;
-  }
+/* All set with the game's panel Click a score card opened: the step right above that panel (its top,
+   --above-game-panel, measured by useAboveGamePanel), or, with too little room there (a phone on its
+   side), at the top of the screen over the panel's top, never cut short, so Done is always in view.
+   The game panel, under the tour, stays usable: the tour takes no press but on the step's panel, and
+   has no dim (the globe and rail are inert while it shows). After the short screen's centering above,
+   which it overrides. */
+.welcome-tour[data-above-game-panel] {
+  align-items: safe flex-end;
+  padding-top: calc(3 * var(--spacing));
+  padding-bottom: calc(var(--above-game-panel, 0px) + 3 * var(--spacing));
+  pointer-events: none;
+}
+
+.welcome-tour[data-above-game-panel] > .welcome-tour__dim {
+  display: none;
+}
+
+.welcome-tour[data-above-game-panel] .welcome-tour__panel {
+  flex: none;
+  max-height: none;
+  pointer-events: auto;
 }
 
 /* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one

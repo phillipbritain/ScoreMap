@@ -157,9 +157,11 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
         return text.Length == 0 ? null : text;
     }
 
-    /// <summary>Words naming a view from above, as Commons names and files them ("Satellite pictures of structures", "Aerial photographs of …").</summary>
-    [GeneratedRegex(@"satellite|aerial|world[ _]wind|google[ _]earth|orthophoto|drone|bird'?s[- _]eye|from[ _](above|the[ _]air)",
-        RegexOptions.IgnoreCase)]
+    /// <summary>
+    /// Words naming a view from the air, as Commons names and files them ("Satellite pictures of structures", "Aerial photographs of …").
+    /// Not "from above" or "bird's-eye": Commons uses those for views from high up, such as a stadium's upper deck.
+    /// </summary>
+    [GeneratedRegex(@"satellite|aerial|world[ _]wind|google[ _]earth|orthophoto|drone|from[ _]the[ _]air", RegexOptions.IgnoreCase)]
     private static partial Regex FromTheAir();
 
     [GeneratedRegex("<[^>]*>")]

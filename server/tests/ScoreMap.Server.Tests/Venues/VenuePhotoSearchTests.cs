@@ -208,6 +208,19 @@ public class VenuePhotoSearchTests
     }
 
     [Fact]
+    public async Task Keeps_a_photo_from_high_up_in_the_stands()
+    {
+        // Yankee Stadium's Wikidata image, from the upper deck, is filed under "… from above" too.
+        const string file = "Yankee Stadium upper deck 2010.jpg";
+        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace), (WikidataClaims, ImageClaims("P18", file)),
+            Commons(file, ImageInfo(file, 2154, categories: "Interior of Yankee Stadium|Views of the Bronx, New York City from above")));
+
+        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
+
+        Assert.Equal("https://upload.wikimedia.org/thumb/Yankee_Stadium_upper_deck_2010.jpg/720px-Yankee_Stadium_upper_deck_2010.jpg", Url(photo));
+    }
+
+    [Fact]
     public async Task Keeps_a_large_enough_photo_whatever_its_format()
     {
         // Welsh-Ryan Arena's Wikidata image is a PNG photo from inside, 750 pixels wide.

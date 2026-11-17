@@ -18,7 +18,6 @@ function game(id: string, venue: Partial<GameVenue> = {}): Game {
     },
     clock: null,
     period: null,
-    clutchTime: false,
     hot: false,
     venue: {
       name: 'GEHA Field at Arrowhead Stadium',

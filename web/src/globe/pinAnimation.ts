@@ -12,7 +12,7 @@ export type PinAnimation = 'score' | 'start'
  * Which animation a game plays for a change the server pushed, as its GameChanges judged it (a field's
  * score changes when the lead changes hands, a fight card's when a bout finishes); null for none, as
  * for a game finishing.
- * Basketball scores so often that its score changes pulse only in clutch time, as the server judges
+ * Basketball scores so often that its score changes pulse only while it's hot, as the server judges
  * it on the score after the basket: the game as it is now.
  */
 export function pinAnimation(kind: NotableChangeKind, game: Game): PinAnimation | null {
@@ -22,6 +22,6 @@ export function pinAnimation(kind: NotableChangeKind, game: Game): PinAnimation 
     case 'Finished':
       return null
     case 'ScoreChanged':
-      return game.sport !== 'Basketball' || game.clutchTime ? 'score' : null
+      return game.sport !== 'Basketball' || game.hot ? 'score' : null
   }
 }

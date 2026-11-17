@@ -18,7 +18,6 @@ const game = (changes: Partial<Game> = {}): Game => ({
   contest: sides,
   clock: '4:12',
   period: 3,
-  clutchTime: false,
   hot: false,
   venue: { name: 'Arrowhead', city: 'Kansas City', region: 'Missouri', country: 'USA', latitude: 39, longitude: -94, timeZone: 'America/Chicago', photo: null, court: null },
   streamLinks: [],

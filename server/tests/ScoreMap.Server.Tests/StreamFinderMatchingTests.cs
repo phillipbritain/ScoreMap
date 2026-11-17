@@ -33,7 +33,7 @@ public class StreamFinderMatchingTests
         Id: id, League: league, Sport: "Football", StartTime: server.Clock.GetUtcNow(),
         Status: GameStatus.Live, Delayed: false, EndTime: null,
         Contest: new GameSides(new GameTeam("H", home, null, "0"), new GameTeam("A", away, null, "0")),
-        Clock: null, Period: null, ClutchTime: false, Hot: false,
+        Clock: null, Period: null, Hot: false,
         Venue: new GameVenue(null, null, null, null, null, null, null), StreamLinks: []);
 
     [Fact]

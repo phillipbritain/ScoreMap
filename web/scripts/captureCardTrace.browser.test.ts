@@ -54,7 +54,6 @@ function game({ id, longitude, latitude, status }: (typeof venues)[number]): Gam
     },
     clock: null,
     period: null,
-    clutchTime: false,
     venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
     streamLinks: [],
     note: null,

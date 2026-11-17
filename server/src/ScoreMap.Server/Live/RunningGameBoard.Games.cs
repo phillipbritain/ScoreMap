@@ -197,7 +197,6 @@ public sealed partial class RunningGameBoard
                 ToContest(game.Contest, league),
                 ClockLine.For(game, league),
                 game.Period,
-                ClutchTime.For(game, league),
                 HotGame.For(game, league),
                 ToVenue(game.Venue, location) with { Photo = photos.PhotoFor(league.Key, game.Venue) },
                 StreamLinks: [])

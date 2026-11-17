@@ -36,7 +36,6 @@ internal abstract class SportRule
 
     protected abstract bool HotSides(ProviderGame game, ProviderSides sides, int period, League league);
     protected virtual bool HotField(ProviderGame game, ProviderField field, int period, League league) => false;
-    internal virtual bool Clutch(ProviderGame game, League league) => false;
     internal virtual GameScoreline? Scoreline(ProviderGame game) => null;
     internal virtual string? When(ProviderScoringPlay play, League league) => play.Clock;
 }

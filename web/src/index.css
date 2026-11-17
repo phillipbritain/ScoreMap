@@ -2841,13 +2841,17 @@ body {
   background: var(--dim);
 }
 
-/* A step's panel, in the middle of the screen, on the rail's surface and outlined as its popovers are. */
+/* A step's panel, in the middle of the screen, on the rail's surface and outlined as its popovers are:
+   its heading at the top and its buttons at the foot always in view, what's between scrolling (see
+   .welcome-tour__body). */
 .welcome-tour__panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
   width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
   max-height: calc(100% - 12 * var(--spacing));
-  overflow-y: auto;
+  overflow: hidden;
   padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
@@ -2860,6 +2864,7 @@ body {
 }
 
 .welcome-tour__heading {
+  flex: none;
   margin: 0 0 calc(2 * var(--spacing));
   /* Clear of the close button in the panel's corner. */
   padding-right: var(--game-panel-size-close-width);
@@ -2974,7 +2979,18 @@ body {
   }
 }
 
+/* A step's content, scrolling when the panel can't fit it. It reaches a little past the panel's padding
+   on every side, padded back in, so focus rings and lit edges at its edge aren't clipped. */
+.welcome-tour__body {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: calc(-1 * var(--spacing));
+  padding: var(--spacing);
+}
+
 .welcome-tour__actions {
+  flex: none;
   position: relative;
   display: flex;
   flex-wrap: wrap;

@@ -390,7 +390,7 @@ interface TourPanelProps {
 
 /**
  * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the game
- * panel's, that closes the tour.
+ * panel's, that closes the tour. Its content scrolls between the heading and the step's buttons.
  */
 function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
   const headingId = useId()
@@ -400,7 +400,8 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
       <Heading id={headingId} className="welcome-tour__heading">
         {heading}
       </Heading>
-      {children}
+      {/* Scrolls on its own when it doesn't fit, so the heading and the step's buttons stay in view. */}
+      <div className="welcome-tour__body">{children}</div>
       {action && <div className="welcome-tour__actions">{action}</div>}
       <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
         ×

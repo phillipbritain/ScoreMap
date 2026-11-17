@@ -220,12 +220,18 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
 /** The rail's groups of buttons, which Your controls lights and points at. */
 const railGroups = () => document.querySelectorAll('.rail__buttons-inner > .rail__group')
 
-/** Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at. */
+/** The app's phone layout, where Your controls' arrow leaves from the top of its panel. */
+const phoneScreen = '(max-width: 640px)'
+
+/**
+ * Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
+ * phone, from the top of its panel).
+ */
 function ControlsStep({ onNext }: { onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   return (
     <>
-      <TourPointer panel={panel} target={railGroups} />
+      <TourPointer panel={panel} target={railGroups} fromTopWhen={phoneScreen} />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
         <ul className="welcome-tour__controls">
           {railButtons.map(({ name, icon }) => (

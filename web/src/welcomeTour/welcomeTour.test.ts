@@ -9,6 +9,7 @@ import {
 import {
   canShowPicks,
   isTourProgress,
+  middleClearsGamePanel,
   noPicks,
   picksFrom,
   scoreCardToTry,
@@ -210,5 +211,15 @@ describe("Click a score card's pick", () => {
 
   it('picks none with no cards', () => {
     expect(scoreCardToTry([], panel, screen)).toBeNull()
+  })
+})
+
+describe("where All set sits over the game panel on a desktop", () => {
+  it('sits in the middle of a tall screen, clear of the game panel', () => {
+    expect(middleClearsGamePanel(800, 168, 224)).toBe(true)
+  })
+
+  it('sits right above the game panel where the middle would run into it', () => {
+    expect(middleClearsGamePanel(600, 168, 224)).toBe(false)
   })
 })

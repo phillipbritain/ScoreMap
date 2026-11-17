@@ -82,6 +82,18 @@ export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox,
   return nearest?.gameId ?? null
 }
 
+/** The least room All set keeps between itself and the game panel below it, in the middle of the screen. */
+const roomAboveGamePanel = 16
+
+/**
+ * Whether All set, in the middle of a screen `screenHeight` tall, is clear of the game panel whose top
+ * is `aboveGamePanel` up from the screen's foot (with room between them). If not, it sits right above
+ * the game panel instead.
+ */
+export function middleClearsGamePanel(screenHeight: number, stepHeight: number, aboveGamePanel: number): boolean {
+  return (screenHeight + stepHeight) / 2 + roomAboveGamePanel <= screenHeight - aboveGamePanel
+}
+
 function within(box: ScreenBox, outer: ScreenBox): boolean {
   return box.left >= outer.left && box.top >= outer.top && box.right <= outer.right && box.bottom <= outer.bottom
 }

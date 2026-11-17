@@ -8,6 +8,7 @@ import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
+  middleClearsGamePanel,
   noPicks,
   picksFrom,
   scoreCardToTry,
@@ -265,7 +266,8 @@ function AllSetStep({ onDone }: { onDone: () => void }) {
 /**
  * While `on`, sets the tour's --above-game-panel to how far up from its foot the open game panel's top
  * is, following it as it slides in or grows, so the step's panel sits right above it (see
- * .welcome-tour[data-above-game-panel]). With no game panel open, the step's panel stays in the middle.
+ * .welcome-tour[data-above-game-panel]), and whether the middle of the screen is clear of it, for a
+ * desktop's All set to sit there. With no game panel open, the step's panel stays in the middle.
  */
 function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
   useEffect(() => {
@@ -275,15 +277,22 @@ function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
     const look = () => {
       frame = requestAnimationFrame(look)
       const gamePanel = document.querySelector('.game-panel:not(.game-panel--leaving)')
-      const above = gamePanel && element.getBoundingClientRect().bottom - gamePanel.getBoundingClientRect().top
-      // An attribute rather than a class, which React would drop each time it renders the tour.
+      const screenBox = element.getBoundingClientRect()
+      const above = gamePanel && screenBox.bottom - gamePanel.getBoundingClientRect().top
+      const step = element.querySelector('.welcome-tour__panel')?.getBoundingClientRect()
+      // Attributes rather than classes, which React would drop each time it renders the tour.
       element.toggleAttribute('data-above-game-panel', Boolean(gamePanel))
+      element.toggleAttribute(
+        'data-middle-clears-game-panel',
+        Boolean(above && step && middleClearsGamePanel(screenBox.height, step.height, above)),
+      )
       if (above) element.style.setProperty('--above-game-panel', `${above}px`)
     }
     look()
     return () => {
       cancelAnimationFrame(frame)
       element.removeAttribute('data-above-game-panel')
+      element.removeAttribute('data-middle-clears-game-panel')
       element.style.removeProperty('--above-game-panel')
     }
   }, [screen, on])

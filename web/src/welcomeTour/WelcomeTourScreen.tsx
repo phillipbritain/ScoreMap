@@ -184,9 +184,6 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
           <h3 className="welcome-tour__question">What would you like to see?</h3>
           <div className="welcome-tour__choices">
             <button type="button" className="welcome-tour__choice" onClick={() => onChoose('topEvents')}>
-              <svg className="welcome-tour__star" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
               <strong>Top Events</strong>
               <span>The biggest games right now, in every sport</span>
             </button>

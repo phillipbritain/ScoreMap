@@ -2928,7 +2928,6 @@ body {
 /* A choice on Welcome: its name, and a line under it on what it shows. */
 .welcome-tour__choice {
   display: grid;
-  grid-template-columns: auto 1fr;
   column-gap: calc(2.5 * var(--spacing));
   align-items: center;
   padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
@@ -2943,22 +2942,12 @@ body {
 }
 
 .welcome-tour__choice strong {
-  grid-column: 2;
   font-size: var(--typography-subtitle1-font-size);
   font-weight: var(--typography-subtitle1-font-weight);
 }
 
 .welcome-tour__choice span {
-  grid-column: 2;
   color: var(--palette-text-secondary);
-}
-
-.welcome-tour__star {
-  grid-row: 1 / span 2;
-  grid-column: 1;
-  width: 1.3em;
-  height: 1.3em;
-  color: var(--rail-open);
 }
 
 @media (hover: hover) {
@@ -3419,18 +3408,14 @@ body {
     margin-top: calc(3 * var(--spacing));
   }
 
-  /* The star's room held on every line, so the names and what they show line up. */
+  /* The names in a column of their own, so what they show lines up. */
   .welcome-tour__choice {
-    grid-template-columns: 1.3em 7em 1fr;
+    grid-template-columns: 7em 1fr;
     padding: calc(2 * var(--spacing)) calc(3.5 * var(--spacing));
   }
 
   .welcome-tour__choice span {
-    grid-column: 3;
-  }
-
-  .welcome-tour__star {
-    grid-row: auto;
+    grid-column: 2;
   }
 }
 

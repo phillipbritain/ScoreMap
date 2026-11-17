@@ -3,6 +3,7 @@ import type { Game, GameTeam } from './game'
 import { gameLabel, gameMatchup, matchesSearch } from './gameLabel'
 import { moveByArrows } from '../menus/arrowKeys'
 import { sidesTopFirst } from './sides'
+import { TeamLogoImage } from './TeamLogoImage'
 
 /**
  * The Games popover's list (see Rail): every filtered game, independent of the camera and of which pins
@@ -88,7 +89,5 @@ function Logos({ game }: { game: Game }) {
 }
 
 function Logo({ team }: { team: GameTeam }) {
-  return team.logoUrl
-    ? <img className="game-navigation__logo" src={team.logoUrl} alt="" />
-    : <span className="game-navigation__logo game-navigation__logo--none">{team.abbreviation.slice(0, 1)}</span>
+  return <TeamLogoImage team={team} className="game-navigation__logo" markClassName="game-navigation__logo--none" />
 }

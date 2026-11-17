@@ -1,0 +1,982 @@
+{
+  "leagues": [
+    {
+      "id": "41",
+      "uid": "s:40~l:41",
+      "name": "NCAA Men's Basketball",
+      "abbreviation": "NCAAM",
+      "midsizeName": "NCAAM Basketball",
+      "slug": "mens-college-basketball",
+      "season": {
+        "year": 2027,
+        "startDate": "2026-07-13T07:00Z",
+        "endDate": "2027-04-07T06:59Z",
+        "displayName": "2026-27",
+        "type": {
+          "id": "2",
+          "type": 2,
+          "name": "Regular Season",
+          "abbreviation": "reg"
+        }
+      },
+      "logos": [
+        {
+          "href": "https://a.espncdn.com/redesign/assets/img/icons/NCAASports_MensBasketball.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+            "full",
+            "default"
+          ],
+          "lastUpdated": "2026-09-17T20:36Z"
+        },
+        {
+          "href": "https://a.espncdn.com/redesign/assets/img/icons/NCAASports_MensBasketball.png",
+          "width": 500,
+          "height": 500,
+          "alt": "",
+          "rel": [
+            "full",
+            "dark"
+          ],
+          "lastUpdated": "2026-09-17T20:36Z"
+        }
+      ],
+      "calendarType": "day",
+      "calendarIsWhitelist": true,
+      "calendarStartDate": "2026-07-13T07:00Z",
+      "calendarEndDate": "2027-04-07T06:59Z",
+      "calendar": [
+        "2026-11-01T07:00Z",
+        "2026-11-02T08:00Z",
+        "2026-11-03T08:00Z",
+        "2026-11-04T08:00Z",
+        "2026-11-05T08:00Z",
+        "2026-11-06T08:00Z",
+        "2026-11-07T08:00Z",
+        "2026-11-08T08:00Z",
+        "2026-11-09T08:00Z",
+        "2026-11-10T08:00Z",
+        "2026-11-11T08:00Z",
+        "2026-11-12T08:00Z",
+        "2026-11-13T08:00Z",
+        "2026-11-14T08:00Z",
+        "2026-11-15T08:00Z",
+        "2026-11-16T08:00Z",
+        "2026-11-17T08:00Z",
+        "2026-11-18T08:00Z",
+        "2026-11-19T08:00Z",
+        "2026-11-20T08:00Z",
+        "2026-11-21T08:00Z",
+        "2026-11-22T08:00Z",
+        "2026-11-23T08:00Z",
+        "2026-11-24T08:00Z",
+        "2026-11-25T08:00Z",
+        "2026-11-26T08:00Z",
+        "2026-11-27T08:00Z",
+        "2026-11-28T08:00Z",
+        "2026-11-29T08:00Z",
+        "2026-11-30T08:00Z",
+        "2026-12-01T08:00Z",
+        "2026-12-02T08:00Z",
+        "2026-12-03T08:00Z",
+        "2026-12-04T08:00Z",
+        "2026-12-05T08:00Z",
+        "2026-12-06T08:00Z",
+        "2026-12-07T08:00Z",
+        "2026-12-08T08:00Z",
+        "2026-12-09T08:00Z",
+        "2026-12-10T08:00Z",
+        "2026-12-11T08:00Z",
+        "2026-12-12T08:00Z",
+        "2026-12-13T08:00Z",
+        "2026-12-14T08:00Z",
+        "2026-12-15T08:00Z",
+        "2026-12-16T08:00Z",
+        "2026-12-17T08:00Z",
+        "2026-12-18T08:00Z",
+        "2026-12-19T08:00Z",
+        "2026-12-20T08:00Z",
+        "2026-12-21T08:00Z",
+        "2026-12-22T08:00Z",
+        "2026-12-23T08:00Z",
+        "2026-12-27T08:00Z",
+        "2026-12-28T08:00Z",
+        "2026-12-29T08:00Z",
+        "2026-12-30T08:00Z",
+        "2026-12-31T08:00Z",
+        "2027-01-01T08:00Z",
+        "2027-01-02T08:00Z",
+        "2027-01-03T08:00Z",
+        "2027-01-04T08:00Z",
+        "2027-01-05T08:00Z",
+        "2027-01-06T08:00Z",
+        "2027-01-07T08:00Z",
+        "2027-01-08T08:00Z",
+        "2027-01-09T08:00Z",
+        "2027-01-10T08:00Z",
+        "2027-01-11T08:00Z",
+        "2027-01-12T08:00Z",
+        "2027-01-13T08:00Z",
+        "2027-01-14T08:00Z",
+        "2027-01-15T08:00Z",
+        "2027-01-16T08:00Z",
+        "2027-01-17T08:00Z",
+        "2027-01-18T08:00Z",
+        "2027-01-19T08:00Z",
+        "2027-01-20T08:00Z",
+        "2027-01-21T08:00Z",
+        "2027-01-22T08:00Z",
+        "2027-01-23T08:00Z",
+        "2027-01-24T08:00Z",
+        "2027-01-25T08:00Z",
+        "2027-01-26T08:00Z",
+        "2027-01-27T08:00Z",
+        "2027-01-28T08:00Z",
+        "2027-01-29T08:00Z",
+        "2027-01-30T08:00Z",
+        "2027-01-31T08:00Z",
+        "2027-02-01T08:00Z",
+        "2027-02-02T08:00Z",
+        "2027-02-03T08:00Z",
+        "2027-02-04T08:00Z",
+        "2027-02-05T08:00Z",
+        "2027-02-06T08:00Z",
+        "2027-02-07T08:00Z",
+        "2027-02-08T08:00Z",
+        "2027-02-09T08:00Z",
+        "2027-02-10T08:00Z",
+        "2027-02-11T08:00Z",
+        "2027-02-12T08:00Z",
+        "2027-02-13T08:00Z",
+        "2027-02-14T08:00Z",
+        "2027-02-15T08:00Z",
+        "2027-02-16T08:00Z",
+        "2027-02-17T08:00Z",
+        "2027-02-18T08:00Z",
+        "2027-02-19T08:00Z",
+        "2027-02-20T08:00Z",
+        "2027-02-21T08:00Z",
+        "2027-02-22T08:00Z",
+        "2027-02-23T08:00Z",
+        "2027-02-24T08:00Z",
+        "2027-02-25T08:00Z",
+        "2027-02-26T08:00Z",
+        "2027-02-27T08:00Z",
+        "2027-02-28T08:00Z",
+        "2027-03-01T08:00Z",
+        "2027-03-02T08:00Z",
+        "2027-03-03T08:00Z",
+        "2027-03-04T08:00Z",
+        "2027-03-05T08:00Z",
+        "2027-03-06T08:00Z",
+        "2027-03-07T08:00Z"
+      ]
+    }
+  ],
+  "groups": [
+    "50"
+  ],
+  "events": [
+    {
+      "id": "401928360",
+      "uid": "s:40~l:41~e:401928360",
+      "date": "2026-11-17T17:00Z",
+      "name": "Louisiana Christian Wildcats at Southern Jaguars",
+      "shortName": "LCHR @ SOU",
+      "season": {
+        "year": 2027,
+        "type": 2,
+        "slug": "regular-season"
+      },
+      "competitions": [
+        {
+          "id": "401928360",
+          "uid": "s:40~l:41~e:401928360~c:401928360",
+          "date": "2026-11-17T17:00Z",
+          "attendance": 0,
+          "type": {
+            "id": "1",
+            "abbreviation": "STD"
+          },
+          "timeValid": true,
+          "neutralSite": false,
+          "conferenceCompetition": false,
+          "playByPlayAvailable": true,
+          "recent": true,
+          "venue": {
+            "id": "2210",
+            "fullName": "F.G. Clark Activity Center",
+            "address": {
+              "city": "Baton Rouge",
+              "state": "LA"
+            },
+            "indoor": true
+          },
+          "competitors": [
+            {
+              "id": "2582",
+              "uid": "s:40~l:41~t:2582",
+              "type": "team",
+              "order": 0,
+              "homeAway": "home",
+              "team": {
+                "id": "2582",
+                "uid": "s:40~l:41~t:2582",
+                "location": "Southern",
+                "name": "Jaguars",
+                "abbreviation": "SOU",
+                "displayName": "Southern Jaguars",
+                "shortDisplayName": "Southern",
+                "color": "004B97",
+                "alternateColor": "ffc82d",
+                "isActive": true,
+                "venue": {
+                  "id": "2210"
+                },
+                "links": [
+                  {
+                    "rel": [
+                      "clubhouse",
+                      "desktop",
+                      "team"
+                    ],
+                    "href": "https://www.espn.com/mens-college-basketball/team/_/id/2582/southern-jaguars",
+                    "text": "Clubhouse",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "roster",
+                      "desktop",
+                      "team"
+                    ],
+                    "href": "https://www.espn.com/mens-college-basketball/team/roster/_/id/2582",
+                    "text": "Roster",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "roster",
+                      "sportscenter",
+                      "app",
+                      "team"
+                    ],
+                    "href": "sportscenter://x-callback-url/showClubhouse?uid=s:40~l:41~t:2582&section=roster",
+                    "text": "Roster",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "stats",
+                      "desktop",
+                      "team"
+                    ],
+                    "href": "https://www.espn.com/mens-college-basketball/team/stats/_/id/2582",
+                    "text": "Statistics",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "stats",
+                      "sportscenter",
+                      "app",
+                      "team"
+                    ],
+                    "href": "sportscenter://x-callback-url/showClubhouse?uid=s:40~l:41~t:2582&section=stats",
+                    "text": "Statistics",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "schedule",
+                      "desktop",
+                      "team"
+                    ],
+                    "href": "https://www.espn.com/mens-college-basketball/team/schedule/_/id/2582",
+                    "text": "Schedule",
+                    "isExternal": false,
+                    "isPremium": false
+                  },
+                  {
+                    "rel": [
+                      "schedule",
+                      "sportscenter",
+                      "app",
+                      "team"
+                    ],
+                    "href": "sportscenter://x-callback-url/showClubhouse?uid=s:40~l:41~t:2582&section=scores",
+                    "text": "Schedule",
+                    "isExternal": false,
+                    "isPremium": false
+                  }
+                ],
+                "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2582.png",
+                "logoDark": "https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2582.png",
+                "conferenceId": "26"
+              },
+              "score": "77",
+              "linescores": [
+                {
+                  "value": 54.0,
+                  "displayValue": "54",
+                  "period": 1
+                },
+                {
+                  "value": 23.0,
+                  "displayValue": "23",
+                  "period": 2
+                }
+              ],
+              "statistics": [
+                {
+                  "name": "rebounds",
+                  "abbreviation": "REB",
+                  "displayValue": "19"
+                },
+                {
+                  "name": "avgRebounds",
+                  "abbreviation": "REB",
+                  "displayValue": "19.0"
+                },
+                {
+                  "name": "assists",
+                  "abbreviation": "AST",
+                  "displayValue": "15"
+                },
+                {
+                  "name": "fieldGoalsAttempted",
+                  "abbreviation": "FGA",
+                  "displayValue": "41"
+                },
+                {
+                  "name": "fieldGoalsMade",
+                  "abbreviation": "FGM",
+                  "displayValue": "27"
+                },
+                {
+                  "name": "fieldGoalPct",
+                  "abbreviation": "FG%",
+                  "displayValue": "65.9"
+                },
+                {
+                  "name": "freeThrowPct",
+                  "abbreviation": "FT%",
+                  "displayValue": "81.0"
+                },
+                {
+                  "name": "freeThrowsAttempted",
+                  "abbreviation": "FTA",
+                  "displayValue": "21"
+                },
+                {
+                  "name": "freeThrowsMade",
+                  "abbreviation": "FTM",
+                  "displayValue": "17"
+                },
+                {
+                  "name": "points",
+                  "abbreviation": "PTS",
+                  "displayValue": "77"
+                },
+                {
+                  "name": "threePointFieldGoalsAttempted",
+                  "abbreviation": "3PA",
+                  "displayValue": "14"
+                },
+                {
+                  "name": "threePointFieldGoalsMade",
+                  "abbreviation": "3PM",
+                  "displayValue": "6"
+                },
+                {
+                  "name": "avgPoints",
+                  "abbreviation": "PTS",
+                  "displayValue": "77.0"
+                },
+                {
+                  "name": "avgAssists",
+                  "abbreviation": "AST",
+                  "displayValue": "15.0"
+                },
+                {
+                  "name": "threePointFieldGoalPct",
+                  "abbreviation": "3P%",
+                  "displayValue": "42.9"
+                }
+              ],
+              "leaders": [
+                {
+                  "name": "points",
+                  "displayName": "Points",
+                  "shortDisplayName": "Pts",
+                  "abbreviation": "Pts",
+                  "leaders": [
+                    {
+                      "displayValue": "17",
+                      "value": 17.0,
+                      "athlete": {
+                        "id": "5461725",
+                        "fullName": "Joseph Hunter",
+                        "displayName": "Joseph Hunter",
+                        "shortName": "J. Hunter",
+                        "links": [
+                          {
+                            "rel": [
+                              "playercard",
+                              "desktop",
+                              "athlete"
+                            ],
+                            "href": "https://www.espn.com/mens-college-basketball/player/_/id/5461725/joseph-hunter"
+                          }
+                        ],
+                        "headshot": "https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/5461725.png",
+                        "jersey": "13",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2582"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2582"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "rebounds",
+                  "displayName": "Rebounds",
+                  "shortDisplayName": "Reb",
+                  "abbreviation": "Reb",
+                  "leaders": [
+                    {
+                      "displayValue": "4",
+                      "value": 4.0,
+                      "athlete": {
+                        "id": "5108073",
+                        "fullName": "Cam Amboree",
+                        "displayName": "Cam Amboree",
+                        "shortName": "C. Amboree",
+                        "links": [
+                          {
+                            "rel": [
+                              "playercard",
+                              "desktop",
+                              "athlete"
+                            ],
+                            "href": "https://www.espn.com/mens-college-basketball/player/_/id/5108073/cam-amboree"
+                          }
+                        ],
+                        "headshot": "https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/5108073.png",
+                        "jersey": "0",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2582"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2582"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "assists",
+                  "displayName": "Assists",
+                  "shortDisplayName": "Ast",
+                  "abbreviation": "Ast",
+                  "leaders": [
+                    {
+                      "displayValue": "4",
+                      "value": 4.0,
+                      "athlete": {
+                        "id": "5314858",
+                        "fullName": "Daniel Dormu",
+                        "displayName": "Daniel Dormu",
+                        "shortName": "D. Dormu",
+                        "links": [
+                          {
+                            "rel": [
+                              "playercard",
+                              "desktop",
+                              "athlete"
+                            ],
+                            "href": "https://www.espn.com/mens-college-basketball/player/_/id/5314858/daniel-dormu"
+                          }
+                        ],
+                        "headshot": "https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/5314858.png",
+                        "jersey": "3",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2582"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2582"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "rating",
+                  "displayName": "Rating",
+                  "shortDisplayName": "RAT",
+                  "abbreviation": "RAT",
+                  "leaders": [
+                    {
+                      "displayValue": "17 PTS",
+                      "value": 30.75,
+                      "athlete": {
+                        "id": "5461725",
+                        "fullName": "Joseph Hunter",
+                        "displayName": "Joseph Hunter",
+                        "shortName": "J. Hunter",
+                        "links": [
+                          {
+                            "rel": [
+                              "playercard",
+                              "desktop",
+                              "athlete"
+                            ],
+                            "href": "https://www.espn.com/mens-college-basketball/player/_/id/5461725/joseph-hunter"
+                          }
+                        ],
+                        "headshot": "https://a.espncdn.com/i/headshots/mens-college-basketball/players/full/5461725.png",
+                        "jersey": "13",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2582"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2582"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "curatedRank": {
+                "current": 99
+              },
+              "records": [
+                {
+                  "name": "overall",
+                  "abbreviation": "Season",
+                  "type": "total",
+                  "summary": "0-5"
+                },
+                {
+                  "name": "Home",
+                  "abbreviation": "Home",
+                  "type": "home",
+                  "summary": "0-0"
+                },
+                {
+                  "name": "Road",
+                  "abbreviation": "AWAY",
+                  "type": "road",
+                  "summary": "0-5"
+                },
+                {
+                  "name": "vs. Conf.",
+                  "abbreviation": "VS CONF",
+                  "type": "vsconf",
+                  "summary": "0-0"
+                }
+              ]
+            },
+            {
+              "id": "2347",
+              "uid": "s:40~l:41~t:2347",
+              "type": "team",
+              "order": 1,
+              "homeAway": "away",
+              "team": {
+                "id": "2347",
+                "uid": "s:40~l:41~t:2347",
+                "location": "Louisiana Christian",
+                "name": "Wildcats",
+                "abbreviation": "LCHR",
+                "displayName": "Louisiana Christian Wildcats",
+                "shortDisplayName": "LA Christian",
+                "color": "000000",
+                "isActive": false,
+                "links": []
+              },
+              "score": "38",
+              "linescores": [
+                {
+                  "value": 32.0,
+                  "displayValue": "32",
+                  "period": 1
+                },
+                {
+                  "value": 6.0,
+                  "displayValue": "6",
+                  "period": 2
+                }
+              ],
+              "statistics": [
+                {
+                  "name": "rebounds",
+                  "abbreviation": "REB",
+                  "displayValue": "10"
+                },
+                {
+                  "name": "avgRebounds",
+                  "abbreviation": "REB",
+                  "displayValue": "10.0"
+                },
+                {
+                  "name": "assists",
+                  "abbreviation": "AST",
+                  "displayValue": "9"
+                },
+                {
+                  "name": "fieldGoalsAttempted",
+                  "abbreviation": "FGA",
+                  "displayValue": "31"
+                },
+                {
+                  "name": "fieldGoalsMade",
+                  "abbreviation": "FGM",
+                  "displayValue": "14"
+                },
+                {
+                  "name": "fieldGoalPct",
+                  "abbreviation": "FG%",
+                  "displayValue": "45.2"
+                },
+                {
+                  "name": "freeThrowPct",
+                  "abbreviation": "FT%",
+                  "displayValue": "100.0"
+                },
+                {
+                  "name": "freeThrowsAttempted",
+                  "abbreviation": "FTA",
+                  "displayValue": "4"
+                },
+                {
+                  "name": "freeThrowsMade",
+                  "abbreviation": "FTM",
+                  "displayValue": "4"
+                },
+                {
+                  "name": "points",
+                  "abbreviation": "PTS",
+                  "displayValue": "38"
+                },
+                {
+                  "name": "threePointFieldGoalsAttempted",
+                  "abbreviation": "3PA",
+                  "displayValue": "17"
+                },
+                {
+                  "name": "threePointFieldGoalsMade",
+                  "abbreviation": "3PM",
+                  "displayValue": "6"
+                },
+                {
+                  "name": "avgPoints",
+                  "abbreviation": "PTS",
+                  "displayValue": "38.0"
+                },
+                {
+                  "name": "avgAssists",
+                  "abbreviation": "AST",
+                  "displayValue": "9.0"
+                },
+                {
+                  "name": "threePointFieldGoalPct",
+                  "abbreviation": "3P%",
+                  "displayValue": "35.3"
+                }
+              ],
+              "leaders": [
+                {
+                  "name": "points",
+                  "displayName": "Points",
+                  "shortDisplayName": "Pts",
+                  "abbreviation": "Pts",
+                  "leaders": [
+                    {
+                      "displayValue": "10",
+                      "value": 10.0,
+                      "athlete": {
+                        "id": "5464462",
+                        "fullName": "Isaac Ratliff",
+                        "displayName": "Isaac Ratliff",
+                        "shortName": "I. Ratliff",
+                        "links": [],
+                        "jersey": "13",
+                        "position": {
+                          "abbreviation": "F"
+                        },
+                        "team": {
+                          "id": "2347"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2347"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "rebounds",
+                  "displayName": "Rebounds",
+                  "shortDisplayName": "Reb",
+                  "abbreviation": "Reb",
+                  "leaders": [
+                    {
+                      "displayValue": "3",
+                      "value": 3.0,
+                      "athlete": {
+                        "id": "5464463",
+                        "fullName": "Desmond Atkins",
+                        "displayName": "Desmond Atkins",
+                        "shortName": "D. Atkins",
+                        "links": [],
+                        "jersey": "21",
+                        "position": {
+                          "abbreviation": "C"
+                        },
+                        "team": {
+                          "id": "2347"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2347"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "assists",
+                  "displayName": "Assists",
+                  "shortDisplayName": "Ast",
+                  "abbreviation": "Ast",
+                  "leaders": [
+                    {
+                      "displayValue": "7",
+                      "value": 7.0,
+                      "athlete": {
+                        "id": "5464457",
+                        "fullName": "Rambo Eagins",
+                        "displayName": "Rambo Eagins",
+                        "shortName": "R. Eagins",
+                        "links": [],
+                        "jersey": "1",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2347"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2347"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "rating",
+                  "displayName": "Rating",
+                  "shortDisplayName": "RAT",
+                  "abbreviation": "RAT",
+                  "leaders": [
+                    {
+                      "displayValue": "8 PTS, 7 AST",
+                      "value": 19.100000381469727,
+                      "athlete": {
+                        "id": "5464457",
+                        "fullName": "Rambo Eagins",
+                        "displayName": "Rambo Eagins",
+                        "shortName": "R. Eagins",
+                        "links": [],
+                        "jersey": "1",
+                        "position": {
+                          "abbreviation": "G"
+                        },
+                        "team": {
+                          "id": "2347"
+                        },
+                        "active": true
+                      },
+                      "team": {
+                        "id": "2347"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "curatedRank": {
+                "current": 99
+              }
+            }
+          ],
+          "notes": [],
+          "situation": {
+            "lastPlay": {
+              "id": "401928360121478491",
+              "type": {
+                "id": "598",
+                "text": "Lost Ball Turnover"
+              },
+              "text": "Rambo Eagins bad pass\nturnover",
+              "scoreValue": 0,
+              "team": {
+                "id": "2347"
+              },
+              "probability": {
+                "tiePercentage": 0.0,
+                "homeWinPercentage": 0.999,
+                "awayWinPercentage": 0.0010000000000000009
+              },
+              "athletesInvolved": [
+                {
+                  "id": "5464457",
+                  "fullName": "Rambo Eagins",
+                  "displayName": "Rambo Eagins",
+                  "shortName": "R. Eagins",
+                  "links": [],
+                  "jersey": "1",
+                  "position": "G",
+                  "team": {
+                    "id": "2347"
+                  }
+                }
+              ]
+            }
+          },
+          "status": {
+            "clock": 753.0,
+            "displayClock": "12:33",
+            "period": 2,
+            "type": {
+              "id": "2",
+              "name": "STATUS_IN_PROGRESS",
+              "state": "in",
+              "completed": false,
+              "description": "In Progress",
+              "detail": "12:33 - 2nd Half",
+              "shortDetail": "12:33 - 2nd"
+            }
+          },
+          "broadcasts": [],
+          "format": {
+            "regulation": {
+              "periods": 2
+            }
+          },
+          "startDate": "2026-11-17T17:00Z",
+          "broadcast": "",
+          "geoBroadcasts": [],
+          "highlights": []
+        }
+      ],
+      "links": [
+        {
+          "language": "en-US",
+          "rel": [
+            "live",
+            "desktop",
+            "event"
+          ],
+          "href": "https://www.espn.com/mens-college-basketball/game?gameId=401928360",
+          "text": "Gamecast",
+          "shortText": "Gamecast",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en-US",
+          "rel": [
+            "boxscore",
+            "desktop",
+            "event"
+          ],
+          "href": "https://www.espn.com/mens-college-basketball/boxscore/_/gameId/401928360",
+          "text": "Box Score",
+          "shortText": "Box Score",
+          "isExternal": false,
+          "isPremium": false
+        },
+        {
+          "language": "en-US",
+          "rel": [
+            "pbp",
+            "desktop",
+            "event"
+          ],
+          "href": "https://www.espn.com/mens-college-basketball/playbyplay/_/gameId/401928360",
+          "text": "Play-by-Play",
+          "shortText": "Play-by-Play",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "status": {
+        "clock": 753.0,
+        "displayClock": "12:33",
+        "period": 2,
+        "type": {
+          "id": "2",
+          "name": "STATUS_IN_PROGRESS",
+          "state": "in",
+          "completed": false,
+          "description": "In Progress",
+          "detail": "12:33 - 2nd Half",
+          "shortDetail": "12:33 - 2nd"
+        }
+      }
+    }
+  ],
+  "provider": {
+    "id": "100",
+    "name": "DraftKings",
+    "priority": 1,
+    "logos": [
+      {
+        "href": "https://a.espncdn.com/i/betting/Draftkings_Light.svg",
+        "rel": [
+          "light"
+        ]
+      },
+      {
+        "href": "https://a.espncdn.com/i/betting/Draftkings_Dark.svg",
+        "rel": [
+          "dark"
+        ]
+      }
+    ],
+    "displayName": "DraftKings"
+  },
+  "eventsDate": {
+    "date": "2026-11-17T17:00Z",
+    "seasonType": 2
+  }
+}

@@ -21,7 +21,6 @@ const arrowhead: PlacedGame = {
   },
   clock: '4:12',
   period: 3,
-  clutchTime: false,
   hot: false,
   venue: {
     name: 'GEHA Field at Arrowhead Stadium',

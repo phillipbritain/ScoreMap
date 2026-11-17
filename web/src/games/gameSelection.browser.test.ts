@@ -33,7 +33,6 @@ function game(id: string): Game {
     },
     clock,
     period: null,
-    clutchTime: false,
     hot: false,
     venue: { name: null, city: null, region: null, country: null, latitude, longitude, timeZone: null, photo: null, court: null },
     streamLinks: [],

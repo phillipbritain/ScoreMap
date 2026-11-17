@@ -87,7 +87,6 @@ function made(spec: GameSpec, now: number): Game {
     contest: { kind: 'sides', home: side(spec.home), away: side(spec.away) },
     clock: spec.clock ?? null,
     period: null,
-    clutchTime: false,
     hot: false,
     // Its photo comes from the server, as a real game's does (see tourVenuePhotos).
     venue: { ...spec.venue, photo: null, court: null },

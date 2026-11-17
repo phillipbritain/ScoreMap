@@ -69,4 +69,14 @@ describe('the tour arrow', () => {
     expect(path.startsWith(`M${from.x} ${from.y} `)).toBe(true)
     expect(path.endsWith(` ${to.x} ${to.y}`)).toBe(true)
   })
+
+  it("starts at the middle of the top of the panel when asked, to the side of what's aimed at above it", () => {
+    const phonePanel = { left: 12, top: 113, right: 310, bottom: 550 }
+    const zoomButtons = { left: 342, top: 52, right: 378, bottom: 124 }
+    const { from, to } = tourArrow(phonePanel, zoomButtons, 'side', 'top')
+    expect(from.x).toBe(161)
+    expect(from.y).toBeLessThan(phonePanel.top)
+    expect(to.x).toBeLessThan(zoomButtons.left)
+    expect(to.y).toBe(88)
+  })
 })

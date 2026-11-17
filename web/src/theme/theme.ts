@@ -606,9 +606,14 @@ const settings = {
     },
     /**
      * The welcome tour: how opaque its dim over the globe is (under a step's panel, and around its
-     * spotlight), and how wide the arrow from a step's panel is.
+     * spotlight), how wide the arrow from a step's panel is, and the outline of each of Welcome's
+     * choices.
      */
-    WelcomeTour: { dim: { opacity }, arrow: { width: pixels } },
+    WelcomeTour: {
+      dim: { opacity },
+      arrow: { width: pixels },
+      choice: { topEvents: color, myLeagues: color, everything: color },
+    },
   },
 }
 

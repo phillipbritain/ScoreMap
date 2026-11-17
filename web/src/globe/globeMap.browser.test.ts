@@ -1294,8 +1294,17 @@ describe('settling', () => {
     }
     expect(globe.cardsSteady(), 'the pan stopped as the cards settled').toBe(false)
     // The cards in each frame from the camera stopping until they settle.
+    const debugFrame = () => {
+      const element = container.querySelector<HTMLElement>('[data-game-id="G20"].score-card')!
+      return {
+        at: performance.now(), offset: cardsFromVenues().get('G20'),
+        parent: element?.parentElement?.style.transform,
+        animations: element?.getAnimations().map((animation) => ({ time: animation.currentTime, start: animation.startTime, state: animation.playState, frames: (animation.effect as KeyframeEffect).getKeyframes() })),
+      }
+    }
     const frames = [cardsFromVenues()]
-    const record = () => frames.push(cardsFromVenues())
+    const debugFrames = [debugFrame()]
+    const record = () => { frames.push(cardsFromVenues()); debugFrames.push(debugFrame()) }
     map.on('render', record)
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     map.off('render', record)
@@ -1308,7 +1317,7 @@ describe('settling', () => {
       for (const gameId of jumped(frames[i], now)) jumpFrames.set(gameId, [...(jumpFrames.get(gameId) ?? []), i + 1])
     })
     const jumpedAgain = [...jumpFrames].filter(([, at]) => at.some((frame, i) => i > 0 && frame !== at[i - 1] + 1))
-    expect(jumpedAgain.map(([gameId, at]) => `${gameId} in frames ${at.join(', ')}`)).toEqual([])
+    expect(jumpedAgain.map(([gameId, at]) => `${gameId} in frames ${at.join(', ')}`), JSON.stringify(debugFrames)).toEqual([])
 
     // Any glide over, the cards stay where they are.
     await pause(cardMoveDuration)

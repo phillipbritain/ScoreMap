@@ -1,24 +1,23 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
 import { RailIcon } from '../rail/railIcons'
-import {
-  isLeagueOn,
-  leaguesBySport,
-  sportSwitch,
-  withAllLeagues,
-  withLeague,
-  withSport,
-  type League,
-  type ViewerSettings,
-} from '../settings/viewerSettings'
+import type { ViewerSettings } from '../settings/viewerSettings'
+import { LeaguePicker } from '../rail/LeaguePicker'
 import type { LeagueList } from '../settings/leagues'
 import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
+  noPicks,
+  picksFrom,
   scoreCardToTry,
   settingsForChoice,
-  type TourChoice, type TourEvent, type TourProgress } from './welcomeTour'
+  settingsForPicks,
+  type TourChoice,
+  type TourEvent,
+  type TourPicks,
+  type TourProgress,
+} from './welcomeTour'
 
 interface WelcomeTourScreenProps {
   /** The step on show: the app shows the tour only while it isn't finished. */
@@ -84,6 +83,9 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
 /** Closes the tour, for each step's panel's ×. */
 const TourClose = createContext<() => void>(() => {})
 
+/** How long the note on why "Show these" can't go on stays (its fade is in the CSS, .welcome-tour__nothing-picked). */
+const nothingPickedDuration = 4000
+
 interface WelcomeStepProps {
   onChoose: (choice: TourChoice) => void
   leagueList: LeagueList
@@ -92,19 +94,28 @@ interface WelcomeStepProps {
 }
 
 /**
- * Welcome: what ScoreMap is, and what to see first. My leagues starts with nothing picked;
- * only "Show these" applies the picks, so Back can leave them without changing the viewer settings.
+ * Welcome: what ScoreMap is, and what to see first. My leagues opens the rail's own LeaguePicker,
+ * conferences and all, starting with nothing picked; only "Show these" applies the picks, so Back can
+ * leave them without changing the viewer settings. "Show these" pressed with nothing picked says why it
+ * can't go on, in a note over the picker that fades out.
  */
 function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepProps) {
   const { leagues, status, retry } = leagueList
   const [picking, setPicking] = useState(false)
-  const [pickedLeagues, setPickedLeagues] = useState<string[]>([])
-  const pickedSettings = pickedLeagues.reduce(
-    (current, name) => withLeague(current, name, true),
-    settingsForChoice(settings, 'myLeagues', leagues),
-  )
+  const [picks, setPicks] = useState<TourPicks>(noPicks)
+  const pickedSettings = settingsForPicks(settings, picks, leagues)
+  const ready = status === 'ready' && leagues.length > 0
+  const canShow = ready && canShowPicks(pickedSettings, leagues)
+  // The note on why "Show these" can't go on yet, keyed afresh on each press so its fade starts again.
+  const [nothingPicked, setNothingPicked] = useState<number | null>(null)
+  useEffect(() => {
+    if (nothingPicked === null) return
+    const timer = setTimeout(() => setNothingPicked(null), nothingPickedDuration)
+    return () => clearTimeout(timer)
+  }, [nothingPicked])
   const pickMyLeagues = () => {
-    setPickedLeagues([])
+    setPicks(noPicks)
+    setNothingPicked(null)
     setPicking(true)
   }
   return (
@@ -116,13 +127,24 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
           <>
             <TourButton onClick={() => setPicking(false)}>Back</TourButton>
             {status === 'failed' && <TourButton onClick={retry}>Retry</TourButton>}
+            {nothingPicked !== null && !canShow && (
+              <p key={nothingPicked} className="welcome-tour__nothing-picked" role="status">
+                Pick at least one league first, so there&apos;s something to show. Or go Back for Top Events or Everything.
+              </p>
+            )}
             <TourButton
               onClick={() => {
-                if (status !== 'ready' || !canShowPicks(pickedSettings, leagues)) return
+                if (!ready) return
+                if (!canShow) {
+                  setNothingPicked(Date.now())
+                  return
+                }
                 onChange(pickedSettings)
                 onChoose('myLeagues')
               }}
-              disabled={status !== 'ready' || !canShowPicks(pickedSettings, leagues)}
+              // Loading, failed or empty, the picker says why already; with nothing picked, a press says why.
+              disabled={!ready}
+              unavailable={!canShow}
             >
               Show these
             </TourButton>
@@ -150,9 +172,7 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
             <LeaguePicker
               leagues={leagues}
               settings={pickedSettings}
-              onChange={(next) => setPickedLeagues(
-                leagues.filter((league) => isLeagueOn(next, league.name)).map((league) => league.name),
-              )}
+              onChange={(next) => setPicks(picksFrom(next, leagues))}
             />
           )}
         </>
@@ -182,89 +202,6 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
         </>
       )}
     </TourPanel>
-  )
-}
-
-/**
- * My leagues' picker: "Select all", switching every league as "All leagues" does in Leagues on the
- * rail, then a card for each sport, its switch switching all its leagues as the sport's name does
- * there, and its leagues as chips in it. A sport with one league has no chips: its switch is that
- * league. Each switch shows half-way while only some of its leagues are on.
- */
-function LeaguePicker({ leagues, settings, onChange }: {
-  leagues: readonly League[]
-  settings: ViewerSettings
-  onChange: (settings: ViewerSettings) => void
-}) {
-  const leaguesOn = leagues.filter((league) => isLeagueOn(settings, league.name)).length
-  const allState = leaguesOn === leagues.length ? 'on' : leaguesOn === 0 ? 'off' : 'mixed'
-  return (
-    <div className="welcome-tour__picker">
-      <SwitchButton
-        state={allState}
-        className="welcome-tour__select-all"
-        onClick={() => onChange(withAllLeagues(settings, leagues, allState !== 'on'))}
-      >
-        Select all
-      </SwitchButton>
-      <div className="welcome-tour__sports">
-        {leaguesBySport(leagues).map((group) => {
-          const state = sportSwitch(settings, group)
-          return (
-            <div key={group.sport} className={`welcome-tour__sport welcome-tour__sport--${state}`}>
-              <SwitchButton
-                state={state}
-                className="welcome-tour__sport-switch"
-                onClick={() => onChange(withSport(settings, group, state !== 'on'))}
-              >
-                {group.sport}
-              </SwitchButton>
-              {group.leagues.length > 1 && (
-                <div className="leagues-chips welcome-tour__league-chips">
-                  {group.leagues.map((league) => {
-                    const on = isLeagueOn(settings, league.name)
-                    return (
-                      <button
-                        key={league.name}
-                        type="button"
-                        aria-pressed={on}
-                        className="rail-chip welcome-tour__league-chip"
-                        onClick={() => onChange(withLeague(settings, league.name, !on))}
-                      >
-                        {league.name}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-interface SwitchButtonProps {
-  /** On, off, or mixed while only some of the leagues it switches are on. */
-  state: 'on' | 'off' | 'mixed'
-  className: string
-  onClick: () => void
-  children: ReactNode
-}
-
-/** A label with a switch at its right, switching some leagues: all on, or all off when they're all on already. */
-function SwitchButton({ state, className, onClick, children }: SwitchButtonProps) {
-  return (
-    <button
-      type="button"
-      aria-pressed={state === 'mixed' ? 'mixed' : state === 'on'}
-      className={`welcome-tour__switch-button ${className}`}
-      onClick={onClick}
-    >
-      {children}
-      <span className={`switch switch--${state}`} aria-hidden="true" />
-    </button>
   )
 }
 
@@ -422,12 +359,20 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
 interface TourButtonProps {
   onClick: () => void
   disabled?: boolean
+  /** Shown as unavailable, but still pressable, to say why ("Show these" with nothing picked). */
+  unavailable?: boolean
   children: ReactNode
 }
 
-function TourButton({ onClick, disabled, children }: TourButtonProps) {
+function TourButton({ onClick, disabled, unavailable, children }: TourButtonProps) {
   return (
-    <button type="button" className="welcome-tour__button" onClick={onClick} disabled={disabled}>
+    <button
+      type="button"
+      className="welcome-tour__button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-disabled={unavailable || undefined}
+    >
       {children}
     </button>
   )

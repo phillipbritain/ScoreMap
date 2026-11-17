@@ -2925,62 +2925,12 @@ body {
   }
 }
 
-/* My leagues' picker: "Select all", then a card for each sport, with its switch and its leagues as
-   chips, the cards in two columns where there's room for them. */
+/* "You can change this any time", above My leagues' picker: the rail's own (LeaguePicker), as in Leagues. */
 .welcome-tour__note--above {
   margin: 0 0 calc(3 * var(--spacing));
 }
 
-.welcome-tour__picker {
-  display: flex;
-  flex-direction: column;
-  gap: calc(2 * var(--spacing));
-}
-
-.welcome-tour__sports {
-  columns: 2 calc(36 * var(--spacing));
-  column-gap: calc(2 * var(--spacing));
-}
-
-.welcome-tour__sport {
-  break-inside: avoid;
-  margin-bottom: calc(2 * var(--spacing));
-  padding: calc(2.5 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--palette-divider);
-  border-radius: var(--menu-corner);
-  background: var(--palette-action-hover);
-}
-
-.welcome-tour__sport--on,
-.welcome-tour__sport--mixed {
-  border-color: var(--rail-on-outline);
-}
-
-/* A label with its switch at the right: "Select all", and each sport's name. */
-.welcome-tour__switch-button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(2 * var(--spacing));
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--palette-text-primary);
-  font-family: var(--typography-font-family);
-  font-size: var(--typography-button-font-size);
-  font-weight: var(--typography-button-font-weight);
-  cursor: pointer;
-}
-
-.welcome-tour__select-all {
-  align-self: flex-end;
-}
-
-.welcome-tour__sport-switch {
-  width: 100%;
-}
-
-/* A switch, its knob at the right when on: the welcome tour's, and Display Settings' "Display venue photo on Game Panel". */
+/* A switch, its knob at the right when on: Display Settings' "Display venue photo on Game Panel". */
 .switch {
   position: relative;
   flex: none;
@@ -3011,35 +2961,14 @@ body {
   background: var(--palette-secondary-contrast-text);
 }
 
-/* Half-way, while only some of its leagues are on. */
-.switch--mixed {
-  background: color-mix(in srgb, var(--palette-secondary-main) 50%, var(--rail-chip-outline));
-}
-
-.switch--mixed::after {
-  left: calc(2.125 * var(--spacing));
-}
-
 @media (prefers-reduced-motion: reduce) {
   .switch::after {
     transition: none;
   }
 }
 
-.welcome-tour__league-chips {
-  gap: var(--spacing);
-  margin-top: calc(2 * var(--spacing));
-}
-
-/* A long name wraps rather than running out of its card, as it can in a narrow column on a phone. */
-.welcome-tour__league-chip {
-  padding: calc(0.5 * var(--spacing)) calc(2.5 * var(--spacing));
-  font-size: var(--typography-caption-font-size);
-  white-space: normal;
-  text-align: left;
-}
-
 .welcome-tour__actions {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
@@ -3061,10 +2990,32 @@ body {
   cursor: pointer;
 }
 
-/* "Show these" with nothing picked yet. */
-.welcome-tour__button:disabled {
+/* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
+.welcome-tour__button:disabled,
+.welcome-tour__button[aria-disabled='true'] {
   opacity: var(--controls-off-opacity);
   cursor: default;
+}
+
+/* Why "Show these" can't go on with nothing picked: a note over the picker, just above the buttons, looking
+   and fading as Leagues' note on why the leagues are off does (leagues-off-note, 4 s). */
+.welcome-tour__nothing-picked {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 2 * var(--spacing));
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: var(--controls-corner);
+  background: var(--palette-background-default);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--palette-background-default) 70%, transparent);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  animation: leagues-off-note 4s ease forwards;
+  pointer-events: none;
 }
 
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */

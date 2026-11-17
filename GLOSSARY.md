@@ -13,7 +13,7 @@ A competition whose games ScoreMap shows, such as the NFL, NCAA Football, the Pr
 _Avoid_: Competition, tournament, conference (a part of a league), governing body (e.g. "NCAA" or "FIFA" alone)
 
 **Conference**:
-A group of teams within a college league, such as the SEC or the ACC in NCAA Football, as ESPN groups them. In Leagues on the rail a viewer can narrow a league with conferences to some of them: it then shows only its games with a team, either side, in a chosen one.
+A group of teams within a college league, such as the SEC or the ACC in NCAA Football, as ESPN groups them. In Leagues on the rail, and in the welcome tour's My leagues, a viewer can narrow a league with conferences to some of them: it then shows only its games with a team, either side, in a chosen one.
 _Avoid_: Division, group (ESPN's word for it in its feed)
 
 **Game**:
@@ -93,7 +93,7 @@ The column of buttons down the right of the globe: zoom in and out, Home (back t
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:
-What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen: Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one). While it shows, the globe shows its Tour games in place of real ones. Closing it, by its panel's × or Escape, finishes it as Done does; until it's finished or closed, it carries on where it was left. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo shows it every time.
+What a first visit shows once ScoreMap is ready, in three steps, each a panel in the middle of the screen: Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything; My leagues opens the same leagues to pick, conferences included, as Leagues on the rail, applied only with "Show these"), Your controls (each button on the rail, with an arrow to it) and Click a score card (with an arrow to one). While it shows, the globe shows its Tour games in place of real ones. Closing it, by its panel's × or Escape, finishes it as Done does; until it's finished or closed, it carries on where it was left. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo shows it every time.
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 
 **Tour games**:

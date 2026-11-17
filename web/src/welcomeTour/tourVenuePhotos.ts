@@ -49,17 +49,19 @@ export function withVenuePhotos(games: readonly Game[], photos: ReadonlyMap<stri
 }
 
 /**
- * The tour's games with their venue photos, asked for once, the first time `showing` is true (the
- * tour's games are on the globe), so a viewer who has finished the tour doesn't ask.
+ * The tour's games with their venue photos. Ask once per game when it joins a confirmed selection.
  */
-export function useTourVenuePhotos(games: Game[], showing: boolean): Game[] {
+export function useTourVenuePhotos(games: readonly Game[], showing: boolean): Game[] {
   const [photos, setPhotos] = useState<ReadonlyMap<string, VenuePhoto>>(new Map())
-  const asked = useRef(false)
+  const asked = useRef(new Set<string>())
   useEffect(() => {
-    if (!showing || asked.current) return
-    asked.current = true
-    // Not aborted when the tour's games go: what's found is kept for the tour shown again.
-    void fetchVenuePhotos(games).then(setPhotos)
+    if (!showing) return
+    const unasked = games.filter(({ id }) => !asked.current.has(id))
+    if (!unasked.length) return
+    for (const { id } of unasked) asked.current.add(id)
+    void fetchVenuePhotos(unasked).then((found) => {
+      if (found.size) setPhotos((previous) => new Map([...previous, ...found]))
+    })
   }, [showing, games])
   return useMemo(() => withVenuePhotos(games, photos), [games, photos])
 }

@@ -35,7 +35,8 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
-import { showsTourGames, tourCamera, tourGames, type TourScreen } from './welcomeTour/tourGames'
+import { selectedTourGames, showsTourGames, tourCamera, tourCameraForGame, tourGames, type TourScreen } from './welcomeTour/tourGames'
+import { useTourPlay } from './welcomeTour/tourPlay'
 import { useTourVenuePhotos } from './welcomeTour/tourVenuePhotos'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
@@ -109,7 +110,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
-  const { games, justHappened, cutOffSince, waking } = useLiveGames(
+  const { games, justHappened: liveChanges, cutOffSince, waking } = useLiveGames(
     asleepSettings.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
@@ -128,7 +129,19 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // opened from Click a score card closes as they go. Timed from when the tour starts.
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
   const showTourGames = showsTourGames(tourProgress)
-  const tourBoardWithPhotos = useTourVenuePhotos(tourBoard, showTourGames)
+  const tourConfirmed = showTourGames && tourProgress !== 'welcome'
+  const tourSelection = useMemo(
+    () => selectedTourGames(tourConfirmed, tourBoard, viewerSettings, leagues),
+    [tourConfirmed, tourBoard, viewerSettings, leagues],
+  )
+  const tourPlay = useTourPlay(tourSelection, touring)
+  const tourBoardWithPhotos = useTourVenuePhotos(tourPlay.games, tourConfirmed)
+  const justHappened = showTourGames ? tourPlay.changes : liveChanges
+  useEffect(() => {
+    if (!loadingScreenGone) return
+    const camera = tourCameraForGame(tourSelection[0], tourScreen(), tourSelection.length === 1)
+    if (camera) globe.current?.flyTo(camera)
+  }, [loadingScreenGone, tourSelection])
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
@@ -138,14 +151,14 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // Games whose celebration has closed their panel leave the globe with it, before the server drops them
   // (see celebration/celebrated.ts).
   const [celebrated, setCelebrated] = useState<Celebrated>(noneCelebrated)
-  // The tour's games show whatever the viewer's settings, so every one of them is there to point at.
+  // An empty board lets the globe finish loading before the viewer makes a choice on Welcome.
   const boardGames = useMemo(
     () => (showTourGames ? tourBoardWithPhotos : games && withoutCelebrated(games, celebrated)),
     [showTourGames, tourBoardWithPhotos, games, celebrated],
   )
   const visible = useMemo(
-    () => (showTourGames ? tourBoardWithPhotos : visibleGames(boardGames ?? [], viewerSettings)),
-    [showTourGames, tourBoardWithPhotos, boardGames, viewerSettings],
+    () => (showTourGames ? (boardGames ?? []) : visibleGames(boardGames ?? [], viewerSettings)),
+    [showTourGames, boardGames, viewerSettings],
   )
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
@@ -222,7 +235,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             </p>
           )}
         </div>
-        {demo && <DemoLabel />}
+        {(demo || touring) && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
         {panelGame && panelColor && (
           <GamePanel

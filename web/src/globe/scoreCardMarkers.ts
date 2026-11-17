@@ -4,6 +4,7 @@ import type { Feature, Point } from 'geojson'
 import type { Game } from '../games/game'
 import type { PlacedGame } from '../games/placedGames'
 import { sidesTopFirst } from '../games/sides'
+import { logoFailed, shownLogo } from '../games/teamLogo'
 import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
@@ -611,13 +612,33 @@ function flames(): HTMLElement {
   return outline
 }
 
-function logo({ logoUrl }: ScoreCardRow): HTMLImageElement {
+/**
+ * A row's logo on its plate; with no logo, or once it fails to load, a team's mark on the plate (see
+ * logoMark), and for an entrant or a bout's side with no flag, an empty space.
+ */
+function logo({ logoUrl, mark }: ScoreCardRow): HTMLElement {
+  const url = shownLogo(logoUrl)
+  if (!url) return noLogo(mark)
   const image = document.createElement('img')
   image.className = 'score-card__logo'
   image.alt = ''
-  if (logoUrl) image.src = logoUrl
-  else image.style.visibility = 'hidden'
+  image.addEventListener('error', () => {
+    logoFailed(url)
+    image.replaceWith(noLogo(mark))
+  }, { once: true })
+  image.src = url
   return image
+}
+
+function noLogo(mark: string | undefined): HTMLElement {
+  if (mark) {
+    const stand = span('score-card__logo score-card__logo--mark', mark)
+    stand.setAttribute('aria-hidden', 'true')
+    return stand
+  }
+  const space = span('score-card__logo', '')
+  space.style.visibility = 'hidden'
+  return space
 }
 
 function team(card: ScoreCardRow): HTMLElement {

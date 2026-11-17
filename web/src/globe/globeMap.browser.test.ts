@@ -370,7 +370,8 @@ describe('shown score cards', () => {
     expect(shown.label).toContain('Buffalo Bills 17 vs Kansas City Chiefs 21')
     expect(shown.element).toBe(drawn)
     expect(shown.box.toJSON()).toEqual(drawn.getBoundingClientRect().toJSON())
-    expect(shown.rows.map((row) => row.textContent)).toEqual(['BUF17', 'KC21'])
+    // Each starts with its team's mark, as these teams have no logo.
+    expect(shown.rows.map((row) => row.textContent)).toEqual(['BBUF17', 'KKC21'])
   })
 
   it('leaves out the games counted in a card cluster, whose cards a viewer cannot see', async () => {

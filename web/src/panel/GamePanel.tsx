@@ -4,6 +4,7 @@ import { positionText, type Game, type GameBout, type GameBoutSide, type GameEnt
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
+import { TeamLogoImage } from '../games/TeamLogoImage'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
@@ -239,7 +240,7 @@ function TeamRow({ team, scores, scoredAt }: { team: GameTeam; scores: string[];
   }, [scoredAt])
   return (
     <div ref={row} className="game-panel__team">
-      {team.logoUrl ? <img src={team.logoUrl} alt="" /> : <span className="game-panel__logo" />}
+      <TeamLogoImage team={team} markClassName="game-panel__logo game-panel__logo--mark" />
       <span className="game-panel__team-name" data-tooltip={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
         {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}
         {team.fullName}

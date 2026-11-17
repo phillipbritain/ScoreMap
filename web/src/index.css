@@ -3587,6 +3587,16 @@ body {
   pointer-events: auto;
 }
 
+/* On a desktop, where the game panel is a strip along the foot of the screen, All set sits in the
+   middle of the screen instead, as the other steps do, when that's clear of the game panel (see
+   middleClearsGamePanel); not on a phone, held upright or on its side. */
+@media (min-width: 641px) and (min-height: 501px), (min-width: 641px) and (orientation: portrait) {
+  .welcome-tour[data-above-game-panel][data-middle-clears-game-panel] {
+    align-items: safe center;
+    padding-bottom: calc(3 * var(--spacing));
+  }
+}
+
 /* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one
    column at full size, which scrolls within the screen's height, fading out at its foot so it shows
    there's more. It takes the pointer there, so it can be scrolled by touch. */

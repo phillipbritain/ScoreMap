@@ -45,6 +45,17 @@ describe("the welcome tour's games", () => {
     }
   })
 
+  it('make the game Click a score card points at (Ravens v Steelers) Live, with all a game under way shows', () => {
+    const game = tourGames(now).find((tourGame) => tourGame.id === 'tour-nfl-pit')!
+    if (game.contest.kind !== 'sides') throw new Error('Expected sides')
+
+    expect(game.status).toBe('Live')
+    expect(game.clock).not.toBeNull()
+    expect([game.contest.away.record, game.contest.home.record].every((record) => record !== null)).toBe(true)
+    expect(game.situation?.downAndDistance).not.toBeNull()
+    expect(game.lastScore).not.toBeNull()
+  })
+
   it('sit in a fixed place, around the camera the tour opens on', () => {
     for (const screen of ['wide', 'phone', 'short'] as const) {
       const camera = tourCamera(screen)

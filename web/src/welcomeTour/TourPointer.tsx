@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import type { ScreenBox } from '../globe/panelClearance'
-import { boxAround, spotlightPadding, tourArrow } from './tourArrow'
+import { boxAround, headLength, spotlightPadding, tourArrow } from './tourArrow'
 
 interface TourPointerProps {
   /** The step's panel, which the arrow starts from. */
@@ -91,7 +91,17 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fr
             <div className="welcome-tour__spotlight" style={hole} />
             <svg className="welcome-tour__arrow">
               <defs>
-                <marker id={head} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                {/* Its base at the line's end, its tip headLength on (see tourArrow). */}
+                <marker
+                  id={head}
+                  viewBox="0 0 10 10"
+                  refX="0"
+                  refY="5"
+                  markerUnits="userSpaceOnUse"
+                  markerWidth={headLength}
+                  markerHeight={headLength}
+                  orient="auto"
+                >
                   <path d="M0 0 10 5 0 10z" />
                 </marker>
               </defs>

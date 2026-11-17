@@ -72,6 +72,27 @@ public sealed class VenuePhotos
         }
     }
 
+    /// <summary>
+    /// The venue's photo, waiting for its search when it's not been searched for yet (or a search is
+    /// under way), for a caller with no later poll to pick it up on: the welcome tour's games.
+    /// Null when the venue has none, or its search failed.
+    /// </summary>
+    public async Task<VenuePhoto?> PhotoForAsync(string leagueKey, ProviderVenue venue, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(venue.Name))
+            return null;
+        if (PhotoFor(leagueKey, venue) is { } found)
+            return found;
+        var key = Key(venue);
+        Task? running;
+        lock (_lock)
+            running = _running.GetValueOrDefault(key);
+        if (running is not null)
+            await running.WaitAsync(cancellationToken);
+        lock (_lock)
+            return _saved!.GetValueOrDefault(key);
+    }
+
     /// <summary>Completes when every search started so far has finished. For tests.</summary>
     public Task SearchesFinishedAsync()
     {

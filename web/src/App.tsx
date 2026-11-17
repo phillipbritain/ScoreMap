@@ -36,6 +36,7 @@ import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { showsTourGames, tourCamera, tourGames, type TourScreen } from './welcomeTour/tourGames'
+import { useTourVenuePhotos } from './welcomeTour/tourVenuePhotos'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
 // The width below which the page takes its phone layout, as index.css has it.
@@ -127,6 +128,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // opened from Click a score card closes as they go. Timed from when the tour starts.
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
   const showTourGames = showsTourGames(tourProgress)
+  const tourBoardWithPhotos = useTourVenuePhotos(tourBoard, showTourGames)
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
@@ -138,12 +140,12 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [celebrated, setCelebrated] = useState<Celebrated>(noneCelebrated)
   // The tour's games show whatever the viewer's settings, so every one of them is there to point at.
   const boardGames = useMemo(
-    () => (showTourGames ? tourBoard : games && withoutCelebrated(games, celebrated)),
-    [showTourGames, tourBoard, games, celebrated],
+    () => (showTourGames ? tourBoardWithPhotos : games && withoutCelebrated(games, celebrated)),
+    [showTourGames, tourBoardWithPhotos, games, celebrated],
   )
   const visible = useMemo(
-    () => (showTourGames ? tourBoard : visibleGames(boardGames ?? [], viewerSettings)),
-    [showTourGames, tourBoard, boardGames, viewerSettings],
+    () => (showTourGames ? tourBoardWithPhotos : visibleGames(boardGames ?? [], viewerSettings)),
+    [showTourGames, tourBoardWithPhotos, boardGames, viewerSettings],
   )
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings

@@ -131,3 +131,16 @@ export function picksFrom(settings: ViewerSettings, leagues: readonly League[]):
     conferences: settings.chosenConferences,
   }
 }
+
+/**
+ * Whether the viewer moves the globe by touch: true when the screen's main pointer is coarse (a finger),
+ * as on a phone or tablet, whatever its size. A laptop with a touchscreen and a trackpad counts as a mouse.
+ */
+export const touchPointer = '(pointer: coarse)'
+
+/** How Your controls says to move and zoom the globe: with a finger on a touchscreen, else with a mouse or trackpad. */
+export function moveAndZoomWords(touch: boolean): string {
+  return touch
+    ? 'Drag the globe to move around it, and pinch to zoom.'
+    : 'Drag the globe to move around it, and scroll (or pinch a trackpad) to zoom.'
+}

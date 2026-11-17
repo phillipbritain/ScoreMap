@@ -287,7 +287,8 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         var twoSided = snapshot.Where(g => g.Contest is GameSides).ToList();
         Assert.Contains(twoSided, g => g.Status == GameStatus.Live && g.Sides().Home.Score == g.Sides().Away.Score);
         Assert.Contains(twoSided, g => g.Sides().Home.FullName.Length >= 30 && g.Sides().Away.FullName.Length >= 30);
-        Assert.Contains(twoSided, g => g.Sides().Home.LogoUrl is null && g.Sides().Away.LogoUrl is null);
+        // Edmonton has no logo; Calgary's is one that won't load, as some ESPN gives do.
+        Assert.Contains(twoSided, g => g.Sides().Home.LogoUrl is null && g.Sides().Away.LogoUrl is not null);
         Assert.Contains(twoSided, g => Points(g.Sides().Home.Score) >= 100 && Points(g.Sides().Away.Score) >= 100);
     }
 

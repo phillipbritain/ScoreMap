@@ -2,6 +2,7 @@ import { shownBout } from '../games/bouts'
 import { positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
+import { logoMark } from '../games/teamLogo'
 import { isHexColor, mixColors, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
 
@@ -14,6 +15,8 @@ export interface ScoreCardRow {
   /** A college team's place in its poll ("5"), shown before its abbreviation; absent when unranked. */
   rank?: string
   logoUrl: string | null
+  /** A team's mark (see logoMark), shown on the logo's plate when it has no logo or its logo won't load; absent for an entrant or a bout's side, whose missing flag leaves its space empty. */
+  mark?: string
   /** Blank until the game has a score; for a bout's side, "W" once they've won it. */
   score: string
 }
@@ -80,7 +83,7 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
 }
 
 function cardTeam({ abbreviation, logoUrl, score, rank }: GameTeam): ScoreCardRow {
-  const row = { label: abbreviation, logoUrl, score: score ?? '' }
+  const row = { label: abbreviation, logoUrl, mark: logoMark(abbreviation), score: score ?? '' }
   return rank === null ? row : { ...row, rank: String(rank) }
 }
 

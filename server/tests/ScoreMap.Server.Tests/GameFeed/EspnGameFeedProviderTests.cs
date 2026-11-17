@@ -196,6 +196,20 @@ public class EspnGameFeedProviderTests
         Assert.Equal(new ProviderVenue("Palazzo dello Sport", "Rome", "Italy", null, "3282"), game.Venue);
     }
 
+    /// <summary>
+    /// ESPN gives no logo for most college basketball opponents from outside Division I (here an NAIA
+    /// school): not on the scoreboard, nor on the team's own page, nor on its image server. The team
+    /// comes through without one, for the app to show its mark in its place.
+    /// </summary>
+    [Fact]
+    public async Task College_basketball_team_ESPN_gives_no_logo_comes_through_without_one()
+    {
+        var game = Assert.Single(await FetchFixtureAsync("college-basketball-team-without-logo.json", "basketball/mens-college-basketball?groups=50"));
+
+        Assert.Equal(("LCHR", "Louisiana Christian Wildcats", null), (game.Sides().Away.Abbreviation, game.Sides().Away.FullName, game.Sides().Away.LogoUrl));
+        Assert.Equal("https://a.espncdn.com/i/teamlogos/ncaa/500/2582.png", game.Sides().Home.LogoUrl);
+    }
+
     [Fact]
     public async Task Hockey_game_in_progress_carries_score_clock_and_period()
     {

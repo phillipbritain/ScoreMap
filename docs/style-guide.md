@@ -325,7 +325,7 @@ The **cut corner** cuts off the game panel's bottom left corner, like a broadcas
 
 ### Logo plates
 
-Every team logo, on a score card and in the game panel, sits on a **plate**: a block of a color that contrasts with the card's fill and the panel, so that a logo near their color (a navy logo on a navy card) can still be seen. A missing logo leaves its space empty, with no plate. A score card's plate fades into its fill with the logo as the card fades. A plate is as solid as the glass it's on is frosted, so on clear glass there's none (see [Glass](#glass)).
+Every team logo, on a score card and in the game panel, sits on a **plate**: a block of a color that contrasts with the card's fill and the panel, so that a logo near their color (a navy logo on a navy card) can still be seen. A team with no logo (ESPN gives none for most college basketball opponents from outside Division I), or whose logo won't load, shows its **mark** instead: its abbreviation's first letter, bold, on the plate, in the card's fill or the panel's score block color, its plate solid however frosted the glass is, as a logo is; the Games list shows the same mark on its own round plate. A missing flag leaves its space empty, with no plate. A score card's plate fades into its fill with the logo as the card fades. A plate is as solid as the glass it's on is frosted, so on clear glass there's none (see [Glass](#glass)).
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |

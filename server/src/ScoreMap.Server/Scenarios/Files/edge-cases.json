@@ -3,7 +3,8 @@
 //   venue list or its lookups, so its pin falls back to its city (Reykjavík). It is the one
 //   scenario venue looked up through Nominatim at runtime. "notInVenueList" says it is made up on
 //   purpose; any other venue missing from the list stops startup, so a misspelled one can't slip by.
-// - A tied score, long team names, missing logos and three-digit scores.
+// - A tied score, long team names, missing logos (Edmonton: no logo; Calgary: a logo ESPN gives that
+//   won't load, a non-Division I college team's) and three-digit scores.
 // - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
 // - An F1 race under way, its whole field listed (the Miami Grand Prix is run around Hard Rock Stadium).
@@ -50,7 +51,7 @@
       "id": "edge-missing-logos",
       "league": "NHL",
       "home": { "name": "Edmonton Oilers", "abbreviation": "EDM", "score": 1 },
-      "away": { "name": "Calgary Flames", "abbreviation": "CGY", "score": 0 },
+      "away": { "name": "Calgary Flames", "abbreviation": "CGY", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2347.png", "score": 0 },
       "venue": { "name": "Rogers Place", "city": "Edmonton", "region": "AB", "country": "Canada" },
       "startsIn": "-25m",
       "status": "live",

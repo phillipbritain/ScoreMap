@@ -220,18 +220,26 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
 /** The rail's groups of buttons, which Your controls lights and points at. */
 const railGroups = () => document.querySelectorAll('.rail__buttons-inner > .rail__group')
 
-/** The app's phone layout, where Your controls' arrow leaves from the top of its panel. */
+/** The rail's Zoom in and Zoom out buttons, which Your controls' arrow aims at on a phone. */
+const zoomButtons = () => document.querySelectorAll('.rail__buttons-inner > .rail__group:first-child > :nth-child(-n + 2)')
+
+/** The app's phone layout, where Your controls' arrow runs from the top of its panel to the zoom buttons. */
 const phoneScreen = '(max-width: 640px)'
 
 /**
  * Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
- * phone, from the top of its panel).
+ * phone, from the top of its panel to the zoom buttons, so the arrow rises clear of the panel).
  */
 function ControlsStep({ onNext }: { onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   return (
     <>
-      <TourPointer panel={panel} target={railGroups} fromTopWhen={phoneScreen} />
+      <TourPointer
+        panel={panel}
+        target={railGroups}
+        aim={() => (window.matchMedia(phoneScreen).matches ? zoomButtons() : [])}
+        fromTopWhen={phoneScreen}
+      />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
         <ul className="welcome-tour__controls">
           {railButtons.map(({ name, icon }) => (

@@ -10,6 +10,7 @@ import {
   canShowPicks,
   isTourProgress,
   middleClearsGamePanel,
+  moveAndZoomWords,
   noPicks,
   picksFrom,
   scoreCardToTry,
@@ -221,5 +222,23 @@ describe("where All set sits over the game panel on a desktop", () => {
 
   it('sits right above the game panel where the middle would run into it', () => {
     expect(middleClearsGamePanel(600, 168, 224)).toBe(false)
+  })
+})
+
+describe('how Your controls says to move and zoom the globe', () => {
+  it('says pinch to zoom on a touchscreen, without a scroll wheel', () => {
+    const words = moveAndZoomWords(true)
+
+    expect(words).toMatch(/drag/i)
+    expect(words).toMatch(/pinch/i)
+    expect(words).not.toMatch(/scroll/i)
+  })
+
+  it('says drag and scroll with a mouse', () => {
+    const words = moveAndZoomWords(false)
+
+    expect(words).toMatch(/drag/i)
+    expect(words).toMatch(/scroll/i)
+
   })
 })

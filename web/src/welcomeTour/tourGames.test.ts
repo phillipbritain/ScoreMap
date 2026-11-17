@@ -46,8 +46,8 @@ describe("the welcome tour's games", () => {
   })
 
   it('sit in a fixed place, around the camera the tour opens on', () => {
-    for (const phone of [false, true]) {
-      const camera = tourCamera(phone)
+    for (const screen of ['wide', 'phone', 'short'] as const) {
+      const camera = tourCamera(screen)
       for (const { venue } of tourGames(now)) {
         expect(Math.abs(venue.longitude! - camera.longitude)).toBeLessThan(10)
         expect(Math.abs(venue.latitude! - camera.latitude)).toBeLessThan(8)

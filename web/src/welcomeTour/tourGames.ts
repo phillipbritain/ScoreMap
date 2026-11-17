@@ -15,9 +15,18 @@ const camera: Camera = { longitude: -81, latitude: 38, zoom: 4.8 }
 /** On a phone the step's panel takes the screen's width, so the camera sits further south and further out, the games above it. */
 const phoneCamera: Camera = { longitude: -79.5, latitude: 36.5, zoom: 3.8 }
 
-/** The camera for the tour's games, at a phone's width or wider. */
-export function tourCamera(phone: boolean): Camera {
-  return phone ? phoneCamera : camera
+/**
+ * On a short screen on its side (a phone in landscape), Click a score card's panel sits at the foot, so
+ * the camera sits further north and further out, the games in the little height above it.
+ */
+const shortCamera: Camera = { longitude: -79, latitude: 40.5, zoom: 4.2 }
+
+/** The screens the tour's camera is chosen for: a phone held upright, a short screen on its side, or wider. */
+export type TourScreen = 'phone' | 'short' | 'wide'
+
+/** The camera for the tour's games on a screen. */
+export function tourCamera(screen: TourScreen): Camera {
+  return screen === 'phone' ? phoneCamera : screen === 'short' ? shortCamera : camera
 }
 
 /**

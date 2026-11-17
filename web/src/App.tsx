@@ -35,11 +35,19 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
-import { showsTourGames, tourCamera, tourGames } from './welcomeTour/tourGames'
+import { showsTourGames, tourCamera, tourGames, type TourScreen } from './welcomeTour/tourGames'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
+/** A short screen on its side, such as a phone in landscape (the CSS's "A short screen"). */
+const shortLandscape = '(orientation: landscape) and (max-height: 500px)'
+
+/** Which screen the tour's camera is chosen for (see tourCamera). */
+function tourScreen(): TourScreen {
+  if (window.matchMedia(phoneLayout).matches) return 'phone'
+  return window.matchMedia(shortLandscape).matches ? 'short' : 'wide'
+}
 
 const savedStore = settingsStore(() => window.localStorage)
 const demoStore = unsavedSettingsStore()
@@ -89,7 +97,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const zoom = useMemo(() => zoomForMapType(fittedZoom, viewerSettings.mapType), [fittedZoom, viewerSettings.mapType])
   // A tour still to finish opens on its own games (see tourGames), and the camera stays there after it.
   const [camera] = useState(() =>
-    store.loadTourProgress() === 'finished' ? openingCamera(store, zoom) : tourCamera(window.matchMedia(phoneLayout).matches),
+    store.loadTourProgress() === 'finished' ? openingCamera(store, zoom) : tourCamera(tourScreen()),
   )
   const [cameraNow, setCameraNow] = useState<Camera>(camera)
   const leagueList = useLeagues()
@@ -122,7 +130,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
-    globe.current?.flyTo(tourCamera(window.matchMedia(phoneLayout).matches))
+    globe.current?.flyTo(tourCamera(tourScreen()))
   }
 
   // Games whose celebration has closed their panel leave the globe with it, before the server drops them

@@ -3393,6 +3393,13 @@ body {
     padding-right: calc(var(--rail-left-inset, 0px) + 14 * var(--spacing));
   }
 
+  /* Click a score card at the foot, leaving the height above it for the cards (the tour's camera on a
+     short screen puts them there, see tourCamera) and the arrow to one. */
+  .welcome-tour--scoreCard {
+    align-items: flex-end;
+    padding-bottom: calc(3 * var(--spacing));
+  }
+
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
@@ -3416,15 +3423,26 @@ body {
 }
 
 /* All set with the game's panel Click a score card opened: the step right above that panel (its top,
-   --above-game-panel, measured by useAboveGamePanel), which is lifted over the tour's dim to be used.
-   After the short screen's centering above, which it overrides. */
+   --above-game-panel, measured by useAboveGamePanel), or, with too little room there (a phone on its
+   side), at the top of the screen over the panel's top, never cut short, so Done is always in view.
+   The game panel, under the tour, stays usable: the tour takes no press but on the step's panel, and
+   has no dim (the globe and rail are inert while it shows). After the short screen's centering above,
+   which it overrides. */
 .welcome-tour[data-above-game-panel] {
-  align-items: flex-end;
+  align-items: safe flex-end;
+  padding-top: calc(3 * var(--spacing));
   padding-bottom: calc(var(--above-game-panel, 0px) + 3 * var(--spacing));
+  pointer-events: none;
 }
 
-.globe-area--touring > .game-panel {
-  z-index: 3;
+.welcome-tour[data-above-game-panel] > .welcome-tour__dim {
+  display: none;
+}
+
+.welcome-tour[data-above-game-panel] .welcome-tour__panel {
+  flex: none;
+  max-height: none;
+  pointer-events: auto;
 }
 
 /* Too short for the rail's buttons in one column, such as a phone on its side in Safari: they stay one

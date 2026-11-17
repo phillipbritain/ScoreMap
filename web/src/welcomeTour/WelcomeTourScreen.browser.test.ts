@@ -15,7 +15,11 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-const leagues = [{ name: 'NFL', sport: 'Football' }, { name: 'NBA', sport: 'Basketball' }]
+const leagues = [
+  { name: 'NFL', sport: 'Football', conferences: [] },
+  { name: 'NCAA Football', sport: 'Football', conferences: ['SEC', 'ACC'] },
+  { name: 'NBA', sport: 'Basketball', conferences: [] },
+]
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(leagues)))
@@ -45,9 +49,11 @@ async function mountTour(progress: Exclude<TourProgress, 'finished'> = 'welcome'
   return { changed, event }
 }
 
+/** A button by its text, its name on Welcome's choices, or its accessible label (a league's conferences toggle). */
 function button(name: string): HTMLButtonElement {
   const found = [...document.querySelectorAll('button')].find((candidate) => candidate.textContent?.trim() === name
-    || candidate.querySelector('strong')?.textContent === name)
+    || candidate.querySelector('strong')?.textContent === name
+    || candidate.getAttribute('aria-label') === name)
   expect(found, `button ${name}`).toBeDefined()
   return found!
 }
@@ -66,6 +72,35 @@ it('can leave the picker and choose Everything without applying unfinished picks
   expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'everything' })
 })
 
+it("chooses a league's conferences, as Leagues on the rail does, and applies them only with Show these", async () => {
+  const { changed, event } = await mountTour()
+  await click('My leagues')
+  await click('NCAA Football')
+  await click('NCAA Football conferences: all')
+  expect(document.querySelector('[role="group"][aria-label="NCAA Football conferences"]')).not.toBeNull()
+  await click('SEC')
+  expect(button('NCAA Football conferences: SEC').getAttribute('aria-expanded')).toBe('true')
+  expect(changed).not.toHaveBeenCalled()
+  await click('Show these')
+  expect(changed).toHaveBeenCalledWith({
+    ...firstVisitSettings,
+    hiddenLeagues: ['NFL', 'NBA'],
+    chosenConferences: { 'NCAA Football': ['SEC'] },
+  })
+  expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'myLeagues' })
+})
+
+it('leaves conferences chosen in the picker unapplied on Back, and starts afresh on My leagues again', async () => {
+  const { changed } = await mountTour()
+  await click('My leagues')
+  await click('NCAA Football conferences: all')
+  await click('ACC')
+  await click('Back')
+  await click('My leagues')
+  expect(button('NCAA Football conferences: all').getAttribute('aria-expanded')).toBe('false')
+  expect(changed).not.toHaveBeenCalled()
+})
+
 it('recovers a failed league list with Retry before applying an explicit pick', async () => {
   vi.stubGlobal('fetch', vi.fn()
     .mockResolvedValueOnce(new Response(null, { status: 503 }))
@@ -76,11 +111,11 @@ it('recovers a failed league list with Retry before applying an explicit pick', 
   expect(button('Show these').disabled).toBe(true)
   expect(changed).not.toHaveBeenCalled()
   await click('Retry')
-  expect(button('Show these').disabled).toBe(true)
-  await click('Football')
-  expect(button('Show these').disabled).toBe(false)
+  expect(button('Show these').getAttribute('aria-disabled')).toBe('true')
+  await click('NFL')
+  expect(button('Show these').getAttribute('aria-disabled')).toBeNull()
   await click('Show these')
-  expect(changed).toHaveBeenCalledWith({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+  expect(changed).toHaveBeenCalledWith({ ...firstVisitSettings, hiddenLeagues: ['NCAA Football', 'NBA'] })
   expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'myLeagues' })
 })
 
@@ -90,14 +125,41 @@ it('keeps late-loading leagues unpicked and cannot apply the unavailable list', 
   const { changed, event } = await mountTour()
   await click('My leagues')
   expect(document.body.textContent).toContain('Loading leagues')
-  expect(document.body.textContent).not.toContain('Select all')
+  expect(document.body.textContent).not.toContain('All leagues')
   await click('Show these')
   expect(changed).not.toHaveBeenCalled()
   expect(event).not.toHaveBeenCalled()
   await act(async () => { response.resolve(Response.json(leagues)) })
-  expect(button('Football').getAttribute('aria-pressed')).toBe('false')
-  expect(button('Basketball').getAttribute('aria-pressed')).toBe('false')
-  expect(button('Show these').disabled).toBe(true)
+  for (const { name } of leagues) expect(button(name).getAttribute('aria-pressed')).toBe('false')
+  expect(button('Show these').getAttribute('aria-disabled')).toBe('true')
+})
+
+it('says why Show these can\'t go on with nothing picked, until a league is picked', async () => {
+  const { changed, event } = await mountTour()
+  await click('My leagues')
+  expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  await click('Show these')
+  expect(document.querySelector('.welcome-tour__nothing-picked[role="status"]')?.textContent).toContain('Pick at least one league')
+  expect(changed).not.toHaveBeenCalled()
+  expect(event).not.toHaveBeenCalled()
+  await click('NBA')
+  expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  await click('Show these')
+  expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'myLeagues' })
+})
+
+it('lets the note on nothing picked fade away by itself', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  try {
+    await mountTour()
+    await click('My leagues')
+    await click('Show these')
+    expect(document.querySelector('.welcome-tour__nothing-picked')).not.toBeNull()
+    await act(() => vi.advanceTimersByTime(4000))
+    expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 it.each(['http', 'network', 'invalid JSON'] as const)('can leave a persistent %s failure for Top Events', async (failure) => {
@@ -168,7 +230,9 @@ it.each(['welcome', 'controls', 'scoreCard'] as const)('closes from %s by Escape
 it("closes from My leagues' picker by Escape without applying its picks", async () => {
   const { changed, event } = await mountTour()
   await click('My leagues')
-  await click('Football')
+  await click('NCAA Football')
+  await click('NCAA Football conferences: all')
+  await click('SEC')
   await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
   expect(changed).not.toHaveBeenCalled()

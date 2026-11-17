@@ -22,6 +22,39 @@ body {
   font-size: var(--typography-body1-font-size);
 }
 
+/* Every scrollbar (the welcome tour's panel, the game panel, the Games list, the rail's popovers):
+   slim, a soft thumb in the theme's text color on no track, so it sits in the dark surfaces rather
+   than standing out as the browser's light one. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
+}
+
+/* The same where scrollbar-color isn't known (older Safari), drawn with WebKit's own scrollbar
+   parts: a rounded thumb inset from the edge, on no track. */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: calc(2.5 * var(--spacing));
+    height: calc(2.5 * var(--spacing));
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: calc(0.5 * var(--spacing)) solid transparent;
+    border-radius: calc(2 * var(--spacing));
+    background: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--palette-text-primary) 45%, transparent);
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
 /* On a touch screen, text boxes (the Games search, the Feedback note) are at least 16px: Safari on an
    iPhone zooms the page in on focusing a smaller one, and stays zoomed, pushing the rail off the
    screen. */
@@ -3209,13 +3242,6 @@ body {
 }
 
 .game-navigation__search::placeholder { color: var(--palette-text-secondary); }
-
-/* A menu's scrollbar: slim, in the theme's colors. The Games list and the rail's other popovers. */
-.game-navigation ul,
-.rail__popover {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
-}
 
 /* The games, scrolling under the search. Its own stacking context, so the pinned league headings, lifted
    over the games, stay under its scrollbar: Safari on iPhone draws the scrollbar over the list, and

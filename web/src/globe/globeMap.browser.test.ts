@@ -12,6 +12,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { themeWith } from '../theme/testTheme'
 import type { Camera } from './camera'
 import { cardJump } from './cardJump'
+import { cardMoveDuration } from './cardMoves'
 import { cardClusterLayer, cardLayoutSource, cardlessSelectedPinLayer, cardlessSmallPinLayer } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { flameImage } from './flames'
@@ -469,6 +470,25 @@ describe('selection', () => {
     map.jumpTo({ center: [60, 0] })
     await vi.waitFor(() => expect(card('B')).toBeNull())
     expect(document.activeElement).toBe(map.getCanvas())
+  })
+
+  it("gives no score card to a game whose venue is off screen, but the selected game's", async () => {
+    // A map 400 px wide: B's venue, 10° east, is off its right edge, A's in the middle.
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 300 })
+    globe.show([game('A'), game('B', { longitude: 10 })])
+    await cardShown('A')
+    expect(map.project([10, 0]).x).toBeGreaterThan(400)
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(card('B')).toBeNull()
+
+    globe.select('B')
+    await cardShown('B')
+    globe.select(null)
+    await vi.waitFor(() => expect(card('B')).toBeNull())
+
+    // Brought into view, it has its card.
+    map.jumpTo({ center: [6, 0] })
+    await cardShown('B')
   })
 
   it('highlights the selected game’s score card, zoomed in', async () => {
@@ -1263,9 +1283,18 @@ describe('settling', () => {
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     map.off('render', record)
 
-    const jumps = frames.slice(1).flatMap((now, i) => jumped(frames[i], now).map((gameId) => `${gameId} in frame ${i + 1}`))
-    expect(jumps).toEqual([])
+    // A card the layout moved on the pan's last frame (see layOutCards) glides on there once it stops,
+    // more than a jump in its first frames: so each card may jump in one run of frames, its glide, but
+    // never jump again.
+    const jumpFrames = new Map<string, number[]>()
+    frames.slice(1).forEach((now, i) => {
+      for (const gameId of jumped(frames[i], now)) jumpFrames.set(gameId, [...(jumpFrames.get(gameId) ?? []), i + 1])
+    })
+    const jumpedAgain = [...jumpFrames].filter(([, at]) => at.some((frame, i) => i > 0 && frame !== at[i - 1] + 1))
+    expect(jumpedAgain.map(([gameId, at]) => `${gameId} in frames ${at.join(', ')}`)).toEqual([])
 
+    // Any glide over, the cards stay where they are.
+    await pause(cardMoveDuration)
     const settled = cardsFromVenues()
     expect(settled.size).toBeGreaterThan(0)
     await pause(500)

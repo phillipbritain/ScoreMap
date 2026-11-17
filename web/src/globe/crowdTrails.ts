@@ -139,16 +139,17 @@ const clearOfCards = 2
 const leaving = 4
 // How much cheaper another route must be to take over from the one a card's trail had last time: once
 // the camera is still, less than a card crossed, so a trail moves off a card in its way, but more than
-// trails crossed or length alone; as it moves, less only than its own card crossed, so trails don't
-// flip back and forth as cards pass each other, but never run back through their own card.
-const keepLastRoute = { still: 90, moving: cost.ownCard - 1 }
+// trails crossed or length alone; as it moves, half its own card crossed, so trails don't flip back
+// and forth as cards pass each other, but leave their own card even where every way out crosses a few
+// others: the cards hold once the camera stops (see layOutCards), so no still layout puts it right.
+const keepLastRoute = { still: 90, moving: cost.ownCard / 2 }
 
 /**
  * Routes each moved card's trail to its venue, in the order given: leaving the card where it faces its
  * venue, or from the middle of a side, and going straight or at 45° first, whichever crosses the fewest
  * cards, then the fewest trails routed already, then is shortest. A trail keeps the route it had last
  * time (`last`) unless another would cross fewer cards, or, while the camera is `moving`, unless it
- * would cross its own card. A card that isn't moved keeps its trail
+ * crosses its own card. A card that isn't moved keeps its trail
  * straight down to its venue below.
  */
 export function routeTrails(

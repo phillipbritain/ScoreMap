@@ -3019,6 +3019,11 @@ body {
 }
 
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */
+/* Your controls' line on moving and zooming the globe, above the rail's buttons. */
+.welcome-tour__move {
+  margin-bottom: calc(3 * var(--spacing));
+}
+
 .welcome-tour__controls {
   display: flex;
   flex-direction: column;

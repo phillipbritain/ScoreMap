@@ -17,3 +17,4 @@ So while the tour shows, the globe shows its **Tour games** (`web/src/welcomeTou
 - The tour's games show whatever the viewer chose on Welcome, so a choice there shows on the globe only once the tour is finished.
 - Asking for the tour again flies the camera to the tour's games; it stays there after the tour.
 - The tour's games link to ESPN's team logos, so they need the network as real games do.
+- Their game panels show each venue's photo as a real game's do. As the games are made in the browser, it asks the server for each venue's photo (`GET /api/venue-photo`, by league, venue and city) while the tour's games show; the server finds and saves it as it does a real game's, so a venue a real game has played at is answered at once, and no image address is written into the tour. A venue whose search fails, or takes longer than the server waits, shows the faint glow in its place.

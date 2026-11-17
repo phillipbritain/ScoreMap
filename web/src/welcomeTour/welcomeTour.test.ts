@@ -9,6 +9,7 @@ import {
 import {
   canShowPicks,
   isTourProgress,
+  moveAndZoomWords,
   noPicks,
   picksFrom,
   scoreCardToTry,
@@ -206,5 +207,22 @@ describe("Click a score card's pick", () => {
 
   it('picks none with no cards', () => {
     expect(scoreCardToTry([], panel, screen)).toBeNull()
+  })
+})
+
+describe('how Your controls says to move and zoom the globe', () => {
+  it('says pinch to zoom on a touchscreen, without a scroll wheel', () => {
+    const words = moveAndZoomWords(true)
+
+    expect(words).toMatch(/drag/i)
+    expect(words).toMatch(/pinch/i)
+    expect(words).not.toMatch(/scroll/i)
+  })
+
+  it('says drag and scroll with a mouse', () => {
+    const words = moveAndZoomWords(false)
+
+    expect(words).toMatch(/drag/i)
+    expect(words).toMatch(/scroll/i)
   })
 })

@@ -84,6 +84,9 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
 /** Closes the tour, for each step's panel's ×. */
 const TourClose = createContext<() => void>(() => {})
 
+/** How long the note on why "Show these" can't go on stays (its fade is in the CSS, .welcome-tour__nothing-picked). */
+const nothingPickedDuration = 4000
+
 interface WelcomeStepProps {
   onChoose: (choice: TourChoice) => void
   leagueList: LeagueList
@@ -94,15 +97,26 @@ interface WelcomeStepProps {
 /**
  * Welcome: what ScoreMap is, and what to see first. My leagues opens the rail's own LeaguePicker,
  * conferences and all, starting with nothing picked; only "Show these" applies the picks, so Back can
- * leave them without changing the viewer settings.
+ * leave them without changing the viewer settings. "Show these" pressed with nothing picked says why it
+ * can't go on, in a note over the picker that fades out.
  */
 function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepProps) {
   const { leagues, status, retry } = leagueList
   const [picking, setPicking] = useState(false)
   const [picks, setPicks] = useState<TourPicks>(noPicks)
   const pickedSettings = settingsForPicks(settings, picks, leagues)
+  const ready = status === 'ready' && leagues.length > 0
+  const canShow = ready && canShowPicks(pickedSettings, leagues)
+  // The note on why "Show these" can't go on yet, keyed afresh on each press so its fade starts again.
+  const [nothingPicked, setNothingPicked] = useState<number | null>(null)
+  useEffect(() => {
+    if (nothingPicked === null) return
+    const timer = setTimeout(() => setNothingPicked(null), nothingPickedDuration)
+    return () => clearTimeout(timer)
+  }, [nothingPicked])
   const pickMyLeagues = () => {
     setPicks(noPicks)
+    setNothingPicked(null)
     setPicking(true)
   }
   return (
@@ -114,13 +128,24 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
           <>
             <TourButton onClick={() => setPicking(false)}>Back</TourButton>
             {status === 'failed' && <TourButton onClick={retry}>Retry</TourButton>}
+            {nothingPicked !== null && !canShow && (
+              <p key={nothingPicked} className="welcome-tour__nothing-picked" role="status">
+                Pick at least one league first, so there&apos;s something to show. Or go Back for Top Events or Everything.
+              </p>
+            )}
             <TourButton
               onClick={() => {
-                if (status !== 'ready' || !canShowPicks(pickedSettings, leagues)) return
+                if (!ready) return
+                if (!canShow) {
+                  setNothingPicked(Date.now())
+                  return
+                }
                 onChange(pickedSettings)
                 onChoose('myLeagues')
               }}
-              disabled={status !== 'ready' || !canShowPicks(pickedSettings, leagues)}
+              // Loading, failed or empty, the picker says why already; with nothing picked, a press says why.
+              disabled={!ready}
+              unavailable={!canShow}
             >
               Show these
             </TourButton>
@@ -335,12 +360,20 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
 interface TourButtonProps {
   onClick: () => void
   disabled?: boolean
+  /** Shown as unavailable, but still pressable, to say why ("Show these" with nothing picked). */
+  unavailable?: boolean
   children: ReactNode
 }
 
-function TourButton({ onClick, disabled, children }: TourButtonProps) {
+function TourButton({ onClick, disabled, unavailable, children }: TourButtonProps) {
   return (
-    <button type="button" className="welcome-tour__button" onClick={onClick} disabled={disabled}>
+    <button
+      type="button"
+      className="welcome-tour__button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-disabled={unavailable || undefined}
+    >
       {children}
     </button>
   )

@@ -2968,6 +2968,7 @@ body {
 }
 
 .welcome-tour__actions {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
@@ -2989,10 +2990,32 @@ body {
   cursor: pointer;
 }
 
-/* "Show these" with nothing picked yet. */
-.welcome-tour__button:disabled {
+/* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
+.welcome-tour__button:disabled,
+.welcome-tour__button[aria-disabled='true'] {
   opacity: var(--controls-off-opacity);
   cursor: default;
+}
+
+/* Why "Show these" can't go on with nothing picked: a note over the picker, just above the buttons, looking
+   and fading as Leagues' note on why the leagues are off does (leagues-off-note, 4 s). */
+.welcome-tour__nothing-picked {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 2 * var(--spacing));
+  left: 0;
+  z-index: 1;
+  margin: 0;
+  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--rail-on-outline);
+  border-radius: var(--controls-corner);
+  background: var(--palette-background-default);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--palette-background-default) 70%, transparent);
+  color: var(--palette-text-primary);
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-caption-font-size);
+  animation: leagues-off-note 4s ease forwards;
+  pointer-events: none;
 }
 
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */

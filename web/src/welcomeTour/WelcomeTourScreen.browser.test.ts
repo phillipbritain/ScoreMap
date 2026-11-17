@@ -111,9 +111,9 @@ it('recovers a failed league list with Retry before applying an explicit pick', 
   expect(button('Show these').disabled).toBe(true)
   expect(changed).not.toHaveBeenCalled()
   await click('Retry')
-  expect(button('Show these').disabled).toBe(true)
+  expect(button('Show these').getAttribute('aria-disabled')).toBe('true')
   await click('NFL')
-  expect(button('Show these').disabled).toBe(false)
+  expect(button('Show these').getAttribute('aria-disabled')).toBeNull()
   await click('Show these')
   expect(changed).toHaveBeenCalledWith({ ...firstVisitSettings, hiddenLeagues: ['NCAA Football', 'NBA'] })
   expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'myLeagues' })
@@ -131,7 +131,35 @@ it('keeps late-loading leagues unpicked and cannot apply the unavailable list', 
   expect(event).not.toHaveBeenCalled()
   await act(async () => { response.resolve(Response.json(leagues)) })
   for (const { name } of leagues) expect(button(name).getAttribute('aria-pressed')).toBe('false')
-  expect(button('Show these').disabled).toBe(true)
+  expect(button('Show these').getAttribute('aria-disabled')).toBe('true')
+})
+
+it('says why Show these can\'t go on with nothing picked, until a league is picked', async () => {
+  const { changed, event } = await mountTour()
+  await click('My leagues')
+  expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  await click('Show these')
+  expect(document.querySelector('.welcome-tour__nothing-picked[role="status"]')?.textContent).toContain('Pick at least one league')
+  expect(changed).not.toHaveBeenCalled()
+  expect(event).not.toHaveBeenCalled()
+  await click('NBA')
+  expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  await click('Show these')
+  expect(event).toHaveBeenCalledWith({ kind: 'chose', choice: 'myLeagues' })
+})
+
+it('lets the note on nothing picked fade away by itself', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  try {
+    await mountTour()
+    await click('My leagues')
+    await click('Show these')
+    expect(document.querySelector('.welcome-tour__nothing-picked')).not.toBeNull()
+    await act(() => vi.advanceTimersByTime(4000))
+    expect(document.querySelector('.welcome-tour__nothing-picked')).toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 it.each(['http', 'network', 'invalid JSON'] as const)('can leave a persistent %s failure for Top Events', async (failure) => {

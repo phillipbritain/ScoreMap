@@ -30,11 +30,6 @@ interface WelcomeTourScreenProps {
   onChange: (settings: ViewerSettings) => void
   /** Opens a game's panel, as clicking its score card on the globe would: Click a score card's lit card. */
   onOpenGame: (gameId: string) => void
-  /**
-   * Whether a game's panel opened from Click a score card is open: the step stays, at the top of the
-   * screen and pointing at nothing, until Done or its × finishes the tour.
-   */
-  gameOpen: boolean
   /** The score cards a viewer can see now, for Click a score card to point at (see GlobeMap.shownScoreCards). */
   scoreCards: () => ShownScoreCard[]
 }
@@ -45,7 +40,7 @@ interface WelcomeTourScreenProps {
  * choice or button; its panel's ×, or Escape, closes the tour, which finishes it. There is no Skip or
  * dots. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards, gameOpen }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
   const choose = (choice: TourChoice) => {
     // My leagues applies its completed picks before making the choice.
@@ -53,6 +48,8 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
     onEvent({ kind: 'chose', choice })
   }
   const close = () => onEvent({ kind: 'closed' })
+  const screen = useRef<HTMLDivElement>(null)
+  useAboveGamePanel(screen, progress === 'allSet')
   // Escape closes the tour wherever focus is, as the panel's × does.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -63,7 +60,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   }, [onEvent])
   return (
     <TourClose.Provider value={close}>
-      <div className={`welcome-tour welcome-tour--${progress}${gameOpen ? ' welcome-tour--game-open' : ''}`}>
+      <div ref={screen} className={`welcome-tour welcome-tour--${progress}`}>
         {/* Catches every press, so nothing under the tour can be used. */}
         <div className="welcome-tour__dim" />
         {progress === 'welcome' && (
@@ -74,10 +71,13 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
           <ScoreCardStep
             onDone={() => onEvent({ kind: 'done' })}
             scoreCards={scoreCards}
-            onOpenGame={onOpenGame}
-            gameOpen={gameOpen}
+            onOpenGame={(gameId) => {
+              onOpenGame(gameId)
+              onEvent({ kind: 'gameOpened' })
+            }}
           />
         )}
+        {progress === 'allSet' && <AllSetStep onDone={() => onEvent({ kind: 'done' })} />}
       </div>
     </TourClose.Provider>
   )
@@ -257,28 +257,61 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
   )
 }
 
+/** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */
+function AllSetStep({ onDone }: { onDone: () => void }) {
+  return (
+    <TourPanel heading="You're all set" action={<TourButton onClick={onDone}>Done</TourButton>}>
+      <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the games.</p>
+    </TourPanel>
+  )
+}
+
+/**
+ * While `on`, sets the tour's --above-game-panel to how far up from its foot the open game panel's top
+ * is, following it as it slides in or grows, so the step's panel sits right above it (see
+ * .welcome-tour[data-above-game-panel]). With no game panel open, the step's panel stays in the middle.
+ */
+function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
+  useEffect(() => {
+    const element = screen.current
+    if (!on || !element) return
+    let frame = 0
+    const look = () => {
+      frame = requestAnimationFrame(look)
+      const gamePanel = document.querySelector('.game-panel:not(.game-panel--leaving)')
+      const above = gamePanel && element.getBoundingClientRect().bottom - gamePanel.getBoundingClientRect().top
+      // An attribute rather than a class, which React would drop each time it renders the tour.
+      element.toggleAttribute('data-above-game-panel', Boolean(gamePanel))
+      if (above) element.style.setProperty('--above-game-panel', `${above}px`)
+    }
+    look()
+    return () => {
+      cancelAnimationFrame(frame)
+      element.removeAttribute('data-above-game-panel')
+      element.style.removeProperty('--above-game-panel')
+    }
+  }, [screen, on])
+}
+
 interface ScoreCardStepProps {
   onDone: () => void
   onOpenGame: (gameId: string) => void
   scoreCards: () => ShownScoreCard[]
-  /** A game's panel opened from the lit card is open, so nothing is pointed at. */
-  gameOpen: boolean
 }
 
 /**
  * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
  * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
  * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
- * to bring a card into view. Pressing the card opens its game's panel and the step stays, pointing at
- * nothing while the panel is open, until Done (or the ×) finishes the tour.
+ * to bring a card into view.
  */
-function ScoreCardStep({ onDone, onOpenGame, scoreCards, gameOpen }: ScoreCardStepProps) {
+function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
-  const toTry = useScoreCardToTry(panel, scoreCards, gameOpen)
+  const toTry = useScoreCardToTry(panel, scoreCards)
   const card = () => scoreCards().filter((shown) => shown.gameId === toTry?.gameId)
   return (
     <>
-      {toTry && !gameOpen && (
+      {toTry && (
         <TourPointer
           panel={panel}
           target={() => card().map((shown) => shown.element)}
@@ -315,21 +348,15 @@ interface CardToTry {
  * The score card for Click a score card to point at, following the cards as they're laid out: null
  * for none, undefined until the panel has been measured. Once picked, a card is
  * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards; its name
- * follows its game (a new score, say). Held as it is while `held` (a game's panel open, the step's panel
- * moved to make room for it), so the step's wording doesn't change under the viewer.
+ * follows its game (a new score, say).
  */
-function useScoreCardToTry(
-  panel: RefObject<HTMLElement | null>,
-  scoreCards: () => ShownScoreCard[],
-  held: boolean,
-): CardToTry | null | undefined {
+function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () => ShownScoreCard[]): CardToTry | null | undefined {
   const [toTry, setToTry] = useState<CardToTry | null | undefined>(undefined)
   const latest = useRef(scoreCards)
   useEffect(() => {
     latest.current = scoreCards
   })
   useEffect(() => {
-    if (held) return
     let frame = 0
     const look = () => {
       frame = requestAnimationFrame(look)
@@ -347,7 +374,7 @@ function useScoreCardToTry(
     }
     look()
     return () => cancelAnimationFrame(frame)
-  }, [panel, held])
+  }, [panel])
   return toTry
 }
 

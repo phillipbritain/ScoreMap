@@ -3394,12 +3394,12 @@ body {
   }
 }
 
-/* Click a score card with the game's panel it opened: the step at the top of the screen, clear of the
-   game panel at the foot, which is lifted over the tour's dim to be used. After the short screen's
-   centering above, which it overrides. */
-.welcome-tour.welcome-tour--game-open {
-  align-items: flex-start;
-  padding-top: calc(3 * var(--spacing));
+/* All set with the game's panel Click a score card opened: the step right above that panel (its top,
+   --above-game-panel, measured by useAboveGamePanel), which is lifted over the tour's dim to be used.
+   After the short screen's centering above, which it overrides. */
+.welcome-tour[data-above-game-panel] {
+  align-items: flex-end;
+  padding-bottom: calc(var(--above-game-panel, 0px) + 3 * var(--spacing));
 }
 
 .globe-area--touring > .game-panel {

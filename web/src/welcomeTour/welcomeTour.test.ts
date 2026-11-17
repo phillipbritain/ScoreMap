@@ -26,6 +26,9 @@ describe('welcome tour progress', () => {
     ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
     ['controls', { kind: 'next' }, 'scoreCard'],
     ['scoreCard', { kind: 'done' }, 'finished'],
+    ['scoreCard', { kind: 'gameOpened' }, 'allSet'],
+    ['allSet', { kind: 'done' }, 'finished'],
+    ['allSet', { kind: 'closed' }, 'finished'],
     ['welcome', { kind: 'closed' }, 'finished'],
     ['controls', { kind: 'closed' }, 'finished'],
     ['scoreCard', { kind: 'closed' }, 'finished'],
@@ -37,10 +40,14 @@ describe('welcome tour progress', () => {
   it.each<[TourProgress, TourEvent]>([
     ['welcome', { kind: 'next' }],
     ['welcome', { kind: 'done' }],
+    ['welcome', { kind: 'gameOpened' }],
     ['controls', { kind: 'chose', choice: 'everything' }],
     ['controls', { kind: 'done' }],
+    ['controls', { kind: 'gameOpened' }],
     ['scoreCard', { kind: 'chose', choice: 'topEvents' }],
     ['scoreCard', { kind: 'next' }],
+    ['allSet', { kind: 'gameOpened' }],
+    ['allSet', { kind: 'next' }],
     ['welcome', { kind: 'again' }],
     ['controls', { kind: 'again' }],
     ['scoreCard', { kind: 'again' }],
@@ -52,6 +59,7 @@ describe('welcome tour progress', () => {
     { kind: 'chose', choice: 'topEvents' },
     { kind: 'next' },
     { kind: 'done' },
+    { kind: 'gameOpened' },
     { kind: 'closed' },
   ])('stays finished on %j', (event) => {
     expect(tourProgressAfter('finished', event)).toBe('finished')

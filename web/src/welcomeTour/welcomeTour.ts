@@ -4,10 +4,10 @@ import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
- * on. Its steps are Welcome, Your controls and Click a score card; once finished it comes back only
+ * on. Its steps are Welcome, Your controls, Click a score card and All set; once finished it comes back only
  * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
-export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'finished'
+export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'allSet' | 'finished'
 
 /** What the viewer chose to see on Welcome. */
 export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
@@ -17,8 +17,10 @@ export type TourEvent =
   | { kind: 'chose'; choice: TourChoice }
   /** Your controls → Click a score card. */
   | { kind: 'next' }
-  /** Click a score card → finished, by its Done button. Pressing the lit card opens its game's panel and leaves the step showing. */
+  /** Click a score card or All set → finished, by its Done button. */
   | { kind: 'done' }
+  /** Click a score card → All set, by pressing the lit card, which opens its game's panel. */
+  | { kind: 'gameOpened' }
   /** Any step → finished, by the panel's × or Escape. */
   | { kind: 'closed' }
   /** Finished → Welcome, by "Welcome tour" in More on the rail. */
@@ -28,7 +30,8 @@ export type TourEvent =
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
   welcome: { chose: 'controls', closed: 'finished' },
   controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { done: 'finished', closed: 'finished' },
+  scoreCard: { done: 'finished', gameOpened: 'allSet', closed: 'finished' },
+  allSet: { done: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }
 

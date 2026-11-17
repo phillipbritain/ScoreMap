@@ -194,8 +194,8 @@ describe('applyTheme', () => {
       // The loading screen's dim (a color and an opacity), rocket (two colors and a size), message, its
       // glow (a color, a radius and an opacity) and its ellipsis's dots (a size).
       loadingScreen: 2 + 3 + 1 + 3 + 1,
-      // The welcome tour's dim opacity and arrow width.
-      welcomeTour: 2,
+      // The welcome tour's dim opacity, arrow width and Welcome's three choices' outlines.
+      welcomeTour: 2 + 3,
     }
     expect(properties.size).toBe(Object.values(written).reduce((sum, n) => sum + n))
   })

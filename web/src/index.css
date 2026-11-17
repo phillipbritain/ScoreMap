@@ -2950,9 +2950,22 @@ body {
   color: var(--palette-text-secondary);
 }
 
+/* Each choice outlined in a color of its own (components.WelcomeTour.choice). */
+.welcome-tour__choice--top-events {
+  border-color: var(--welcome-tour-choice-top-events);
+}
+
+.welcome-tour__choice--my-leagues {
+  border-color: var(--welcome-tour-choice-my-leagues);
+}
+
+.welcome-tour__choice--everything {
+  border-color: var(--welcome-tour-choice-everything);
+}
+
+/* Under the pointer, lit behind, its own outline kept. */
 @media (hover: hover) {
   .welcome-tour__choice:hover {
-    border-color: var(--rail-on-outline);
     background: var(--palette-action-hover);
   }
 }

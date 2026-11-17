@@ -183,15 +183,15 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
         <>
           <h3 className="welcome-tour__question">What would you like to see?</h3>
           <div className="welcome-tour__choices">
-            <button type="button" className="welcome-tour__choice" onClick={() => onChoose('topEvents')}>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--top-events" onClick={() => onChoose('topEvents')}>
               <strong>Top Events</strong>
               <span>The biggest games right now, in every sport</span>
             </button>
-            <button type="button" className="welcome-tour__choice" onClick={pickMyLeagues}>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--my-leagues" onClick={pickMyLeagues}>
               <strong>My leagues</strong>
               <span>Pick the sports and leagues you follow</span>
             </button>
-            <button type="button" className="welcome-tour__choice" onClick={() => onChoose('everything')}>
+            <button type="button" className="welcome-tour__choice welcome-tour__choice--everything" onClick={() => onChoose('everything')}>
               <strong>Everything</strong>
               <span>Every league ScoreMap shows</span>
             </button>

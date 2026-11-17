@@ -187,6 +187,10 @@
       "glow": { "color": "secondary.main", "radius": 14, "opacity": 0.45 },
       "dot": 5
     },
-    "WelcomeTour": { "dim": { "opacity": 0.3 }, "arrow": { "width": 2.5 } }
+    "WelcomeTour": {
+      "dim": { "opacity": 0.3 },
+      "arrow": { "width": 2.5 },
+      "choice": { "topEvents": "gold.500", "myLeagues": "navy.300", "everything": "orange.500" }
+    }
   }
 }

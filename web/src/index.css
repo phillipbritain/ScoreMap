@@ -33,37 +33,6 @@ body {
   }
 }
 
-/* Every scrollbar in the app: slim, in the theme's colors, and always showing while what it scrolls
-   overflows (rather than only while scrolling, as macOS draws them), so a viewer can tell there's more
-   further down. Drawn with the ::-webkit-scrollbar parts, which Chrome and Safari keep showing; the
-   standard scrollbar-width and scrollbar-color would take their place in Chrome and fade again, so they
-   are left to browsers without the parts (Firefox). The rail's own scrolling on a short screen hides
-   its scrollbar, showing there's more by a fade (see "Too short for the rail's buttons"). */
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--palette-text-primary) 35%, transparent);
-}
-
-*::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-@supports not selector(::-webkit-scrollbar) {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 35%, transparent) transparent;
-  }
-}
-
 /* The globe fills the screen; an open game panel lies over the bottom of it. */
 .app {
   display: flex;
@@ -3222,6 +3191,13 @@ body {
 
 .game-navigation__search::placeholder { color: var(--palette-text-secondary); }
 
+/* A menu's scrollbar: slim, in the theme's colors. The Games list and the rail's other popovers. */
+.game-navigation ul,
+.rail__popover {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
+}
+
 /* The games, scrolling under the search. Its own stacking context, so the pinned league headings, lifted
    over the games, stay under its scrollbar: Safari on iPhone draws the scrollbar over the list, and
    drew it behind them. */
@@ -3465,10 +3441,5 @@ body {
     pointer-events: auto;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
-  }
-
-  /* Hidden in Chrome and Safari too, which draw it with the app's scrollbar parts (see the top). */
-  .rail__buttons-inner::-webkit-scrollbar {
-    display: none;
   }
 }

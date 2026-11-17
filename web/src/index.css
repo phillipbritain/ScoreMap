@@ -3400,6 +3400,30 @@ body {
     padding-bottom: calc(3 * var(--spacing));
   }
 
+  /* All set, compact so it fits in the little height above the game panel without covering it: Done
+     beside its words, at the foot of a column of its own, clear of the × above it. */
+  .welcome-tour--allSet .welcome-tour__panel {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    column-gap: calc(4 * var(--spacing));
+    padding-block: calc(3 * var(--spacing));
+  }
+
+  .welcome-tour--allSet .welcome-tour__heading {
+    margin-bottom: var(--spacing);
+  }
+
+  .welcome-tour--allSet .welcome-tour__body {
+    grid-column: 1;
+  }
+
+  .welcome-tour--allSet .welcome-tour__actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: end;
+    margin-top: 0;
+  }
+
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));

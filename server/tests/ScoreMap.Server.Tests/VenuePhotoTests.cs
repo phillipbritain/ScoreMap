@@ -114,26 +114,24 @@ public class VenuePhotoTests
     }
 
     [Fact]
-    public async Task Photo_credits_saved_with_the_British_licence_spelling_keep_their_license_without_searching_again()
+    public async Task Photos_saved_before_poor_photos_were_dropped_are_searched_for_again()
     {
-        // A file as saved before the switch to American spelling: version 2, its credit's "licence" and "licenceUrl".
+        // A file as saved before poor photos (small, or from the air) were dropped: version 3, its photo a satellite view.
         var savedPhotos = Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(savedPhotos, """
-            {"version":2,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead.jpg",
-              "credit":{"author":"A. Photographer","licence":"CC BY-SA 4.0","licenceUrl":"https://licenses.test/by-sa","sourceUrl":"https://photos.test/page"}}}}
+            {"version":3,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead-satellite.png",
+              "credit":{"author":"NASA World Wind","license":"Public domain","licenseUrl":null,"sourceUrl":"https://photos.test/page"}}}}
             """, TestContext.Current.CancellationToken);
         try
         {
             await using var server = new ScoreMapServer(savedVenuePhotosPath: savedPhotos);
+            server.Photos.Add(Arrowhead, ArrowheadPhoto);
             server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
 
-            var game = Assert.Single(await server.SnapshotOnceAsync());
+            Assert.Null(Assert.Single(await server.SnapshotOnceAsync()).Venue.Photo);
+            await server.PhotoSearchesFinishedAsync();
 
-            Assert.Equal(
-                new VenuePhoto("https://photos.test/arrowhead.jpg",
-                    new PhotoCredit("A. Photographer", "CC BY-SA 4.0", "https://licenses.test/by-sa", "https://photos.test/page")),
-                game.Venue.Photo);
-            Assert.Empty(server.Photos.Searches);
+            Assert.Equal([Arrowhead], server.Photos.Searches);
         }
         finally
         {

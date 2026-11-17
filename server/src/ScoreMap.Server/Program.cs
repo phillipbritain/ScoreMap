@@ -125,6 +125,9 @@ app.MapGet("/api/leagues", (IOptions<List<League>> leagues) =>
 
 app.MapFeedback();
 
+// A venue's photo for the welcome tour's own games, found as a real game's is.
+app.MapVenuePhoto();
+
 // The scenario picker's list and switch (ADR-0009); in Development only.
 app.MapScenarios();
 

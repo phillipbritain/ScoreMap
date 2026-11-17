@@ -115,14 +115,12 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // The rail is kept out of sight on a first visit until the tour's Your controls step brings it in:
   // through the loading screen and Welcome, so it doesn't show and then go.
   const railHidden = tourProgress === 'welcome'
-  // The tour's own games show in place of real ones until it's finished, and then until a panel opened
-  // from Click a score card closes (see showsTourGames). Timed from when the tour starts.
+  // The tour's own games show in place of real ones until it's finished (see showsTourGames); a panel
+  // opened from Click a score card closes as they go. Timed from when the tour starts.
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
-  const [openedFromTour, setOpenedFromTour] = useState<string | null>(null)
-  const showTourGames = showsTourGames(tourProgress, openedFromTour)
+  const showTourGames = showsTourGames(tourProgress)
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
-    setOpenedFromTour(null)
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
     globe.current?.flyTo(tourCamera(window.matchMedia(phoneLayout).matches))
   }
@@ -147,11 +145,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
-  const { selectedGame, panel, selectGame, closeGame: closeSelectedGame } = useGameSelection(visible)
-  const closeGame = useCallback(() => {
-    setOpenedFromTour(null)
-    closeSelectedGame()
-  }, [closeSelectedGame])
+  const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
   // A game finishing while its panel is open celebrates there, then the panel closes itself and the game
   // leaves the globe with it (see usePanelCelebration).
   const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])
@@ -288,10 +282,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             leagueList={leagueList}
             settings={viewerSettings}
             onChange={setViewerSettings}
-            onOpenGame={(gameId) => {
-              setOpenedFromTour(gameId)
-              selectGame(gameId)
-            }}
+            onOpenGame={selectGame}
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
           />
         )}

@@ -69,7 +69,6 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
         {progress === 'controls' && <ControlsStep onNext={() => onEvent({ kind: 'next' })} />}
         {progress === 'scoreCard' && (
           <ScoreCardStep
-            onDone={() => onEvent({ kind: 'done' })}
             scoreCards={scoreCards}
             onOpenGame={(gameId) => {
               onOpenGame(gameId)
@@ -291,7 +290,6 @@ function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
 }
 
 interface ScoreCardStepProps {
-  onDone: () => void
   onOpenGame: (gameId: string) => void
   scoreCards: () => ShownScoreCard[]
 }
@@ -300,9 +298,9 @@ interface ScoreCardStepProps {
  * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
  * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
  * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
- * to bring a card into view.
+ * to bring a card into view. It has no Done: pressing the card moves on to All set, and its × closes the tour.
  */
-function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
+function ScoreCardStep({ onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
   const toTry = useScoreCardToTry(panel, scoreCards)
   const card = () => scoreCards().filter((shown) => shown.gameId === toTry?.gameId)
@@ -317,7 +315,7 @@ function ScoreCardStep({ onDone, onOpenGame, scoreCards }: ScoreCardStepProps) {
           targetLabel={`Open ${toTry.label}`}
         />
       )}
-      <TourPanel ref={panel} heading="Click a score card" action={<TourButton onClick={onDone}>Done</TourButton>}>
+      <TourPanel ref={panel} heading="Click a score card">
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
           <p className="welcome-tour__text">

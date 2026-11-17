@@ -17,7 +17,7 @@ export type TourEvent =
   | { kind: 'chose'; choice: TourChoice }
   /** Your controls → Click a score card. */
   | { kind: 'next' }
-  /** Click a score card or All set → finished, by its Done button. */
+  /** All set → finished, by its Done button. */
   | { kind: 'done' }
   /** Click a score card → All set, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
@@ -30,7 +30,7 @@ export type TourEvent =
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
   welcome: { chose: 'controls', closed: 'finished' },
   controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { done: 'finished', gameOpened: 'allSet', closed: 'finished' },
+  scoreCard: { gameOpened: 'allSet', closed: 'finished' },
   allSet: { done: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }

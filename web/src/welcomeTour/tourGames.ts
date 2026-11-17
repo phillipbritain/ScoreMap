@@ -22,11 +22,10 @@ export function tourCamera(phone: boolean): Camera {
 
 /**
  * Whether the globe shows the tour's games in place of real ones (or the scenario's): from the tour's
- * start until it's finished, and after that for as long as a panel opened from Click a score card stays
- * open, so the game it shows doesn't vanish from under it.
+ * start until it's finished, when they go at once, with any panel of theirs still open.
  */
-export function showsTourGames(progress: TourProgress, openedFromTour: string | null): boolean {
-  return progress !== 'finished' || openedFromTour !== null
+export function showsTourGames(progress: TourProgress): boolean {
+  return progress !== 'finished'
 }
 
 /**

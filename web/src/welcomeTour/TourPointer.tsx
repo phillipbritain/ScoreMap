@@ -22,12 +22,15 @@ interface TourPointerProps {
    */
   onTargetClick?: () => void
   targetLabel?: string
+  /** A media query: while it matches, the arrow starts at the middle of the panel's top edge. */
+  fromTopWhen?: string
 }
 
 interface Boxes {
   panel: ScreenBox
   target: ScreenBox
   aim: ScreenBox | null
+  fromTop: boolean
 }
 
 /**
@@ -36,11 +39,11 @@ interface Boxes {
  * theme's Live color runs from the panel's edge to it. Neither catches a press; the lit target can
  * be given its own button over it (Click a score card's card). Drawn in the tour's layer, which it fills.
  */
-export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: TourPointerProps) {
+export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fromTopWhen }: TourPointerProps) {
   const layer = useRef<HTMLDivElement>(null)
-  const find = useRef({ target, aim })
+  const find = useRef({ target, aim, fromTopWhen })
   useLayoutEffect(() => {
-    find.current = { target, aim }
+    find.current = { target, aim, fromTopWhen }
   })
   const [boxes, setBoxes] = useState<Boxes | null>(null)
   // An id fit for url(#…), whatever characters React's ids use.
@@ -60,6 +63,7 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: 
               panel: relativeTo(panelBox, origin),
               target: relativeTo(targetBox, origin),
               aim: aimBox ? relativeTo(aimBox, origin) : null,
+              fromTop: find.current.fromTopWhen !== undefined && window.matchMedia(find.current.fromTopWhen).matches,
             }
           : null
       setBoxes((current) => (sameBoxes(current, next) ? current : next))
@@ -68,8 +72,10 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel }: 
     return () => cancelAnimationFrame(frame)
   }, [panel])
 
+  const startAt = boxes?.fromTop ? 'top' : 'facing'
   const arrow =
-    boxes && (boxes.aim ? tourArrow(boxes.panel, boxes.aim, 'side') : tourArrow(boxes.panel, boxes.target))
+    boxes &&
+    (boxes.aim ? tourArrow(boxes.panel, boxes.aim, 'side', startAt) : tourArrow(boxes.panel, boxes.target, 'facing', startAt))
   // The spotlight's hole, where the lit target's own button sits too.
   const hole = boxes && {
     left: boxes.target.left - spotlightPadding,
@@ -124,7 +130,7 @@ function relativeTo(box: ScreenBox, origin: ScreenBox): ScreenBox {
 
 function sameBoxes(a: Boxes | null, b: Boxes | null): boolean {
   if (!a || !b) return a === b
-  return sameBox(a.panel, b.panel) && sameBox(a.target, b.target) && sameBox(a.aim, b.aim)
+  return sameBox(a.panel, b.panel) && sameBox(a.target, b.target) && sameBox(a.aim, b.aim) && a.fromTop === b.fromTop
 }
 
 function sameBox(a: ScreenBox | null, b: ScreenBox | null): boolean {

@@ -177,16 +177,18 @@ it("points at a card on the globe, named as the card's own button names its game
 })
 
 it.each([
-  { screen: 'a laptop', width: 1280, height: 800, phone: false },
-  { screen: 'a phone', width: 390, height: 844, phone: true },
-])("points at one of the tour's own games from the tour's camera, on $screen", async ({ width, height, phone }) => {
+  { screen: 'a laptop', width: 1280, height: 800, kind: 'wide' },
+  { screen: 'a phone', width: 390, height: 844, kind: 'phone' },
+  // An iPhone on its side in Safari, its bars taking some of the height.
+  { screen: 'a phone on its side', width: 874, height: 300, kind: 'short' },
+] as const)("points at one of the tour's own games, wholly on screen, from the tour's camera, on $screen", async ({ width, height, kind }) => {
   await page.viewport(width, height)
   try {
     const map = document.createElement('div')
     map.style.cssText = 'position: fixed; inset: 0'
     document.body.append(map)
     const globe = new GlobeMap(map, {
-      style: plainStyle, theme: builtInTheme, startCamera: tourCamera(phone), zoomSettings,
+      style: plainStyle, theme: builtInTheme, startCamera: tourCamera(kind), zoomSettings,
       onSelect: () => {}, onCameraMove: () => {}, onStage: () => {},
     })
     opened.push(globe)
@@ -195,6 +197,10 @@ it.each([
     const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards())
 
     await vi.waitFor(() => expect(openButton()).not.toBeNull(), { timeout: 5_000 })
+    // The lit card's button covers the card and its spotlight's rim, all on the screen.
+    const lit = openButton()!.getBoundingClientRect()
+    expect(lit.top).toBeGreaterThanOrEqual(0)
+    expect(lit.bottom).toBeLessThanOrEqual(height)
     await userEvent.click(openButton()!)
 
     expect(onOpenGame).toHaveBeenCalledWith(expect.stringMatching(/^tour-/))

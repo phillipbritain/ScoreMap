@@ -33,9 +33,15 @@ export interface TourArrow {
  *
  * Ending at the target's `side`, it comes in at whichever of its left and right faces the panel's
  * middle, wherever the target is: a score card's teams, as its bottom is where its trail runs.
+ * Starting at the panel's `top`, it leaves from the middle of its top edge, wherever the target is.
  */
-export function tourArrow(panel: ScreenBox, target: ScreenBox, endAt: 'facing' | 'side' = 'facing'): TourArrow {
-  const start = edgeFacing(panel, middleOf(target))
+export function tourArrow(
+  panel: ScreenBox,
+  target: ScreenBox,
+  endAt: 'facing' | 'side' = 'facing',
+  startAt: 'facing' | 'top' = 'facing',
+): TourArrow {
+  const start = startAt === 'top' ? topOf(panel) : edgeFacing(panel, middleOf(target))
   const end = endAt === 'side' ? sideFacing(target, middleOf(panel)) : edgeFacing(target, middleOf(panel))
   const from = { x: start.point.x + start.out.x * startGap, y: start.point.y + start.out.y * startGap }
   const to = { x: end.point.x + end.out.x * endGap, y: end.point.y + end.out.y * endGap }
@@ -75,6 +81,11 @@ function edgeFacing(box: ScreenBox, toward: ScreenPoint): { point: ScreenPoint; 
   return dy > 0
     ? { point: { x: middle.x, y: box.bottom }, out: { x: 0, y: 1 } }
     : { point: { x: middle.x, y: box.top }, out: { x: 0, y: -1 } }
+}
+
+/** The middle of a box's top edge, and the way out of it. */
+function topOf(box: ScreenBox): { point: ScreenPoint; out: ScreenPoint } {
+  return { point: { x: middleOf(box).x, y: box.top }, out: { x: 0, y: -1 } }
 }
 
 /** The middle of a box's left or right edge, whichever faces a point, and the way out of it. */

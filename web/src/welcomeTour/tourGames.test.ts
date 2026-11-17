@@ -46,8 +46,8 @@ describe("the welcome tour's games", () => {
   })
 
   it('sit in a fixed place, around the camera the tour opens on', () => {
-    for (const phone of [false, true]) {
-      const camera = tourCamera(phone)
+    for (const screen of ['wide', 'phone', 'short'] as const) {
+      const camera = tourCamera(screen)
       for (const { venue } of tourGames(now)) {
         expect(Math.abs(venue.longitude! - camera.longitude)).toBeLessThan(10)
         expect(Math.abs(venue.latitude! - camera.latitude)).toBeLessThan(8)
@@ -57,15 +57,11 @@ describe("the welcome tour's games", () => {
 })
 
 describe('when the globe shows the tour games', () => {
-  it.each<TourProgress>(['welcome', 'controls', 'scoreCard'])('shows them through the tour (%s)', (progress) => {
-    expect(showsTourGames(progress, null)).toBe(true)
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'allSet'])('shows them through the tour (%s)', (progress) => {
+    expect(showsTourGames(progress)).toBe(true)
   })
 
-  it('goes back to real games once the tour is finished', () => {
-    expect(showsTourGames('finished', null)).toBe(false)
-  })
-
-  it('keeps them while a panel opened from Click a score card stays open', () => {
-    expect(showsTourGames('finished', 'tour-nfl-nyg')).toBe(true)
+  it('goes back to real games once the tour is finished, even with a panel opened from Click a score card', () => {
+    expect(showsTourGames('finished')).toBe(false)
   })
 })

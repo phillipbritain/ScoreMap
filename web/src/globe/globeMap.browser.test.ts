@@ -473,6 +473,25 @@ describe('selection', () => {
     expect(document.activeElement).toBe(map.getCanvas())
   })
 
+  it("gives no score card to a game whose venue is off screen, but the selected game's", async () => {
+    // A map 400 px wide: B's venue, 10° east, is off its right edge, A's in the middle.
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 300 })
+    globe.show([game('A'), game('B', { longitude: 10 })])
+    await cardShown('A')
+    expect(map.project([10, 0]).x).toBeGreaterThan(400)
+    await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
+    expect(card('B')).toBeNull()
+
+    globe.select('B')
+    await cardShown('B')
+    globe.select(null)
+    await vi.waitFor(() => expect(card('B')).toBeNull())
+
+    // Brought into view, it has its card.
+    map.jumpTo({ center: [6, 0] })
+    await cardShown('B')
+  })
+
   it('highlights the selected game’s score card, zoomed in', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show([game('A'), game('B', { longitude: 2 })])
@@ -1265,8 +1284,9 @@ describe('settling', () => {
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
     map.off('render', record)
 
-    // A card the layout moves once the camera stops (see layOutCards) glides there, more than a jump in
-    // its first frames: so each card may jump in one run of frames, its glide, but never jump again.
+    // A card the layout moved on the pan's last frame (see layOutCards) glides on there once it stops,
+    // more than a jump in its first frames: so each card may jump in one run of frames, its glide, but
+    // never jump again.
     const jumpFrames = new Map<string, number[]>()
     frames.slice(1).forEach((now, i) => {
       for (const gameId of jumped(frames[i], now)) jumpFrames.set(gameId, [...(jumpFrames.get(gameId) ?? []), i + 1])

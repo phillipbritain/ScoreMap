@@ -38,6 +38,8 @@ export class PlacedCard {
   /** The card's size on screen, as last measured. */
   width = 0
   height = 0
+  /** Whether its size is set (see measure). */
+  private sizeSet = false
   /**
    * Where the card sits from its venue: just above it, or moved aside to make room for others (see
    * cardLayout). Null until it's first laid out.
@@ -110,10 +112,31 @@ export class PlacedCard {
     if (at.lng !== longitude || at.lat !== latitude) this.marker.setLngLat([longitude, latitude])
   }
 
-  /** Measures the card's size on screen afresh, after it's drawn or restyled. */
+  /**
+   * Measures the card's size on screen, after it's drawn, the first time only: then its size is set,
+   * so no change of score, clock or selection resizes it and nudges the cards round it (see
+   * layOutCards). What no longer fits is cut short (the page's CSS). Set only once the page's fonts are
+   * in, as measured in a fallback font it would be too small: until then, each time it's drawn.
+   */
   measure(): void {
+    if (this.sizeSet) return
     this.width = this.element.offsetWidth
     this.height = this.element.offsetHeight
+    if (document.fonts.status !== 'loaded') return
+    this.sizeSet = true
+    // A pixel more across: offsetWidth rounds, and a fraction of a pixel short would cut its text short.
+    this.width += 1
+    this.element.style.boxSizing = 'border-box'
+    this.element.style.width = `${this.width}px`
+    this.element.style.height = `${this.height}px`
+  }
+
+  /** Measures the card's size afresh, after it's restyled (a change of theme): set again from what it shows now. */
+  measureAfresh(): void {
+    this.sizeSet = false
+    this.element.style.width = ''
+    this.element.style.height = ''
+    this.measure()
   }
 
   /** Puts the card where the card layout has it from its venue, moved aside for its neighbors or not. */

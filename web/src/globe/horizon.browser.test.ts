@@ -82,8 +82,8 @@ describe('fadeNearHorizon', () => {
   })
 
   it('draws a point back in the source at its fade where it is now from its first frame, not the one it had before', async () => {
-    // The point near the horizon, faded out; then gone, as a game into a score card's reach; then back
-    // at the center, as an outer pin cluster's id comes back for another cluster somewhere else.
+    // The point near the horizon, faded out; then gone; then back at the center, as a city's name
+    // can be when the games' cities are labeled again.
     await show(points(['A', ...nearHorizon]), 'A')
     await vi.waitFor(() => expect(map.getFeatureState({ source, id: 'A' }).horizonFade).toBe(0))
     await show(points())

@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
-  cardRadius,
-  cardRadiusAt,
-  cardRadiusWidening,
-  furthestOutCardRadius,
   centerLatitude,
   fieldOfView,
   fittedZoomSettings,
   furthestOutFill,
   furthestOutZoom,
-  hasCard,
   minZoom,
   minZoomView,
   laptopView,
-  pinClusterRadius,
   wholeGlobeZoom,
   zoomAt,
   zoomAtEquator,
@@ -21,28 +15,11 @@ import {
   zoomSettings,
 } from './zoomLevels'
 
-// Pins and pin clusters kept 35 pixels apart, as the built-in theme's widest pin clusters are.
-const spacing = 35
-
 /** MapLibre's camera at this zoom, centered on the equator. */
 const atEquator = (zoom: number) => ({ zoom, latitude: 0 })
 
 // About one country on screen, a zoom to measure with.
 const countryZoom = 3
-
-describe('pinClusterRadius', () => {
-  it('clusters small pins closer than the spacing', () => {
-    expect(pinClusterRadius(2, spacing)).toBe(35)
-  })
-
-  it("shrinks the radius past a whole zoom level, where MapLibre still shows that level's clusters", () => {
-    // Halfway to the next level, pins are about 1.4 times as far apart on screen as when clustered.
-    expect(pinClusterRadius(2.5, spacing)).toBe(Math.round(35 / Math.SQRT2))
-    // In steps, rounded down, so it errs toward clustering and doesn't change every frame.
-    expect(pinClusterRadius(2.6, spacing)).toBe(pinClusterRadius(2.5, spacing))
-    expect(pinClusterRadius(2.99, spacing)).toBeGreaterThan(35 / 2)
-  })
-})
 
 describe('zoomAt and zoomAtEquator', () => {
   it('are the same at the equator', () => {
@@ -173,62 +150,5 @@ describe('zoomForMapType', () => {
 
   it('lets the satellite map zoom in further than the plain map', () => {
     expect(zoomSettings.satelliteMaxZoom).toBeGreaterThan(zoomSettings.maxZoom)
-  })
-})
-
-describe('hasCard', () => {
-  const kansas = { longitude: -97, latitude: 39 }
-
-  it('gives a card to a game within the card radius of the center of the view', () => {
-    expect(hasCard(kansas, kansas)).toBe(true)
-    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 })).toBe(true) // New York
-    expect(hasCard(kansas, { longitude: -122.3, latitude: 47.6 })).toBe(true) // Seattle
-  })
-
-  it('leaves a game farther out as a small pin', () => {
-    expect(hasCard(kansas, { longitude: -0.1, latitude: 51.5 })).toBe(false) // London
-    expect(hasCard(kansas, { longitude: -157.9, latitude: 21.3 })).toBe(false) // Honolulu
-  })
-
-  it('measures the radius along the globe, the same in every direction', () => {
-    const equator = { longitude: 0, latitude: 0 }
-    expect(hasCard(equator, { longitude: cardRadius, latitude: 0 })).toBe(true)
-    expect(hasCard(equator, { longitude: 0, latitude: -cardRadius })).toBe(true)
-    expect(hasCard(equator, { longitude: cardRadius + 0.5, latitude: 0 })).toBe(false)
-    expect(hasCard(equator, { longitude: 0, latitude: cardRadius + 0.5 })).toBe(false)
-  })
-
-  it('gives the selected game its card as far out as zoomed in, whatever the radius it is given', () => {
-    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 }, furthestOutCardRadius, true)).toBe(true) // New York
-    expect(hasCard(kansas, { longitude: -0.1, latitude: 51.5 }, furthestOutCardRadius, true)).toBe(false) // London
-  })
-
-  it('gives cards only within the radius it is given, as zoomed out', () => {
-    expect(hasCard(kansas, { longitude: -90.2, latitude: 38.6 }, furthestOutCardRadius)).toBe(true) // St. Louis
-    expect(hasCard(kansas, { longitude: -74, latitude: 40.7 }, furthestOutCardRadius)).toBe(false) // New York
-  })
-})
-
-describe('cardRadiusAt', () => {
-  it('reaches about a region zoomed all the way out, short of the reach zoomed in', () => {
-    expect(cardRadiusAt(0)).toBe(furthestOutCardRadius)
-    expect(furthestOutCardRadius).toBeLessThan(cardRadius)
-  })
-
-  it('widens as the view zooms in, to the full card radius', () => {
-    expect(cardRadiusAt(cardRadiusWidening / 2)).toBeGreaterThan(furthestOutCardRadius)
-    expect(cardRadiusAt(cardRadiusWidening / 2)).toBeLessThan(cardRadius)
-    expect(cardRadiusAt(cardRadiusWidening)).toBe(cardRadius)
-  })
-
-  it('stays at the full card radius from there in', () => {
-    expect(cardRadiusAt(cardRadiusWidening + 5)).toBe(cardRadius)
-  })
-
-  it('reaches as far as the full card radius at the zoom the globe starts at, on a laptop and a phone', () => {
-    for (const view of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
-      const { minZoom, startZoom } = fittedZoomSettings(zoomSettings, view)
-      expect(cardRadiusAt(startZoom - minZoom)).toBe(cardRadius)
-    }
   })
 })

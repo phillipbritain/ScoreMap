@@ -25,7 +25,7 @@ export const stillComing = ({ at }: CardComing, now: number): boolean => now - a
  * Which score cards are coming in or going out: a game arriving on the board or leaving it (it was
  * shown 30 minutes before its start, it dropped off after it finished, or the viewer's leagues showed
  * or hid it) has its card come in or go out; a card that comes or goes as the camera moves (its venue
- * crossing the horizon or the card radius) appears or fades the same way, in place. One moved into or
+ * crossing the horizon or the edge of the screen) appears or fades the same way, in place. One moved into or
  * out of a card cluster stays placed, and fades by the CSS alone (`[data-in-card-cluster]`).
  */
 export interface CardComings {

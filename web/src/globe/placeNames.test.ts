@@ -8,7 +8,6 @@ import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
 import { addPlaceNames, cityNameLook, clusterClearOffset, placeNameLayers } from './placeNames'
-import { cardRadius, furthestOutCardRadius } from './zoomLevels'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -51,13 +50,13 @@ describe('cityNameLook', () => {
     }
   })
 
-  it('moves a name far enough from its dot to clear the widest cluster on it, at the smallest size names are written', () => {
-    // The widest cluster reaches 17.5 pixels (16 and an outline of 1.5), its footprint a pixel further, and a
-    // city name's outline 2 more: 20.5 pixels, at the built-in theme's smallest city size, 12 pixels.
+  it('moves a name far enough from its dot to clear a card cluster on it, at the smallest size names are written', () => {
+    // A card cluster reaches 13 pixels, outline and all, its footprint a pixel further, and a city
+    // name's outline 2 more: 16 pixels, at the built-in theme's smallest city size, 12 pixels.
     const smallest = cityNameLook(0, builtInTheme).size
     expect(smallest).toBe(12)
-    expect(clusterClearOffset(builtInTheme) * smallest).toBeGreaterThanOrEqual(20.5)
-    expect(clusterClearOffset(builtInTheme) * smallest).toBeLessThan(20.5 + 0.12)
+    expect(clusterClearOffset(builtInTheme) * smallest).toBeGreaterThanOrEqual(16)
+    expect(clusterClearOffset(builtInTheme) * smallest).toBeLessThan(16 + 0.12)
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {
@@ -131,19 +130,15 @@ describe('addPlaceNames', () => {
     expect(gameCities()).toEqual(['Miami'])
   })
 
-  it('keeps a game’s city whole near the horizon while a game it names has a score card', () => {
+  it('keeps a game’s city whole near the horizon, wherever the view is centered, as its game has a score card', () => {
     const { map, gameCities } = mapWithCityNames()
     const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
     names.showGames([evergladesGame])
     expect(gameCities()).toEqual(['Miami'])
     const miami = 0
-    // The game within the card radius of the center of the view (over Texas), and far out of it (over Tokyo).
-    expect(names.namesACard(miami, { longitude: -99, latitude: 31 }, cardRadius)).toBe(true)
-    expect(names.namesACard(miami, { longitude: 139.7, latitude: 35.7 }, cardRadius)).toBe(false)
-    // Zoomed all the way out, cards reach less far: not from Texas to Miami.
-    expect(names.namesACard(miami, { longitude: -99, latitude: 31 }, furthestOutCardRadius)).toBe(false)
-    // A Big city with no game near names no card.
-    expect(names.namesACard(1, { longitude: -99, latitude: 31 }, cardRadius)).toBe(false)
+    expect(names.namesAGame(miami)).toBe(true)
+    // A Big city with no game near names no game.
+    expect(names.namesAGame(1)).toBe(false)
   })
 
   it("marks a game's city as naming a score card while the card is on screen, giving the cities again only when that changes", () => {

@@ -895,7 +895,7 @@ interface Mark {
 /**
  * Gathers cards' venue dots and card clusters so no two overlap: the two marks that overlap most become
  * one in the middle of their games' venues on screen (a venue cluster is wider than a dot; a card
- * cluster is as wide as a pin cluster of some games), and again until none overlap; of two that
+ * cluster is as wide as cardLayoutLayers draws it), and again until none overlap; of two that
  * overlap as much, the first. How far apart each pair is is worked out once, and again only for the
  * mark just made: a crowd of cards can make many clusters a frame.
  */

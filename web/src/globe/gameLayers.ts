@@ -1,22 +1,13 @@
 import type { LayerSpecification } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
 import { cardClusterFootprintLayerSpec, cardFootprintLayerSpec, cardLayoutLayers, cardlessPins } from './cardLayoutLayers'
-import {
-  cardPinsLayerSpec,
-  outerPins,
-  pinClusterFootprintLayerSpec,
-  pinClusterLayers,
-  pinFootprintLayerSpec,
-  selectedPinLayerSpec,
-  smallPinLayers,
-} from './pinLayers'
+import { cardPinsLayerSpec, pinFootprintLayerSpec, selectedPinLayerSpec, smallPinLayers } from './pinLayers'
 
 /** The layers the globe adds over its map style for the games, each from the bottom up. */
 export interface GameLayers {
   /**
-   * The pin source's layer, which draws nothing (see cardPinsLayerSpec), the outer pins and those of
-   * games with no room for a card, the selected pin's ring, and the card layout's trails and card
-   * clusters: beneath the place names, so a pin never hides a city's name and names draw over trails
+   * The pin source's layer, which draws nothing (see cardPinsLayerSpec), the card layout's trails and
+   * card clusters, and the small pins of games with no room for a card with the selected pin's ring: beneath the place names, so a pin never hides a city's name and names draw over trails
    * (ADR-0010).
    */
   belowNames: LayerSpecification[]
@@ -27,7 +18,7 @@ export interface GameLayers {
    */
   belowGameNames: LayerSpecification[]
   /**
-   * The clusters' footprints: on top, so every name, a game's city's too, is placed around them where
+   * The card clusters' footprints: on top, so every name, a game's city's too, is placed around them where
    * it can be, keeping their circles and counts readable.
    */
   onTop: LayerSpecification[]
@@ -38,14 +29,11 @@ export function gameLayers(theme: Theme, selectedGameId: string | null): GameLay
   return {
     belowNames: [
       cardPinsLayerSpec,
-      ...pinClusterLayers(theme, outerPins),
-      ...smallPinLayers(theme, outerPins),
-      selectedPinLayerSpec(theme, selectedGameId, outerPins),
       ...cardLayoutLayers(theme),
       ...smallPinLayers(theme, cardlessPins),
       selectedPinLayerSpec(theme, selectedGameId, cardlessPins),
     ],
-    belowGameNames: [cardFootprintLayerSpec, pinFootprintLayerSpec(outerPins), pinFootprintLayerSpec(cardlessPins)],
-    onTop: [cardClusterFootprintLayerSpec(theme), pinClusterFootprintLayerSpec(theme, outerPins)],
+    belowGameNames: [cardFootprintLayerSpec, pinFootprintLayerSpec(cardlessPins)],
+    onTop: [cardClusterFootprintLayerSpec(theme)],
   }
 }

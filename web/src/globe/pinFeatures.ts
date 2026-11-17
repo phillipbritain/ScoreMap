@@ -8,7 +8,7 @@ export interface PinProperties {
   status: GameStatus
   /** The game's color (see gameColor), for the pin's ring, glow and core (see smallPinLayers). */
   color: string
-  /** Whether the game shows flames: a flame on its small pin, and on a pin cluster it's in. */
+  /** Whether the game shows flames: a flame on its small pin. */
   flames: boolean
 }
 
@@ -16,9 +16,8 @@ export type PinFeature = Feature<Point, PinProperties>
 
 /**
  * Turns games into the GeoJSON the globe's pin source draws: one point per game, exactly at its
- * venue, in its color (`colorOf`, see gameColor), marked if it is hot. Games sharing a venue
- * cluster while pins are small, and their score cards are moved apart on screen (see cardLayout),
- * so each stays reachable.
+ * venue, in its color (`colorOf`, see gameColor), marked if it is hot. Games sharing a venue have
+ * their score cards moved apart on screen (see cardLayout), so each stays reachable.
  */
 export function pinFeatures(
   games: readonly PlacedGame[],

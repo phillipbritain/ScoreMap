@@ -1,47 +1,5 @@
-import type { Map as MapLibreMap } from 'maplibre-gl'
-import { degreesApart, type GlobePoint } from './geo'
 import type { MapType } from '../settings/viewerSettings'
 import settingsFile from './zoomSettings.json'
-
-/**
- * How far from the center of the view a game's venue can be, in degrees of arc, and still have a score
- * card, zoomed in. Farther games show as small pins (outer pins), so cards don't crowd the globe's rim.
- */
-export const cardRadius = 40
-
-/**
- * How far cards reach zoomed all the way out, in degrees of arc: about a region, such as the eastern
- * US, so cards don't come from every region on the globe at once.
- */
-export const furthestOutCardRadius = 15
-
-/** How many zoom levels in from the furthest out cards reach as far as cardRadius. */
-export const cardRadiusWidening = 1
-
-/**
- * How far cards reach, `pastFurthestOut` zoom levels in from the furthest out the view zooms (both
- * measured at the equator): furthestOutCardRadius at the furthest out, widening evenly to cardRadius
- * cardRadiusWidening levels in, and cardRadius from there in.
- */
-export function cardRadiusAt(pastFurthestOut: number): number {
-  const widened = Math.max(0, Math.min(1, pastFurthestOut / cardRadiusWidening))
-  return furthestOutCardRadius + (cardRadius - furthestOutCardRadius) * widened
-}
-
-/** How far cards reach on this map now (see cardRadiusAt), from how far in it is from its furthest out. */
-export function cardRadiusOn(map: MapLibreMap): number {
-  return cardRadiusAt(zoomAtEquator({ zoom: map.getZoom(), latitude: map.getCenter().lat }) - map.getMinZoom())
-}
-
-/**
- * Whether a game has a score card: its venue is within `radius` (see cardRadiusOn) of the view's
- * center, or within cardRadius for the selected game. Zoomed out, where cards reach less far, a game
- * picked from the list is turned to above the game panel, which can be past `radius`: it keeps its card
- * as zoomed in.
- */
-export function hasCard(center: GlobePoint, venue: GlobePoint, radius = cardRadius, selected = false): boolean {
-  return degreesApart(center, venue) <= (selected ? Math.max(radius, cardRadius) : radius)
-}
 
 /** How far out and in the globe zooms, and where it starts. */
 export interface ZoomSettings {
@@ -185,28 +143,4 @@ const maxLatitude = 85.051129
 /** The zoom MapLibre allows furthest out with the view centered at this latitude, given the furthest out at the equator. */
 export function furthestOutZoom(latitude: number, furthestOut = minZoom): number {
   return zoomAt(latitude, furthestOut)
-}
-
-/**
- * Highest zoom at which the outer pin source clusters. Score cards aren't in pin clusters, so outer
- * pins only need to stop clustering by the furthest in.
- */
-export const clusterMaxZoom = maxZoom - 1
-
-// The radius is adjusted in steps of this much zoom, so it changes (and pins re-cluster) a few
-// times per zoom level rather than on every frame of a zoom.
-const zoomStep = 0.25
-
-/**
- * How close small pins must be to cluster at MapLibre's zoom `zoom`, in pixels at the whole zoom level
- * below: closer on screen than the spacing, which keeps small pins and pin clusters from overlapping
- * (see pinClusterSpacing). MapLibre clusters pins at whole zoom levels only, and shows zoom 3's
- * clusters all the way to 3.99, where pins are nearly twice as far apart on screen. So the radius is
- * shrunk by how far past the whole level the zoom is (rounded down to a step, erring toward
- * clustering) to keep pins clustering only as close as they'd be on screen now. It's MapLibre's own
- * zoom, as it clusters at its whole zoom levels wherever the globe is turned.
- */
-export function pinClusterRadius(zoom: number, spacing: number): number {
-  const pastWholeLevel = Math.floor((zoom - Math.floor(zoom)) / zoomStep) * zoomStep
-  return Math.round(spacing / 2 ** pastWholeLevel)
 }

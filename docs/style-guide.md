@@ -57,7 +57,7 @@ Motion isn't part of a theme: durations, easings and the animations' shapes stay
 
 When a game's score changes, nothing on its score card moves: the card's edge glows in the game's color and fades over 1.6 seconds, and the score takes that color as it fades. When a two-sided game's score changes, the side that scored is also lit for 3 seconds, on its score card's row and in the game panel: a tint and inner glow in the game's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
 
-A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon, the card radius or the edge of the screen, as a venue out of view has no card but the selected game's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. Cards move only as the camera moves: to keep clear of each other, to come back over their venues, or to come within 80 px of their venues where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Once it stops, every card and trail holds where it is, whatever changes on screen, until the camera moves again. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
+A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the edge of the screen, as a venue out of view has no card but the selected game's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. Cards move only as the camera moves: to keep clear of each other, to come back over their venues, or to come within 80 px of their venues where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Once it stops, every card and trail holds where it is, whatever changes on screen, until the camera moves again. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
 
 The message under the loading screen's rocket, and the cut-off note's, drifts in a word at a time: each word rises into place out of a blur over 0.3 seconds, 35 ms after the one before, glowing in `components.LoadingScreen.glow`. A message ending in an ellipsis ends instead in three dots in the glow's color, lit one after another for as long as it shows. This is variant E2 of the comparison preserved on the throwaway branch `prototype/loading-text`, chosen by the user on November 14, 2026.
 
@@ -156,7 +156,7 @@ The dark theme names one of the palette's colors where a job is what that palett
 | --- | --- | --- |
 | `palette.<status>.main` | A game's color, by status (`live`, `upcoming`, `final`; see [The palette](#the-palette)) | `gold.500` for each |
 | `components.Pin.<status>.core.color` | A small pin's bright core. One that's its status's color is drawn in the game's color; any other (Live's paler core) stays, so status shows by brightness | Live `gold.100`; the others their status's color (`upcoming.main` and so on) |
-| `components.Cluster.fill` | The disc of a pin cluster or card cluster | `primary.dark` |
+| `components.Cluster.fill` | The disc of a card cluster | `primary.dark` |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
 | `components.ScoreCard.fill` | A score card's fill, tinting its glass (see [Glass](#glass)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
@@ -215,7 +215,7 @@ A status's color is the palette's; the rest of its look is each component's own,
 | `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its color, radius in pixels and opacity |
 | `components.Pin.<status>.core.ring` | The width of the ring of the game's color around the core, in pixels (0 is no ring) |
 | `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
-| `components.Cluster.<status>.opacity` | How opaque a pin cluster or card cluster showing as this status is: its disc, outline and count alike. A venue cluster doesn't fade, as a venue dot doesn't |
+| `components.Cluster.<status>.opacity` | How opaque a card cluster showing as this status is: its disc, outline and count alike. A venue cluster doesn't fade, as a venue dot doesn't |
 | `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
 | `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity |
 
@@ -235,7 +235,6 @@ How status reaches the rest of the globe:
 - **Pulses** play in the game's color, over its small pin, score card or cluster alike. A score and a start play the same pulse: one small ring over a small pin or a cluster, and the card's edge lit over a score card, which doesn't move (a pop there made cards jump). A finish plays none; it celebrates instead (see [Where the theme reaches](#where-the-theme-reaches)).
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the game panel's glow has opacity 0, and their drop shadows are `transparent`, so they cast none (see [Glass](#glass)).
-- **Pin clustering** depends on the widest pin glow: small pins gather into pin clusters when their glows (at 0.6 of their radius) would overlap. Widening Live's glow makes pins cluster sooner.
 
 ### Hot games' flames
 
@@ -243,7 +242,7 @@ A hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows fire around its whole edg
 
 - A **score card** has a glowing fire outline around all four sides, with warm highlights crawling around it once every 2.4 seconds and a lightly flickering glow. The card's box is cut out of the effect, so no fire shows through its glass. There are no floating embers.
 - A **small pin** has a thin fire outline around its core and ring, with a steady soft glow. Its highlight turns slowly, once every 7.68 seconds.
-- A **pin cluster** or **card cluster** holding a hot game has the same slowly moving outline around its disc, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, fire and all.
+- A **card cluster** holding a hot game has the same slowly moving outline around its disc, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, fire and all.
 
 The fire is in **fire's colors**, wherever it shows, so hot games look the same across leagues: the one place color doesn't say league (ADR-0012). With reduce motion on, every fire outline and glow stays visible and still; changing that setting while the app runs stops or resumes the motion.
 
@@ -347,8 +346,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.2 and 0 |
-| `components.Cluster.radius.few`, `.some`, `.many` | A pin cluster's disc by how many games it holds: up to 4, up to 14, more. A card cluster is as wide as `some`, outline and all | 11, 13, 16 |
-| `components.Cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
+| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 13 |
+| `components.Cluster.glowRadius` | Its glow's radius | 26 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
@@ -469,7 +468,7 @@ Some of the look is in code on purpose, as behavior or layout rather than a them
 - the starfield's pattern (where each star sits in its tile, how bright it is, the tile's size) and skew angles;
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the game panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`cityNameOffset` in `placeNames.ts`, 1 em) and where it wraps (as the base map style has them);
-- that a glow on the globe (a small pin's, a pin cluster's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
+- that a glow on the globe (a small pin's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
 - a flame's drawing, and a score card's tongues of flame: how many, their heights and pace (see [Hot games' flames](#hot-games-flames));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;
 - which kinds of place are named in capitals (states and countries);

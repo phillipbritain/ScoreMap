@@ -12,7 +12,7 @@ import { cardMoves } from './cardMoves'
 import { cardPins, type CardPin } from './cardPins'
 import { cardRank, nearCenter } from './cardRank'
 import { cardCount, cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
-import { cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
+import { cardClusterReach, cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { PlacedCard, animationClass } from './placedCard'
 import { confettiOnCard } from '../celebration/celebration'
@@ -26,7 +26,6 @@ import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { selectedStacking, stacking } from './statusLook'
-import { cardRadiusOn, hasCard } from './zoomLevels'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -191,7 +190,7 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * Places, updates and removes cards to match what the pin source shows, on the side of the globe facing the viewer, for games near the center of the view (see hasCard).
+   * Places, updates and removes cards to match what the pin source shows, for every game whose venue is on screen on the side of the globe facing the viewer, and the selected game's: at every zoom, with no reach from the center of the view. The card count and room decide which have cards (see layOutCards).
    */
   sync(): void {
     if (!this.map.getSource(pinSource)) return
@@ -205,10 +204,7 @@ export class ScoreCardMarkers {
         this.placedPins()
     // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
     // room in the layout with it): cards fade in and out as their venues cross the horizon, out of
-    // the layout at once. So do they as their venues cross the card radius, where they swap with
-    // small pins (see GlobeMap).
-    const { lng: longitude, lat: latitude } = this.map.getCenter()
-    const radius = cardRadiusOn(this.map)
+    // the layout at once.
     // Nor does a venue off screen (but the selected game's), so no card hangs over the edge for a venue out of view.
     const canvas = this.map.getCanvas()
     const inView = (gameId: string, lngLat: [number, number]) => {
@@ -216,12 +212,7 @@ export class ScoreCardMarkers {
       const { x, y } = this.map.project(lngLat)
       return x >= 0 && y >= 0 && x <= canvas.clientWidth && y <= canvas.clientHeight
     }
-    const wanted = pins.filter(
-      ({ gameId, lngLat }) =>
-        !isBehindGlobe(this.map, lngLat) &&
-        inView(gameId, lngLat) &&
-        hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }, radius, gameId === this.selectedGameId),
-    )
+    const wanted = pins.filter(({ gameId, lngLat }) => !isBehindGlobe(this.map, lngLat) && inView(gameId, lngLat))
 
     const keep = new Set<string>()
     for (const { gameId, lngLat } of wanted) {
@@ -280,7 +271,7 @@ export class ScoreCardMarkers {
     const now = performance.now()
     for (const [gameId, placed] of this.placed) {
       if (keep.has(gameId)) continue
-      // A card on screen whose venue has gone out of view (behind the globe, or past the card radius)
+      // A card on screen whose venue has gone out of view (behind the globe, or off screen)
       // fades out; one with no room, or not yet laid out, just goes.
       if (this.animates() && this.games.has(gameId) && placed.offset && !placed.inCardCluster) this.goOut(gameId, now, true)
       else {
@@ -561,8 +552,7 @@ function venueSizes(theme: Theme): VenueSizes {
     dot: ring.radius + ring.width,
     // A venue cluster is drawn as a venue dot is (see cardLayoutLayers).
     venueCluster: ring.radius + ring.width,
-    // As wide as a pin cluster of some games, outline and all (see cardLayoutLayers).
-    cardCluster: theme.components.Cluster.radius.some,
+    cardCluster: cardClusterReach(theme),
   }
 }
 

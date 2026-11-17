@@ -14,7 +14,7 @@ export type SettlingStage = Exclude<LoadingStage, 'constructionError'>
  * Ready (see GLOSSARY.md). A plain object, told what happens on the map and answering what follows;
  * it never touches MapLibre or the page. GlobeMap and ScoreCardMarkers both report to the one object.
  *
- * Whether the pin sources have loaded is given in by its caller each time it's needed.
+ * Whether the pin source has loaded is given in by its caller each time it's needed.
  *
  * It relies on one order of events from the map: as the map goes idle, the score cards sync (see
  * cardsSynced) before the settling is told the map went idle (see wentIdle), so Ready is checked

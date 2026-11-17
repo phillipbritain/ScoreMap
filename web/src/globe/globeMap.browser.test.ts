@@ -16,14 +16,10 @@ import { cardMoveDuration } from './cardMoves'
 import { cardClusterLayer, cardLayoutSource, cardlessSelectedPinLayer, cardlessSmallPinLayer } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { flameImage } from './flames'
-import { panelGap, smallPinReach } from './panelClearance'
+import { panelGap } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import {
-  outerPinClusterLayer,
-  outerPinSource,
-  outerSelectedPinLayer,
-  outerSmallPinLayer,
   pinSource,
 } from './pinLayers'
 import { fieldOfView, fittedZoomSettings, maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
@@ -31,8 +27,7 @@ import { fieldOfView, fittedZoomSettings, maxZoom, zoomAtEquator, zoomSettings }
 // About one country on screen: a zoom the tests look closer at the cards from.
 const countryZoom = 3
 
-// Looking 50° west of 0°, 0°: past the card radius, so a game at 0°, 0° shows as a small pin (an
-// outer pin), short of where pins fade near the horizon zoomed out.
+// Looking 50° west of 0°, 0°: a game at 0°, 0° is far from the center of the view, but on screen.
 const awayFromGames = { longitude: -50, latitude: 0 }
 
 /**
@@ -176,7 +171,7 @@ function drawnAt(map: MapLibreMap, layer: string, { venue }: PlacedGame) {
   )
 }
 
-/** Waits until the map has drawn these games' small pins, or the pin clusters they're in. */
+/** Waits until the map has drawn these games' small pins in a layer. */
 async function pinsDrawn(map: MapLibreMap, layer: string, ...games: PlacedGame[]) {
   await vi.waitFor(() => expect(games.every((game) => drawnAt(map, layer, game).length > 0)).toBe(true), {
     timeout: 10_000,
@@ -384,50 +379,43 @@ describe('shown score cards', () => {
     for (const { element } of shown) expect(element.checkVisibility({ visibilityProperty: true })).toBe(true)
   })
 
-  it('gives none for a game far from the center of the view, shown as a small pin', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    const games = [game('A')]
-    globe.show(games)
-    await pinsDrawn(map, outerSmallPinLayer, ...games)
+  // Games some 25° from the center, as the US west coast is from the Midwest: in view zoomed all the
+  // way out, with room for their cards, and under the card count.
+  const farGames = () => [game('A'), game('EAST', { longitude: 23, latitude: 10 }), game('WEST', { longitude: -24, latitude: 8 })]
 
-    expect(globe.shownScoreCards()).toEqual([])
-  })
-
-  it('gives cards zoomed all the way out only to games within a region of the center, the rest small pins', async () => {
-    // B is some 22° from the center: within the card radius zoomed in, past it zoomed all the way out.
-    const games = [game('A'), game('B', { longitude: 20, latitude: 10 })]
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: testZoom.minZoom })
-    globe.show(games)
+  it('gives a card to a game far from the center of the view, its venue on screen', async () => {
+    const { globe } = openGlobe({ ...awayFromGames, zoom: 2 })
+    globe.show([game('A')])
     await cardShown('A')
-    await pinsDrawn(map, outerSmallPinLayer, games[1])
 
     await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId)).toEqual(['A']))
   })
 
-  it('gives cards farther from the center as the view zooms in from all the way out', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: testZoom.minZoom })
-    globe.show([game('A'), game('B', { longitude: 20, latitude: 10 })])
-    await cardShown('A')
+  it('gives a card zoomed all the way out to every game on screen with room, not only those near the center', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: testZoom.minZoom })
+    globe.show(farGames())
 
-    map.jumpTo({ zoom: testZoom.minZoom + 1 })
-    await cardShown('B')
-
-    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'B']))
+    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'EAST', 'WEST']), {
+      timeout: 10_000,
+    })
   })
 
-  it('gives cards zoomed all the way out on a phone only to games within a region of the center', async () => {
-    const phone = { width: 390, height: 844 }
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 0 }, phone)
-    globe.setZoomLimits(fittedZoomSettings(zoomSettings, phone))
-    map.jumpTo({ zoom: 0 })
-    // B is some 22° from the center: past the card radius zoomed all the way out.
-    const games = [game('A'), game('B', { longitude: 20, latitude: 10 })]
-    globe.show(games)
-    await cardShown('A')
-    await pinsDrawn(map, outerSmallPinLayer, games[1])
+  for (const phone of [
+    { width: 390, height: 844 },
+    { width: 390, height: 664 },
+    { width: 844, height: 390 },
+  ]) {
+    it(`gives a card zoomed all the way out on a phone ${phone.width} × ${phone.height} to every game on screen with room`, async () => {
+      const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 0 }, phone)
+      globe.setZoomLimits(fittedZoomSettings(zoomSettings, phone))
+      map.jumpTo({ zoom: 0 })
+      globe.show(farGames())
 
-    await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId)).toEqual(['A']))
-  })
+      await vi.waitFor(() => expect(globe.shownScoreCards().map((shown) => shown.gameId).sort()).toEqual(['A', 'EAST', 'WEST']), {
+        timeout: 10_000,
+      })
+    })
+  }
 })
 
 describe('the furthest out', () => {
@@ -456,7 +444,7 @@ describe('selection', () => {
   })
 
 
-  it('moves focus to the map when a focused card is removed or becomes a small pin', async () => {
+  it('moves focus to the map when a focused card is removed or its venue goes out of view', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show([game('A')])
     const first = await cardShown('A')
@@ -521,24 +509,6 @@ describe('selection', () => {
     expect(placed()).toEqual(everyCard)
   })
 
-  it('lifts a small pin the panel would cover just clear of it, without turning sideways', async () => {
-    // Far enough from the center of the view, before and after the lift, to stay a small pin.
-    const { globe, map } = openGlobe({ longitude: -45, latitude: 0, zoom: 2 })
-    const a = game('A', { longitude: 0, latitude: -40 })
-    globe.show([a])
-    await pinsDrawn(map, outerSmallPinLayer, a)
-    const panel = panelAcrossBottom()
-    const before = venueOnPage(map, a)
-    expect(before.y).toBeGreaterThan(panel.top)
-
-    globe.select('A', panel)
-
-    await vi.waitFor(() => expect(offBy(venueOnPage(map, a).y, panel.top - panelGap - smallPinReach)).toBeLessThan(2), {
-      timeout: 5_000,
-    })
-    expect(offBy(venueOnPage(map, a).x, before.x)).toBeLessThan(2)
-  })
-
   it('lifts a score card’s venue the panel would cover until the card and venue are clear of it', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     const a = game('A', { latitude: -8 })
@@ -557,7 +527,7 @@ describe('selection', () => {
     const { globe, map } = openGlobe({ longitude: -45, latitude: 0, zoom: 2 })
     const a = game('A', { latitude: -40 })
     globe.show([a])
-    await pinsDrawn(map, outerSmallPinLayer, a)
+    await cardShown('A')
     // Listening before the lift starts, so a busy machine can't miss its end.
     const lifted = new Promise((resolve) => map.once('moveend', resolve))
     globe.select('A', panelAcrossBottom())
@@ -575,8 +545,7 @@ describe('selection', () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
-    await pinsDrawn(map, outerSmallPinLayer, a)
+    await cardShown('A')
     const panel = panelAcrossBottom()
 
     const moved = new Promise((resolve) => map.once('moveend', resolve))
@@ -630,8 +599,7 @@ describe('selection', () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
-    await pinsDrawn(map, outerSmallPinLayer, a)
+    await cardShown('A')
     globe.select('A')
     await pause(500)
     expect(map.getCenter().lng).toBeCloseTo(0)
@@ -656,8 +624,7 @@ describe('camera movement lifetime', () => {
     const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     const a = game('A', { longitude: 30, latitude: 10 })
     globe.show([a])
-    // Zoomed all the way out, 30° from the center: past the card radius, a small pin until picked.
-    await pinsDrawn(map, outerSmallPinLayer, a)
+    await cardShown('A')
 
     globe.pickGame('A', null)
     expect(onSelect).toHaveBeenCalledWith('A')
@@ -754,19 +721,20 @@ describe('games not placed yet', () => {
   // Where the server used to put a game before its venue was placed.
   const nullIsland = game('NULL ISLAND')
 
-  it('draws no pin for a game not placed yet, then its pin at its venue once it is placed', async () => {
+  it('draws nothing for a game not placed yet, then its card at its venue once it is placed', async () => {
     const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
     const b = game('B', { longitude: 0, latitude: 20 })
     globe.show([unplaced('A'), b])
-    await pinsDrawn(map, outerSmallPinLayer, b)
+    await cardShown('B')
 
-    for (const layer of [outerSmallPinLayer, outerPinClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
+    expect(card('A')).toBeNull()
+    for (const layer of [cardlessSmallPinLayer, cardClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
 
     const a = game('A', { longitude: 0, latitude: -20 })
     globe.show([a, b])
 
-    await pinsDrawn(map, outerSmallPinLayer, a)
-    for (const layer of [outerSmallPinLayer, outerPinClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
+    await cardShown('A')
+    for (const layer of [cardlessSmallPinLayer, cardClusterLayer]) expect(drawnAt(map, layer, nullIsland)).toEqual([])
   })
 
   it('gives a game not placed yet no score card, then gives it one once it is placed', async () => {
@@ -783,7 +751,7 @@ describe('games not placed yet', () => {
 
   it('leaves the globe where it is when a game not placed yet is selected, even once it is placed under the panel', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 30, zoom: 2 })
-    // Under the panel, as 0°, 0° is too, and inside the card radius.
+    // Under the panel, as 0°, 0° is too.
     const a = game('A', { latitude: -5 })
     globe.show([unplaced('A')])
 
@@ -908,89 +876,17 @@ describe('score cards', () => {
   })
 })
 
-// Big enough to show the whole globe at countryZoom, about 440 pixels from its center to its rim, so
-// games past the card radius are on screen.
+// Big enough to show the whole globe at countryZoom, about 440 pixels from its center to its rim.
 const wideGlobe = { width: 1000, height: 740 }
 
-describe('score cards near the center of the view', () => {
-  // About 44° from 0°, 0°: past the card radius, on screen in a wide globe.
-  const outerVenue = { longitude: 38, latitude: 25 }
+describe('score cards across the view', () => {
+  it('gives a game far from the center of the view its score card, as one near it, its venue on screen', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
+    // About 44° from 0°, 0°, on screen in a wide globe.
+    globe.show([game('INNER', { longitude: 20 }), game('OUTER', { longitude: 38, latitude: 25 })])
 
-  /** Whether a game's venue is on the globe's canvas, so what's drawn there can be found. */
-  function onCanvas(map: MapLibreMap, { venue }: PlacedGame) {
-    const { x, y } = map.project([venue.longitude, venue.latitude])
-    return x > 0 && x < wideGlobe.width && y > 0 && y < wideGlobe.height
-  }
-
-  it('shows a game near the center as a score card, and one farther out as a small pin', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    const outer = game('OUTER', outerVenue)
-    globe.show([game('INNER', { longitude: 20 }), outer])
     await cardShown('INNER')
-    expect(onCanvas(map, outer)).toBe(true)
-
-    await pinsDrawn(map, outerSmallPinLayer, outer)
-    expect(card('OUTER')).toBeNull()
-  })
-
-  it('clusters the pins farther out among themselves, leaving the games near the center their cards', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    // Just inside the card radius, a few degrees from the outer games.
-    const inner = game('INNER', { longitude: 34, latitude: 22 })
-    const outer = [game('OUTER1', outerVenue), game('OUTER2', outerVenue)]
-    globe.show([inner, ...outer])
-    await cardShown('INNER')
-
-    await pinsDrawn(map, outerPinClusterLayer, outer[0])
-    expect(drawnAt(map, outerPinClusterLayer, outer[0]).map((f) => f.properties.point_count)).toContain(2)
-    expect(card('OUTER1')).toBeNull()
-    expect(card('OUTER2')).toBeNull()
-  })
-
-  it('gives a game a card once the globe turns its venue within the card radius', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    globe.show([game('OUTER', outerVenue)])
-    await pinsDrawn(map, outerSmallPinLayer, game('OUTER', outerVenue))
-
-    // At the zoom it was: MapLibre's globe would zoom out a little, turning north from the equator.
-    map.jumpTo({ center: [30, 20], zoom: countryZoom })
-
     await cardShown('OUTER')
-    await vi.waitFor(() => expect(drawnAt(map, outerSmallPinLayer, game('OUTER', outerVenue))).toEqual([]))
-  })
-
-  it('tells the app when the viewer selects a pin farther out, and leaves the globe where it is', async () => {
-    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    const outer = game('OUTER', outerVenue)
-    globe.show([outer])
-    await pinsDrawn(map, outerSmallPinLayer, outer)
-
-    await userEvent.click(map.getCanvas(), { position: map.project([outerVenue.longitude, outerVenue.latitude]) })
-    await pause(500)
-
-    expect(onSelect).toHaveBeenCalledWith('OUTER')
-    expect(map.getCenter().lng).toBeCloseTo(0)
-    expect(map.getCenter().lat).toBeCloseTo(0)
-  })
-
-  it('centers the globe on a pin cluster farther out the viewer selects, the globe the same size, so its games have cards', async () => {
-    // Not a whole zoom level, so the camera keeping it exactly shows.
-    const zoom = countryZoom + 0.2
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom }, wideGlobe)
-    const venue = outerVenue
-    globe.show([game('A', venue), game('B', venue)])
-    await pinsDrawn(map, outerPinClusterLayer, game('A', venue))
-    expect(onCanvas(map, game('A', venue))).toBe(true)
-
-    await userEvent.click(map.getCanvas(), { position: map.project([venue.longitude, venue.latitude]) })
-
-    await cameraSettles(
-      onCameraMove,
-      (camera) =>
-        offBy(zoomAtEquator(camera), zoom) < 0.01 && offBy(camera.longitude, venue.longitude) < 0.5 && offBy(camera.latitude, venue.latitude) < 0.5,
-    )
-    await cardShown('A')
-    await cardShown('B')
   })
 })
 
@@ -1360,8 +1256,13 @@ describe('animations', () => {
     await vi.waitFor(() => expect(card('A')!.classList).toContain(`score-card--animate-${animation}`))
   })
 
-  it('plays nothing as a game finishes, on its score card or over its small pin', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+  // A strip of globe with room for one card, CARD's: A beside it is left its small pin.
+  const besideCard = game('CARD')
+  const openStrip = () => openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 40 })
+  const pinned = (overrides: Parameters<typeof game>[1] = {}) => game('A', { longitude: 3, ...overrides })
+
+  it('plays nothing as a game finishes on its score card', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show([game('A', { home: '21' })])
     await cardShown('A')
     const watching = watchPulses()
@@ -1369,42 +1270,43 @@ describe('animations', () => {
     globe.show([game('A', { status: 'Final', home: '21' })], changed('Finished', game('A', { status: 'Final', home: '21' })))
     await vi.waitFor(() => expect(card('A')!.className).toContain('score-card--final'))
     await pause(300)
-    expect(card('A')!.className).not.toMatch(/score-card--animate/)
-    // Turned so it's a small pin.
-    map.jumpTo({ center: [awayFromGames.longitude, 0], zoom: 2 })
-    await pause(300)
     watching.stop()
 
+    expect(card('A')!.className).not.toMatch(/score-card--animate/)
     expect([...watching.pulses]).toEqual([])
   })
 
-  it('plays over a game’s small pin, far from the center of the view', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    globe.show([game('A', { home: '0' })])
-    await pinsDrawn(map, outerSmallPinLayer, game('A'))
+  it('plays over a game’s small pin, when it has no room for its card', async () => {
+    const { globe, map } = openStrip()
+    globe.show([besideCard, pinned({ home: '0' })])
+    await pinsDrawn(map, cardlessSmallPinLayer, pinned())
 
-    globe.show([game('A', { home: '7' })], changed('ScoreChanged', game('A')))
+    globe.show([besideCard, pinned({ home: '7' })], changed('ScoreChanged', pinned()))
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--pin.pin-pulse--score')).not.toBeNull())
   })
 
-  it('plays over the pin cluster a game is in', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    globe.show([game('A', { home: '0' }), game('B')])
-    await pinsDrawn(map, outerPinClusterLayer, game('A'))
+  it('plays over the card cluster a game is in', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
+    const games = Array.from({ length: 40 }, (_, i) => game(`V${i}`, { home: '0' }))
+    globe.show(games)
+    await cardClusterDrawn(map)
+    const shown = new Set(globe.shownScoreCards().map(({ gameId }) => gameId))
+    const clustered = games.find(({ id }) => !shown.has(id))!
 
-    globe.show([game('A', { home: '7' }), game('B')], changed('ScoreChanged', game('A')))
+    const after = games.map((g) => (g === clustered ? game(g.id, { home: '7' }) : g))
+    globe.show(after, changed('ScoreChanged', clustered))
 
     await vi.waitFor(() => expect(container.querySelector('.pin-pulse--cluster.pin-pulse--score')).not.toBeNull())
   })
 
   // Looking 50° west of 0°, 0° zoomed out, a game 90° east is behind the globe, but still in the
-  // pin source's loaded tiles, so it would be found to animate.
-  it('does not play over a small pin on the far side of the globe', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
+  // pin source's loaded tiles.
+  it('does not play over a game on the far side of the globe', async () => {
+    const { globe } = openGlobe({ ...awayFromGames, zoom: 2 })
     const near = game('NEAR', { home: '0' })
     globe.show([near, game('FAR', { longitude: 90, home: '0' })])
-    await pinsDrawn(map, outerSmallPinLayer, near)
+    await cardShown('NEAR')
     const watching = watchPulses()
 
     globe.show([near, game('FAR', { longitude: 90, home: '7' })], changed('ScoreChanged', game('FAR')))
@@ -1415,18 +1317,17 @@ describe('animations', () => {
   })
 
   it('does not animate a change the globe did not show, while the game was hidden', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    const other = game('B', { latitude: 30 })
-    globe.show([game('A', { home: '0' }), other])
-    await pinsDrawn(map, outerSmallPinLayer, game('A'), other)
+    const { globe, map } = openStrip()
+    globe.show([besideCard, pinned({ home: '0' })])
+    await pinsDrawn(map, cardlessSmallPinLayer, pinned())
     const watching = watchPulses()
 
     // Hidden by the viewer's settings as its score changes, then shown again. Straight after, so the
     // map still has its pin and could animate it: only what the globe last showed rules it out.
-    const changes = changed('ScoreChanged', game('A'))
-    globe.show([other], changes)
-    globe.show([game('A', { home: '7' }), other], changes)
-    await pinsDrawn(map, outerSmallPinLayer, game('A'))
+    const changes = changed('ScoreChanged', pinned())
+    globe.show([besideCard], changes)
+    globe.show([besideCard, pinned({ home: '7' })], changes)
+    await pinsDrawn(map, cardlessSmallPinLayer, pinned())
     await pause(500)
     watching.stop()
 
@@ -1434,12 +1335,12 @@ describe('animations', () => {
   })
 
   it('does not animate games shown without changes, as a snapshot brings them', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    globe.show([game('A', { status: 'Upcoming', home: null, away: null })])
-    await pinsDrawn(map, outerSmallPinLayer, game('A'))
+    const { globe, map } = openStrip()
+    globe.show([besideCard, pinned({ status: 'Upcoming', home: null, away: null })])
+    await pinsDrawn(map, cardlessSmallPinLayer, pinned())
     const watching = watchPulses()
 
-    globe.show([game('A', { status: 'Final', home: '7' })])
+    globe.show([besideCard, pinned({ status: 'Final', home: '7' })])
     await pause(500)
     watching.stop()
 
@@ -1447,17 +1348,16 @@ describe('animations', () => {
   })
 
   it('plays a change once, however often the games are shown again (a redraw for the viewer’s settings)', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    const other = game('B', { latitude: 30 })
-    globe.show([game('A', { home: '0' }), other])
-    await pinsDrawn(map, outerSmallPinLayer, game('A'), other)
+    const { globe, map } = openStrip()
+    globe.show([besideCard, pinned({ home: '0' })])
+    await pinsDrawn(map, cardlessSmallPinLayer, pinned())
     const watching = watchPulses()
 
-    const changes = changed('ScoreChanged', game('A'))
-    globe.show([game('A', { home: '7' }), other], changes)
+    const changes = changed('ScoreChanged', pinned())
+    globe.show([besideCard, pinned({ home: '7' })], changes)
     await vi.waitFor(() => expect(watching.pulses.size).toBe(1))
-    globe.show([game('A', { home: '7' })], changes)
-    globe.show([game('A', { home: '7' }), other], changes)
+    globe.show([besideCard], changes)
+    globe.show([besideCard, pinned({ home: '7' })], changes)
     await pause(500)
     watching.stop()
 
@@ -1509,11 +1409,11 @@ describe('flames', () => {
   it('animates a used fire image in place, and stops and resumes with reduce motion', async () => {
     await commands.reduceMotion(false)
     try {
-      // A small pin's fire: a score card's is drawn by the page.
-      const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-      const alone = hot('A', {})
+      // A small pin's fire: a score card's is drawn by the page. A strip of globe with room for one
+      // card: A beside it is left its small pin.
+      const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 40 })
       const id = flameImage(builtInTheme, builtInTheme.components.Pin.flame, 5)
-      globe.show([alone])
+      globe.show([game('CARD'), hot('A', { longitude: 3 })])
       await vi.waitFor(() => expect(map.hasImage(id)).toBe(true), { timeout: 10_000 })
       const pixels = () => Array.from(map.getImage(id).data.data)
       const first = pixels()
@@ -1572,19 +1472,20 @@ describe('changing theme', () => {
   afterEach(() => applyTheme(document.documentElement, builtInTheme))
 
   it('restyles the games’ layers in place, without making the map again', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    const a = game('A')
-    globe.show([a])
-    await pinsDrawn(map, outerSmallPinLayer, a)
+    // A strip of globe with room for one card: A beside it is left its small pin.
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 40 })
+    const a = game('A', { longitude: 3 })
+    globe.show([game('CARD'), a])
+    await pinsDrawn(map, cardlessSmallPinLayer, a)
     let reloaded = false
     map.once('style.load', () => (reloaded = true))
 
     globe.setTheme(themeWith((json) => ((json.components.Cluster.outlineWidth = 6), (json.components.Pin.live.core.color = '#ff0000'))))
 
     expect(map.getPaintProperty('card-clusters', 'circle-stroke-width')).toBe(6)
-    expect(JSON.stringify(map.getPaintProperty(outerSmallPinLayer, 'circle-color'))).toContain('#ff0000')
+    expect(JSON.stringify(map.getPaintProperty(cardlessSmallPinLayer, 'circle-color'))).toContain('#ff0000')
     await vi.waitFor(() => expect(globe.settled()).toBe(true), { timeout: 10_000 })
-    expect(drawnAt(map, outerSmallPinLayer, a)).not.toEqual([])
+    expect(drawnAt(map, cardlessSmallPinLayer, a)).not.toEqual([])
     expect(reloaded).toBe(false)
   })
 
@@ -1595,18 +1496,6 @@ describe('changing theme', () => {
     globe.setTheme(themeWith((json) => (json.components.Globe.surface = '#ff0000')))
 
     expect(channels(getComputedStyle(glow).backgroundColor).slice(0, 3)).toEqual([255, 0, 0])
-  })
-
-  it('clusters small pins by the new theme’s glows, which a wider glow gathers from farther apart', async () => {
-    const { globe, map } = openGlobe({ ...awayFromGames, zoom: 2 })
-    // About 40 pixels apart, north and south.
-    const [a, b] = [game('A', { latitude: -3.5 }), game('B', { latitude: 3.5 })]
-    globe.show([a, b])
-    await pinsDrawn(map, outerSmallPinLayer, a, b)
-
-    globe.setTheme(themeWith((json) => (json.components.Pin.live.glow.radius = 60)))
-
-    await pinsDrawn(map, outerPinClusterLayer, a, b)
   })
 
   it('measures score cards afresh in the new theme’s sizes, moving apart cards that now overlap', async () => {
@@ -1627,13 +1516,7 @@ describe('changing theme', () => {
   })
 })
 
-describe('pin sources', () => {
-  /** The games the map has been given in a pin source, by id. */
-  async function inSource(map: MapLibreMap, source: string) {
-    const { features } = (await map.getSource<GeoJSONSource>(source)!.getData()) as FeatureCollection
-    return features.map((feature) => feature.properties?.gameId as string)
-  }
-
+describe('the pin source', () => {
   it('shows no score card until the pin source has loaded the games, then shows them', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     let loading = true
@@ -1663,36 +1546,6 @@ describe('pin sources', () => {
 
     globe.show([game('A', { status: 'Final', home: '7' })])
     expect(setData).toHaveBeenCalledOnce()
-  })
-
-  // Looking at 0°, 0° at zoom 3, the horizon is about 65° away.
-  it('makes a game an outer pin as the globe turns it out of the card radius, and drops it as it turns behind the globe', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    const a = game('A', { longitude: 20 })
-    globe.show([a])
-    await cardShown('A')
-    expect(await inSource(map, outerPinSource)).toEqual([])
-
-    // At the zoom it was, the venue 50° east of the center of the view.
-    map.jumpTo({ center: [-30, 0], zoom: countryZoom })
-    await pinsDrawn(map, outerSmallPinLayer, a)
-    // Its card fades out as its venue leaves the card radius.
-    await vi.waitFor(() => expect(card('A')).toBeNull())
-
-    // 120° east, behind the globe.
-    map.jumpTo({ center: [-100, 0], zoom: countryZoom })
-    await vi.waitFor(async () => expect(await inSource(map, outerPinSource)).toEqual([]))
-  })
-
-  it('rings the selected game’s pin farther out', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, wideGlobe)
-    const outer = game('OUTER', { longitude: 38, latitude: 25 })
-    globe.show([game('INNER'), outer])
-    await pinsDrawn(map, outerSmallPinLayer, outer)
-
-    globe.select('OUTER')
-
-    await vi.waitFor(() => expect(drawnAt(map, outerSelectedPinLayer, outer).map((f) => f.properties.gameId)).toEqual(['OUTER']))
   })
 
   it('rings the selected game’s small pin when it has no room for its score card', async () => {

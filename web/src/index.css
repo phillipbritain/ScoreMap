@@ -3165,7 +3165,7 @@ body {
 }
 
 /* The Games popover (see Rail): the search, then the games scrolling under it while the popover stays
-   still. Keyboard selection stays available for games in any pin or card cluster. */
+   still. Keyboard selection stays available for games in a card cluster. */
 .rail__popover--games {
   display: flex;
   flex-direction: column;

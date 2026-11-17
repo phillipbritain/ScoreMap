@@ -1,5 +1,5 @@
 import type { Camera } from '../globe/camera'
-import type { Game, GameStatus } from '../games/game'
+import type { Game, GameSituation, GameStatus, ScoringPlay } from '../games/game'
 import type { TourProgress } from './welcomeTour'
 
 /**
@@ -7,7 +7,9 @@ import type { TourProgress } from './welcomeTour'
  * eastern half of North America, the same every time the tour runs, so a first visit starts on a few
  * cards rather than however many real games are on. Three sit close together around New York, so
  * the tour shows cards making room for each other; the rest are spread out. Each sport and status
- * shows at least once.
+ * shows at least once. The one Click a score card points at, Ravens v Steelers, is Live with the
+ * rest of what a game under way shows (records, where play stands, the last score), so its panel looks
+ * as a real game's does.
  */
 
 /** Where the globe looks while the tour's games show: on all six, with the tour's panel clear of them. */
@@ -51,6 +53,7 @@ interface SideSpec {
   fullName: string
   logoUrl: string
   score?: string
+  record?: string
 }
 
 interface GameSpec {
@@ -59,6 +62,9 @@ interface GameSpec {
   sport: string
   status: GameStatus
   clock?: string
+  period?: number
+  situation?: GameSituation
+  lastScore?: ScoringPlay
   /** Minutes from now: negative for a game under way or over. */
   startsIn: number
   home: SideSpec
@@ -67,13 +73,13 @@ interface GameSpec {
 }
 
 function made(spec: GameSpec, now: number): Game {
-  const side = ({ abbreviation, fullName, logoUrl, score }: SideSpec) => ({
+  const side = ({ abbreviation, fullName, logoUrl, score, record }: SideSpec) => ({
     abbreviation,
     fullName,
     logoUrl,
     score: spec.status === 'Upcoming' ? null : (score ?? '0'),
     rank: null,
-    record: null,
+    record: record ?? null,
     conference: null,
   })
   return {
@@ -86,14 +92,14 @@ function made(spec: GameSpec, now: number): Game {
     endTime: spec.status === 'Final' ? new Date(now - 2 * 60_000).toISOString() : null,
     contest: { kind: 'sides', home: side(spec.home), away: side(spec.away) },
     clock: spec.clock ?? null,
-    period: null,
+    period: spec.period ?? null,
     hot: false,
     // Its photo comes from the server, as a real game's does (see tourVenuePhotos).
     venue: { ...spec.venue, photo: null, court: null },
     streamLinks: [],
     note: null,
-    situation: null,
-    lastScore: null,
+    situation: spec.situation ?? null,
+    lastScore: spec.lastScore ?? null,
     keyEvents: [],
     // So they show whichever choice the viewer makes on Welcome.
     topEvent: true,
@@ -138,9 +144,16 @@ const specs: GameSpec[] = [
     venue: { name: 'Soldier Field', city: 'Chicago', region: 'Illinois', country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago' },
   },
   {
-    id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Upcoming', startsIn: 28,
-    home: { abbreviation: 'PIT', fullName: 'Pittsburgh Steelers', logoUrl: logo('nfl', 'pit') },
-    away: { abbreviation: 'BAL', fullName: 'Baltimore Ravens', logoUrl: logo('nfl', 'bal') },
+    id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95,
+    home: { abbreviation: 'PIT', fullName: 'Pittsburgh Steelers', logoUrl: logo('nfl', 'pit'), score: '13', record: '6-3' },
+    away: { abbreviation: 'BAL', fullName: 'Baltimore Ravens', logoUrl: logo('nfl', 'bal'), score: '17', record: '7-2' },
+    situation: {
+      lastPlay: 'J. Warren rush to the right for 6 yards to the BAL 38',
+      downAndDistance: '2nd & 4 at BAL 38',
+      possession: 'PIT',
+      balls: null, strikes: null, outs: null, onFirst: false, onSecond: false, onThird: false,
+    },
+    lastScore: { team: 'BAL', text: 'D. Henry 12 yard run (J. Tucker kick)', when: 'Q3 9:47' },
     venue: { name: 'Acrisure Stadium', city: 'Pittsburgh', region: 'Pennsylvania', country: 'USA', latitude: 40.4468, longitude: -80.0158, timeZone: eastern },
   },
 ]

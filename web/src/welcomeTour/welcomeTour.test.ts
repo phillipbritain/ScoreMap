@@ -9,6 +9,7 @@ import {
 import {
   canShowPicks,
   isTourProgress,
+  middleClearsGamePanel,
   moveAndZoomWords,
   noPicks,
   picksFrom,
@@ -214,6 +215,16 @@ describe("Click a score card's pick", () => {
   })
 })
 
+describe("where All set sits over the game panel on a desktop", () => {
+  it('sits in the middle of a tall screen, clear of the game panel', () => {
+    expect(middleClearsGamePanel(800, 168, 224)).toBe(true)
+  })
+
+  it('sits right above the game panel where the middle would run into it', () => {
+    expect(middleClearsGamePanel(600, 168, 224)).toBe(false)
+  })
+})
+
 describe('how Your controls says to move and zoom the globe', () => {
   it('says pinch to zoom on a touchscreen, without a scroll wheel', () => {
     const words = moveAndZoomWords(true)
@@ -228,5 +239,6 @@ describe('how Your controls says to move and zoom the globe', () => {
 
     expect(words).toMatch(/drag/i)
     expect(words).toMatch(/scroll/i)
+
   })
 })

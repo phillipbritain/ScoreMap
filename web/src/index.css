@@ -22,6 +22,39 @@ body {
   font-size: var(--typography-body1-font-size);
 }
 
+/* Every scrollbar (the welcome tour's panel, the game panel, the Games list, the rail's popovers):
+   slim, a soft thumb in the theme's text color on no track, so it sits in the dark surfaces rather
+   than standing out as the browser's light one. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
+}
+
+/* The same where scrollbar-color isn't known (older Safari), drawn with WebKit's own scrollbar
+   parts: a rounded thumb inset from the edge, on no track. */
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: calc(2.5 * var(--spacing));
+    height: calc(2.5 * var(--spacing));
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: calc(0.5 * var(--spacing)) solid transparent;
+    border-radius: calc(2 * var(--spacing));
+    background: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--palette-text-primary) 45%, transparent);
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
 /* On a touch screen, text boxes (the Games search, the Feedback note) are at least 16px: Safari on an
    iPhone zooms the page in on focusing a smaller one, and stays zoomed, pushing the rail off the
    screen. */
@@ -2854,7 +2887,9 @@ body {
   overflow: hidden;
   /* Its padding at the sides, which its scrolling content reaches across (see .welcome-tour__body). */
   --panel-side: calc(6 * var(--spacing));
-  padding: calc(5 * var(--spacing)) var(--panel-side);
+  /* Its padding at the foot, which the step's buttons' band reaches across (see .welcome-tour__actions). */
+  --panel-end: calc(5 * var(--spacing));
+  padding: calc(5 * var(--spacing)) var(--panel-side) var(--panel-end);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   color: var(--palette-text-primary);
@@ -2996,6 +3031,13 @@ body {
   padding-right: var(--panel-side);
 }
 
+/* Above the step's buttons, the room between its content and their band is at the foot of what
+   scrolls, not outside it, so content that overflows runs right up to the band, with no gap. */
+.welcome-tour__body:has(+ .welcome-tour__actions) {
+  margin-bottom: 0;
+  padding-bottom: calc(4 * var(--spacing));
+}
+
 .welcome-tour__actions {
   flex: none;
   position: relative;
@@ -3003,7 +3045,12 @@ body {
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
   justify-content: flex-end;
-  margin-top: calc(4 * var(--spacing));
+  /* A band of its own across the panel's foot, set off from the step's content above by a line and a
+     slightly lighter fill. */
+  margin: 0 calc(-1 * var(--panel-side)) calc(-1 * var(--panel-end));
+  padding: calc(3 * var(--spacing)) var(--panel-side) var(--panel-end);
+  border-top: var(--shape-border-width-thin) solid var(--rail-outline);
+  background: color-mix(in srgb, var(--palette-text-primary) 4%, var(--rail-surface));
 }
 
 /* A step's own button (Next, Done), lit as a chip that's on. */
@@ -3018,6 +3065,22 @@ body {
   font-size: var(--typography-button-font-size);
   font-weight: var(--typography-button-font-weight);
   cursor: pointer;
+}
+
+/* Back: a way back rather than on, outlined as an unlit chip, with no fill or glow, so the step's own
+   button beside it stands out. */
+.welcome-tour__button--quiet {
+  border-color: var(--rail-outline);
+  background: none;
+  box-shadow: none;
+  color: var(--palette-text-secondary);
+}
+
+@media (hover: hover) {
+  .welcome-tour__button--quiet:hover {
+    background: var(--palette-action-hover);
+    color: var(--palette-text-primary);
+  }
 }
 
 /* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
@@ -3049,6 +3112,11 @@ body {
 }
 
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */
+/* Your controls' line on moving and zooming the globe, above the rail's buttons. */
+.welcome-tour__move {
+  margin-bottom: calc(3 * var(--spacing));
+}
+
 .welcome-tour__controls {
   display: flex;
   flex-direction: column;
@@ -3152,7 +3220,8 @@ body {
     width: calc(100% - 6 * var(--spacing));
     max-height: calc(100% - 6 * var(--spacing));
     --panel-side: calc(5 * var(--spacing));
-    padding: calc(4 * var(--spacing)) var(--panel-side);
+    --panel-end: calc(4 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
   .welcome-tour--controls {
@@ -3196,13 +3265,6 @@ body {
 }
 
 .game-navigation__search::placeholder { color: var(--palette-text-secondary); }
-
-/* A menu's scrollbar: slim, in the theme's colors. The Games list and the rail's other popovers. */
-.game-navigation ul,
-.rail__popover {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--palette-text-primary) 30%, transparent) transparent;
-}
 
 /* The games, scrolling under the search. Its own stacking context, so the pinned league headings, lifted
    over the games, stay under its scrollbar: Safari on iPhone draws the scrollbar over the list, and
@@ -3415,20 +3477,27 @@ body {
 
   .welcome-tour--allSet .welcome-tour__body {
     grid-column: 1;
+    margin-bottom: calc(-1 * var(--spacing));
+    padding-bottom: var(--spacing);
   }
 
   .welcome-tour--allSet .welcome-tour__actions {
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: end;
-    margin-top: 0;
+    /* Beside the words, so no band. */
+    margin: 0;
+    padding: 0;
+    border-top: none;
+    background: none;
   }
 
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
     --panel-side: calc(5 * var(--spacing));
-    padding: calc(4 * var(--spacing)) var(--panel-side);
+    --panel-end: calc(4 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
   .welcome-tour__question {

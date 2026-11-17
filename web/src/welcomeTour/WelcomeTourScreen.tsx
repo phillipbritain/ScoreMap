@@ -10,8 +10,10 @@ import {
   canShowPicks,
   noPicks,
   picksFrom,
+  moveAndZoomWords,
   scoreCardToTry,
   settingsForChoice,
+  touchPointer,
   settingsForPicks,
   type TourChoice,
   type TourEvent,
@@ -127,7 +129,9 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
       action={
         picking && (
           <>
-            <TourButton onClick={() => setPicking(false)}>Back</TourButton>
+            <TourButton onClick={() => setPicking(false)} quiet>
+              Back
+            </TourButton>
             {status === 'failed' && <TourButton onClick={retry}>Retry</TourButton>}
             {nothingPicked !== null && !canShow && (
               <p key={nothingPicked} className="welcome-tour__nothing-picked" role="status">
@@ -226,11 +230,13 @@ const zoomButtons = () => document.querySelectorAll('.rail__buttons-inner > .rai
 const phoneScreen = '(max-width: 640px)'
 
 /**
- * Your controls: each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
+ * Your controls: how to move and zoom the globe, in words for the viewer's touchscreen or mouse, then
+ * each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
  * phone, from the top of its panel to the zoom buttons, so the arrow rises clear of the panel).
  */
 function ControlsStep({ onNext }: { onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
+  const [touch] = useState(() => window.matchMedia(touchPointer).matches)
   return (
     <>
       <TourPointer
@@ -240,6 +246,7 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
         fromTopWhen={phoneScreen}
       />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
+        <p className="welcome-tour__text welcome-tour__move">{moveAndZoomWords(touch)}</p>
         <ul className="welcome-tour__controls">
           {railButtons.map(({ name, icon }) => (
             <li key={name} className="welcome-tour__control">
@@ -410,14 +417,16 @@ interface TourButtonProps {
   disabled?: boolean
   /** Shown as unavailable, but still pressable, to say why ("Show these" with nothing picked). */
   unavailable?: boolean
+  /** A way back rather than on (Back): outlined but not lit, so the step's own button stands out beside it. */
+  quiet?: boolean
   children: ReactNode
 }
 
-function TourButton({ onClick, disabled, unavailable, children }: TourButtonProps) {
+function TourButton({ onClick, disabled, unavailable, quiet, children }: TourButtonProps) {
   return (
     <button
       type="button"
-      className="welcome-tour__button"
+      className={quiet ? 'welcome-tour__button welcome-tour__button--quiet' : 'welcome-tour__button'}
       onClick={onClick}
       disabled={disabled}
       aria-disabled={unavailable || undefined}

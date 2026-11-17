@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { showScrollThumb } from '../scroll/scrollThumb'
 import { Feedback } from '../feedback/Feedback'
 import type { FeedbackContext } from '../feedback/feedbackForm'
 import type { Game } from '../games/game'
@@ -93,6 +94,15 @@ export function Rail({
   // A popover closed stays a moment as it goes (see .rail__popover--leaving), out of reach.
   const { shown, leaving, key: popoverKey } = useLeaving(open, popoverLeaveDuration)
   const popover = useRef<HTMLDivElement>(null)
+  // The popover, with the app's scrollbar drawn in it on a touch screen (see showScrollThumb).
+  const popoverRef = useCallback((element: HTMLDivElement | null) => {
+    popover.current = element
+    const hide = element ? showScrollThumb(element) : undefined
+    return () => {
+      popover.current = null
+      hide?.()
+    }
+  }, [])
   const rail = useRef<HTMLDivElement>(null)
   // Map Type's and More's popovers sit level with their buttons, their few choices beside them, rather
   // than with the rail's top. On a screen too short for that, such as a phone on its side, they rise
@@ -193,7 +203,7 @@ export function Rail({
       {shown && (
         <div
           key={popoverKey}
-          ref={leaving ? undefined : popover}
+          ref={leaving ? undefined : popoverRef}
           id={leaving ? undefined : 'rail-popover'}
           className={popoverClassName(shown, leaving)}
           style={beside ? { top: besideTop } : undefined}

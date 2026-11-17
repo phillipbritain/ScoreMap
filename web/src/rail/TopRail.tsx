@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
 import { useLeaving } from '../motion/useLeaving'
+import { showScrollThumb } from '../scroll/scrollThumb'
 import { RailButton } from './Rail'
 import { nextPopover, popoverLeaveDuration, type PopoverEvent } from './railControls'
 
@@ -28,6 +29,15 @@ export function TopRail({ scenarioControls }: TopRailProps) {
   const open = chosen === 'scenario' && !scenarioControls ? null : chosen
   const { shown, leaving, key: popoverKey } = useLeaving(open, popoverLeaveDuration)
   const popover = useRef<HTMLDivElement>(null)
+  // The popover, with the app's scrollbar drawn in it on a touch screen (see showScrollThumb).
+  const popoverRef = useCallback((element: HTMLDivElement | null) => {
+    popover.current = element
+    const hide = element ? showScrollThumb(element) : undefined
+    return () => {
+      popover.current = null
+      hide?.()
+    }
+  }, [])
   const popoverEvent = (event: PopoverEvent<TopRailPopover>) => setOpen((current) => nextPopover(current, event))
 
   useEffect(() => {
@@ -53,7 +63,7 @@ export function TopRail({ scenarioControls }: TopRailProps) {
       {shown === name && (
         <div
           key={popoverKey}
-          ref={leaving ? undefined : popover}
+          ref={leaving ? undefined : popoverRef}
           id={leaving ? undefined : 'top-rail-popover'}
           className={`rail__popover top-rail__popover rail__popover--${name}${leaving ? ' rail__popover--leaving' : ''}`}
           role="dialog"

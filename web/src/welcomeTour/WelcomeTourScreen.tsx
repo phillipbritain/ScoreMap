@@ -6,6 +6,7 @@ import { LeaguePicker } from '../rail/LeaguePicker'
 import type { LeagueList } from '../settings/leagues'
 import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
+import { scrollThumbRef } from '../scroll/scrollThumb'
 import {
   canShowPicks,
   noPicks,
@@ -398,7 +399,9 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
         {heading}
       </Heading>
       {/* Scrolls on its own when it doesn't fit, so the heading and the step's buttons stay in view. */}
-      <div className="welcome-tour__body">{children}</div>
+      <div ref={scrollThumbRef} className="welcome-tour__body">
+        {children}
+      </div>
       {action && <div className="welcome-tour__actions">{action}</div>}
       <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
         ×

@@ -2852,7 +2852,9 @@ body {
   width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
   max-height: calc(100% - 12 * var(--spacing));
   overflow: hidden;
-  padding: calc(5 * var(--spacing)) calc(6 * var(--spacing));
+  /* Its padding at the sides, which its scrolling content reaches across (see .welcome-tour__body). */
+  --panel-side: calc(6 * var(--spacing));
+  padding: calc(5 * var(--spacing)) var(--panel-side);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   color: var(--palette-text-primary);
@@ -2989,6 +2991,9 @@ body {
   overflow-y: auto;
   margin: calc(-1 * var(--spacing));
   padding: var(--spacing);
+  /* Out to the panel's right edge, so its scrollbar runs there rather than beside the content. */
+  margin-right: calc(-1 * var(--panel-side));
+  padding-right: var(--panel-side);
 }
 
 .welcome-tour__actions {
@@ -3146,7 +3151,8 @@ body {
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
     max-height: calc(100% - 6 * var(--spacing));
-    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+    --panel-side: calc(5 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side);
   }
 
   .welcome-tour--controls {
@@ -3390,7 +3396,8 @@ body {
   .welcome-tour__panel {
     width: min(calc(150 * var(--spacing)), calc(100% - 8 * var(--spacing)));
     max-height: calc(100% - 6 * var(--spacing));
-    padding: calc(4 * var(--spacing)) calc(5 * var(--spacing));
+    --panel-side: calc(5 * var(--spacing));
+    padding: calc(4 * var(--spacing)) var(--panel-side);
   }
 
   .welcome-tour__question {

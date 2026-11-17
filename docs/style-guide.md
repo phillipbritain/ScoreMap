@@ -145,7 +145,7 @@ The dark theme names one of the palette's colors where a job is what that palett
 | `components.Globe.disputedBorders.color` | Disputed borders, dashed | `navy.300` |
 | `components.Globe.halo.inner.color` | The halo close around the globe's edge | `navy.400` |
 | `components.Globe.halo.outer.color` | The halo's wider, fainter outer glow | `primary.dark` |
-| `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | city `navy.200`, state `primary.light`, country `navy.200` |
+| `components.PlaceNames.<kind>.color` | A kind of place's name: `city` (national capitals included), `state`, `country` | `navy.200` for every kind: state names stay quieter than city names by their smaller size and capitals, not a dimmer color, which got lost on the land |
 | `components.PlaceNames.<kind>.outline.color` | The outline around its letters | `navy.800` for every kind |
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
@@ -346,7 +346,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.<line>.width` | A line's width by zoom, for `coastlines`, `countryBorders`, `stateLines` and `disputedBorders`: a width at each of some zoom levels (`{ "2": 0.9, "8": 1.6 }`), growing evenly between them; one zoom level is a fixed width | coastlines 0.9 to 1.6 (zoom 2 to 8), country borders 0.9 to 1.8 (2 to 8), state lines 0.6 to 1.2 (3 to 8), disputed borders 0.8 |
 | `components.Globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
-| `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.2 and 0 |
+| `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
 | `components.Cluster.radius.few`, `.some`, `.many` | A pin cluster's disc by how many games it holds: up to 4, up to 14, more. A card cluster is as wide as `some`, outline and all | 11, 13, 16 |
 | `components.Cluster.glowRadius.few`, `.some`, `.many` | Its glow's radius, likewise | 22, 26, 32 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
@@ -416,9 +416,9 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 
 | Setting | Which text | Dark theme |
 | --- | --- | --- |
-| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, state `Open Sans Regular`, country `Open Sans Bold` |
+| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, state `Open Sans Semibold`, country `Open Sans Bold` |
 | `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
-| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.25, country 0.12 |
+| `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.18, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
 | `components.Cluster.count.size` | Its size, a type style's | `caption` |
 

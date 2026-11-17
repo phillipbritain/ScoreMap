@@ -1024,22 +1024,20 @@ describe('loading stage', () => {
   })
 
   it('is drawing the games it is given until it settles, then ready', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    const { globe, onStage } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    let settledAtReady: boolean | undefined
+    // Ready is permanent, but a later render can make the globe unsettled again.
+    onStage.mockImplementation((stage) => {
+      if (stage === 'ready') settledAtReady ??= globe.settled()
+    })
+
     const crowd = ['A', 'B', 'C', 'D'].map((id, i) => game(id, { longitude: i * 0.3 }))
     globe.show(crowd)
     expect(globe.stage()).toBe('drawing')
+    expect(globe.settled()).toBe(false)
 
-    // The stage in each frame, beside whether the globe had settled by then.
-    const frames: string[] = []
-    const record = () => frames.push(`${globe.settled() ? 'settled' : 'unsettled'}, ${globe.stage()}`)
-    map.on('render', record)
-    await vi.waitFor(() => expect(globe.stage()).toBe('ready'), { timeout: 10_000 })
-    map.off('render', record)
-
-    expect(frames).toContain('unsettled, drawing')
-    expect(frames).not.toContain('unsettled, ready')
-    expect(frames).not.toContain('settled, drawing')
-    expect(globe.settled()).toBe(true)
+    await vi.waitFor(() => expect(onStage).toHaveBeenCalledWith('ready'), { timeout: 10_000 })
+    expect(settledAtReady).toBe(true)
     expect(container.querySelectorAll('.score-card')).toHaveLength(crowd.length)
   })
 

@@ -57,34 +57,6 @@ body {
   background: transparent;
 }
 
-/* On a touch screen the app draws its own scrollbar in a scrolling area (see scroll/scrollThumb.ts), as
-   Safari on iPhone only shows its own while scrolling; the browser's own is hidden there so there's one. */
-@media (pointer: coarse) {
-  .has-scroll-thumb {
-    scrollbar-width: none;
-  }
-
-  .has-scroll-thumb::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-/* The app's own scrollbar, in a scrolling area's right edge, scrolled with what it holds into place. */
-.scroll-thumb {
-  position: absolute;
-  top: 0;
-  right: 2px;
-  z-index: 3;
-  width: 4px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--palette-text-primary) 35%, transparent);
-  pointer-events: none;
-}
-
-.scroll-thumb[hidden] {
-  display: none;
-}
-
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;

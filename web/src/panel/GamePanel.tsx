@@ -6,7 +6,6 @@ import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
-import { scrollThumbRef } from '../scroll/scrollThumb'
 import type { StreamLink } from '../games/game'
 import { listedWatchLinks } from './watchLinks'
 import { lastScoreSlot } from './lastScoreSlot'
@@ -338,10 +337,7 @@ function GameBand({ game }: { game: Game }) {
   const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
   if (!scoreline && entries.length === 0 && bouts.length === 0) return null
   return (
-    <div
-      ref={scrollThumbRef}
-      className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}
-    >
+    <div className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {entries.length > 0 && (
         <BandCell label="Leaderboard" wide>
           <ol className="game-panel__field">

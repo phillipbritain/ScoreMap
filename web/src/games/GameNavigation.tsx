@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Game, GameTeam } from './game'
 import { gameLabel, gameMatchup, matchesSearch } from './gameLabel'
 import { moveByArrows } from '../menus/arrowKeys'
-import { scrollThumbRef } from '../scroll/scrollThumb'
 import { sidesTopFirst } from './sides'
 
 /**
@@ -48,7 +47,7 @@ export function GameNavigation({ games, onSelect }: {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      <ul ref={scrollThumbRef} aria-label="Games" onFocus={(event) => { focusedGame.current = event.target }}>
+      <ul aria-label="Games" onFocus={(event) => { focusedGame.current = event.target }}>
         {byLeague(found).map(([league, inLeague]) => [
           <li key={`league:${league}`} className="game-navigation__league" role="presentation">{league}</li>,
           ...inLeague.map((game) => (

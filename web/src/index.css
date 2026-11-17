@@ -1254,6 +1254,12 @@ body {
   gap: var(--rail-group-gap);
 }
 
+/* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
+   controls step brings it in. */
+.globe-area--rail-hidden > .rail {
+  visibility: hidden;
+}
+
 /* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
    it, their groups rising and fading one after another, leaving it alone at the top right as Show
    controls (a menu); they drop back down the same way. Folded, they take no room and no pointer. The

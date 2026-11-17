@@ -112,6 +112,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // and rail can't be used.
   const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
+  // The rail is kept out of sight on a first visit until the tour's Your controls step brings it in:
+  // through the loading screen and Welcome, so it doesn't show and then go.
+  const railHidden = tourProgress === 'welcome'
   // The tour's own games show in place of real ones until it's finished, and then until a panel opened
   // from Click a score card closes (see showsTourGames). Timed from when the tour starts.
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
@@ -165,7 +168,10 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      <div ref={globeArea} className={touring ? 'globe-area globe-area--touring' : 'globe-area'}>
+      <div
+        ref={globeArea}
+        className={['globe-area', touring && 'globe-area--touring', railHidden && 'globe-area--rail-hidden'].filter(Boolean).join(' ')}
+      >
         <Globe
           key={`globe-${globeAttempt}`}
           ref={globe}

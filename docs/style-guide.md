@@ -383,7 +383,7 @@ A short screen on its side (500px tall or less, wider than tall: a phone in land
 | `components.LoadingScreen.dim.opacity` | How opaque the loading screen's dim is over the globe, 0 to 1 | 0.6 |
 | `components.LoadingScreen.glow.radius`, `.opacity` | How far the glow around the loading screen's message reaches, and how strong it is, 0 to 1 (its ellipsis's dots glow half as far, at full strength) | 14, 0.45 |
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.3, 2.5 |
-| `components.WelcomeTour.choice.topEvents`, `.myLeagues`, `.everything` | The outline of each of Welcome's choices, a color of its own so the three tell apart; it stays on hover, which lights the choice behind | `gold.500`, `navy.300`, `offWhite.600` |
+| `components.WelcomeTour.choice.topEvents`, `.myLeagues`, `.everything` | The outline of each of Welcome's choices, a color of its own so the three tell apart; it stays on hover, which lights the choice behind | `gold.500`, `navy.300`, `#6dbb8a` (a green outside the theme's colors) |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue and its links (on a phone, behind the whole panel), 0 to 1 | 0.4 |
 | `components.GamePanel.size.width` | The game panel's width at most | 1200 |

@@ -36,11 +36,17 @@ describe('scoreCard', () => {
     expect(scoreCard(arrowhead)).toEqual({
       gameId: '401',
       status: 'Live',
-      top: { label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', score: '17' },
-      bottom: { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', score: '21' },
+      top: { label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', mark: 'B', score: '17' },
+      bottom: { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', mark: 'K', score: '21' },
       clockLine: '4:12',
       flames: false,
     })
+  })
+
+  it("shows a team ESPN gives no logo with its mark in the logo's place", () => {
+    const card = scoreCard({ ...arrowhead, contest: { ...sides, away: { ...sides.away, abbreviation: 'LCHR', logoUrl: null } } })
+
+    expect(card.top).toMatchObject({ label: 'LCHR', logoUrl: null, mark: 'L' })
   })
 
   it("shows a ranked team's poll place before its abbreviation, and none for an unranked team", () => {

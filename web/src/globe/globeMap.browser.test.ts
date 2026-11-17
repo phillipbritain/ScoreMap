@@ -554,6 +554,23 @@ describe('selection', () => {
     expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top)
   })
 
+  it('leaves the globe where it is when the selected score card is already clear of the panel', async () => {
+    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    const a = game('A')
+    globe.show([a])
+    await cardShown('A')
+    const panel = panelAcrossBottom()
+    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top - panelGap)
+    let moved = false
+    map.on('movestart', () => (moved = true))
+
+    globe.select('A', panel)
+    await pause(500)
+
+    expect(moved).toBe(false)
+    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top)
+  })
+
   it('does not lift the selected game again when it is selected again', async () => {
     const { globe, map } = openGlobe({ longitude: -45, latitude: 0, zoom: 2 })
     const a = game('A', { latitude: -40 })

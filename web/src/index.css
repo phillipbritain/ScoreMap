@@ -894,7 +894,7 @@ body {
 
 .score-card__team {
   display: grid;
-  grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) 1fr auto;
+  grid-template-columns: calc(var(--score-card-size-logo) + 2 * var(--score-card-logo-plate-padding)) minmax(0, 1fr) auto;
   align-items: center;
   gap: calc(0.75 * var(--spacing));
   padding: 0 var(--spacing);
@@ -926,10 +926,26 @@ body {
 }
 
 .score-card__score {
+  /* Room for three digits from the start, so a score going up never widens the card (see PlacedCard.measure). */
+  min-width: 3ch;
   font-family: var(--typography-font-family);
   font-weight: var(--typography-h6-font-weight);
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+/* A card's size is set when it's first drawn (see PlacedCard.measure): a clock line or a name that
+   grows after is cut short rather than widen it. */
+:is(.score-card__header, .score-card__abbreviation) {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+:is(.score-card__clock, .score-card__abbreviation) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Animations for changes worth noticing (see globe/pinAnimation.ts): a glow of the card's edge when

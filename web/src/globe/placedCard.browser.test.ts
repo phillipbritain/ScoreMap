@@ -64,6 +64,21 @@ describe('a placed card', () => {
     expect(events.hover.mock.calls).toEqual([[true], [false]])
   })
 
+  it('keeps the size it was first measured at, cutting short what grows after, until measured afresh', () => {
+    expect(document.fonts.status).toBe('loaded')
+    const card = place()
+    card.element.className = 'score-card'
+    card.measure()
+    const { width, height } = card
+    expect(width).toBeGreaterThan(0)
+    card.element.textContent = 'BUF 117 KC 121 in double overtime'
+    card.measure()
+    expect([card.width, card.height]).toEqual([width, height])
+    expect(card.element.offsetWidth).toBe(width)
+    card.measureAfresh()
+    expect(card.width).toBeGreaterThan(width)
+  })
+
   it('keeps a pulse through a redraw, until the pulse is over', () => {
     const card = place()
     card.pulse('score')

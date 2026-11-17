@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { cardCount, cardLayout, layOutCards, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { cardCount, cardLayout, layOutCards, type CardPlacement, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { gatheringRulesBroken } from './gatheringRules'
@@ -305,19 +305,18 @@ describe('layOutCards', () => {
       const first = layIn(many)
       const clustered = (layout: CardPlacements) => [...layout.cards].filter(([, { inCardCluster }]) => inCardCluster).map(([gameId]) => gameId)
 
-      it('gives every card in a card cluster room at once, with the camera still', () => {
+      it('keeps the cards in a card cluster there, with the camera still', () => {
         expect(clustered(first).length).toBeGreaterThan(2)
-        expect(clustered(layOutCards(many, scene, first.cards))).toEqual([])
+        expect(clustered(layOutCards(many, scene, first.cards))).toEqual(clustered(first))
       })
 
-      it('gives the cards in a card cluster room one a layout, taking turns, while the camera moves', () => {
+      it('gives the cards in a card cluster room one a layout, taking turns, while the camera moves, and keeps the rest there once it stops', () => {
         const moving = { ...scene, moving: true }
         const second = layOutCards(many, moving, first.cards)
         const third = layOutCards(many, moving, second.cards)
         expect(clustered(second)).toHaveLength(clustered(first).length - 1)
         expect(clustered(third)).toHaveLength(clustered(first).length - 2)
-        // And once it stops, the rest at once.
-        expect(clustered(layOutCards(many, scene, third.cards))).toEqual([])
+        expect(clustered(layOutCards(many, scene, third.cards))).toEqual(clustered(third))
       })
     })
   })
@@ -443,6 +442,8 @@ describe('layOutCards', () => {
   })
 
   describe('laid out again, as the globe turns', () => {
+    // Laid out only as the camera moves: once it's still, the cards hold (see 'with the camera still').
+    const turning: CardScene = { ...scene, moving: true }
     // Two games at one venue: b is moved aside, below the venue.
     const pair = [card('a', mx, my), card('b', mx, my)]
     const lastTime = (shifts: Record<string, ScreenOffset>) =>
@@ -458,16 +459,26 @@ describe('layOutCards', () => {
       const nearest = spreadCards(pair).get('b')!
       const lower = { dx: 0, dy: nearest.dy + 24 }
       expect(trailOf(lower) - trailOf(nearest)).toBeLessThan(40)
-      const layout = layOutCards(pair, scene, lastTime({ a: { dx: 0, dy: 0 }, b: lower }))
+      const layout = layOutCards(pair, turning, lastTime({ a: { dx: 0, dy: 0 }, b: lower }))
       expect(shiftsOf(layout).get('b')).toEqual(lower)
     })
 
-    it('keeps a moved card where it was while that still has room, however much nearer a spot opens up', () => {
+    it('keeps a moved card within 80 px of its venue where it was while that still has room, however much nearer a spot opens up', () => {
+      const nearest = spreadCards(pair).get('b')!
+      const out = { dx: 0, dy: nearest.dy + 60 }
+      expect(trailOf(out)).toBeLessThanOrEqual(80)
+      expect(trailOf(out) - trailOf(nearest)).toBeGreaterThanOrEqual(60)
+      const layout = layOutCards(pair, turning, lastTime({ a: { dx: 0, dy: 0 }, b: out }))
+      expect(shiftsOf(layout).get('b')).toEqual(out)
+    })
+
+    it('brings a moved card further than 80 px from its venue nearer, where there is room', () => {
       const nearest = spreadCards(pair).get('b')!
       const far = { dx: 0, dy: nearest.dy + 160 }
-      expect(trailOf(far) - trailOf(nearest)).toBeGreaterThanOrEqual(160)
-      const layout = layOutCards(pair, scene, lastTime({ a: { dx: 0, dy: 0 }, b: far }))
-      expect(shiftsOf(layout).get('b')).toEqual(far)
+      expect(trailOf(far)).toBeGreaterThan(80)
+      const layout = layOutCards(pair, turning, lastTime({ a: { dx: 0, dy: 0 }, b: far }))
+      expect(shiftsOf(layout).get('b')).toEqual(nearest)
+      expect(anyOverlap(boxesOf(pair, layout))).toBe(false)
     })
 
     it('keeps a card where it was rather than let a more prominent card looking for room take its spot', () => {
@@ -477,7 +488,7 @@ describe('layOutCards', () => {
       const over = [{ x: mx, y: my, width: 80, height: 20 }]
       // Where the Live card would go, had it the venue to itself, is where the Upcoming card was.
       const taken = shiftsOf(lay([live], over)).get('live')!
-      const layout = layOutCards([live, upcoming], { ...scene, names: over }, lastTime({ live: { dx: 0, dy: 0 }, upcoming: taken }))
+      const layout = layOutCards([live, upcoming], { ...turning, names: over }, lastTime({ live: { dx: 0, dy: 0 }, upcoming: taken }))
       expect(shiftsOf(layout).get('upcoming')).toEqual(taken)
       expect(shiftsOf(layout).get('live')).not.toEqual(taken)
       expect(anyOverlap(boxesOf([live, upcoming], layout))).toBe(false)
@@ -487,7 +498,7 @@ describe('layOutCards', () => {
       // b moved down the venue gap below its venue; as the globe turns, b's venue edges a pixel higher than a's.
       const b = { dx: 0, dy: 92 }
       expect(shiftsOf(lay([card('a', mx, my), card('b', mx + 1, my)])).get('b')).toEqual(b)
-      const layout = layOutCards([card('a', mx, my), card('b', mx + 1, my - 1)], scene, lastTime({ a: { dx: 0, dy: 0 }, b }))
+      const layout = layOutCards([card('a', mx, my), card('b', mx + 1, my - 1)], turning, lastTime({ a: { dx: 0, dy: 0 }, b }))
       expect(shiftsOf(layout).get('b')).toEqual(b)
     })
 
@@ -500,22 +511,23 @@ describe('layOutCards', () => {
     })
 
     it('moves a card back over its venue once there is room there', () => {
-      const layout = layOutCards([card('b', mx, my)], scene, lastTime({ b: { dx: 0, dy: 80 } }))
+      const layout = layOutCards([card('b', mx, my)], turning, lastTime({ b: { dx: 0, dy: 80 } }))
       expect(shiftsOf(layout).get('b')).toEqual({ dx: 0, dy: 0 })
     })
 
     it('moves a card from where it was once that has no room', () => {
       const below = { dx: 0, dy: 80 }
       const blocking = { x: mx, y: my + 80, width: 80, height: 24 }
-      const layout = layOutCards(pair, { ...scene, names: [blocking] }, lastTime({ a: { dx: 0, dy: 0 }, b: below }))
+      const layout = layOutCards(pair, { ...turning, names: [blocking] }, lastTime({ a: { dx: 0, dy: 0 }, b: below }))
       expect(shiftsOf(layout).get('b')).not.toEqual(below)
       expect(anyOverlap(placed(pair, [blocking]))).toBe(false)
     })
 
     it('pushes cards along as the globe turns the last of a row off screen, rather than send it across the crowd', () => {
       // Four games at one venue, in a strip of screen with no room above or below their cards: a sits
-      // over the venue, the rest in a row to its right, out to the screen's edge.
-      const strip: CardScene = { width: 1000, height: 140, venueGap }
+      // over the venue, the rest in a row to its right, out to the screen's edge. A city's name fills
+      // the strip to their left, so they can't come nearer the venue that way (see 'comes nearer').
+      const strip: CardScene = { width: 1000, height: 140, venueGap, moving: true, names: [{ x: 270, y: 70, width: 540, height: 140 }] }
       const row = (x: number) => ['a', 'b', 'c', 'd'].map((gameId) => card(gameId, x, 64))
       const was = { a: { dx: 0, dy: 0 }, b: { dx: 120, dy: 0 }, c: { dx: 230, dy: 0 }, d: { dx: 340, dy: 0 } }
       const before = row(600)
@@ -551,20 +563,25 @@ describe('layOutCards', () => {
             height: 60,
           }
         })
-      // As the camera moves, which a pan is: a crowd's cards are handed round only once it's still (see untangle).
       const panning = { ...scene, moving: true }
-      // How often a card with its venue on screen leaps further than a jump from where it was.
+      // How far a card is from its venue, placed so.
+      const fromVenue = ({ venueX, venueY, height, width }: ScreenCard, { offset }: CardPlacement) =>
+        trailLength({ gameId: '', venueX, venueY, width, height, x: venueX + offset.dx, y: venueY + offset.dy - height / 2 })
+      // How often a card with its venue on screen leaps further than a jump from where it was, other
+      // than to come nearer its venue, as a card far from it does where there's room (see arrange).
       let jumps = 0
       let previous: CardPlacements['cards'] = new Map()
       for (let frame = 0; frame < 100; frame++) {
         const cards = crowd(frame)
         const layout = layOutCards(cards, panning, previous)
-        for (const { gameId, venueX, venueY } of cards) {
+        for (const card of cards) {
+          const { gameId, venueX, venueY } = card
           const was = previous.get(gameId)
           const now = layout.cards.get(gameId)!
           if (!was || was.inCardCluster || now.inCardCluster) continue
           const onScreen = venueX >= 0 && venueX <= scene.width && venueY >= 0 && venueY <= scene.height
-          if (onScreen && Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > cardJump) jumps++
+          const jumped = Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > cardJump
+          if (onScreen && jumped && fromVenue(card, now) >= fromVenue(card, was)) jumps++
         }
         previous = layout.cards
       }
@@ -600,6 +617,8 @@ describe('layOutCards', () => {
           const was = previous.get(gameId)
           const now = layout.cards.get(gameId)!
           if (!was?.trail || !now.trail) continue
+          // A card that jumped, to come nearer its venue or for room, takes its trail along: only the trails of cards that stayed count.
+          if (Math.hypot(now.offset.dx - was.offset.dx, now.offset.dy - was.offset.dy) > cardJump) continue
           // Where the trail leaves the card, from the card's bottom center.
           const leaves = ({ trail, offset }: typeof now) => ({ x: trail!.x1 - venueX - offset.dx, y: trail!.y1 - venueY - offset.dy })
           const [before, after] = [leaves(was), leaves(now)]
@@ -610,6 +629,43 @@ describe('layOutCards', () => {
       }
       // No jumpier than the layout is now: trails routed afresh every frame made 54 here.
       expect(flips).toBeLessThanOrEqual(6)
+    })
+  })
+
+  describe('with the camera still, laid out before', () => {
+    // b moved aside, 160 px further than it need be; c in a card cluster; d's game given for the first time.
+    const pair = [card('a', mx, my), card('b', mx, my)]
+    const nearest = () => spreadCards(pair).get('b')!
+    const far = () => ({ dx: 0, dy: nearest().dy + 160 })
+    const before = (): CardPlacements['cards'] =>
+      new Map([
+        ['a', { offset: { dx: 0, dy: -venueGap }, inCardCluster: false, moved: false, trail: null }],
+        ['b', { offset: { dx: far().dx, dy: far().dy - venueGap }, inCardCluster: false, moved: true, trail: { x1: mx, y1: my + 200, x2: mx, y2: my + 46 } }],
+      ])
+
+    it('holds every card where it was, trail and all, however much nearer a spot or its venue is', () => {
+      const was = before()
+      const layout = layOutCards(pair, scene, was)
+      expect(layout.cards).toEqual(was)
+      // Even with a's game gone, which leaves room over b's venue.
+      expect(layOutCards([pair[1]], scene, was).cards.get('b')).toEqual(was.get('b'))
+    })
+
+    it('keeps a card cluster as it was, though there is room for its cards', () => {
+      const was = new Map([...before(), ['c', { offset: { dx: 0, dy: -venueGap }, inCardCluster: true, moved: false, trail: null, lookedAgo: 3 }]])
+      const cards = [...pair, card('c', mx + 300, my - 200, 'Final')]
+      const layout = layOutCards(cards, scene, was)
+      expect(layout.cards.get('c')).toEqual(was.get('c'))
+      expect(layout.cardClusters).toEqual([{ gameIds: ['c'], status: 'Final', x: cards[2].venueX, y: cards[2].venueY }])
+    })
+
+    it('places a game given for the first time clear of the cards there, moving none of them', () => {
+      const was = before()
+      const cards = [...pair, card('d', mx, my)]
+      const layout = layOutCards(cards, scene, was)
+      for (const gameId of ['a', 'b']) expect(layout.cards.get(gameId)).toEqual(was.get(gameId))
+      expect(layout.cards.get('d')!.inCardCluster).toBe(false)
+      expect(anyOverlap(boxesOf(cards, layout))).toBe(false)
     })
   })
 
@@ -744,7 +800,7 @@ describe('cardLayout', () => {
       expect(layout.shows('c')).toEqual({ as: 'smallPin' })
     })
 
-    it('gives the games in card clusters turns at looking for room while the camera moves, one a frame, and the rest once it stops', () => {
+    it('gives the games in card clusters turns at looking for room while the camera moves, one a frame, and keeps the rest there once it stops', () => {
       const many = games('g', 20, 200, 150, 'Live')
       const layout = cardLayout()
       layout.layOut(many, { width: 400, height: 300, venueGap, venueSizes })
@@ -755,8 +811,8 @@ describe('cardLayout', () => {
       expect(noRoom()).toBe(first - 1)
       layout.layOut(many, { ...big, moving: true })
       expect(noRoom()).toBe(first - 2)
-      layout.layOut(many, big)
-      expect(noRoom()).toBe(0)
+      expect(layout.layOut(many, big)).toBe(false)
+      expect(noRoom()).toBe(first - 2)
     })
 
     it('shows every game once, never as a card cluster of one, its trail ending where it should, as the globe pans across a crowd', () => {

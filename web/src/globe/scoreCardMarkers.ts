@@ -143,12 +143,12 @@ export class ScoreCardMarkers {
   }
 
   /**
-   * After a change of theme, with the page's CSS already in it, or of the games' colors:
-   * each card redrawn in its game's color, measured afresh, as its text, spacing and sizes may have changed,
-   * and laid out again.
+   * After a change of theme, with the page's CSS already in it, or of the games' colors: each card redrawn in its game's color, measured afresh, as its text, spacing
+   * and sizes may have changed, and laid out afresh, as the cards held where they were would overlap.
    */
   restyle(): void {
-    for (const placed of this.placed.values()) placed.measure()
+    for (const placed of this.placed.values()) placed.measureAfresh()
+    this.layout = cardLayout()
     this.settling.settleAfresh()
     this.sync()
   }
@@ -209,9 +209,17 @@ export class ScoreCardMarkers {
     // small pins (see GlobeMap).
     const { lng: longitude, lat: latitude } = this.map.getCenter()
     const radius = cardRadiusOn(this.map)
+    // Nor does a venue off screen (but the selected game's), so no card hangs over the edge for a venue out of view.
+    const canvas = this.map.getCanvas()
+    const inView = (gameId: string, lngLat: [number, number]) => {
+      if (gameId === this.selectedGameId) return true
+      const { x, y } = this.map.project(lngLat)
+      return x >= 0 && y >= 0 && x <= canvas.clientWidth && y <= canvas.clientHeight
+    }
     const wanted = pins.filter(
       ({ gameId, lngLat }) =>
         !isBehindGlobe(this.map, lngLat) &&
+        inView(gameId, lngLat) &&
         hasCard({ longitude, latitude }, { longitude: lngLat[0], latitude: lngLat[1] }, radius, gameId === this.selectedGameId),
     )
 

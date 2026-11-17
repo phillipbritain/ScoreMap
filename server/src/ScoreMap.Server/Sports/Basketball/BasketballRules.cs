@@ -14,21 +14,19 @@ internal sealed class BasketballRules : SportRule
     protected override string? ClockInPlay(ProviderGame game, League league, int period) =>
         ClockFormat.Timed(game, period, league.Regulation, ClockFormat.QuarterOrHalf(league.Regulation));
 
-    protected override bool HotSides(ProviderGame game, ProviderSides sides, int period, League league) =>
-        Clutch(game, league);
-
     internal override string? When(ProviderScoringPlay play, League league) =>
         ClockFormat.WhenTimed(play, league, ClockFormat.QuarterOrHalf(league.Regulation));
 
     private static readonly TimeSpan LastMinutes = TimeSpan.FromMinutes(5);
     private const int WithinPoints = 5;
 
-    internal override bool Clutch(ProviderGame game, League league)
+    /// <summary>
+    /// The last 5 minutes of the last period of regulation, or any time in overtime, within 5 points:
+    /// borrowed from the NBA's clutch-time stat.
+    /// </summary>
+    protected override bool HotSides(ProviderGame game, ProviderSides sides, int period, League league)
     {
-        if (game.Status is not (ProviderStatus.InProgress or ProviderStatus.Delayed)
-            || game.Period is not { } period
-            || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away }
-            || Math.Abs(home - away) > WithinPoints)
+        if (sides is not { Home.Score: { } home, Away.Score: { } away } || Math.Abs(home - away) > WithinPoints)
             return false;
 
         if (period > league.Regulation)

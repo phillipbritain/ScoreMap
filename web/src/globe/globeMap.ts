@@ -24,7 +24,7 @@ import { fadeNearHorizon } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
-import { smallPinReach, type ScreenBox } from './panelClearance'
+import type { ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import { drawFlamesOnDemand } from './flames'
 import {
@@ -209,7 +209,6 @@ export class GlobeMap {
       this.moves = new CameraMoves(map, {
         game: (gameId) => this.shown.get(gameId),
         cards: this.cards,
-        pinOnPage: (game) => this.pinOnPage(game, map.project([game.venue.longitude, game.venue.latitude])),
         onPick: (gameId) => this.onSelect(gameId),
         onSelection: (gameId) => {
           this.unsettle()
@@ -283,7 +282,7 @@ export class GlobeMap {
     }
   }
 
-  /** Highlights the selected game and brings it clear of its rendered panel, according to its intent. */
+  /** Highlights the selected game, leaving the camera where it is unless it was picked from the Games list (see pickGame) or `intent` is 'center'. */
   select(gameId: string | null, panel: ScreenBox | null = null, intent?: SelectionIntent): void {
     this.moves.select(gameId, panel, intent)
   }
@@ -524,30 +523,6 @@ export class GlobeMap {
    */
   private animate(game: PlacedGame, animation: PinAnimation): void {
     this.cards.animate(game.id, animation)
-  }
-
-  /**
-   * The box a game's pin takes up on the page: its score card and venue, or its ringed small pin.
-   * Given where its venue is on the map.
-   */
-  private pinOnPage(game: Game, { x, y }: { x: number; y: number }): ScreenBox {
-    const container = this.map.getContainer().getBoundingClientRect()
-    const venue = { x: container.left + x, y: container.top + y }
-    const card = this.cards.cardOnPage(game.id)
-    if (!card) {
-      return {
-        left: venue.x - smallPinReach,
-        top: venue.y - smallPinReach,
-        right: venue.x + smallPinReach,
-        bottom: venue.y + smallPinReach,
-      }
-    }
-    return {
-      left: Math.min(card.left, venue.x),
-      top: Math.min(card.top, venue.y),
-      right: Math.max(card.right, venue.x),
-      bottom: Math.max(card.bottom, venue.y),
-    }
   }
 
   private readonly saveCamera = () => {

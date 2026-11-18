@@ -16,7 +16,6 @@ import { cardMoveDuration } from './cardMoves'
 import { cardClusterLayer, cardLayoutSource, cardlessSelectedPinLayer, cardlessSmallPinLayer } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
 import { flameImage } from './flames'
-import { panelGap } from './panelClearance'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import {
@@ -509,27 +508,13 @@ describe('selection', () => {
     expect(placed()).toEqual(everyCard)
   })
 
-  it('lifts a score card’s venue the panel would cover until the card and venue are clear of it', async () => {
+  it('leaves the globe where it is when the panel covers the selected score card’s venue', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     const a = game('A', { latitude: -8 })
     globe.show([a])
     await cardShown('A')
     const panel = panelAcrossBottom()
     expect(venueOnPage(map, a).y).toBeGreaterThan(panel.top)
-
-    globe.select('A', panel)
-
-    await vi.waitFor(() => expect(offBy(venueOnPage(map, a).y, panel.top - panelGap)).toBeLessThan(2), { timeout: 5_000 })
-    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top)
-  })
-
-  it('leaves the globe where it is when the selected score card is already clear of the panel', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
-    const a = game('A')
-    globe.show([a])
-    await cardShown('A')
-    const panel = panelAcrossBottom()
-    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top - panelGap)
     let moved = false
     map.on('movestart', () => (moved = true))
 
@@ -537,25 +522,6 @@ describe('selection', () => {
     await pause(500)
 
     expect(moved).toBe(false)
-    expect(card('A')!.getBoundingClientRect().bottom).toBeLessThan(panel.top)
-  })
-
-  it('does not lift the selected game again when it is selected again', async () => {
-    const { globe, map } = openGlobe({ longitude: -45, latitude: 0, zoom: 2 })
-    const a = game('A', { latitude: -40 })
-    globe.show([a])
-    await cardShown('A')
-    // Listening before the lift starts, so a busy machine can't miss its end.
-    const lifted = new Promise((resolve) => map.once('moveend', resolve))
-    globe.select('A', panelAcrossBottom())
-    await lifted
-    expect(map.getCenter().lat).toBeLessThan(-1)
-    map.jumpTo({ center: [-45, 0] })
-
-    globe.select('A', panelAcrossBottom())
-    await pause(500)
-
-    expect(map.getCenter().lat).toBeCloseTo(0)
   })
 
   it('centers a game picked from the list above the panel, the globe the same size', async () => {

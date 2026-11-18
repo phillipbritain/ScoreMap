@@ -124,7 +124,8 @@ public class ShippedScenarioTests(ITestOutputHelper output)
 
         Assert.InRange(snapshot.Count, 55, 65);
         Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
-        Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 15, "games in at least 15 countries");
+        // Where configured leagues play: North America, Europe and India (ADR-0028).
+        Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 4, "games in at least 4 countries");
     }
 
     [Fact]
@@ -138,7 +139,8 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.InRange(snapshot.Count, 60, 70);
         var college = snapshot.Where(g => g.League.StartsWith("NCAA", StringComparison.Ordinal)).ToList();
         Assert.True(college.Count >= 55, $"only {college.Count} college games");
-        Assert.All(college, g => Assert.Equal("USA", g.Venue.Country));
+        // As ESPN gives a college venue: in a US state, with no country for basketball.
+        Assert.All(college, g => Assert.Contains(g.Venue.Country, new string?[] { "USA", null }));
         Assert.True(snapshot.Count(g => g.Status == GameStatus.Live) >= 55, "nearly all Live");
         Assert.Contains(snapshot, g => g.League == "PGA Tour");
         Assert.Contains(snapshot, g => g.League == "LPGA Tour");
@@ -325,7 +327,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.Equal("Lap 42", race.Clock);
         var field = Assert.IsType<GameField>(race.Contest);
         Assert.Equal(Enumerable.Range(1, 22), field.Entries.Select(entrant => entrant.Position));
-        Assert.Equal("Hard Rock Stadium", race.Venue.Name);
+        Assert.Equal("Miami International Autodrome", race.Venue.Name);
     }
 
     [Fact]
@@ -341,7 +343,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.True(field.Entries.Count > 10, "a field longer than the game panel's top 10");
         Assert.Equal([(1, "-15"), (2, "-14"), (2, "-14")], field.Entries.Take(3).Select(entrant => (entrant.Position, entrant.Score)));
         Assert.Contains(field.Entries, entrant => entrant.Score == "E");
-        Assert.Equal("Rose Bowl", tournament.Venue.Name);
+        Assert.Equal("Riviera Country Club", tournament.Venue.Name);
     }
 
 
@@ -415,14 +417,14 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     }
 
     // The centers of the cities crowded packs its games into.
+    // The world's biggest cities with a configured league's venues (ADR-0028).
     private static readonly (string Name, (double Lat, double Lon) At)[] BigCities =
     [
-        ("New York", (40.7128, -74.0060)), ("Los Angeles", (34.0522, -118.2437)), ("Miami", (25.7617, -80.1918)),
-        ("London", (51.5072, -0.1276)), ("Paris", (48.8566, 2.3522)), ("Tokyo", (35.6762, 139.6503)),
-        ("Madrid", (40.4168, -3.7038)), ("Mexico City", (19.4326, -99.1332)), ("São Paulo", (-23.5505, -46.6333)),
-        ("Buenos Aires", (-34.6037, -58.3816)), ("Istanbul", (41.0082, 28.9784)), ("Cairo", (30.0444, 31.2357)),
-        ("Seoul", (37.5665, 126.9780)), ("Mumbai", (19.0760, 72.8777)), ("Shanghai", (31.2304, 121.4737)),
-        ("Lagos", (6.5244, 3.3792)), ("Jakarta", (-6.2088, 106.8456)),
+        ("New York", (40.7580, -73.9855)), ("Los Angeles", (34.0522, -118.2437)), ("Miami", (25.7617, -80.1918)),
+        ("London", (51.5072, -0.1276)), ("Paris", (48.8566, 2.3522)), ("Mexico City", (19.4326, -99.1332)),
+        ("Mumbai", (19.0760, 72.8777)), ("Delhi", (28.6139, 77.2090)), ("Kolkata", (22.5726, 88.3639)),
+        ("Istanbul", (41.0082, 28.9784)), ("Madrid", (40.4168, -3.7038)), ("Chicago", (41.8781, -87.6298)),
+        ("Toronto", (43.6532, -79.3832)),
     ];
 
     private static double KmFrom((double Lat, double Lon) center, GameVenue venue)

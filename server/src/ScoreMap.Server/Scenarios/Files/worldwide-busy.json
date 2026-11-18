@@ -1,6 +1,6 @@
 // worldwide-busy: a busy Saturday afternoon in the college season, as the real games stood on
 // 14 November 2026 (the common case in production): about 65 games, nearly all of them two-sided college
-// games packed over the eastern and central US, at that day's venues (the "us-college" group), in its
+// games packed over the US, at their home teams' venues (the "us-college" group), in its
 // mix of leagues (15 NCAA Football, 19 NCAA Men's Basketball, 27 NCAA Women's Basketball) and statuses
 // (almost all Live, two Upcoming, one Final). Beside them, that day's PGA Tour (Austin) and LPGA Tour
 // (Belleair, between rounds) leaderboards and an NHL game in Helsinki. For the globe as it usually is
@@ -121,9 +121,7 @@
       ],
       "venue": {
         "name": "Omni Barton Creek Resort & Spa (Fazio Canyons Course)",
-        "city": "Austin",
-        "region": "TX",
-        "country": "USA"
+        "city": "Austin"
       },
       "startsIn": "-54h",
       "status": "live",
@@ -242,9 +240,7 @@
       ],
       "venue": {
         "name": "Pelican Golf Club",
-        "city": "Belleair",
-        "region": "FL",
-        "country": "USA"
+        "city": "Belleair"
       },
       "startsIn": "-42h",
       "status": "live",
@@ -268,8 +264,7 @@
       },
       "venue": {
         "name": "Veikkaus Arena",
-        "city": "Helsinki",
-        "country": "Finland"
+        "city": "Helsinki"
       },
       "startsIn": "-45m",
       "status": "live",

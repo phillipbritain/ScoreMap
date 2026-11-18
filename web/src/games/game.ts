@@ -32,6 +32,11 @@ export interface GameVenue {
   photo: VenuePhoto | null
   /** Tennis: the court the match is on ("Stadium Court"); null in other sports, or until the feed names it. */
   court: string | null
+  /**
+   * ESPN's id for the venue in the game's league, set only on the welcome tour's games, so the server finds
+   * their photos as it does a real game's (a real game's photo comes with it).
+   */
+  espnId?: string
 }
 
 /** A photo of a venue, for the top of the game panel. */

@@ -49,7 +49,7 @@ public sealed class ScenarioFillTests : IDisposable
         {
             var venue = Assert.Single(Venues, v => v.Name == game.Venue.Name);
             Assert.Contains("london", venue.Groups);
-            Assert.Equal(venue.ToProviderVenue(), game.Venue);
+            Assert.Equal(venue.ToProviderVenue(venue.For(Assert.Single(Leagues, l => l.Key == game.LeagueKey).Name)!), game.Venue);
             var league = Assert.Single(Leagues, l => l.Key == game.LeagueKey);
             Assert.Contains(Teams.For(league), team => team.Name == game.Sides.Home.FullName);
             Assert.Contains(Teams.For(league), team => team.Name == game.Sides.Away.FullName);
@@ -206,7 +206,7 @@ public sealed class ScenarioFillTests : IDisposable
         // Six leagues of two teams: room for six games.
         var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
 
-        Assert.Contains("asks for 7 games, but the team list has free teams for only 6 of them", error.Message);
+        Assert.Contains("asks for 7 games from \"worldwide\", but its venues have leagues with teams free for only 6 of them", error.Message);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public sealed class ScenarioFillTests : IDisposable
         // Six leagues of two teams: room for six games, one of them written out.
         var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, Venues, TeamsPerLeague(2)));
 
-        Assert.Contains("asks for 6 games, but the team list has free teams for only 5 of them beside the 1 written out", error.Message);
+        Assert.Contains("for only 5 of them beside the 1 written out", error.Message);
     }
 
     [Fact]
@@ -248,13 +248,48 @@ public sealed class ScenarioFillTests : IDisposable
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Filled games are never this"),
     };
 
+    [Fact]
+    public void Fill_passes_over_a_venue_whose_home_team_is_already_playing_for_one_with_a_league_free()
+    {
+        // Two grounds of NFL team 1 (one at a time can have its game) and a neutral site.
+        ScenarioVenue[] venues =
+        [
+            new("Ground A", [new ScenarioVenueLeague("NFL", "1", "City A", null, "USA", ["NFL team 1"])], ["g"]),
+            new("Ground B", [new ScenarioVenueLeague("NFL", "2", "City B", null, "USA", ["NFL team 1"])], ["g"]),
+            ScenarioTestVenues.Neutral("Neutral Site", "City C", null, "USA", Leagues, "g"),
+        ];
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """{ "fill": { "count": 2, "group": "g", "leagues": { "NFL": 1 } } }""");
+
+        var scenario = ScenarioReader.Read(_folder, "sample", Leagues, venues, Teams);
+
+        Assert.Equal(2, scenario.Games.Count);
+        Assert.Contains(scenario.Games, game => game.Venue.Name == "Neutral Site");
+        Assert.Single(scenario.Games, game => game.Sides.Home.FullName == "NFL team 1");
+    }
+
+    [Fact]
+    public void A_fill_its_venues_cant_all_host_says_how_many_they_had_room_for()
+    {
+        ScenarioVenue[] venues =
+        [
+            new("Ground A", [new ScenarioVenueLeague("NFL", "1", "City A", null, "USA", ["NFL team 1"])], ["g"]),
+            new("Ground B", [new ScenarioVenueLeague("NFL", "2", "City B", null, "USA", ["NFL team 1"])], ["g"]),
+        ];
+        File.WriteAllText(Path.Combine(_folder, "sample.json"), """{ "fill": { "count": 2, "group": "g" } }""");
+
+        var error = Assert.Throws<ScenarioFileException>(() => ScenarioReader.Read(_folder, "sample", Leagues, venues, Teams));
+
+        Assert.Contains("only 1 of them", error.Message);
+    }
+
     private Scenario Read(string json, ScenarioTeamList? teams = null)
     {
         File.WriteAllText(Path.Combine(_folder, "sample.json"), json);
         return ScenarioReader.Read(_folder, "sample", Leagues, Venues, teams ?? Teams);
     }
 
-    private static ScenarioVenue Venue(string name, string city, params string[] groups) => new(name, city, null, "Somewhere", groups);
+    private static ScenarioVenue Venue(string name, string city, params string[] groups) =>
+        ScenarioTestVenues.Neutral(name, city, null, "Somewhere", Leagues, groups);
 
     private static ScenarioTeamList TeamsPerLeague(int count) => new(Leagues.ToDictionary(
         l => l.Name,

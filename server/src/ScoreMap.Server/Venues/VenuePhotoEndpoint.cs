@@ -11,13 +11,14 @@ public static class VenuePhotoEndpoint
 
     /// <summary>
     /// A venue's photo for a game the browser makes itself, the welcome tour's (ADR-0027), found and
-    /// saved as a real game's is (<see cref="VenuePhotos"/>): <c>GET /api/venue-photo?league=NFL&amp;name=…&amp;city=…</c>,
-    /// the league by its configured name. Answers with the photo, or 204 when the venue has none (or its
+    /// saved as a real game's is (<see cref="VenuePhotos"/>): <c>GET /api/venue-photo?league=NFL&amp;name=…&amp;city=…&amp;id=…</c>,
+    /// the league by its configured name, and the venue's ESPN id (optional) as a real game's scoreboard gives it, so
+    /// ESPN's photo is found as it is for a real game there. Answers with the photo, or 204 when the venue has none (or its
     /// search takes longer than <see cref="Wait"/>), and 404 for a league ScoreMap doesn't show.
     /// </summary>
     public static WebApplication MapVenuePhoto(this WebApplication app)
     {
-        app.MapGet("/api/venue-photo", async (string league, string name, string? city,
+        app.MapGet("/api/venue-photo", async (string league, string name, string? city, string? id,
             IOptions<List<League>> leagues, VenuePhotos photos, CancellationToken cancellationToken) =>
         {
             if (leagues.Value.FirstOrDefault(configured => configured.Name == league) is not { } known)
@@ -26,7 +27,7 @@ public static class VenuePhotoEndpoint
             timeout.CancelAfter(Wait);
             try
             {
-                var photo = await photos.PhotoForAsync(known.Key, new ProviderVenue(name, city, null, null), timeout.Token);
+                var photo = await photos.PhotoForAsync(known.Key, new ProviderVenue(name, city, null, null, id), timeout.Token);
                 return photo is null ? Results.NoContent() : Results.Ok(photo);
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

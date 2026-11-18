@@ -1,5 +1,6 @@
-// worldwide (the default, and what a demo shows): about 60 games at venues on every continent, in a mix
-// of Upcoming, Live and Final. For the globe as a whole: pins everywhere, clusters, every status, without
+// worldwide (the default, and what a demo shows): about 60 games at real venues across North America, Europe
+// and India, each in a league that plays there (ADR-0028), in a mix of Upcoming, Live and Final. For the
+// globe as a whole: pins far apart, clusters, every status, without
 // so many that the globe is overwhelming (worldwide-busy is a busy college Saturday over the US). The
 // written-out games below play out as described with this fill's count; a new count changes how the
 // shared seed plays them, so check ShippedScenarioTests after changing it.
@@ -147,7 +148,7 @@
     {
       "id": "worldwide-golf-final-round",
       "league": "PGA Tour",
-      "note": "Augusta Invitational",
+      "note": "Masters Tournament",
       "field": [
         {
           "name": "Scottie Scheffler",
@@ -257,7 +258,7 @@
       ],
       "venue": {
         "name": "Augusta National Golf Club",
-        "city": "Augusta", "region": "GA", "country": "USA"
+        "city": "Augusta"
       },
       "startsIn": "-78h",
       "status": "live",
@@ -497,7 +498,7 @@
       "note": "SF",
       "home": { "name": "Jannik Sinner", "abbreviation": "J. Sinner", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/ita.png" },
       "away": { "name": "Carlos Alcaraz", "abbreviation": "C. Alcaraz", "logo": "https://a.espncdn.com/i/teamlogos/countries/500/esp.png" },
-      "venue": { "name": "Accor Arena", "city": "Paris" },
+      "venue": { "name": "Rolex Paris Masters", "city": "Paris, France", "court": "Court Central" },
       "startsIn": "-1h05m",
       "status": "live",
       "sets": [

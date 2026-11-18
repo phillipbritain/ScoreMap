@@ -124,7 +124,18 @@ describe('live games', () => {
       justHappened: noneJustHappened,
       cutOffSince: null,
       waking: false,
+      boardClock: null,
     })
+  })
+
+  it("keeps the board's clock as the server last sent it", async () => {
+    const { live, hub } = start()
+    await hub.latest.connect()
+    hub.latest.events.snapshot([])
+
+    hub.latest.events.boardClock({ at: '2026-11-18T05:00:00Z', reads: '2026-08-04T16:00:00Z', times: 32 })
+
+    expect(live.state.boardClock).toEqual({ at: '2026-11-18T05:00:00Z', reads: '2026-08-04T16:00:00Z', times: 32 })
   })
 
   it('applies each change to the games, keeping what the server judged changed', async () => {
@@ -257,7 +268,7 @@ describe('live games', () => {
     expect(live.state.games).toEqual([game('a'), game('b')])
 
     hub.latest.events.snapshot([game('c')])
-    expect(live.state).toEqual({ games: [game('c')], justHappened: noneJustHappened, cutOffSince: null, waking: false })
+    expect(live.state).toEqual({ games: [game('c')], justHappened: noneJustHappened, cutOffSince: null, waking: false, boardClock: null })
   })
 
   it('starts the connection again when it closes, as cut off', async () => {
@@ -347,11 +358,12 @@ describe('live games', () => {
         justHappened: noneJustHappened,
         cutOffSince: 50_000,
         waking: true,
+        boardClock: null,
       })
 
       await hub.latest.connect()
       hub.latest.events.snapshot([game('c')])
-      expect(live.state).toEqual({ games: [game('c')], justHappened: noneJustHappened, cutOffSince: null, waking: false })
+      expect(live.state).toEqual({ games: [game('c')], justHappened: noneJustHappened, cutOffSince: null, waking: false, boardClock: null })
     })
 
     it('shown again before the idle timeout, stays connected', async () => {

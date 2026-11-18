@@ -146,13 +146,14 @@ function cameraFromSaved(saved: unknown): Camera | null {
 /**
  * Reads saved settings field by field, so settings saved by an older version of the app (or
  * damaged ones) keep what is still valid and take first-visit defaults for the rest. Settings the
- * app no longer has, such as the old "Card style" or the rail's old "Live games only", "Show Disrupted
- * games" and "Flames on hot games" switches, are ignored. Colors saved under their old British names (sportColours,
+ * app no longer has, such as the old "Card style" or the rail's old "Live games only" (liveOnly, not
+ * Display Settings' "Only show live games"), "Show Disrupted games" and "Flames on hot games" switches,
+ * are ignored. Colors saved under their old British names (sportColours,
  * leagueColours) load as the new ones, so a returning viewer keeps their picks.
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, mapType, venuePhotos, chosenConferences } = fields
+  const { hiddenLeagues, topEventsOnly, onlyLiveGames, mapType, venuePhotos, chosenConferences } = fields
   const sportColors = fields.sportColors ?? fields.sportColours
   const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
@@ -160,6 +161,7 @@ function fromSaved(saved: unknown): ViewerSettings {
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     topEventsOnly: typeof topEventsOnly === 'boolean' ? topEventsOnly : firstVisitSettings.topEventsOnly,
+    onlyLiveGames: typeof onlyLiveGames === 'boolean' ? onlyLiveGames : firstVisitSettings.onlyLiveGames,
     sportColors: colorsFromSaved(sportColors),
     leagueColors: colorsFromSaved(leagueColors),
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,

@@ -6,6 +6,14 @@ import { logoMark } from '../games/teamLogo'
 import { isHexColor, mixColors, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
 
+/** Whose time a score card's start time is written in: the browser's time zone and locale unless given. */
+export interface Viewer {
+  /** IANA time zone. */
+  timeZone?: string
+  /** BCP 47 locale. */
+  locale?: string
+}
+
 export interface ScoreCardRow {
   /**
    * A side's abbreviation, an entrant's position and short name ("1 K. Larson"), a bout's side's short name
@@ -33,21 +41,25 @@ export interface ScoreCard {
   status: GameStatus
   top: ScoreCardRow
   bottom: ScoreCardRow
-  /** Blank when there is nothing to show, such as before an Upcoming game starts. */
+  /** Its start time before an Upcoming game starts; blank when there is nothing to show. */
   clockLine: string
   /** Flames around its edge when its game is hot. */
   flames: boolean
 }
 
-export function scoreCard(game: Game): ScoreCard {
+/**
+ * A game's score card. Before an Upcoming game starts, its clock line is its start time in the viewer's
+ * time ("1:00 PM"; ADR-0029): `viewer` gives the time zone and locale, the browser's unless given.
+ */
+export function scoreCard(game: Game, viewer: Viewer = {}): ScoreCard {
   const [top, bottom] = cardRows(game)
   return {
     gameId: game.id,
     status: game.status,
     top,
     bottom,
-    clockLine: game.contest.kind === 'bouts' && game.status === 'Upcoming'
-      ? new Date(game.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+    clockLine: game.status === 'Upcoming'
+      ? new Date(game.startTime).toLocaleTimeString(viewer.locale, { timeZone: viewer.timeZone, hour: 'numeric', minute: '2-digit' })
       : progressLine(game, 'short') ?? '',
     flames: game.hot,
   }

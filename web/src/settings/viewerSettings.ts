@@ -11,6 +11,11 @@ export interface ViewerSettings {
    */
   topEventsOnly: boolean
   /**
+   * "Only show live games" in Display Settings: no Upcoming game shows, neither those starting within 30
+   * minutes nor those filling a globe with few games on (ADR-0029). Final games still do.
+   */
+  onlyLiveGames: boolean
+  /**
    * The color the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
    * in it (see gameColor). A sport with none takes the theme's colors.
    */
@@ -43,10 +48,11 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on with all its conferences, Top Events off, no colors picked, the plain map and venue photos on. */
+/** Every league on with all its conferences, Top Events and Only show live games off, no colors picked, the plain map and venue photos on. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
+  onlyLiveGames: false,
   sportColors: {},
   leagueColors: {},
   mapType: 'plain',

@@ -16,8 +16,11 @@ namespace ScoreMap.Server.Live;
 /// </summary>
 public sealed partial class RunningGameBoard : BackgroundService
 {
-    /// <summary>An Upcoming game gets its pin this long before its start (ADR-0021).</summary>
-    public static readonly TimeSpan UpcomingWindow = TimeSpan.FromMinutes(30);
+    /// <summary>
+    /// An Upcoming game is sent this long before its start, so browsers can fill a globe with few games
+    /// on with the soonest to start (ADR-0029); a browser shows one sooner only then.
+    /// </summary>
+    public static readonly TimeSpan UpcomingWindow = TimeSpan.FromHours(6);
 
     /// <summary>A Final game keeps its pin this long after its end (ADR-0021).</summary>
     public static readonly TimeSpan FinalWindow = TimeSpan.FromMinutes(5);
@@ -120,8 +123,30 @@ public sealed partial class RunningGameBoard : BackgroundService
     private async Task<ScenarioListing> PublishScenarioAsync(CancellationToken cancellationToken)
     {
         var listing = ListScenario();
-        await _hub.Clients.Group(_connections.Group).SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
+        var viewers = _hub.Clients.Group(_connections.Group);
+        await viewers.SendAsync(GamesHub.ScenarioChangedMessage, listing, cancellationToken);
+        await viewers.SendAsync(GamesHub.BoardClockMessage, Clock(), cancellationToken);
         return listing;
+    }
+
+    /// <summary>
+    /// The board's clock as browsers are sent it: the scenario clock at its speed while a scenario runs,
+    /// here or in a demo, else the real time.
+    /// </summary>
+    private BoardClock Clock()
+    {
+        if (_switcher is { } switcher)
+        {
+            var anchor = switcher.Clock;
+            return new(anchor.At, anchor.Reads, switcher.Running == ScenarioSwitcher.RealGames ? 1 : switcher.Speed.Times);
+        }
+        if (_board.GameClock is ScenarioClock scenario)
+        {
+            var anchor = scenario.Anchor;
+            return new(anchor.At, anchor.Reads, scenario.Speed.Times);
+        }
+        var now = _clock.GetUtcNow();
+        return new(now, now, 1);
     }
 
     private void SetPolling(PollingOptions polling) =>
@@ -161,7 +186,9 @@ public sealed partial class RunningGameBoard : BackgroundService
             await _lock.WaitAsync(cancellationToken);
             try
             {
-                await _hub.Clients.Client(connectionId).SendAsync(GamesHub.SnapshotMessage, Games, cancellationToken);
+                var viewer = _hub.Clients.Client(connectionId);
+                await viewer.SendAsync(GamesHub.SnapshotMessage, Games, cancellationToken);
+                await viewer.SendAsync(GamesHub.BoardClockMessage, Clock(), cancellationToken);
                 await _hub.Groups.AddToGroupAsync(connectionId, _connections.Group, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
                 _connections.Connected(connectionId);

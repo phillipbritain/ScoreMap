@@ -3633,3 +3633,123 @@ body {
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
   }
 }
+
+/* PROTOTYPE, throwaway: a mark on each score card where its trail meets it, by ?anchorProto= (see
+   globe/trailAnchorPrototype.ts). Not for main. */
+.anchor-proto-bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1000;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: 12px/1.2 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+  max-width: calc(100vw - 120px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.anchor-proto-bar button {
+  font: inherit;
+  padding: 2px 8px;
+  border: 1px solid #999;
+  border-radius: 999px;
+  background: #eee;
+  cursor: pointer;
+}
+.anchor-proto-bar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.score-card__anchor {
+  display: none;
+  position: absolute;
+  left: calc(var(--anchor-x) - var(--shape-border-width-thin));
+  top: calc(var(--anchor-y) - var(--shape-border-width-thin));
+  translate: -50% -50%;
+  pointer-events: none;
+  transition: scale 120ms ease-out;
+}
+.score-card[data-anchor-side] > .score-card__anchor {
+  display: block;
+}
+[data-anchor-proto='off'] .score-card__anchor {
+  display: none !important;
+}
+/* Picked out with the card (hovered or selected), as its trail is bolder then. */
+.score-card--selected > .score-card__anchor {
+  scale: 1.35;
+}
+@media (hover: hover) {
+  .score-card:hover > .score-card__anchor {
+    scale: 1.35;
+  }
+}
+
+/* A dot in the trail's color, rimmed in the card's fill so it reads on the card's own edge. */
+[data-anchor-proto='dot'] .score-card__anchor {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--game-color);
+  box-shadow:
+    0 0 0 1.5px var(--score-card-fill),
+    0 0 6px 1px color-mix(in srgb, var(--game-color) 60%, transparent);
+}
+
+/* A ring around a small dot, as the trail's venue end is drawn: the trail runs ring to ring. */
+[data-anchor-proto='ring'] .score-card__anchor {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--game-color);
+  box-shadow:
+    0 0 0 2px var(--score-card-fill),
+    0 0 0 3.25px var(--game-color);
+}
+
+/* A small tab out of the card's edge where the trail leaves, pointing the way it goes. */
+[data-anchor-proto='tab'] .score-card__anchor {
+  --tab-across: 12px;
+  --tab-out: 6px;
+  width: var(--tab-across);
+  height: var(--tab-out);
+  background: var(--game-color);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+[data-anchor-proto='tab'] [data-anchor-side='bottom'] > .score-card__anchor {
+  translate: -50% 0;
+}
+[data-anchor-proto='tab'] [data-anchor-side='top'] > .score-card__anchor {
+  translate: -50% -100%;
+  rotate: 180deg;
+}
+[data-anchor-proto='tab'] [data-anchor-side='left'] > .score-card__anchor {
+  rotate: 90deg;
+  translate: calc(-50% - var(--tab-out) / 2) -50%;
+}
+[data-anchor-proto='tab'] [data-anchor-side='right'] > .score-card__anchor {
+  rotate: -90deg;
+  translate: calc(-50% + var(--tab-out) / 2) -50%;
+}
+
+/* The card's edge lit in the trail's color for a short way either side of where it leaves. */
+[data-anchor-proto='bar'] .score-card__anchor {
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--game-color);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--game-color) 70%, transparent);
+}
+[data-anchor-proto='bar'] :is([data-anchor-side='left'], [data-anchor-side='right']) > .score-card__anchor {
+  width: 3px;
+  height: 18px;
+}

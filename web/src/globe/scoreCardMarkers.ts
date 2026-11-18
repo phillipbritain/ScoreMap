@@ -153,11 +153,6 @@ export class ScoreCardMarkers {
     this.sync()
   }
 
-  /** Where a game's card is on the page, if it has one. */
-  cardOnPage(gameId: string): DOMRect | null {
-    return this.placed.get(gameId)?.element.getBoundingClientRect() ?? null
-  }
-
   /**
    * The cards on the page now that a viewer can see, each measured now: those whose games are counted
    * in a card cluster are left out. What's given is for pointing at a card (see ShownScoreCard).

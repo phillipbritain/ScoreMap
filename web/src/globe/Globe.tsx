@@ -32,8 +32,8 @@ interface GlobeProps {
    */
   justHappened: JustHappened
   /**
-   * The game whose panel is open: its pin is highlighted, and the globe lifts it clear of the panel
-   * if the panel would cover it.
+   * The game whose panel is open: its pin is highlighted. One picked from the Games list is centered
+   * above the panel (see GlobeMap.pickGame).
    */
   selectedGameId: string | null
   /** The game panel's element, there once the panel has opened. */
@@ -127,9 +127,9 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, games,
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
-  // In this order, so the selected game is among the games shown when the globe lifts it clear of
-  // the panel. The panel opens in the same render, so it's on the page by now, though only starting to
-  // slide in: it's measured where it comes to rest (see panelBox).
+  // In this order, so a game picked from the Games list is among the games shown when the globe centers
+  // it above the panel. The panel opens in the same render, so it's on the page by now, though only
+  // starting to slide in: it's measured where it comes to rest (see panelBox).
   useEffect(() => globe.current?.show(games, justHappened), [games, justHappened])
   useEffect(
     () => globe.current?.select(selectedGameId, panel.current && panelBox(panel.current)),

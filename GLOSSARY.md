@@ -57,7 +57,7 @@ The marker for one game on the globe, placed at the game's venue. A game whose v
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
+At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
@@ -193,11 +193,15 @@ _Avoid_: Transparency, opacity (for glass), blur
 
 ### Game status
 
-ScoreMap is mostly about games happening now (ADR-0021): a game gets a pin only from shortly before it starts until shortly after it finishes, and not at all while Disrupted.
+ScoreMap is mostly about games happening now (ADR-0021): a game gets a pin from shortly before it starts until shortly after it finishes, and not at all while Disrupted, but for fill-in games on a quiet globe (ADR-0029).
 
 **Upcoming**:
-A game that hasn't started yet but starts within 30 minutes, so it gets a pin.
+A game that hasn't started yet. One starting within 30 minutes is on now, so it gets a pin; one further off gets a pin only as a fill-in game.
 _Avoid_: Scheduled, pre-game
+
+**Fill-in game**:
+An Upcoming game more than 30 minutes from its start, shown because fewer than 12 games the viewer's settings show are on now across the globe: the soonest-starting fill in, to make 12, each starting within 6 hours and on the viewer's own day. None shows with "Only show live games" on, which hides every Upcoming game.
+_Avoid_: Upcoming card, filler, placeholder
 
 **Live**:
 A game that has started and not yet finished, including breaks such as halftime, intermissions or a golf tournament's nights between rounds, and delays such as a rain delay.

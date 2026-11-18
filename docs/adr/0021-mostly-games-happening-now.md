@@ -1,5 +1,7 @@
 # Mostly games happening now
 
+Its 30-minute Upcoming window is superseded by ADR-0029: Upcoming games fill a globe with few games on.
+
 ScoreMap is for seeing games as they happen, and pins for games not on (hours before a start, hours after a finish, or postponed, suspended or canceled) cluttered the globe around the Live ones. Viewers could hide them with the rail's "Live games only" and "Show Disrupted games" switches, but the owner wants the app itself to be about games happening now. So the server shows a game from 30 minutes before its start (the Upcoming window, which was 3 hours) until 5 minutes after it finishes (the Final window, which was 2 hours), and never shows a Disrupted game: not on the globe, nor in the Games list. The two switches, and the viewer settings behind them, are gone.
 
 ## Consequences

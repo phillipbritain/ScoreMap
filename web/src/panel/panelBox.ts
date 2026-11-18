@@ -2,8 +2,8 @@ import type { ScreenBox } from '../globe/panelClearance'
 
 /**
  * Where the game panel sits on the page once it has opened: its box with no slide (see game-panel-in),
- * though it may still be sliding in. Measured as it opens, so the globe can bring the selected game clear
- * of it while it slides in, its box on screen would still be below the screen's foot.
+ * though it may still be sliding in. Measured as it opens, so the globe can center a game picked from the
+ * Games list above it while it slides in, its box on screen would still be below the screen's foot.
  */
 export function panelBox(panel: HTMLElement): ScreenBox {
   const parent = panel.offsetParent

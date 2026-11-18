@@ -16,9 +16,8 @@ import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
 import { cityNameBox, type ScreenBox } from './cityNameBox'
 import { kmApart, type GlobePoint } from './geo'
+import { cardClusterReach } from './cardLayoutLayers'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
-import { widestClusterReach } from './pinLayers'
-import { hasCard } from './zoomLevels'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
 // globe's own, from the city list: see cityNameLayers), towns, villages and other small places.
@@ -146,7 +145,7 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
     }
     const named = placeName(city, 'city', theme)
     // Faded out near the horizon (see fadeNearHorizon), where they'd crowd into a pile: all but a
-    // game's city naming a game with a score card (see PlaceNames.namesACard).
+    // game's city (see PlaceNames.namesAGame).
     if (named.type === 'symbol') named.paint = { ...named.paint, 'text-opacity': fadedByHorizon() }
     const placed = cityNamePlacement(named, theme)
     if (kind !== 'card' || placed.type !== 'symbol') return placed
@@ -176,9 +175,9 @@ const cityNameSides = [
 /**
  * Where a city's name may go around its dot, as MapLibre's anchors and offsets (in ems), in the order
  * tried: below the dot by preference, clear of its own game's score card above the venue; if a card or
- * cluster covers that spot (see cardLayoutLayers' cardFootprint and pinLayers' clusterFootprintLayout),
- * another side; and if a cluster sits on the dot itself, covering every near side, each side again
- * further out, clear of the widest cluster at the smallest size names are written in (see
+ * card cluster covers that spot (see cardLayoutLayers' cardFootprint and pinLayers' clusterFootprintLayout),
+ * another side; and if a card cluster sits on the dot itself, covering every near side, each side again
+ * further out, clear of the card cluster at the smallest size names are written in (see
  * clusterClearOffset).
  */
 export function cityNamePositions(theme: Theme): ['literal', (string | number[])[]] {
@@ -189,13 +188,13 @@ export function cityNamePositions(theme: Theme): ['literal', (string | number[])
 }
 
 /**
- * How far a city's name sits from its dot, in ems, to clear a cluster on it: as far as the widest
+ * How far a city's name sits from its dot, in ems, to clear a card cluster on it: as far as a card
  * cluster reaches, outline and all, past its footprint's pixel, with room for the name's outline, at
  * the smallest size city names are written in.
  */
 export function clusterClearOffset(theme: Theme): number {
   const smallest = Math.min(...zoomStops(theme.components.PlaceNames.city.size).map(([, size]) => size))
-  const clear = widestClusterReach(theme) + 1 + theme.components.PlaceNames.city.outline.width
+  const clear = cardClusterReach(theme) + 1 + theme.components.PlaceNames.city.outline.width
   return Math.ceil((clear / smallest) * 100) / 100
 }
 
@@ -256,11 +255,11 @@ export interface PlaceNames {
   /** Names the cities for the games shown by these settings from now on. */
   setSettings(settings: CityLabelSettings): void
   /**
-   * Whether the city name source's feature with this id is a game's city with a game in reach that
-   * has a score card, looking at `center` with cards reaching `radius` (see hasCard): a card is always
-   * shown with its city's name, so the name doesn't fade near the horizon while the card shows.
+   * Whether the city name source's feature with this id is a game's city: every game on screen has a
+   * score card (or is in a card cluster, or shows as its small pin), and a card is always shown with
+   * its city's name, so the name doesn't fade near the horizon.
    */
-  namesACard(id: string | number, center: GlobePoint, radius: number): boolean
+  namesAGame(id: string | number): boolean
   /**
    * Always writes the names of the games' cities with a score card on screen, at these venues; the
    * other games' cities give way where there's no room, to clusters and other names (see
@@ -328,8 +327,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       if (now.size === carded.size && [...now].every((id) => carded.has(id))) return
       showLabels()
     },
-    namesACard(id, center, radius) {
-      return typeof id === 'number' && (namedVenues[id]?.some((venue) => hasCard(center, venue, radius)) ?? false)
+    namesAGame(id) {
+      return typeof id === 'number' && (namedVenues[id]?.length ?? 0) > 0
     },
     nameBoxes() {
       const zoom = map.getZoom()

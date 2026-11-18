@@ -57,7 +57,7 @@ The marker for one game on the globe, placed at the game's venue. A game whose v
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-At any zoom, the panel a pin near the center of the view shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen has no card, but the selected game. Farther out, pins stay small, so cards don't crowd the globe's rim. Zoomed all the way out, only the games about a region around the center have cards, so they don't come from every region at once; zoomed in, cards reach farther. A game picked from the list keeps its card as it would zoomed in.
+At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
@@ -65,12 +65,8 @@ The line from a score card to its game's venue, ending at a ringed venue dot. Dr
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
-Games shown as one marker because there's no room to show them apart: a pin cluster or a card cluster, with a count, or a venue cluster. It splits apart as you zoom in. A card cluster zooms in until it does when selected; a pin cluster, always far from the center of the view, turns the globe to it instead, and its games get score cards.
+Games shown as one marker because there's no room to show them apart: a card cluster, with a count, or a venue cluster. It splits apart as you zoom in. A card cluster zooms in until it does when selected.
 _Avoid_: Crowd, bubble, group, stack, pile
-
-**Pin cluster**:
-A cluster of small pins close enough that they, or the pin clusters they'd be in, would overlap, far from the center of the view. Pin clusters that would overlap combine into a larger one. MapLibre clusters them (ADR-0016).
-_Avoid_: Cluster (when it matters that it's pins)
 
 **Card cluster**:
 A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most 40 cards (25 on a phone), for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), and the selected game's. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.

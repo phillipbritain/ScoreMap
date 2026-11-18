@@ -4,7 +4,7 @@ import { statusKey, type Theme } from '../theme/theme'
 
 /**
  * How a game's status shows on the globe. Live stands out most, Upcoming is dimmer and Final fades,
- * alike on small pins, score cards, pin clusters and card clusters. Each
+ * alike on small pins, score cards and card clusters. Each
  * status's look comes from the theme, gathered here from where it sits there: its color from the
  * palette, the small pin's core and glow from the Pin component, a cluster's opacity from Cluster and a
  * score card's fade and glow from ScoreCard. What isn't look stays here: which status draws on top, the
@@ -54,7 +54,7 @@ export function smallPinWidth(theme: Theme): number {
 export const statusProminence: readonly GameStatus[] = ['Live', 'Upcoming', 'Final']
 
 /**
- * The status a group of games shows as (a pin cluster or a card cluster): the most prominent
+ * The status a group of games shows as (a card cluster or venue cluster): the most prominent
  * among them, so Final only when all its games are.
  */
 export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
@@ -63,33 +63,12 @@ export function groupStatus(statuses: readonly GameStatus[]): GameStatus {
 
 /** The status a feature has of its own: a pin's game's, a trail's game's, or a card cluster's (see groupStatus). */
 const ownStatus: ExpressionSpecification = ['get', 'status']
-const countOf = (s: GameStatus): ExpressionSpecification => ['+', ['case', ['==', ownStatus, s], 1, 0]]
-
-/** The counts of each status the pin source keeps for a pin cluster, which pinClusterStatus reads. */
-export const pinClusterStatusCounts = Object.fromEntries(
-  statusProminence.slice(0, -1).map((s) => [s.toLowerCase(), countOf(s)]),
-) as Record<string, ExpressionSpecification>
-
-/** groupStatus as a style expression, for a pin cluster from its counts (see pinClusterStatusCounts). */
-export const pinClusterStatus: ExpressionSpecification = [
-  'case',
-  ...statusProminence.slice(0, -1).flatMap((s) => [['>', ['get', s.toLowerCase()], 0], s]),
-  'Final',
-] as ExpressionSpecification
-
-/**
- * A style value from the look, in this theme, of the status a feature shows as: its own (ownStatus),
- * or a pin cluster's from its counts (pinClusterStatus).
- */
-export function byStatus(
-  theme: Theme,
-  status: 'own' | 'pinCluster',
-  value: (look: StatusLook) => number | string | ExpressionSpecification,
-): ExpressionSpecification {
+/** A style value from the look, in this theme, of the status a feature shows as (ownStatus). */
+export function byStatus(theme: Theme, value: (look: StatusLook) => number | string | ExpressionSpecification): ExpressionSpecification {
   // A match needs a fallback; every status has its own arm, so it's never used.
   return [
     'match',
-    status === 'own' ? ownStatus : pinClusterStatus,
+    ownStatus,
     ...statusProminence.flatMap((s) => [s, value(statusLook(theme, s))]),
     value(statusLook(theme, 'Final')),
   ] as ExpressionSpecification

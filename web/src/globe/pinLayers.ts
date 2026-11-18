@@ -1,21 +1,13 @@
-import type {
-  CircleLayerSpecification,
-  ExpressionSpecification,
-  GeoJSONSourceSpecification,
-  SymbolLayerSpecification,
-} from 'maplibre-gl'
+import type { CircleLayerSpecification, ExpressionSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
-import { clusterColor, pinClusterSharedColor } from './clusterColor'
 import { flameImage } from './flames'
-import { fadedByHorizon } from './horizon'
 import { smallPinReach } from './panelClearance'
-import { byStatus, pinClusterStatusCounts, smallPinWidth } from './statusLook'
-import { clusterMaxZoom } from './zoomLevels'
+import { byStatus, smallPinWidth } from './statusLook'
 
 /**
  * The source of every game shown, never clustered, for score cards to be read from (see
- * ScoreCardMarkers.sync). It draws nothing itself: a game far from the center of the view shows as an
- * outer pin instead.
+ * ScoreCardMarkers.sync). It draws nothing itself: a game shows as its score card, in a card cluster,
+ * or as its small pin, which the card layout draws (see cardLayoutLayers).
  */
 export const pinSource = 'pins'
 
@@ -31,63 +23,25 @@ export const cardPinsLayerSpec: CircleLayerSpecification = {
 }
 
 /**
- * The source of games far from the center of the view, which show as small pins rather than score
- * cards (see hasCard), clustered among themselves. GlobeMap keeps it up to date as the globe turns.
- */
-export const outerPinSource = 'outer-pins'
-export const outerPinClusterLayer = 'outer-pin-clusters'
-export const outerSmallPinLayer = 'outer-pins'
-
-/**
- * A set of small pins and pin clusters: the outer games', or those of games with no room for a card
- * (see cardlessPins). Each has its own source and layers, drawn alike, and fades out near the horizon
- * (see fadeNearHorizon).
+ * A set of small pins in a source shared with other features: those of games with no room for a card
+ * (see cardlessPins), each set with its own layers.
  */
 export interface PinSet {
   source: string
   /** Before each of the set's layer ids. */
   prefix: string
-  /** Which of the source's features are small pins, if not all that aren't pin clusters. */
-  only?: ExpressionSpecification
+  /** Which of the source's features are small pins. */
+  only: ExpressionSpecification
 }
-
-/** The outer games' pins. */
-export const outerPins: PinSet = { source: outerPinSource, prefix: 'outer-' }
 
 // A pin set's layers' ids, after its prefix.
-const pinClusterLayer = 'pin-clusters'
 const smallPinLayer = 'pins'
 const selectedPinLayer = 'pin-selected'
-
-/** The set's small pins: its features that aren't pin clusters, as many as it says. */
-function smallPinsOf({ only }: PinSet): ExpressionSpecification {
-  const single: ExpressionSpecification = ['!', ['has', 'point_count']]
-  return only ? ['all', single, only] : single
-}
 
 /** A layer in a pin set: its id and source. */
 function inSet({ source, prefix }: PinSet, id: string) {
   return { id: prefix + id, source }
 }
-
-/** A source of small pins, clustering them this far apart (see pinClusterRadius). */
-export function pinSourceSpec(data: GeoJSONSourceSpecification['data'], clusterRadius: number): GeoJSONSourceSpecification {
-  return {
-    type: 'geojson',
-    data,
-    cluster: true,
-    clusterRadius,
-    clusterMaxZoom,
-    // Each pin by its game, each pin cluster by its cluster_id, for fading them near the horizon (see fadeNearHorizon).
-    promoteId: 'gameId',
-    // Counts by status, for the status a pin cluster shows as (see statusLook's pinClusterStatus), the
-    // color its games share, for its color (see clusterColor), and how many show flames.
-    clusterProperties: { ...pinClusterStatusCounts, ...pinClusterSharedColor, [flameGamesProperty]: ['+', ['case', ['get', 'flames'], 1, 0]] },
-  }
-}
-
-/** How many of a pin cluster's games are hot, which the pin source counts. */
-const flameGamesProperty = 'flameGames'
 
 /**
  * Fire surrounding a cluster, in fire's colors (see flameImage), centered behind its disc.
@@ -106,81 +60,11 @@ export function clusterFlameImage(theme: Theme, reach: number): string {
   return flameImage(theme, theme.components.Cluster.flame, reach)
 }
 
-/**
- * Pin clusters: discs outlined and lit in their games' color (see clusterColor), with the count in
- * it too (see the theme's cluster), the disc, outline and count faded as their status's clusters are,
- * as card clusters are (see cardLayoutLayers). One holding a game that shows flames has fire around its
- * outline.
- */
-export function pinClusterLayers(
-  theme: Theme,
-  set: PinSet,
-): [CircleLayerSpecification, SymbolLayerSpecification, CircleLayerSpecification, SymbolLayerSpecification] {
-  const cluster = theme.components.Cluster
-  // Faded out near the horizon (see fadeNearHorizon), as small pins are.
-  const clusterOpacity = fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.clusterOpacity))
-  return [
-    {
-      ...inSet(set, 'pin-cluster-glows'),
-      type: 'circle',
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-radius': byCount(cluster.glowRadius),
-        'circle-color': clusterColor(theme),
-        'circle-blur': 1,
-        'circle-opacity': fadedByHorizon(byStatus(theme, 'pinCluster', (look) => look.glow.opacity * cluster.glowOpacity)),
-      },
-    },
-    {
-      ...inSet(set, 'pin-cluster-flames'),
-      type: 'symbol',
-      filter: ['all', ['has', 'point_count'], ['>', ['get', flameGamesProperty], 0]],
-      layout: clusterFlameLayout([
-        'step',
-        ['get', 'point_count'],
-        clusterFlameImage(theme, clusterReach(theme, 1)),
-        clusterCounts.some,
-        clusterFlameImage(theme, clusterReach(theme, clusterCounts.some)),
-        clusterCounts.many,
-        clusterFlameImage(theme, clusterReach(theme, clusterCounts.many)),
-      ]),
-      paint: { 'icon-opacity': clusterOpacity },
-    },
-    {
-      ...inSet(set, pinClusterLayer),
-      type: 'circle',
-      filter: ['has', 'point_count'],
-      layout: { 'circle-sort-key': byStatus(theme, 'pinCluster', (look) => look.stacking) },
-      paint: {
-        'circle-radius': byCount(cluster.radius),
-        'circle-color': cluster.fill,
-        'circle-opacity': clusterOpacity,
-        'circle-stroke-width': cluster.outlineWidth,
-        'circle-stroke-color': clusterColor(theme),
-        'circle-stroke-opacity': clusterOpacity,
-      },
-    },
-    {
-      ...inSet(set, 'pin-cluster-counts'),
-      type: 'symbol',
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': [theme.components.Cluster.count.font.name],
-        'text-size': theme.components.Cluster.count.size,
-        'text-allow-overlap': true,
-      },
-      paint: { 'text-color': clusterColor(theme), 'text-opacity': clusterOpacity },
-    },
-  ]
-}
-
 /** A small pin's game's color (see gameColor). */
 const gameColor: ExpressionSpecification = ['get', 'color']
 
 /**
- * Small pins for single games, each a bright core in a soft glow (see StatusLook): those far from
- * the center of the view, as score cards show near it (see scoreCardMarkers), and those with no room
+ * Small pins for single games, each a bright core in a soft glow (see StatusLook): those with no room
  * for a card (see cardlessPins). The glows are a layer beneath the cores, so a core is never dimmed
  * by a neighbor's glow. Glow, ring and core are in the game's color, but for a core the theme gives
  * a status of its own, apart from the status's color (Live's paler core, say): color stands for the
@@ -195,44 +79,40 @@ export function smallPinLayers(
     {
       ...inSet(set, 'pin-glows'),
       type: 'circle',
-      filter: smallPinsOf(set),
+      filter: set.only,
       paint: {
-        'circle-radius': byStatus(theme, 'own', (look) => look.glow.radius),
+        'circle-radius': byStatus(theme, (look) => look.glow.radius),
         'circle-color': gameColor,
         'circle-blur': 1,
-        'circle-opacity': fadedByHorizon(byStatus(theme, 'own', (look) => look.glow.opacity)),
+        'circle-opacity': byStatus(theme, (look) => look.glow.opacity),
       },
     },
     {
       ...inSet(set, 'pin-flames'),
       type: 'symbol',
-      filter: ['all', smallPinsOf(set), ['==', ['get', 'flames'], true]],
+      filter: ['all', set.only, ['==', ['get', 'flames'], true]],
       layout: {
-        'icon-image': byStatus(theme, 'own', (look) => flameImage(theme, theme.components.Pin.flame, look.core.radius + look.core.ring)),
+        'icon-image': byStatus(theme, (look) => flameImage(theme, theme.components.Pin.flame, look.core.radius + look.core.ring)),
         'icon-anchor': 'center',
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
       },
-      paint: { 'icon-opacity': fadedByHorizon() },
     },
     {
       ...inSet(set, smallPinLayer),
       type: 'circle',
-      filter: smallPinsOf(set),
-      layout: { 'circle-sort-key': byStatus(theme, 'own', (look) => look.stacking) },
+      filter: set.only,
+      layout: { 'circle-sort-key': byStatus(theme, (look) => look.stacking) },
       paint: {
-        'circle-radius': byStatus(theme, 'own', (look) => look.core.radius),
-        'circle-color': byStatus(theme, 'own', (look) => (look.core.color === look.color ? gameColor : look.core.color)),
-        'circle-opacity': fadedByHorizon(byStatus(theme, 'own', (look) => look.core.opacity)),
-        'circle-stroke-width': byStatus(theme, 'own', (look) => look.core.ring),
+        'circle-radius': byStatus(theme, (look) => look.core.radius),
+        'circle-color': byStatus(theme, (look) => (look.core.color === look.color ? gameColor : look.core.color)),
+        'circle-opacity': byStatus(theme, (look) => look.core.opacity),
+        'circle-stroke-width': byStatus(theme, (look) => look.core.ring),
         'circle-stroke-color': gameColor,
-        'circle-stroke-opacity': fadedByHorizon(),
       },
     },
   ]
 }
-
-export const outerSelectedPinLayer = 'outer-pin-selected'
 
 /**
  * A ring around the selected game's small pin, in the theme's selection color and width, reaching as
@@ -248,47 +128,13 @@ export function selectedPinLayerSpec(theme: Theme, gameId: string | null, set: P
       'circle-color': 'transparent',
       'circle-stroke-width': theme.components.Selection.width,
       'circle-stroke-color': theme.components.Selection.color,
-      'circle-stroke-opacity': fadedByHorizon(),
     },
   }
 }
 
-/** Matches only the selected game's small pin (nothing when no game is selected, or while it's in a pin cluster). */
+/** Matches only the selected game's small pin (nothing when no game is selected). */
 export function selectedPin(gameId: string | null): ExpressionSpecification {
-  return ['all', ['!', ['has', 'point_count']], ['==', ['get', 'gameId'], gameId ?? '']]
-}
-
-/**
- * How far apart on screen small pins and pin clusters must be not to overlap: as far as the two widest
- * reach together, the widest small pin (see smallPinWidth) or the widest pin cluster, outline and all.
- * MapLibre clusters with one radius for pins and pin clusters alike, so pins are clustered this far
- * apart, though two small pins alone could come closer. MapLibre measures on a flat map, not the
- * globe, so pins may still overlap a little far from the equator or near the globe's edge.
- */
-export function pinClusterSpacing(theme: Theme): number {
-  const { radius, outlineWidth } = theme.components.Cluster
-  return Math.ceil(Math.max(smallPinWidth(theme), 2 * (Math.max(radius.few, radius.some, radius.many) + outlineWidth)))
-}
-
-/** How many games a cluster holds from which it's of some, and of many. */
-const clusterCounts = { some: 5, many: 15 }
-
-/**
- * A cluster's size by how many games are in it, read from a feature's count property: a few (up to
- * 4), some (up to 14), or many.
- */
-export function byCount(
-  { few, some, many }: Theme['components']['Cluster']['radius'],
-  count = 'point_count',
-): ExpressionSpecification {
-  return ['step', ['get', count], few, clusterCounts.some, some, clusterCounts.many, many]
-}
-
-/** How far a cluster of this many games reaches from its middle, outline and all (drawn outside its radius). */
-export function clusterReach(theme: Theme, count: number): number {
-  const { radius, outlineWidth } = theme.components.Cluster
-  const size = count < clusterCounts.some ? radius.few : count < clusterCounts.many ? radius.some : radius.many
-  return size + outlineWidth
+  return ['==', ['get', 'gameId'], gameId ?? '']
 }
 
 /**
@@ -296,7 +142,7 @@ export function clusterReach(theme: Theme, count: number): number {
  * smallPinWidth), with a pixel's margin each side. Circle layers take no part in label placement, so
  * these give place names something to avoid: a name that would fall under a pin moves to another side
  * of its dot (see placeNames' city names), or is left out if no side is free. Score cards have theirs
- * too (see cardLayoutLayers' cardFootprint), and clusters theirs (see clusterFootprintLayout).
+ * too (see cardLayoutLayers' cardFootprint), and card clusters theirs (see clusterFootprintLayout).
  * Footprints draw nothing.
  */
 export function pinFootprint(theme: Theme): { image: string; size: number } {
@@ -304,19 +150,18 @@ export function pinFootprint(theme: Theme): { image: string; size: number } {
 }
 
 /**
- * The image of a cluster's footprint, scaled to each cluster's size (see clusterFootprintLayout): one
- * size whatever the theme, so it needn't change with it.
+ * The image of a card cluster's footprint, scaled to the cluster's size (see clusterFootprintLayout):
+ * one size whatever the theme, so it needn't change with it.
  */
 export const clusterFootprint = { image: 'cluster-footprint', size: 32 }
 
 /**
- * An invisible stand-in for a cluster, disc and outline with a pixel's margin each side, `diameter`
- * across (in pixels, or an expression by the cluster's count, see clusterFootprintSizes), placed whatever
- * else is there. On top of every name, so city names keep clear of clusters, keeping their circles and
+ * An invisible stand-in for a card cluster, disc and outline with a pixel's margin each side,
+ * `diameter` pixels across, placed whatever else is there. On top of every name, so city names keep clear of clusters, keeping their circles and
  * counts readable: a city's name moves to another side of its dot, or is left out if no side is free,
  * but a game's city is still named below its dot if no side is free (see placeNames' city names).
  */
-export function clusterFootprintLayout(diameter: number | ExpressionSpecification): SymbolLayerSpecification['layout'] {
+export function clusterFootprintLayout(diameter: number): SymbolLayerSpecification['layout'] {
   return {
     'icon-image': clusterFootprint.image,
     'icon-size': ['/', diameter, clusterFootprint.size],
@@ -324,28 +169,8 @@ export function clusterFootprintLayout(diameter: number | ExpressionSpecificatio
   }
 }
 
-/** How far the widest cluster reaches from its middle, outline and all. */
-export const widestClusterReach = (theme: Theme): number => clusterReach(theme, clusterCounts.many)
-
 /** How far across a cluster's footprint is for clusters that reach this far (see clusterFootprintLayout). */
 export const clusterFootprintAcross = (reach: number): number => 2 * reach + 2
-
-/** How far across each size of pin cluster's footprint is (see clusterFootprintLayout). */
-export function clusterFootprintSizes(theme: Theme): Theme['components']['Cluster']['radius'] {
-  const across = (count: number) => clusterFootprintAcross(clusterReach(theme, count))
-  return { few: across(1), some: across(clusterCounts.some), many: across(clusterCounts.many) }
-}
-
-/** Each pin cluster in a pin set (see clusterFootprintLayout). */
-export function pinClusterFootprintLayerSpec(theme: Theme, set: PinSet): SymbolLayerSpecification {
-  return {
-    ...inSet(set, 'pin-cluster-footprints'),
-    type: 'symbol',
-    filter: ['has', 'point_count'],
-    layout: clusterFootprintLayout(byCount(clusterFootprintSizes(theme))),
-    paint: { 'icon-opacity': 0 },
-  }
-}
 
 const pinFootprintImage = 'pin-footprint'
 
@@ -354,7 +179,7 @@ export function pinFootprintLayerSpec(set: PinSet): SymbolLayerSpecification {
   return {
     ...inSet(set, 'pin-footprints'),
     type: 'symbol',
-    filter: smallPinsOf(set),
+    filter: set.only,
     layout: { 'icon-image': pinFootprintImage, 'icon-allow-overlap': true },
     paint: { 'icon-opacity': 0 },
   }

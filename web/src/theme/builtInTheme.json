@@ -95,8 +95,8 @@
     },
     "Cluster": {
       "fill": "primary.dark",
-      "radius": { "few": 11, "some": 13, "many": 16 },
-      "glowRadius": { "few": 22, "some": 26, "many": 32 },
+      "radius": 13,
+      "glowRadius": 26,
       "outlineWidth": 1.5,
       "glowOpacity": 0.6,
       "count": { "font": "Open Sans Bold", "size": "caption" },

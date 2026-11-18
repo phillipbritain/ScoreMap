@@ -1,11 +1,11 @@
 import { Marker, type Map as MapLibreMap } from 'maplibre-gl'
-import { fadedOut } from './horizon'
+import { isBehindGlobe } from './horizon'
 import type { PinAnimation } from './pinAnimation'
 
 /**
  * Plays an animation over a small pin or a cluster, in the color of the game it's for (see gameColor). They're drawn by map layers, which can't run
  * CSS animations, so a short-lived HTML marker draws expanding rings over them and then removes itself.
- * Nothing plays where the pins have faded out near the horizon or are hidden beyond it (see fadeNearHorizon).
+ * Nothing plays over a place hidden behind the globe.
  */
 export function pulse(
   map: MapLibreMap,
@@ -14,7 +14,7 @@ export function pulse(
   animation: PinAnimation,
   over: 'pin' | 'cluster',
 ): void {
-  if (fadedOut(map, lngLat)) return
+  if (isBehindGlobe(map, lngLat)) return
   const element = document.createElement('div')
   element.style.pointerEvents = 'none'
   const ring = document.createElement('div')

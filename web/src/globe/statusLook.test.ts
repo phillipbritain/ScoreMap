@@ -1,12 +1,9 @@
 import { createExpression, type ExpressionSpecification } from '@maplibre/maplibre-gl-style-spec'
 import { describe, expect, it } from 'vitest'
-import type { GameStatus } from '../games/game'
 import builtIn from '../theme/builtInTheme.json'
 import { resolveTheme, type Theme } from '../theme/theme'
 import {
   byStatus,
-  pinClusterStatus,
-  pinClusterStatusCounts,
   groupStatus,
   selectedStacking,
   smallPinWidth,
@@ -46,20 +43,6 @@ function evaluate(expression: ExpressionSpecification, properties: Record<string
   return parsed.value.evaluate({ zoom: 0 }, { type: 'Point', properties } as never)
 }
 
-/** The properties the pin source gives a pin cluster of games with these statuses (see pinClusterStatusCounts). */
-function pinClusterOf(statuses: readonly GameStatus[]): Record<string, number> {
-  return Object.fromEntries(
-    Object.entries(pinClusterStatusCounts).map(([name, [, perPin]]) => [
-      name,
-      statuses.reduce((sum, status) => sum + (evaluate(perPin as ExpressionSpecification, { status }) as number), 0),
-    ]),
-  )
-}
-
-const everyMix: GameStatus[][] = Array.from({ length: 2 ** statusProminence.length - 1 }, (_, bits) =>
-  statusProminence.filter((_, i) => (bits + 1) & (1 << i)),
-)
-
 describe('the status a group of games shows as', () => {
   it('is the most prominent among them', () => {
     expect(groupStatus(['Final', 'Live', 'Upcoming'])).toBe('Live')
@@ -69,30 +52,19 @@ describe('the status a group of games shows as', () => {
   it('is Final only when all its games are', () => {
     expect(groupStatus(['Final', 'Final'])).toBe('Final')
   })
-
-  it('is the same for a pin cluster as for a card cluster, whatever the mix', () => {
-    for (const mix of everyMix) {
-      const games = [...mix, ...mix.slice(0, 1)]
-      expect(evaluate(pinClusterStatus, pinClusterOf(games)), mix.join(', ')).toBe(groupStatus(games))
-    }
-  })
 })
 
 describe('byStatus', () => {
   it("picks a pin's, a trail's or a card cluster's value by its own status, from the theme", () => {
     const radii = { Live: 4, Upcoming: 3, Final: 2 }
     for (const status of statusProminence) {
-      expect(evaluate(byStatus(theme, 'own', (look) => look.core.radius), { status })).toBe(radii[status])
+      expect(evaluate(byStatus(theme, (look) => look.core.radius), { status })).toBe(radii[status])
     }
-  })
-
-  it("picks a pin cluster's value by the status it shows as, from the theme", () => {
-    expect(evaluate(byStatus(theme, 'pinCluster', (look) => look.color), pinClusterOf(['Final', 'Upcoming']))).toBe('#00ff00')
   })
 
   it('picks which status draws on top, which isn’t part of the theme', () => {
     for (const status of statusProminence) {
-      expect(evaluate(byStatus(theme, 'own', (look) => look.stacking), { status })).toBe(stacking[status])
+      expect(evaluate(byStatus(theme, (look) => look.stacking), { status })).toBe(stacking[status])
     }
   })
 })

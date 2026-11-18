@@ -48,26 +48,20 @@ export function foreshortening({ center, cameraDistance: d }: GlobeView, point: 
 }
 
 /**
- * Between what foreshortening (see foreshortening) place names, small pins and pin clusters fade
- * out toward the horizon: shown whole down to `shown`, gone from `gone`. Squashed further, they'd
- * crowd into an unreadable pile along the globe's edge. Looking straight down at zoom 3 that's from
- * about 40° to 50° from the center of the view, as far as score cards reach (see cardRadius) and a
- * little past it; zoomed in, where less of the globe shows, it comes nearer the center.
+ * Between what foreshortening (see foreshortening) place names fade out toward the horizon: shown
+ * whole down to `shown`, gone from `gone`. Squashed further, they'd crowd into an unreadable pile
+ * along the globe's edge. Looking straight down at zoom 3 that's from about 40° to 50° from the center
+ * of the view; zoomed in, where less of the globe shows, it comes nearer the center.
  */
 export const horizonFadeBand = { shown: 0.6, gone: 0.4 } as const
 
 /**
- * How much of a place name, small pin or pin cluster at `point` shows, from 1 (all of it) to 0
+ * How much of a place name at `point` shows, from 1 (all of it) to 0
  * (none), as it nears the horizon (see horizonFadeBand).
  */
 export function horizonFade(view: GlobeView, point: GlobePoint): number {
   const { shown, gone } = horizonFadeBand
   return Math.max(0, Math.min(1, (foreshortening(view, point) - gone) / (shown - gone)))
-}
-
-/** Whether a place name, small pin or pin cluster at `point` has faded out entirely near the horizon. */
-export function fadedOut(map: MapLibreMap, [longitude, latitude]: [number, number]): boolean {
-  return horizonFade(globeView(map), { longitude, latitude }) === 0
 }
 
 /** The feature state holding how much of a feature shows near the horizon (see fadeNearHorizon). */
@@ -84,7 +78,7 @@ const fadeStep = 0.02
 /**
  * Fades the features of these GeoJSON sources as they near the horizon, frame by frame (see
  * horizonFade), through a feature state their layers' opacities read (see fadedByHorizon), but for
- * those `whole` says to show whole in this view. Each feature, a pin cluster included, needs an id.
+ * those `whole` says to show whole in this view. Each feature needs an id.
  * Returns a function that stops it.
  */
 export function fadeNearHorizon(
@@ -111,10 +105,9 @@ export function fadeNearHorizon(
       }
     }
   }
-  // A source's new data (pins reloaded as games cross the card radius, or reclustered) is faded as
-  // soon as it arrives, before the frame that first draws it: else that frame draws a feature new to
-  // the source whole, and one back in it, or a pin cluster whose id now names another, at the fade it
-  // last had, so pins and pin clusters near the horizon flash in and out as the globe turns.
+  // A source's new data is faded as soon as it arrives, before the frame that first draws it: else
+  // that frame draws a feature new to the source whole, and one back in it at the fade it last had, so
+  // names near the horizon flash in and out.
   const arrived = (event: MapSourceDataEvent) => {
     if (event.tile && sources.includes(event.sourceId)) fade()
   }

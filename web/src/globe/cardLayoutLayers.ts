@@ -37,6 +37,11 @@ export const cardlessPins: PinSet = { source: cardLayoutSource, prefix: 'cardles
 export const cardlessSmallPinLayer = 'cardless-pins'
 export const cardlessSelectedPinLayer = 'cardless-pin-selected'
 
+/**
+ * How far a card cluster reaches from its middle, outline and all (see the theme's Cluster).
+ */
+export const cardClusterReach = (theme: Theme): number => theme.components.Cluster.radius
+
 export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
 /**
@@ -141,10 +146,10 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
  *
  * A venue cluster is drawn as the venue dot its trails would otherwise each end at (see trailLayer), a
  * dot in a ring, in its games' color (see clusterColor), with no count: its games' cards are on
- * screen. A card cluster is a disc outlined and lit in its games' color, with the count in it, as a
- * pin cluster of some games is (see the theme's cluster). A card cluster holding a game that shows
- * flames has a flame on its top edge, as a pin cluster does; a venue cluster never does, as its games'
- * cards are on screen, flames and all.
+ * screen. A card cluster is a disc outlined and lit in its games' color, with the count in it (see
+ * cardClusterReach). A card cluster holding a game that shows
+ * flames has a flame on its top edge; a venue cluster never does, as its games' cards are on screen,
+ * flames and all.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -187,10 +192,10 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('cardCluster'),
       paint: {
-        'circle-radius': cluster.glowRadius.some,
+        'circle-radius': cluster.glowRadius,
         'circle-color': clusterPaint,
         'circle-blur': 1,
-        'circle-opacity': byStatus(theme, 'own', (look) => look.glow.opacity * cluster.glowOpacity),
+        'circle-opacity': byStatus(theme, (look) => look.glow.opacity * cluster.glowOpacity),
       },
     },
     {
@@ -198,8 +203,8 @@ export function cardLayoutLayers(
       type: 'symbol',
       source: cardLayoutSource,
       filter: ['all', kindIs('cardCluster'), ['==', ['get', 'flames'], true]],
-      layout: clusterFlameLayout(clusterFlameImage(theme, cluster.radius.some)),
-      paint: { 'icon-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      layout: clusterFlameLayout(clusterFlameImage(theme, cluster.radius)),
+      paint: { 'icon-opacity': byStatus(theme, (look) => look.clusterOpacity) },
     },
     {
       id: cardClusterLayer,
@@ -207,13 +212,13 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('cardCluster'),
       paint: {
-        // As wide as a pin cluster of some games, outline and all: the stroke is drawn outside the radius.
-        'circle-radius': cluster.radius.some - cluster.outlineWidth,
+        // As wide as cardClusterReach, outline and all: the stroke is drawn outside the radius.
+        'circle-radius': cardClusterReach(theme) - cluster.outlineWidth,
         'circle-color': cluster.fill,
-        'circle-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
+        'circle-opacity': byStatus(theme, (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
         'circle-stroke-color': clusterPaint,
-        'circle-stroke-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity),
+        'circle-stroke-opacity': byStatus(theme, (look) => look.clusterOpacity),
       },
     },
     {
@@ -227,7 +232,7 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, 'own', (look) => look.clusterOpacity) },
+      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, (look) => look.clusterOpacity) },
     },
   ]
 }
@@ -258,9 +263,9 @@ export const cardFootprintLayerSpec: SymbolLayerSpecification = {
 }
 
 /**
- * An invisible stand-in for each card cluster, as a pin cluster has (see pinLayers'
- * clusterFootprintLayout), as wide as a pin cluster of some games, outline and all. A venue cluster
- * has none, as a venue dot has none: it has no count to keep readable.
+ * An invisible stand-in for each card cluster (see pinLayers' clusterFootprintLayout), as wide as the
+ * card cluster, outline and all. A venue cluster has none, as a venue dot has none: it has no count
+ * to keep readable.
  */
 export function cardClusterFootprintLayerSpec(theme: Theme): SymbolLayerSpecification {
   return {
@@ -268,7 +273,7 @@ export function cardClusterFootprintLayerSpec(theme: Theme): SymbolLayerSpecific
     type: 'symbol',
     source: cardLayoutSource,
     filter: kindIs('cardCluster'),
-    layout: clusterFootprintLayout(clusterFootprintAcross(theme.components.Cluster.radius.some)),
+    layout: clusterFootprintLayout(clusterFootprintAcross(cardClusterReach(theme))),
     paint: { 'icon-opacity': 0 },
   }
 }

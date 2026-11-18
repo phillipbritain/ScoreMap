@@ -3,7 +3,7 @@ import { accentColor } from '../settings/gameColor'
 import type { Theme } from '../theme/theme'
 
 /**
- * The color a cluster's games share (pin clusters, card clusters and venue clusters alike), kept on
+ * The color a cluster's games share (card clusters and venue clusters alike), kept on
  * the cluster's feature as a key (see sharedColorKey) that clusterColor turns into a color by the
  * theme: the shared game color, or `mixed` when its games' colors differ. The key doesn't depend on
  * the theme, so the pin source needn't change when the theme does.
@@ -15,17 +15,6 @@ const mixed = 'mixed'
 export function sharedColorKey(games: readonly { color: string }[]): string {
   const colors = new Set(games.map((game) => game.color))
   return colors.size === 1 ? [...colors][0] : mixed
-}
-
-/**
- * sharedColorKey gathered by the pin source over a pin cluster's pins, as a MapLibre cluster property:
- * each pin's game color, and two gathered keys merged into one.
- */
-export const pinClusterSharedColor: Record<string, [ExpressionSpecification, ExpressionSpecification]> = {
-  [sharedColorProperty]: [
-    ['case', ['==', ['accumulated'], ['get', sharedColorProperty]], ['accumulated'], mixed],
-    ['get', 'color'],
-  ],
 }
 
 /**

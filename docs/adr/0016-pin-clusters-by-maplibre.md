@@ -1,8 +1,14 @@
+---
+status: superseded in part, 2026-11-17
+---
+
 # Pin clusters by MapLibre, venue clusters by the card layout
 
 Small pins form pin clusters through MapLibre's own clustering of the pin source, with a cluster radius that fits the widest pin cluster (`pinClusterSpacing` in `web/src/globe/pinLayers.ts`), not just a small pin, so pins and pin clusters stay apart. We tried clustering on screen instead, in the browser app, as the globe moves: the two pins or clusters that overlap most merge, again until none do, which keeps anything from overlapping. It ran on the main thread every frame, at about 0.3 ms for 100 games, 2 ms for 300 and 35 ms for 1000, where MapLibre's runs in its worker and only when the radius changes. Performance won over an exact guarantee.
 
 Venue clusters, where score cards' trails meet, are worked out by the card layout in the browser app (`venueMarks` in `web/src/globe/cardLayoutLayers.ts`): the layout already places every card on screen each frame, and a venue cluster counts only the cards on screen, a few dozen at most.
+
+> **Superseded in part, 2026-11-17.** Every game whose venue is on screen, on the side of the globe facing the viewer, can now have a score card, up to the card count; those past it or with no room are in card clusters or show as small pins, which the card layout gathers. So there are no outer pins or pin clusters, and the pin source is no longer clustered: the first paragraph is history. Venue clusters are still the card layout's, as the second says.
 
 ## Consequences
 

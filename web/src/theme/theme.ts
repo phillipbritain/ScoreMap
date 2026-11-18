@@ -421,8 +421,7 @@ const settings = {
      * the ring of the game's color around it) and the soft glow around that, in the game's color (its
      * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose color
      * is just its status's palette color is in the game's color; any other (Live's paler core, say)
-     * stays as given, so status still shows by brightness. Small pins gather into pin clusters by the
-     * widest glow. A hot game's pin has a thin fire outline around its core, in fire's
+     * stays as given, so status still shows by brightness. A hot game's pin has a thin fire outline around its core, in fire's
      * colors (ScoreCard.flames), with a glow reaching `flame.size` pixels beyond it. The outline's
      * width and opacity, and the glow's opacity, are tunable separately.
      */
@@ -431,19 +430,18 @@ const settings = {
       flame: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
     },
     /**
-     * A cluster, pin or card, is a disc filled with this, outlined this wide and lit in its games'
-     * color (the theme's accent where they differ), in a glow as strong as this much of its status's small pins' glow, so a cluster of a
-     * status whose pins don't glow doesn't either. A pin cluster's disc and glow are as wide as these
-     * radii by how many games it holds: a few (up to 4), some (up to 14) or many; a card cluster is as
-     * wide as a pin cluster of some games. Its count is in a font the map's font server has (ADR-0006),
-     * at a type style's size. By the status it shows as, how opaque it is: its disc, outline and count alike.
-     * A pin or card cluster holding a hot game has the same fire outline and glow
-     * around its disc, with its own size, width and opacities.
+     * A card cluster is a disc filled with this, outlined this wide and lit in its games' color (the
+     * theme's accent where they differ), in a glow as strong as this much of its status's small pins'
+     * glow, so a cluster of a status whose pins don't glow doesn't either. Its disc reaches `radius`,
+     * outline and all, and its glow `glowRadius`. Its count is in a font the map's font server has
+     * (ADR-0006), at a type style's size. By the status it shows as, how opaque it is: its disc,
+     * outline and count alike. A card cluster holding a hot game has a fire outline and glow around
+     * its disc, with its own size, width and opacities.
      */
     Cluster: {
       fill: color,
-      radius: { few: pixels, some: pixels, many: pixels },
-      glowRadius: { few: pixels, some: pixels, many: pixels },
+      radius: pixels,
+      glowRadius: pixels,
       outlineWidth: pixels,
       glowOpacity: opacity,
       count: { font: globeFont, size: textSize },

@@ -7,14 +7,12 @@ import {
 } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { Point } from 'geojson'
 import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
 import type { MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
-import { animationTarget } from './animationTarget'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
 import { CameraMoves, type SelectionIntent } from './cameraMoves'
@@ -22,7 +20,7 @@ import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
 import { globeStyle, showStateLines } from './globeStyle'
-import { fadeNearHorizon, fadedOut } from './horizon'
+import { fadeNearHorizon } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { globeSettling, type GlobeSettling } from './globeSettling'
 import { smallPinReach, type ScreenBox } from './panelClearance'
@@ -36,14 +34,13 @@ import {
   cardLayoutSourceSpec,
   overTrails,
 } from './cardLayoutLayers'
-import { outerPinClusterLayer, outerPinSource, outerSmallPinLayer, clusterFootprint } from './pinLayers'
-import { addPinSources, type PinSources } from './pinSources'
-import { pulse } from './pinPulse'
+import { clusterFootprint } from './pinLayers'
+import { addPinSource, type PinSource } from './pinSource'
 import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
-import { cardRadiusOn, hasCard, zoomSettings as appZoomSettings, zoomAt, zoomAtEquator, type GlobeCamera, type ZoomSettings } from './zoomLevels'
+import { zoomSettings as appZoomSettings, type ZoomSettings } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
@@ -97,10 +94,10 @@ export interface GlobeMapOptions {
 export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready' | 'styleError' | 'constructionError'
 
 /**
- * MapLibre globe with a pin at each game's venue. At every zoom, each pin near the center of the view
- * is a score card, and cards with no room form card clusters, while the pins farther out are small
- * and form pin clusters among themselves (see hasCard). Selecting a card cluster zooms in until it
- * splits; selecting a pin cluster farther out centers the globe on it.
+ * MapLibre globe with a pin at each game's venue. At every zoom, each game whose venue is on screen
+ * on the side of the globe facing the viewer is a score card, as many as the card count allows (see
+ * layOutCards); cards past it or with no room form card clusters, or show as small pins. Selecting a
+ * card cluster zooms in until it splits.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
@@ -129,8 +126,8 @@ export class GlobeMap {
   private shown = new Map<string, PlacedGame>()
   /** The number of the latest change from the server the globe has played (see show), so none plays twice. */
   private changesPlayed = 0
-  /** The globe's two pin sets' sources, added once the style loads (see addPins). */
-  private pins: PinSources | null = null
+  /** The globe's pin source, added once the style loads (see addPins). */
+  private pins: PinSource | null = null
   private selectedGameId: string | null = null
   private readonly moves: CameraMoves
   /** The furthest in the globe zooms (see fittedZoomSettings), which changes with setZoomLimits. */
@@ -193,13 +190,9 @@ export class GlobeMap {
       const currentTheme = () => this.theme
       this.glow = addGlobeGlow(map, currentTheme)
       this.names = addPlaceNames(map, currentTheme, cityLabels)
-      // City names, outer pins and their clusters fade out as they near the horizon, which they'd crowd:
-      // all but the names of the cities of games with score cards, which always show with their cards.
-      this.stopHorizonFade = fadeNearHorizon(
-        map,
-        [cityNameSource, outerPinSource],
-        (source, id, { center }) => source === cityNameSource && this.names.namesACard(id, center, cardRadiusOn(map)),
-      )
+      // City names fade out as they near the horizon, which they'd crowd: all but the names of the
+      // games' cities, which show with their games' cards.
+      this.stopHorizonFade = fadeNearHorizon(map, [cityNameSource], (_source, id) => this.names.namesAGame(id))
       this.trails = trailLayer(currentTheme)
       this.cards = new ScoreCardMarkers(
         map,
@@ -225,9 +218,6 @@ export class GlobeMap {
       drawFlamesOnDemand(map)
 
       map.on('style.load', this.addPins)
-      // On every move, not just zooms: turning the globe changes MapLibre's zoom, and with it how
-      // far past a whole level it is (see pinClusterRadius), and games cross the card radius.
-      map.on('move', this.cameraMoved)
       // Cards follow the pin source, which changes as the camera moves and data arrives.
       map.on('render', this.syncCards)
       // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
@@ -238,11 +228,9 @@ export class GlobeMap {
       // After the cards' sync above: the settling checks Ready on idle, after that idle's card sync.
       map.on('render', this.drew)
       map.on('idle', this.goneIdle)
-      map.on('click', outerPinClusterLayer, this.centerOnOuterPinCluster)
-      map.on('click', outerSmallPinLayer, this.selectPin)
       map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
       map.on('click', cardlessSmallPinLayer, this.selectPin)
-      for (const layer of [outerPinClusterLayer, outerSmallPinLayer, cardClusterLayer, cardlessSmallPinLayer]) {
+      for (const layer of [cardClusterLayer, cardlessSmallPinLayer]) {
         map.on('mouseenter', layer, this.pointAt)
         map.on('mouseleave', layer, this.stopPointing)
       }
@@ -286,7 +274,7 @@ export class GlobeMap {
     for (const game of placed) {
       const kind = before.has(game.id) ? changeSince(justHappened, game.id, played) : null
       const animation = kind && pinAnimation(kind, game)
-      if (animation) void this.animate(game, animation)
+      if (animation) this.animate(game, animation)
       // A game finishing celebrates on its score card, where it has one on screen.
       if (kind === 'Finished') this.cards.celebrate(game.id)
     }
@@ -300,11 +288,6 @@ export class GlobeMap {
   /** Picks a game from the Games list, opening its panel before centering it above the panel. */
   pickGame(gameId: string, panel: ScreenBox | null): void {
     this.moves.pickGame(gameId, panel)
-  }
-
-  /** MapLibre's zoom, and the latitude the view is centered at. */
-  private camera(): GlobeCamera {
-    return { zoom: this.map.getZoom(), latitude: this.map.getCenter().lat }
   }
 
   /**
@@ -393,7 +376,7 @@ export class GlobeMap {
     return this.settling.settled({ pinsLoaded: this.pinsLoaded() })
   }
 
-  /** Whether both pin sources have loaded the games last given them (none before the style loads). */
+  /** Whether the pin source has loaded the games last given it (not before the style loads). */
   private pinsLoaded(): boolean {
     return this.pins?.loaded() ?? false
   }
@@ -468,7 +451,7 @@ export class GlobeMap {
   private readonly addPins = () => {
     const map = this.map
     map.setProjection({ type: 'globe' })
-    const pins = addPinSources(map, { games: [...this.shown.values()], theme: this.theme, colorOf: this.colorOf })
+    const pins = addPinSource(map, { games: [...this.shown.values()], theme: this.theme, colorOf: this.colorOf })
     this.pins = pins
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)
@@ -482,9 +465,6 @@ export class GlobeMap {
     for (const layer of layers.onTop) map.addLayer(layer)
   }
 
-  /** The outer pins recluster and follow the camera (see PinSources.cameraMoved). */
-  private readonly cameraMoved = () => this.pins?.cameraMoved()
-
   private readonly syncCards = () => this.cards.sync()
 
   private readonly drew = () => this.settling.frameDrawn()
@@ -497,40 +477,17 @@ export class GlobeMap {
   }
 
   private readonly selectPin = (event: MapLayerMouseEvent) => {
-    if (this.fadedOutAt(event)) return
     const gameId: unknown = event.features?.[0]?.properties?.gameId
     if (typeof gameId === 'string') this.onSelect(gameId)
   }
 
-  private readonly pointAt = (event: MapLayerMouseEvent) => {
-    if (!this.fadedOutAt(event)) this.map.getCanvas().style.cursor = 'pointer'
+  private readonly pointAt = () => {
+    this.map.getCanvas().style.cursor = 'pointer'
   }
 
-  /**
-   * Whether the small pin or pin cluster an event is on has faded out near the horizon (see
-   * fadeNearHorizon): it still takes clicks, so they're ignored. Its games are reached by turning the
-   * globe until it shows.
-   */
-  private fadedOutAt(event: MapLayerMouseEvent): boolean {
-    const geometry = event.features?.[0]?.geometry
-    return geometry?.type === 'Point' && fadedOut(this.map, geometry.coordinates as [number, number])
-  }
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
-  // Selecting a card cluster zooms in until its games split. Selecting an outer pin cluster brings
-  // its games' cards instead.
-
-  /**
-   * Centers the globe on an outer pin cluster, with the globe the same size (the same zoom measured at
-   * the equator), so its games have score cards.
-   */
-  private readonly centerOnOuterPinCluster = (event: MapLayerMouseEvent) => {
-    const cluster = event.features?.[0]
-    if (!cluster || this.fadedOutAt(event)) return
-    const center = (cluster.geometry as Point).coordinates as [number, number]
-    this.map.easeTo({ center, zoom: zoomAt(center[1], zoomAtEquator(this.camera())) })
-  }
-
+  // Selecting a card cluster zooms in until its games split.
   private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
     const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
     const showing = typeof firstGameId === 'string' ? this.cards.shows(firstGameId) : undefined
@@ -538,34 +495,11 @@ export class GlobeMap {
   }
 
   /**
-   * Plays an animation where a game shows on the globe: its score card, its small pin (far from the
-   * center of the view), or the pin cluster it's in. Games not on the map (off screen)
-   * don't animate.
+   * Plays an animation where a game shows on the globe: its score card, the card cluster it's in, or
+   * its small pin. Games not on screen don't animate.
    */
-  private async animate(game: PlacedGame, animation: PinAnimation): Promise<void> {
-    const map = this.map
-    const { lng: longitude, lat: latitude } = map.getCenter()
-    const card = hasCard({ longitude, latitude }, game.venue, cardRadiusOn(map), game.id === this.selectedGameId)
-    const source = this.pins?.pulseSource(game)
-    if (!source) return
-    const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
-    const target = animationTarget(game.id, venue, source.features)
-    if (!target) return
-
-    if (target.kind === 'pin') {
-      if (card) this.cards.animate(game.id, animation)
-      else pulse(map, this.colorOf(game), target.lngLat, animation, 'pin')
-      return
-    }
-
-    for (const { clusterId, lngLat } of target.candidates) {
-      const leaves = await source.clusterLeaves(clusterId)
-      if (this.destroyed) return
-      if (leaves.some((leaf) => leaf.properties?.gameId === game.id)) {
-        pulse(map, this.colorOf(game), lngLat, animation, 'cluster')
-        return
-      }
-    }
+  private animate(game: PlacedGame, animation: PinAnimation): void {
+    this.cards.animate(game.id, animation)
   }
 
   /**

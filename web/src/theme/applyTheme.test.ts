@@ -167,9 +167,9 @@ describe('applyTheme', () => {
       placeNames: 3 * 9,
       // The sky's color, three stars and two star sizes.
       sky: 1 + 3 + 2,
-      // A cluster's fill, three radii, three glow radii, outline width and glow opacity, its count's
-      // font (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
-      cluster: 9 + 5 + 4 + 3,
+      // A card cluster's fill, radius, glow radius, outline width and glow opacity, its count's font
+      // (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
+      cluster: 5 + 5 + 4 + 3,
       // A trail's width and opacity, its glow's three and its venue's three.
       trail: 8,
       selection: 2,

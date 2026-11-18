@@ -118,7 +118,7 @@ describe('addPlaceNames', () => {
     return { map, gameCities, cardCities, given: () => given }
   }
   // Everglades City, about 100 km from Miami.
-  const evergladesGame = { venue: { longitude: -81.3851, latitude: 25.8573 } } as PlacedGame
+  const evergladesGame = { id: 'everglades', venue: { longitude: -81.3851, latitude: 25.8573 } } as PlacedGame
 
   it('names the shown games afresh by new settings', () => {
     const { map, gameCities } = mapWithCityNames()
@@ -145,22 +145,32 @@ describe('addPlaceNames', () => {
     const { map, gameCities, cardCities, given } = mapWithCityNames()
     const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
     // In Chicago, far from Miami.
-    const chicagoGame = { venue: { longitude: -87.6359, latitude: 41.8789 } } as PlacedGame
+    const chicagoGame = { id: 'chicago', venue: { longitude: -87.6359, latitude: 41.8789 } } as PlacedGame
     names.showGames([evergladesGame, chicagoGame])
     expect(gameCities()).toEqual(expect.arrayContaining(['Miami', 'Chicago']))
     expect(cardCities()).toEqual([])
 
-    names.showCards([evergladesGame.venue])
+    names.showCards(['everglades'])
     expect(cardCities()).toEqual(['Miami'])
     const before = given()
-    names.showCards([evergladesGame.venue])
+    names.showCards(['everglades'])
     expect(given()).toBe(before)
 
     // Its card gone into a card cluster, Chicago's showing.
-    names.showCards([chicagoGame.venue])
+    names.showCards(['chicago'])
     expect(cardCities()).toEqual(['Chicago'])
     names.showCards([])
     expect(cardCities()).toEqual([])
+  })
+
+  it("marks the city of a game that took another's place at the same venue, once its card is on screen", () => {
+    const { map, cardCities } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
+    names.showGames([evergladesGame])
+    names.showGames([{ ...evergladesGame, id: 'everglades-next' }])
+
+    names.showCards(['everglades-next'])
+    expect(cardCities()).toEqual(['Miami'])
   })
 
   it('names cities at every zoom, as score cards show at every zoom', () => {

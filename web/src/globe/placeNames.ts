@@ -15,7 +15,7 @@ import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
 import { cityNameBox, type ScreenBox } from './cityNameBox'
-import { kmApart, type GlobePoint } from './geo'
+import { kmApart } from './geo'
 import { cardClusterReach } from './cardLayoutLayers'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
 
@@ -261,11 +261,12 @@ export interface PlaceNames {
    */
   namesAGame(id: string | number): boolean
   /**
-   * Always writes the names of the games' cities with a score card on screen, at these venues; the
-   * other games' cities give way where there's no room, to clusters and other names (see
-   * cityNameLayers).
+   * Always writes the names of the cities of these games, those with a score card on screen, by their
+   * ids; the other games' cities give way where there's no room, to clusters and other names (see
+   * cityNameLayers). By id, not by where the cards are: a card's place is read from the map's tiles,
+   * rounded to their grid, up to most of a kilometer off its venue zoomed out.
    */
-  showCards(venues: readonly GlobePoint[]): void
+  showCards(gameIds: readonly string[]): void
   /**
    * Where the names of the games' cities are written on screen, for cards to keep clear of: those on
    * the side of the globe facing the viewer, as MapLibre writes no others.
@@ -279,24 +280,21 @@ export interface PlaceNames {
  * labeled for the games (see cityLabels) by `settings` until they're changed. The names' boxes are worked out in the theme `theme` gives at the time.
  */
 export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings): PlaceNames {
-  let venues: GlobePoint[] = []
+  let games: readonly PlacedGame[] = []
   let labels: CityLabels
-  // The venues in reach of each game's city, by its feature's id (see cityNameFeatures).
-  let namedVenues: GlobePoint[][] = []
+  // The ids of the games in reach of each game's city, by its feature's id (see cityNameFeatures).
+  let namedGames: string[][] = []
   const relabel = () => {
-    labels = cityLabels(venues, cityList, settings)
-    namedVenues = labels.gameCities.map((city) => venues.filter((venue) => kmApart(venue, city) <= settings.gameCityKm))
+    labels = cityLabels(games.map((game) => game.venue), cityList, settings)
+    namedGames = labels.gameCities.map((city) => games.filter(({ venue }) => kmApart(venue, city) <= settings.gameCityKm).map(({ id }) => id))
   }
   relabel()
-  // The venues the labels were chosen for, so games changing only their scores change nothing.
-  let venuesKey = ''
-  // The venues of the cards on screen, and the ids of the games' cities naming them.
-  let cardVenues: readonly GlobePoint[] = []
+  // The games and venues the labels were chosen for, so games changing only their scores change nothing.
+  let gamesKey = ''
+  // The games with a card on screen, and the ids of the games' cities naming them.
+  let cardGames: ReadonlySet<string> = new Set()
   let carded = new Set<number>()
-  const cardedNow = () =>
-    new Set(
-      namedVenues.flatMap((named, id) => (named.some((venue) => cardVenues.some((card) => kmApart(venue, card) < sameVenueKm)) ? [id] : [])),
-    )
+  const cardedNow = () => new Set(namedGames.flatMap((named, id) => (named.some((gameId) => cardGames.has(gameId)) ? [id] : [])))
 
   const showLabels = () => {
     carded = cardedNow()
@@ -307,11 +305,11 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   map.on('style.load', styleLoaded)
 
   return {
-    showGames(games) {
-      const key = games.map(({ venue }) => `${venue.longitude},${venue.latitude}`).sort().join(';')
-      if (key === venuesKey) return
-      venuesKey = key
-      venues = games.map((game) => game.venue)
+    showGames(shown) {
+      const key = shown.map(({ id, venue }) => `${id}@${venue.longitude},${venue.latitude}`).sort().join(';')
+      if (key === gamesKey) return
+      gamesKey = key
+      games = shown
       relabel()
       showLabels()
     },
@@ -321,14 +319,14 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       relabel()
       showLabels()
     },
-    showCards(venues) {
-      cardVenues = venues
+    showCards(gameIds) {
+      cardGames = new Set(gameIds)
       const now = cardedNow()
       if (now.size === carded.size && [...now].every((id) => carded.has(id))) return
       showLabels()
     },
     namesAGame(id) {
-      return typeof id === 'number' && (namedVenues[id]?.length ?? 0) > 0
+      return typeof id === 'number' && (namedGames[id]?.length ?? 0) > 0
     },
     nameBoxes() {
       const zoom = map.getZoom()
@@ -342,9 +340,6 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     },
   }
 }
-
-// How close a card's venue is to a game's venue to be the same, in kilometers.
-const sameVenueKm = 0.01
 
 /**
  * The labeled cities as the city name source's features, marking the games' cities, and those with

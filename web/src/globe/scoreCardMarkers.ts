@@ -370,9 +370,7 @@ export class ScoreCardMarkers {
     })
     this.cardClustersDrawn = this.drawLayout(onGlobe, scene.moving === true)
     // A card on screen is always shown with its city's name; a game in a cluster gives its name way.
-    this.placeNames.showCards(
-      onGlobe.filter(({ gameId }) => this.layout.shows(gameId).as === 'card').map(({ lngLat: [longitude, latitude] }) => ({ longitude, latitude })),
-    )
+    this.placeNames.showCards(cards.map(({ gameId }) => gameId).filter((gameId) => this.layout.shows(gameId).as === 'card'))
     return changed
   }
 

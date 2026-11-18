@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { accentColor, gameColor, type PickedColors } from './settings/gameColor'
 import { useLeagues } from './settings/leagues'
 import { settingsStore, unsavedSettingsStore, type SettingsStore } from './settings/settingsStore'
-import { noPinsMessage, visibleGames } from './settings/visibleGames'
+import { noPinsMessage } from './settings/visibleGames'
+import { useGamesOnGlobe } from './settings/useGamesOnGlobe'
 import { scorerOf } from './games/justHappened'
 import type { Game } from './games/game'
 import { noneCelebrated, withCelebrated, withoutCelebrated, type Celebrated } from './celebration/celebrated'
@@ -55,6 +56,8 @@ function tourScreen(): TourScreen {
 
 const savedStore = settingsStore(() => window.localStorage)
 const demoStore = unsavedSettingsStore()
+// No games yet, kept as one array so it doesn't change from render to render.
+const noGames: Game[] = []
 
 /** What the browser says about where the viewer is (see ViewerPlace). */
 function viewerPlace() {
@@ -112,7 +115,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
 
   // The games, connected to the server while awake (see GLOSSARY.md "Asleep"); scenario changes made in
   // any browser go to every pill and clock.
-  const { games, justHappened: liveChanges, cutOffSince, waking } = useLiveGames(
+  const { games, justHappened: liveChanges, cutOffSince, waking, boardClock } = useLiveGames(
     asleepSettings.idleTimeoutMinutes * 60_000,
     demo,
     setScenarioListing,
@@ -162,10 +165,10 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
     () => (showTourGames ? tourBoardWithPhotos : games && withoutCelebrated(games, celebrated)),
     [showTourGames, tourBoardWithPhotos, games, celebrated],
   )
-  const visible = useMemo(
-    () => (showTourGames ? (boardGames ?? []) : visibleGames(boardGames ?? [], viewerSettings)),
-    [showTourGames, boardGames, viewerSettings],
-  )
+  // The games on now under the viewer's settings, with Upcoming games filling a globe with few on, at the
+  // board's time (ADR-0029); the tour shows its own games as they are.
+  const onGlobe = useGamesOnGlobe(boardGames ?? noGames, viewerSettings, boardClock)
+  const visible = showTourGames ? (boardGames ?? noGames) : onGlobe
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])

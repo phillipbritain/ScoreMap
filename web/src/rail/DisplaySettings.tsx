@@ -1,4 +1,4 @@
-import { useId, useState, type CSSProperties } from 'react'
+import { useId, useState, type CSSProperties, type ReactNode } from 'react'
 import { pickableColors } from '../settings/gameColor'
 import {
   hasColors,
@@ -22,8 +22,8 @@ interface DisplaySettingsProps {
 }
 
 /**
- * The rail's Display Settings popover: a "Display venue photo on Game Panel" switch for the game
- * panel's photo, then, under "Card colors", each sport, then its leagues, by name, with a swatch of
+ * The rail's Display Settings popover: an "Only show live games" switch, which hides every Upcoming game
+ * (ADR-0029), and a "Display venue photo on Game Panel" switch for the game panel's photo, then, under "Card colors", each sport, then its leagues, by name, with a swatch of
  * its games' color, which opens a grid of the colors there are to pick (see pickableColors) under its
  * row, and a control to clear it; a league with no color of its own shows its sport's, marked as
  * taken from the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -67,16 +67,12 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
   const colorsHeading = useId()
   return (
     <>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={photos}
-        className="display-photos"
-        onClick={() => onChange({ ...settings, venuePhotos: !photos })}
-      >
+      <Switch on={settings.onlyLiveGames} onChange={(on) => onChange({ ...settings, onlyLiveGames: on })}>
+        Only show live games
+      </Switch>
+      <Switch on={photos} onChange={(on) => onChange({ ...settings, venuePhotos: on })}>
         Display venue photo on Game Panel
-        <span className={photos ? 'switch switch--on' : 'switch switch--off'} aria-hidden="true" />
-      </button>
+      </Switch>
       <h3 id={colorsHeading} className="display-section">
         Card colors
       </h3>
@@ -106,6 +102,16 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
         </button>
       </div>
     </>
+  )
+}
+
+/** One of Display Settings' on/off switches: its name, then the switch. */
+function Switch({ on, onChange, children }: { on: boolean; onChange: (on: boolean) => void; children: ReactNode }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} className="display-switch" onClick={() => onChange(!on)}>
+      {children}
+      <span className={on ? 'switch switch--on' : 'switch switch--off'} aria-hidden="true" />
+    </button>
   )
 }
 

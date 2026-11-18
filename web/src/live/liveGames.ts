@@ -3,6 +3,7 @@ import type { GameChange } from '../games/gameChange'
 import { applyChange } from '../games/gameStore'
 import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
 import type { ScenarioListing } from '../scenarios/scenarioPicker'
+import type { BoardClock } from './boardClock'
 import { watchForSleep, type PageVisibility } from './asleep'
 
 /** What a connection to the server's games hub tells the browser. */
@@ -12,6 +13,8 @@ export interface GamesHubEvents {
   change: (change: GameChange) => void
   /** The scenario listing, after a switch or a change of speed made in any browser (local runs only). */
   scenarioChanged: (listing: ScenarioListing) => void
+  /** The game board's clock: after the snapshot on every (re)connect, and after a switch or a change of speed. */
+  boardClock: (clock: BoardClock) => void
   /** The connection was lost and is being made again on its own. */
   reconnecting: () => void
   /** The connection closed, other than by stop: it has to be started again. */
@@ -41,6 +44,8 @@ export interface LiveGamesState {
   cutOffSince: number | null
   /** Whether ScoreMap is waking up (see GLOSSARY.md "Asleep"): from when it's shown again until the next snapshot. */
   waking: boolean
+  /** The game board's clock, as the server last sent it; null until it has (see boardTime). */
+  boardClock: BoardClock | null
 }
 
 const maxRetryDelayMs = 30_000
@@ -53,6 +58,7 @@ export const noLiveGames: LiveGamesState = {
   justHappened: noneJustHappened,
   cutOffSince: null,
   waking: false,
+  boardClock: null,
 }
 
 export interface LiveGamesOptions {
@@ -126,6 +132,7 @@ export function startLiveGames(options: LiveGamesOptions, onState: (state: LiveG
         change: live(receive),
         // A switch or a change of speed made in any browser: every pill and clock follows.
         scenarioChanged: live(options.onScenarioChanged),
+        boardClock: live((boardClock) => update({ boardClock })),
         reconnecting: live(cutOff),
         // SignalR's reconnect never gives up, so a close it didn't start is a start to make again.
         closed: live(() => {

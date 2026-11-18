@@ -71,7 +71,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
 
         Assert.NotNull(listing);
         Assert.Equal("worldwide", listing.Running);
-        Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "worldwide", "worldwide-busy"], listing.Scenarios);
+        Assert.Equal(["crowded", "edge-cases", "empty", "hot-finishes", "slow-initial-load", "sunday-morning", "worldwide", "worldwide-busy"], listing.Scenarios);
         foreach (var name in listing.Scenarios)
         {
             var response = await http.PutAsJsonAsync("/api/scenarios/running", new { name }, TestContext.Current.CancellationToken);
@@ -84,6 +84,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
     [InlineData("worldwide", true)]
     [InlineData("worldwide-busy", true)]
     [InlineData("slow-initial-load", true)]
+    [InlineData("sunday-morning", true)]
     [InlineData("edge-cases", false)]
     [InlineData("empty", false)]
     [InlineData("hot-finishes", false)]
@@ -126,6 +127,21 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.Equal([GameStatus.Upcoming, GameStatus.Live, GameStatus.Final], snapshot.Select(g => g.Status).Distinct().Order());
         // Where configured leagues play: North America, Europe and India (ADR-0028).
         Assert.True(snapshot.Select(g => g.Venue.Country).Distinct().Count() >= 4, "games in at least 4 countries");
+    }
+
+    [Fact]
+    public async Task Sunday_morning_sends_three_Live_games_and_the_NFL_games_starting_within_6_hours_only()
+    {
+        await using var server = new ScoreMapServer { UseShippedScenarios = true };
+
+        await using var client = await StartAsync(server, "sunday-morning");
+        var snapshot = await client.GamesMatchingAsync(games => games.Count >= 17);
+
+        Assert.Equal(3, snapshot.Count(g => g.Status == GameStatus.Live));
+        var upcoming = snapshot.Where(g => g.Status == GameStatus.Upcoming).ToList();
+        Assert.Equal(14, upcoming.Count);
+        Assert.All(upcoming, g => Assert.Equal("NFL", g.League));
+        Assert.Equal(17, snapshot.Count); // the NBA's in 8 hours and the NHL's tomorrow aren't sent
     }
 
     [Fact]

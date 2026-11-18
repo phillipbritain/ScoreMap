@@ -203,7 +203,7 @@ public class ScenarioSpeedTests
     public async Task Game_starts_and_pin_windows_are_on_the_scenario_clock()
     {
         await using var server = new ScoreMapServer { Scenario = "test", ScenarioSpeed = "Faster" };
-        // Upcoming games get their pin 30 minutes before their start: this one 32 s in, 1 s of real time at 32×.
+        // Upcoming games are sent 6 hours before their start: this one 32 s in, 1 s of real time at 32×.
         server.WriteScenario("test", """
             {
               "games": [
@@ -213,7 +213,7 @@ public class ScenarioSpeedTests
                   "home": { "name": "Arsenal", "abbreviation": "ARS" },
                   "away": { "name": "Chelsea", "abbreviation": "CHE" },
                   "venue": { "name": "Emirates Stadium", "city": "London", "country": "England" },
-                  "startsIn": "30m32s",
+                  "startsIn": "6h32s",
                   "status": "upcoming"
                 }
               ]
@@ -230,7 +230,7 @@ public class ScenarioSpeedTests
         var added = await client.NextChangeAsync();
 
         Assert.Equal((GameChangeKind.Added, "later"), (added.Kind, added.Game.Id));
-        Assert.Equal(startedAt + new TimeSpan(0, 30, 32), added.Game.StartTime);
+        Assert.Equal(startedAt + new TimeSpan(6, 0, 32), added.Game.StartTime);
     }
 
     [Fact]
@@ -293,7 +293,7 @@ public class ScenarioSpeedTests
     public async Task While_real_games_run_their_times_are_on_the_real_clock_whatever_the_speed()
     {
         await using var server = new ScoreMapServer { ScenarioSpeed = "Faster" };
-        server.Feed.SetScoreboard(Nfl, UpcomingGame(server.Clock, "real-game") with { StartTime = server.Clock.GetUtcNow().AddMinutes(34) });
+        server.Feed.SetScoreboard(Nfl, UpcomingGame(server.Clock, "real-game") with { StartTime = server.Clock.GetUtcNow().AddHours(6).AddMinutes(4) });
         await using var client = await server.ConnectClientAsync();
         Assert.Empty(await client.NextSnapshotAsync());
 

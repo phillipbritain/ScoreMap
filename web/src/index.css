@@ -2032,8 +2032,9 @@ body {
   border-left: var(--shape-border-width-medium) solid var(--palette-divider);
 }
 
-/* Display Settings: "Display venue photo on Game Panel", its switch at the right, above "Card colors". */
-.display-photos {
+/* Display Settings: an on/off switch ("Only show live games", "Display venue photo on Game Panel"), its
+   name at the left and its switch at the right, above "Card colors". */
+.display-switch {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2050,7 +2051,7 @@ body {
   cursor: pointer;
 }
 
-.display-photos:focus-visible {
+.display-switch:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--shape-border-width-medium);
 }

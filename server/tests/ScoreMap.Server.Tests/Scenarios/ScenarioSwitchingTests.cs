@@ -148,8 +148,8 @@ public class ScenarioSwitchingTests
     public async Task Started_on_real_games_the_server_can_switch_to_a_scenario_which_is_then_fetched_every_second()
     {
         await using var server = new ScoreMapServer();
-        // Upcoming games get their pin 30 minutes before their start: this one 1 s after the scenario starts.
-        server.WriteScenario("later", OneGame("later", status: "upcoming").Replace("-40m", "30m1s"));
+        // Upcoming games are sent 6 hours before their start: this one 1 s after the scenario starts.
+        server.WriteScenario("later", OneGame("later", status: "upcoming").Replace("-40m", "6h1s"));
         server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "real-game"));
         using var http = server.CreateClient();
         await using var client = await server.ConnectClientAsync();

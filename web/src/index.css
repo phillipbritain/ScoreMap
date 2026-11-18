@@ -3631,3 +3631,110 @@ body {
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
   }
 }
+
+/* ===== PROTOTYPE (loading/loadRevealPrototype.tsx): the load reveal's variants. Not for main. ===== */
+.load-proto-bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1000;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: 12px/1.2 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+}
+.load-proto-bar button {
+  font: inherit;
+  padding: 2px 8px;
+  border: 1px solid #999;
+  border-radius: 999px;
+  background: #eee;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .load-proto-bar button:nth-of-type(n + 3) {
+    display: none;
+  }
+}
+
+@keyframes load-proto-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes load-proto-drop {
+  from {
+    opacity: 0;
+    translate: 0 -18px;
+  }
+}
+@keyframes load-proto-slide-in {
+  from {
+    opacity: 0;
+    translate: 24px 0;
+  }
+}
+@keyframes load-proto-slide-down {
+  from {
+    opacity: 0;
+    translate: 0 -16px;
+  }
+}
+
+/* A and B: the loading screen hides the globe altogether until Ready. */
+:is([data-load-proto='A'], [data-load-proto='B']) .loading-screen:not(.loading-screen--movable) {
+  background: var(--loading-screen-dim-color);
+}
+
+/* A: the rail and the top rail wait for Ready, then fade in with the globe. */
+[data-load-proto='A'][data-load-phase='waiting'] :is(.rail, .top-rail) {
+  opacity: 0;
+  pointer-events: none;
+}
+[data-load-proto='A'][data-load-phase='revealing'] :is(.rail, .top-rail) {
+  animation: load-proto-fade-in 0.4s ease-out both;
+}
+
+/* B: cards drop in one after another, from the middle outward, then the rail slides in. */
+[data-load-proto='B'][data-load-phase='waiting'] :is(.globe .score-card, .pin-pulse) {
+  opacity: 0;
+}
+[data-load-proto='B'][data-load-phase='revealing'] .globe .score-card {
+  animation: load-proto-drop 0.3s ease-out var(--load-proto-delay, 0ms) both;
+}
+[data-load-proto='B']:not([data-load-rail='in']) :is(.rail, .top-rail) {
+  opacity: 0;
+  pointer-events: none;
+}
+[data-load-proto='B'][data-load-rail='in'] .rail {
+  animation: load-proto-slide-in 0.3s ease-out both;
+}
+[data-load-proto='B'][data-load-rail='in'] .top-rail {
+  animation: load-proto-slide-down 0.3s ease-out both;
+}
+
+/* C: the see-through dim stays, but the cards wait for Ready, then fade in as the dim goes. */
+[data-load-proto='C'][data-load-phase='waiting'] :is(.globe .score-card, .pin-pulse) {
+  opacity: 0;
+}
+[data-load-proto='C'][data-load-phase='revealing'] .globe .score-card {
+  animation: load-proto-fade-in 0.4s ease-out both;
+}
+
+/* A, B and C: the welcome tour fades in rather than popping. */
+:is([data-load-proto='A'], [data-load-proto='B'], [data-load-proto='C']) .welcome-tour {
+  animation: load-proto-fade-in 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-load-proto] :is(.rail, .top-rail, .globe .score-card, .welcome-tour) {
+    animation-duration: 0s !important;
+  }
+}

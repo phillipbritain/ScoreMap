@@ -164,6 +164,8 @@ export class GlobeMap {
       touchPitch: false,
     })
     this.map = map
+    // PROTOTYPE (loadRevealPrototype): the load reveal's hold on the map.
+    window.__protoMap = map
     this.theme = theme
     // The map takes keys once the globe is ready (see GlobeSettling.wentIdle).
     this.settling = globeSettling({

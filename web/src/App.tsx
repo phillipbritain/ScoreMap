@@ -20,6 +20,8 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
+import { LoadRevealSwitcher } from './loading/LoadRevealSwitcher'
+import { useLoadRevealPrototype } from './loading/loadRevealPrototype'
 import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
@@ -120,7 +122,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
   // The welcome tour, once the loading screen has gone, until it's finished. While it shows, the globe
   // and rail can't be used.
-  const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
+  // PROTOTYPE (loadRevealPrototype): when the load counts as done, for the tour and the Games badge.
+  const loadDone = useLoadRevealPrototype(stage, loadingScreenGone)
+  const tourStep = loadDone && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
   // The rail is kept out of sight on a first visit until the tour's Your controls step brings it in:
   // through the loading screen and Welcome, so it doesn't show and then go.
@@ -185,6 +189,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      <LoadRevealSwitcher />
       <div
         ref={globeArea}
         className={['globe-area', touring && 'globe-area--touring', railHidden && 'globe-area--rail-hidden'].filter(Boolean).join(' ')}
@@ -263,7 +268,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
           inert={touring}
           games={visible}
-          gamesReady={loadingScreenGone}
+          gamesReady={loadDone}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
           collapsed={railCollapsed}
           onCollapsedChange={setRailCollapsed}

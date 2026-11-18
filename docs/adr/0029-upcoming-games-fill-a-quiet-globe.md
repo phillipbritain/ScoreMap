@@ -13,6 +13,6 @@ ADR-0021 made ScoreMap about games happening now, showing an Upcoming game only 
 
 - The server sends an Upcoming game from 6 hours before its start (it was 30 minutes), and each browser decides which show, as it depends on the viewer's settings and time zone. Every browser sees the Games list as its globe: only the games it shows.
 - The browser needs the game board's time, which in a scenario or a demo is the scenario clock's (ADR-0009), not the real time. So the server sends each browser its board's clock (what it reads at a real time, and its speed) after the snapshot on every connect, and after a scenario switch or a change of speed; the browser runs it forward and looks again each second.
-- An Upcoming card's clock line is its start time in the viewer's time ("1:00 PM"), as a fight card's was already; its look is Upcoming's, dimmer than Live, and where cards are crowded it comes after Live games, as before.
+- An Upcoming game's progress line, on its score card and in its game panel, is its start time in the viewer's time ("1:00 PM"), as a fight card's card line was already; its look is Upcoming's, dimmer than Live, and where cards are crowded it comes after Live games, as before.
 - "Only show live games" is saved as `onlyLiveGames`. The rail's old "Live games only" switch (gone since ADR-0021) was saved as `liveOnly`, which is still ignored, so a returning viewer's old choice doesn't turn the new switch on.
 - The `sunday-morning` scenario shows a quiet globe filled in, and the fill-in games going as the NFL's kick off.

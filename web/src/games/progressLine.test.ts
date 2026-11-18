@@ -3,11 +3,15 @@ import type { Game } from './game'
 import { progressLine } from './progressLine'
 
 // The server writes the clock line in the sport's style, period included ("Q3 4:12", "Final/OT").
-const live: Pick<Game, 'status' | 'delayed' | 'clock'> = {
+const live: Pick<Game, 'status' | 'delayed' | 'clock' | 'startTime'> = {
   status: 'Live',
   delayed: false,
   clock: 'Q3 4:12',
+  startTime: '2026-10-04T17:00:00+00:00',
 }
+
+// A viewer in New York, for start times.
+const eastern = { timeZone: 'America/New_York', locale: 'en-US' }
 
 describe('progressLine in full, for the game panel', () => {
   it('shows the period and clock of a Live game', () => {
@@ -28,8 +32,8 @@ describe('progressLine in full, for the game panel', () => {
     expect(progressLine({ ...live, status: 'Final', clock: null }, 'full')).toBe('Final')
   })
 
-  it('names an Upcoming game as such', () => {
-    expect(progressLine({ ...live, status: 'Upcoming', clock: null }, 'full')).toBe('Upcoming')
+  it("shows an Upcoming game's start time in the viewer's time", () => {
+    expect(progressLine({ ...live, status: 'Upcoming', clock: null }, 'full', eastern)).toBe('1:00 PM')
   })
 })
 
@@ -47,8 +51,11 @@ describe('progressLine in short, for pins and score cards', () => {
     expect(progressLine({ ...live, status: 'Final', clock: null }, 'short')).toBe('Final')
   })
 
+  it("shows an Upcoming game's start time in the viewer's time", () => {
+    expect(progressLine({ ...live, status: 'Upcoming', clock: null }, 'short', eastern)).toBe('1:00 PM')
+  })
+
   it('leaves the status to the pin color when there is nothing more to say', () => {
-    expect(progressLine({ ...live, status: 'Upcoming', clock: null }, 'short')).toBeNull()
     expect(progressLine({ ...live, clock: null }, 'short')).toBeNull()
   })
 })

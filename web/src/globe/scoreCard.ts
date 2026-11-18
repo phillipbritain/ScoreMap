@@ -1,18 +1,10 @@
 import { shownBout } from '../games/bouts'
 import { positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
-import { progressLine } from '../games/progressLine'
+import { progressLine, type Viewer } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { logoMark } from '../games/teamLogo'
 import { isHexColor, mixColors, textOn } from '../theme/palette'
 import type { Theme } from '../theme/theme'
-
-/** Whose time a score card's start time is written in: the browser's time zone and locale unless given. */
-export interface Viewer {
-  /** IANA time zone. */
-  timeZone?: string
-  /** BCP 47 locale. */
-  locale?: string
-}
 
 export interface ScoreCardRow {
   /**
@@ -58,9 +50,7 @@ export function scoreCard(game: Game, viewer: Viewer = {}): ScoreCard {
     status: game.status,
     top,
     bottom,
-    clockLine: game.status === 'Upcoming'
-      ? new Date(game.startTime).toLocaleTimeString(viewer.locale, { timeZone: viewer.timeZone, hour: 'numeric', minute: '2-digit' })
-      : progressLine(game, 'short') ?? '',
+    clockLine: progressLine(game, 'short', viewer) ?? '',
     flames: game.hot,
   }
 }

@@ -7,6 +7,7 @@ import { cardClusterLayer } from '../globe/cardLayoutLayers'
 import { zoomSettings } from '../globe/zoomLevels'
 import { userEvent } from 'vitest/browser'
 import type { Game } from './game'
+import type { GameDetails } from '../panel/gameDetails'
 import { GameNavigation } from './GameNavigation'
 import { useGameSelection } from './useGameSelection'
 import { GamePanel } from '../panel/GamePanel'
@@ -38,7 +39,6 @@ function game(id: string): Game {
     streamLinks: [],
     note: null,
     situation: null,
-    lastScore: null,
     keyEvents: [],
     topEvent: false,
     scoreline: null,
@@ -74,6 +74,7 @@ afterEach(async () => {
   await act(async () => root?.unmount())
   container?.remove()
   container = null!
+  vi.unstubAllGlobals()
 })
 
 it('opens the current game with Enter and Space and restores focus on close', async () => {
@@ -260,12 +261,77 @@ it("links the panel to a game's StreamEast stream and ESPN page, and has no link
     streamLinks: [{ site: 'StreamEast', url: 'https://streameast.test/nfl/game/1' }],
     espnUrl: 'https://www.espn.com/nfl/game/_/gameId/1',
   }
-  const links = () => [...document.querySelectorAll<HTMLAnchorElement>('.game-panel__watch a')].map((a) => a.href)
+  const links = () => [...document.querySelectorAll<HTMLAnchorElement>('dialog[open] a')].map((a) => a.href)
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json(details)))
   await show([game('N'), linked])
 
   await open('N')
+  await clickTv()
   expect(links()).toEqual([])
+  await userEvent.keyboard('{Escape}')
 
   await open('W')
+  expect(links()).toEqual([])
+  await clickTv()
   expect(links()).toEqual(['https://streameast.test/nfl/game/1', 'https://www.espn.com/nfl/game/_/gameId/1'])
+  expect(container.querySelector('dialog[open]')?.textContent).toContain('ESPN2')
+})
+
+
+const details: GameDetails = {
+  periodScores: [{ label: 'Q1', home: '7', away: '0' }],
+  homeTotal: '7',
+  awayTotal: '0',
+  scoring: [{ team: 'KC', text: 'Seven-yard touchdown run', when: 'Q1 9:00', homeScore: 7, awayScore: 0 }],
+  drives: [{ team: 'KC', outcome: 'Touchdown', scored: true, plays: 8, yards: 75, duration: '4:30', start: 'KC 25', end: 'BUF 0' }],
+  stats: [{ team: 'KC', sections: [{ name: 'Passing', columns: ['YDS'], players: [{ name: 'Patrick Mahomes', values: ['40'] }] }] }],
+  videos: [{ title: 'Game highlights', url: 'https://www.espn.com/video/clip?id=1', duration: 45 }],
+  broadcasts: ['ESPN2'],
+}
+
+async function clickTv() {
+  const button = container.querySelector<HTMLButtonElement>('button[aria-label="Watch and game info"]')!
+  await act(async () => button.click())
+}
+
+it('loads details on opening a tab and collapses them without closing the game', async () => {
+  const fetchDetails = vi.fn(async () => Response.json(details))
+  vi.stubGlobal('fetch', fetchDetails)
+  const tab = (label: string) => [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+    .find((button) => button.textContent === label)!
+  const pane = () => container.querySelector('[role="tabpanel"]')!
+  await show([game('A'), game('B')])
+
+  await open('A')
+  expect(pane().closest('[inert]')).not.toBeNull()
+  expect(fetchDetails).not.toHaveBeenCalled()
+
+  await act(async () => tab('Score').click())
+  expect(pane().closest('[inert]')).toBeNull()
+  expect(pane().textContent).toContain('Q1')
+  expect(fetchDetails).toHaveBeenCalledExactlyOnceWith('/api/game-details?id=A&league=NFL', expect.any(Object))
+
+  await act(async () => tab('Scoring').click())
+  expect(pane().textContent).toContain('Seven-yard touchdown run')
+  await act(async () => tab('Drives').click())
+  expect(pane().textContent).toContain('75 yards')
+  await act(async () => tab('Stats').click())
+  expect(pane().textContent).toContain('Patrick Mahomes')
+  await act(async () => tab('Videos').click())
+  const video = pane().querySelector('a')!
+  expect(video.href).toBe('https://www.espn.com/video/clip?id=1')
+  expect(video.target).toBe('_blank')
+  expect(fetchDetails).toHaveBeenCalledTimes(1)
+
+  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Collapse game details"]')!
+  await act(async () => collapse.click())
+  expect(pane().closest('[inert]')).not.toBeNull()
+  expect(document.activeElement).toBe(tab('Videos'))
+  expect(container.querySelector('.game-panel')).not.toBeNull()
+
+  await open('B')
+  expect(pane().closest('[inert]')).not.toBeNull()
+  await open('A')
+  expect(pane().closest('[inert]')).not.toBeNull()
+  expect(fetchDetails).toHaveBeenCalledTimes(1)
 })

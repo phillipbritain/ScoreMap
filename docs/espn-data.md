@@ -1,6 +1,6 @@
 # ESPN data
 
-What ESPN's unofficial API (ADR-0001) gives for a game, what ScoreMap reads from it, and what's there to add later. All of ESPN's response shape is read in `server/src/ScoreMap.Server/GameFeed/EspnGameFeedProvider.cs`; how often the server asks is in [configuration.md](configuration.md#polling).
+What ESPN's unofficial API (ADR-0001) gives for a game, what ScoreMap reads from it, and what's there to add later. The ESPN feed adapter in `server/src/ScoreMap.Server/GameFeed/` reads these responses; how often the server asks is in [configuration.md](configuration.md#polling).
 
 The field names below are ESPN's, under `https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/`. Some fields only show up in some sports or states. This list was checked against live responses in October 2026, and ESPN changes them without notice.
 
@@ -9,10 +9,10 @@ The field names below are ESPN's, under `https://site.api.espn.com/apis/site/v2/
 | Request | When | Size |
 | --- | --- | --- |
 | `scoreboard?dates=YYYYMMDD&limit=500` | Every poll of a league, for yesterday and today (and near midnight, tomorrow) | Tens of KB per day |
-| `summary?event={id}` | A game inside its pin window whose score needs last-score details | About 5–500 KB; basketball and hockey list every play |
+| `summary?event={id}` | When a viewer opens a game’s details or Watch and game info | About 5–500 KB; basketball and hockey list every play |
 | `teams/{id}` | Once per home team, only for a game with no venue (for its city) | Small |
 
-Summary lookups run in the background, at most four at once across all leagues, with only one queued or active lookup per game. The board chooses which games are inside their pin windows; the feed adapter decides which need a summary. Basic scores return immediately with any cached last score, and new details reach browsers on a later poll. A caught-up summary is kept until the score changes; a failed, empty or lagging summary is tried up to three times at the same score while keeping the last detail available. Cancellation releases queued and active work without spending a retry. A result finishing after a scenario switch only updates the real feed's cache, never the scenario's games.
+Summary lookups run separately from polling and live score delivery. Viewers share a lookup for the same game, with at most four requests in flight across leagues and a 20-second cache. The browser refreshes an open Live game’s details every 20 seconds. The simulated games in scenarios, demos and the welcome tour have no ESPN summary.
 
 ## What ScoreMap reads
 
@@ -26,7 +26,7 @@ In **MMA** (`mma/ufc`) each event is one game, its fight card, with the event's 
 
 In **golf** (`golf/pga`, and `golf/lpga` in the same shape) each event is one game, its tournament, with one competition whose id is the event's, Live for all four rounds (ADR-0020). Its entrants are the competitors in their `order`, each with `athlete.displayName`, `shortName` and `flag.href`, and `score` to par as text ("-12", "E", "+3"). `order` is unique even for ties (four golfers at -11 were ordered 2nd to 5th), so the server has golfers level on score share a position, shown "T2". `status.period` is the round, and `detail` reads "Round 2 - In Progress". There is no "thru": each competitor's `linescores` has one entry per round (`period`), itself holding a `linescores` entry per hole played, so the holes played this round are counted from it. What ESPN gives between rounds, or for a round suspended by weather, hasn't been seen yet: the server takes play to be between rounds once some golfers have finished the round and none is part-way through it, or, from round 2, before anyone has begun it. The note is the event's `name` ("VidantaWorld Mexico Open"). The scoreboard gives no venue; the core API's event (`sports.core.api.espn.com/v2/sports/golf/leagues/{league}/events/{id}`) lists its `courses`, and the first gives the venue's `name`, `address` (`city`, `country`) and `id`, saved as racing's are.
 
-From the **summary**, for football, the last of its `scoringPlays`; for basketball, hockey and baseball, the last play marked `scoringPlay` among its `plays`. From each, the text, team, period (and baseball's `Top` or `Bottom`), clock, and the scores after it, to tell whether the summary has caught up with the scoreboard.
+From the **summary**, ScoreMap reads the period scores from the competitors’ `linescores` and the score after each play in `scoringPlays`, or in `plays` marked `scoringPlay`. Football drives use the previous and current drive’s result, play count, yards, elapsed time and field positions. Player stats use the columns and athlete rows from `boxscore.players`. Videos open the ESPN page from `videos[].links.web`, and the TV dialog lists broadcast networks from the summary’s broadcast entries. Soccer and rugby can show scoring from the scoreboard’s key events. ESPN’s tournament IDs and tennis match IDs differ, so tennis sets continue to come from the scoreboard.
 
 ## Available but not read
 
@@ -55,23 +55,21 @@ Per game (`competitions[]`):
 - `situation` beyond what ScoreMap reads, only while a game is under way: in baseball the `batter` and `pitcher`, each with a summary of their game so far ("0.0 IP, 0 ER, 0 H, 0 BB"); with every sport's `lastPlay`, its type, the players in it and (basketball) each team's chance of winning. Football's is said to have red-zone and timeout fields; no live football response has been checked yet.
 - `altGameNote`, `wasSuspended`, `format` (the regulation periods).
 
-### In the summary (already asked for, but only when a US sport's score changes)
+### In the summary
 
-Anything taken from here only refreshes when the score changes. Fresher would mean asking more often: up to about 500 KB per basketball or hockey game each time.
-
-- `boxscore`: per-player and per-team stats.
+- Team totals from `boxscore`.
 - `leaders`: the game's leaders, per team.
 - `winprobability`: each team's chance of winning after every play (basketball: about 470 entries a game).
-- `drives` (football): each drive, its plays and its result.
-- `plays`: every play, with shot coordinates in basketball.
+- Individual plays within football drives.
+- Shot coordinates in basketball play-by-play.
 - `gameInfo`: the attendance, the officials, the venue (with its photos, and whether it's grass), and the weather at outdoor football games. ScoreMap does not read these fields.
 - `standings`: the league's or division's standings.
 - `injuries`: each team's injury report.
 - `seasonseries`: how the two teams' games this season have gone.
-- `news`, `article`, `videos`: ESPN's coverage of the game.
+- `news` and `article`: ESPN’s written coverage of the game.
 - `pickcenter`, `againstTheSpread`, `odds`: betting data from several bookmakers, which ScoreMap does not read.
 
-Soccer, rugby, cricket and tennis games never get a summary request. Soccer's summary has its key events (`keyEvents`), lineups and match stats; cricket's has scorecards.
+Soccer’s summary has lineups and match stats, and cricket’s has scorecards.
 
 ### Not offered
 
@@ -82,7 +80,7 @@ ESPN gives no venue coordinates or end times (see ADR-0005). The cricket scorebo
 `hockey/mens-college-hockey` uses the default scoreboard: on 31 October 2026 it
 listed 25 games across Division I; `groups=50` returned none. Its periods and
 clock use the hockey rules, including tied finals recorded as `Final/OT` in period 4.
-Most summaries have no plays, so those games have no last score. The 2026 championship
+Most summaries have no plays, so those games have an empty Scoring tab. The 2026 championship
 (game 401862341) has goal plays marked `scoringPlay`, although its play list is incomplete.
 Scenario teams come from teams appearing in the current year's scoreboard, because
 the teams endpoint also lists defunct and lower-division teams as active.

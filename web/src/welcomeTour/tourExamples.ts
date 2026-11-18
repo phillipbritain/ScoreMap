@@ -117,7 +117,6 @@ export function leagueTourExample(league: League, conference: string | null, see
     period: null,
     note: null,
     situation: null,
-    lastScore: null,
     topEvent: false,
   }
   const at = (place: Venue): Game['venue'] => ({ ...place, timeZone: null, court: place.court ?? null, photo: null })

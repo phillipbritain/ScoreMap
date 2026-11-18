@@ -62,7 +62,7 @@ public class RugbyTests
     }
 
     [Fact]
-    public async Task Its_last_score_is_told_at_its_minute_and_its_scores_and_cards_are_listed()
+    public async Task Its_scores_and_cards_are_listed()
     {
         var game = await SentAsync(Match(InProgress, 2, "62'", 26, 21) with
         {
@@ -72,10 +72,8 @@ public class RugbyTests
                 new ProviderKeyEvent(KeyEventKind.Try, "SCO", "Rory Darge", "61'"),
                 new ProviderKeyEvent(KeyEventKind.Conversion, "SCO", "Finn Russell", "62'"),
             ],
-            LastScore = new ProviderScoringPlay("SCO", "Conversion: Finn Russell", null, "62'"),
         });
 
-        Assert.Equal(new ScoringPlay("SCO", "Conversion: Finn Russell", "62'"), game.LastScore);
         Assert.Equal([KeyEventKind.YellowCard, KeyEventKind.Try, KeyEventKind.Conversion], game.KeyEvents.Select(k => k.Kind));
     }
 

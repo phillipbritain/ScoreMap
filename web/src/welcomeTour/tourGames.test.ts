@@ -55,7 +55,6 @@ describe("the welcome tour's games", () => {
     expect(game.clock).not.toBeNull()
     expect([game.contest.away.record, game.contest.home.record].every((record) => record !== null)).toBe(true)
     expect(game.situation?.downAndDistance).not.toBeNull()
-    expect(game.lastScore).not.toBeNull()
   })
 
   it('sit in a fixed place, around the camera the tour opens on', () => {
@@ -123,7 +122,6 @@ describe('simulated event progress', () => {
     const game = tourGames(now).find(({ id }) => id === 'tour-nfl-pit')!
     expect(nextTourPlay(game, 0)).toMatchObject({
       contest: { home: { score: '16' }, away: { score: '17' } },
-      lastScore: { team: 'PIT', text: 'Field goal' },
     })
   })
 

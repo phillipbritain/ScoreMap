@@ -1,0 +1,264 @@
+{
+  "header": {
+    "competitions": [
+      {
+        "competitors": [
+          {
+            "id": "256",
+            "homeAway": "home",
+            "team": {
+              "abbreviation": "JMU"
+            },
+            "score": "24",
+            "linescores": [
+              {
+                "displayValue": "0"
+              },
+              {
+                "displayValue": "7"
+              },
+              {
+                "displayValue": "7"
+              },
+              {
+                "displayValue": "10"
+              }
+            ]
+          },
+          {
+            "id": "309",
+            "homeAway": "away",
+            "team": {
+              "abbreviation": "UL"
+            },
+            "score": "14",
+            "linescores": [
+              {
+                "displayValue": "0"
+              },
+              {
+                "displayValue": "14"
+              },
+              {
+                "displayValue": "0"
+              },
+              {
+                "displayValue": "0"
+              }
+            ]
+          }
+        ],
+        "broadcasts": [
+          {
+            "type": {
+              "id": "1",
+              "shortName": "TV"
+            },
+            "market": {
+              "id": "1",
+              "type": "National"
+            },
+            "media": {
+              "shortName": "ESPN2"
+            },
+            "lang": "en",
+            "region": "us",
+            "isNational": true
+          }
+        ]
+      }
+    ]
+  },
+  "scoringPlays": [
+    {
+      "text": "Brock Chappell 5 Yd pass from Lunch Winfield (Tony Sterner Kick)",
+      "awayScore": 7,
+      "homeScore": 0,
+      "period": {
+        "number": 2
+      },
+      "clock": {
+        "displayValue": "8:33"
+      },
+      "team": {
+        "id": "309"
+      }
+    },
+    {
+      "text": "Landon Ellis 4 Yd pass from Alonza Barnett III (Morgan Suarez Kick)",
+      "awayScore": 7,
+      "homeScore": 7,
+      "period": {
+        "number": 2
+      },
+      "clock": {
+        "displayValue": "4:47"
+      },
+      "team": {
+        "id": "256"
+      }
+    },
+    {
+      "text": "Dale Martin 69 Yd pass from Lunch Winfield (Tony Sterner Kick)",
+      "awayScore": 14,
+      "homeScore": 7,
+      "period": {
+        "number": 2
+      },
+      "clock": {
+        "displayValue": "3:16"
+      },
+      "team": {
+        "id": "309"
+      }
+    },
+    {
+      "text": "Landon Ellis 62 Yd pass from Alonza Barnett III (Morgan Suarez Kick)",
+      "awayScore": 14,
+      "homeScore": 14,
+      "period": {
+        "number": 3
+      },
+      "clock": {
+        "displayValue": "14:46"
+      },
+      "team": {
+        "id": "256"
+      }
+    },
+    {
+      "text": "Landon Ellis 4 Yd pass from Alonza Barnett III (Morgan Suarez Kick)",
+      "awayScore": 14,
+      "homeScore": 21,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "12:33"
+      },
+      "team": {
+        "id": "256"
+      }
+    },
+    {
+      "text": "Morgan Suarez 24 Yd Field Goal  ",
+      "awayScore": 14,
+      "homeScore": 24,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "3:05"
+      },
+      "team": {
+        "id": "256"
+      }
+    }
+  ],
+  "drives": {
+    "previous": [
+      {
+        "id": "4017616251",
+        "team": {
+          "abbreviation": "UL"
+        },
+        "start": {
+          "text": "UL 25"
+        },
+        "end": {
+          "text": "UL 29"
+        },
+        "timeElapsed": {
+          "displayValue": "1:28"
+        },
+        "yards": 4,
+        "isScore": false,
+        "offensivePlays": 3,
+        "displayResult": "Punt"
+      }
+    ]
+  },
+  "boxscore": {
+    "players": [
+      {
+        "team": {
+          "abbreviation": "UL"
+        },
+        "statistics": [
+          {
+            "name": "passing",
+            "text": "Louisiana Passing",
+            "labels": [
+              "C/ATT",
+              "YDS",
+              "AVG",
+              "TD",
+              "INT",
+              "QBR"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "displayName": "Lunch Winfield"
+                },
+                "stats": [
+                  "14/28",
+                  "243",
+                  "8.7",
+                  "2",
+                  "1",
+                  "59.7"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "team": {
+          "abbreviation": "JMU"
+        },
+        "statistics": [
+          {
+            "name": "passing",
+            "text": "James Madison Passing",
+            "labels": [
+              "C/ATT",
+              "YDS",
+              "AVG",
+              "TD",
+              "INT",
+              "QBR"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "displayName": "Alonza Barnett III"
+                },
+                "stats": [
+                  "26/40",
+                  "290",
+                  "7.3",
+                  "3",
+                  "1",
+                  "55.0"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "videos": [
+    {
+      "headline": "Louisiana Ragin' Cajuns vs. James Madison Dukes: Full Highlights",
+      "duration": 76,
+      "links": {
+        "web": {
+          "href": "https://www.espn.com/video/clip?id=46563597"
+        }
+      }
+    }
+  ]
+}

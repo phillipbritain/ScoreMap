@@ -47,7 +47,7 @@ export function useSwipeToClose(gameId: string, onClose: () => void) {
   return {
     onPointerDown(event: PointerEvent<HTMLElement>) {
       if (event.button !== 0 || !window.matchMedia(sheetScreen).matches) return
-      if ((event.target as Element).closest('.game-panel__band')) return
+      if ((event.target as Element).closest('.game-panel__band, [data-panel-scroll], dialog')) return
       press.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, dragging: false, samples: [] }
     },
     onPointerMove(event: PointerEvent<HTMLElement>) {

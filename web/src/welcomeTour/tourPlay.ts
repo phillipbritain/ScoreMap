@@ -62,13 +62,12 @@ export function nextTourPlay(game: Game, turn: number): Game {
     }
   }
 
-  const [next, text] = scoreTeam(team, game.sport, turn)
+  const next = scoreTeam(team, game.sport, turn)
   const clock = nextTeamClock(game.clock)
   return {
     ...game,
     clock,
     contest: { ...contest, [scoring]: next },
-    lastScore: game.sport === 'Cricket' ? null : { team: team.abbreviation, text, when: clock },
   }
 }
 
@@ -95,14 +94,13 @@ function toPar(score: string | null): number {
   return score === 'E' ? 0 : Number(score)
 }
 
-function scoreTeam(team: GameTeam, sport: string, turn: number): [GameTeam, string] {
+function scoreTeam(team: GameTeam, sport: string, turn: number): GameTeam {
   if (sport === 'Cricket') {
     const [runs, wickets = '2'] = (team.score ?? '0').split('/')
-    return [{ ...team, score: `${Number(runs) + (turn % 3 === 0 ? 4 : 1)}/${wickets}` }, 'Runs scored']
+    return { ...team, score: `${Number(runs) + (turn % 3 === 0 ? 4 : 1)}/${wickets}` }
   }
   const points = sport === 'Football' ? 3 : sport === 'Basketball' ? 2 + turn % 2 : sport === 'Rugby' ? 5 : 1
-  const action = sport === 'Football' ? 'Field goal' : sport === 'Basketball' ? 'Basket' : sport === 'Rugby' ? 'Try' : sport === 'Baseball' ? 'Run scored' : 'Goal'
-  return [{ ...team, score: String(Number(team.score ?? '0') + points) }, action]
+  return { ...team, score: String(Number(team.score ?? '0') + points) }
 }
 
 interface TourPlay {

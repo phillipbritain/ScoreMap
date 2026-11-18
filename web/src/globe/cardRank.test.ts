@@ -23,7 +23,6 @@ const game = (changes: Partial<Game> = {}): Game => ({
   streamLinks: [],
   note: null,
   situation: null,
-  lastScore: null,
   keyEvents: [],
   topEvent: false,
   scoreline: null,

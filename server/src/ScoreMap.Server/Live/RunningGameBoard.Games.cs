@@ -45,20 +45,18 @@ public sealed partial class RunningGameBoard
             feed.FetchTopEventsAsync(cancellationToken);
 
         /// <summary>Applies basic game data without waiting for optional venue lookups.</summary>
-        public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard, CancellationToken cancellationToken)
+        public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard)
         {
             var now = clock.GetUtcNow();
             ForgetGamesNoLongerReported(league.Key, scoreboard);
             var games = new List<Game>();
-            foreach (var reported in scoreboard)
+            foreach (var game in scoreboard)
             {
-                var game = reported;
                 if (ToGameStatus(game.Status) is not { } status)
                     continue;
                 var endTime = RecordSighting(league, game, now);
                 if (!IsInPinWindow(game, status, endTime, now))
                     continue;
-                game = feed.EnrichGame(game, cancellationToken);
                 var previous = _reported.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var previousGame = _games.GetValueOrDefault(league.Key, []).FirstOrDefault(g => g.Id == game.Id);
                 var location = venues.Fallback(game.Venue, (game.Contest as ProviderSides)?.Home);
@@ -205,7 +203,6 @@ public sealed partial class RunningGameBoard
                 Situation = status == GameStatus.Live && game.Situation is { } s
                     ? new GameSituation(s.LastPlay, s.DownAndDistance, s.Possession, s.Balls, s.Strikes, s.Outs, s.OnFirst, s.OnSecond, s.OnThird)
                     : null,
-                LastScore = game.LastScore is { } play ? new ScoringPlay(play.Team, play.Text, ClockLine.When(play, league)) : null,
                 KeyEvents = game.KeyEvents.Select(k => new KeyEvent(k.Kind, k.Team, k.Player, k.Clock)).ToList(),
                 TopEvent = _topEvents.Contains(game.Id),
                 Scoreline = Scoreline.For(game, league),

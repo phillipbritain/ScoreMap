@@ -2352,9 +2352,9 @@ body {
 }
 
 /* The loading screen, over the globe until ScoreMap is ready (see loading/LoadingScreen.tsx): the
-   globe dimmed in the theme's dim, which still lets it show through, and a flying rocket in the middle.
-   It takes the globe's pointer and touch input, so the camera can't move while loading; the rail
-   and the bottom stack come after it on the page, so they lie over it and stay usable. */
+   theme's dim color, solid, hiding the globe as it draws, and a flying rocket in the middle. It takes
+   the globe's pointer and touch input, so the camera can't move while loading; the rail and the bottom
+   stack come after it on the page, out of sight until the reveal (see .globe-area--hidden). */
 .loading-screen {
   position: absolute;
   inset: 0;
@@ -2362,18 +2362,34 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--loading-screen-dim-color);
+  touch-action: none;
+}
+
+/* As the cut-off note uses it: the globe dimmed, as opaque as the theme's dim, so it still shows
+   through, and it takes its pointer and touch input through it, so it can still be moved. */
+.loading-screen--movable {
   background: color-mix(
     in srgb,
     var(--loading-screen-dim-color) calc(var(--loading-screen-dim-opacity) * 100%),
     transparent
   );
-  touch-action: none;
-}
-
-/* As the cut-off note uses it: the globe takes its pointer and touch input through it, so it can still be moved. */
-.loading-screen--movable {
   pointer-events: none;
   touch-action: auto;
+}
+
+/* Before the reveal (see loading/revealPhase.ts): the controls and messages over the globe wait out
+   of sight, still laid out (so the rail's clearance is measured), so nothing comes in on its own while
+   the rocket flies. */
+.globe-area--hidden > :is(.rail, .top-rail, .bottom-stack) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* The reveal: they fade in as the loading screen fades away, over the same 0.4 s, and the welcome
+   tour with them, so the globe, its cards and names, the controls and the tour come in as one. */
+.globe-area--revealing > :is(.rail, .top-rail, .bottom-stack, .welcome-tour, .demo-label) {
+  animation: fade-in 0.4s ease-out both;
 }
 
 /* Ready: the dim fades away, letting the globe have its input at once. */
@@ -2562,7 +2578,8 @@ body {
 }
 
 /* With reduce motion the rocket fades in place, its flame steady and with no speed lines, the message
-   is there at once, its dots steady, and the dim goes at once. */
+   is there at once, its dots steady, and the loading screen goes at once, everything it hid there at
+   once too. */
 @media (prefers-reduced-motion: reduce) {
   .loading-screen__rocket-ship {
     animation: loading-screen-rocket-still 1.6s ease-in-out infinite;
@@ -2579,6 +2596,10 @@ body {
   .loading-screen--leaving {
     animation: none;
     opacity: 0;
+  }
+
+  .globe-area--revealing > :is(.rail, .top-rail, .bottom-stack, .welcome-tour, .demo-label) {
+    animation: none;
   }
 }
 

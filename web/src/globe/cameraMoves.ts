@@ -1,16 +1,15 @@
 import { LngLat, LngLatBounds, type EaseToOptions, type Map as MapLibreMap, type MapMovementEvent } from 'maplibre-gl'
 import type { PlacedGame } from '../games/placedGames'
 import type { ScoreCardMarkers } from './scoreCardMarkers'
-import { clearCenter, liftClearOf, type ScreenBox } from './panelClearance'
+import { clearCenter, type ScreenBox } from './panelClearance'
 import { centerLatitude, zoomAt, zoomAtEquator } from './zoomLevels'
 
-/** How a selected game should be brought clear of its panel. */
-export type SelectionIntent = 'lift' | 'center'
+/** Whether selecting a game leaves the camera where it is, or centers the game above its panel. */
+export type SelectionIntent = 'still' | 'center'
 
 interface CameraMovesOptions {
   game: (gameId: string) => PlacedGame | undefined
   cards: Pick<ScoreCardMarkers, 'shows' | 'cardClusters'>
-  pinOnPage: (game: PlacedGame) => ScreenBox
   onPick: (gameId: string) => void
   onSelection: (gameId: string | null) => void
 }
@@ -49,22 +48,16 @@ export class CameraMoves {
   /** The current selection and its rendered panel, or a selection with an explicit camera intent. */
   select(gameId: string | null, panel: ScreenBox | null, intent?: SelectionIntent): void {
     if (this.destroyed) return
-    const move = intent ?? (gameId !== null && this.pendingPick === gameId ? 'center' : 'lift')
+    const move = intent ?? (gameId !== null && this.pendingPick === gameId ? 'center' : 'still')
     this.pendingPick = null
     const changed = gameId !== this.selectedGameId
-    if (!changed && move === 'lift') return
+    if (!changed && move === 'still') return
     this.cancel()
     this.selectedGameId = gameId
     if (changed) this.options.onSelection(gameId)
+    if (move === 'still') return
     const game = gameId === null ? undefined : this.options.game(gameId)
-    if (!game) return
-    if (move === 'center') return this.center(game, panel)
-    const lift = liftClearOf(this.options.pinOnPage(game), panel)
-    if (lift <= 0) return
-    const venue: [number, number] = [game.venue.longitude, game.venue.latitude]
-    const { x, y } = this.map.project(venue)
-    const { width, height } = this.map.getContainer().getBoundingClientRect()
-    this.map.easeTo({ center: venue, offset: [x - width / 2, y - lift - height / 2], duration: 600 })
+    if (game) this.center(game, panel)
   }
 
   /** Zooms to fit a card cluster, then again while any of its games still have no room. */

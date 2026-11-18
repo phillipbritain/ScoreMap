@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
+using ScoreMap.Server.Scenarios;
 using ScoreMap.Server.Tests.Support;
 using ScoreMap.Server.Venues;
 using static ScoreMap.Server.Tests.Support.StubHttpHandler;
@@ -68,6 +69,87 @@ public class VenuePhotoSearchTests
             new HttpClient(handler) { BaseAddress = new Uri("https://nominatim.test/") },
             new FakeTimeProvider(),
             Options.Create(new NominatimOptions())));
+
+    // Soldier Field, as the venue list has it: ESPN's id and city for it in the NFL and in MLS.
+    private static readonly VenueLeagueCatalog SoldierFieldCatalog = new(
+        [new ScenarioVenue("Soldier Field",
+        [
+            new ScenarioVenueLeague("NFL", "3933", "Chicago", "IL", "USA", ["Chicago Bears"]),
+            new ScenarioVenueLeague("MLS", "1452", "Chicago, Illinois", null, "USA", ["Chicago Fire FC"]),
+        ], ["worldwide"])],
+        [
+            new League { Key = "football/nfl", Name = "NFL", Sport = Sport.Football },
+            new League { Key = "soccer/usa.1", Name = "MLS", Sport = Sport.Soccer },
+        ]);
+
+    private const string EspnSoldierFieldMls = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/usa.1/venues/1452";
+    private const string EspnSoldierFieldNfl = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/venues/3933";
+    private const string SoldierFieldNflImages = """
+        {"id":"3933","images":[{"href":"https://a.espncdn.com/i/venues/nfl/day/interior/3933.jpg","width":2000,"rel":["full","day","interior"]}]}
+        """;
+    private static readonly ProviderVenue SoldierFieldMls = new("Soldier Field", "Chicago, Illinois", null, "USA", "1452");
+
+    private static VenuePhotoSearch Search(StubHttpHandler handler, VenueLeagueCatalog catalog) => new(
+        new HttpClient(handler),
+        new NominatimPlaceSearch(
+            new HttpClient(handler) { BaseAddress = new Uri("https://nominatim.test/") },
+            new FakeTimeProvider(),
+            Options.Create(new NominatimOptions())),
+        catalog);
+
+    [Fact]
+    public async Task Takes_another_leagues_espn_photo_of_the_venue_when_the_games_league_has_none()
+    {
+        var handler = Serving((EspnSoldierFieldMls, """{"id":"1452","images":[]}"""), (EspnSoldierFieldNfl, SoldierFieldNflImages));
+
+        var photo = await Search(handler, SoldierFieldCatalog).SearchAsync("soccer/usa.1", SoldierFieldMls, CancellationToken.None);
+
+        Assert.Equal(new VenuePhoto("https://a.espncdn.com/combiner/i?img=/i/venues/nfl/day/interior/3933.jpg&w=720", null), photo);
+        Assert.Equal([EspnSoldierFieldMls, EspnSoldierFieldNfl], handler.Requests.Select(r => r.RequestUri!.AbsoluteUri));
+    }
+
+    [Fact]
+    public async Task Keeps_the_games_own_leagues_photo_over_another_leagues()
+    {
+        var handler = Serving((EspnSoldierFieldMls, """
+            {"id":"1452","images":[{"href":"https://a.espncdn.com/i/venues/soccer/day/1452.jpg","width":2000,"rel":["full","day"]}]}
+            """), (EspnSoldierFieldNfl, SoldierFieldNflImages));
+
+        var photo = await Search(handler, SoldierFieldCatalog).SearchAsync("soccer/usa.1", SoldierFieldMls, CancellationToken.None);
+
+        Assert.Equal(new VenuePhoto("https://a.espncdn.com/combiner/i?img=/i/venues/soccer/day/1452.jpg&w=720", null), photo);
+        Assert.Single(handler.Requests);
+    }
+
+    [Fact]
+    public async Task Asks_commons_only_when_no_league_at_the_venue_has_a_good_espn_photo()
+    {
+        var handler = Serving((EspnSoldierFieldMls, """{"id":"1452","images":[]}"""),
+            (EspnSoldierFieldNfl, """{"id":"3933","images":[{"href":"https://a.espncdn.com/i/venues/nfl/day/3933.jpg","width":500,"rel":["full","day"]}]}"""),
+            ("https://nominatim.test/", "[]"));
+
+        var photo = await Search(handler, SoldierFieldCatalog).SearchAsync("soccer/usa.1", SoldierFieldMls, CancellationToken.None);
+
+        Assert.Null(photo);
+        Assert.Equal([EspnSoldierFieldMls, EspnSoldierFieldNfl], handler.Requests.Take(2).Select(r => r.RequestUri!.AbsoluteUri));
+        Assert.StartsWith("https://nominatim.test/", handler.Requests[2].RequestUri!.AbsoluteUri);
+    }
+
+    [Theory]
+    [InlineData("Soldier Field", "Springfield")]
+    [InlineData("Wrigley Field", "Chicago")]
+    public void A_venue_not_in_the_list_or_of_the_same_name_elsewhere_has_no_other_leagues(string name, string city)
+    {
+        Assert.Empty(SoldierFieldCatalog.OtherLeagues("soccer/usa.1", new ProviderVenue(name, city, null, "USA", "1")));
+    }
+
+    [Fact]
+    public void A_venue_in_the_list_has_its_other_leagues_ids_however_its_league_writes_its_city()
+    {
+        Assert.Equal([("football/nfl", "3933")], SoldierFieldCatalog.OtherLeagues("soccer/usa.1", SoldierFieldMls));
+        Assert.Equal([("soccer/usa.1", "1452")],
+            SoldierFieldCatalog.OtherLeagues("football/nfl", new ProviderVenue("Soldier Field", "Chicago", "IL", "USA", "3933")));
+    }
 
     [Fact]
     public async Task Uses_espns_interior_photo_over_its_main_one_resized_for_the_panel_without_asking_anyone_else()

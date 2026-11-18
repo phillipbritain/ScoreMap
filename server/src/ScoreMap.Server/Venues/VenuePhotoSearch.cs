@@ -9,12 +9,14 @@ namespace ScoreMap.Server.Venues;
 
 /// <summary>
 /// Finds a venue's photo, preferring one from inside, trying in order: ESPN's own "interior" photo of
-/// the venue from its core API, then its main ("day") one, which cover most US venues; then the images Wikidata gives for the venue
+/// the venue from its core API, then its main ("day") one, which cover most US venues, in the game's
+/// league; then ESPN's photo of the venue in another league that plays there (from
+/// <see cref="VenueLeagueCatalog"/>: ESPN gives each league its own id for a venue, and its own photos); then the images Wikidata gives for the venue
 /// (its interior images, P5775, then its main ones, P18), found through the Wikidata item OpenStreetMap links the venue to, served by
 /// Wikimedia Commons with their author and license. Both are asked for a photo about twice the game panel's width. Only a good photo
 /// is taken (see <see cref="IsGoodPhoto"/>): with none, the venue has no photo rather than a poor one.
 /// </summary>
-public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSearch places) : IVenuePhotoSearch
+public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSearch places, VenueLeagueCatalog? leagues = null) : IVenuePhotoSearch
 {
     /// <summary>Width asked for, in pixels: the game panel is 360 CSS pixels wide, so this stays sharp on high-density screens.</summary>
     public const int PhotoWidth = 720;
@@ -30,17 +32,24 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
     /// <summary>Wikidata's "interior image" property.</summary>
     private const string InteriorImage = "P5775";
 
-    public async Task<VenuePhoto?> SearchAsync(string leagueKey, ProviderVenue venue, CancellationToken cancellationToken) =>
-        await EspnPhotoAsync(leagueKey, venue, cancellationToken) ?? await CommonsPhotoAsync(venue, cancellationToken);
+    public async Task<VenuePhoto?> SearchAsync(string leagueKey, ProviderVenue venue, CancellationToken cancellationToken)
+    {
+        if (await EspnPhotoAsync(leagueKey, venue.Id, cancellationToken) is { } own)
+            return own;
+        foreach (var (otherLeague, id) in (leagues ?? VenueLeagueCatalog.Empty).OtherLeagues(leagueKey, venue))
+            if (await EspnPhotoAsync(otherLeague, id, cancellationToken) is { } other)
+                return other;
+        return await CommonsPhotoAsync(venue, cancellationToken);
+    }
 
     /// <summary>
     /// ESPN's photo of the venue, resized by ESPN's image combiner, or null when it has none. Its
     /// "interior" image (of the field, for football venues) is taken first, then its main "day" one,
     /// which for football venues is from outside and for arenas and ballparks is of the bowl.
     /// </summary>
-    private async Task<VenuePhoto?> EspnPhotoAsync(string leagueKey, ProviderVenue venue, CancellationToken cancellationToken)
+    private async Task<VenuePhoto?> EspnPhotoAsync(string leagueKey, string? venueId, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(venue.Id))
+        if (string.IsNullOrWhiteSpace(venueId))
             return null;
         // League keys are "sport/league", sometimes with a scoreboard query ("?groups=50") that the core API doesn't take.
         var (sport, league) = leagueKey.Split('?')[0].Split('/') is [var s, var l] ? (s, l) : (null, null);
@@ -48,7 +57,7 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
             return null;
 
         var details = await GetJsonAsync<EspnVenue>(
-            $"{EspnCoreApi}{sport}/leagues/{league}/venues/{Uri.EscapeDataString(venue.Id)}", cancellationToken);
+            $"{EspnCoreApi}{sport}/leagues/{league}/venues/{Uri.EscapeDataString(venueId)}", cancellationToken);
         // ESPN's images are photos of the bowl or field, so only their size is checked.
         var images = details?.Images?.Where(i => i.Href is not null && i.Rel is not null && !(i.Width < PhotoWidth)).ToList() ?? [];
         var best = images.FirstOrDefault(i => i.Rel!.Contains("interior"))

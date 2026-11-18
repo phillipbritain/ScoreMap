@@ -21,9 +21,10 @@ public sealed class VenuePhotos
     /// The saved-photos file's version, raised whenever the search changes which photo it prefers, so
     /// answers found the old way are dropped and each venue is searched for again: 1 preferred ESPN's
     /// outside ("day") photo, 2 its inside ("interior") one, 3 spelled a credit's license the American way,
-    /// and 4 drops poor photos (small, or satellite and aerial views) and prefers Wikidata's inside ones.
+    /// 4 drops poor photos (small, or satellite and aerial views) and prefers Wikidata's inside ones, and 5
+    /// takes another league's ESPN photo of the venue when the game's league has none.
     /// </summary>
-    private const int SavedFileVersion = 4;
+    private const int SavedFileVersion = 5;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 

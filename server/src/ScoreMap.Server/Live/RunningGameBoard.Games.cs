@@ -32,6 +32,9 @@ public sealed partial class RunningGameBoard
 
         public IReadOnlyList<League> Leagues => leagues.Value;
 
+        /// <summary>The time the board's games are on: the real time, or a scenario clock.</summary>
+        public TimeProvider GameClock => clock;
+
         /// <summary>A consistent snapshot of every game on the board, safe to read while leagues update.</summary>
         public IReadOnlyList<Game> Games => Volatile.Read(ref _snapshot);
 

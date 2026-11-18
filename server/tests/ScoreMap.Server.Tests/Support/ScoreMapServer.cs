@@ -337,6 +337,8 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
     private readonly Channel<GameChange> _changes = Channel.CreateUnbounded<GameChange>();
     public bool ChangePrecededSnapshot { get; private set; }
 
+    private readonly Channel<BoardClock> _clocks = Channel.CreateUnbounded<BoardClock>();
+
     private readonly Channel<ScenarioEndpoints.ScenarioListing> _scenarioChanges =
         Channel.CreateUnbounded<ScenarioEndpoints.ScenarioListing>();
 
@@ -353,8 +355,13 @@ public sealed class TestClient(bool demo, HubConnection connection) : IAsyncDisp
             _changes.Writer.TryWrite(change);
         });
         connection.On<ScenarioEndpoints.ScenarioListing>(GamesHub.ScenarioChangedMessage, listing => _scenarioChanges.Writer.TryWrite(listing));
+        connection.On<BoardClock>(GamesHub.BoardClockMessage, clock => _clocks.Writer.TryWrite(clock));
         await connection.StartAsync();
     }
+
+    /// <summary>The game board's clock, as the server next sent it: on joining, and after a switch or a change of speed.</summary>
+    public async Task<BoardClock> NextBoardClockAsync() =>
+        await _clocks.Reader.ReadAsync().AsTask().WaitAsync(Timeout);
 
     /// <summary>What the server next said about scenarios, after a switch or a change of speed.</summary>
     public async Task<ScenarioEndpoints.ScenarioListing> NextScenarioChangeAsync() =>

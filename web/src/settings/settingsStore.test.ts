@@ -22,6 +22,7 @@ describe('settingsStore', () => {
     const chosen = {
       hiddenLeagues: ['NBA', 'MLS'],
       topEventsOnly: true,
+      onlyLiveGames: true,
       sportColors: { Football: '#123456', Soccer: '#abcdef' },
       leagueColors: { NFL: '#fedcba' },
       mapType: 'satellite' as const,
@@ -142,6 +143,7 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: false,
+      onlyLiveGames: false,
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
@@ -157,6 +159,7 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: true,
+      onlyLiveGames: false,
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
@@ -253,6 +256,7 @@ describe('settingsStore', () => {
       expect(settingsStore(() => storage).load()).toEqual({
         hiddenLeagues: ['NBA', 'MLS'],
         topEventsOnly: true,
+        onlyLiveGames: false,
         sportColors: {},
         leagueColors: {},
         mapType: 'plain',

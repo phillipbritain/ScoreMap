@@ -3,6 +3,9 @@ import type { Game, GameSides } from '../games/game'
 import { themeWith } from '../theme/testTheme'
 import { headerText, scoreCard } from './scoreCard'
 
+// A viewer in New York, for start times.
+const eastern = { timeZone: 'America/New_York', locale: 'en-US' }
+
 const arrowhead: Game = {
   id: '401',
   league: 'NFL',
@@ -61,7 +64,7 @@ describe('scoreCard', () => {
     expect([card.top.label, card.bottom.label]).toEqual(['KC', 'BUF'])
   })
 
-  it('leaves scores blank and shows no clock line before an Upcoming game starts', () => {
+  it("leaves scores blank and shows the start time, in the viewer's time, before an Upcoming game starts", () => {
     const upcoming: Game = {
       ...arrowhead,
       status: 'Upcoming',
@@ -74,11 +77,11 @@ describe('scoreCard', () => {
       },
     }
 
-    expect(scoreCard(upcoming)).toMatchObject({
+    expect(scoreCard(upcoming, eastern)).toMatchObject({
       status: 'Upcoming',
       top: { score: '' },
       bottom: { score: '' },
-      clockLine: '',
+      clockLine: '1:00 PM',
     })
   })
 
@@ -198,10 +201,10 @@ describe('scoreCard for a fight card', () => {
       contest: { kind: 'bouts', bouts: [main, { ...coMain, status: 'Upcoming', round: null }] },
     }
 
-    expect(scoreCard(upcoming)).toMatchObject({
+    expect(scoreCard({ ...upcoming, startTime: '2026-11-17T03:00:00Z' }, eastern)).toMatchObject({
       top: { label: 'J. Jones' },
       bottom: { label: 'S. Miocic' },
-      clockLine: new Date(upcoming.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+      clockLine: '10:00 PM',
     })
   })
 

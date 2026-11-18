@@ -39,6 +39,12 @@ public sealed class GamesHub(
     /// </summary>
     public const string ScenarioChangedMessage = "ScenarioChanged";
 
+    /// <summary>
+    /// Client method that receives the game board's clock (a <see cref="Live.BoardClock"/>): after the
+    /// snapshot on joining, and after a switch or a change of speed.
+    /// </summary>
+    public const string BoardClockMessage = "BoardClock";
+
     public override async Task OnConnectedAsync()
     {
         if (Context.GetHttpContext()?.Request.Query.ContainsKey(DemoQuery) == true)

@@ -2,12 +2,13 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
 import { demoQuery } from '../demo/demo'
 import type { GamesHub } from './liveGames'
 
-// Must match GamesHub.Path, GamesHub.SnapshotMessage, GamesHub.ChangeMessage and
-// GamesHub.ScenarioChangedMessage on the server.
+// Must match GamesHub.Path, GamesHub.SnapshotMessage, GamesHub.ChangeMessage,
+// GamesHub.ScenarioChangedMessage and GamesHub.BoardClockMessage on the server.
 const hubPath = '/hubs/games'
 const snapshotMessage = 'Snapshot'
 const changeMessage = 'GameChanged'
 const scenarioChangedMessage = 'ScenarioChanged'
+const boardClockMessage = 'BoardClock'
 
 const maxRetryDelayMs = 30_000
 
@@ -29,6 +30,7 @@ export const signalRGamesHub: GamesHub = (events, demo) => {
   connection.on(snapshotMessage, events.snapshot)
   connection.on(changeMessage, events.change)
   connection.on(scenarioChangedMessage, events.scenarioChanged)
+  connection.on(boardClockMessage, events.boardClock)
   connection.onreconnecting(() => events.reconnecting())
   connection.onclose(() => events.closed())
 

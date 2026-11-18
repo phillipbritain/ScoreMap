@@ -34,7 +34,6 @@ function game(id: string, venue: Partial<GameVenue> = {}): Game {
     streamLinks: [],
     note: null,
     situation: null,
-    lastScore: null,
     keyEvents: [],
     topEvent: false,
     scoreline: null,

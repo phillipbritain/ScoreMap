@@ -143,6 +143,7 @@ app.MapScenarios();
 
 // The board's games, one line each, for an agent driving a local run; in Development only.
 app.MapGameList();
+app.MapGameDetails();
 
 app.Run();
 

@@ -33,9 +33,6 @@ public sealed record Game(
     /// <summary>Where play stands right now; only while the game is Live.</summary>
     public GameSituation? Situation { get; init; }
 
-    /// <summary>The last score: who scored and how, and when in the game.</summary>
-    public ScoringPlay? LastScore { get; init; }
-
     /// <summary>Soccer and rugby: the scores and cards so far, in the order they happened.</summary>
     public IReadOnlyList<KeyEvent> KeyEvents { get; init; } = [];
 
@@ -187,12 +184,6 @@ public sealed record GameSituation(
     bool OnFirst,
     bool OnSecond,
     bool OnThird);
-
-/// <summary>
-/// A score: the team that scored (its abbreviation), what happened ("Rashee Rice 2 Yd pass from Patrick
-/// Mahomes"), and when, in the style of the clock line ("Q1 5:58", "Top 7th", "23'").
-/// </summary>
-public sealed record ScoringPlay(string Team, string Text, string? When);
 
 /// <summary>A goal or card in soccer, or a score or card in rugby: what it was, the team (its abbreviation), the player and the minute ("23'").</summary>
 public sealed record KeyEvent(KeyEventKind Kind, string Team, string? Player, string? Clock);

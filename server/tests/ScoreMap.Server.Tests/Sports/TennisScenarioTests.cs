@@ -56,12 +56,11 @@ public sealed class TennisScenarioTests : IDisposable
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task A_written_match_has_no_made_up_record_or_last_score(bool play)
+    public async Task A_written_match_has_no_made_up_record_or_key_events(bool play)
     {
         var match = await ReceivedAsync(SinnerAlcaraz(play));
 
         Assert.Equal((null, null), (match.Sides().Home.Record, match.Sides().Away.Record));
-        Assert.Null(match.LastScore);
         Assert.Empty(match.KeyEvents);
     }
 

@@ -1,5 +1,5 @@
 import type { Camera } from '../globe/camera'
-import type { Game, GameSituation, GameStatus, ScoringPlay } from '../games/game'
+import type { Game, GameSituation, GameStatus } from '../games/game'
 import { chosenConferences, isLeagueOn, type League, type ViewerSettings } from '../settings/viewerSettings'
 import { visibleGames } from '../settings/visibleGames'
 import { leagueTourExample } from './tourExamples'
@@ -116,7 +116,6 @@ interface GameSpec {
   clock?: string
   period?: number
   situation?: GameSituation
-  lastScore?: ScoringPlay
   /** Minutes from now: negative for a game under way or over. */
   startsIn: number
   home: SideSpec
@@ -152,7 +151,6 @@ function made(spec: GameSpec, now: number): Game {
     streamLinks: [],
     note: null,
     situation: spec.situation ?? null,
-    lastScore: spec.lastScore ?? null,
     keyEvents: [],
     // So they show whichever choice the viewer makes on Welcome.
     topEvent: true,
@@ -206,7 +204,6 @@ const specs: GameSpec[] = [
       possession: 'PIT',
       balls: null, strikes: null, outs: null, onFirst: false, onSecond: false, onThird: false,
     },
-    lastScore: { team: 'BAL', text: 'D. Henry 12 yard run (J. Tucker kick)', when: 'Q3 9:47' },
     venue: { name: 'Acrisure Stadium', city: 'Pittsburgh', region: 'Pennsylvania', country: 'USA', latitude: 40.4468, longitude: -80.0158, timeZone: eastern, espnId: '3752' },
   },
 ]

@@ -31,7 +31,6 @@ function game(
     streamLinks: [],
     note: null,
     situation: null,
-    lastScore: null,
     keyEvents: [],
     topEvent,
     scoreline: null,

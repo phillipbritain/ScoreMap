@@ -92,7 +92,7 @@ public sealed partial class RunningGameBoard
                         await ApplyAsync(() =>
                         {
                             _applied.Add(key);
-                            return _board.UpdateLeague(league, scoreboard, token);
+                            return _board.UpdateLeague(league, scoreboard);
                         }, token);
                     }
                 }

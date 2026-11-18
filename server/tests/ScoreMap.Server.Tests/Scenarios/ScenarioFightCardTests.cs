@@ -13,7 +13,7 @@ public sealed class ScenarioFightCardTests : IDisposable
         new() { Key = "mma/ufc", Name = "UFC", Sport = Sport.Mma },
     ];
 
-    private static readonly ScenarioVenue[] Venues = [new("Madison Square Garden", "New York", "NY", "USA", ["worldwide"])];
+    private static readonly ScenarioVenue[] Venues = [ScenarioTestVenues.Neutral("Madison Square Garden", "New York", "NY", "USA", Leagues, "worldwide")];
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-scenario-fight-card-{Guid.NewGuid():N}");
 

@@ -7,11 +7,12 @@
 //   won't load, a non-Division I college team's) and three-digit scores.
 // - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
-// - An F1 race under way, its whole field listed (the Miami Grand Prix is run around Hard Rock Stadium).
+// - An F1 race under way, its whole field listed, at its circuit as ESPN gives it (Miami International
+//   Autodrome, in "Florida").
 // - A UFC fight card under way, written out in full, main event first: the main event in its 2nd round,
 //   each bout before it won one of the three ways, and the opener a draw, with no winner or method.
 // - A golf tournament in its final round, hot, with golfers tied for 2nd and level par, scores to par and
-//   the leader's holes (Brookside, beside the Rose Bowl, stands in for its course).
+//   the leader's holes (The Genesis Invitational at Riviera Country Club).
 {
   "games": [
     {
@@ -30,7 +31,7 @@
       "league": "Champions League",
       "home": { "name": "Bayern Munich", "abbreviation": "MUN", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/132.png", "score": 2 },
       "away": { "name": "Borussia Dortmund", "abbreviation": "DOR", "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/124.png", "score": 2 },
-      "venue": { "name": "Allianz Arena", "city": "Munich", "country": "Germany" },
+      "venue": { "name": "Allianz Arena", "city": "München" },
       "startsIn": "-1h20m",
       "status": "live",
       "clock": "78'",
@@ -41,7 +42,7 @@
       "league": "NCAA Men's Basketball",
       "home": { "name": "Texas A&M-Corpus Christi Islanders", "abbreviation": "AMCC", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/357.png", "score": 31 },
       "away": { "name": "Arkansas-Pine Bluff Golden Lions", "abbreviation": "UAPB", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2029.png", "score": 29 },
-      "venue": { "name": "United Center", "city": "Chicago", "region": "IL", "country": "USA" },
+      "venue": { "name": "Hilliard Center", "city": "Corpus Christi" },
       "startsIn": "-50m",
       "status": "live",
       "clock": "14:20",
@@ -52,7 +53,7 @@
       "league": "NHL",
       "home": { "name": "Edmonton Oilers", "abbreviation": "EDM", "score": 1 },
       "away": { "name": "Calgary Flames", "abbreviation": "CGY", "logo": "https://a.espncdn.com/i/teamlogos/ncaa/500/2347.png", "score": 0 },
-      "venue": { "name": "Rogers Place", "city": "Edmonton", "region": "AB", "country": "Canada" },
+      "venue": { "name": "Rogers Place", "city": "Edmonton" },
       "startsIn": "-25m",
       "status": "live",
       "clock": "4:15",
@@ -63,7 +64,7 @@
       "league": "NBA",
       "home": { "name": "Golden State Warriors", "abbreviation": "GS", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/gs.png", "score": 118 },
       "away": { "name": "Los Angeles Lakers", "abbreviation": "LAL", "logo": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png", "score": 121 },
-      "venue": { "name": "Chase Center", "city": "San Francisco", "region": "CA", "country": "USA" },
+      "venue": { "name": "Chase Center", "city": "San Francisco" },
       "startsIn": "-2h10m",
       "status": "live",
       "clock": "0:48",
@@ -108,7 +109,7 @@
       "league": "NASCAR Cup Series",
       "note": "Grant Park 165",
       "field": [],
-      "venue": { "name": "Soldier Field", "city": "Chicago" },
+      "venue": { "name": "Chicago Street Course", "city": "Chicago" },
       "startsIn": "20m",
       "status": "upcoming"
     },
@@ -140,7 +141,7 @@
         { "name": "Valtteri Bottas", "shortName": "V. Bottas", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/fin.png" },
         { "name": "Gabriel Bortoleto", "shortName": "G. Bortoleto", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/bra.png" }
       ],
-      "venue": { "name": "Hard Rock Stadium", "city": "Miami Gardens" },
+      "venue": { "name": "Miami International Autodrome", "city": "Florida" },
       "startsIn": "-1h05m",
       "status": "live",
       "period": 42
@@ -148,7 +149,7 @@
     {
       "id": "edge-golf-final-round",
       "league": "PGA Tour",
-      "note": "Arroyo Seco Invitational",
+      "note": "The Genesis Invitational",
       "field": [
         { "name": "Scottie Scheffler", "shortName": "S. Scheffler", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", "score": -15, "thru": 12 },
         { "name": "Rory McIlroy", "shortName": "R. McIlroy", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/nir.png", "score": -14, "thru": 14 },
@@ -166,7 +167,7 @@
         { "name": "Adam Scott", "shortName": "A. Scott", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/aus.png", "score": 0, "thru": 18 },
         { "name": "Joaquín Niemann", "shortName": "J. Niemann", "flag": "https://a.espncdn.com/i/teamlogos/countries/500/chi.png", "score": 2, "thru": 18 }
       ],
-      "venue": { "name": "Rose Bowl", "city": "Pasadena" },
+      "venue": { "name": "Riviera Country Club", "city": "Pacific Palisades" },
       "startsIn": "-78h",
       "status": "live",
       "period": 4

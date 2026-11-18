@@ -74,9 +74,19 @@ builder.Services.AddHttpClient(nameof(VenuePhotoSearch), client => client.Timeou
         AutomaticDecompression = DecompressionMethods.All,
         PooledConnectionLifetime = TimeSpan.FromMinutes(5),
     });
+// Another league's ESPN photo of a venue, when the game's league has none, by the venue list's ids (ADR-0028).
+builder.Services.AddSingleton(sp =>
+{
+    var venueList = Path.Combine(sp.GetRequiredService<IHostEnvironment>().ContentRootPath,
+        sp.GetRequiredService<IOptions<ScenarioOptions>>().Value.VenueListPath);
+    return File.Exists(venueList)
+        ? new VenueLeagueCatalog(ScenarioVenue.ReadList(venueList), sp.GetRequiredService<IOptions<List<League>>>().Value)
+        : VenueLeagueCatalog.Empty;
+});
 builder.Services.AddSingleton<IVenuePhotoSearch>(sp => new VenuePhotoSearch(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(VenuePhotoSearch)),
-    sp.GetRequiredService<NominatimPlaceSearch>()));
+    sp.GetRequiredService<NominatimPlaceSearch>(),
+    sp.GetRequiredService<VenueLeagueCatalog>()));
 builder.Services.AddSingleton<VenuePhotos>();
 
 // Unofficial stream links: no game has any unless the stream finder is added (ADR-0002: hobby v1

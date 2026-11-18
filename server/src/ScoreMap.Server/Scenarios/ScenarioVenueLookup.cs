@@ -28,8 +28,10 @@ public static class ScenarioVenueLookup
     public static async Task<IReadOnlyList<ScenarioVenueMiss>> UpdateAsync(
         string venueListPath, string locationsPath, IPlaceSearch places, CancellationToken cancellationToken)
     {
+        // Each league's games ask for the venue as that league writes it, so each way is looked up.
         var venues = ScenarioVenue.ReadList(venueListPath)
-            .Select(venue => (Venue: venue, Query: VenueLocator.VenueQuery(venue.ToProviderVenue())))
+            .SelectMany(venue => venue.ToProviderVenues().Select(provider => (Venue: provider, Query: VenueLocator.VenueQuery(provider))))
+            .DistinctBy(v => v.Query)
             .ToList();
         var inList = venues.Select(v => v.Query).ToHashSet(StringComparer.Ordinal);
         var locations = new SortedDictionary<string, Coordinates>(
@@ -79,4 +81,4 @@ public static class ScenarioVenueLookup
 }
 
 /// <summary>A venue the lookup didn't find: the place search had no match, or failed with <see cref="Error"/>.</summary>
-public sealed record ScenarioVenueMiss(ScenarioVenue Venue, Exception? Error);
+public sealed record ScenarioVenueMiss(ProviderVenue Venue, Exception? Error);

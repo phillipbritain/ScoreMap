@@ -98,11 +98,12 @@ public sealed class ScenarioPlay
     }
 
     /// <summary>
-    /// A new game at a venue no game is at (if there is one), between teams in no other game showing,
+    /// A new game at a venue no game is at (if there is one), in a league that plays there, between its
+    /// home team there and another team, both in no other game showing,
     /// Upcoming and starting soon, or straight into Live. The teams of the game it is
     /// <paramref name="replacing"/> are free again, so a scenario filled with as many games as its teams
-    /// have room for can still bring new ones on. Null if no league has two teams free, which can happen
-    /// when the game replaced is between teams the team list doesn't have (one written out).
+    /// have room for can still bring new ones on. Null if no venue has a league with its home team and another team
+    /// free, which can happen when the game replaced is between teams the team list doesn't have (one written out).
     /// </summary>
     private PlayedGame? NewGame(DateTimeOffset at, PlayedGame replacing)
     {
@@ -115,23 +116,30 @@ public sealed class ScenarioPlay
         }
         var inUse = _games.Select(game => game.Game.Venue?.Name).ToHashSet();
         var free = _settings.Venues.Where(venue => !inUse.Contains(venue.Name)).ToList();
-        var venues = free.Count > 0 ? free : _settings.Venues;
-        var venue = venues[_random.Next(venues.Count)];
         var id = $"{_scenario}-play-{_newGames + 1}";
         var playing = _games.Where(game => game != replacing)
             .Where(game => game.Game.Contest is ProviderSides)
             .SelectMany(game => PlayingTeam.In(game.Game.LeagueKey, game.Game.Sides().Home, game.Game.Sides().Away)).ToList();
-        ScenarioGame made;
-        try
+        var upcoming = _random.NextDouble() < UpcomingShare;
+        ScenarioGame? made = null;
+        // Free venues in a random order, then any, until one has a league whose home team there is free.
+        var venues = (free.Count > 0 ? free : _settings.Venues).ToArray();
+        _random.Shuffle(venues);
+        foreach (var venue in venues)
         {
-            made = _random.NextDouble() < UpcomingShare
-                ? _settings.Maker.Make(id, venue, GameStatus.Upcoming, playing, _random) with { StartsIn = TimeSpan.FromSeconds(_random.Next(60, 181)) }
-                : _settings.Maker.Make(id, venue, GameStatus.Live, playing, _random);
+            try
+            {
+                made = upcoming
+                    ? _settings.Maker.Make(id, venue, GameStatus.Upcoming, playing, _random) with { StartsIn = TimeSpan.FromSeconds(_random.Next(60, 181)) }
+                    : _settings.Maker.Make(id, venue, GameStatus.Live, playing, _random);
+                break;
+            }
+            catch (NotEnoughTeamsException)
+            {
+            }
         }
-        catch (NotEnoughTeamsException)
-        {
+        if (made is null)
             return null;
-        }
         _newGames++;
         return Begin(made, at);
     }

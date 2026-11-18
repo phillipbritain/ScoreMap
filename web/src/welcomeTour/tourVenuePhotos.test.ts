@@ -18,7 +18,7 @@ const server =
   }
 
 describe("the tour's venue photos", () => {
-  it('are asked for by league, venue and city, as the server finds a real game’s', () => {
+  it('are asked for by league, venue, city and the venue’s ESPN id, as the server finds a real game’s', () => {
     const query = new URL(venuePhotoAddress(games[0]), 'http://scoremap.test')
 
     expect(query.pathname).toBe('/api/venue-photo')
@@ -26,7 +26,15 @@ describe("the tour's venue photos", () => {
       league: games[0].league,
       name: games[0].venue.name,
       city: games[0].venue.city,
+      id: games[0].venue.espnId,
     })
+    expect(games[0].venue.espnId).toBeTruthy()
+  })
+
+  it('are asked for without an id for a venue that has none', () => {
+    const game = { ...games[0], venue: { ...games[0].venue, espnId: undefined } }
+
+    expect(new URL(venuePhotoAddress(game), 'http://scoremap.test').searchParams.has('id')).toBe(false)
   })
 
   it('reach every tour game, each with its own venue’s photo', async () => {

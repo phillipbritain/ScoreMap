@@ -16,4 +16,4 @@ The original tour used six fixed example games, chosen in a prototype to start o
 - Click a score card points to a matching card when one is clear of the panel. The tour opens on a camera of its own on a phone, further south and out, to give the cards room. When no card is clear of the panel, the step describes what a card opens.
 - Asking for the tour again flies the camera to the tour's games; it stays there after the tour.
 - The tour's games link to ESPN's team logos, so they need the network as real games do.
-- The browser asks the server for photos of the selected venues (`GET /api/venue-photo`, by league, venue and city). A venue without a photo uses the panel's fallback glow.
+- The browser asks the server for photos of the selected venues (`GET /api/venue-photo`, by league, venue, city and the venue's ESPN id, so a tour game gets the photo a real game there would). A venue without a photo uses the panel's fallback glow.

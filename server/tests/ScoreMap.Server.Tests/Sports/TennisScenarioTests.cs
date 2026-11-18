@@ -297,7 +297,7 @@ public sealed class TennisScenarioTests : IDisposable
             ["ATP"] = [new("Jannik Sinner", "J. Sinner", null), new("Carlos Alcaraz", "C. Alcaraz", null)],
         });
         var maker = new ScenarioGameMaker([Atp], teams);
-        var venue = ScenarioPlayTests.Venues[0];
+        var venue = ScenarioTestVenues.Neutral("Rolex Paris Masters", "Paris, France", null, null, [Atp]);
         var made = maker.Make("made", venue, GameStatus.Live, [], new Random(1));
         var play = new ScenarioPlay(new Scenario("sample", [made],
             Play: new PlaySettings([Atp], [venue], maker)), StartedAt, new Random(1));

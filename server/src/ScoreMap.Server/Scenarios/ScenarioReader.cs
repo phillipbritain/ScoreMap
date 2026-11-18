@@ -126,7 +126,7 @@ public static partial class ScenarioReader
                     new ProviderSides(ReadTeam(entry.Home, "home"), ReadTeam(entry.Away, "away")),
             _ => throw new InvalidDataException($"has unsupported sport {league.Sport}"),
         };
-        var venue = ReadVenue(entry.Venue, venues);
+        var venue = ReadVenue(entry.Venue, venues, league, contest);
         var (sets, ending) = ReadTennis(entry.Sets, entry.EarlyEnding, status, league.Sport == Sport.Tennis);
 
         return new ScenarioGame(
@@ -206,42 +206,50 @@ public static partial class ScenarioReader
     private static string ContestName(ProviderContest contest) => contest is ProviderBouts ? "a fight card" : "among a field";
 
     /// <summary>
-    /// A written-out game's venue, which must be in the venue list (known by name and city, as the
-    /// venue locator looks it up), so a misspelled one can't quietly go to Nominatim. A venue made up on
-    /// purpose says so with <c>"notInVenueList": true</c>. Parts of a listed venue left out are taken
-    /// from the list; parts written must agree with it.
+    /// A written-out game's venue, which must be in the venue list (known by name), with the game's league
+    /// playing there and, for a game between two sides, its home team one of that league's there (any
+    /// team at a neutral site), so a scenario's games are where real ones are (ADR-0028), and a misspelled
+    /// venue can't quietly go to Nominatim. It is as the league's games there have it (city, region,
+    /// country and ESPN id). A venue made up on purpose says so with <c>"notInVenueList": true</c>.
+    /// Parts of a listed venue left out are taken from the list; parts written must agree with it.
+    /// A tennis match's venue is its tournament, at a place, on a court (<c>"court"</c>), as ESPN gives it.
     /// </summary>
-    private static ProviderVenue ReadVenue(VenueEntry? entry, IReadOnlyList<ScenarioVenue>? venues)
+    private static ProviderVenue ReadVenue(VenueEntry? entry, IReadOnlyList<ScenarioVenue>? venues, League league, ProviderContest contest)
     {
         if (entry is null || string.IsNullOrWhiteSpace(entry.Name))
             throw new InvalidDataException("has no venue (a venue needs at least a name)");
-        var written = $"\"{entry.Name}\" in {entry.City ?? "no city"}";
+        var written = $"\"{entry.Name}\"" + (entry.City is null ? "" : $" in {entry.City}");
         if (venues is null)
             throw new InvalidDataException(
                 $"has venue {written}, but there is no venue list to check it against");
-        var listed = venues.SingleOrDefault(v => v.Name == entry.Name && v.City == entry.City);
+        var listed = venues.SingleOrDefault(v => v.Name == entry.Name);
         if (entry.NotInVenueList)
         {
             if (listed is not null)
                 throw new InvalidDataException(
                     $"has venue {written}, which is in the venue list; drop \"notInVenueList\"");
-            return new ProviderVenue(entry.Name, entry.City, entry.Region, entry.Country);
+            return new ProviderVenue(entry.Name, entry.City, entry.Region, entry.Country, Court: entry.Court);
         }
         if (listed is null)
-        {
-            var cities = venues.Where(v => v.Name == entry.Name).Select(v => v.City).ToList();
             throw new InvalidDataException(
-                $"has unknown venue {written}"
-                + (cities.Count > 0 ? $"; the venue list has it in {string.Join(", ", cities)}" : "; it isn't in the venue list")
-                + ". Use a venue from the list, or mark one made up on purpose with \"notInVenueList\": true");
-        }
-        if (entry.Region is not null && entry.Region != listed.Region)
+                $"has unknown venue {written}; it isn't in the venue list. "
+                + "Use a venue from the list, or mark one made up on purpose with \"notInVenueList\": true");
+        var there = listed.For(league.Name)
+            ?? throw new InvalidDataException(
+                $"has venue {written}, where {league.Name} doesn't play; the venue list has {string.Join(", ", listed.Leagues.Select(l => l.League))} there");
+        if (entry.City is not null && entry.City != there.City)
             throw new InvalidDataException(
-                $"has venue {written} with region \"{entry.Region}\", but the venue list has \"{listed.Region}\"");
-        if (entry.Country is not null && entry.Country != listed.Country)
+                $"has venue {written}, but the venue list has {league.Name}'s games there in \"{there.City}\"");
+        if (entry.Region is not null && entry.Region != there.Region)
             throw new InvalidDataException(
-                $"has venue {written} with country \"{entry.Country}\", but the venue list has \"{listed.Country}\"");
-        return listed.ToProviderVenue();
+                $"has venue {written} with region \"{entry.Region}\", but the venue list has \"{there.Region}\"");
+        if (entry.Country is not null && entry.Country != there.Country)
+            throw new InvalidDataException(
+                $"has venue {written} with country \"{entry.Country}\", but the venue list has \"{there.Country}\"");
+        if (contest is ProviderSides { Home.FullName: var home } && !there.IsNeutral && !there.Home!.Contains(home))
+            throw new InvalidDataException(
+                $"has {home} at home at {written}, which is home to {string.Join(", ", there.Home!)} in {league.Name}");
+        return listed.ToProviderVenue(there, entry.Court);
     }
 
     private static ProviderStatus ReadStatus(string? status) =>
@@ -345,7 +353,7 @@ public static partial class ScenarioReader
 
     private sealed record SituationEntry(int? Outs, bool OnFirst, bool OnSecond, bool OnThird);
 
-    private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country, bool NotInVenueList = false);
+    private sealed record VenueEntry(string? Name, string? City, string? Region, string? Country, string? Court = null, bool NotInVenueList = false);
 
     /// <summary>What a scenario file is read against: the configured leagues, the venue list and the team list.</summary>
     private sealed record Lists(IReadOnlyList<League> Leagues, IReadOnlyList<ScenarioVenue>? Venues, ScenarioTeamList? Teams);

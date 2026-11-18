@@ -16,12 +16,13 @@ public sealed class ScenarioReaderTests : IDisposable
         new() { Key = "tennis/atp", Name = "ATP", Sport = Sport.Tennis },
     ];
 
-    // A slice of the venue list: venues are known by name and city, as the venue locator looks them up.
+    // A slice of the venue list: two neutral sites for every league, and Lambeau Field, home to the
+    // Packers in the NFL alone, as ESPN gives it.
     private static readonly ScenarioVenue[] Venues =
     [
-        Venue("Arrowhead Stadium", "Kansas City", "MO", "USA"),
-        Venue("Allianz Stadium", "Turin", null, "Italy"),
-        Venue("Allianz Stadium", "Sydney", "NSW", "Australia"),
+        ScenarioTestVenues.Neutral("Arrowhead Stadium", "Kansas City", "MO", "USA", Leagues),
+        ScenarioTestVenues.Neutral("Allianz Stadium", "Sydney", "NSW", "Australia", Leagues),
+        new("Lambeau Field", [new ScenarioVenueLeague("NFL", "3798", "Green Bay", "WI", "USA", ["Green Bay Packers"])], []),
     ];
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), $"scoremap-scenario-reader-{Guid.NewGuid():N}");
@@ -122,7 +123,7 @@ public sealed class ScenarioReaderTests : IDisposable
 
     [Theory]
     [InlineData("""{ "name": "Arrowhed Stadium", "city": "Kansas City" }""", "unknown venue \"Arrowhed Stadium\" in Kansas City")]
-    [InlineData("""{ "name": "Allianz Stadium", "city": "Melbourne" }""", "unknown venue \"Allianz Stadium\" in Melbourne", "Turin, Sydney")]
+    [InlineData("""{ "name": "Allianz Stadium", "city": "Melbourne" }""", "\"Allianz Stadium\" in Melbourne", "NFL's games there in \"Sydney\"")]
     [InlineData("""{ "name": "Arrowhead Stadium", "city": "Kansas City", "country": "Canada" }""", "Arrowhead Stadium", "country \"Canada\"", "\"USA\"")]
     [InlineData("""{ "name": "Arrowhead Stadium", "city": "Kansas City", "notInVenueList": true }""", "Arrowhead Stadium", "is in the venue list", "notInVenueList")]
     public void A_venue_not_as_the_venue_list_has_it_is_rejected(string venue, params string[] messageParts)
@@ -151,11 +152,37 @@ public sealed class ScenarioReaderTests : IDisposable
     }
 
     [Fact]
-    public void A_venue_from_the_list_can_be_written_with_just_its_name_and_city()
+    public void A_venue_from_the_list_can_be_written_with_just_its_name()
     {
-        var scenario = Read(Game(venue: """{ "name": "Allianz Stadium", "city": "Sydney" }"""));
+        var scenario = Read(Game(venue: """{ "name": "Allianz Stadium" }"""));
 
         Assert.Equal(new ProviderVenue("Allianz Stadium", "Sydney", "NSW", "Australia"), Assert.Single(scenario.Games).Venue);
+    }
+
+    [Fact]
+    public void A_written_game_is_at_its_venue_as_its_leagues_games_there_have_it_with_ESPNs_id()
+    {
+        var scenario = Read(Game(venue: """{ "name": "Lambeau Field" }""", home: """{ "name": "Green Bay Packers", "abbreviation": "GB" }"""));
+
+        Assert.Equal(new ProviderVenue("Lambeau Field", "Green Bay", "WI", "USA", "3798"), Assert.Single(scenario.Games).Venue);
+    }
+
+    [Fact]
+    public void A_written_game_in_a_league_that_doesnt_play_at_its_venue_is_rejected()
+    {
+        var error = Assert.Throws<ScenarioFileException>(() => Read(Game(league: "MLB", venue: """{ "name": "Lambeau Field" }""")));
+
+        Assert.Contains("where MLB doesn't play", error.Message);
+        Assert.Contains("NFL", error.Message);
+    }
+
+    [Fact]
+    public void A_written_game_at_home_at_another_teams_venue_is_rejected()
+    {
+        var error = Assert.Throws<ScenarioFileException>(() => Read(Game(venue: """{ "name": "Lambeau Field" }""")));
+
+        Assert.Contains("Kansas City Chiefs at home", error.Message);
+        Assert.Contains("home to Green Bay Packers", error.Message);
     }
 
     [Fact]
@@ -225,9 +252,6 @@ public sealed class ScenarioReaderTests : IDisposable
         File.WriteAllText(Path.Combine(_folder, "sample.json"), $$"""{ "games": [ {{string.Join(", ", games)}} ] }""");
         return ScenarioReader.Read(_folder, "sample", Leagues, Venues);
     }
-
-    private static ScenarioVenue Venue(string name, string city, string? region, string country) =>
-        new(name, city, region, country, ["worldwide"]);
 
     private const string Arrowhead = """{ "name": "Arrowhead Stadium", "city": "Kansas City", "region": "MO", "country": "USA" }""";
 

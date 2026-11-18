@@ -15,7 +15,7 @@ public sealed class ScenarioTimelineTests : IDisposable
     ];
 
     private static readonly ScenarioVenue[] Venues =
-        [new("Arrowhead Stadium", "Kansas City", "MO", "USA", ["worldwide"])];
+        [ScenarioTestVenues.Neutral("Arrowhead Stadium", "Kansas City", "MO", "USA", Leagues, "worldwide")];
 
     private static readonly DateTimeOffset StartedAt = new(2026, 10, 4, 18, 0, 0, TimeSpan.Zero);
 

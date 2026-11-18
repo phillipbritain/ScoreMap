@@ -31,7 +31,10 @@ public sealed class ScenarioPlayTests : IDisposable
 
     // 120 venues around the world, the first 10 of them also in "london".
     internal static readonly ScenarioVenue[] Venues = Enumerable.Range(1, 120)
-        .Select(n => new ScenarioVenue($"Stadium {n}", $"City {n}", null, "Somewhere", n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
+        // Neutral sites for every league here, and NCAA Softball, which a test adds.
+        .Select(n => ScenarioTestVenues.Neutral($"Stadium {n}", $"City {n}", null, "Somewhere",
+            [.. Leagues, new League { Key = "baseball/college-softball", Name = "NCAA Softball", Sport = Sport.Baseball }],
+            n <= 10 ? ["worldwide", "london"] : ["worldwide"]))
         .ToArray();
 
     // Twenty made-up teams in each league, named for it ("NFL team 1"): room for 120 games at a time,

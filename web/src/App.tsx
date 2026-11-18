@@ -20,6 +20,7 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
+import { revealPhase } from './loading/revealPhase'
 import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
@@ -118,9 +119,13 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
   useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
-  // The welcome tour, once the loading screen has gone, until it's finished. While it shows, the globe
-  // and rail can't be used.
-  const tourStep = loadingScreenGone && tourProgress !== 'finished' ? tourProgress : null
+  // Nothing but the loading screen until the globe is ready; then the globe, the controls and the
+  // welcome tour come in together as it fades away (see revealPhase).
+  const reveal = revealPhase(stage, loadingScreenGone)
+  const revealed = reveal !== 'hidden'
+  // The welcome tour, from the reveal until it's finished. While it shows, the globe and rail can't be
+  // used.
+  const tourStep = revealed && tourProgress !== 'finished' ? tourProgress : null
   const touring = tourStep !== null
   // The rail is kept out of sight on a first visit until the tour's Your controls step brings it in:
   // through the loading screen and Welcome, so it doesn't show and then go.
@@ -163,8 +168,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // Changing only when a color does, so other settings don't recolor the globe.
   const { sportColors, leagueColors } = viewerSettings
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
-  // Not under the loading screen, nor during the welcome tour: only once both have gone.
-  const message = loadingScreenGone && !touring ? noPinsMessage(boardGames, visible, viewerSettings) : null
+  // Not before the reveal, nor during the welcome tour.
+  const message = revealed && !touring ? noPinsMessage(boardGames, visible, viewerSettings) : null
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
@@ -187,7 +192,14 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
       <Tooltips />
       <div
         ref={globeArea}
-        className={['globe-area', touring && 'globe-area--touring', railHidden && 'globe-area--rail-hidden'].filter(Boolean).join(' ')}
+        className={[
+          'globe-area',
+          `globe-area--${reveal}`,
+          touring && 'globe-area--touring',
+          railHidden && 'globe-area--rail-hidden',
+        ]
+          .filter(Boolean)
+          .join(' ')}
       >
         <Globe
           key={`globe-${globeAttempt}`}
@@ -211,8 +223,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onStage={setStage}
           inert={touring}
         />
-        {/* Over the globe until it's ready, under the bottom stack and the rail, which come after it
-            so they stay usable while loading. */}
+        {/* Over the globe until it's ready, hiding it. The bottom stack and the rail come after it, out
+            of sight until the reveal (see .globe-area--hidden). */}
         {!loadingScreenGone && (
           <LoadingScreen
             key={`loading-${globeAttempt}`}
@@ -257,14 +269,14 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onChange={setViewerSettings}
           accent={accentColor(theme)}
           // The camera can't move until the globe is ready, as on the globe itself.
-          camera={loadingScreenGone ? cameraNow : null}
+          camera={revealed ? cameraNow : null}
           zoomSettings={zoom}
           onZoomIn={() => globe.current?.zoomIn()}
           onZoomOut={() => globe.current?.zoomOut()}
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
           inert={touring}
           games={visible}
-          gamesReady={loadingScreenGone}
+          gamesReady={revealed}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
           collapsed={railCollapsed}
           onCollapsedChange={setRailCollapsed}

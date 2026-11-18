@@ -19,9 +19,10 @@ import { CameraMoves, type SelectionIntent } from './cameraMoves'
 import { cityLabelSettings, type CityLabelSettings } from './cityLabels'
 import { gameLayers } from './gameLayers'
 import { addGlobeGlow, type GlobeGlow } from './globeGlow'
-import { globeStyle, showStateLines } from './globeStyle'
+import { globeStyle, satelliteLayer, showStateLines } from './globeStyle'
 import { fadeNearHorizon } from './horizon'
 import { traceLayouts } from './layoutTrace'
+import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
 import { smallPinReach, type ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
@@ -135,6 +136,8 @@ export class GlobeMap {
   private destroyed = false
   /** When the globe is still, and when it's Ready (see GlobeSettling): the score cards report to it too. */
   private readonly settling: GlobeSettling
+  /** A change of map type under way, the new map fading in over the old (see setMapType). */
+  private readonly mapTypeFade = mapTypeFade()
 
   constructor(
     container: HTMLElement,
@@ -312,15 +315,34 @@ export class GlobeMap {
 
   /**
    * Draws the globe as this map type from now on (see globeStyle), in place, as setTheme restyles it:
-   * the plain map's and the satellite map's layers are shown or hidden. Pins, score cards and place
-   * names are left as they are.
+   * the plain map's and the satellite map's layers are shown or hidden. The change cross-fades (see
+   * mapTypeFade): the new map's layers show alongside the old one's while its tiles load, then the
+   * satellite imagery fades in or out over the plain map, and the old map's layers are hidden. Pins,
+   * score cards and place names are left as they are.
    */
   setMapType(mapType: MapType): void {
     if (mapType === this.mapType) return
     const was = this.mapType
     this.mapType = mapType
     this.unsettle()
-    applyLayerChanges(this.map, this.mapStyleChanges(this.theme, was))
+    const changes = this.mapStyleChanges(this.theme, was)
+    const hiding = (change: LayerChange) => change.kind === 'layout' && change.property === 'visibility' && change.value === 'none'
+    const map = this.map
+    this.mapTypeFade.start(mapType, {
+      showBoth: () => applyLayerChanges(map, changes.filter((change) => !hiding(change))),
+      hideOld: () => {
+        this.unsettle()
+        applyLayerChanges(map, changes.filter(hiding))
+      },
+      fadeImagery: (opacity, ms) => {
+        map.setPaintProperty(satelliteLayer, 'raster-opacity-transition', { duration: ms, delay: 0 })
+        map.setPaintProperty(satelliteLayer, 'raster-opacity', opacity)
+      },
+      onceLoaded: (then) => {
+        map.once('idle', then)
+        return () => map.off('idle', then)
+      },
+    })
   }
 
   /** What to set on the map style's layers to restyle them to the theme and map type the globe has now, from these. */
@@ -369,11 +391,12 @@ export class GlobeMap {
   /**
    * Whether everything the globe was last given is on screen and still: the pin source has loaded
    * the games, the map has drawn them and gone idle (tiles loaded, the camera still, every place name
-   * placed), and the score cards have settled. Still right now: false again after any change or move,
-   * so tests and scripts wait on it after one. For the initial load, see stage.
+   * placed), the score cards have settled, and no change of map type is still fading in. Still right
+   * now: false again after any change or move, so tests and scripts wait on it after one. For the
+   * initial load, see stage.
    */
   settled(): boolean {
-    return this.settling.settled({ pinsLoaded: this.pinsLoaded() })
+    return this.settling.settled({ pinsLoaded: this.pinsLoaded() }) && !this.mapTypeFade.running()
   }
 
   /** Whether the pin source has loaded the games last given it (not before the style loads). */
@@ -432,6 +455,7 @@ export class GlobeMap {
     if (this.destroyed) return
     this.destroyed = true
     this.moves?.destroy()
+    this.mapTypeFade.destroy()
     this.map.off('error', this.initialStyleError)
     window.removeEventListener('pagehide', this.saveCamera)
     this.cards?.clear()

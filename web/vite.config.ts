@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises'
 import { playwright } from '@vitest/browser-playwright'
 import type { BrowserCommand } from 'vitest/node'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, runnerImport, type Plugin } from 'vite'
 
 // The server's URL, which Aspire passes to Vite on a local run (ADR-0013); a bare `npm run dev`
 // has none, so nothing reaches the server.
@@ -25,9 +25,22 @@ const saveCardTrace: BrowserCommand<[json: string]> = async (_, json) => {
   await writeFile(process.env.CARD_TRACE!, json)
 }
 
+/**
+ * Writes the theme into index.html (see src/theme/themeInPage.ts), so the page's first paint is the
+ * theme's background rather than white. Loaded through Vite, as the theme's modules are the app's.
+ */
+async function themeInPage(): Promise<Plugin> {
+  const { module } = await runnerImport<{ themeInPage: () => string }>('./src/theme/themeInPage.ts')
+  const style = module.themeInPage()
+  return {
+    name: 'theme-in-page',
+    transformIndexHtml: () => [{ tag: 'style', children: style, injectTo: 'head' }],
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), themeInPage()],
   server: {
     proxy: {
       '/hubs': { target: server, ws: true },

@@ -55,7 +55,7 @@ public class ScenarioTests
     public async Task Game_starts_are_relative_to_when_the_scenario_started_and_every_league_is_fetched_every_second()
     {
         await using var server = new ScoreMapServer { Scenario = "test" };
-        // Upcoming games get their pin 30 minutes before their start: this one 1 s after the scenario starts.
+        // Upcoming games are sent 6 hours before their start: this one 1 s after the scenario starts.
         server.WriteScenario("test", """
             {
               "games": [
@@ -65,7 +65,7 @@ public class ScenarioTests
                   "home": { "name": "Arsenal", "abbreviation": "ARS" },
                   "away": { "name": "Chelsea", "abbreviation": "CHE" },
                   "venue": { "name": "Emirates Stadium", "city": "London", "country": "England" },
-                  "startsIn": "30m1s",
+                  "startsIn": "6h1s",
                   "status": "upcoming"
                 }
               ]
@@ -81,7 +81,7 @@ public class ScenarioTests
         Assert.Equal(GameChangeKind.Added, change.Kind);
         Assert.Equal("later", change.Game.Id);
         Assert.Equal(GameStatus.Upcoming, change.Game.Status);
-        Assert.Equal(startedAt + new TimeSpan(0, 30, 1), change.Game.StartTime);
+        Assert.Equal(startedAt + new TimeSpan(6, 0, 1), change.Game.StartTime);
     }
 
     [Fact]

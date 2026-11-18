@@ -8,10 +8,10 @@ namespace ScoreMap.Server.Tests;
 public class PinWindowTests
 {
     [Fact]
-    public async Task An_Upcoming_game_has_no_pin_earlier_than_30_minutes_before_its_start()
+    public async Task An_Upcoming_game_is_not_sent_earlier_than_6_hours_before_its_start()
     {
         await using var server = new ScoreMapServer();
-        var start = server.Clock.GetUtcNow().AddMinutes(31);
+        var start = server.Clock.GetUtcNow().AddHours(6).AddMinutes(1);
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Scheduled));
 
         await using var client = await server.ConnectClientAsync();
@@ -20,10 +20,10 @@ public class PinWindowTests
     }
 
     [Fact]
-    public async Task An_Upcoming_game_gets_its_pin_from_30_minutes_before_its_start()
+    public async Task An_Upcoming_game_is_sent_from_6_hours_before_its_start()
     {
         await using var server = new ScoreMapServer();
-        var start = server.Clock.GetUtcNow().AddMinutes(30);
+        var start = server.Clock.GetUtcNow().AddHours(6);
         server.Feed.SetScoreboard("football/nfl", NflGame(start, ProviderStatus.Scheduled));
 
         await using var client = await server.ConnectClientAsync();

@@ -8,9 +8,10 @@ import { TeamLogoImage } from '../games/TeamLogoImage'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
-import { listedWatchLinks } from './watchLinks'
-import { lastScoreSlot } from './lastScoreSlot'
 import { useSwipeToClose } from './useSwipeToClose'
+import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
+import { useGameDetails } from './useGameDetails'
+import { emptyGameDetails } from './gameDetails'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -31,6 +32,8 @@ interface GamePanelProps {
   textOnColor: string
   /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
   venuePhotos: boolean
+  /** Tour and demo games are simulated and have no ESPN summary. */
+  simulated?: boolean
   onClose: () => void
   /**
    * Whether the panel is on its way out, closed (see .game-panel--leaving): it can't be used meanwhile.
@@ -42,18 +45,15 @@ interface GamePanelProps {
 }
 
 /**
- * The game panel: details of the selected game, as a TV-style strip across the bottom of the globe
- * (see .game-panel in index.css). The strip is the score block (the league, the score, the progress line
- * and the last score) and the venue over the venue's photo, with the game's StreamEast streams and its ESPN page as
- * logos in its bottom right corner; under it, a band for a
- * field's leaderboard, a fight card's bouts or a tennis match's sets, when the game has them. So that
- * clicking between games doesn't change its height, every line holds its place whether or not the game
- * has it (the last score where the sport has one, the venue's place, the watch links), and the league, names and the venue sit on one line
- * each, cut short with an ellipsis and in full on hover or, on a touch screen, a tap (see Tooltips); only the band adds height. Re-renders with each
- * snapshot, so it stays current while open. On a phone, where it's a bottom sheet, it's swiped down to
- * close as well as by its close button (see useSwipeToClose).
+ * The selected game's score and venue above a collapsible details pane. Venue photos stay
+ * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClose, leaving = false, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, simulated = false, onClose, leaving = false, ref }: GamePanelProps) {
+  const [shown, setShown] = useState({ gameId: game.id, details: false, watch: false })
+  if (shown.gameId !== game.id) setShown({ gameId: game.id, details: false, watch: false })
+  const showingDetails = !leaving && shown.gameId === game.id && (shown.details || shown.watch)
+  const { data, failed } = useGameDetails(game, showingDetails && !simulated)
+  const details = simulated ? emptyGameDetails : data
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -62,6 +62,16 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
   // The place under the venue's name; in tennis, already on the venue's line.
   const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
+  const leagueLabel = (
+    <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+      {game.league}
+    </div>
+  )
+  const progressChip = progress && (
+    <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
+      {progress}
+    </div>
+  )
   const { contest } = game
   // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
   const links = streamLinks(game.streamLinks)
@@ -92,27 +102,12 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
       <div className="game-panel__body">
         <div className="game-panel__main">
           <div className="game-panel__score">
-            <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
-              {game.league}
-            </div>
+            <div className="game-details-score-header">{leagueLabel}{progressChip}</div>
             {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i, teams) => (
                 <TeamRow key={i} team={team} scores={teams.map(teamScore)} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
               ))}
             {contest.kind === 'field' && <FieldRows field={contest} name={game.note} />}
             {contest.kind === 'bouts' && <BoutRows bout={shownBout(contest)} />}
-            {progress && (
-              <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
-                {progress}
-              </div>
-            )}
-            {lastScoreSlot(game) === 'shown' && <LastScore game={game} />}
-            {/* Cricket's room for it, left empty, so its panel is as tall as the other team sports'. */}
-            {lastScoreSlot(game) === 'held' && (
-              <div className="game-panel__last-score game-panel__last-score--held" aria-hidden="true">
-                <div className="game-panel__label">Last score</div>
-                <div className="game-panel__one-line">None yet</div>
-              </div>
-            )}
           </div>
 
           {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none or the viewer switched photos off. */}
@@ -129,19 +124,17 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, onClo
                 {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
               </div>
             </div>
-            {/* The game's streams on StreamEast, then its page on ESPN, as their logos; empty when it has neither, holding its room on a phone. */}
             <div className="game-panel__watch">
-              <WatchLinks links={links} />
-              {game.espnUrl && (
-                <a className="game-panel__logo-link" href={game.espnUrl} target="_blank" rel="noopener noreferrer" data-tooltip="The game on ESPN">
-                  <img className="game-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
-                </a>
-              )}
+              <WatchInfo key={game.id} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
+                {(game.espnUrl || links.length > 0) && <WatchLinks links={links} espnUrl={game.espnUrl} />}
+              </WatchInfo>
             </div>
           </div>
         </div>
 
         <GameBand game={game} />
+        <GameDetailsPanel key={game.id} game={game} details={details} failed={failed}
+          onToggle={(details) => setShown((current) => ({ ...current, details }))} />
 
         <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
           ×
@@ -160,61 +153,22 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
   )
 }
 
-/**
- * The game's StreamEast streams, each as StreamEast's logo. The first few are shown; the rest are
- * counted in "+N more", which names them on hover.
- */
-function WatchLinks({ links }: { links: StreamLink[] }) {
-  const { listed, folded } = listedWatchLinks(links)
+/** The game's StreamEast and ESPN links as logo buttons. */
+function WatchLinks({ links, espnUrl }: { links: StreamLink[]; espnUrl: string | null }) {
   return (
     <>
-      {listed.map((link) => (
-        <a
-          key={link.url}
-          className="game-panel__logo-link"
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-          data-tooltip={`${link.site} (unofficial stream)`}
-          aria-label={`${link.site} (unofficial stream)`}
-        >
+      {links.map((link) => (
+        <a key={link.url} className="game-panel__logo-link" href={link.url} target="_blank"
+          rel="noopener noreferrer nofollow" aria-label={`${link.site} (unofficial stream)`}>
           <img className="game-panel__stream-logo" src={streamEastLogoUrl} alt="" />
         </a>
       ))}
-      {folded.length > 0 && (
-        <span className="game-panel__muted">
-          +{folded.length} more
-        </span>
+      {espnUrl && (
+        <a className="game-panel__logo-link" href={espnUrl} target="_blank" rel="noopener noreferrer">
+          <img className="game-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
+        </a>
       )}
     </>
-  )
-}
-
-/**
- * The last score (who scored and when; in soccer the goal's scorer and minute), under its label at the foot
- * of the score block: one line, cut short with an ellipsis where it's longer, in full on hover or a tap. Before a
- * score, "None yet", so the panel is as tall either way. Only for sports that score in plays (see
- * lastScoreSlot).
- */
-function LastScore({ game }: { game: Game }) {
-  const { lastScore } = game
-  if (!lastScore) return (
-    <div className="game-panel__last-score">
-      <div className="game-panel__label">Last score</div>
-      <div className="game-panel__one-line game-panel__muted">None yet</div>
-    </div>
-  )
-  return (
-    <div className="game-panel__last-score">
-      <div className="game-panel__label">Last score</div>
-      <div className="game-panel__one-line" data-tooltip={`${lastScore.when ?? ''} ${lastScore.team}: ${lastScore.text}`.trim()} data-tooltip-when-clipped>
-        <span className="game-panel__strong">
-          {lastScore.when && `${lastScore.when} · `}
-          {lastScore.team}
-        </span>{' '}
-        {lastScore.text}
-      </div>
-    </div>
   )
 }
 

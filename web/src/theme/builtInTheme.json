@@ -149,7 +149,7 @@
       "logo": { "plate": { "fill": "offWhite.500", "padding": 1, "corner": 1 } },
       "size": {
         "width": 1200,
-        "height": 140,
+        "height": 128,
         "scoreBlock": 504,
         "slant": 16,
         "logo": 28,

@@ -113,7 +113,6 @@ function game(id: string, { longitude = 0, latitude = 0, status = 'Live', home =
     streamLinks: [],
     note: null,
     situation: null,
-    lastScore: null,
     keyEvents: [],
     topEvent: false,
     scoreline: null,

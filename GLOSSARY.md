@@ -81,7 +81,7 @@ Where each game's score card goes on screen, and which games gather into card cl
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:
-The detailed view of one game, opened by selecting its pin, shown as a strip across the bottom of the globe: its score and last score (who scored, and when), and its venue and where to watch over the venue's photo (unless the viewer switched venue photos off in Display Settings), with a band under it for tennis sets, a field's leaderboard or a fight card's bouts.
+The view of one game, opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar. A band lists tennis sets, a field’s leaderboard or a fight card’s bouts when available.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:
@@ -96,9 +96,8 @@ _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 Simulated Live games featuring real teams or competitors at real venues, shown after the viewer confirms what they want to see on Welcome. They match the selected leagues and conferences, and their scores or event progress change under the Demo Mode label until the tour ends.
 _Avoid_: Sample games, dummy games, onboarding games, example games
 
-**Last score**:
-The most recent score in a game: the team that scored, what happened ("Rashee Rice 2 Yd pass from Patrick Mahomes") and when. Cricket has none, as runs come off nearly every ball, and nor has tennis.
-_Avoid_: Last play (that's any play, scoring or not), scoring summary
+**Game details**:
+The content opened by the tabs at the foot of the game panel. It includes period scores in the Score tab, scoring plays in order, football drives, player stats and ESPN highlights where the feed supplies them.
 
 **Situation**:
 Where play stands in a Live game right now: in football the down and distance and who has the ball, in baseball the count, outs and runners, and in every sport the feed covers the last play.

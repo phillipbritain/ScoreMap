@@ -1,3 +1,5 @@
+using ScoreMap.Server.Games;
+
 namespace ScoreMap.Server.GameFeed;
 
 /// <summary>
@@ -13,12 +15,9 @@ public interface IGameFeedProvider
     /// </summary>
     Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Returns optional details already available and starts any missing lookup without waiting.
-    /// Call only for games inside their pin windows; new details arrive on a later poll.
-    /// Cancellation stops queued and active optional work.
-    /// </summary>
-    ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken) => game;
+    /// <summary>Fetches the details of a selected event. Null signals a temporary feed failure.</summary>
+    Task<GameDetails?> FetchGameDetailsAsync(League league, string id, CancellationToken cancellationToken) =>
+        Task.FromResult<GameDetails?>(GameDetails.Empty);
 
     /// <summary>
     /// Fetches the games the source picks as its most important right now, across every sport (ESPN's

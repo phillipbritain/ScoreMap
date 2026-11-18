@@ -127,13 +127,8 @@ body {
   box-shadow: var(--glass-rim);
 }
 
-/* The game panel: a TV-style strip across the bottom of the globe, a thin neutral line round its edge
-   (see .game-panel__body::after) and a glow in the game's color (--game-color, set on the panel, with --text-on-game-color for text on it)
-   around it: the score block, then
-   the venue and its watch links over the venue's photo, with a band under the strip for a field's
-   leaderboard, a fight card or tennis sets. Every line holds its place whether or not a game has it, and
-   names and the venue take one line each, so the panel is as tall for every game (bar the band) and
-   doesn't jump as the viewer clicks between them; the panel never scrolls. */
+/* The game panel: the score and venue header, a sport-specific band when available, and the
+   collapsible game details at the foot. Only the content below the header scrolls. */
 .game-panel {
   /* How far it sits above the screen's foot: none on a phone (see below). */
   --game-panel-bottom: calc(3 * var(--spacing));
@@ -447,8 +442,7 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The game's StreamEast streams and its ESPN page, as their logos, stacked in the details' bottom right
-   corner, right-aligned. */
+/* The TV button sits at the foot of the venue details. */
 .game-panel__watch {
   align-self: end;
   justify-self: end;
@@ -468,7 +462,7 @@ body {
   text-decoration: underline;
 }
 
-/* A logo as a link: StreamEast's round icon, or ESPN's wordmark, as tall as each other. */
+/* The Watch and game info dialog uses the existing stream and ESPN logos. */
 .game-panel__logo-link {
   flex-shrink: 0;
   line-height: 0;
@@ -603,18 +597,7 @@ body {
   font-weight: var(--typography-button-font-weight);
 }
 
-/* The last score at the foot of the score block, its label over it, quieter than the names. */
-.game-panel__last-score {
-  margin-top: var(--spacing);
-  font-size: var(--typography-caption-font-size);
-}
-
-/* Cricket's room for a last score, sized as one but left empty (see lastScoreSlot). */
-.game-panel__last-score--held {
-  visibility: hidden;
-}
-
-/* One line, cut short with an ellipsis, such as a last score's description. */
+/* One line, cut short with an ellipsis, such as a tennis match's advancing player. */
 .game-panel__one-line {
   overflow: hidden;
   white-space: nowrap;
@@ -631,12 +614,10 @@ body {
     min-height: 0;
   }
 
-  /* Over the photo, which fills the whole panel on a phone (below). */
   .game-panel__band {
     flex-wrap: wrap;
     gap: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
-    background: none;
   }
 
   .game-panel__cell {
@@ -656,8 +637,7 @@ body {
     padding-right: calc(var(--game-panel-size-close-width) + var(--spacing));
   }
 
-  .game-panel__progress,
-  .game-panel__last-score {
+  .game-panel__progress {
     margin-top: calc(0.5 * var(--spacing));
   }
 
@@ -666,10 +646,8 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
-  /* The venue's photo behind the whole panel, the score block and band too, rather than behind the venue
-     alone, and the watch links in the panel's bottom right corner: the strip and the details give way to
-     their contents, laid out down the panel, and the score block has no color of its own. With no photo,
-     the faint glow in its place is the panel's. */
+  /* The venue's photo behind the score and venue rows. The strip and venue details give way to
+     their contents in the grid, and the score block has no color of its own. */
   .game-panel {
     background:
       radial-gradient(ellipse at 85% 75%, var(--game-panel-photo-glow), transparent 60%),
@@ -708,17 +686,22 @@ body {
     pointer-events: none;
   }
 
-  /* The score at the top, then the band, then the venue and its watch links side by side along the foot:
-     the venue in the bottom left corner, watch in the bottom right, its label over its links. */
+  /* The score and venue rows hold their size while the lower bands give way and scroll. */
   .game-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
-    /* The band's row gives way, scrolling, when the panel would reach the rail. */
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto minmax(0, auto) minmax(0, auto);
     grid-template-areas:
       'score score'
+      'venue watch'
       'band band'
-      'venue watch';
+      'details details';
+  }
+
+  /* The photo's crop follows the header independently of the expandable details. */
+  .game-panel__photo {
+    grid-row: score-start / venue-end;
+    grid-column: 1 / -1;
   }
 
   .game-panel__score {
@@ -736,15 +719,13 @@ body {
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
-  /* Side by side on one line, which is held empty when the game has no links, so the panel is as tall
-     with or without them. */
+  /* The TV button sits beside the venue on narrow screens. */
   .game-panel__watch {
     grid-area: watch;
     align-self: end;
     flex-direction: row;
     align-items: center;
     gap: calc(2 * var(--spacing));
-    min-height: calc(8 * var(--spacing));
     box-sizing: border-box;
     max-width: 50vw;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));

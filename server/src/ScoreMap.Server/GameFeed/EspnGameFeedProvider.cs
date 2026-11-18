@@ -17,19 +17,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 {
     private const string IndyCar = "racing/irl";
 
-    /// <summary>The maximum simultaneous summary requests across all leagues on this provider.</summary>
-    public const int SummaryConcurrency = 4;
-
-    private readonly SemaphoreSlim _summarySlots = new(SummaryConcurrency, SummaryConcurrency);
-    private readonly Lock _summaryLock = new();
-    private readonly Dictionary<string, Task> _summaryWork = new();
-
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
-
-    // Each started game's last score, by league and game, with the score it was looked up at and how many
-    // more times it may be asked for at that score: the scoreboard doesn't carry it, so it's asked for again
-    // only when the score has changed.
-    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Score, int TriesLeft, ProviderScoringPlay? Play)> _lastScores = new();
 
     // Each event's venue from the core API, by league and event, loaded from and saved to savedEventVenuesPath
     // (see EventVenueAsync), one lookup at a time.
@@ -38,9 +26,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
 
     private static readonly System.Text.Json.JsonSerializerOptions SavedJson =
         new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true };
-
-    /// <summary>How many times a game's summary is asked for at one score before waiting for the score to change.</summary>
-    private const int SummaryTries = 3;
 
     public async Task<IReadOnlyList<ProviderGame>> FetchScoreboardAsync(string leagueKey, CancellationToken cancellationToken)
     {
@@ -62,11 +47,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             var page = EspnUrl(e);
             games.AddRange((await EventGamesAsync(e, league, leagueKey, cancellationToken)).Select(game => game with { EspnUrl = page }));
         }
-        ForgetLastScoresNoLongerReported(leagueKey, games);
-        return games.Select(game => game.LastScore is not null ? game : game with
-        {
-            LastScore = _lastScores.GetValueOrDefault($"{game.LeagueKey}/{game.Id}").Play,
-        }).ToList();
+        return games;
     }
 
     /// <summary>
@@ -123,101 +104,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             .FirstOrDefault(href => href is not null);
     }
 
-    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
-    {
-        var league = game.LeagueKey.Split('?')[0];
-        if (league.StartsWith("soccer/", StringComparison.Ordinal) || league.StartsWith("rugby/", StringComparison.Ordinal)
-            || league.StartsWith("cricket/", StringComparison.Ordinal) || league.StartsWith("tennis/", StringComparison.Ordinal)
-            || game.Contest is not ProviderSides { Home.Score: { } home, Away.Score: { } away } || home + away == 0)
-            return game;
-
-        var key = $"{game.LeagueKey}/{game.Id}";
-        lock (_summaryLock)
-        {
-            var known = _lastScores.GetValueOrDefault(key);
-            if (!cancellationToken.IsCancellationRequested && !_summaryWork.ContainsKey(key)
-                && (known.Score != $"{home}-{away}" || known.TriesLeft > 0))
-                _summaryWork[key] = Task.Run(() => RefreshLastScoreAsync(game, league, key, cancellationToken));
-            return game with { LastScore = known.Play };
-        }
-    }
-
-    /// <summary>Completes when every optional summary lookup started so far has finished. For tests.</summary>
-    public Task EnrichmentFinishedAsync()
-    {
-        lock (_summaryLock)
-            return Task.WhenAll(_summaryWork.Values);
-    }
-
-    private async Task RefreshLastScoreAsync(ProviderGame game, string league, string key, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _summarySlots.WaitAsync(cancellationToken);
-            try
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await FetchLastScoreAsync(game, league, cancellationToken);
-            }
-            finally { _summarySlots.Release(); }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Optional work never prevents delivery of the basic scoreboard.
-        }
-        finally
-        {
-            lock (_summaryLock)
-                _summaryWork.Remove(key);
-        }
-    }
-
-    /// <summary>
-    /// Refreshes the cached last score. Soccer's and rugby's come with the scoreboard, from their scoring, and cricket and
-    /// tennis have none (runs come off almost every ball; games and sets aren't scored by anyone's play). Every other sport's is only in the game's summary, which is
-    /// large, so it's asked for only when the score has changed since it was last asked for. If the summary
-    /// hasn't caught up with the score yet, has no scoring plays, or the request fails, it's asked for again
-    /// next time, up to <see cref="SummaryTries"/> times at one score; the last score stays as it was meanwhile.
-    /// </summary>
-    private async Task FetchLastScoreAsync(ProviderGame game, string league, CancellationToken cancellationToken)
-    {
-        var key = $"{game.LeagueKey}/{game.Id}";
-        var sides = (ProviderSides)game.Contest;
-        var (home, away) = (sides.Home.Score, sides.Away.Score);
-        var score = $"{home}-{away}";
-        var known = _lastScores.GetValueOrDefault(key);
-        var triesLeft = known.Score == score ? known.TriesLeft : SummaryTries;
-        if (triesLeft == 0)
-            return;
-        _lastScores[key] = (score, triesLeft - 1, known.Play);
-        try
-        {
-            var summary = await http.GetFromJsonAsync<Summary>($"{league}/summary?event={game.Id}", cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
-            // Football's summary lists its scoring plays; the other sports' only list every play.
-            var plays = summary?.ScoringPlays ?? summary?.Plays?.Where(p => p.ScoringPlay == true).ToList() ?? [];
-            if (plays.LastOrDefault() is not { } last)
-                return;
-            var play = ToScoringPlay(last, summary!.Header?.Competitions?.FirstOrDefault()?.Competitors ?? []) ?? known.Play;
-            var caughtUp = last.HomeScore == home && last.AwayScore == away;
-            _lastScores[key] = (score, caughtUp ? 0 : triesLeft - 1, play);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // A canceled attempt can be tried again, including at an unchanged score.
-            if (known.Score is null)
-                _lastScores.TryRemove(key, out _);
-            else
-                _lastScores[key] = known;
-            throw;
-        }
-        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException
-            || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
-        {
-            return;
-        }
-    }
-
     /// <summary>
     /// ESPN's Top Events, as its front page shows them: its scoreboard header, asked with no sport. It's
     /// on another host from the scoreboards, so the address is whole.
@@ -238,14 +124,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             .SelectMany(e => new[] { e.Id, e.CompetitionId })
             .OfType<string>()
             .ToHashSet();
-    }
-
-    private void ForgetLastScoresNoLongerReported(string leagueKey, IReadOnlyList<ProviderGame> games)
-    {
-        var reported = games.Select(game => $"{leagueKey}/{game.Id}").ToHashSet();
-        foreach (var key in _lastScores.Keys)
-            if (key.StartsWith($"{leagueKey}/", StringComparison.Ordinal) && !reported.Contains(key))
-                _lastScores.TryRemove(key, out _);
     }
 
     /// <summary>A play from a game's summary as a score, naming its team by abbreviation; null if the team isn't in the game.</summary>
@@ -948,12 +826,6 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record Clock(string? DisplayValue);
     private sealed record TeamRef(string? Id, string? Abbreviation);
     private sealed record Athlete(string? DisplayName);
-    private sealed record Summary(SummaryHeader? Header, List<Play>? ScoringPlays, List<Play>? Plays);
-    // Summary broadcasts have a different shape from scoreboard broadcasts. Read only
-    // the team ids needed to name the scoring side here.
-    private sealed record SummaryHeader(List<SummaryCompetition>? Competitions);
-    private sealed record SummaryCompetition(List<SummaryCompetitor>? Competitors);
-    private sealed record SummaryCompetitor(string? Id, Team? Team);
     private sealed record Play(string? Text, bool? ScoringPlay, TeamRef? Team, PlayPeriod? Period, Clock? Clock,
         int? HomeScore, int? AwayScore);
     private sealed record PlayPeriod(int? Number, string? Type);

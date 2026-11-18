@@ -79,13 +79,6 @@ export interface GameSituation {
   onThird: boolean
 }
 
-/** A score: the team that scored (its abbreviation), what happened, and when, as the clock line writes it ("Q1 5:58", "Top 7th", "23'"). */
-export interface ScoringPlay {
-  team: string
-  text: string
-  when: string | null
-}
-
 /** What a soccer or rugby key event was; a rugby penalty goal is a PenaltyGoal. */
 export type KeyEventKind = 'Goal' | 'PenaltyGoal' | 'OwnGoal' | 'YellowCard' | 'RedCard' | 'Try' | 'Conversion' | 'DropGoal'
 
@@ -205,8 +198,6 @@ export interface Game {
   note: string | null
   /** Where play stands right now; only while the game is Live. */
   situation: GameSituation | null
-  /** The last score; null before anyone scores, and in cricket. */
-  lastScore: ScoringPlay | null
   /** Soccer and rugby: the scores and cards so far, in the order they happened; empty in other sports. */
   keyEvents: KeyEvent[]
   /** Whether ESPN lists the game in its Top Events: the games it picks as the most important right now. */

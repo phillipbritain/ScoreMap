@@ -1,7 +1,6 @@
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Tests.Support;
-using static ScoreMap.Server.GameFeed.ProviderPeriodPhase;
 using static ScoreMap.Server.Tests.Support.TestGames;
 
 namespace ScoreMap.Server.Tests;
@@ -47,24 +46,6 @@ public class GameDetailTests
         var sent = await SnapshotOfAsync(Live(Nfl) with { EspnUrl = "https://www.espn.com/nfl/game/_/gameId/1" });
 
         Assert.Equal("https://www.espn.com/nfl/game/_/gameId/1", sent.EspnUrl);
-    }
-
-    [Theory]
-    [InlineData(Nfl, 4, "5:58", Playing, "Q4 5:58")]
-    [InlineData(Nfl, 5, "2:10", Playing, "OT 2:10")]
-    [InlineData("basketball/mens-college-basketball?groups=50", 2, "0:45", Playing, "H2 0:45")]
-    [InlineData("hockey/nhl", 3, "13:31", Playing, "P3 13:31")]
-    [InlineData("baseball/mlb", 7, null, InningTop, "Top 7th")]
-    [InlineData("baseball/mlb", 10, null, InningBottom, "Bot 10th")]
-    [InlineData("soccer/eng.1", null, "90'+5'", Playing, "90'+5'")]
-    public async Task Last_score_says_when_it_came_as_the_clock_line_would(
-        string leagueKey, int? period, string? clock, ProviderPeriodPhase phase, string when)
-    {
-        var game = Live(leagueKey) with { LastScore = new ProviderScoringPlay("KC", "Something scored", period, clock, phase) };
-
-        var sent = await SnapshotOfAsync(game);
-
-        Assert.Equal(new ScoringPlay("KC", "Something scored", when), sent.LastScore);
     }
 
     [Fact]

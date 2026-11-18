@@ -164,10 +164,10 @@ public sealed class ScenarioSwitcher : IGameFeedProvider
         return scenario ? games.Select(game => game with { EspnUrl = ScenarioLinks.For(game.Id).EspnUrl }).ToList() : games;
     }
 
-    public ProviderGame EnrichGame(ProviderGame game, CancellationToken cancellationToken)
+    public Task<GameDetails?> FetchGameDetailsAsync(League league, string id, CancellationToken cancellationToken)
     {
         lock (_sourceGate)
-            return _running.Feed.EnrichGame(game, cancellationToken);
+            return _running.Feed.FetchGameDetailsAsync(league, id, cancellationToken);
     }
 
     public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)

@@ -3,16 +3,12 @@
 import type { PlacedCard } from './placedCard'
 import type { TrailOnGlobe } from './trailLayer'
 
-export const anchorProtoVariants = ['off', 'dot', 'small', 'bead', 'half', 'dim', 'ring', 'tab', 'bar'] as const
+export const anchorProtoVariants = ['off', 'dot', 'ring', 'tab', 'bar'] as const
 export type AnchorVariant = (typeof anchorProtoVariants)[number]
 
 export const anchorNames: Record<AnchorVariant, string> = {
   off: 'Today (no mark)',
   dot: 'Dot in the trail’s color',
-  small: 'Small dot, no glow',
-  bead: 'Bead on the border, in the card’s own edge color',
-  half: 'Half dot, outside the edge only',
-  dim: 'Dim dot, bright when hovered or selected',
   ring: 'Ring, echoing the venue dot',
   tab: 'Tab pointing out along the trail',
   bar: 'Lit edge segment',

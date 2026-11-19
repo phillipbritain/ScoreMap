@@ -105,18 +105,30 @@ describe('addPlaceNames', () => {
     const states = new Map<string | number, Record<string, unknown>>()
     const source = { setData: (data: FeatureCollection) => (features = data) } as unknown as GeoJSONSource
     const idOf = (name: string) => features!.features.find((f) => f.properties!.name === name)?.id
+    let spread = 10
     const map = {
       getSource: () => source,
       getLayer: () => ({}),
+      getZoom: () => 3,
+      // A flat screen, `spread` pixels a degree, everything facing the viewer.
+      project: ([longitude, latitude]: [number, number]) => ({ x: (longitude + 130) * spread, y: (50 - latitude) * spread }),
+      _camera: { transform: { isLocationOccluded: () => false } },
       on: (event: string, handler: () => void) => (handlers.set(event, handler), map),
       off: () => map,
       queryRenderedFeatures: () => names.map((name) => ({ id: idOf(name), properties: { name } })),
       setFeatureState: ({ id }: { id: string | number }, state: Record<string, unknown>) => states.set(id, { ...states.get(id), ...state }),
     } as unknown as MapLibreMap
     const gameCities = () => features!.features.filter((f) => f.properties!.game).map((f) => f.properties!.name as string)
+    const writtenCities = () => features!.features.filter((f) => f.properties!.written).map((f) => f.properties!.name as string)
+    let given = 0
+    const setData = source.setData
+    source.setData = ((data: FeatureCollection) => (given++, setData(data))) as typeof source.setData
     return {
       map,
       gameCities,
+      writtenCities,
+      given: () => given,
+      spreadTo: (pixels: number) => (spread = pixels),
       written: (cities: string[]) => (names = cities),
       emit: (event: string) => handlers.get(event)?.(),
       dotShown: (city: string) => states.get(idOf(city)!)?.named === true,
@@ -168,6 +180,29 @@ describe('addPlaceNames', () => {
     written([])
     emit('idle')
     expect(dotShown('Chicago')).toBe(false)
+  })
+
+  it("writes the more populous of two games' cities whose names overlap, sticking through small moves, and gives only written names for cards to keep clear of", () => {
+    const { map, writtenCities, given, spreadTo } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings)
+    const losAngeles = { id: 'la', venue: { longitude: -118.1819, latitude: 33.9919 } } as PlacedGame
+    const sanDiego = { id: 'sd', venue: { longitude: -117.1819, latitude: 32.822 } } as PlacedGame
+    names.showGames([losAngeles, sanDiego])
+    expect(writtenCities()).toEqual(['Los Angeles', 'San Diego'])
+
+    // Close together, San Diego's name, under Los Angeles', gives way.
+    spreadTo(10)
+    expect(names.layOutGameNames()).toHaveLength(1)
+    expect(writtenCities()).toEqual(['Los Angeles'])
+    // Brought apart a little, it stays out, and nothing is given the map again.
+    const before = given()
+    spreadTo(10.5)
+    expect(names.layOutGameNames()).toHaveLength(1)
+    expect(given()).toBe(before)
+    // Well apart, it's written again.
+    spreadTo(30)
+    expect(names.layOutGameNames()).toHaveLength(2)
+    expect(writtenCities()).toEqual(['Los Angeles', 'San Diego'])
   })
 
   it('names cities at every zoom, as score cards show at every zoom', () => {

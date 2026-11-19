@@ -251,7 +251,7 @@ describe('globeStyle', () => {
     }
   })
 
-  it("writes every city's name in one spot, right of its dot and level with it, never moving to another side or over another name", () => {
+  it("writes every city's name in one spot, right of its dot and level with it, never moving to another side", () => {
     for (const id of ['city_names', 'city_names_game']) {
       expect(layout(id)['text-anchor'], id).toBe('left')
       expect(layout(id)['text-justify'], id).toBe('left')
@@ -259,8 +259,16 @@ describe('globeStyle', () => {
       expect((layout(id)['text-offset'] as number[])[1], id).toBe(0)
       expect(layout(id), id).not.toHaveProperty('text-variable-anchor-offset')
       expect(layout(id), id).not.toHaveProperty('text-variable-anchor')
-      expect(layout(id)['text-allow-overlap'], id).toBeUndefined()
     }
+    // A Big city's name gives way to everything placed before it; the app picks which games' cities' names are written.
+    expect(layout('city_names')['text-allow-overlap']).toBeUndefined()
+    expect(layout('city_names_game')['text-allow-overlap']).toBe(true)
+  })
+
+  it("writes only the games' cities' names the app picks", () => {
+    const filter = featureFilter((layer('city_names_game') as { filter: FilterSpecification }).filter, 'f').filter
+    const features = cityNameFeatures({ gameCities: [tokyo, kobe], otherBigCities: [] }, (city) => city === tokyo).features
+    expect(features.map((f) => filter({ zoom: 5 }, { type: 1, properties: f.properties } as never))).toEqual([true, false])
   })
 
   it("places the games' city names before every other name, so only a more populous game's city's name hides one", () => {

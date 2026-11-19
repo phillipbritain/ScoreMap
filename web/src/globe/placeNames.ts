@@ -18,6 +18,7 @@ import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type Lis
 import { cityNameBox, type ScreenBox } from './cityNameBox'
 import type { GlobePoint } from './geo'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
+import { writtenNames, type NameOnScreen } from './writtenNames'
 import stateNames from './stateNames.json'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
@@ -144,14 +145,15 @@ const cityNameLayerIds = { big: 'city_names', game: 'city_names_game', dots: 'ci
 /**
  * The layer naming the games' cities, the first place names placed: the cards', small pins' and card
  * clusters' footprints go just beneath it (see GameLayers), so other names give way to them, while
- * a game's city's name is written whatever cards and pins are there.
+ * a game's city's name is written whatever cards and pins are there. Which games' cities' names are
+ * written is the app's choice, not MapLibre's (see PlaceNames.layOutGameNames).
  */
 export const gameCityNameLayer = cityNameLayerIds.game
 
 /** Which city names each layer writes: Big cities' with no game near, and games' cities'. */
 const cityNameFilters = {
   big: ['==', ['get', 'game'], false],
-  game: ['==', ['get', 'game'], true],
+  game: ['all', ['==', ['get', 'game'], true], ['==', ['get', 'written'], true]],
 } satisfies Record<'big' | 'game', FilterSpecification>
 
 /** The feature state saying a city's name is written now, so its dot shows (see markNamedCities). */
@@ -160,11 +162,12 @@ const namedState = 'named'
 /**
  * The layers naming the cities in the city name source (see addPlaceNames), at every zoom as score
  * cards show at every zoom, all in the theme's city look, national capitals included, and their dots.
- * Each name has one spot, right of its city's dot, and never moves from it: where something placed
- * before it is in that spot, it isn't written. The games' cities' names are placed first, so only a
- * more populous game's city's name hides one, and cards are laid out around them; Big cities with no
- * game near come after, giving way to everything but states, most populous first. A city's dot shows
- * while its name is written, beneath pins, so the pin of a game at it covers it.
+ * Each name has one spot, right of its city's dot, and never moves from it. The games' cities' names
+ * are placed first, and written whatever is there: the app leaves out the less populous of two that
+ * overlap (see PlaceNames.layOutGameNames), and cards are laid out around the rest. Big cities with no
+ * game near come after, written only where nothing placed before them is in their spot, giving way to
+ * everything but states, most populous first. A city's dot shows while its name is written, beneath
+ * pins, so the pin of a game at it covers it.
  */
 function cityNameLayers(theme: Theme): { dots: LayerSpecification; big: LayerSpecification; game: LayerSpecification } {
   const layer = (kind: 'big' | 'game'): LayerSpecification => {
@@ -182,6 +185,7 @@ function cityNameLayers(theme: Theme): { dots: LayerSpecification; big: LayerSpe
         'symbol-sort-key': ['-', ['get', 'population']],
       },
     }
+    if (kind === 'game') city.layout = { ...city.layout, 'text-allow-overlap': true }
     const named = placeName(city, 'city', theme)
     // Faded out near the horizon (see fadeNearHorizon), where they'd crowd into a pile: all but a
     // game's city (see PlaceNames.namesAGame).
@@ -269,10 +273,12 @@ export interface PlaceNames {
    */
   namesAGame(id: string | number): boolean
   /**
-   * Where the names of the games' cities are written on screen, for cards to keep clear of: those on
-   * the side of the globe facing the viewer, as MapLibre writes no others.
+   * Picks which games' cities' names to write where the globe is now, and gives where they're written
+   * on screen, for cards to keep clear of: those on the side of the globe facing the viewer, as
+   * MapLibre writes no others. Of two names that overlap, the more populous city's is written, each
+   * sticky by a few pixels (see writtenNames), so a pan never flips one.
    */
-  nameBoxes(): ScreenBox[]
+  layOutGameNames(): ScreenBox[]
   remove(): void
 }
 
@@ -290,9 +296,11 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   // The venues the labels were chosen for, so games changing only their scores change nothing.
   let venuesKey = ''
 
+  // Whether each game's city's name was written when last laid out, by its key (see nameKey).
+  let written = new Map<string, boolean>()
   const dots = markNamedCities(map)
   const showLabels = () => {
-    map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels))
+    map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels, (city) => written.get(nameKey(city)) !== false))
     dots.renumbered()
   }
   // The style starts with no cities (see cityNameSourceSpec).
@@ -317,12 +325,22 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
     namesAGame(id) {
       return typeof id === 'number' && id < labels.gameCities.length
     },
-    nameBoxes() {
-      const zoom = map.getZoom()
-      const look = cityNameLook(zoom, theme())
-      return labels.gameCities
+    layOutGameNames() {
+      const look = cityNameLook(map.getZoom(), theme())
+      const onScreen = labels.gameCities
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
-        .map((city) => cityNameBox(city.name, map.project([city.longitude, city.latitude]), look, measureText))
+        .map((city) => ({ city, dot: map.project([city.longitude, city.latitude]) }))
+      // Names keep clear of each other by their letters, cards by the theme's clearance around them too.
+      const names = onScreen.map(({ city, dot }): NameOnScreen => ({
+        key: nameKey(city),
+        population: city.population,
+        box: cityNameBox(city.name, dot, { ...look, clearance: 0 }, measureText),
+      }))
+      const now = new Map([...written, ...writtenNames(names, written, nameStickiness)])
+      const changed = [...now].some(([key, shown]) => written.get(key) !== shown)
+      written = now
+      if (changed) showLabels()
+      return onScreen.filter(({ city }) => now.get(nameKey(city))).map(({ city, dot }) => cityNameBox(city.name, dot, look, measureText))
     },
     remove() {
       map.off('style.load', styleLoaded)
@@ -369,17 +387,27 @@ function markNamedCities(map: MapLibreMap): { renumbered(): void; remove(): void
   }
 }
 
+/** A city, the same from frame to frame whatever else is named, for remembering whether its name was written. */
+const nameKey = (city: ListedCity) => `${city.name}@${city.longitude},${city.latitude}`
+
+// How far, in pixels, two games' cities' names overlap before the less populous gives way, and clear
+// each other before it comes back (see writtenNames).
+const nameStickiness = 4
+
 // How often, in milliseconds, the dots follow the names written while the globe moves.
 const markEvery = 100
 
-/** The labeled cities as the city name source's features, marking the games' cities. */
-export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels): FeatureCollection<Point> {
+/**
+ * The labeled cities as the city name source's features, marking the games' cities, and which of
+ * those have their names written (see PlaceNames.layOutGameNames): all of them unless `written` says.
+ */
+export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels, written: (city: ListedCity) => boolean = () => true): FeatureCollection<Point> {
   // Each with an id, for fading it near the horizon (see fadeNearHorizon) and showing its dot (see markNamedCities).
   const feature = (city: ListedCity, game: boolean, id: number): Feature<Point> => ({
     type: 'Feature',
     id,
     geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
-    properties: { name: city.name, population: city.population, game },
+    properties: { name: city.name, population: city.population, game, written: game && written(city) },
   })
   return {
     type: 'FeatureCollection',
@@ -405,7 +433,7 @@ function measureText(text: string, font: string, size: number): number {
   const key = `${measuredFont}|${text}`
   const known = measured.get(key)
   if (known !== undefined) return (known * size) / measuredSize
-  measuring ??= document.createElement('canvas').getContext('2d')
+  measuring ??= typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
   if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = measuredFont
   // Many names in many fonts (themes changing, say): the oldest are let go.

@@ -12,7 +12,7 @@ import type { Theme } from '../theme/theme'
 import { globeStyle, showStateLines } from './globeStyle'
 import { layerChanges } from './restyle'
 import type { ListedCity } from './cityLabels'
-import { cityNameFeatures, cityNameSource, firstPlaceNameLayer, stateNameSource } from './placeNames'
+import { cityDotImage, cityNameFeatures, cityNameSource, firstPlaceNameLayer, stateNameSource } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
   return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
@@ -100,7 +100,6 @@ describe('globeStyle', () => {
       'coastline',
       'boundary_2',
       'boundary_disputed',
-      'city_dots',
       'state_abbreviations',
       'label_state',
       'city_names',
@@ -277,22 +276,23 @@ describe('globeStyle', () => {
     expect(names.at(-1)?.id).toBe('city_names_game')
   })
 
-  it("puts a dot at each named city, in its name's color ringed in its outline color at the theme's sizes, showing only while its name is written", () => {
-    expect(layer('city_dots')).toMatchObject({ type: 'circle', source: cityNameSource })
-    expect(paint('city_dots')['circle-color']).toBe('#100001')
-    expect(paint('city_dots')['circle-radius']).toBe(1.75)
-    expect(paint('city_dots')['circle-stroke-color']).toBe('#200001')
-    expect(paint('city_dots')['circle-stroke-width']).toBe(0.5)
-    for (const property of ['circle-opacity', 'circle-stroke-opacity']) {
-      const parsed = createExpression(paint('city_dots')[property] as ExpressionSpecification, property)
+  it("puts a dot at each named city as its name's icon, in its name's color ringed in its outline color at the theme's sizes, shown and hidden with its name", () => {
+    for (const id of ['city_names', 'city_names_game']) {
+      expect(layout(id)['icon-image'], id).toBe(cityDotImage.name)
+      // The image's circle scaled to the theme's radius.
+      expect((layout(id)['icon-size'] as number) * cityDotImage.radius, id).toBeCloseTo(1.75, 6)
+      expect(paint(id)['icon-color'], id).toBe('#100001')
+      expect(paint(id)['icon-halo-color'], id).toBe('#200001')
+      expect(paint(id)['icon-halo-width'], id).toBe(0.5)
+      const parsed = createExpression(paint(id)['icon-opacity'] as ExpressionSpecification, id)
       if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
       const opacity = (state: Record<string, unknown>) => parsed.value.evaluate({ zoom: 5 }, { type: 'Point', properties: {} } as never, state)
-      expect(opacity({ named: true }), property).toBe(1)
-      expect(opacity({}), property).toBe(0)
-      expect(opacity({ named: true, horizonFade: 0.5 }), property).toBe(0.5)
-      // A venue's pin on it: hidden whole, not peeking out beside the pin.
-      expect(opacity({ named: true, covered: true }), property).toBe(0)
+      expect(opacity({}), id).toBe(1)
+      expect(opacity({ horizonFade: 0.5 }), id).toBe(0.5)
+      // A venue's pin on it: hidden whole, not peeking out beside the pin, while its name stays.
+      expect(opacity({ covered: true }), id).toBe(0)
     }
+    expect(layer('city_dots')).toBeUndefined()
   })
 
   it('abbreviates US states and Canadian provinces and territories zoomed out, to their postal codes, until the full names show', () => {
@@ -314,8 +314,6 @@ describe('globeStyle', () => {
     expect(first).toBe('state_abbreviations')
     const beneath = globe.layers.slice(0, globe.layers.findIndex((l) => l.id === first))
     expect(beneath.every((l) => l.type !== 'symbol')).toBe(true)
-    // Cities' dots too, so a pin on one covers it.
-    expect(beneath.map((l) => l.id)).toContain('city_dots')
   })
 
   it("writes each kind of place name in the theme's color, outline (its color, width and blur) and font, from the map's font server", () => {

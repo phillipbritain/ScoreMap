@@ -7,7 +7,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
-import { addPlaceNames, cityNameLook, placeNameLayers } from './placeNames'
+import { addPlaceNames, cityDotImage, cityDotImageData, cityNameLook, placeNameLayers } from './placeNames'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -103,12 +103,15 @@ describe('addPlaceNames', () => {
     let names: string[] = []
     const handlers = new Map<string, () => void>()
     const states = new Map<string | number, Record<string, unknown>>()
+    const images = new Map<string, { image: unknown; options: unknown }>()
     const source = { setData: (data: FeatureCollection) => (features = data) } as unknown as GeoJSONSource
     const idOf = (name: string) => features!.features.find((f) => f.properties!.name === name)?.id
     let spread = 10
     const map = {
       getSource: () => source,
       getLayer: () => ({}),
+      hasImage: (id: string) => images.has(id),
+      addImage: (id: string, image: unknown, options: unknown) => images.set(id, { image, options }),
       getZoom: () => 3,
       // A flat screen, `spread` pixels a degree, everything facing the viewer.
       project: ([longitude, latitude]: [number, number]) => ({ x: (longitude + 130) * spread, y: (50 - latitude) * spread }),
@@ -130,8 +133,9 @@ describe('addPlaceNames', () => {
       given: () => given,
       spreadTo: (pixels: number) => (spread = pixels),
       written: (cities: string[]) => (names = cities),
-      emit: (event: string) => handlers.get(event)?.(),
-      dotShown: (city: string) => states.get(idOf(city)!)?.named === true && states.get(idOf(city)!)?.covered !== true,
+      emit: (event: string, data?: unknown) => (handlers.get(event) as ((data?: unknown) => void) | undefined)?.(data),
+      images,
+      dotShown: (city: string) => states.get(idOf(city)!)?.covered !== true,
     }
   }
   // Everglades City, about 100 km from Miami.
@@ -158,30 +162,6 @@ describe('addPlaceNames', () => {
     expect(names.namesAGame(1)).toBe(false)
   })
 
-  it("shows a city's dot only while its name is written, following names as they come and go", () => {
-    const { map, written, emit, dotShown } = mapWithCityNames()
-    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
-    // In Chicago, far from Miami.
-    const chicagoGame = { id: 'chicago', venue: { longitude: -87.6359, latitude: 41.8789 } } as PlacedGame
-    names.showGames([evergladesGame, chicagoGame])
-
-    written(['Miami'])
-    emit('idle')
-    expect(dotShown('Miami')).toBe(true)
-    expect(dotShown('Chicago')).toBe(false)
-
-    written(['Chicago'])
-    emit('idle')
-    expect(dotShown('Miami')).toBe(false)
-    expect(dotShown('Chicago')).toBe(true)
-
-    // The games changing, the cities are numbered afresh: no dot is left on from before.
-    names.showGames([chicagoGame])
-    written([])
-    emit('idle')
-    expect(dotShown('Chicago')).toBe(false)
-  })
-
   it("writes the more populous of two games' cities whose names overlap, sticking through small moves, and gives only written names for cards to keep clear of", () => {
     const { map, writtenCities, given, spreadTo } = mapWithCityNames()
     const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings)
@@ -206,23 +186,40 @@ describe('addPlaceNames', () => {
   })
 
   it("hides a city's dot whole where a game's venue on screen is near enough for its pin to touch it, showing it once clear", () => {
-    const { map, written, emit, dotShown, spreadTo } = mapWithCityNames()
+    const { map, dotShown, spreadTo } = mapWithCityNames()
     const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings)
     // The Rose Bowl, about 15 km from the middle of Los Angeles.
     const roseBowl = { id: 'rose-bowl', venue: { longitude: -118.1675, latitude: 34.1613 } } as PlacedGame
     names.showGames([roseBowl])
-    written(['Los Angeles'])
-    emit('idle')
     // Zoomed out, the venue's pin is on the dot: hidden.
     spreadTo(10)
     names.layOutGameNames()
-    emit('idle')
     expect(dotShown('Los Angeles')).toBe(false)
     // Zoomed in, the venue's pin is well clear: shown.
     spreadTo(200)
     names.layOutGameNames()
-    emit('idle')
     expect(dotShown('Los Angeles')).toBe(true)
+  })
+
+  it("gives the map the cities' dot, a circle it can color, once its style loads, or when it finds the dot missing", () => {
+    const { map, emit, images } = mapWithCityNames()
+    addPlaceNames(map, () => builtInTheme, cityLabelSettings)
+    emit('style.load')
+    expect(images.get(cityDotImage.name)?.options).toEqual({ sdf: true })
+    images.clear()
+    emit('styleimagemissing', { id: 'something-else' })
+    expect(images.size).toBe(0)
+    emit('styleimagemissing', { id: cityDotImage.name })
+    expect(images.has(cityDotImage.name)).toBe(true)
+  })
+
+  it("draws the dot as a circle of the image's radius: solid inside, at MapLibre's edge on it, gone well outside", () => {
+    const { width, data } = cityDotImageData()
+    const alpha = (x: number, y: number) => data[(y * width + x) * 4 + 3]
+    const middle = width / 2
+    expect(alpha(middle, middle)).toBe(255)
+    expect(Math.abs(alpha(middle + cityDotImage.radius, middle) - 191)).toBeLessThan(20)
+    expect(alpha(width - 1, middle)).toBeLessThan(60)
   })
 
   it('names cities at every zoom, as score cards show at every zoom', () => {

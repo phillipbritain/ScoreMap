@@ -77,8 +77,10 @@ export class PlacedCard {
       if (event.pointerType !== 'touch') events.hover(true)
     })
     element.addEventListener('pointerleave', () => events.hover(false))
-    // Above the venue, its trail down to it (see cardLayout); the city's name sits below its dot.
-    this.marker = new Marker({ element, anchor: 'bottom' }).setLngLat(lngLat).addTo(map)
+    // Above the venue, its trail down to it (see cardLayout). At the venue's exact place on screen,
+    // not rounded to a pixel as MapLibre's markers are by default: its trail and venue dot are drawn
+    // exactly, so a rounded card would shake against them as the globe moves.
+    this.marker = new Marker({ element, anchor: 'bottom', subpixelPositioning: true }).setLngLat(lngLat).addTo(map)
   }
 
   /** The marker's element, which MapLibre moves with the camera, holding the card. */

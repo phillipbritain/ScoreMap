@@ -413,7 +413,11 @@ const settings = {
       disputedBorders: { ...globeLine, dash: dashes },
       halo: { inner: haloGlow, outer: haloGlow },
     },
-    PlaceNames: { city: placeName, state: placeName, country: placeName },
+    /**
+     * The globe's place names, by kind of place. A named city also has a dot where it is, in its name's
+     * color ringed in its name's outline color: the dot's radius and the ring's width.
+     */
+    PlaceNames: { city: { ...placeName, dot: { radius: pixels, ring: pixels } }, state: placeName, country: placeName },
     /** The sky around the globe, behind it, with its scattering of stars: white, cool and warm, small and large. */
     Sky: { color, stars: { white: color, cool: color, warm: color, size: { small: pixels, large: pixels } } },
     /**

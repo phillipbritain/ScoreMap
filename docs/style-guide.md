@@ -350,6 +350,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.disputedBorders.dash` | The disputed borders' dash pattern: the lengths of the dashes and the gaps between them, in line widths, at least two | `[2, 2]` |
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
+| `components.PlaceNames.city.dot.radius`, `.ring` | The dot where a named city is, in the city name's color, and the ring around it in the name's outline color | 1.5 and 0.75 |
 | `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 13 |
 | `components.Cluster.glowRadius` | Its glow's radius | 26 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |

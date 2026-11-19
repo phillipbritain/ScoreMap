@@ -9,6 +9,7 @@
     "lint": "oxlint --deny-warnings",
     "city-list": "node scripts/cityList.ts",
     "state-lines": "node scripts/stateLines.ts",
+    "state-names": "node scripts/stateNames.ts",
     "page": "node scripts/page/page.ts",
     "preview": "vite preview",
     "test": "vitest run --project unit",

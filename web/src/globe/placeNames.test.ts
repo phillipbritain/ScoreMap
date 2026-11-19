@@ -7,7 +7,7 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { cityLabelSettings } from './cityLabels'
-import { addPlaceNames, cityNameLook, clusterClearOffset, placeNameLayers } from './placeNames'
+import { addPlaceNames, cityNameLook, placeNameLayers } from './placeNames'
 
 const place = { type: 'symbol', source: 'openmaptiles', 'source-layer': 'place' } as const
 const base: StyleSpecification = {
@@ -33,30 +33,19 @@ const zooms = [2, 3, 4, 4.5, 5.5, 7, 8.25, 11, 12.9]
 
 describe('cityNameLook', () => {
   it('predicts the size the map writes a city name at, at every zoom', () => {
-    for (const id of ['city_names', 'city_names_game', 'city_names_card']) {
+    for (const id of ['city_names', 'city_names_game']) {
       for (const zoom of zooms) {
         expect(cityNameLook(zoom, builtInTheme).size, `${id} at ${zoom}`).toBeCloseTo(atZoom(layout(id)['text-size'], zoom), 6)
       }
     }
   })
 
-  it("predicts how far below its dot the map writes a city's name, at every zoom", () => {
+  it("predicts how far right of its dot the map writes a city's name, at every zoom", () => {
     for (const zoom of zooms) {
       const look = cityNameLook(zoom, builtInTheme)
-      // The first place tried: below the dot, this many ems down.
-      const [, [firstAnchor, [, ems]]] = layout('city_names')['text-variable-anchor-offset'] as ['literal', [string, number[]]]
-      expect(firstAnchor).toBe('top')
+      const [ems] = layout('city_names')['text-offset'] as number[]
       expect(look.offset, `at ${zoom}`).toBeCloseTo(ems * look.size, 6)
     }
-  })
-
-  it('moves a name far enough from its dot to clear a card cluster on it, at the smallest size names are written', () => {
-    // A card cluster reaches 13 pixels, outline and all, its footprint a pixel further, and a city
-    // name's outline 2 more: 16 pixels, at the built-in theme's smallest city size, 12 pixels.
-    const smallest = cityNameLook(0, builtInTheme).size
-    expect(smallest).toBe(12)
-    expect(clusterClearOffset(builtInTheme) * smallest).toBeGreaterThanOrEqual(16)
-    expect(clusterClearOffset(builtInTheme) * smallest).toBeLessThan(16 + 0.12)
   })
 
   it('wraps a name wider than 8 ems, as the base style does', () => {
@@ -101,21 +90,37 @@ describe('cityNameLook', () => {
     }
     expect(layout('city_names', theme)['text-font']).toEqual(['Metropolis Light'])
     expect(layout('city_names_game', theme)['text-font']).toEqual(['Metropolis Light'])
-    expect(layout('city_names_card', theme)['text-font']).toEqual(['Metropolis Light'])
     expect(cityNameLook(5, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
   })
 })
 
 describe('addPlaceNames', () => {
   // A map with just the city name source, keeping the features last given to it.
+  // A map with just the city name source, keeping the features last given to it, writing the names
+  // it's told to, and keeping the cities' feature states.
   function mapWithCityNames() {
     let features: FeatureCollection | null = null
-    let given = 0
-    const source = { setData: (data: FeatureCollection) => ((features = data), given++) } as unknown as GeoJSONSource
-    const map = { getSource: () => source, on: () => map, off: () => map } as unknown as MapLibreMap
+    let names: string[] = []
+    const handlers = new Map<string, () => void>()
+    const states = new Map<string | number, Record<string, unknown>>()
+    const source = { setData: (data: FeatureCollection) => (features = data) } as unknown as GeoJSONSource
+    const idOf = (name: string) => features!.features.find((f) => f.properties!.name === name)?.id
+    const map = {
+      getSource: () => source,
+      getLayer: () => ({}),
+      on: (event: string, handler: () => void) => (handlers.set(event, handler), map),
+      off: () => map,
+      queryRenderedFeatures: () => names.map((name) => ({ id: idOf(name), properties: { name } })),
+      setFeatureState: ({ id }: { id: string | number }, state: Record<string, unknown>) => states.set(id, { ...states.get(id), ...state }),
+    } as unknown as MapLibreMap
     const gameCities = () => features!.features.filter((f) => f.properties!.game).map((f) => f.properties!.name as string)
-    const cardCities = () => features!.features.filter((f) => f.properties!.card).map((f) => f.properties!.name as string)
-    return { map, gameCities, cardCities, given: () => given }
+    return {
+      map,
+      gameCities,
+      written: (cities: string[]) => (names = cities),
+      emit: (event: string) => handlers.get(event)?.(),
+      dotShown: (city: string) => states.get(idOf(city)!)?.named === true,
+    }
   }
   // Everglades City, about 100 km from Miami.
   const evergladesGame = { id: 'everglades', venue: { longitude: -81.3851, latitude: 25.8573 } } as PlacedGame
@@ -141,36 +146,28 @@ describe('addPlaceNames', () => {
     expect(names.namesAGame(1)).toBe(false)
   })
 
-  it("marks a game's city as naming a score card while the card is on screen, giving the cities again only when that changes", () => {
-    const { map, gameCities, cardCities, given } = mapWithCityNames()
+  it("shows a city's dot only while its name is written, following names as they come and go", () => {
+    const { map, written, emit, dotShown } = mapWithCityNames()
     const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
     // In Chicago, far from Miami.
     const chicagoGame = { id: 'chicago', venue: { longitude: -87.6359, latitude: 41.8789 } } as PlacedGame
     names.showGames([evergladesGame, chicagoGame])
-    expect(gameCities()).toEqual(expect.arrayContaining(['Miami', 'Chicago']))
-    expect(cardCities()).toEqual([])
 
-    names.showCards(['everglades'])
-    expect(cardCities()).toEqual(['Miami'])
-    const before = given()
-    names.showCards(['everglades'])
-    expect(given()).toBe(before)
+    written(['Miami'])
+    emit('idle')
+    expect(dotShown('Miami')).toBe(true)
+    expect(dotShown('Chicago')).toBe(false)
 
-    // Its card gone into a card cluster, Chicago's showing.
-    names.showCards(['chicago'])
-    expect(cardCities()).toEqual(['Chicago'])
-    names.showCards([])
-    expect(cardCities()).toEqual([])
-  })
+    written(['Chicago'])
+    emit('idle')
+    expect(dotShown('Miami')).toBe(false)
+    expect(dotShown('Chicago')).toBe(true)
 
-  it("marks the city of a game that took another's place at the same venue, once its card is on screen", () => {
-    const { map, cardCities } = mapWithCityNames()
-    const names = addPlaceNames(map, () => builtInTheme, { ...cityLabelSettings, gameCityKm: 150 })
-    names.showGames([evergladesGame])
-    names.showGames([{ ...evergladesGame, id: 'everglades-next' }])
-
-    names.showCards(['everglades-next'])
-    expect(cardCities()).toEqual(['Miami'])
+    // The games changing, the cities are numbered afresh: no dot is left on from before.
+    names.showGames([chicagoGame])
+    written([])
+    emit('idle')
+    expect(dotShown('Chicago')).toBe(false)
   })
 
   it('names cities at every zoom, as score cards show at every zoom', () => {

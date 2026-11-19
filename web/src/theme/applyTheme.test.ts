@@ -170,11 +170,11 @@ describe('applyTheme', () => {
       // A card cluster's fill, radius, glow radius, outline width and glow opacity, its count's font
       // (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
       cluster: 5 + 5 + 4 + 3,
-      // A trail's width and opacity, its glow's three and its venue's three.
-      trail: 8,
+      // A trail's width and opacity, its glow's three, its venue's three and its card dot's radius.
+      trail: 9,
       selection: 2,
-      // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two.
-      hover: 2 + 2 + 3,
+      // A hovered card's border width and whether it turns solid, its trail's width and opacity, and its venue dot's radius and glow of two, and its card dot's radius.
+      hover: 2 + 2 + 3 + 1,
       // Two sizes and two ring widths.
       pulse: 3,
       // A score card's fill, text, shadow, frost, header's two, corner, four sizes,

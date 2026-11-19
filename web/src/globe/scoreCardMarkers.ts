@@ -26,6 +26,7 @@ import { traceLayout } from './layoutTrace'
 import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
+import { cardDotAt } from './cardDot'
 import { selectedStacking, stacking } from './statusLook'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
@@ -389,6 +390,13 @@ export class ScoreCardMarkers {
     if (!source) return cardClusters
     this.layoutTrails = trails
     this.showTrails()
+    // A dot on each card where its trail meets it, so it's plain which card a trail is.
+    const starts = new Map(trails.map(({ gameId, start }) => [gameId, start]))
+    for (const { gameId } of cards) {
+      const placed = this.placed.get(gameId)
+      const start = starts.get(gameId)
+      placed?.showTrailDot(start && placed.offset ? cardDotAt(start, placed.offset, placed) : null)
+    }
     // The features with those points and the footprints' offsets left out, which are compared by how far they've come.
     const footprints: number[][] = []
     const shape = JSON.stringify(features, (key, value: unknown) => {
@@ -570,6 +578,8 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   const rows = [team(card.top), team(card.bottom)]
   element.replaceChildren(header, ...rows)
   if (card.flames) element.append(flames())
+  // Where its trail meets it, put there by its placed card (see showTrailDot).
+  element.append(span('score-card__trail-dot', ''))
   return rows
 }
 

@@ -281,7 +281,7 @@ Tooltips are drawn by the page, not the browser, whose own can't be styled: anyt
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's color. Its settings are `components.Hover`: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), and `venue.radius` and `.glow.radius`, `.opacity`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
+While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's color, and the dot on the card where the trail meets it is bigger. Its settings are `components.Hover`: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), `venue.radius` and `.glow.radius`, `.opacity`, and `cardDot.radius`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
 
 ## Typography
 
@@ -359,10 +359,12 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot. A venue cluster is the same dot and ring | 5, 1 |
+| `components.Trail.cardDot.radius` | The dot in its game's color on a score card's edge where its trail meets it, so it's plain which card a trail is | 2 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
 | `components.Hover.trail.width`, `.opacity` | A hovered card's trail, and its venue dot ring's width (see [Hover](#hover)) | 2.5, 1 |
 | `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
 | `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's color | 12, 0.6 |
+| `components.Hover.cardDot.radius` | A hovered card's dot where its trail meets it | 2.75 |
 | `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 36 |
 | `components.Pulse.ring` | How thick a pulse's ring is | 3 |
 

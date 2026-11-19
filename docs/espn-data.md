@@ -12,7 +12,7 @@ The field names below are ESPN's, under `https://site.api.espn.com/apis/site/v2/
 | `summary?event={id}` | When a viewer opens a game’s details or Watch and game info | About 5–500 KB; basketball and hockey list every play |
 | `teams/{id}` | Once per home team, only for a game with no venue (for its city) | Small |
 
-Summary lookups run separately from polling and live score delivery. Viewers share a lookup for the same game, with at most four requests in flight across leagues and a 20-second cache. The browser refreshes an open Live game’s details every 20 seconds. The simulated games in scenarios, demos and the welcome tour have no ESPN summary.
+Summary lookups run separately from polling and live score delivery. Viewers share a lookup for the same game, with at most four requests in flight across leagues and a 20-second cache. The browser refreshes an open Live game’s details every 20 seconds. The simulated games in scenarios, demos and the welcome tour have no ESPN summary: the server makes up their details from the game instead (`ScenarioGameDetails`), and the tour sends its game, as it exists only in the browser.
 
 ## What ScoreMap reads
 

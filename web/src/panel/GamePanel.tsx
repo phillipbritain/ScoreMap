@@ -11,7 +11,6 @@ import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
-import { emptyGameDetails } from './gameDetails'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -32,8 +31,8 @@ interface GamePanelProps {
   textOnColor: string
   /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
   venuePhotos: boolean
-  /** Tour and demo games are simulated and have no ESPN summary. */
-  simulated?: boolean
+  /** Whether the game is a demo's, whose details come from the demo board. */
+  demo?: boolean
   onClose: () => void
   /**
    * Whether the panel is on its way out, closed (see .game-panel--leaving): it can't be used meanwhile.
@@ -48,12 +47,11 @@ interface GamePanelProps {
  * The selected game's score and venue above a collapsible details pane. Venue photos stay
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, simulated = false, onClose, leaving = false, ref }: GamePanelProps) {
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo = false, onClose, leaving = false, ref }: GamePanelProps) {
   const [shown, setShown] = useState({ gameId: game.id, details: false, watch: false })
   if (shown.gameId !== game.id) setShown({ gameId: game.id, details: false, watch: false })
   const showingDetails = !leaving && shown.gameId === game.id && (shown.details || shown.watch)
-  const { data, failed } = useGameDetails(game, showingDetails && !simulated)
-  const details = simulated ? emptyGameDetails : data
+  const { data: details, failed } = useGameDetails(game, showingDetails, demo)
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.

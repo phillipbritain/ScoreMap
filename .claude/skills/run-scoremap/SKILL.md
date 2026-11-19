@@ -94,6 +94,8 @@ Pick the scenario that brings out what you're checking, and you know what should
 
 Every scenario's games carry made-up links for the game panel's logos, picked by game id so a game keeps them: about a quarter have both an ESPN page and a StreamEast stream, a quarter only ESPN, a quarter only StreamEast and a quarter neither. Each goes to its site's home page. Demos and real games don't get them.
 
+Every game in a scenario, a demo or the welcome tour also has made-up game details, for each tab its sport has (none but a preview video and its networks before it starts): picked by its id, so it shows the same ones each time, growing as it goes on. Its videos open ESPN's home page.
+
 Everything happens on the scenario clock, which reads noon Eastern on 4 August 2026 (12:00:00 PM EDT) whenever a scenario starts, is switched to or is reset (real games show the real time), so an event comes at the same reading every time: note it on the clock, press Reset, and watch for it again. At Faster (32×) a Final game drops out under 2 s (1.875 s) after it finishes. Switching to the running scenario starts it afresh; switching keeps the speed.
 
 To switch while running (each run's scenario and speed are its own):

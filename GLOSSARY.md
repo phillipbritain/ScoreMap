@@ -97,7 +97,7 @@ Simulated Live games featuring real teams or competitors at real venues, shown a
 _Avoid_: Sample games, dummy games, onboarding games, example games
 
 **Game details**:
-The content opened by the tabs at the foot of the game panel. It includes period scores in the Score tab, scoring plays in order, football drives, player stats and ESPN highlights where the feed supplies them.
+The content opened by the tabs at the foot of the game panel. It includes period scores in the Score tab, scoring plays in order, football drives, player stats and ESPN highlights where the feed supplies them. A scenario’s, a demo’s and the tour’s games have theirs made up.
 
 **Situation**:
 Where play stands in a Live game right now: in football the down and distance and who has the ball, in baseball the count, outs and runners, and in every sport the feed covers the last play.

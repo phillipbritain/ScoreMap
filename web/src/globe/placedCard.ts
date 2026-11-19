@@ -8,6 +8,7 @@ import type { ScreenOffset } from './cardLayout'
 import { cardMoveDuration, cardMoveEasing, type CardMove } from './cardMoves'
 import type { PinAnimation } from './pinAnimation'
 import type { TrailOnGlobe } from './trailLayer'
+import type { Point } from './trailRoute'
 
 /** What a viewer does to a placed card, for whoever placed it. */
 export interface PlacedCardEvents {
@@ -147,6 +148,18 @@ export class PlacedCard {
     this.offset = offset
     this.marker.setOffset([offset.dx, offset.dy])
     this.markerElement.toggleAttribute('data-moved', moved)
+  }
+
+  /**
+   * Puts the dot where the card's trail meets it, `at` pixels from its top left (see cardDotAt), or
+   * takes it off while the card has no trail. Kept as the card is redrawn.
+   */
+  showTrailDot(at: Point | null): void {
+    const element = this.element
+    element.toggleAttribute('data-trail-dot', at !== null)
+    if (!at) return
+    element.style.setProperty('--trail-dot-x', `${at.x}px`)
+    element.style.setProperty('--trail-dot-y', `${at.y}px`)
   }
 
   /**

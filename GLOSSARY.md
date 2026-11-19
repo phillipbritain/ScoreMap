@@ -61,7 +61,7 @@ At any zoom, the panel a pin shows as, a little above the game's venue with a tr
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
-The line from a score card to its game's venue, ending at a ringed venue dot. Drawn as a transit map's line: across, up or down and at 45°, its one bend rounded off. It leaves its card straight out or at 45°, never along the card's edge, where it crosses the fewest other cards and trails.
+The line from a score card to its game's venue, starting at a small dot in its game's color on the card's edge and ending at a ringed venue dot. Drawn as a transit map's line: across, up or down and at 45°, its one bend rounded off. It leaves its card straight out or at 45°, never along the card's edge, where it crosses the fewest other cards and trails.
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:

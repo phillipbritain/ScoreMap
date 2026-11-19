@@ -455,27 +455,31 @@ const settings = {
     /**
      * A moved score card's trail back to its venue: a line this wide and opaque in its game's color
      * (below 1, the map shows through it), in a soft glow, to a dot ringed in that color. A venue
-     * cluster is the same ringed dot, in its games' color.
+     * cluster is the same ringed dot, in its games' color. Where it meets its card, a small dot in
+     * that color on the card's edge, so it's plain which card the trail is.
      */
     Trail: {
       width: pixels,
       opacity,
       glow: { width: pixels, blur: pixels, opacity },
       venue: { radius: pixels, ring: { radius: pixels, width: pixels } },
+      cardDot: { radius: pixels },
     },
     /** The selected game's small pin ring and score card outline: their color and width. */
     Selection: { color, width: pixels },
     /**
      * A score card the pointer is on, and its game on the globe, picked out: the card's border this
      * wide, and solid whatever the cards' fill opacity, or not; its trail this wide and opaque (in place
-     * of the trail's own opacity); and the venue dot its trail ends at this
-     * big, in a glow of its game's color this wide and strong. Its card doesn't move. Where the game
+     * of the trail's own opacity); the venue dot its trail ends at this
+     * big, in a glow of its game's color this wide and strong; and the dot where its trail meets the
+     * card this big. Its card doesn't move. Where the game
      * is also the selected one, selection's look wins where they differ.
      */
     Hover: {
       card: { borderWidth: pixels, solid: onOff },
       trail: { width: pixels, opacity },
       venue: { radius: pixels, glow: { radius: pixels, opacity } },
+      cardDot: { radius: pixels },
     },
     /**
      * The rings an animation draws over a small pin or a cluster: how wide they start, over a pin and

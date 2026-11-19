@@ -844,6 +844,38 @@ body {
   outline-offset: calc(0.5 * var(--spacing));
 }
 
+/* A small dot in its game's color where its trail meets the card (see showTrailDot), on the card's edge,
+   so it's plain which card a trail is; bigger while the card is picked out, as its trail is bolder. */
+.score-card__trail-dot {
+  display: none;
+  position: absolute;
+  /* From the card's padding box, inside its border. */
+  left: calc(var(--trail-dot-x) - var(--shape-border-width-thin));
+  top: calc(var(--trail-dot-y) - var(--shape-border-width-thin));
+  width: calc(2 * var(--trail-card-dot-radius));
+  height: calc(2 * var(--trail-card-dot-radius));
+  border-radius: 50%;
+  background: var(--game-color);
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+[data-trail-dot] > .score-card__trail-dot {
+  display: block;
+}
+
+.score-card--selected > .score-card__trail-dot {
+  width: calc(2 * var(--hover-card-dot-radius));
+  height: calc(2 * var(--hover-card-dot-radius));
+}
+
+@media (hover: hover) {
+  .score-card:hover > .score-card__trail-dot {
+    width: calc(2 * var(--hover-card-dot-radius));
+    height: calc(2 * var(--hover-card-dot-radius));
+  }
+}
+
 .score-card__header {
   display: flex;
   align-items: center;

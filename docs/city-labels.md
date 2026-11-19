@@ -1,6 +1,6 @@
 # City labels
 
-The globe names cities from a city list included with the app, not from the map's tiles (ADR-0015). Only city names follow these rules; states and countries are named by the base map, once each in English (its English name, else its Latin spelling, else its own), in the theme's look. Zoomed out, before the base map names states (zoom 5), US states and Canadian provinces and territories are named by their 2-letter postal codes (WA, ON), from Natural Earth (`web/src/globe/stateNames.json`, made by `npm --prefix web run state-names`). Every name reads as on an American map.
+The globe names cities from a city list included with the app, not from the map's tiles (ADR-0015). Only city names follow these rules; states and countries are named by the base map, once each in English (its English name, else its Latin spelling, else its own), in the theme's look. Fully zoomed out no states are named, to leave the room to score cards. From zoom 3.25, US states and Canadian provinces and territories are named by their 2-letter postal codes (WA, ON), from Natural Earth (`web/src/globe/stateNames.json`, made by `npm --prefix web run state-names`); from zoom 4.25 to 8 the base map names every country's states in full. Every name reads as on an American map.
 
 ## The rules
 

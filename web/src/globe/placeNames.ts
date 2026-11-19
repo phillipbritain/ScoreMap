@@ -63,18 +63,33 @@ export const stateNameSourceSpec: GeoJSONSourceSpecification = {
 export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSpecification[] {
   const names = base.layers.filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles && !droppedNames.has(l.id))
   const isCountry = (l: LayerSpecification) => l.id.startsWith('label_country')
-  const states = names.filter((l) => !isCountry(l)).map((l) => placeName(l, 'state', theme))
+  const states = names.filter((l) => !isCountry(l)).map((l) => placeName(l.id === 'label_state' ? { ...l, minzoom: stateNamesFrom } : l, 'state', theme))
   const countries = names.filter(isCountry).map((l) => placeName(l, 'country', theme))
   const { big, game } = cityNameLayers(theme)
   return [stateNameLayer(theme), ...states, ...countries, big, game]
 }
 
 /**
+ * The zoom states' abbreviations show from: further out they'd only crowd the score cards.
+ */
+export const stateAbbreviationsFrom = 3.25
+
+/**
+ * The zoom states' full names (the base style's label_state, every country's) show from, in place of
+ * the abbreviations, up to the base style's zoom 8. The base style starts them at 5.
+ */
+export const stateNamesFrom = 4.25
+
+/**
  * The US states' and Canadian provinces' and territories' abbreviations, their postal codes (WA, ON),
- * zoomed out: from zoom 5 the base style writes their full names (label_state).
+ * zoomed out a little (see stateAbbreviationsFrom), until the full names show (see stateNamesFrom).
  */
 function stateNameLayer(theme: Theme): LayerSpecification {
-  const layer = placeName({ id: 'state_abbreviations', type: 'symbol', source: stateNameSource, maxzoom: 5 }, 'state', theme)
+  const layer = placeName(
+    { id: 'state_abbreviations', type: 'symbol', source: stateNameSource, minzoom: stateAbbreviationsFrom, maxzoom: stateNamesFrom },
+    'state',
+    theme,
+  )
   return layer.type === 'symbol' ? { ...layer, layout: { ...layer.layout, 'text-field': ['get', 'postal'] } } : layer
 }
 

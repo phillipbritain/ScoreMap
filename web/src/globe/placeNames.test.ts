@@ -168,21 +168,24 @@ describe('addPlaceNames', () => {
     const losAngeles = { id: 'la', venue: { longitude: -118.1819, latitude: 33.9919 } } as PlacedGame
     const sanDiego = { id: 'sd', venue: { longitude: -117.1819, latitude: 32.822 } } as PlacedGame
     names.showGames([losAngeles, sanDiego])
-    expect(writtenCities()).toEqual(['Los Angeles', 'San Diego'])
+    expect(writtenCities()).toEqual(expect.arrayContaining(['Los Angeles', 'San Diego']))
 
     // Close together, San Diego's name, under Los Angeles', gives way.
     spreadTo(10)
-    expect(names.layOutGameNames()).toHaveLength(1)
-    expect(writtenCities()).toEqual(['Los Angeles'])
-    // Brought apart a little, it stays out, and nothing is given the map again.
-    const before = given()
+    const close = names.layOutCityNames().length
+    expect(writtenCities()).toContain('Los Angeles')
+    expect(writtenCities()).not.toContain('San Diego')
+    // Brought apart a little, it stays out.
     spreadTo(10.5)
-    expect(names.layOutGameNames()).toHaveLength(1)
-    expect(given()).toBe(before)
-    // Well apart, it's written again.
+    names.layOutCityNames()
+    expect(writtenCities()).not.toContain('San Diego')
+    // Well apart, it's written again, and cards keep clear of it too.
     spreadTo(30)
-    expect(names.layOutGameNames()).toHaveLength(2)
-    expect(writtenCities()).toEqual(['Los Angeles', 'San Diego'])
+    const before = given()
+    const apart = names.layOutCityNames().length
+    expect(writtenCities()).toContain('San Diego')
+    expect(given()).toBeGreaterThan(before)
+    expect(apart).toBeGreaterThanOrEqual(close + 1)
   })
 
   it("hides a city's dot whole where a game's venue on screen is near enough for its pin to touch it, showing it once clear", () => {
@@ -193,12 +196,23 @@ describe('addPlaceNames', () => {
     names.showGames([roseBowl])
     // Zoomed out, the venue's pin is on the dot: hidden.
     spreadTo(10)
-    names.layOutGameNames()
+    names.layOutCityNames()
     expect(dotShown('Los Angeles')).toBe(false)
     // Zoomed in, the venue's pin is well clear: shown.
     spreadTo(200)
-    names.layOutGameNames()
+    names.layOutCityNames()
     expect(dotShown('Los Angeles')).toBe(true)
+  })
+
+  it("writes Big cities' names with games' cities', the more populous of two that overlap, and gives cards all the names written", () => {
+    const { map, writtenCities, spreadTo } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings)
+    // A game in Los Angeles; Seattle is Big by the Big list, with no game near.
+    names.showGames([{ id: 'la', venue: { longitude: -118.1819, latitude: 33.9919 } } as PlacedGame])
+    spreadTo(10)
+    const boxes = names.layOutCityNames()
+    expect(writtenCities()).toEqual(expect.arrayContaining(['Los Angeles', 'Seattle']))
+    expect(boxes.length).toBe(writtenCities().length)
   })
 
   it("gives the map the cities' dot, a circle it can color, once its style loads, or when it finds the dot missing", () => {

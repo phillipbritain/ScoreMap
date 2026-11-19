@@ -331,7 +331,7 @@ export class ScoreCardMarkers {
     const scene: LayoutScene = {
       ...this.mapSize,
       venueGap: theme.components.ScoreCard.size.venueGap,
-      names: this.placeNames.layOutGameNames(),
+      names: this.placeNames.layOutCityNames(),
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),

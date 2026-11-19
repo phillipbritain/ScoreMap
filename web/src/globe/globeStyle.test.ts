@@ -102,8 +102,8 @@ describe('globeStyle', () => {
       'boundary_disputed',
       'state_abbreviations',
       'label_state',
-      'city_names',
       'label_country_1',
+      'city_names',
       'city_names_game',
     ])
   })
@@ -259,21 +259,28 @@ describe('globeStyle', () => {
       expect(layout(id), id).not.toHaveProperty('text-variable-anchor-offset')
       expect(layout(id), id).not.toHaveProperty('text-variable-anchor')
     }
-    // A Big city's name gives way to everything placed before it; the app picks which games' cities' names are written.
-    expect(layout('city_names')['text-allow-overlap']).toBeUndefined()
-    expect(layout('city_names_game')['text-allow-overlap']).toBe(true)
+    // The app picks which cities' names are written; the map writes them whatever's there.
+    for (const id of ['city_names', 'city_names_game']) expect(layout(id)['text-allow-overlap'], id).toBe(true)
   })
 
-  it("writes only the games' cities' names the app picks", () => {
-    const filter = featureFilter((layer('city_names_game') as { filter: FilterSpecification }).filter, 'f').filter
-    const features = cityNameFeatures({ gameCities: [tokyo, kobe], otherBigCities: [] }, (city) => city === tokyo).features
-    expect(features.map((f) => filter({ zoom: 5 }, { type: 1, properties: f.properties } as never))).toEqual([true, false])
+  it("writes only the cities' names the app picks, Big cities' and games' alike", () => {
+    const picked = (city: ListedCity) => city === tokyo
+    const features = [
+      ...cityNameFeatures({ gameCities: [tokyo, kobe], otherBigCities: [osaka] }, picked).features,
+      ...cityNameFeatures({ gameCities: [], otherBigCities: [tokyo] }, picked).features,
+    ]
+    const writtenBy = (id: string) => {
+      const filter = featureFilter((layer(id) as { filter: FilterSpecification }).filter, 'f').filter
+      return features.filter((f) => filter({ zoom: 5 }, { type: 1, properties: f.properties } as never)).map((f) => f.properties!.name)
+    }
+    expect(writtenBy('city_names_game')).toEqual(['Tokyo'])
+    expect(writtenBy('city_names')).toEqual(['Tokyo'])
   })
 
-  it("places the games' city names before every other name, so only a more populous game's city's name hides one", () => {
-    const names = style().layers.filter((l) => l.type === 'symbol')
+  it('places the city names before every other name, so state and country names give way to them', () => {
+    const names = style().layers.filter((l) => l.type === 'symbol').map((l) => l.id)
     // MapLibre places the top layer first.
-    expect(names.at(-1)?.id).toBe('city_names_game')
+    expect(names.slice(-2)).toEqual(['city_names', 'city_names_game'])
   })
 
   it("puts a dot at each named city as its name's icon, in its name's color ringed in its outline color at the theme's sizes, shown and hidden with its name", () => {

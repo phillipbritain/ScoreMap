@@ -40,6 +40,18 @@ public sealed class ScenarioGameFeedProvider : IGameFeedProvider
         }
     }
 
+    /// <summary>A game's made-up details (see <see cref="ScenarioGameDetails"/>); none for a game the scenario hasn't now.</summary>
+    public Task<GameDetails?> FetchGameDetailsAsync(League league, string id, CancellationToken cancellationToken)
+    {
+        lock (_lock)
+        {
+            var now = _clock.GetUtcNow();
+            var all = _play is not null ? _play.GamesAt(now) : _scenario.GamesAt(_startedAt, now);
+            var game = all.FirstOrDefault(game => game.Id == id && game.LeagueKey == league.Key);
+            return Task.FromResult<GameDetails?>(game is null ? GameDetails.Empty : ScenarioGameDetails.For(league, game));
+        }
+    }
+
     /// <summary>About one game in five, picked by its id, so a game stays a top event for as long as it runs.</summary>
     public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken)
     {

@@ -69,6 +69,19 @@ public sealed partial class RunningGameBoard : BackgroundService
     public IReadOnlyList<Game> Games => _board.Games;
     public IReadOnlyList<League> Leagues => _board.Leagues;
 
+    /// <summary>
+    /// The details of game <paramref name="id"/> in <paramref name="league"/> from the board's feed, for the
+    /// game panel. Only the board's own games are looked up.
+    /// </summary>
+    public async Task<(DetailsLookup Lookup, GameDetails? Details)> FetchGameDetailsAsync(
+        League league, string id, CancellationToken cancellationToken)
+    {
+        if (!Games.Any(game => game.Id == id && game.League == league.Name))
+            return (DetailsLookup.NotOnBoard, null);
+        var details = await _board.FetchGameDetailsAsync(league, id, cancellationToken);
+        return details is null ? (DetailsLookup.FeedFailed, null) : (DetailsLookup.Found, details);
+    }
+
     /// <summary>How long each viewer waits before joining, in real time.</summary>
     public TimeSpan SlowStart => _switcher?.SlowStart ?? TimeSpan.Zero;
 
@@ -266,4 +279,12 @@ public sealed partial class RunningGameBoard : BackgroundService
 
         private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
+}
+
+/// <summary>How looking up a game's details on a board went.</summary>
+public enum DetailsLookup
+{
+    Found,
+    NotOnBoard,
+    FeedFailed,
 }

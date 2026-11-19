@@ -1,11 +1,24 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Game } from '../games/game'
 import type { GameDetails } from './gameDetails'
 
 const refreshInterval = 20_000
 
-export function useGameDetails({ id, league, status }: Game, enabled: boolean) {
-  const key = new URLSearchParams({ id, league }).toString()
+/** The welcome tour's games are made up in the browser; the server makes up their details from the game sent. */
+export const isTourGame = ({ id }: Game) => id.startsWith('tour-')
+
+/**
+ * The selected game's details, refreshed while it's Live: a game on the board by its id, a demo's game
+ * on the demo board, and a tour game by sending the game as it is now.
+ */
+export function useGameDetails(game: Game, enabled: boolean, demo = false) {
+  const { id, league, status } = game
+  const tour = isTourGame(game)
+  const key = new URLSearchParams({ id, league, ...(demo && !tour ? { demo: 'true' } : {}) }).toString()
+  const current = useRef(game)
+  useEffect(() => {
+    current.current = game
+  })
   const [result, setResult] = useState<{ key: string; data: GameDetails | null; failed: boolean } | null>(null)
 
   useEffect(() => {
@@ -15,7 +28,14 @@ export function useGameDetails({ id, league, status }: Game, enabled: boolean) {
 
     async function refresh() {
       try {
-        const response = await fetch(`/api/game-details?${key}`, { signal: controller.signal })
+        const response = tour
+          ? await fetch('/api/tour-game-details', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(current.current),
+            signal: controller.signal,
+          })
+          : await fetch(`/api/game-details?${key}`, { signal: controller.signal })
         if (!response.ok) throw new Error('Game details request failed')
         const data: GameDetails = await response.json()
         if (!controller.signal.aborted) setResult({ key, data, failed: false })
@@ -33,8 +53,8 @@ export function useGameDetails({ id, league, status }: Game, enabled: boolean) {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [enabled, key, status])
+  }, [enabled, key, status, tour])
 
-  const current = result?.key === key ? result : null
-  return { data: current?.data ?? null, failed: current?.failed ?? false }
+  const shown = result?.key === key ? result : null
+  return { data: shown?.data ?? null, failed: shown?.failed ?? false }
 }

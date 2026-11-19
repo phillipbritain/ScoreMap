@@ -39,6 +39,16 @@ public sealed class DemoBoard(
         }
     }
 
+    /// <summary>The running demo board, or null while it isn't running.</summary>
+    public RunningGameBoard? Running
+    {
+        get
+        {
+            lock (_lock)
+                return _running;
+        }
+    }
+
     /// <summary>
     /// Whether a browser is counted as watching the demo: from just after the hub sends its snapshot
     /// until it leaves.

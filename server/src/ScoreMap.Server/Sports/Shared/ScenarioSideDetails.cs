@@ -46,6 +46,9 @@ internal abstract partial class SportScenario
     /// <see cref="Events"/>' default; none by default.
     /// </summary>
     protected virtual string? ScoreText(int points, Random random) => null;
+
+    /// <summary>How a score of <paramref name="points"/> reads in a scoring play; null in a sport without its own words for one.</summary>
+    internal string? ScoringPlayText(int points, Random random) => ScoreText(points, random);
     protected virtual ProviderPeriodPhase ScorePhase(ProviderGame game) => ProviderPeriodPhase.Playing;
     protected virtual string? ScoreClock(ProviderGame game) => game.DisplayClock;
 

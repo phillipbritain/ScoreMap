@@ -131,7 +131,7 @@ describe('addPlaceNames', () => {
       spreadTo: (pixels: number) => (spread = pixels),
       written: (cities: string[]) => (names = cities),
       emit: (event: string) => handlers.get(event)?.(),
-      dotShown: (city: string) => states.get(idOf(city)!)?.named === true,
+      dotShown: (city: string) => states.get(idOf(city)!)?.named === true && states.get(idOf(city)!)?.covered !== true,
     }
   }
   // Everglades City, about 100 km from Miami.
@@ -203,6 +203,26 @@ describe('addPlaceNames', () => {
     spreadTo(30)
     expect(names.layOutGameNames()).toHaveLength(2)
     expect(writtenCities()).toEqual(['Los Angeles', 'San Diego'])
+  })
+
+  it("hides a city's dot whole where a game's venue on screen is near enough for its pin to touch it, showing it once clear", () => {
+    const { map, written, emit, dotShown, spreadTo } = mapWithCityNames()
+    const names = addPlaceNames(map, () => builtInTheme, cityLabelSettings)
+    // The Rose Bowl, about 15 km from the middle of Los Angeles.
+    const roseBowl = { id: 'rose-bowl', venue: { longitude: -118.1675, latitude: 34.1613 } } as PlacedGame
+    names.showGames([roseBowl])
+    written(['Los Angeles'])
+    emit('idle')
+    // Zoomed out, the venue's pin is on the dot: hidden.
+    spreadTo(10)
+    names.layOutGameNames()
+    emit('idle')
+    expect(dotShown('Los Angeles')).toBe(false)
+    // Zoomed in, the venue's pin is well clear: shown.
+    spreadTo(200)
+    names.layOutGameNames()
+    emit('idle')
+    expect(dotShown('Los Angeles')).toBe(true)
   })
 
   it('names cities at every zoom, as score cards show at every zoom', () => {

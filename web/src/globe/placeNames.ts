@@ -159,6 +159,9 @@ const cityNameFilters = {
 /** The feature state saying a city's name is written now, so its dot shows (see markNamedCities). */
 const namedState = 'named'
 
+/** The feature state saying a game's venue's pin or venue dot is on a city's dot, so it's hidden whole (see coverDots). */
+const coveredState = 'covered'
+
 /**
  * The layers naming the cities in the city name source (see addPlaceNames), at every zoom as score
  * cards show at every zoom, all in the theme's city look, national capitals included, and their dots.
@@ -166,8 +169,8 @@ const namedState = 'named'
  * are placed first, and written whatever is there: the app leaves out the less populous of two that
  * overlap (see PlaceNames.layOutGameNames), and cards are laid out around the rest. Big cities with no
  * game near come after, written only where nothing placed before them is in their spot, giving way to
- * everything but states, most populous first. A city's dot shows while its name is written, beneath
- * pins, so the pin of a game at it covers it.
+ * everything but states, most populous first. A city's dot shows while its name is written, and no
+ * game's venue is near enough for its pin to touch it (see coverDots): a venue's pin comes first.
  */
 function cityNameLayers(theme: Theme): { dots: LayerSpecification; big: LayerSpecification; game: LayerSpecification } {
   const layer = (kind: 'big' | 'game'): LayerSpecification => {
@@ -193,7 +196,12 @@ function cityNameLayers(theme: Theme): { dots: LayerSpecification; big: LayerSpe
     return named
   }
   const look = theme.components.PlaceNames.city
-  const shown = fadedByHorizon(['case', ['boolean', ['feature-state', namedState], false], 1, 0])
+  const shown = fadedByHorizon([
+    'case',
+    ['all', ['boolean', ['feature-state', namedState], false], ['!', ['boolean', ['feature-state', coveredState], false]]],
+    1,
+    0,
+  ])
   const dots: CircleLayerSpecification = {
     id: cityNameLayerIds.dots,
     type: 'circle',
@@ -299,9 +307,11 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
   // Whether each game's city's name was written when last laid out, by its key (see nameKey).
   let written = new Map<string, boolean>()
   const dots = markNamedCities(map)
+  const covers = coverDots(map)
   const showLabels = () => {
     map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels, (city) => written.get(nameKey(city)) !== false))
     dots.renumbered()
+    covers.renumbered()
   }
   // The style starts with no cities (see cityNameSourceSpec).
   const styleLoaded = () => showLabels()
@@ -340,6 +350,8 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       const changed = [...now].some(([key, shown]) => written.get(key) !== shown)
       written = now
       if (changed) showLabels()
+      // After any relabeling, which numbers the cities afresh.
+      covers.cover([...labels.gameCities, ...labels.otherBigCities], venues, theme())
       return onScreen.filter(({ city }) => now.get(nameKey(city))).map(({ city, dot }) => cityNameBox(city.name, dot, look, measureText))
     },
     remove() {
@@ -385,6 +397,45 @@ function markNamedCities(map: MapLibreMap): { renumbered(): void; remove(): void
       map.off('idle', markNow)
     },
   }
+}
+
+/**
+ * Hides a city's dot whole while a game's venue on screen is near enough for its small pin or venue
+ * dot to touch it, so a dot never peeks out beside a pin, which comes first. Each city is marked on
+ * its feature by its id (see cityNameFeatures), as they're given to cover.
+ */
+function coverDots(map: MapLibreMap): { cover(cities: readonly ListedCity[], venues: readonly GlobePoint[], theme: Theme): void; renumbered(): void } {
+  let covered = new Set<number>()
+  const mark = (id: number, on: boolean) => map.setFeatureState({ source: cityNameSource, id }, { [coveredState]: on })
+  return {
+    cover(cities, venues, theme) {
+      const dot = theme.components.PlaceNames.city.dot
+      const reach = venueMarkerReach(theme) + dot.radius + dot.ring
+      const onScreen = venues
+        .filter((venue) => !isBehindGlobe(map, [venue.longitude, venue.latitude]))
+        .map((venue) => map.project([venue.longitude, venue.latitude]))
+      const now = new Set<number>()
+      cities.forEach((city, id) => {
+        if (isBehindGlobe(map, [city.longitude, city.latitude])) return
+        const at = map.project([city.longitude, city.latitude])
+        if (onScreen.some((venue) => Math.hypot(venue.x - at.x, venue.y - at.y) < reach)) now.add(id)
+      })
+      for (const id of covered) if (!now.has(id)) mark(id, false)
+      for (const id of now) if (!covered.has(id)) mark(id, true)
+      covered = now
+    },
+    renumbered() {
+      for (const id of covered) mark(id, false)
+      covered = new Set()
+    },
+  }
+}
+
+/** How far a game's marker at its venue reaches on screen, in pixels: the largest small pin's core and ring, or a score card's venue dot's ring. */
+function venueMarkerReach(theme: Theme): number {
+  const { Pin, Trail } = theme.components
+  const pins = [Pin.live, Pin.upcoming, Pin.final].map(({ core }) => core.radius + core.ring)
+  return Math.max(...pins, Trail.venue.ring.radius + Trail.venue.ring.width / 2)
 }
 
 /** A city, the same from frame to frame whatever else is named, for remembering whether its name was written. */

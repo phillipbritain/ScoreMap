@@ -58,7 +58,7 @@
         "font": "Open Sans Semibold",
         "size": { "4": "caption", "7": "body2", "11": "h6" },
         "letterSpacing": 0,
-        "dot": { "radius": 1.5, "ring": 0.75 }
+        "dot": { "radius": 2.25, "ring": 0.75 }
       },
       "state": {
         "color": "navy.200",

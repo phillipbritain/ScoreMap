@@ -290,6 +290,8 @@ describe('globeStyle', () => {
       expect(opacity({ named: true }), property).toBe(1)
       expect(opacity({}), property).toBe(0)
       expect(opacity({ named: true, horizonFade: 0.5 }), property).toBe(0.5)
+      // A venue's pin on it: hidden whole, not peeking out beside the pin.
+      expect(opacity({ named: true, covered: true }), property).toBe(0)
     }
   })
 

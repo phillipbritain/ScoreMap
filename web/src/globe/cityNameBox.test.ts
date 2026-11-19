@@ -9,13 +9,13 @@ describe('cityNameBox', () => {
   // Wide enough for the longest word below, "Santísima", to fit on a line.
   const look = { ...cityNameLook(4, builtInTheme), maxWidth: 100 }
 
-  it('sits centered below the dot, past the offset, with room for the outline', () => {
+  it('sits right of the dot, past the offset, level with it, with room for the outline', () => {
     const box = cityNameBox('Tampa', { x: 100, y: 200 }, look, measure)
-    expect(box.x).toBe(100)
-    expect(box.width).toBeGreaterThan(50)
-    expect(box.y - box.height / 2).toBeLessThanOrEqual(200 + look.offset)
-    expect(box.y - box.height / 2).toBeGreaterThan(200)
-    expect(box.y + box.height / 2).toBeGreaterThanOrEqual(200 + look.offset + look.size)
+    expect(box.y).toBe(200)
+    expect(box.height).toBeGreaterThan(look.size)
+    expect(box.x - box.width / 2).toBeLessThanOrEqual(100 + look.offset)
+    expect(box.x - box.width / 2).toBeGreaterThan(100)
+    expect(box.x + box.width / 2).toBeGreaterThanOrEqual(100 + look.offset + measure('Tampa'))
   })
 
   it("keeps the theme's clearance for score cards around the name's letters", () => {
@@ -25,7 +25,7 @@ describe('cityNameBox', () => {
     const clear = { ...cityNameLook(4, theme), maxWidth: 100 }
     const box = cityNameBox('Tampa', { x: 100, y: 200 }, clear, measure)
     expect(box.width).toBe(measure('Tampa') + 2 * 7)
-    expect(box.y - box.height / 2).toBe(200 + clear.offset - 7)
+    expect(box.x - box.width / 2).toBe(100 + clear.offset - 7)
   })
 
   it('wraps a long name onto more lines, as the map does', () => {

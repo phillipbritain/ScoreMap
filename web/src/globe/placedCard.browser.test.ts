@@ -64,6 +64,23 @@ describe('a placed card', () => {
     expect(events.hover.mock.calls).toEqual([[true], [false]])
   })
 
+  it('stays exactly on its venue as the globe moves by fractions of a pixel, as its trail does, rather than jumping from pixel to pixel', () => {
+    const card = place()
+    // Where the card is from its venue, on screen.
+    const fromVenue = () => {
+      const venue = map.project([0, 0])
+      const box = card.element.getBoundingClientRect()
+      return [box.left - venue.x, box.top - venue.y]
+    }
+    const start = fromVenue()
+    for (const step of [0.3, 0.3, 0.3, 0.3]) {
+      map.panBy([step, step], { animate: false })
+      const [dx, dy] = fromVenue()
+      expect(dx).toBeCloseTo(start[0], 1)
+      expect(dy).toBeCloseTo(start[1], 1)
+    }
+  })
+
   it('keeps the size it was first measured at, cutting short what grows after, until measured afresh', () => {
     expect(document.fonts.status).toBe('loaded')
     const card = place()

@@ -7,8 +7,8 @@ import { gameLayers } from './gameLayers'
 import { layerChanges } from './restyle'
 
 const layersIn = (theme: Theme): LayerSpecification[] => {
-  const { belowNames, belowGameNames, onTop } = gameLayers(theme, null)
-  return [...belowNames, ...belowGameNames, ...onTop]
+  const { belowNames, belowGameNames } = gameLayers(theme, null)
+  return [...belowNames, ...belowGameNames]
 }
 
 describe('layerChanges', () => {

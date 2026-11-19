@@ -485,7 +485,6 @@ export class GlobeMap {
     // Beneath the venue clusters and card clusters, as their trails end at them.
     map.addLayer(this.trails, overTrails)
     for (const layer of layers.belowGameNames) map.addLayer(layer, gameCityNameLayer)
-    for (const layer of layers.onTop) map.addLayer(layer)
   }
 
   private readonly syncCards = () => this.cards.sync()
@@ -536,6 +535,6 @@ const noColors: PickedColors = { sportColors: {}, leagueColors: {} }
 
 /** Every layer the globe adds for the games in a theme, as gameLayers makes them. */
 function gameLayersIn(theme: Theme, selectedGameId: string | null): LayerSpecification[] {
-  const { belowNames, belowGameNames, onTop } = gameLayers(theme, selectedGameId)
-  return [...belowNames, ...belowGameNames, ...onTop]
+  const { belowNames, belowGameNames } = gameLayers(theme, selectedGameId)
+  return [...belowNames, ...belowGameNames]
 }

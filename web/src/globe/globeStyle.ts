@@ -10,7 +10,7 @@ import type {
 import type { MapType } from '../settings/viewerSettings'
 import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
-import { cityNameSource, cityNameSourceSpec, placeNameLayers } from './placeNames'
+import { cityNameSource, cityNameSourceSpec, placeNameLayers, stateNameSource, stateNameSourceSpec } from './placeNames'
 import stateLinesUrl from './stateLines.json?url'
 
 /** Free vector tiles with borders and place labels (ADR-0004). The globe keeps its data, not its look. */
@@ -92,6 +92,7 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
       [satelliteSource]: satelliteSourceSpec,
       [stateLinesSource]: stateLinesSourceSpec,
       [cityNameSource]: cityNameSourceSpec,
+      [stateNameSource]: stateNameSourceSpec,
     },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': globe.surface } },

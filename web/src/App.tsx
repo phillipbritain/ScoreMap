@@ -10,7 +10,6 @@ import { noneCelebrated, withCelebrated, withoutCelebrated, type Celebrated } fr
 import { useGameSelection } from './games/useGameSelection'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
-import { TrailAnchorSwitcher } from './globe/TrailAnchorSwitcher'
 import type { LoadingStage } from './globe/globeMap'
 import { homeCamera, startCamera } from './globe/startCamera'
 import { useFittedZoom } from './globe/useFittedZoom'
@@ -193,7 +192,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
 
   return (
     <div className="app">
-      <TrailAnchorSwitcher />
       <Tooltips />
       <div
         ref={globeArea}

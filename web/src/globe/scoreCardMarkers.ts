@@ -26,7 +26,6 @@ import { traceLayout } from './layoutTrace'
 import type { GlobeSettling } from './globeSettling'
 import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scoreCard'
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
-import { anchorElement, placeAnchors } from './trailAnchorPrototype'
 import { selectedStacking, stacking } from './statusLook'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
@@ -389,7 +388,6 @@ export class ScoreCardMarkers {
     const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
     if (!source) return cardClusters
     this.layoutTrails = trails
-    placeAnchors(this.placed, trails)
     this.showTrails()
     // The features with those points and the footprints' offsets left out, which are compared by how far they've come.
     const footprints: number[][] = []
@@ -572,7 +570,6 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   const rows = [team(card.top), team(card.bottom)]
   element.replaceChildren(header, ...rows)
   if (card.flames) element.append(flames())
-  element.append(anchorElement())
   return rows
 }
 

@@ -3706,6 +3706,63 @@ body {
     0 0 6px 1px color-mix(in srgb, var(--game-color) 60%, transparent);
 }
 
+/* Subtler dots. A small dot in the trail's color, with no rim or glow. */
+[data-anchor-proto='small'] .score-card__anchor {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--game-color);
+}
+
+/* A bead on the card's border, in the border's own color (faded with a Final card), so it reads as
+   part of the card rather than a mark on it. */
+[data-anchor-proto='bead'] .score-card__anchor {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--card-color);
+}
+
+/* Half a dot, standing out of the edge only: the card's outline bulges where the trail leaves. */
+[data-anchor-proto='half'] .score-card__anchor {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--game-color);
+}
+[data-anchor-proto='half'] [data-anchor-side='bottom'] > .score-card__anchor {
+  clip-path: inset(50% 0 0 0);
+}
+[data-anchor-proto='half'] [data-anchor-side='top'] > .score-card__anchor {
+  clip-path: inset(0 0 50% 0);
+}
+[data-anchor-proto='half'] [data-anchor-side='left'] > .score-card__anchor {
+  clip-path: inset(0 50% 0 0);
+}
+[data-anchor-proto='half'] [data-anchor-side='right'] > .score-card__anchor {
+  clip-path: inset(0 0 0 50%);
+}
+
+/* The dot, dim until its card is hovered or selected. */
+[data-anchor-proto='dim'] .score-card__anchor {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--game-color);
+  opacity: 0.45;
+  transition:
+    scale 120ms ease-out,
+    opacity 120ms ease-out;
+}
+[data-anchor-proto='dim'] .score-card--selected > .score-card__anchor {
+  opacity: 1;
+}
+@media (hover: hover) {
+  [data-anchor-proto='dim'] .score-card:hover > .score-card__anchor {
+    opacity: 1;
+  }
+}
+
 /* A ring around a small dot, as the trail's venue end is drawn: the trail runs ring to ring. */
 [data-anchor-proto='ring'] .score-card__anchor {
   width: 5px;

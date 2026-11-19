@@ -197,14 +197,14 @@ describe('globeStyle', () => {
     expect(() => showStateLines({ getSource: (() => undefined) as never })).not.toThrow()
   })
 
-  it("draws the globe's own state lines at every zoom, starting with none, in place of the tiles' (under the sea on the plain map, over the imagery on the satellite map), and state names at the base style's zooms", () => {
+  it("draws the globe's own state lines at every zoom, starting with none, in place of the tiles' (under the sea on the plain map, over the imagery on the satellite map), and state names to zoom 8", () => {
     expect(layer('state-lines')).toMatchObject({ type: 'line', source: 'state-lines' })
     expect(layer('state-lines-satellite')).toMatchObject({ type: 'line', source: 'state-lines', paint: layer('state-lines')?.paint })
     expect(layer('state-lines')).not.toHaveProperty('minzoom')
     expect(layer('state-lines')).not.toHaveProperty('maxzoom')
     expect(style().sources['state-lines']).toEqual({ type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
     expect(layer('boundary_3')).toBeUndefined()
-    expect(layer('label_state')).toMatchObject({ minzoom: 5, maxzoom: 8 })
+    expect(layer('label_state')).toMatchObject({ maxzoom: 8 })
     expect(paint('label_state')).not.toHaveProperty('text-opacity')
   })
 
@@ -302,17 +302,32 @@ describe('globeStyle', () => {
     expect(layer('city_dots')).toBeUndefined()
   })
 
-  it('abbreviates US states and Canadian provinces and territories zoomed out, to their postal codes, until the full names show', () => {
+  /** Whether MapLibre draws a layer at a zoom: from its minzoom, up to but not at its maxzoom. */
+  const showsAt = (id: string, zoom: number) => {
+    const { minzoom = 0, maxzoom = 24 } = layer(id) ?? {}
+    return zoom >= minzoom && zoom < maxzoom
+  }
+
+  it('names no states fully zoomed out, then abbreviates US states and Canadian provinces from zoom 3.25, then writes every state in full from zoom 4.25 to 8', () => {
+    const shown = (zoom: number) => ['state_abbreviations', 'label_state'].filter((id) => showsAt(id, zoom))
+    expect(shown(2)).toEqual([])
+    expect(shown(3.2)).toEqual([])
+    expect(shown(3.25)).toEqual(['state_abbreviations'])
+    expect(shown(4.2)).toEqual(['state_abbreviations'])
+    expect(shown(4.25)).toEqual(['label_state'])
+    expect(shown(7.9)).toEqual(['label_state'])
+    expect(shown(8)).toEqual([])
+  })
+
+  it('abbreviates US states and Canadian provinces and territories to their postal codes', () => {
     const states = style().sources[stateNameSource] as { type: string; data: { features: { properties: { postal: string } }[] } }
     expect(states.type).toBe('geojson')
     const postal = states.data.features.map((f) => f.properties.postal)
     expect(postal).toHaveLength(63)
     expect(postal).toEqual(expect.arrayContaining(['WA', 'TX', 'HI', 'ON', 'BC', 'NU']))
     expect(postal).not.toContain('DC')
-    expect(layer('state_abbreviations')).toMatchObject({ type: 'symbol', source: stateNameSource, maxzoom: 5 })
-    expect(layer('state_abbreviations')).not.toHaveProperty('minzoom')
+    expect(layer('state_abbreviations')).toMatchObject({ type: 'symbol', source: stateNameSource })
     expect(layout('state_abbreviations')['text-field']).toEqual(['get', 'postal'])
-    expect(layer('label_state')).toMatchObject({ minzoom: 5 })
   })
 
   it('finds the first place-name layer, for pins to go beneath', () => {

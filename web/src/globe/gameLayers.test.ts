@@ -3,8 +3,8 @@ import { builtInTheme } from '../theme/builtInTheme'
 import { gameLayers } from './gameLayers'
 
 const layers = () => {
-  const { belowNames, belowGameNames, onTop } = gameLayers(builtInTheme, null)
-  return [...belowNames, ...belowGameNames, ...onTop]
+  const { belowNames, belowGameNames } = gameLayers(builtInTheme, null)
+  return [...belowNames, ...belowGameNames]
 }
 
 describe('gameLayers', () => {

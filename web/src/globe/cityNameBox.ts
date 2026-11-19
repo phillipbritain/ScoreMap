@@ -12,8 +12,8 @@ export interface ScreenBox {
 export type MeasureText = (text: string, font: string, size: number) => number
 
 /**
- * Where a game city's name is written: centered below its dot at `dot` (see placeNames' game city
- * names), wrapped as the map wraps it. `measure` gives a line's width in the name's font. The look's
+ * Where a game city's name is written: right of its dot at `dot`, level with it (see placeNames' game
+ * city names), wrapped as the map wraps it. `measure` gives a line's width in the name's font. The look's
  * clearance (the name's outline and a little more) is included, since the box is for keeping cards
  * clear of the name.
  */
@@ -22,7 +22,7 @@ export function cityNameBox(name: string, dot: { x: number; y: number }, look: C
   const lines = wrap(name, look, measure)
   const width = Math.max(...lines.map((line) => lineWidth(line, look, measure))) + 2 * clearance
   const height = lines.length * lineHeight * look.size + 2 * clearance
-  return { x: dot.x, y: dot.y + look.offset - clearance + height / 2, width, height }
+  return { x: dot.x + look.offset - clearance + width / 2, y: dot.y, width, height }
 }
 
 // The map's line height for names, in ems.

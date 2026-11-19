@@ -15,9 +15,10 @@ import type { GlobeFont } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityLabels, cityList, type CityLabelSettings, type CityLabels, type ListedCity } from './cityLabels'
 import { cityNameBox, type ScreenBox } from './cityNameBox'
-import { kmApart, type GlobePoint } from './geo'
-import { cardClusterReach } from './cardLayoutLayers'
+import type { GlobePoint } from './geo'
 import { fadedByHorizon, isBehindGlobe } from './horizon'
+import { writtenNames, type NameOnScreen } from './writtenNames'
+import stateNames from './stateNames.json'
 
 // Place names of the base style the globe drops: its cities and capitals (city names are all the
 // globe's own, from the city list: see cityNameLayers), towns, villages and other small places.
@@ -32,18 +33,49 @@ export const cityNameSource = 'cityNames'
 /** The city name source as the style starts it, empty until addPlaceNames fills it. */
 export const cityNameSourceSpec: GeoJSONSourceSpecification = { type: 'geojson', data: { type: 'FeatureCollection', features: [] } }
 
+/** The source of the US states' and Canadian provinces' and territories' abbreviations (see stateNameLayer). */
+export const stateNameSource = 'stateNames'
+
 /**
- * The globe's place names: the base style's states and countries, and the city names from the city
- * list (see cityNameLayers), each in the theme's look for its kind of place. Big cities with no game
- * near come first, so every other name is placed before them; the games' cities come last, placed
- * before everything. Goes after the globe's lines.
+ * The state name source: the states, provinces and territories from stateNames.json (made by `npm run
+ * state-names`), each with its postal code, at the point Natural Earth writes its name.
+ */
+export const stateNameSourceSpec: GeoJSONSourceSpecification = {
+  type: 'geojson',
+  data: {
+    type: 'FeatureCollection',
+    features: stateNames.map(({ name, postal, longitude, latitude }) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [longitude, latitude] },
+      properties: { name, postal },
+    })),
+  },
+}
+
+/**
+ * The globe's place names: the base style's states and countries, the US states' and Canadian
+ * provinces' abbreviations zoomed out, and the city names from the city list (see cityNameLayers),
+ * each in the theme's look for its kind of place, a city's name with its dot. MapLibre places the top
+ * layer's names first, and each name after gives way to those placed before it: so the cities come
+ * first, written whatever's there (the app picks which, see PlaceNames.layOutCityNames), then
+ * countries, and states last, giving way to everything. Goes after the globe's lines.
  */
 export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSpecification[] {
-  const names = base.layers
-    .filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles && !droppedNames.has(l.id))
-    .map((l) => placeName(l, l.id.startsWith('label_country') ? 'country' : 'state', theme))
+  const names = base.layers.filter((l) => l.type === 'symbol' && l['source-layer'] === placeTiles && !droppedNames.has(l.id))
+  const isCountry = (l: LayerSpecification) => l.id.startsWith('label_country')
+  const states = names.filter((l) => !isCountry(l)).map((l) => placeName(l, 'state', theme))
+  const countries = names.filter(isCountry).map((l) => placeName(l, 'country', theme))
   const { big, game } = cityNameLayers(theme)
-  return [...big, ...names, ...game]
+  return [stateNameLayer(theme), ...states, ...countries, big, game]
+}
+
+/**
+ * The US states' and Canadian provinces' and territories' abbreviations, their postal codes (WA, ON),
+ * zoomed out: from zoom 5 the base style writes their full names (label_state).
+ */
+function stateNameLayer(theme: Theme): LayerSpecification {
+  const layer = placeName({ id: 'state_abbreviations', type: 'symbol', source: stateNameSource, maxzoom: 5 }, 'state', theme)
+  return layer.type === 'symbol' ? { ...layer, layout: { ...layer.layout, 'text-field': ['get', 'postal'] } } : layer
 }
 
 /**
@@ -51,7 +83,8 @@ export function placeNameLayers(base: StyleSpecification, theme: Theme): LayerSp
  * them and stay readable.
  */
 export function firstPlaceNameLayer(style: StyleSpecification): string | undefined {
-  return style.layers.find((l) => l.type === 'symbol' && (l.source === cityNameSource || l['source-layer'] === placeTiles))?.id
+  const placeSources = new Set([cityNameSource, stateNameSource])
+  return style.layers.find((l) => l.type === 'symbol' && (placeSources.has(l.source) || l['source-layer'] === placeTiles))?.id
 }
 
 const zoomBase = 1.2
@@ -106,32 +139,64 @@ function placeName(layer: LayerSpecification, kind: PlaceKind, theme: Theme): La
 }
 
 /** The city name layers' ids: Big cities with no game near, and the games' cities. */
-const cityNameLayerIds = { big: 'city_names', game: 'city_names_game', card: 'city_names_card' } as const
+const cityNameLayerIds = { big: 'city_names', game: 'city_names_game' } as const
 
 /**
- * The layer naming the cities of games with a score card on screen, the last place names placed: the
- * cards' and small pins' footprints go just beneath it (see GameLayers).
+ * The layer naming the games' cities, the first place names placed: the cards', small pins' and card
+ * clusters' footprints go just beneath it (see GameLayers), so country and state names give way to
+ * them, while a city's name is written whatever cards and pins are there. Which cities' names are
+ * written is the app's choice, not MapLibre's (see PlaceNames.layOutCityNames).
  */
-export const gameCityNameLayer = cityNameLayerIds.card
+export const gameCityNameLayer = cityNameLayerIds.game
 
-/** Which city names each layer writes: Big cities', other games' cities', and score cards' cities'. */
+/** Which city names each layer writes: Big cities' with no game near, and games' cities', each those the app picks. */
 const cityNameFilters = {
-  big: ['==', ['get', 'game'], false],
-  game: ['all', ['==', ['get', 'game'], true], ['!=', ['get', 'card'], true]],
-  card: ['all', ['==', ['get', 'game'], true], ['==', ['get', 'card'], true]],
-} satisfies Record<keyof typeof cityNameLayerIds, FilterSpecification>
+  big: ['all', ['==', ['get', 'game'], false], ['==', ['get', 'written'], true]],
+  game: ['all', ['==', ['get', 'game'], true], ['==', ['get', 'written'], true]],
+} satisfies Record<'big' | 'game', FilterSpecification>
+
+/** The feature state saying a game's venue's pin or venue dot is on a city's dot, so it's hidden whole (see coverDots). */
+const coveredState = 'covered'
+
+/**
+ * The image of a city's dot: a white circle, `radius` pixels across from its middle, as a signed
+ * distance field, so the map colors it and rings it in the theme's colors at any size (see
+ * cityNameLayers). Made by cityDotImageData.
+ */
+export const cityDotImage = { name: 'city-dot', size: 24, radius: 6 } as const
+
+/**
+ * The city dot's pixels as MapLibre reads a signed distance field: each pixel's alpha falls from 255
+ * inside the circle through 191 at its edge to 0 eight pixels outside it.
+ */
+export function cityDotImageData(): { width: number; height: number; data: Uint8Array } {
+  const { size, radius } = cityDotImage
+  const data = new Uint8Array(size * size * 4)
+  const middle = size / 2
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const outside = Math.hypot(x + 0.5 - middle, y + 0.5 - middle) - radius
+      const i = (y * size + x) * 4
+      data.set([255, 255, 255, Math.max(0, Math.min(255, Math.round(255 - 255 * (outside / sdfSpread + 0.25))))], i)
+    }
+  }
+  return { width: size, height: size, data }
+}
+// How far, in pixels, a signed distance field's alpha reaches outside its shape, as MapLibre reads it.
+const sdfSpread = 8
 
 /**
  * The layers naming the cities in the city name source (see addPlaceNames), at every zoom as score
- * cards show at every zoom, all in the theme's city look, national capitals included, with no dot: just the name, around where the city is, and
- * where it has room (see cityNamePositions). The city of a game whose score card is on screen (see
- * PlaceNames.showCards) is always written, below where it is unless a cluster is there (see
- * GameLayers), and cards are laid out around it. Other games' cities come next, giving way to
- * clusters, cards and those names; then Big cities with no game near, most populous first, giving
- * way to everything else.
+ * cards show at every zoom, all in the theme's city look, national capitals included, each with its
+ * dot, which the map shows and hides with the name. Each name has one spot, right of its city's dot,
+ * and never moves from it. Big cities' and games' cities' names are placed before every other name,
+ * and written whatever is there: the app leaves out the less populous of two that overlap (see
+ * PlaceNames.layOutCityNames), and cards are laid out around the rest. A city's dot is hidden while a
+ * game's venue is near enough for its pin to touch it (see coverDots): a venue's pin comes first.
  */
-function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerSpecification[] } {
-  const layer = (kind: keyof typeof cityNameLayerIds): LayerSpecification => {
+function cityNameLayers(theme: Theme): { big: LayerSpecification; game: LayerSpecification } {
+  const look = theme.components.PlaceNames.city
+  const layer = (kind: 'big' | 'game'): LayerSpecification => {
     const city: SymbolLayerSpecification = {
       id: cityNameLayerIds[kind],
       type: 'symbol',
@@ -140,74 +205,44 @@ function cityNameLayers(theme: Theme): { big: LayerSpecification[]; game: LayerS
       layout: {
         'text-field': ['get', 'name'],
         'text-max-width': cityNameMaxWidth,
-        ...(kind === 'big' ? { 'symbol-sort-key': ['-', ['get', 'population']] } : {}),
+        'text-anchor': 'left',
+        'text-justify': 'left',
+        'text-offset': [cityNameOffset, 0],
+        'symbol-sort-key': ['-', ['get', 'population']],
+        'icon-image': cityDotImage.name,
+        'icon-size': look.dot.radius / cityDotImage.radius,
+        'text-allow-overlap': true,
+        'icon-allow-overlap': true,
       },
     }
     const named = placeName(city, 'city', theme)
+    if (named.type !== 'symbol') return named
     // Faded out near the horizon (see fadeNearHorizon), where they'd crowd into a pile: all but a
     // game's city (see PlaceNames.namesAGame).
-    if (named.type === 'symbol') named.paint = { ...named.paint, 'text-opacity': fadedByHorizon() }
-    const placed = cityNamePlacement(named, theme)
-    if (kind !== 'card' || placed.type !== 'symbol') return placed
-    // Always written, as its card is: below the dot, where the cards are laid out around it, unless a
-    // cluster's there (or another card's city's name), then on another side that's free, or further
-    // out clear of the cluster; below it after all if none is. Cards' and small pins' footprints are
-    // placed after these names, so they never move them.
-    return { ...placed, layout: { ...placed.layout, 'text-allow-overlap': true } }
+    const covered = ['boolean', ['feature-state', coveredState], false]
+    named.paint = {
+      ...named.paint,
+      'text-opacity': fadedByHorizon(),
+      'icon-color': look.color,
+      'icon-halo-color': look.outline.color,
+      'icon-halo-width': look.dot.ring,
+      'icon-opacity': fadedByHorizon(['case', covered as ExpressionSpecification, 0, 1]),
+    }
+    return named
   }
-  return { big: [layer('big')], game: [layer('game'), layer('card')] }
+  return { big: layer('big'), game: layer('game') }
 }
 
-/** Where a city's name goes around its dot (see cityNamePositions). */
-function cityNamePlacement(layer: LayerSpecification, theme: Theme): LayerSpecification {
-  if (layer.type !== 'symbol') return layer
-  return { ...layer, layout: { ...layer.layout, 'text-variable-anchor-offset': cityNamePositions(theme) } }
-}
+// How far a city's name sits right of its dot, in ems: clear of the dot and its ring.
+const cityNameOffset = 0.5
 
-/** The sides of its dot a city's name may go, in the order tried: below, above, left of it, right of it. */
-const cityNameSides = [
-  ['top', [0, 1]],
-  ['bottom', [0, -1]],
-  ['left', [1, 0]],
-  ['right', [-1, 0]],
-] as const
-
-/**
- * Where a city's name may go around its dot, as MapLibre's anchors and offsets (in ems), in the order
- * tried: below the dot by preference, clear of its own game's score card above the venue; if a card or
- * card cluster covers that spot (see cardLayoutLayers' cardFootprint and pinLayers' clusterFootprintLayout),
- * another side; and if a card cluster sits on the dot itself, covering every near side, each side again
- * further out, clear of the card cluster at the smallest size names are written in (see
- * clusterClearOffset).
- */
-export function cityNamePositions(theme: Theme): ['literal', (string | number[])[]] {
-  const far = clusterClearOffset(theme)
-  const at = (offset: number) =>
-    cityNameSides.flatMap(([anchor, [x, y]]) => [anchor, [x * offset, y * offset]])
-  return ['literal', [...at(cityNameOffset), ...at(far)]]
-}
-
-/**
- * How far a city's name sits from its dot, in ems, to clear a card cluster on it: as far as a card
- * cluster reaches, outline and all, past its footprint's pixel, with room for the name's outline, at
- * the smallest size city names are written in.
- */
-export function clusterClearOffset(theme: Theme): number {
-  const smallest = Math.min(...zoomStops(theme.components.PlaceNames.city.size).map(([, size]) => size))
-  const clear = cardClusterReach(theme) + 1 + theme.components.PlaceNames.city.outline.width
-  return Math.ceil((clear / smallest) * 100) / 100
-}
-
-// How far a city's name sits from its dot, in ems: clear of a score card's trail.
-const cityNameOffset = 1
-
-/** Where and how big a city's name is written below its dot, so cards can keep clear of it. */
+/** Where and how big a city's name is written right of its dot, so cards can keep clear of it. */
 export interface CityNameLook {
   /** The font, as a CSS font for measuring the name. */
   font: string
   /** The text's size in pixels. */
   size: number
-  /** How far the name's top sits below the city's dot, in pixels. */
+  /** How far the name's left edge sits right of the city's dot, in pixels. */
   offset: number
   /** The widest a line gets before the name wraps, in pixels. */
   maxWidth: number
@@ -256,55 +291,56 @@ export interface PlaceNames {
   setSettings(settings: CityLabelSettings): void
   /**
    * Whether the city name source's feature with this id is a game's city: every game on screen has a
-   * score card (or is in a card cluster, or shows as its small pin), and a card is always shown with
-   * its city's name, so the name doesn't fade near the horizon.
+   * score card (or is in a card cluster, or shows as its small pin), and its city's name is always
+   * written with it, so the name doesn't fade near the horizon.
    */
   namesAGame(id: string | number): boolean
   /**
-   * Always writes the names of the games' cities with a score card on screen, at these venues; the
-   * other games' cities give way where there's no room, to clusters and other names (see
-   * cityNameLayers).
+   * Picks which cities' names to write where the globe is now, Big cities' and games' cities', and
+   * gives where they're written on screen, for cards to keep clear of: those on the side of the globe
+   * facing the viewer, as MapLibre writes no others. Of two names that overlap, the more populous
+   * city's is written, each sticky by a few pixels (see writtenNames), so a pan never flips one.
    */
-  showCards(venues: readonly GlobePoint[]): void
-  /**
-   * Where the names of the games' cities are written on screen, for cards to keep clear of: those on
-   * the side of the globe facing the viewer, as MapLibre writes no others.
-   */
-  nameBoxes(): ScreenBox[]
+  layOutCityNames(): ScreenBox[]
   remove(): void
 }
 
 /**
  * Keeps the city names on a map up to date with the games shown: the Big cities, and the cities
- * labeled for the games (see cityLabels) by `settings` until they're changed. The names' boxes are worked out in the theme `theme` gives at the time.
+ * labeled for the games (see cityLabels) by `settings` until they're changed, each city's dot hidden
+ * while a game's venue's pin would touch it (see coverDots). The names' boxes are worked out in the
+ * theme `theme` gives at the time.
  */
 export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: CityLabelSettings): PlaceNames {
   let venues: GlobePoint[] = []
   let labels: CityLabels
-  // The venues in reach of each game's city, by its feature's id (see cityNameFeatures).
-  let namedVenues: GlobePoint[][] = []
-  const relabel = () => {
-    labels = cityLabels(venues, cityList, settings)
-    namedVenues = labels.gameCities.map((city) => venues.filter((venue) => kmApart(venue, city) <= settings.gameCityKm))
-  }
+  const relabel = () => (labels = cityLabels(venues, cityList, settings))
   relabel()
   // The venues the labels were chosen for, so games changing only their scores change nothing.
   let venuesKey = ''
-  // The venues of the cards on screen, and the ids of the games' cities naming them.
-  let cardVenues: readonly GlobePoint[] = []
-  let carded = new Set<number>()
-  const cardedNow = () =>
-    new Set(
-      namedVenues.flatMap((named, id) => (named.some((venue) => cardVenues.some((card) => kmApart(venue, card) < sameVenueKm)) ? [id] : [])),
-    )
 
+  // Whether each game's city's name was written when last laid out, by its key (see nameKey).
+  let written = new Map<string, boolean>()
+  const covers = coverDots(map)
+  // The cities numbered afresh only when the cities named change, not which of them are written.
+  let numbered = ''
   const showLabels = () => {
-    carded = cardedNow()
-    map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels, carded))
+    map.getSource<GeoJSONSource>(cityNameSource)?.setData(cityNameFeatures(labels, (city) => written.get(nameKey(city)) !== false))
+    const numbering = [...labels.gameCities, ...labels.otherBigCities].map(nameKey).join(';')
+    if (numbering !== numbered) covers.renumbered()
+    numbered = numbering
   }
-  // The style starts with no cities (see cityNameSourceSpec).
-  const styleLoaded = () => showLabels()
+  const addDotImage = () => {
+    if (!map.hasImage(cityDotImage.name)) map.addImage(cityDotImage.name, cityDotImageData(), { sdf: true })
+  }
+  // The style starts with no cities (see cityNameSourceSpec), and no dot image.
+  const styleLoaded = () => {
+    addDotImage()
+    showLabels()
+  }
+  const imageMissing = ({ id }: { id: string }) => id === cityDotImage.name && addDotImage()
   map.on('style.load', styleLoaded)
+  map.on('styleimagemissing', imageMissing)
 
   return {
     showGames(games) {
@@ -321,42 +357,93 @@ export function addPlaceNames(map: MapLibreMap, theme: () => Theme, settings: Ci
       relabel()
       showLabels()
     },
-    showCards(venues) {
-      cardVenues = venues
-      const now = cardedNow()
-      if (now.size === carded.size && [...now].every((id) => carded.has(id))) return
-      showLabels()
-    },
     namesAGame(id) {
-      return typeof id === 'number' && (namedVenues[id]?.length ?? 0) > 0
+      return typeof id === 'number' && id < labels.gameCities.length
     },
-    nameBoxes() {
-      const zoom = map.getZoom()
-      const look = cityNameLook(zoom, theme())
-      return labels.gameCities
+    layOutCityNames() {
+      const look = cityNameLook(map.getZoom(), theme())
+      const onScreen = [...labels.gameCities, ...labels.otherBigCities]
         .filter((city) => !isBehindGlobe(map, [city.longitude, city.latitude]))
-        .map((city) => cityNameBox(city.name, map.project([city.longitude, city.latitude]), look, measureText))
+        .map((city) => ({ city, dot: map.project([city.longitude, city.latitude]) }))
+      // Names keep clear of each other by their letters, cards by the theme's clearance around them too.
+      const names = onScreen.map(({ city, dot }): NameOnScreen => ({
+        key: nameKey(city),
+        population: city.population,
+        box: cityNameBox(city.name, dot, { ...look, clearance: 0 }, measureText),
+      }))
+      const now = new Map([...written, ...writtenNames(names, written, nameStickiness)])
+      // A city not laid out before is written until it's picked otherwise (see cityNameFeatures).
+      const changed = [...now].some(([key, shown]) => (written.get(key) ?? true) !== shown)
+      written = now
+      if (changed) showLabels()
+      // After any relabeling, which numbers the cities afresh.
+      covers.cover([...labels.gameCities, ...labels.otherBigCities], venues, theme())
+      return onScreen.filter(({ city }) => now.get(nameKey(city))).map(({ city, dot }) => cityNameBox(city.name, dot, look, measureText))
     },
     remove() {
       map.off('style.load', styleLoaded)
+      map.off('styleimagemissing', imageMissing)
     },
   }
 }
 
-// How close a card's venue is to a game's venue to be the same, in kilometers.
-const sameVenueKm = 0.01
+/**
+ * Hides a city's dot whole while a game's venue on screen is near enough for its small pin or venue
+ * dot to touch it, so a dot never peeks out beside a pin, which comes first. Each city is marked on
+ * its feature by its id (see cityNameFeatures), as they're given to cover.
+ */
+function coverDots(map: MapLibreMap): { cover(cities: readonly ListedCity[], venues: readonly GlobePoint[], theme: Theme): void; renumbered(): void } {
+  let covered = new Set<number>()
+  const mark = (id: number, on: boolean) => map.setFeatureState({ source: cityNameSource, id }, { [coveredState]: on })
+  return {
+    cover(cities, venues, theme) {
+      const dot = theme.components.PlaceNames.city.dot
+      const reach = venueMarkerReach(theme) + dot.radius + dot.ring
+      const onScreen = venues
+        .filter((venue) => !isBehindGlobe(map, [venue.longitude, venue.latitude]))
+        .map((venue) => map.project([venue.longitude, venue.latitude]))
+      const now = new Set<number>()
+      cities.forEach((city, id) => {
+        if (isBehindGlobe(map, [city.longitude, city.latitude])) return
+        const at = map.project([city.longitude, city.latitude])
+        if (onScreen.some((venue) => Math.hypot(venue.x - at.x, venue.y - at.y) < reach)) now.add(id)
+      })
+      for (const id of covered) if (!now.has(id)) mark(id, false)
+      for (const id of now) if (!covered.has(id)) mark(id, true)
+      covered = now
+    },
+    renumbered() {
+      for (const id of covered) mark(id, false)
+      covered = new Set()
+    },
+  }
+}
+
+/** How far a game's marker at its venue reaches on screen, in pixels: the largest small pin's core and ring, or a score card's venue dot's ring. */
+function venueMarkerReach(theme: Theme): number {
+  const { Pin, Trail } = theme.components
+  const pins = [Pin.live, Pin.upcoming, Pin.final].map(({ core }) => core.radius + core.ring)
+  return Math.max(...pins, Trail.venue.ring.radius + Trail.venue.ring.width / 2)
+}
+
+/** A city, the same from frame to frame whatever else is named, for remembering whether its name was written. */
+const nameKey = (city: ListedCity) => `${city.name}@${city.longitude},${city.latitude}`
+
+// How far, in pixels, two games' cities' names overlap before the less populous gives way, and clear
+// each other before it comes back (see writtenNames).
+const nameStickiness = 4
 
 /**
- * The labeled cities as the city name source's features, marking the games' cities, and those with
- * these ids (see showCards) as naming a score card on screen.
+ * The labeled cities as the city name source's features, marking the games' cities, and which of
+ * them have their names written (see PlaceNames.layOutCityNames): all of them unless `written` says.
  */
-export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels, carded: ReadonlySet<number> = new Set()): FeatureCollection<Point> {
-  // Each with an id, for fading it near the horizon (see fadeNearHorizon).
+export function cityNameFeatures({ gameCities, otherBigCities }: CityLabels, written: (city: ListedCity) => boolean = () => true): FeatureCollection<Point> {
+  // Each with an id, for fading it near the horizon (see fadeNearHorizon) and hiding its dot under a pin (see coverDots).
   const feature = (city: ListedCity, game: boolean, id: number): Feature<Point> => ({
     type: 'Feature',
     id,
     geometry: { type: 'Point', coordinates: [city.longitude, city.latitude] },
-    properties: { name: city.name, population: city.population, game, card: carded.has(id) },
+    properties: { name: city.name, population: city.population, game, written: written(city) },
   })
   return {
     type: 'FeatureCollection',
@@ -382,7 +469,7 @@ function measureText(text: string, font: string, size: number): number {
   const key = `${measuredFont}|${text}`
   const known = measured.get(key)
   if (known !== undefined) return (known * size) / measuredSize
-  measuring ??= document.createElement('canvas').getContext('2d')
+  measuring ??= typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
   if (!measuring) return text.length * fallbackLetterWidth * size
   measuring.font = measuredFont
   // Many names in many fonts (themes changing, say): the oldest are let go.

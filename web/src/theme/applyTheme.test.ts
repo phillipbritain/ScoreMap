@@ -163,8 +163,8 @@ describe('applyTheme', () => {
       // A surface, the sea, four kinds of line (their colors) and two halo colors.
       globe: 8,
       // Three kinds of place name (city, state and country), each with a color, an outline (its color, width and blur), a
-      // font (its name, family, weight and style) and letter spacing.
-      placeNames: 3 * 9,
+      // font (its name, family, weight and style) and letter spacing; and a city's dot's radius and ring.
+      placeNames: 3 * 9 + 2,
       // The sky's color, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A card cluster's fill, radius, glow radius, outline width and glow opacity, its count's font

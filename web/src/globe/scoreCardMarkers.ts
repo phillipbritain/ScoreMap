@@ -332,7 +332,7 @@ export class ScoreCardMarkers {
     const scene: LayoutScene = {
       ...this.mapSize,
       venueGap: theme.components.ScoreCard.size.venueGap,
-      names: this.placeNames.nameBoxes(),
+      names: this.placeNames.layOutCityNames(),
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
@@ -365,10 +365,6 @@ export class ScoreCardMarkers {
       return { ...card, lngLat: this.placed.get(card.gameId)!.lngLat, color: this.colorOf(game), flames: game.hot }
     })
     this.cardClustersDrawn = this.drawLayout(onGlobe, scene.moving === true)
-    // A card on screen is always shown with its city's name; a game in a cluster gives its name way.
-    this.placeNames.showCards(
-      onGlobe.filter(({ gameId }) => this.layout.shows(gameId).as === 'card').map(({ lngLat: [longitude, latitude] }) => ({ longitude, latitude })),
-    )
     return changed
   }
 

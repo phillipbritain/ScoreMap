@@ -57,7 +57,8 @@
         "outline": { "color": "navy.800", "width": 2, "blur": 0.5 },
         "font": "Open Sans Semibold",
         "size": { "4": "caption", "7": "body2", "11": "h6" },
-        "letterSpacing": 0
+        "letterSpacing": 0,
+        "dot": { "radius": 2.25, "ring": 0.75 }
       },
       "state": {
         "color": "navy.200",

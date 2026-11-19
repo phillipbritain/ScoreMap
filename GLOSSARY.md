@@ -128,11 +128,11 @@ A note a viewer writes and sends from ScoreMap, from Send feedback in More on th
 _Avoid_: Bug report (it may be anything), comment, support request
 
 **City label**:
-A city's name on the globe, by where the city is (with no dot), from the city list included with the app. A city label naming a score card on screen is always drawn; any other is drawn where there's room, clear of clusters and other labels. See `docs/city-labels.md`.
+A city's name on the globe, right of a small dot where the city is, from the city list included with the app. It never moves from that spot. A Big city's or a game's city's label is always drawn, unless a more populous city's label is in its spot. See `docs/city-labels.md`.
 _Avoid_: Place name (which also covers states and countries), city name tag
 
 **Big city**:
-A city in the city list with a metro population of at least 4 million, or one on the Big list. It always gets a city label where there's room.
+A city in the city list with a metro population of at least 4 million, or one on the Big list. It always gets a city label, unless a more populous city's label is in its spot.
 _Avoid_: Major city, large city
 
 **Small city**:

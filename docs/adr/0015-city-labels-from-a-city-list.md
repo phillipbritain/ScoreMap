@@ -7,6 +7,6 @@ The globe's city names come from a city list included with the app (Natural Eart
 - Cities are ranked by real metro populations, and every label is known as soon as the games are, before any tile loads.
 - Nothing reads the tiles' places as the globe moves.
 - The base style's city, town and village names are dropped: city names are all ours. States, countries and the rest stay as the base style has them, in the theme's look.
-- State names show as the base style shows them, from zoom 5 to 8, giving way where there's no room, rather than all or none.
+- State names show as the base style shows them, from zoom 5 to 8, giving way where there's no room, rather than all or none. Since November 2026, US states and Canadian provinces and territories are also named zoomed out, below zoom 5, by their postal codes from a small list of our own, as the tiles carry no abbreviations.
 - The list adds about 170 KB (gzipped) to the browser app, and its populations date from when Natural Earth gathered them.
 - A town not in the list, such as Foxborough, is never named: its games are named by the most populous listed city near.

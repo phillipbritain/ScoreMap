@@ -12,16 +12,11 @@ export interface GameLayers {
    */
   belowNames: LayerSpecification[]
   /**
-   * The cards' and small pins' footprints: just beneath the games' city names, over every other name,
-   * so other names are placed around them rather than under them, while a game's city is written
-   * below its dot whatever cards and pins are there, as cards are laid out around it.
+   * The cards', small pins' and card clusters' footprints: just beneath the games' city names, over
+   * every other name, so other names give way to them rather than go under them, while a game's city
+   * is written in its spot whatever cards, pins and clusters are there, as cards are laid out around it.
    */
   belowGameNames: LayerSpecification[]
-  /**
-   * The card clusters' footprints: on top, so every name, a game's city's too, is placed around them where
-   * it can be, keeping their circles and counts readable.
-   */
-  onTop: LayerSpecification[]
 }
 
 /** The trails are drawn by the trail layer (see trailLayer), which GlobeMap adds among these. */
@@ -33,7 +28,6 @@ export function gameLayers(theme: Theme, selectedGameId: string | null): GameLay
       ...smallPinLayers(theme, cardlessPins),
       selectedPinLayerSpec(theme, selectedGameId, cardlessPins),
     ],
-    belowGameNames: [cardFootprintLayerSpec, pinFootprintLayerSpec(cardlessPins)],
-    onTop: [cardClusterFootprintLayerSpec(theme)],
+    belowGameNames: [cardFootprintLayerSpec, pinFootprintLayerSpec(cardlessPins), cardClusterFootprintLayerSpec(theme)],
   }
 }

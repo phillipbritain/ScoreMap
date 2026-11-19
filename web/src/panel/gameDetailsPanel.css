@@ -37,7 +37,6 @@
   flex: 1;
   min-width: 0;
   overflow-x: auto;
-  padding-inline: calc(2 * var(--spacing));
 }
 
 .game-details-reveal {

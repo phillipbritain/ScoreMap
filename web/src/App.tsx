@@ -261,7 +261,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             color={panelColor}
             textOnColor={textOn(panelColor, theme.palette.text.primary, theme.palette.background.paper)}
             venuePhotos={viewerSettings.venuePhotos}
-            simulated={demo || touring}
+            demo={demo}
             onClose={closeGame}
             leaving={panelLeaving}
           />

@@ -47,6 +47,9 @@ public sealed partial class RunningGameBoard
         public Task<IReadOnlySet<string>> FetchTopEventsAsync(CancellationToken cancellationToken) =>
             feed.FetchTopEventsAsync(cancellationToken);
 
+        public Task<GameDetails?> FetchGameDetailsAsync(League league, string id, CancellationToken cancellationToken) =>
+            feed.FetchGameDetailsAsync(league, id, cancellationToken);
+
         /// <summary>Applies basic game data without waiting for optional venue lookups.</summary>
         public IReadOnlyList<GameChange> UpdateLeague(League league, IReadOnlyList<ProviderGame> scoreboard)
         {

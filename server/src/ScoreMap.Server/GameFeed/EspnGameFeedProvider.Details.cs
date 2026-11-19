@@ -104,14 +104,7 @@ public sealed partial class EspnGameFeedProvider
             return [];
 
         return Enumerable.Range(1, Math.Max(periodCount, league.Regulation)).Select(period => new GamePeriodScore(
-            league.Sport switch
-            {
-                Sport.Baseball => period.ToString(),
-                _ when period > league.Regulation => period == league.Regulation + 1 ? "OT" : $"OT{period - league.Regulation}",
-                Sport.Hockey => $"P{period}",
-                Sport.Basketball when league.Regulation == 2 => $"H{period}",
-                _ => $"Q{period}",
-            },
+            GamePeriodScore.LabelFor(league, period),
             home.ElementAtOrDefault(period - 1)?.DisplayValue, away.ElementAtOrDefault(period - 1)?.DisplayValue)).ToList();
     }
 

@@ -10,17 +10,6 @@ export interface GameDetails {
   broadcasts: string[]
 }
 
-export const emptyGameDetails: GameDetails = {
-  periodScores: [],
-  homeTotal: null,
-  awayTotal: null,
-  scoring: [],
-  drives: [],
-  stats: [],
-  videos: [],
-  broadcasts: [],
-}
-
 export interface GameScoringPlay {
   team: string
   text: string

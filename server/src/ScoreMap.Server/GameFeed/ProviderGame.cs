@@ -87,9 +87,11 @@ public sealed record ProviderField(IReadOnlyList<ProviderEntrant> Entries) : Pro
 /// <summary>
 /// One of a field: their position (1 for the leader), name, short name ("K. Larson") and their country's flag.
 /// In golf, their score to par (-12; 0 is level) and the holes they've played of the current round
-/// (<see cref="Thru"/>, 0 before they start it); both null in racing.
+/// (<see cref="Thru"/>, 0 before they start it); both null in racing. Their own logo where they have one,
+/// shown in place of their flag: in NASCAR, their car's number in its team's lettering (see <see cref="NascarCarBadge"/>).
 /// </summary>
-public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl, int? ToPar = null, int? Thru = null);
+public sealed record ProviderEntrant(int Position, string Name, string ShortName, string? FlagUrl, int? ToPar = null, int? Thru = null,
+    string? LogoUrl = null);
 
 /// <summary>
 /// A fight card: its bouts, the main event first (the reverse of the order they're fought in). Two fight

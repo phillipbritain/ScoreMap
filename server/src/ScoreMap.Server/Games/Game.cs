@@ -74,9 +74,10 @@ public sealed record GameField(IReadOnlyList<GameEntrant> Entries) : GameContest
 /// <summary>
 /// One of a field: their position (1 for the leader, shared by those tied on score), name, short name
 /// ("K. Larson") and their country's flag. In golf, their <see cref="Score"/> to par as golf writes it
-/// ("-12", "E", "+3"); null in racing, and before they have one.
+/// ("-12", "E", "+3"); null in racing, and before they have one. Their own logo where they have one, shown in
+/// place of their flag (a NASCAR car's number badge).
 /// </summary>
-public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl, string? Score = null);
+public sealed record GameEntrant(int Position, string Name, string ShortName, string? FlagUrl, string? Score = null, string? LogoUrl = null);
 
 /// <summary>
 /// A fight card: its bouts, the main event first (the reverse of the order they're fought in). Two fight cards

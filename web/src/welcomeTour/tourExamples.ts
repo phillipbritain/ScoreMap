@@ -68,7 +68,7 @@ const sides: Record<string, SidesExample> = {
 }
 
 function entrants(names: [string, string, string, string | null][]): GameEntrant[] {
-  return names.map(([name, shortName, country, score], index) => ({ position: index + 1, name, shortName, flagUrl: flag(country), score }))
+  return names.map(([name, shortName, country, score], index) => ({ position: index + 1, name, shortName, flagUrl: flag(country), score, logoUrl: null }))
 }
 
 const fields: Record<string, { venue: Venue; note: string; clock: string; entries: GameEntrant[] }> = {

@@ -150,7 +150,8 @@ public static partial class ScenarioReader
     /// <summary>
     /// A race's or golf tournament's field: its entrants in order, the leader first (none before the feed
     /// would list them), in place of a home and an away team. A golfer has their score to par and the holes
-    /// they've played of the round (<c>thru</c>), and golfers level on score share a position.
+    /// they've played of the round (<c>thru</c>), and golfers level on score share a position. A NASCAR driver may
+    /// have their car's number (<c>car</c>), for its badge.
     /// </summary>
     private static ProviderField ReadField(GameEntry entry)
     {
@@ -161,7 +162,7 @@ public static partial class ScenarioReader
         return ProviderField.TiedByScore(entry.Field.Select((entrant, i) =>
             entrant is null || string.IsNullOrWhiteSpace(entrant.Name) || string.IsNullOrWhiteSpace(entrant.ShortName)
                 ? throw new InvalidDataException($"has entrant {i + 1} with no name or short name")
-                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag, entrant.Score, entrant.Thru)));
+                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag, entrant.Score, entrant.Thru, NascarCarBadge.Url(entrant.Car))));
     }
 
     /// <summary>
@@ -344,7 +345,7 @@ public static partial class ScenarioReader
     /// One of a field, in order: their name, short name ("K. Larson") and country's flag; in golf, their
     /// <c>score</c> to par (-12; 0 is level) and the holes they've played of the round (<c>thru</c>).
     /// </summary>
-    private sealed record EntrantEntry(string? Name, string? ShortName, string? Flag, int? Score, int? Thru);
+    private sealed record EntrantEntry(string? Name, string? ShortName, string? Flag, int? Score, int? Thru, string? Car);
 
     /// <summary>A team; in cricket, with its <c>innings</c> beyond its runs (see <see cref="ProviderInnings"/>).</summary>
     private sealed record TeamEntry(string? Name, string? Abbreviation, string? Logo, int? Score, InningsEntry? Innings);

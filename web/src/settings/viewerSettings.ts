@@ -145,6 +145,17 @@ export function hasColors(settings: ViewerSettings): boolean {
   return Object.keys(settings.sportColors).length > 0 || Object.keys(settings.leagueColors).length > 0
 }
 
+/**
+ * Whether the viewer's Leagues choices keep games of these leagues off the globe, so the Leagues button on the
+ * rail marks it: Top Events on, a league switched off, or a league that's on narrowed to some conferences. A
+ * league no longer in the list doesn't count. Only show live games doesn't either: it's in Display Settings,
+ * not Leagues, where the viewer would look for it.
+ */
+export function leaguesFilterGames(settings: ViewerSettings, leagues: readonly League[]): boolean {
+  if (settings.topEventsOnly) return true
+  return leagues.some((league) => !isLeagueOn(settings, league.name) || chosenConferences(settings, league.name).length > 0)
+}
+
 function withLeagues(settings: ViewerSettings, leagues: readonly string[], on: boolean): ViewerSettings {
   const others = settings.hiddenLeagues.filter((hidden) => !leagues.includes(hidden))
   return { ...settings, hiddenLeagues: on ? others : [...others, ...leagues] }

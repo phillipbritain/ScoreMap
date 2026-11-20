@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   firstVisitSettings,
+  leaguesFilterGames,
   isLeagueOn,
   leaguesBySport,
   sportSwitch,
@@ -130,5 +131,39 @@ describe('conferences', () => {
     const settings = { ...firstVisitSettings, chosenConferences: { 'NCAA Football': ['SEC'], "NCAA Men's Basketball": ['ACC'] } }
 
     expect(withAllConferences(settings, 'NCAA Football').chosenConferences).toEqual({ "NCAA Men's Basketball": ['ACC'] })
+  })
+})
+
+describe('leaguesFilterGames', () => {
+  const sec = { name: 'NCAA Football', sport: 'Football', conferences: ['SEC', 'ACC'] }
+  const leagues = [nfl, sec, nba]
+
+  it('is false with every league on and all its conferences', () => {
+    expect(leaguesFilterGames(firstVisitSettings, leagues)).toBe(false)
+  })
+
+  it('is true with Top Events on', () => {
+    expect(leaguesFilterGames({ ...firstVisitSettings, topEventsOnly: true }, leagues)).toBe(true)
+  })
+
+  it('is true with a league switched off', () => {
+    expect(leaguesFilterGames(withLeague(firstVisitSettings, 'NBA', false), leagues)).toBe(true)
+  })
+
+  it('is true with a league narrowed to some of its conferences', () => {
+    expect(leaguesFilterGames(withConference(firstVisitSettings, 'NCAA Football', 'SEC', true), leagues)).toBe(true)
+  })
+
+  it('is false again with the league back on all its conferences', () => {
+    const narrowed = withConference(firstVisitSettings, 'NCAA Football', 'SEC', true)
+    expect(leaguesFilterGames(withAllConferences(narrowed, 'NCAA Football'), leagues)).toBe(false)
+  })
+
+  it('ignores a switched-off league that is no longer in the list', () => {
+    expect(leaguesFilterGames(withLeague(firstVisitSettings, 'XFL', false), leagues)).toBe(false)
+  })
+
+  it("ignores Only show live games, which isn't in Leagues", () => {
+    expect(leaguesFilterGames({ ...firstVisitSettings, onlyLiveGames: true }, leagues)).toBe(false)
   })
 })

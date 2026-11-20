@@ -9,6 +9,7 @@ How a coordinator runs several Orca workers (Claude or Codex) on this repo. The 
 - **One worker per PR.** A worker that hands off a PR ends its turn and leaves the workspace to the new owner. Before giving a PR to a new worker, tell the old one it no longer owns it, so it doesn't wake on a later message and act.
 - **One new worker per issue.** Each issue the user names gets its own new worker and workspace. When two issues touch the same files, tell the user about the overlap when starting the second. (city-dots and label-churn both rewrote `placeNames.ts`, which took a run of relays until the user merged the work, and #449 gave way to #450 mid-review.)
 - **The user talks to each worker in its own workspace.** Questions, answers, scope changes, prototypes and progress stay there, out of the coordinator's chat.
+- **The coordinator keeps the review queue:** which PRs are ready for review, in order, and which one holds the review run.
 - **Messages only when needed.** The coordinator writes to a worker only when the worker must act: each message re-arms Orca's idle escalation, which can't be muted, and every status or escalation reaches the user as one more notification.
 - **PRs go by number and workspace name:** "#449 (`city-labels`)".
 

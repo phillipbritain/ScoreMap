@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
-import { positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam } from '../games/game'
+import { entrantImage, positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam } from '../games/game'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
 import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
@@ -264,7 +264,7 @@ function FieldLine({ entrant, field, sizers }: { entrant: GameEntrant; field: Ga
   const position = positionText(entrant, field)
   return (
     <div className="game-panel__team">
-      {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
+      {entrantImage(entrant) ? <img src={entrantImage(entrant)!} alt="" /> : <span className="game-panel__logo" />}
       <span className="game-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
         <span className="game-panel__rank">{position} </span>
         {entrant.name}

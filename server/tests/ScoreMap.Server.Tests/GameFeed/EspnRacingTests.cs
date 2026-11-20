@@ -57,7 +57,8 @@ public sealed class EspnRacingTests : IDisposable
         Assert.Equal(40, field.Entries.Count);
         Assert.Equal(Enumerable.Range(1, 40), field.Entries.Select(entrant => entrant.Position));
         Assert.Equal(
-            new ProviderEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"),
+            new ProviderEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
+                LogoUrl: "https://cf.nascar.com/data/images/carbadges/1/5.png"),
             field.Entries[0]);
         Assert.Equal("W. Byron", field.Entries[1].ShortName);
     }
@@ -74,8 +75,9 @@ public sealed class EspnRacingTests : IDisposable
         var talladega = new ProviderVenue("Talladega Superspeedway", "Talladega", "AL", "USA", "15");
         Assert.Equal(talladega, game.Venue);
         Assert.Equal(talladega, laterRace.Venue);
-        Assert.Single(first.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal));
-        Assert.DoesNotContain(later.Requests, request => request.RequestUri!.Host == "sports.core.api.espn.com");
+        // The venue's own request is the venue lookup's alone (the event is asked for car numbers too).
+        Assert.Single(first.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreVenue, StringComparison.Ordinal));
+        Assert.DoesNotContain(later.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreVenue, StringComparison.Ordinal));
     }
 
     public static TheoryData<string> VenueFailures => ["error status", "timeout", "not JSON"];
@@ -139,7 +141,39 @@ public sealed class EspnRacingTests : IDisposable
         var game = Assert.Single(await provider.FetchScoreboardAsync(Nascar, CancellationToken.None));
 
         Assert.Equal("Talladega Superspeedway", game.Venue?.Name);
-        Assert.Single(handler.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal));
+        Assert.Single(handler.Requests, request => request.RequestUri!.AbsoluteUri.StartsWith(CoreVenue, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task A_drivers_logo_is_their_cars_number_badge_from_the_core_api_asked_for_once_per_race()
+    {
+        var handler = Talladega();
+        var provider = ProviderOver(handler);
+
+        await provider.FetchScoreboardAsync(Nascar, CancellationToken.None);
+        var game = Assert.Single(await provider.FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        var field = Assert.IsType<ProviderField>(game.Contest);
+        Assert.Equal(["https://cf.nascar.com/data/images/carbadges/1/5.png", "https://cf.nascar.com/data/images/carbadges/1/24.png"],
+            field.Entries.Take(2).Select(entrant => entrant.LogoUrl));
+        // One for the venue, one for the car numbers, and none on the next poll.
+        Assert.Equal(2, handler.Requests.Count(request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task A_failed_car_numbers_request_leaves_flags_alone_and_is_tried_again()
+    {
+        var failing = new StubHttpHandler(request => request.RequestUri!.AbsoluteUri.StartsWith(Scoreboard, StringComparison.Ordinal)
+            ? Fixture("nascar-final.json")
+            : StubHttpHandler.ServerError);
+        var game = Assert.Single(await ProviderOver(failing).FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        var retried = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
+
+        var leader = Assert.IsType<ProviderField>(game.Contest).Entries[0];
+        Assert.Null(leader.LogoUrl);
+        Assert.Equal("https://a.espncdn.com/i/teamlogos/countries/500/usa.png", leader.FlagUrl);
+        Assert.Equal("https://cf.nascar.com/data/images/carbadges/1/5.png", Assert.IsType<ProviderField>(retried.Contest).Entries[0].LogoUrl);
     }
 
     [Fact]

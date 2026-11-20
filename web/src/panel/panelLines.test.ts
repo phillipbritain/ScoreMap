@@ -8,6 +8,7 @@ const entrant = (position: number, score: string | null = null): GameEntrant => 
   shortName: `G. ${position}`,
   flagUrl: null,
   score,
+  logoUrl: null,
 })
 
 const field = (...entries: GameEntrant[]): GameField => ({ kind: 'field', entries })

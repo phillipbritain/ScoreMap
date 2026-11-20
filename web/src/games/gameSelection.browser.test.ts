@@ -239,7 +239,7 @@ it("lines up a field's whole leaderboard in the score block, a line each, with n
     note: 'Driver Grand Prix',
     contest: {
       kind: 'field',
-      entries: Array.from({ length: 12 }, (_, i) => ({ position: i + 1, name: `Driver ${letters[i]}`, shortName: `D. ${letters[i]}`, flagUrl: null, score: null })),
+      entries: Array.from({ length: 12 }, (_, i) => ({ position: i + 1, name: `Driver ${letters[i]}`, shortName: `D. ${letters[i]}`, flagUrl: null, score: null, logoUrl: null })),
     },
   }
   await show([race])

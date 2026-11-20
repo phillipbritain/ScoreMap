@@ -560,14 +560,17 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A field's whole leaderboard in the score block, a line each, as tall as two lines (the score block's
-   height for two sides), scrolling to the last. */
+/* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
+   the last, never sideways. */
 .game-panel__field-lines {
+  --lines: 5;
   display: grid;
   gap: var(--game-panel-score-gap);
-  max-height: calc(2 * (var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding)) + var(--game-panel-score-gap));
+  max-height: calc(var(--lines) * (var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding)) + (var(--lines) - 1) * var(--game-panel-score-gap));
   margin: 0;
-  padding: 0;
+  /* Room between the scores and the scroll bar. */
+  padding: 0 var(--spacing) 0 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;

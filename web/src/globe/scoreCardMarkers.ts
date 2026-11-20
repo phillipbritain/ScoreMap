@@ -28,6 +28,7 @@ import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scor
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { cardDotAt } from './cardDot'
 import { selectedStacking, stacking } from './statusLook'
+import { onPrototypeCardCount, prototypeCardCount } from './cardCountPrototypeState'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -133,6 +134,9 @@ export class ScoreCardMarkers {
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
     map.on('moveend', this.cameraStopped)
     map.on('resize', this.resized)
+    // PROTOTYPE: the card count slider lays the cards out afresh.
+    onPrototypeCardCount(this.cameraMoved)
+    onPrototypeCardCount(() => this.sync())
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -336,7 +340,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
-      cardCount: cardCount(screen.width),
+      cardCount: prototypeCardCount() ?? cardCount(screen.width),
     }
     this.moving = false
     traceLayout({ cards, scene })

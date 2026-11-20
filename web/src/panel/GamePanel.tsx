@@ -9,6 +9,7 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
+import { boutChip, chipSizers, fieldLines } from './panelLines'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
 
@@ -223,8 +224,8 @@ function ScoreChip({ score, scores }: { score: string; scores: string[] }) {
 }
 
 /**
- * A field's top two entrants by position, as its score card shows them, a tie marked ("T2"), with golf's
- * score to par; before its field is listed, the game's name.
+ * A field's top two entrants by position, as its score card shows them (see FieldLine); before its field is
+ * listed, the game's name.
  */
 function FieldRows({ field, name }: { field: GameField; name: string | null }) {
   if (field.entries.length === 0) return (
@@ -235,21 +236,26 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
         </span>
       </div>
     )
-  const shown = field.entries.slice(0, 2)
-  const scores = shown.flatMap((entrant) => (entrant.score === null ? [] : [entrant.score]))
-  return shown.map((entrant) => {
-    const position = positionText(entrant, field)
-    return (
-      <div key={entrant.name} className="game-panel__team">
-        {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
-        <span className="game-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
-          <span className="game-panel__rank">{position} </span>
-          {entrant.name}
-        </span>
-        {entrant.score !== null && <ScoreChip score={entrant.score} scores={scores} />}
-      </div>
-    )
-  })
+  const sizers = chipSizers(field)
+  return fieldLines(field).leaders.map((entrant) => <FieldLine key={entrant.name} entrant={entrant} field={field} sizers={sizers} />)
+}
+
+/**
+ * One of a field on their own line: their flag, position ("T2" when tied) and name, and in golf their score
+ * to par on its chip, as wide as every other line's in the field (sizers, see chipSizers).
+ */
+function FieldLine({ entrant, field, sizers }: { entrant: GameEntrant; field: GameField; sizers: string[] }) {
+  const position = positionText(entrant, field)
+  return (
+    <div className="game-panel__team">
+      {entrant.flagUrl ? <img src={entrant.flagUrl} alt="" /> : <span className="game-panel__logo" />}
+      <span className="game-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
+        <span className="game-panel__rank">{position} </span>
+        {entrant.name}
+      </span>
+      {entrant.score !== null && <ScoreChip score={entrant.score} scores={sizers} />}
+    </div>
+  )
 }
 
 /**
@@ -264,46 +270,41 @@ function BoutRows({ bout }: { bout: GameBout }) {
         {side.name}
       </span>
       {side.record && <span className="game-panel__record">{side.record}</span>}
-      <ScoreChip score={side.winner ? 'W' : ''} scores={['W']} />
+      <BoutChip side={side} />
     </div>
   ))
 }
 
+/** A side's score chip: "W" for the winner, else none, as a fight card has no score to show (see boutChip). */
+function BoutChip({ side }: { side: GameBoutSide }) {
+  const chip = boutChip(side)
+  return chip && <ScoreChip score={chip} scores={[chip]} />
+}
+
 const sideWithRecord = ({ name, record }: GameBoutSide): string => (record ? `${name} (${record})` : name)
 
-/** How many of a field the band lists until the viewer asks for all of it. */
-const leaderboardLength = 10
-
 /**
- * The band under the strip: in tennis the scoreline set by set, or for a field its leaderboard, or for a
- * fight card its bouts, each with its label. None for a game with none of them (its last score is in the
+ * The band under the strip: in tennis the scoreline set by set, or for a field the rest of its leaderboard
+ * from 3rd, a line each and scrolling to its last, or for a fight card its bouts, each with its label. None for a game with none of them (its last score is in the
  * score block).
  */
 function GameBand({ game }: { game: Game }) {
   const { scoreline, contest } = game
   const field: GameField = contest.kind === 'field' ? contest : { kind: 'field', entries: [] }
-  const { entries } = field
+  const { rest } = fieldLines(field)
+  const sizers = chipSizers(field)
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
-  // Which game the viewer asked to see the whole field of, so selecting another shows its top 10 again.
-  const [shownAllOf, setShownAllOf] = useState<string | null>(null)
-  const showAll = shownAllOf === game.id
-  const toggleShowAll = () => setShownAllOf(showAll ? null : game.id)
-  if (!scoreline && entries.length === 0 && bouts.length === 0) return null
+  if (!scoreline && rest.length === 0 && bouts.length === 0) return null
   return (
-    <div className={showAll || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
-      {entries.length > 0 && (
+    <div className={rest.length > 0 || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
+      {rest.length > 0 && (
         <BandCell label="Leaderboard" wide>
-          <ol className="game-panel__field">
-            {entries.slice(0, showAll ? entries.length : leaderboardLength).map((entrant) => (
-              <Entrant key={entrant.name} entrant={entrant} field={field} />
-            ))}
-            {entries.length > leaderboardLength && (
-              <li>
-                <button type="button" className="game-panel__show-all" onClick={toggleShowAll}>
-                  {showAll ? `Top ${leaderboardLength}` : `Show all ${entries.length}`}
-                </button>
+          <ol className="game-panel__field-lines">
+            {rest.map((entrant) => (
+              <li key={entrant.name}>
+                <FieldLine entrant={entrant} field={field} sizers={sizers} />
               </li>
-            )}
+            ))}
           </ol>
         </BandCell>
       )}
@@ -331,19 +332,6 @@ function GameBand({ game }: { game: Game }) {
         </BandCell>
       )}
     </div>
-  )
-}
-
-/**
- * One of a field on its leaderboard: their position ("T2" when tied), short name and in golf their score
- * to par, their full name on hover.
- */
-function Entrant({ entrant, field }: { entrant: GameEntrant; field: GameField }) {
-  return (
-    <li className="game-panel__entrant" data-tooltip={entrant.name}>
-      <span className="game-panel__rank">{positionText(entrant, field)}</span> {entrant.shortName}
-      {entrant.score !== null && <span className="game-panel__strong"> {entrant.score}</span>}
-    </li>
   )
 }
 

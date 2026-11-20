@@ -228,31 +228,42 @@ it("names a tennis match's home player first in its panel, as its score card doe
   expect(panelText().indexOf('Jannik Sinner')).toBeLessThan(panelText().indexOf('Carlos Alcaraz'))
 })
 
-it("shows a field's whole leaderboard with Show all, and the next game selected its top 10 again", async () => {
+it("lines up a field's whole leaderboard, its top two in the score block and every other from 3rd in the band, each once", async () => {
   // The 1st to 12th entrants as "Driver A" to "Driver L", so no name is part of another.
   const letters = 'ABCDEFGHIJKL'
-  const race = (id: string, driver: string): Game => ({
-    ...game(id),
+  const race: Game = {
+    ...game('R1'),
     league: 'F1',
     sport: 'Racing',
-    note: `${driver} Grand Prix`,
+    note: 'Driver Grand Prix',
     contest: {
       kind: 'field',
-      entries: Array.from({ length: 12 }, (_, i) => ({ position: i + 1, name: `${driver} ${letters[i]}`, shortName: `${driver} ${letters[i]}`, flagUrl: null, score: null })),
+      entries: Array.from({ length: 12 }, (_, i) => ({ position: i + 1, name: `Driver ${letters[i]}`, shortName: `D. ${letters[i]}`, flagUrl: null, score: null })),
     },
-  })
-  await show([race('R1', 'Driver'), race('R2', 'Rider')])
+  }
+  await show([race])
   await open('R1')
-  expect(panelText()).toContain('Driver J')
-  expect(panelText()).not.toContain('Driver L')
+  const names = (selector: string) =>
+    [...container.querySelectorAll(`${selector} .game-panel__team-name`)].map((name) => name.textContent)
+  expect(names('.game-panel__score')).toEqual(['1 Driver A', '2 Driver B'])
+  expect(names('.game-panel__band')).toEqual([...letters.slice(2)].map((letter, i) => `${i + 3} Driver ${letter}`))
+  expect([...container.querySelectorAll('.game-panel button')].map((button) => button.textContent)).not.toContain('Show all 12')
+})
 
-  const showAll = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Show all 12')!
-  await act(async () => showAll.click())
-  expect(panelText()).toContain('Driver L')
+it("shows a fight card side's score chip only for the winner", async () => {
+  const side = (name: string, winner: boolean) => ({ name, shortName: name, flagUrl: null, record: null, winner })
+  const bout = (id: string, status: 'Upcoming' | 'Final', winner: boolean) => ({
+    id, first: side(`${id} first`, winner), second: side(`${id} second`, false), weightClass: null, scheduledRounds: 3,
+    status, round: null, clock: null, method: winner ? 'Decision' : null,
+  })
+  const card = (id: string, main: ReturnType<typeof bout>): Game => ({ ...game(id), league: 'UFC', sport: 'MMA', contest: { kind: 'bouts', bouts: [main] } })
+  await show([card('U1', bout('upcoming', 'Upcoming', false)), card('U2', bout('won', 'Final', true))])
+  const chips = () => [...container.querySelectorAll('.game-panel__score .game-panel__team-score')].map((chip) => chip.firstElementChild?.textContent)
 
-  await open('R2')
-  expect(panelText()).toContain('Rider J')
-  expect(panelText()).not.toContain('Rider L')
+  await open('U1')
+  expect(chips()).toEqual([])
+  await open('U2')
+  expect(chips()).toEqual(['W'])
 })
 
 it("links the panel to a game's StreamEast stream and ESPN page, and has no links for a game with neither", async () => {

@@ -16,6 +16,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     : IGameFeedProvider
 {
     private const string IndyCar = "racing/irl";
+    private const string NascarCup = "racing/nascar-premier";
 
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ProviderCity?> _homeCities = new();
 
@@ -23,6 +24,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     // (see EventVenueAsync), one lookup at a time.
     private readonly SemaphoreSlim _eventVenuesGate = new(1, 1);
     private Dictionary<string, ProviderVenue?>? _eventVenues;
+
+    // Each NASCAR race's car numbers from the core API, by league and event, then by driver (see CarNumbersAsync).
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _carNumbers = new();
 
     private static readonly System.Text.Json.JsonSerializerOptions SavedJson =
         new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true };
@@ -63,6 +67,9 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         {
             if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is not { } fieldGame)
                 return [];
+            // A NASCAR driver's logo is their car's number badge, once the race lists its field.
+            if (league == NascarCup && fieldGame.Contest is ProviderField { Entries.Count: > 0 })
+                fieldGame = ToFieldGame(e, leagueKey, await CarNumbersAsync(league, fieldGame.Id, cancellationToken))!;
             if (league == IndyCar)
             {
                 // ESPN has no IndyCar venue, on the scoreboard or in the core API's event, so a race is at its
@@ -277,9 +284,10 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// (FP1–FP3, qualifying and the race), and only the race counts (ADR-0020), so the game's start, status,
     /// lap and field are the race's, its id the event's. Its period is the current lap, and its note the
     /// event's name. Its venue is the event's <c>circuit</c> (F1); NASCAR's scoreboard gives none (see
-    /// <see cref="EventVenueAsync"/>), and nor does IndyCar's (see <see cref="TrackList"/>).
+    /// <see cref="EventVenueAsync"/>), and nor does IndyCar's (see <see cref="TrackList"/>). A driver with a
+    /// number in <paramref name="carNumbers"/> (by their id) has their car's badge as their logo.
     /// </summary>
-    private static ProviderGame? ToFieldGame(Event e, string leagueKey)
+    private static ProviderGame? ToFieldGame(Event e, string leagueKey, IReadOnlyDictionary<string, string>? carNumbers = null)
     {
         var competitions = e.Competitions ?? [];
         // A competition that names its session must be the race; one that doesn't is NASCAR's only one.
@@ -295,7 +303,8 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             .Where(c => c.Order is not null && !string.IsNullOrWhiteSpace(c.Athlete?.DisplayName))
             .OrderBy(c => c.Order)
             .Select(c => new ProviderEntrant(c.Order!.Value, c.Athlete!.DisplayName!.Trim(),
-                NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(), c.Athlete.Flag?.Href))
+                NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(), c.Athlete.Flag?.Href,
+                LogoUrl: c.Id is not null && carNumbers?.GetValueOrDefault(c.Id) is { } car ? NascarCarBadge.Url(car) : null))
             .ToList();
         return new ProviderGame(
             e.Id,
@@ -489,6 +498,33 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         finally
         {
             _eventVenuesGate.Release();
+        }
+    }
+
+    /// <summary>
+    /// A NASCAR race's car numbers by driver id, which its scoreboard doesn't give: the core API's event lists
+    /// each driver with their car. Asked for once per race while the server runs, once its field is listed; a
+    /// failed request gives none and is asked again next time.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, string>> CarNumbersAsync(string league, string eventId, CancellationToken cancellationToken)
+    {
+        var key = $"{league}/{eventId}";
+        if (_carNumbers.TryGetValue(key, out var known))
+            return known;
+        try
+        {
+            var name = league.Split('/', 2)[1];
+            var coreEvent = await http.GetFromJsonAsync<CoreEvent>($"{CoreApi}racing/leagues/{name}/events/{eventId}", cancellationToken);
+            var numbers = (coreEvent?.Competitions?.FirstOrDefault()?.Competitors ?? [])
+                .Where(c => c.Id is not null && !string.IsNullOrWhiteSpace(c.Vehicle?.Number))
+                .DistinctBy(c => c.Id)
+                .ToDictionary(c => c.Id!, c => c.Vehicle!.Number!.Trim());
+            return _carNumbers[key] = numbers;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException
+            || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            return new Dictionary<string, string>();
         }
     }
 
@@ -837,8 +873,11 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     private sealed record StatusType(string? Name, string? State, bool? Completed, string? ShortDetail, string? Description);
     private sealed record Venue(string? Id, string? FullName, Address? Address, string? Court);
     private sealed record Address(string? City, string? State, string? Country);
-    // The core API: an event, its venues as links, and in golf its courses.
-    private sealed record CoreEvent(List<CoreLink>? Venues, List<CoreCourse>? Courses);
+    // The core API: an event, its venues as links, in golf its courses, and in racing its drivers' cars.
+    private sealed record CoreEvent(List<CoreLink>? Venues, List<CoreCourse>? Courses, List<CoreCompetition>? Competitions);
+    private sealed record CoreCompetition(List<CoreCompetitor>? Competitors);
+    private sealed record CoreCompetitor(string? Id, CoreVehicle? Vehicle);
+    private sealed record CoreVehicle(string? Number);
     private sealed record CoreCourse(string? Id, string? Name, Address? Address);
     private sealed record CoreLink([property: System.Text.Json.Serialization.JsonPropertyName("$ref")] string? Ref);
 }

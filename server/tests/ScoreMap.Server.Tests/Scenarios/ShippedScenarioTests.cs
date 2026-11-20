@@ -322,9 +322,10 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.Equal("Racing", live.Sport);
         Assert.StartsWith("Lap ", live.Clock);
         var field = Assert.IsType<GameField>(live.Contest);
-        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's top 10");
+        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's score block shows");
         Assert.Equal(Enumerable.Range(1, field.Entries.Count), field.Entries.Select(entrant => entrant.Position));
         Assert.Equal("Los Angeles Memorial Coliseum", live.Venue.Name);
+        Assert.All(field.Entries, entrant => Assert.StartsWith("https://cf.nascar.com/data/images/carbadges/1/", entrant.LogoUrl));
         var upcoming = Assert.Single(races, g => g.Status == GameStatus.Upcoming);
         Assert.Empty(Assert.IsType<GameField>(upcoming.Contest).Entries);
         Assert.NotNull(upcoming.Note);
@@ -356,7 +357,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
 
         Assert.Equal((GameStatus.Live, "Golf", "R4 · Thru 12", true), (tournament.Status, tournament.Sport, tournament.Clock, tournament.Hot));
         var field = Assert.IsType<GameField>(tournament.Contest);
-        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's top 10");
+        Assert.True(field.Entries.Count > 10, "a field longer than the game panel's score block shows");
         Assert.Equal([(1, "-15"), (2, "-14"), (2, "-14")], field.Entries.Take(3).Select(entrant => (entrant.Position, entrant.Score)));
         Assert.Contains(field.Entries, entrant => entrant.Score == "E");
         Assert.Equal("Riviera Country Club", tournament.Venue.Name);

@@ -203,10 +203,12 @@ body {
 /* The score block at the left, slanted on its right edge. Names are cut short within their share of
    each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
 .game-panel__score {
+  /* The space between its lines, and a field's lines (see .game-panel__field-lines). */
+  --game-panel-score-gap: calc(2 * var(--spacing));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: calc(2 * var(--spacing));
+  gap: var(--game-panel-score-gap);
   box-sizing: border-box;
   width: min(var(--game-panel-size-score-block), 42%);
   flex-shrink: 0;
@@ -558,9 +560,24 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A field's leaderboard, or a fight card's bouts: side by side in order, wrapping onto the band's next
-   line. A field has a button to show all; a fight card always lists every bout. Shown whole, the band grows and scrolls. */
-.game-panel__field,
+/* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
+   the last, never sideways. */
+.game-panel__field-lines {
+  --lines: 5;
+  display: grid;
+  gap: var(--game-panel-score-gap);
+  max-height: calc(var(--lines) * (var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding)) + (var(--lines) - 1) * var(--game-panel-score-gap));
+  margin: 0;
+  /* Room between the scores and the scroll bar. */
+  padding: 0 var(--spacing) 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+/* A fight card's bouts: side by side in order, wrapping onto the band's next line, every bout listed,
+   the band growing and scrolling. */
 .game-panel__bouts {
   display: flex;
   flex-wrap: wrap;
@@ -571,20 +588,9 @@ body {
   list-style: none;
 }
 
-.game-panel__entrant,
 .game-panel__bout {
   flex-shrink: 0;
   white-space: nowrap;
-}
-
-.game-panel__show-all {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--game-color);
-  font: inherit;
-  font-weight: var(--typography-button-font-weight);
-  cursor: pointer;
 }
 
 .game-panel__band.game-panel__band--expanded {
@@ -626,7 +632,7 @@ body {
 
   .game-panel__score {
     width: auto;
-    gap: var(--spacing);
+    --game-panel-score-gap: var(--spacing);
     padding: calc(2 * var(--spacing));
     clip-path: none;
   }
@@ -2891,7 +2897,8 @@ body {
     border-width: var(--shape-border-width-thin) 0 0;
   }
 
-  .game-panel__band {
+  .game-panel__band,
+  .game-panel__field-lines {
     touch-action: pan-y;
   }
 
@@ -3554,7 +3561,8 @@ body {
       border-width: var(--shape-border-width-thin) var(--shape-border-width-thin) 0 0;
     }
 
-    .game-panel__band {
+    .game-panel__band,
+    .game-panel__field-lines {
       touch-action: pan-y;
     }
 
@@ -3571,7 +3579,7 @@ body {
   /* Half the strip, so names have room on a phone. */
   .game-panel__score {
     width: min(var(--game-panel-size-score-block), 50%);
-    gap: var(--spacing);
+    --game-panel-score-gap: var(--spacing);
     padding-block: calc(2 * var(--spacing));
   }
 

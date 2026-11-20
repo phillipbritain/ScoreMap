@@ -1,5 +1,5 @@
 import { shownBout } from '../games/bouts'
-import { positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
+import { entrantImage, positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
 import { progressLine, type Viewer } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { logoMark } from '../games/teamLogo'
@@ -94,5 +94,5 @@ function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRo
 }
 
 function cardEntrant(entrant: GameEntrant, field: GameField): ScoreCardRow {
-  return { label: `${positionText(entrant, field)} ${entrant.shortName}`, logoUrl: entrant.flagUrl, score: entrant.score ?? '' }
+  return { label: `${positionText(entrant, field)} ${entrant.shortName}`, logoUrl: entrantImage(entrant), score: entrant.score ?? '' }
 }

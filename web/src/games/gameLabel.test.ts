@@ -67,7 +67,7 @@ describe('gameLabel', () => {
       note: 'NASCAR Cup Series at Talladega',
       clock: 'Lap 189',
       venue: { ...arrowhead.venue, name: 'Talladega Superspeedway' },
-      contest: { kind: 'field', entries: [{ position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: null, score: null }] },
+      contest: { kind: 'field', entries: [{ position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: null, score: null, logoUrl: null }] },
     }
 
     expect(gameLabel(talladega)).toContain('NASCAR Cup Series at Talladega')
@@ -139,7 +139,7 @@ describe('matchesSearch', () => {
   })
 
   it('finds a field game by an entrant and a fight card by any fighter', () => {
-    const race: Game = { ...arrowhead, contest: { kind: 'field', entries: [{ position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: null, score: null }] } }
+    const race: Game = { ...arrowhead, contest: { kind: 'field', entries: [{ position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: null, score: null, logoUrl: null }] } }
     const side = (name: string) => ({ name, shortName: name, flagUrl: null, record: null, winner: false })
     const bout = { id: 'b', first: side('Jon Jones'), second: side('Stipe Miocic'), weightClass: null, scheduledRounds: 5, status: 'Final' as const, round: null, clock: null, method: null }
     const card: Game = { ...arrowhead, contest: { kind: 'bouts', bouts: [{ ...bout, status: 'Live', id: 'a', first: side('Alex Pereira'), second: side('Khalil Rountree') }, bout] } }

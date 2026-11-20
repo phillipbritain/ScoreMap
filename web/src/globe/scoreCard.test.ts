@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Game, GameSides } from '../games/game'
+import type { Game, GameField, GameSides } from '../games/game'
 import { themeWith } from '../theme/testTheme'
 import { headerText, scoreCard } from './scoreCard'
 
@@ -104,9 +104,9 @@ describe('scoreCard', () => {
       contest: {
         kind: 'field',
         entries: [
-          { position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: usa, score: null },
-          { position: 2, name: 'William Byron', shortName: 'W. Byron', flagUrl: usa, score: null },
-          { position: 3, name: 'Ryan Blaney', shortName: 'R. Blaney', flagUrl: usa, score: null },
+          { position: 1, name: 'Kyle Larson', shortName: 'K. Larson', flagUrl: usa, score: null, logoUrl: null },
+          { position: 2, name: 'William Byron', shortName: 'W. Byron', flagUrl: usa, score: null, logoUrl: null },
+          { position: 3, name: 'Ryan Blaney', shortName: 'R. Blaney', flagUrl: usa, score: null, logoUrl: null },
         ],
       },
     }
@@ -119,6 +119,13 @@ describe('scoreCard', () => {
       })
     })
 
+    it("shows an entrant's own logo, a NASCAR car's number badge, in place of their flag", () => {
+      const badge = 'https://cf.nascar.com/data/images/carbadges/1/5.png'
+      const [larson, ...rest] = (talladega.contest as GameField).entries
+      const badged: Game = { ...talladega, contest: { kind: 'field', entries: [{ ...larson, logoUrl: badge }, ...rest] } }
+      expect(scoreCard(badged)).toMatchObject({ top: { logoUrl: badge }, bottom: { logoUrl: usa } })
+    })
+
     it("shows a golf tournament's top two with their scores to par, a tie marked", () => {
       const mexicoOpen: Game = {
         ...talladega,
@@ -127,9 +134,9 @@ describe('scoreCard', () => {
         contest: {
           kind: 'field',
           entries: [
-            { position: 1, name: 'Ben Griffin', shortName: 'B. Griffin', flagUrl: usa, score: '-12' },
-            { position: 2, name: 'Kihei Akina', shortName: 'K. Akina', flagUrl: usa, score: '-11' },
-            { position: 2, name: 'Andrew Novak', shortName: 'A. Novak', flagUrl: usa, score: '-11' },
+            { position: 1, name: 'Ben Griffin', shortName: 'B. Griffin', flagUrl: usa, score: '-12', logoUrl: null },
+            { position: 2, name: 'Kihei Akina', shortName: 'K. Akina', flagUrl: usa, score: '-11', logoUrl: null },
+            { position: 2, name: 'Andrew Novak', shortName: 'A. Novak', flagUrl: usa, score: '-11', logoUrl: null },
           ],
         },
       }

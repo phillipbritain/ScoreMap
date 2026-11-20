@@ -1596,8 +1596,8 @@ body {
    as the Games count is ringed in it, edged in the rail's glass so it stands off the button's. */
 .rail__dot {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 3px;
+  right: 3px;
   width: 8px;
   height: 8px;
   border-radius: 50%;

@@ -11,6 +11,7 @@ import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
+import { PanelWidthSwitcher } from './PanelWidthSwitcher'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -81,7 +82,8 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo 
   // On a phone, swiped down to close (see useSwipeToClose).
   const swipe = useSwipeToClose(game.id, onClose)
 
-  return (
+  return (<>
+    <PanelWidthSwitcher />
     <aside
       ref={ref}
       className={leaving ? 'game-panel game-panel--leaving' : 'game-panel'}
@@ -139,7 +141,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo 
         </button>
       </div>
     </aside>
-  )
+  </>)
 }
 
 /** A link to a place (the venue, or its city) in Google Maps, in a new tab. */

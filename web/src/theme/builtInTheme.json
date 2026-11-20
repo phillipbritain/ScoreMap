@@ -185,7 +185,7 @@
     "Tooltip": { "surface": "navy.700", "outline": "navy.500" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
-      "rocket": { "color": "text.primary", "flame": "secondary.main", "size": 64 },
+      "rocket": { "color": "text.primary", "flame": { "outer": "warning.main", "inner": "secondary.main" }, "size": 64 },
       "message": "text.primary",
       "glow": { "color": "secondary.main", "radius": 14, "opacity": 0.45 },
       "dot": 5

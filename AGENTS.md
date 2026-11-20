@@ -19,7 +19,11 @@ The app is still being shaped, so keep the process light:
 
 ### Pull requests
 
-Commit work on a branch created from `main`, named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
+Commit work on a branch created from `origin/main` (a clone's own `main` can be stale), named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
+
+Commits carry no `Co-Authored-By` trailer or Claude author: CI's commit attribution check fails the PR, and with force pushes blocked, one such commit means a new branch and PR.
+
+Waiting for CI, watch the run for the pushed commit: `gh run list --commit $(git rev-parse HEAD)`, then `gh run watch <id> --exit-status` (`--branch <b> --limit 1` straight after a push can return the previous run, green for the old commit). When no run appears, check `gh pr view --json mergeable`: GitHub starts no CI on a conflicting PR.
 
 Working an issue, move its card on the project board: to **In progress** when starting work, and to **In review** when opening its pull request (the commands are in `docs/agents/issue-tracker.md`).
 
@@ -42,10 +46,6 @@ Making or changing the theme, or any color, font, size or status look: read the 
 ### Card layout
 
 Score cards jumping about or landing in the wrong place on a running globe: capture and replay the layout, see `docs/agents/card-layout-replay.md`.
-
-### Orchestration
-
-Coordinating Orca workers on this repo (handovers, the review run, merges): `docs/agents/orchestration.md`.
 
 ### Prototyping
 

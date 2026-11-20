@@ -132,20 +132,52 @@ function Message({ text }: { text: string }) {
 }
 
 /**
- * A little rocket flying up and to the right, bobbing as it goes, its flame flickering and speed lines
- * streaming past, in the theme's colors, with the dim showing through its window.
+ * The stars streaming past the rocket, spread steadily (the same each time) across its box and a little
+ * beyond, in the rocket's own frame: each across (x), down (y) and how near it is (0 to 1), nearer
+ * stars bigger and quicker.
+ */
+const stars = Array.from({ length: 22 }, (_, at) => {
+  const spread = (n: number) => {
+    const x = Math.sin((at + 1) * 12.9898 * n + 311.932) * 43758.5453
+    return x - Math.floor(x)
+  }
+  return { x: -14 + spread(1) * 92, y: -14 + spread(2) * 92, near: spread(3) }
+})
+
+/**
+ * A little rocket flying up and to the right, bobbing as it goes, its two-layer flame flickering and
+ * stars streaming past it, in the theme's colors, with the dim showing through its window. The stars
+ * fade out toward the edge of a circle around it.
  */
 function Rocket() {
   return (
     <svg className="loading-screen__rocket" viewBox="0 0 64 64" aria-hidden="true">
-      <g transform="rotate(45 32 32)">
-        <g className="loading-screen__rocket-lines">
-          <line x1="20" y1="44" x2="20" y2="56" />
-          <line x1="32" y1="50" x2="32" y2="62" />
-          <line x1="44" y1="44" x2="44" y2="56" />
+      <defs>
+        <radialGradient id="loading-screen-stars-fade">
+          <stop offset="0.5" stopColor="#fff" />
+          <stop offset="1" stopColor="#000" />
+        </radialGradient>
+        <mask id="loading-screen-stars-mask">
+          <circle cx="32" cy="32" r="46" fill="url(#loading-screen-stars-fade)" />
+        </mask>
+      </defs>
+      <g mask="url(#loading-screen-stars-mask)">
+        <g className="loading-screen__rocket-stars" transform="rotate(45 32 32)">
+          {stars.map(({ x, y, near }, at) => (
+            <circle
+              key={at}
+              cx={x}
+              cy={y}
+              r={0.5 + near * 0.9}
+              style={{ animationDuration: `${0.45 + (1 - near) * 0.8}s`, animationDelay: `${-((y + 14) / 92) * 1.3}s` }}
+            />
+          ))}
         </g>
+      </g>
+      <g transform="rotate(45 32 32)">
         <g className="loading-screen__rocket-ship">
-          <path className="loading-screen__rocket-flame" d="M27 41 Q32 56 37 41 Z" />
+          <path className="loading-screen__rocket-flame loading-screen__rocket-flame--outer" d="M25.5 41 Q32 62 38.5 41 Z" />
+          <path className="loading-screen__rocket-flame loading-screen__rocket-flame--inner" d="M28.5 41 Q32 54 35.5 41 Z" />
           <path d="M24 29 L16 42 L25 39 Z M40 29 L48 42 L39 39 Z" />
           <path d="M32 4 C41 12 43 26 40 41 H24 C21 26 23 12 32 4 Z" />
           <circle className="loading-screen__rocket-window" cx="32" cy="21" r="4.5" />

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type Ref } from 'react'
 import type { LoadingStage } from '../globe/globeMap'
 import { usePhrase } from './loadingPhrases'
 import { loadingScreenView } from './loadingScreenView'
-import { ProtoRocket, rocketProto } from './rocketPrototype'
 
 /** How often the loading screen looks again at how long it's been in a stage. */
 const tickMs = 250
@@ -98,8 +97,7 @@ export function Dimmed({ ref, message, leaving = false, movable = false, label }
     .join(' ')
   return (
     <div ref={ref} className={className} role="status" aria-label={leaving ? undefined : label} aria-busy={!leaving}>
-      {/* PROTOTYPE (rocketPrototype): the rocket variant asked for, or today's. */}
-      {rocketProto === 'today' ? <Rocket /> : <ProtoRocket />}
+      <Rocket />
       {message && <Message key={message} text={message} />}
     </div>
   )

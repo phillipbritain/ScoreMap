@@ -21,7 +21,6 @@ import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
 import { LoadingScreen } from './loading/LoadingScreen'
-import { RocketProtoHold, RocketProtoSwitcher } from './loading/RocketProtoSwitcher'
 import { revealPhase } from './loading/revealPhase'
 import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
@@ -194,7 +193,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      <RocketProtoSwitcher />
       <div
         ref={globeArea}
         className={[
@@ -243,8 +241,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
         )}
         {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
             the rail, which stay usable. */}
-        {/* PROTOTYPE (rocketPrototype): the loading screen held on screen with ?rocketProto=. */}
-        {loadingScreenGone && <RocketProtoHold />}
         {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
         <div className="bottom-stack">

@@ -1,0 +1,16 @@
+{
+  "name": "ScoreMap",
+  "short_name": "ScoreMap",
+  "description": "Live sports games as pins on a globe, with scores that update on their own.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000209",
+  "theme_color": "#000209",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

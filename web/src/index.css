@@ -2667,6 +2667,53 @@ body {
   color: var(--palette-text-primary);
 }
 
+/* The iOS install hint (see IosInstallHint): a message as the no-pins one is, with a close button on
+   its right, the only part of the bottom stack that takes a tap. Share's icon sits in the line. */
+.install-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+  padding: var(--spacing) var(--spacing) var(--spacing) calc(4 * var(--spacing));
+  border-radius: var(--controls-message-corner);
+  background: var(--controls-surface);
+  color: var(--palette-text-primary);
+  pointer-events: auto;
+}
+
+.install-hint__text {
+  margin: 0;
+}
+
+.install-hint__share {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+}
+
+.install-hint__close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(10 * var(--spacing));
+  height: calc(10 * var(--spacing));
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--palette-text-secondary);
+  cursor: pointer;
+}
+
+.install-hint__close svg {
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
+}
+
+@media (hover: hover) {
+  .install-hint__close:hover {
+    color: var(--palette-text-primary);
+  }
+}
+
 .scenario-clock {
   box-sizing: border-box;
   height: var(--controls-bar-height);

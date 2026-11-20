@@ -416,6 +416,49 @@ describe('settingsStore: the collapsed rail', () => {
   })
 })
 
+describe('settingsStore: the game panel\'s details', () => {
+  it('shows a first-time visitor the details minimized', () => {
+    expect(settingsStore(() => memoryStorage()).loadDetailsOpen()).toBe(false)
+  })
+
+  it('keeps the details open, or minimized again, after a page reload', () => {
+    const storage = memoryStorage()
+
+    settingsStore(() => storage).saveDetailsOpen(true)
+    expect(settingsStore(() => storage).loadDetailsOpen()).toBe(true)
+
+    settingsStore(() => storage).saveDetailsOpen(false)
+    expect(settingsStore(() => storage).loadDetailsOpen()).toBe(false)
+  })
+
+  it('keeps the details apart from the settings and the rail, so opening them changes neither', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
+
+    store.saveDetailsOpen(true)
+
+    expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
+    expect(store.loadRailCollapsed()).toBe(false)
+  })
+
+  it('minimizes the details when what was saved is unreadable', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.detailsOpen', '{not json')
+
+    expect(settingsStore(() => storage).loadDetailsOpen()).toBe(false)
+  })
+
+  it('still works when the browser blocks storage, with the details minimized', () => {
+    const store = settingsStore(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    })
+
+    expect(() => store.saveDetailsOpen(true)).not.toThrow()
+    expect(store.loadDetailsOpen()).toBe(false)
+  })
+})
+
 describe('unsavedSettingsStore', () => {
   it("opens on first-visit settings and the viewer's region, and saves neither the settings nor the camera", () => {
     const storage = memoryStorage()
@@ -455,5 +498,16 @@ describe('unsavedSettingsStore', () => {
 
     expect(store.loadRailCollapsed()).toBe(false)
     expect(saved.loadRailCollapsed()).toBe(false)
+  })
+
+  it('opens a demo\'s game panels with their details minimized, and saves nothing when they open', () => {
+    const storage = memoryStorage()
+    const saved = settingsStore(() => storage)
+    const store = unsavedSettingsStore()
+
+    store.saveDetailsOpen(true)
+
+    expect(store.loadDetailsOpen()).toBe(false)
+    expect(saved.loadDetailsOpen()).toBe(false)
   })
 })

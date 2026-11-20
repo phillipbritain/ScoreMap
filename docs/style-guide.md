@@ -392,7 +392,7 @@ Selecting a tab slides its content up above the tab bar over 220 ms. The down ch
 | `components.WelcomeTour.choice.topEvents`, `.myLeagues`, `.everything` | The outline of each of Welcome's choices, a color of its own so the three tell apart; it stays on hover, which lights the choice behind | `gold.500`, `navy.300`, `#6dbb8a` (a green outside the theme's colors) |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue (on a phone, behind the header), 0 to 1 | 0.4 |
-| `components.GamePanel.size.width` | The game panel's width at most | 1200 |
+| `components.GamePanel.size.width` | The game panel's width at most | 900 |
 | `components.GamePanel.size.height` | The score and venue header’s minimum height on desktop | 128 |
 | `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
 | `components.GamePanel.size.logo` | A team's logo | 28 |

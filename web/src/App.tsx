@@ -97,6 +97,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // Whether the viewer collapsed the rail out of the way after setting up.
   const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
+  // Whether a game panel's details were left open: the next panel opens them the same way.
+  const [detailsOpen, setDetailsOpen] = useState(store.loadDetailsOpen)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
   const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
@@ -122,6 +124,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
   useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
+  useEffect(() => store.saveDetailsOpen(detailsOpen), [store, detailsOpen])
   // Nothing but the loading screen until the globe is ready; then the globe, the controls and the
   // welcome tour come in together as it fades away (see revealPhase).
   const reveal = revealPhase(stage, loadingScreenGone)
@@ -266,6 +269,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             color={panelColor}
             textOnColor={textOn(panelColor, theme.palette.text.primary, theme.palette.background.paper)}
             venuePhotos={viewerSettings.venuePhotos}
+            detailsOpen={detailsOpen}
+            onDetailsOpenChange={setDetailsOpen}
             demo={demo}
             onClose={closeGame}
             leaving={panelLeaving}

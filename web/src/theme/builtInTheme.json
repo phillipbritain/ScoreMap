@@ -151,7 +151,7 @@
       "cutCorner": { "on": false, "size": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 1, "corner": 1 } },
       "size": {
-        "width": 1200,
+        "width": 900,
         "height": 128,
         "scoreBlock": 504,
         "slant": 16,

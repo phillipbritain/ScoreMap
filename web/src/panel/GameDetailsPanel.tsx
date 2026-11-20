@@ -17,7 +17,7 @@ export function WatchInfo({ details, failed, onToggle, children }: {
   const title = useId()
   return (
     <>
-      <button type="button" className="game-details-tv" aria-label="Watch and game info" aria-haspopup="dialog" onClick={() => {
+      <button type="button" className="game-details-tv" aria-label="Watch and game info" data-tooltip="Watch and game info" aria-haspopup="dialog" onClick={() => {
         dialog.current?.showModal()
         onToggle(true)
       }}>
@@ -49,10 +49,12 @@ export function WatchInfo({ details, failed, onToggle, children }: {
   )
 }
 
-export function GameDetailsPanel({ game, details, failed, onToggle }: {
+export function GameDetailsPanel({ game, details, failed, open, onToggle }: {
   game: Game
   details: GameDetails | null
   failed: boolean
+  /** Whether it opens with its details showing, as the last game panel's were left. */
+  open: boolean
   onToggle: (open: boolean) => void
 }) {
   const contest = game.contest.kind === 'sides' ? game.contest : null
@@ -64,7 +66,7 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
   tabs.push('Stats', 'Videos')
 
   const [selected, setSelected] = useState(tabs[0])
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(open)
   const tabList = useRef<HTMLDivElement>(null)
   const id = useId()
   const active = tabs.includes(selected) ? selected : tabs[0]
@@ -111,7 +113,8 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
             </button>
           ))}
         </div>
-        <button type="button" className="game-details-collapse" aria-label="Collapse game details"
+        <button type="button" className="game-details-collapse" aria-label="Minimize game details"
+          data-tooltip="Minimize game details"
           aria-controls={`${id}-pane`} onClick={collapse}>
           <RailIcon className="game-details-collapse-icon"><path d="m6 9 6 6 6-6" /></RailIcon>
         </button>
@@ -143,9 +146,11 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
 function LineScore({ game, contest, details }: { game: Game; contest: GameSides; details: GameDetails }) {
   return (
     <div className="game-details-table-scroll">
-      <table className="game-details-table game-details-line-score">
-        <caption>{game.sport === 'Football' ? 'Score by quarter' : 'Line score'}</caption>
-        <thead><tr><th scope="col">Team</th>
+      {/* No caption on screen: the chart is plainly the score by period. Named for a screen reader. */}
+      <table className="game-details-table game-details-line-score"
+        aria-label={game.sport === 'Football' ? 'Score by quarter' : 'Line score'}>
+        {/* The team column needs no heading on screen; it keeps its name for a screen reader. */}
+        <thead><tr><th scope="col" aria-label="Team" />
           {details.periodScores.map((period) => <th key={period.label} scope="col">{period.label}</th>)}
           <th scope="col">{game.status === 'Final' ? 'Final' : 'Total'}</th>
         </tr></thead>

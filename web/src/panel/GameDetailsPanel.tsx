@@ -113,7 +113,8 @@ export function GameDetailsPanel({ game, details, failed, open, onToggle }: {
             </button>
           ))}
         </div>
-        <button type="button" className="game-details-collapse" aria-label="Collapse game details"
+        <button type="button" className="game-details-collapse" aria-label="Minimize game details"
+          data-tooltip="Minimize game details"
           aria-controls={`${id}-pane`} onClick={collapse}>
           <RailIcon className="game-details-collapse-icon"><path d="m6 9 6 6 6-6" /></RailIcon>
         </button>

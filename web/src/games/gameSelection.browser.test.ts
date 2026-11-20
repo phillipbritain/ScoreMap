@@ -324,7 +324,7 @@ it('loads details on opening a tab and collapses them without closing the game',
   expect(video.target).toBe('_blank')
   expect(fetchDetails).toHaveBeenCalledTimes(1)
 
-  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Collapse game details"]')!
+  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Minimize game details"]')!
   await act(async () => collapse.click())
   expect(pane().closest('[inert]')).not.toBeNull()
   expect(document.activeElement).toBe(tab('Videos'))

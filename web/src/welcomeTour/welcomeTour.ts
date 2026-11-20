@@ -53,11 +53,13 @@ export function overGamePanel(progress: TourProgress): boolean {
 }
 
 /**
- * The progress a page reload carries on at, from the progress saved: where it was left, but All set,
- * with nothing left to show, finishes the tour, straight into the live games.
+ * The progress a page reload carries on at, from the progress saved: where it was left, but the game
+ * panel's steps go back to Click a score card, as the panel they light isn't open after a reload, and
+ * All set, with nothing left to show, finishes the tour, straight into the live games.
  */
 export function progressAfterReload(saved: TourProgress): TourProgress {
-  return saved === 'allSet' ? 'finished' : saved
+  if (saved === 'allSet') return 'finished'
+  return (gamePanelSteps as readonly TourProgress[]).includes(saved) ? 'scoreCard' : saved
 }
 
 /** The progress after an event: an event that isn't the current step's changes nothing. */

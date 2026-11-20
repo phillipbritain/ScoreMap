@@ -79,10 +79,17 @@ describe('welcome tour progress', () => {
 })
 
 describe('progressAfterReload', () => {
-  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch', 'finished'])(
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'finished'])(
     'carries on at %s',
     (progress) => {
       expect(progressAfterReload(progress)).toBe(progress)
+    },
+  )
+
+  it.each<TourProgress>(['gamePanel', 'panelTabs', 'panelWatch'])(
+    'goes back from %s to Click a score card, as the panel it lights is no longer open',
+    (progress) => {
+      expect(progressAfterReload(progress)).toBe('scoreCard')
     },
   )
 

@@ -8,7 +8,7 @@ const looks = {
   B: { name: 'Gold 6px, plain', css: 'width: 6px; height: 6px; background: var(--rail-open); box-shadow: none;' },
   C: { name: 'Gold 9px, glowing', css: 'width: 9px; height: 9px; background: var(--rail-open); box-shadow: 0 0 6px 1px color-mix(in srgb, var(--rail-open) 70%, transparent);' },
   D: { name: 'Gold ring, glass inside (as the Games count)', css: 'width: 9px; height: 9px; background: var(--score-card-fill); box-shadow: inset 0 0 0 2px var(--rail-open);' },
-  E: { name: 'White 8px, glass edge', css: 'width: 8px; height: 8px; background: var(--palette-text-primary); box-shadow: 0 0 0 var(--shape-border-width-thin) var(--score-card-fill);' },
+  E: { name: 'Live red 8px, glass edge', css: 'width: 8px; height: 8px; background: var(--palette-live-main); box-shadow: 0 0 0 var(--shape-border-width-thin) var(--score-card-fill);' },
   F: { name: 'Gold 8px, slow pulse', css: 'width: 8px; height: 8px; background: var(--rail-open); animation: leagues-dot-proto-pulse 2s ease-in-out infinite;' },
 } as const
 const positions = {
@@ -44,11 +44,6 @@ const css = (look: Look, position: Position) => `
 }
 .leagues-dot-proto-bar button {
   border: 0; border-radius: 999px; padding: 4px 10px; background: #fff3; color: inherit; font: inherit; cursor: pointer;
-}
-@media (max-width: 640px) {
-  .leagues-dot-proto-bar { flex-wrap: nowrap; gap: 4px; padding: 3px 4px; white-space: nowrap; }
-  .leagues-dot-proto-bar button { padding: 3px 6px; }
-  .leagues-dot-proto-name { display: none; }
 }`
 
 /** The switcher bar, at the top middle. Local runs only. */
@@ -87,10 +82,10 @@ export function LeaguesDotSwitcher() {
       <style>{css(look, position)}</style>
       <div className="leagues-dot-proto-bar">
         <button type="button" onClick={() => stepLook(-1)}>‹ [</button>
-        <span>Look {look}<span className="leagues-dot-proto-name">: {looks[look].name}</span></span>
+        <span>Look {look}: {looks[look].name}</span>
         <button type="button" onClick={() => stepLook(1)}>] ›</button>
         <button type="button" onClick={() => stepPosition(-1)}>‹ {'{'}</button>
-        <span>Position {position}<span className="leagues-dot-proto-name">: {positions[position].name}</span></span>
+        <span>Position {position}: {positions[position].name}</span>
         <button type="button" onClick={() => stepPosition(1)}>{'}'} ›</button>
       </div>
     </>

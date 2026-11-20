@@ -17,7 +17,7 @@ export function WatchInfo({ details, failed, onToggle, children }: {
   const title = useId()
   return (
     <>
-      <button type="button" className="game-details-tv" aria-label="Watch and game info" aria-haspopup="dialog" onClick={() => {
+      <button type="button" className="game-details-tv" aria-label="Watch and game info" data-tooltip="Watch and game info" aria-haspopup="dialog" onClick={() => {
         dialog.current?.showModal()
         onToggle(true)
       }}>

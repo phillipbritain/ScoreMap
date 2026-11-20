@@ -368,13 +368,13 @@ function ScoreCardStep({ onOpenGame, scoreCards }: ScoreCardStepProps) {
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
           <p className="welcome-tour__text">
-            Each game shows as a score card. Click one to open a panel with details for the event, venue, last score,
+            Each game shows as a score card. Click one to open a panel with details for the event, venue,
             where to watch, and more
           </p>
         )}
         {toTry && (
           <p className="welcome-tour__text">
-            Try this one: it opens a panel with details for the event, venue, last score, where to watch, and more
+            Try this one: it opens a panel with details for the event, venue, where to watch, and more
           </p>
         )}
       </TourPanel>

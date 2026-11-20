@@ -3284,21 +3284,6 @@ body {
   pointer-events: none;
 }
 
-/* The game panel's line saying ScoreMap is live, above its list of what the panel has. */
-.welcome-tour__live {
-  margin-bottom: calc(3 * var(--spacing));
-  color: var(--palette-text-primary);
-}
-
-.welcome-tour__panel-parts {
-  display: flex;
-  flex-direction: column;
-  gap: calc(2 * var(--spacing));
-  margin: 0;
-  padding-left: calc(5 * var(--spacing));
-  color: var(--palette-text-secondary);
-}
-
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */
 /* Your controls' line on moving and zooming the globe, above the rail's buttons. */
 .welcome-tour__move {
@@ -3656,40 +3641,27 @@ body {
     padding-bottom: calc(3 * var(--spacing));
   }
 
-  /* All set and The game panel, compact so they fit in the little height above the game panel without
-     covering it: Done (or Next) beside the words, at the foot of a column of its own, clear of the ×
-     above it. The game panel keeps only its line on ScoreMap being live, so the score it speaks of
-     stays in view. */
-  .welcome-tour--gamePanel .welcome-tour__panel-parts {
-    display: none;
-  }
-
-  .welcome-tour--gamePanel .welcome-tour__live {
-    margin-bottom: 0;
-  }
-
-  .welcome-tour--gamePanel .welcome-tour__panel,
-  .welcome-tour--allSet .welcome-tour__panel {
+  /* The steps over the game panel (its own and All set), compact so they fit in the little height above
+     it without covering it: Next or Done beside the words, at the foot of a column of its own, clear of
+     the × above it. */
+  .welcome-tour--over-game-panel .welcome-tour__panel {
     display: grid;
     grid-template-columns: 1fr auto;
     column-gap: calc(4 * var(--spacing));
     padding-block: calc(3 * var(--spacing));
   }
 
-  .welcome-tour--gamePanel .welcome-tour__heading,
-  .welcome-tour--allSet .welcome-tour__heading {
+  .welcome-tour--over-game-panel .welcome-tour__heading {
     margin-bottom: var(--spacing);
   }
 
-  .welcome-tour--gamePanel .welcome-tour__body,
-  .welcome-tour--allSet .welcome-tour__body {
+  .welcome-tour--over-game-panel .welcome-tour__body {
     grid-column: 1;
     margin-bottom: calc(-1 * var(--spacing));
     padding-bottom: var(--spacing);
   }
 
-  .welcome-tour--gamePanel .welcome-tour__actions,
-  .welcome-tour--allSet .welcome-tour__actions {
+  .welcome-tour--over-game-panel .welcome-tour__actions {
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: end;
@@ -3723,7 +3695,7 @@ body {
   }
 }
 
-/* All set with the game's panel Click a score card opened: the step right above that panel (its top,
+/* A step over the game's panel Click a score card opened (the game panel's own, and All set): the step right above that panel (its top,
    --above-game-panel, measured by useAboveGamePanel), or, with too little room there (a phone on its
    side), at the top of the screen over the panel's top, never cut short, so Done is always in view.
    The game panel, under the tour, stays usable: the tour takes no press but on the step's panel, and
@@ -3752,7 +3724,7 @@ body {
   pointer-events: auto;
 }
 
-/* On a desktop, where the game panel is a strip along the foot of the screen, All set sits in the
+/* On a desktop, where the game panel is a strip along the foot of the screen, a step over it sits in the
    middle of the screen instead, as the other steps do, when that's clear of the game panel (see
    middleClearsGamePanel); not on a phone, held upright or on its side. */
 @media (min-width: 641px) and (min-height: 501px), (min-width: 641px) and (orientation: portrait) {

@@ -1,6 +1,6 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
-import { isTourProgress, type TourProgress } from '../welcomeTour/welcomeTour'
+import { isTourProgress, progressAfterReload, type TourProgress } from '../welcomeTour/welcomeTour'
 import { firstVisitSettings, isMapType, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -149,7 +149,7 @@ export function unsavedSettingsStore(): SettingsStore {
 function tourProgressFromSaved(saved: string): TourProgress {
   try {
     const progress: unknown = JSON.parse(saved)
-    return isTourProgress(progress) ? progress : 'finished'
+    return isTourProgress(progress) ? progressAfterReload(progress) : 'finished'
   } catch {
     return 'finished'
   }

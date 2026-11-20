@@ -8,6 +8,8 @@ import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
 import {
   canShowPicks,
+  gamePanelSteps,
+  overGamePanel,
   middleClearsGamePanel,
   noPicks,
   picksFrom,
@@ -52,7 +54,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   }
   const close = () => onEvent({ kind: 'closed' })
   const screen = useRef<HTMLDivElement>(null)
-  useAboveGamePanel(screen, progress === 'gamePanel' || progress === 'allSet')
+  useAboveGamePanel(screen, overGamePanel(progress))
   // Escape closes the tour wherever focus is, as the panel's × does; but with one of the rail's popovers
   // open (More, or the Feedback panel, usable during the tour), it's the rail's, to close that popover,
   // whichever hears it first.
@@ -66,7 +68,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   }, [onEvent])
   return (
     <TourClose.Provider value={close}>
-      <div ref={screen} className={`welcome-tour welcome-tour--${progress}`}>
+      <div ref={screen} className={`welcome-tour welcome-tour--${progress}${overGamePanel(progress) ? ' welcome-tour--over-game-panel' : ''}`}>
         {/* Catches every press, so nothing under the tour can be used. */}
         <div className="welcome-tour__dim" />
         {progress === 'welcome' && (
@@ -82,7 +84,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
             }}
           />
         )}
-        {progress === 'gamePanel' && <GamePanelStep onNext={() => onEvent({ kind: 'next' })} />}
+        {isGamePanelStep(progress) && <GamePanelStep step={progress} onNext={() => onEvent({ kind: 'next' })} />}
         {progress === 'allSet' && <AllSetStep onDone={() => onEvent({ kind: 'done' })} />}
       </div>
     </TourClose.Provider>
@@ -265,33 +267,48 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
   )
 }
 
-/** The open game's panel, which The game panel lights. */
-const openGamePanel = () => document.querySelectorAll('.game-panel:not(.game-panel--leaving)')
+function isGamePanelStep(progress: TourProgress): progress is GamePanelStepName {
+  return (gamePanelSteps as readonly TourProgress[]).includes(progress)
+}
 
-/** The game panel's tabs, which The game panel's arrow aims at. */
-const gameDetailsTabs = () => document.querySelectorAll('.game-panel:not(.game-panel--leaving) .game-details-tabs')
+/** A part of the open game's panel, for one of the game panel's steps to light. */
+const panelPart = (selector: string) => () => document.querySelectorAll(`.game-panel:not(.game-panel--leaving) ${selector}`)
 
 /**
- * The game panel: what the panel Click a score card opened shows, with it lit and its tabs pointed at,
- * and that its game is live, changing as the viewer watches (the tour plays the open game more often,
- * see tourPlayTick). The panel stays usable, so the viewer can try its tabs and its TV button. Next
- * moves on to All set. With no panel open (closed, or the tour picked up here after a reload), it says
+ * The game panel's steps (see gamePanelSteps): each lights one part of the panel Click a score card
+ * opened, dimming the rest of it with the globe, and points at it. The panel stays usable, so the viewer
+ * can try what's lit. With no panel open (closed, or the tour picked up here after a reload), a step says
  * the same with nothing lit.
  */
-function GamePanelStep({ onNext }: { onNext: () => void }) {
+const gamePanelStepParts: Record<GamePanelStepName, { heading: string; part: string; words: string }> = {
+  // The tour plays the open game more often, so its score is seen to change (see tourPlayTick).
+  gamePanel: {
+    heading: 'The game panel',
+    part: '.game-panel__score',
+    words: "ScoreMap is live: scores change here and on the game's card, as it happens. No need to refresh.",
+  },
+  panelTabs: {
+    heading: 'Game details',
+    part: '.game-details-tabs',
+    words: 'Open a tab for the score by period, scoring plays, drives, player stats and highlights, as the sport has them.',
+  },
+  panelWatch: {
+    heading: 'Where to watch',
+    part: '.game-details-tv',
+    words: 'The TV button shows where to watch the game, and more about it.',
+  },
+}
+
+type GamePanelStepName = (typeof gamePanelSteps)[number]
+
+function GamePanelStep({ step, onNext }: { step: GamePanelStepName; onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
+  const { heading, part, words } = gamePanelStepParts[step]
   return (
     <>
-      <TourPointer panel={panel} target={openGamePanel} aim={gameDetailsTabs} />
-      <TourPanel ref={panel} heading="The game panel" action={<TourButton onClick={onNext}>Next</TourButton>}>
-        <p className="welcome-tour__text welcome-tour__live">
-          ScoreMap is live: watch the score and clock change, here and on the game&apos;s card, as it happens. No need to refresh.
-        </p>
-        <ul className="welcome-tour__panel-parts">
-          <li>Tabs: the score by period, scoring plays, drives, player stats and highlights, as the sport has them</li>
-          <li>TV button: where to watch the game, and more about it</li>
-          <li>Venue: click it to find it on Google Maps</li>
-        </ul>
+      <TourPointer key={step} panel={panel} target={panelPart(part)} />
+      <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
+        <p className="welcome-tour__text">{words}</p>
       </TourPanel>
     </>
   )

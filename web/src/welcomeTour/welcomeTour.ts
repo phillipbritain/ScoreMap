@@ -4,10 +4,11 @@ import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
- * on. Its steps are Welcome, Your controls, Click a score card, The game panel and All set; once finished it comes back only
+ * on. Its steps are Welcome, Your controls, Click a score card, the game panel's three (The game panel, Game details and
+ * Where to watch) and All set; once finished it comes back only
  * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
-export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'gamePanel' | 'allSet' | 'finished'
+export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'gamePanel' | 'panelTabs' | 'panelWatch' | 'allSet' | 'finished'
 
 /** What the viewer chose to see on Welcome. */
 export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
@@ -15,7 +16,7 @@ export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
 export type TourEvent =
   /** Welcome → Your controls. My leagues fires it from its picker's "Show these". */
   | { kind: 'chose'; choice: TourChoice }
-  /** Your controls → Click a score card, and The game panel → All set. */
+  /** Your controls → Click a score card, and through the game panel's steps to All set. */
   | { kind: 'next' }
   /** All set → finished, by its Done button. */
   | { kind: 'done' }
@@ -31,7 +32,9 @@ const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress
   welcome: { chose: 'controls', closed: 'finished', again: 'welcome' },
   controls: { next: 'scoreCard', closed: 'finished', again: 'welcome' },
   scoreCard: { gameOpened: 'gamePanel', closed: 'finished', again: 'welcome' },
-  gamePanel: { next: 'allSet', closed: 'finished', again: 'welcome' },
+  gamePanel: { next: 'panelTabs', closed: 'finished', again: 'welcome' },
+  panelTabs: { next: 'panelWatch', closed: 'finished', again: 'welcome' },
+  panelWatch: { next: 'allSet', closed: 'finished', again: 'welcome' },
   allSet: { done: 'finished', closed: 'finished', again: 'welcome' },
   finished: { again: 'welcome' },
 }
@@ -39,6 +42,22 @@ const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress
 /** Whether something (saved progress, read back) is one of the tour's steps. */
 export function isTourProgress(value: unknown): value is TourProgress {
   return typeof value === 'string' && Object.hasOwn(moves, value)
+}
+
+/** The game panel's steps, each over the panel Click a score card opened, lighting a part of it. */
+export const gamePanelSteps = ['gamePanel', 'panelTabs', 'panelWatch'] as const satisfies readonly TourProgress[]
+
+/** Whether a step sits over the game panel Click a score card opened: the game panel's steps and All set. */
+export function overGamePanel(progress: TourProgress): boolean {
+  return progress === 'allSet' || (gamePanelSteps as readonly TourProgress[]).includes(progress)
+}
+
+/**
+ * The progress a page reload carries on at, from the progress saved: where it was left, but All set,
+ * with nothing left to show, finishes the tour, straight into the live games.
+ */
+export function progressAfterReload(saved: TourProgress): TourProgress {
+  return saved === 'allSet' ? 'finished' : saved
 }
 
 /** The progress after an event: an event that isn't the current step's changes nothing. */

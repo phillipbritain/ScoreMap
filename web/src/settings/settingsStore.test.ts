@@ -338,6 +338,15 @@ describe('settingsStore welcome tour progress', () => {
     },
   )
 
+  it('finishes the tour on a reload at All set', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
+    store.saveTourProgress('allSet')
+
+    expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
+  })
+
   it('keeps the progress apart from the other settings', () => {
     const storage = memoryStorage()
     const store = settingsStore(() => storage)

@@ -16,6 +16,7 @@ import {
   scoreCardToTry,
   settingsForChoice,
   settingsForPicks,
+  progressAfterReload,
   tourProgressAfter,
   type TourEvent,
   type TourProgress,
@@ -28,7 +29,11 @@ describe('welcome tour progress', () => {
     ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
     ['controls', { kind: 'next' }, 'scoreCard'],
     ['scoreCard', { kind: 'gameOpened' }, 'gamePanel'],
-    ['gamePanel', { kind: 'next' }, 'allSet'],
+    ['gamePanel', { kind: 'next' }, 'panelTabs'],
+    ['panelTabs', { kind: 'next' }, 'panelWatch'],
+    ['panelWatch', { kind: 'next' }, 'allSet'],
+    ['panelTabs', { kind: 'closed' }, 'finished'],
+    ['panelWatch', { kind: 'closed' }, 'finished'],
     ['gamePanel', { kind: 'closed' }, 'finished'],
     ['allSet', { kind: 'done' }, 'finished'],
     ['allSet', { kind: 'closed' }, 'finished'],
@@ -73,8 +78,21 @@ describe('welcome tour progress', () => {
   })
 })
 
+describe('progressAfterReload', () => {
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch', 'finished'])(
+    'carries on at %s',
+    (progress) => {
+      expect(progressAfterReload(progress)).toBe(progress)
+    },
+  )
+
+  it('finishes the tour from All set, straight into the live games', () => {
+    expect(progressAfterReload('allSet')).toBe('finished')
+  })
+})
+
 describe('isTourProgress', () => {
-  it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'allSet', 'finished'])('takes %s as a step', (progress) => {
+  it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch', 'allSet', 'finished'])('takes %s as a step', (progress) => {
     expect(isTourProgress(progress)).toBe(true)
   })
 

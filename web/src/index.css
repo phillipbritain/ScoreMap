@@ -1347,7 +1347,9 @@ body {
 }
 
 /* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
-   controls step brings it in: all but More, and its popover, which stay in reach throughout the tour. */
+   controls step brings it in: all but More, and its popover, which stay in reach throughout the tour.
+   Until then More sits at the rail's top, where Hide controls is, rather than alone partway down; it
+   goes back to its place as the rest of the rail comes in. */
 .globe-area--rail-hidden > .rail {
   visibility: hidden;
 }
@@ -1355,6 +1357,12 @@ body {
 .globe-area--rail-hidden > .rail .rail__group--more,
 .globe-area--rail-hidden > .rail > .rail__popover {
   visibility: visible;
+}
+
+.globe-area--rail-hidden > .rail .rail__group--more {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 /* While the welcome tour shows, the rail sits under it, dimmed and out of use, but for More, its popover

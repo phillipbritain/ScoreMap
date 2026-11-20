@@ -23,16 +23,16 @@ export type TourEvent =
   | { kind: 'gameOpened' }
   /** Any step → finished, by the panel's × or Escape. */
   | { kind: 'closed' }
-  /** Finished → Welcome, by "Welcome tour" in More on the rail. */
+  /** Any step, or finished → Welcome, by "Welcome tour" in More on the rail, which stays usable during the tour. */
   | { kind: 'again' }
 
 /** Each step, with the events that move it on and where they lead. */
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
-  welcome: { chose: 'controls', closed: 'finished' },
-  controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { gameOpened: 'gamePanel', closed: 'finished' },
-  gamePanel: { next: 'allSet', closed: 'finished' },
-  allSet: { done: 'finished', closed: 'finished' },
+  welcome: { chose: 'controls', closed: 'finished', again: 'welcome' },
+  controls: { next: 'scoreCard', closed: 'finished', again: 'welcome' },
+  scoreCard: { gameOpened: 'gamePanel', closed: 'finished', again: 'welcome' },
+  gamePanel: { next: 'allSet', closed: 'finished', again: 'welcome' },
+  allSet: { done: 'finished', closed: 'finished', again: 'welcome' },
   finished: { again: 'welcome' },
 }
 

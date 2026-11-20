@@ -36,6 +36,10 @@ describe('welcome tour progress', () => {
     ['controls', { kind: 'closed' }, 'finished'],
     ['scoreCard', { kind: 'closed' }, 'finished'],
     ['finished', { kind: 'again' }, 'welcome'],
+    ['controls', { kind: 'again' }, 'welcome'],
+    ['scoreCard', { kind: 'again' }, 'welcome'],
+    ['gamePanel', { kind: 'again' }, 'welcome'],
+    ['allSet', { kind: 'again' }, 'welcome'],
   ])('moves from %s on %j to %s', (progress, event, after) => {
     expect(tourProgressAfter(progress, event)).toBe(after)
   })
@@ -54,9 +58,6 @@ describe('welcome tour progress', () => {
     ['gamePanel', { kind: 'done' }],
     ['allSet', { kind: 'gameOpened' }],
     ['allSet', { kind: 'next' }],
-    ['welcome', { kind: 'again' }],
-    ['controls', { kind: 'again' }],
-    ['scoreCard', { kind: 'again' }],
   ])("stays at %s on %j, another step's event", (progress, event) => {
     expect(tourProgressAfter(progress, event)).toBe(progress)
   })

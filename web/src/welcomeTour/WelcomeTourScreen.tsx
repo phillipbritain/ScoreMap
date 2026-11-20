@@ -53,10 +53,13 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   const close = () => onEvent({ kind: 'closed' })
   const screen = useRef<HTMLDivElement>(null)
   useAboveGamePanel(screen, progress === 'gamePanel' || progress === 'allSet')
-  // Escape closes the tour wherever focus is, as the panel's × does.
+  // Escape closes the tour wherever focus is, as the panel's × does; but with one of the rail's popovers
+  // open (More, or the Feedback panel, usable during the tour), it's the rail's, to close that popover,
+  // whichever hears it first.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onEvent({ kind: 'closed' })
+      const forRail = event.defaultPrevented || document.getElementById('rail-popover')
+      if (event.key === 'Escape' && !forRail) onEvent({ kind: 'closed' })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)

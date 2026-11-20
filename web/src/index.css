@@ -1347,9 +1347,26 @@ body {
 }
 
 /* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
-   controls step brings it in. */
+   controls step brings it in: all but More, and its popover, which stay in reach throughout the tour. */
 .globe-area--rail-hidden > .rail {
   visibility: hidden;
+}
+
+.globe-area--rail-hidden > .rail .rail__group--more,
+.globe-area--rail-hidden > .rail > .rail__popover {
+  visibility: visible;
+}
+
+/* While the welcome tour shows, the rail sits under it, dimmed and out of use, but for More, its popover
+   and the Feedback panel, lifted above the tour so they can be used (see Rail's touring). The rail has no
+   layer of its own then, so they can rise out of it. */
+.rail--touring {
+  z-index: auto;
+}
+
+.rail--touring .rail__group--more,
+.rail--touring > .rail__popover {
+  z-index: 3;
 }
 
 /* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
@@ -2999,8 +3016,8 @@ body {
 }
 
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
-   from being used. The Feedback button is lifted above it while it shows, so it
-   stays usable. */
+   from being used. The rail's More, its popover and the Feedback panel are lifted above it while it
+   shows, so they stay usable (see .rail--touring). */
 .welcome-tour {
   /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
   --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
@@ -3758,5 +3775,12 @@ body {
     pointer-events: auto;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
+  }
+
+  /* Its fade makes the buttons a layer of their own, which More can't rise out of: the whole column is
+     lifted over the welcome tour instead, all but More still out of use. */
+  .rail--touring .rail__buttons-inner {
+    position: relative;
+    z-index: 3;
   }
 }

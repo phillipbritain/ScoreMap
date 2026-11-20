@@ -244,3 +244,18 @@ it('moves on from The game panel to All set by Next, saying ScoreMap is live', a
   await click('Next')
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'next' })
 })
+
+it("leaves Escape to the rail's popovers, usable during the tour, whichever hears it first", async () => {
+  const { event } = await mountTour('controls')
+  const taken = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+  taken.preventDefault()
+  await act(() => document.body.dispatchEvent(taken))
+  const popover = document.createElement('div')
+  popover.id = 'rail-popover'
+  document.body.append(popover)
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).not.toHaveBeenCalled()
+  popover.remove()
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+})

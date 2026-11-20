@@ -310,7 +310,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onZoomIn={() => globe.current?.zoomIn()}
           onZoomOut={() => globe.current?.zoomOut()}
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
-          inert={touring}
+          touring={touring}
           games={visible}
           gamesReady={revealed}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}

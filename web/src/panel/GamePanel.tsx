@@ -11,7 +11,6 @@ import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
-import { detailsOpen } from './detailsOpen'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -32,6 +31,10 @@ interface GamePanelProps {
   textOnColor: string
   /** Whether to show the venue's photo (the viewer's "Venue photos" switch); off, the faint glow shows in its place. */
   venuePhotos: boolean
+  /** Whether the last panel's details were left open, so this one opens them the same way (saved, see settingsStore). */
+  detailsOpen: boolean
+  /** The viewer opened the details (a tab) or minimized them. */
+  onDetailsOpenChange: (open: boolean) => void
   /** Whether the game is a demo's, whose details come from the demo board. */
   demo?: boolean
   onClose: () => void
@@ -48,10 +51,10 @@ interface GamePanelProps {
  * The selected game's score and venue above a collapsible details pane. Venue photos stay
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo = false, onClose, leaving = false, ref }: GamePanelProps) {
-  // Its details open as the last panel's were left (see detailsOpen).
-  const [shown, setShown] = useState(() => ({ gameId: game.id, details: detailsOpen(), watch: false }))
-  if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen(), watch: false })
+export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, demo = false, onClose, leaving = false, ref }: GamePanelProps) {
+  // Its details open as the last panel's were left.
+  const [shown, setShown] = useState({ gameId: game.id, details: detailsOpen, watch: false })
+  if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen, watch: false })
   const showingDetails = !leaving && shown.gameId === game.id && (shown.details || shown.watch)
   const { data: details, failed } = useGameDetails(game, showingDetails, demo)
   const { venue } = game
@@ -133,8 +136,11 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo 
         </div>
 
         <GameBand game={game} />
-        <GameDetailsPanel key={game.id} game={game} details={details} failed={failed}
-          onToggle={(details) => setShown((current) => ({ ...current, details }))} />
+        <GameDetailsPanel key={game.id} game={game} details={details} failed={failed} open={detailsOpen}
+          onToggle={(details) => {
+            setShown((current) => ({ ...current, details }))
+            onDetailsOpenChange(details)
+          }} />
 
         <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
           ×

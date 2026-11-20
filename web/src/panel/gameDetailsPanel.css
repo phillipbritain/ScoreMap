@@ -74,6 +74,8 @@
 }
 
 .game-details-collapse:hover {
+  /* The divider is the hover's own color, so the line by the tabs takes a lighter one to stay seen. */
+  border-left-color: var(--palette-primary-main);
   background: var(--palette-action-hover);
   color: var(--palette-text-primary);
 }

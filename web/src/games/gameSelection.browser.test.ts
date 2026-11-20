@@ -55,7 +55,8 @@ function Selection({ games }: { games: Game[] }) {
     createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
     createElement(GameNavigation, { games, onSelect: selectGame }),
     selectedGame && createElement(GamePanel, { ref: panel, game: selectedGame,
-      color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, onClose: closeGame }),
+      color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, detailsOpen: false, onDetailsOpenChange: () => {},
+      onClose: closeGame }),
   )
 }
 async function show(games: Game[]) {
@@ -323,7 +324,7 @@ it('loads details on opening a tab and collapses them without closing the game',
   expect(video.target).toBe('_blank')
   expect(fetchDetails).toHaveBeenCalledTimes(1)
 
-  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Collapse game details"]')!
+  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Minimize game details"]')!
   await act(async () => collapse.click())
   expect(pane().closest('[inert]')).not.toBeNull()
   expect(document.activeElement).toBe(tab('Videos'))

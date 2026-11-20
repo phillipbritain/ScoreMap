@@ -21,6 +21,9 @@ export interface SettingsStore {
   /** Whether the viewer collapsed the rail out of the way: open on a first visit. */
   loadRailCollapsed(): boolean
   saveRailCollapsed(collapsed: boolean): void
+  /** Whether the game panel's details were left open, so the next panel opens them too: minimized on a first visit. */
+  loadDetailsOpen(): boolean
+  saveDetailsOpen(open: boolean): void
 }
 
 const key = 'scoremap.settings'
@@ -30,6 +33,8 @@ const cameraKey = 'scoremap.camera'
 const tourKey = 'scoremap.welcomeTour'
 // Kept apart from the settings: it's how the page is laid out, not what the globe shows.
 const railCollapsedKey = 'scoremap.railCollapsed'
+// Kept apart from the settings, as the rail's is.
+const detailsOpenKey = 'scoremap.detailsOpen'
 
 /**
  * Saves viewer settings in browser storage. Storage is reached through a function because merely
@@ -101,6 +106,20 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
         // The rail will just open again next time.
       }
     },
+    loadDetailsOpen() {
+      try {
+        return storage().getItem(detailsOpenKey) === 'true'
+      } catch {
+        return false
+      }
+    },
+    saveDetailsOpen(open) {
+      try {
+        storage().setItem(detailsOpenKey, String(open))
+      } catch {
+        // Game panels will just open with their details minimized next time.
+      }
+    },
   }
 }
 
@@ -118,6 +137,8 @@ export function unsavedSettingsStore(): SettingsStore {
     saveTourProgress() {},
     loadRailCollapsed: () => false,
     saveRailCollapsed() {},
+    loadDetailsOpen: () => false,
+    saveDetailsOpen() {},
   }
 }
 

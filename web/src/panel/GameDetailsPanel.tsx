@@ -146,7 +146,8 @@ function LineScore({ game, contest, details }: { game: Game; contest: GameSides;
       {/* No caption on screen: the chart is plainly the score by period. Named for a screen reader. */}
       <table className="game-details-table game-details-line-score"
         aria-label={game.sport === 'Football' ? 'Score by quarter' : 'Line score'}>
-        <thead><tr><th scope="col">Team</th>
+        {/* The team column needs no heading on screen; it keeps its name for a screen reader. */}
+        <thead><tr><th scope="col" aria-label="Team" />
           {details.periodScores.map((period) => <th key={period.label} scope="col">{period.label}</th>)}
           <th scope="col">{game.status === 'Final' ? 'Final' : 'Total'}</th>
         </tr></thead>

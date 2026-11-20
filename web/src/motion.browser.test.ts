@@ -40,6 +40,14 @@ const flame = () => element('score-card score-card--live', 'score-card__flames')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
+
+/** A star streaming past the loading screen's rocket. */
+function star(): Element {
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+  element('loading-screen', 'loading-screen__rocket-stars').append(circle)
+  return circle
+}
+
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')
 const messageWord = () => element('loading-screen', 'loading-screen__message', 'loading-screen__word')
 
@@ -68,6 +76,16 @@ describe('with reduce motion off', () => {
 
     expect(new Set(transforms).size).toBeGreaterThan(1)
     expect(ship.getAnimations()[0].effect?.getComputedTiming().iterations).toBe(Infinity)
+  })
+
+  it('streams the stars past the loading screen’s rocket, for as long as it shows', () => {
+    const streaming = star()
+    const animations = streaming.getAnimations()
+
+    expect(animations).toHaveLength(1)
+    const transforms = (animations[0].effect as KeyframeEffect).getKeyframes().map((keyframe) => keyframe.transform)
+    expect(new Set(transforms.filter((transform) => transform !== undefined)).size).toBeGreaterThan(1)
+    expect(animations[0].effect?.getComputedTiming().iterations).toBe(Infinity)
   })
 
   it('drifts each word of the loading screen’s message up into place', () => {
@@ -122,6 +140,13 @@ describe('with reduce motion on', () => {
     expect(keyframes.filter((keyframe) => 'transform' in keyframe)).toEqual([])
     const opacities = keyframes.map((keyframe) => Number(keyframe.opacity))
     expect(Math.min(...opacities)).toBeLessThan(Math.max(...opacities))
+  })
+
+  it('keeps the stars round the loading screen’s rocket, standing still', () => {
+    const still = star()
+
+    expect(still.getAnimations()).toEqual([])
+    expect(getComputedStyle(still).display).not.toBe('none')
   })
 
   it('shows the loading screen’s message at once, its ellipsis’s dots steady', () => {

@@ -598,14 +598,14 @@ const settings = {
     Tooltip: { surface: color, outline: color },
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
-     * and how opaque it is, so the globe still shows through) and the flying rocket (its body and speed
-     * lines, its flame, and how big its box is across), the text of the message under the rocket, and
+     * and how opaque it is, so the globe still shows through) and the flying rocket (its body and the
+     * stars streaming past it, its flame's outer and inner layers, and how big its box is across), the text of the message under the rocket, and
      * the glow its words drift in with (its color, how far it reaches and how strong it is), which also
      * lights the dots of a closing ellipsis (how big each is across).
      */
     LoadingScreen: {
       dim: { color, opacity },
-      rocket: { color, flame: color, size: pixels },
+      rocket: { color, flame: { outer: color, inner: color }, size: pixels },
       message: color,
       glow: { color, radius: pixels, opacity },
       dot: pixels,

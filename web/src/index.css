@@ -2447,28 +2447,28 @@ body {
   fill: var(--loading-screen-dim-color);
 }
 
+/* The flame: an outer layer and a quicker inner one, flickering out of step. */
 .loading-screen__rocket-flame {
-  fill: var(--loading-screen-rocket-flame);
   transform-box: fill-box;
   transform-origin: top center;
   animation: loading-screen-rocket-flame 0.15s ease-in-out infinite alternate;
 }
 
-/* Speed lines streaming past the rocket, one after another. */
-.loading-screen__rocket-lines line {
-  stroke: currentColor;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  opacity: 0;
-  animation: loading-screen-rocket-line 0.9s linear infinite;
+.loading-screen__rocket-flame--outer {
+  fill: var(--loading-screen-rocket-flame-outer);
 }
 
-.loading-screen__rocket-lines line:nth-child(2) {
-  animation-delay: 0.3s;
+.loading-screen__rocket-flame--inner {
+  fill: var(--loading-screen-rocket-flame-inner);
+  animation-duration: 0.11s;
+  animation-direction: alternate-reverse;
 }
 
-.loading-screen__rocket-lines line:nth-child(3) {
-  animation-delay: 0.6s;
+/* Stars streaming past the rocket, the nearer (bigger) ones quicker: each its own speed and start
+   (LoadingScreen.tsx gives them). */
+.loading-screen__rocket-stars circle {
+  fill: currentColor;
+  animation: loading-screen-rocket-star 1s linear infinite;
 }
 
 /* Under the rocket, saying it's loading or what's holding it up, its words drifting up into place one
@@ -2568,17 +2568,12 @@ body {
   }
 }
 
-@keyframes loading-screen-rocket-line {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
+@keyframes loading-screen-rocket-star {
+  from {
+    transform: translateY(-50px);
   }
-  30% {
-    opacity: 0.6;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(14px);
+  to {
+    transform: translateY(50px);
   }
 }
 
@@ -2609,7 +2604,7 @@ body {
   }
 }
 
-/* With reduce motion the rocket fades in place, its flame steady and with no speed lines, the message
+/* With reduce motion the rocket fades in place, its flame steady and the stars standing still, the message
    is there at once, its dots steady, and the loading screen goes at once, everything it hid there at
    once too. */
 @media (prefers-reduced-motion: reduce) {
@@ -2618,7 +2613,7 @@ body {
   }
 
   .loading-screen__rocket-flame,
-  .loading-screen__rocket-lines line,
+  .loading-screen__rocket-stars circle,
   .loading-screen__word,
   .loading-screen__dots,
   .loading-screen__dots span {

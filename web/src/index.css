@@ -3666,3 +3666,240 @@ body {
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
   }
 }
+
+/* PROTOTYPE, throwaway: rocket-in-space variants for the loading screen, by ?rocketProto= (see
+   loading/rocketPrototype.tsx). Not for main. */
+.rocket-proto-bar {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1000;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: 12px/1.2 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.5);
+  white-space: nowrap;
+  max-width: calc(100vw - 120px);
+  overflow: hidden;
+}
+.rocket-proto-bar button {
+  font: inherit;
+  padding: 2px 8px;
+  border: 1px solid #999;
+  border-radius: 999px;
+  background: #eee;
+  color: #111;
+  cursor: pointer;
+}
+.rocket-proto-bar > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 600px) {
+  .rocket-proto-bar__name {
+    display: none;
+  }
+}
+.rocket-proto-hold {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+}
+
+/* Each variant's box, and the message placed under it by its height. */
+.loading-screen:has(.rp-starfield) {
+  --loading-screen-rocket-size: 140px;
+}
+.loading-screen:has(.rp-orbit) {
+  --loading-screen-rocket-size: 170px;
+}
+.loading-screen:has(.rp-retro) {
+  --loading-screen-rocket-size: 120px;
+}
+.loading-screen:has(.rp-warp) {
+  --loading-screen-rocket-size: 96px;
+}
+.loading-screen__rocket.rp-warp {
+  width: 240px;
+}
+
+.rp {
+  --rp-hot: #e56335;
+  --rp-red: #cd2435;
+}
+.rp .rp-body {
+  fill: var(--loading-screen-rocket-color);
+}
+.rp .rp-accent,
+.rp .rp-pin {
+  fill: var(--loading-screen-rocket-flame);
+}
+.rp .rp-hot {
+  fill: var(--rp-red);
+}
+.rp .rp-nozzle {
+  fill: color-mix(in srgb, var(--loading-screen-rocket-color) 55%, var(--loading-screen-dim-color));
+}
+.rp .rp-window {
+  fill: var(--loading-screen-dim-color);
+  stroke: var(--loading-screen-rocket-flame);
+  stroke-width: 1.5;
+}
+.rp .rp-flame-outer {
+  fill: var(--rp-hot);
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: loading-screen-rocket-flame 0.15s ease-in-out infinite alternate;
+}
+.rp .rp-flame-inner {
+  fill: var(--loading-screen-rocket-flame);
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: loading-screen-rocket-flame 0.11s ease-in-out infinite alternate-reverse;
+}
+.rp .rp-flame--side {
+  transform-origin: right center;
+  animation-name: rp-flame-side;
+}
+.rp .rp-ship {
+  animation: loading-screen-rocket-bob 0.8s ease-in-out infinite alternate;
+}
+.rp .rp-star {
+  fill: var(--loading-screen-rocket-color);
+}
+
+/* Starfield: stars streaming past, faster the bigger (nearer) they are. */
+.rp .rp-star--stream {
+  animation: rp-stream linear infinite;
+}
+
+/* Orbit: the rocket and its trail circling a little globe with a pin on it. */
+.rp .rp-star--twinkle {
+  animation: rp-twinkle 2s ease-in-out infinite;
+}
+.rp-orbit .rp-orbit-path {
+  fill: none;
+  stroke: var(--loading-screen-rocket-color);
+  stroke-width: 0.75;
+  stroke-dasharray: 1 4;
+  opacity: 0.35;
+}
+.rp-orbit .rp-planet-body {
+  fill: color-mix(in srgb, var(--loading-screen-rocket-color) 12%, var(--loading-screen-dim-color));
+  stroke: var(--loading-screen-rocket-color);
+  stroke-width: 1.5;
+}
+.rp-orbit .rp-planet-line {
+  fill: none;
+  stroke: var(--loading-screen-rocket-color);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+.rp-orbit .rp-pin {
+  filter: drop-shadow(0 0 3px var(--loading-screen-rocket-flame));
+}
+.rp-orbit .rp-trail-dot {
+  fill: var(--loading-screen-rocket-flame);
+}
+.rp-orbit .rp-orbiter {
+  transform-origin: 70px 70px;
+  animation: rp-orbit 2.4s linear infinite;
+}
+.rp-orbit .rp-ship {
+  animation: none;
+}
+
+/* Warp: long streaks rushing past right to left. */
+.rp-warp .rp-streak {
+  stroke: var(--loading-screen-rocket-color);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.55;
+  animation: rp-warp linear infinite;
+}
+
+/* Retro: puffs of exhaust billowing out and fading, sparkles twinkling. */
+.rp-retro .rp-puff {
+  fill: color-mix(in srgb, var(--loading-screen-rocket-color) 70%, var(--loading-screen-dim-color));
+  opacity: 0.35;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rp-puff 1.2s ease-out infinite;
+}
+.rp-retro .rp-sparkle {
+  fill: var(--loading-screen-rocket-flame);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rp-twinkle 1.8s ease-in-out infinite;
+}
+.rp-retro .rp-ship {
+  animation-duration: 0.5s;
+}
+
+@keyframes rp-stream {
+  from {
+    transform: translateY(-90px);
+  }
+  to {
+    transform: translateY(90px);
+  }
+}
+@keyframes rp-twinkle {
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes rp-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes rp-warp {
+  from {
+    transform: translateX(110px);
+  }
+  to {
+    transform: translateX(-110px);
+  }
+}
+@keyframes rp-flame-side {
+  from {
+    transform: scaleX(0.75);
+  }
+  to {
+    transform: scaleX(1.2);
+  }
+}
+@keyframes rp-puff {
+  from {
+    opacity: 0.7;
+    transform: translate(0, -6px) scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--dx), 18px) scale(1.5);
+  }
+}
+
+/* Reduce motion: nothing moves; each rocket fades in and out in place, as today's does. */
+@media (prefers-reduced-motion: reduce) {
+  .rp .rp-flame-outer,
+  .rp .rp-flame-inner,
+  .rp .rp-star,
+  .rp-orbit .rp-orbiter,
+  .rp-warp .rp-streak,
+  .rp-retro .rp-puff,
+  .rp-retro .rp-sparkle {
+    animation: none;
+  }
+  .rp .rp-ship,
+  .rp-orbit .rp-ship {
+    animation: loading-screen-rocket-still 1.6s ease-in-out infinite;
+  }
+}

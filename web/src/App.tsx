@@ -142,7 +142,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
     () => selectedTourGames(tourConfirmed, tourBoard, viewerSettings, leagues),
     [tourConfirmed, tourBoard, viewerSettings, leagues],
   )
-  const tourPlay = useTourPlay(tourSelection, touring)
+  // The game whose panel is open, which the tour plays more often so its panel is seen to change.
+  const openGameId = useRef<string | null>(null)
+  const tourPlay = useTourPlay(tourSelection, touring, openGameId)
   const tourBoardWithPhotos = useTourVenuePhotos(tourPlay.games, tourConfirmed)
   const justHappened = showTourGames ? tourPlay.changes : liveChanges
   useEffect(() => {
@@ -177,6 +179,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
+  useEffect(() => {
+    openGameId.current = selectedGame?.id ?? null
+  })
   // A game finishing while its panel is open celebrates there, then the panel closes itself and the game
   // leaves the globe with it (see usePanelCelebration).
   const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])

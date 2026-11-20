@@ -52,7 +52,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   }
   const close = () => onEvent({ kind: 'closed' })
   const screen = useRef<HTMLDivElement>(null)
-  useAboveGamePanel(screen, progress === 'allSet')
+  useAboveGamePanel(screen, progress === 'gamePanel' || progress === 'allSet')
   // Escape closes the tour wherever focus is, as the panel's × does.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -79,6 +79,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
             }}
           />
         )}
+        {progress === 'gamePanel' && <GamePanelStep onNext={() => onEvent({ kind: 'next' })} />}
         {progress === 'allSet' && <AllSetStep onDone={() => onEvent({ kind: 'done' })} />}
       </div>
     </TourClose.Provider>
@@ -261,6 +262,38 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
   )
 }
 
+/** The open game's panel, which The game panel lights. */
+const openGamePanel = () => document.querySelectorAll('.game-panel:not(.game-panel--leaving)')
+
+/** The game panel's tabs, which The game panel's arrow aims at. */
+const gameDetailsTabs = () => document.querySelectorAll('.game-panel:not(.game-panel--leaving) .game-details-tabs')
+
+/**
+ * The game panel: what the panel Click a score card opened shows, with it lit and its tabs pointed at,
+ * and that its game is live, changing as the viewer watches (the tour plays the open game more often,
+ * see tourPlayTick). The panel stays usable, so the viewer can try its tabs and its TV button. Next
+ * moves on to All set. With no panel open (closed, or the tour picked up here after a reload), it says
+ * the same with nothing lit.
+ */
+function GamePanelStep({ onNext }: { onNext: () => void }) {
+  const panel = useRef<HTMLElement>(null)
+  return (
+    <>
+      <TourPointer panel={panel} target={openGamePanel} aim={gameDetailsTabs} />
+      <TourPanel ref={panel} heading="The game panel" action={<TourButton onClick={onNext}>Next</TourButton>}>
+        <p className="welcome-tour__text welcome-tour__live">
+          ScoreMap is live: watch the score and clock change, here and on the game&apos;s card, as it happens. No need to refresh.
+        </p>
+        <ul className="welcome-tour__panel-parts">
+          <li>Tabs: the score by period, scoring plays, drives, player stats and highlights, as the sport has them</li>
+          <li>TV button: where to watch the game, and more about it</li>
+          <li>Venue: click it to find it on Google Maps</li>
+        </ul>
+      </TourPanel>
+    </>
+  )
+}
+
 /** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */
 function AllSetStep({ onDone }: { onDone: () => void }) {
   return (
@@ -314,7 +347,7 @@ interface ScoreCardStepProps {
  * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
  * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
  * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
- * to bring a card into view. It has no Done: pressing the card moves on to All set, and its × closes the tour.
+ * to bring a card into view. It has no Done: pressing the card moves on to The game panel, and its × closes the tour.
  */
 function ScoreCardStep({ onOpenGame, scoreCards }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)

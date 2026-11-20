@@ -3195,6 +3195,21 @@ body {
   pointer-events: none;
 }
 
+/* The game panel's line saying ScoreMap is live, above its list of what the panel has. */
+.welcome-tour__live {
+  margin-bottom: calc(3 * var(--spacing));
+  color: var(--palette-text-primary);
+}
+
+.welcome-tour__panel-parts {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--spacing));
+  margin: 0;
+  padding-left: calc(5 * var(--spacing));
+  color: var(--palette-text-secondary);
+}
+
 /* Your controls' list of the rail's buttons, each with the rail's own icon. */
 /* Your controls' line on moving and zooming the globe, above the rail's buttons. */
 .welcome-tour__move {
@@ -3551,8 +3566,19 @@ body {
     padding-bottom: calc(3 * var(--spacing));
   }
 
-  /* All set, compact so it fits in the little height above the game panel without covering it: Done
-     beside its words, at the foot of a column of its own, clear of the × above it. */
+  /* All set and The game panel, compact so they fit in the little height above the game panel without
+     covering it: Done (or Next) beside the words, at the foot of a column of its own, clear of the ×
+     above it. The game panel keeps only its line on ScoreMap being live, so the score it speaks of
+     stays in view. */
+  .welcome-tour--gamePanel .welcome-tour__panel-parts {
+    display: none;
+  }
+
+  .welcome-tour--gamePanel .welcome-tour__live {
+    margin-bottom: 0;
+  }
+
+  .welcome-tour--gamePanel .welcome-tour__panel,
   .welcome-tour--allSet .welcome-tour__panel {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -3560,16 +3586,19 @@ body {
     padding-block: calc(3 * var(--spacing));
   }
 
+  .welcome-tour--gamePanel .welcome-tour__heading,
   .welcome-tour--allSet .welcome-tour__heading {
     margin-bottom: var(--spacing);
   }
 
+  .welcome-tour--gamePanel .welcome-tour__body,
   .welcome-tour--allSet .welcome-tour__body {
     grid-column: 1;
     margin-bottom: calc(-1 * var(--spacing));
     padding-bottom: var(--spacing);
   }
 
+  .welcome-tour--gamePanel .welcome-tour__actions,
   .welcome-tour--allSet .welcome-tour__actions {
     grid-column: 2;
     grid-row: 1 / span 2;

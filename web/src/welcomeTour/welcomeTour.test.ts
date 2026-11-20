@@ -27,7 +27,9 @@ describe('welcome tour progress', () => {
     ['welcome', { kind: 'chose', choice: 'everything' }, 'controls'],
     ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
     ['controls', { kind: 'next' }, 'scoreCard'],
-    ['scoreCard', { kind: 'gameOpened' }, 'allSet'],
+    ['scoreCard', { kind: 'gameOpened' }, 'gamePanel'],
+    ['gamePanel', { kind: 'next' }, 'allSet'],
+    ['gamePanel', { kind: 'closed' }, 'finished'],
     ['allSet', { kind: 'done' }, 'finished'],
     ['allSet', { kind: 'closed' }, 'finished'],
     ['welcome', { kind: 'closed' }, 'finished'],
@@ -48,6 +50,8 @@ describe('welcome tour progress', () => {
     ['scoreCard', { kind: 'chose', choice: 'topEvents' }],
     ['scoreCard', { kind: 'next' }],
     ['scoreCard', { kind: 'done' }],
+    ['gamePanel', { kind: 'gameOpened' }],
+    ['gamePanel', { kind: 'done' }],
     ['allSet', { kind: 'gameOpened' }],
     ['allSet', { kind: 'next' }],
     ['welcome', { kind: 'again' }],
@@ -69,7 +73,7 @@ describe('welcome tour progress', () => {
 })
 
 describe('isTourProgress', () => {
-  it.each(['welcome', 'controls', 'scoreCard', 'finished'])('takes %s as a step', (progress) => {
+  it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'allSet', 'finished'])('takes %s as a step', (progress) => {
     expect(isTourProgress(progress)).toBe(true)
   })
 

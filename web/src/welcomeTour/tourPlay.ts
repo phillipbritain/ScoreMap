@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import type { Game, GameTeam } from '../games/game'
 import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
 import { sidesTopFirst } from '../games/sides'
 
-const playIntervalMs = 3500
+/** How often one of the tour's games has a play: the open game every other time, so every 4 seconds. */
+const playIntervalMs = 2000
 
 /** One simulated play, using what changes on a real card for that kind of contest. */
 export function nextTourPlay(game: Game, turn: number): Game {
@@ -103,36 +104,74 @@ function scoreTeam(team: GameTeam, sport: string, turn: number): GameTeam {
   return { ...team, score: String(Number(team.score ?? '0') + points) }
 }
 
-interface TourPlay {
-  source: readonly Game[]
+/**
+ * The tour's games as played so far: the games, their score animations, how many plays each game has
+ * had (for nextTourPlay's turn), how many ticks have gone, and where the round of the others has got to.
+ */
+export interface TourPlayState {
   games: readonly Game[]
   changes: JustHappened
-  turns: number
+  plays: Readonly<Record<string, number>>
+  ticks: number
+  next: number
 }
 
-/** Plays one local event at a time and passes it through the app's existing score animation record. */
-export function useTourPlay(source: readonly Game[], active: boolean): Pick<TourPlay, 'games' | 'changes'> {
-  const [played, setPlayed] = useState<TourPlay | null>(null)
+export function tourPlayStart(games: readonly Game[]): TourPlayState {
+  return { games, changes: noneJustHappened, plays: {}, ticks: 0, next: 0 }
+}
+
+/**
+ * One tick of the tour's play: one game has a play. The game whose panel is open (`openGameId`) has
+ * every other one, so the viewer sees its panel and card change as they watch; the rest take turns.
+ */
+export function tourPlayTick(state: TourPlayState, openGameId: string | null, now: number): TourPlayState {
+  const { games } = state
+  if (games.length === 0) return state
+  const open = games.findIndex((game) => game.id === openGameId && game.status === 'Live')
+  let index: number
+  let next = state.next
+  if (open >= 0 && (state.ticks % 2 === 0 || games.length === 1)) {
+    index = open
+  } else {
+    index = next % games.length
+    if (index === open) index = (index + 1) % games.length
+    next = index + 1
+  }
+  const old = games[index]
+  const turn = state.plays[old.id] ?? 0
+  const game = nextTourPlay(old, turn)
+  return {
+    games: games.map((other, at) => (at === index ? game : other)),
+    changes: recordJustHappened(state.changes, old, { kind: game.sport === 'MMA' || game.sport === 'Racing' ? 'Updated' : 'ScoreChanged', game }, now),
+    plays: { ...state.plays, [old.id]: turn + 1 },
+    ticks: state.ticks + 1,
+    next,
+  }
+}
+
+/**
+ * Plays one local event at a time and passes it through the app's existing score animation record.
+ * `openGameId` is read at each tick: the game whose panel is open then, if any.
+ */
+export function useTourPlay(
+  source: readonly Game[],
+  active: boolean,
+  openGameId: RefObject<string | null>,
+): Pick<TourPlayState, 'games' | 'changes'> {
+  const [played, setPlayed] = useState<{ source: readonly Game[]; state: TourPlayState } | null>(null)
   useEffect(() => {
     if (!active || source.length === 0) return
     const timer = window.setInterval(() => {
       const now = performance.now()
+      const open = openGameId.current
       setPlayed((before) => {
-        const current = before?.source === source ? before : { source, games: source, changes: noneJustHappened, turns: 0 }
-        const index = current.turns % current.games.length
-        const old = current.games[index]
-        const game = nextTourPlay(old, Math.floor(current.turns / current.games.length))
-        return {
-          ...current,
-          games: current.games.map((other, at) => at === index ? game : other),
-          changes: recordJustHappened(current.changes, old, { kind: game.sport === 'MMA' || game.sport === 'Racing' ? 'Updated' : 'ScoreChanged', game }, now),
-          turns: current.turns + 1,
-        }
+        const current = before?.source === source ? before.state : tourPlayStart(source)
+        return { source, state: tourPlayTick(current, open, now) }
       })
     }, playIntervalMs)
     return () => {
       window.clearInterval(timer)
     }
-  }, [source, active])
-  return active && played?.source === source ? played : { games: source, changes: noneJustHappened }
+  }, [source, active, openGameId])
+  return active && played?.source === source ? played.state : { games: source, changes: noneJustHappened }
 }

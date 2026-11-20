@@ -4,10 +4,10 @@ import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
- * on. Its steps are Welcome, Your controls, Click a score card and All set; once finished it comes back only
+ * on. Its steps are Welcome, Your controls, Click a score card, The game panel and All set; once finished it comes back only
  * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
-export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'allSet' | 'finished'
+export type TourProgress = 'welcome' | 'controls' | 'scoreCard' | 'gamePanel' | 'allSet' | 'finished'
 
 /** What the viewer chose to see on Welcome. */
 export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
@@ -15,11 +15,11 @@ export type TourChoice = 'topEvents' | 'everything' | 'myLeagues'
 export type TourEvent =
   /** Welcome → Your controls. My leagues fires it from its picker's "Show these". */
   | { kind: 'chose'; choice: TourChoice }
-  /** Your controls → Click a score card. */
+  /** Your controls → Click a score card, and The game panel → All set. */
   | { kind: 'next' }
   /** All set → finished, by its Done button. */
   | { kind: 'done' }
-  /** Click a score card → All set, by pressing the lit card, which opens its game's panel. */
+  /** Click a score card → The game panel, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
   /** Any step → finished, by the panel's × or Escape. */
   | { kind: 'closed' }
@@ -30,7 +30,8 @@ export type TourEvent =
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
   welcome: { chose: 'controls', closed: 'finished' },
   controls: { next: 'scoreCard', closed: 'finished' },
-  scoreCard: { gameOpened: 'allSet', closed: 'finished' },
+  scoreCard: { gameOpened: 'gamePanel', closed: 'finished' },
+  gamePanel: { next: 'allSet', closed: 'finished' },
   allSet: { done: 'finished', closed: 'finished' },
   finished: { again: 'welcome' },
 }
@@ -82,11 +83,11 @@ export function scoreCardToTry(cards: readonly CardOnScreen[], panel: ScreenBox,
   return nearest?.gameId ?? null
 }
 
-/** The least room All set keeps between itself and the game panel below it, in the middle of the screen. */
+/** The least room a step over the game panel (The game panel, All set) keeps between itself and the game panel below it, in the middle of the screen. */
 const roomAboveGamePanel = 16
 
 /**
- * Whether All set, in the middle of a screen `screenHeight` tall, is clear of the game panel whose top
+ * Whether a step over the game panel (The game panel, All set), in the middle of a screen `screenHeight` tall, is clear of the game panel whose top
  * is `aboveGamePanel` up from the screen's foot (with room between them). If not, it sits right above
  * the game panel instead.
  */

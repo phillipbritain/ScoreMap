@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Game } from '../games/game'
 import { firstVisitSettings } from '../settings/viewerSettings'
 import { settingsForChoice, settingsForPicks, type TourProgress } from './welcomeTour'
-import { nextTourPlay } from './tourPlay'
+import { nextTourPlay, tourPlayStart, tourPlayTick } from './tourPlay'
 import { selectedTourGames, showsTourGames, tourCamera, tourCameraForGame, tourGames } from './tourGames'
 
 const now = Date.parse('2026-11-16T20:00:00Z')
@@ -69,7 +69,7 @@ describe("the welcome tour's games", () => {
 })
 
 describe('when the globe shows the tour games', () => {
-  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'allSet'])('shows them through the tour (%s)', (progress) => {
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'gamePanel', 'allSet'])('shows them through the tour (%s)', (progress) => {
     expect(showsTourGames(progress)).toBe(true)
   })
 
@@ -135,5 +135,42 @@ describe('simulated event progress', () => {
       clock: 'Lap 43',
       contest: { kind: 'field', entries: [{ name: 'Oscar Piastri', position: 1 }, { name: 'Lando Norris', position: 2 }] },
     })
+  })
+})
+
+describe('tour play ticks', () => {
+  const live = () => tourGames(now).filter(({ status, contest }) => status === 'Live' && contest.kind === 'sides').slice(0, 3)
+  const run = (games: readonly Game[], open: string | null, ticks: number) => {
+    const played: string[] = []
+    let state = tourPlayStart(games)
+    for (let tick = 0; tick < ticks; tick++) {
+      const before = state.games
+      state = tourPlayTick(state, open, tick)
+      played.push(state.games.find((game, at) => game !== before[at])!.id)
+    }
+    return { played, state }
+  }
+
+  it('gives each game a play in turn with no panel open', () => {
+    const games = live()
+    expect(run(games, null, 6).played).toEqual([...games, ...games].map(({ id }) => id))
+  })
+
+  it("gives the open game every other play, so its panel and card change as the viewer watches, the rest still taking turns", () => {
+    const games = live()
+    const open = games[1].id
+    expect(run(games, open, 6).played).toEqual([open, games[0].id, open, games[2].id, open, games[0].id])
+  })
+
+  it('changes the open game score and records it for its card', () => {
+    const games = live()
+    const { state } = run(games, games[0].id, 1)
+    expect(state.games[0].contest).not.toEqual(games[0].contest)
+    expect(state.changes.has(games[0].id)).toBe(true)
+  })
+
+  it('takes turns as before once the open game is closed', () => {
+    const games = live()
+    expect(run(games, 'tour-not-on-the-globe', 3).played).toEqual(games.map(({ id }) => id))
   })
 })

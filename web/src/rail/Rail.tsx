@@ -52,12 +52,14 @@ interface RailProps {
   feedbackContext: () => FeedbackContext
   /** Starts the welcome tour afresh, from More. */
   onTourAgain: () => void
+  /** Installs ScoreMap as an app, from More, or nothing where it can't be (see installWay). */
+  onInstall?: () => void
 }
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in four groups: zoom in, zoom
  * out and Home, which move the camera; Leagues, Display Settings and Map Type; Games (with its
- * count of games on it); and More (sending feedback, the welcome tour again), whose Send feedback opens
+ * count of games on it); and More (installing the app, sending feedback, the welcome tour again), whose Send feedback opens
  * the Feedback panel in its place. Each of the last five opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
  * Games popover closes on picking a game too. The arrow keys
@@ -84,6 +86,7 @@ export function Rail({
   onCollapsedChange,
   feedbackContext,
   onTourAgain,
+  onInstall,
 }: RailProps) {
   const collapsed = collapsedSaved && !inert
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
@@ -213,6 +216,13 @@ export function Rail({
           {shown === 'mapType' && <MapTypes settings={settings} onChange={onChange} onPicked={() => setOpen(null)} />}
           {shown === 'more' && (
             <More
+              onInstall={
+                onInstall &&
+                (() => {
+                  setOpen(null)
+                  onInstall()
+                })
+              }
               onFeedback={() => popoverEvent({ press: 'feedback' })}
               onTourAgain={() => {
                 setOpen(null)

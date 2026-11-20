@@ -20,6 +20,9 @@ import { DemoLabel } from './demo/DemoLabel'
 import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
+import { installHintStore, showsIosHint } from './install/install'
+import { IosInstallHint } from './install/IosInstallHint'
+import { useInstall } from './install/useInstall'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { revealPhase } from './loading/revealPhase'
 import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
@@ -55,6 +58,8 @@ function tourScreen(): TourScreen {
 
 const savedStore = settingsStore(() => window.localStorage)
 const demoStore = unsavedSettingsStore()
+// Kept in a demo too: the hint is about this browser, not the viewer's settings.
+const hintStore = installHintStore(() => window.localStorage)
 // No games yet, kept as one array so it doesn't change from render to render.
 const noGames: Game[] = []
 
@@ -125,6 +130,16 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
   useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
   useEffect(() => store.saveDetailsOpen(detailsOpen), [store, detailsOpen])
+  // Installing ScoreMap as an app: More's Install app, and on iOS the install hint, once after the
+  // welcome tour, or again when asked for from More.
+  const install = useInstall()
+  const [installHintDismissed, setInstallHintDismissed] = useState(hintStore.dismissed)
+  const [installHintAsked, setInstallHintAsked] = useState(false)
+  const closeInstallHint = () => {
+    hintStore.dismiss()
+    setInstallHintDismissed(true)
+    setInstallHintAsked(false)
+  }
   // Nothing but the loading screen until the globe is ready; then the globe, the controls and the
   // welcome tour come in together as it fades away (see revealPhase).
   const reveal = revealPhase(stage, loadingScreenGone)
@@ -176,6 +191,13 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
   // Not before the reveal, nor during the welcome tour.
   const message = revealed && !touring ? noPinsMessage(boardGames, visible, viewerSettings) : null
+  const iosHint = showsIosHint({
+    way: install.way,
+    revealed,
+    touring,
+    dismissed: installHintDismissed,
+    asked: installHintAsked,
+  })
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
@@ -252,6 +274,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
               {message}
             </p>
           )}
+          {iosHint && <IosInstallHint onClose={closeInstallHint} />}
         </div>
         {(demo || touring) && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
@@ -299,6 +322,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             })
           }
           onTourAgain={tourAgain}
+          onInstall={
+            install.way === 'prompt' ? install.prompt : install.way === 'iosSteps' ? () => setInstallHintAsked(true) : undefined
+          }
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail

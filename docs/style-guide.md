@@ -311,7 +311,7 @@ Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-
 
 - **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a unit or less and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 1, 2, 3, 4, 6, 8, 12, 16, 24 and 32 pixels (a quarter of a unit to 8).
 - **`shape.borderRadius`**: the corner radius, in pixels, every corner is a number of (below), as MUI's `sx` takes `borderRadius: 2`. The dark theme's is 4. Circles (clusters) stay circles whatever it is.
-- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers, league chips, the rail's popovers' outline and the game panel's top edge are `thin`, a color swatch's ring `medium`, a map type's picture's frame `thick`. The dark theme's are 1, 2 and 3.
+- **`shape.borderWidth.thin`, `.medium`, `.thick`**: the page's borders and dividers. The score card's border and header line, dividers, league chips, the rail's popovers' outline and the game panel's top edge are `thin`, a color swatch's ring and the outline of the welcome tour's choices on Welcome `medium`, a map type's picture's frame `thick`. The dark theme's are 1, 2 and 3.
 
 ### Corners and the cut corner
 

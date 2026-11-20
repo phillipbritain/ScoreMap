@@ -3016,7 +3016,7 @@ body {
   column-gap: calc(2.5 * var(--spacing));
   align-items: center;
   padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border: var(--shape-border-width-medium) solid var(--rail-chip-outline);
   border-radius: var(--controls-corner);
   background: transparent;
   color: var(--palette-text-primary);

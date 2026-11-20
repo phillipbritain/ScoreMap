@@ -8,7 +8,7 @@ import type { ZoomSettings } from '../globe/zoomLevels'
 import { moveByArrows } from '../menus/arrowKeys'
 import { useClickAway } from '../menus/clickAway'
 import { useLeaving } from '../motion/useLeaving'
-import type { League, ViewerSettings } from '../settings/viewerSettings'
+import { leaguesFilterGames, type League, type ViewerSettings } from '../settings/viewerSettings'
 import { DisplaySettings } from './DisplaySettings'
 import { Leagues } from './Leagues'
 import { MapTypes } from './MapTypes'
@@ -168,7 +168,13 @@ export function Rail({
             <RailButton label="Home" disabled={!camera} onClick={onHome} />
           </div>
           <div className="rail__group">
-            <RailButton label="Leagues" popover="leagues" open={open} onClick={() => popoverEvent({ press: 'leagues' })} />
+            <RailButton
+              label="Leagues"
+              popover="leagues"
+              open={open}
+              note={leaguesFilterGames(settings, leagues) ? 'games filtered' : undefined}
+              onClick={() => popoverEvent({ press: 'leagues' })}
+            />
             <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
             <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
           </div>
@@ -268,7 +274,9 @@ const popoverNames: Record<RailPopover, string> = {
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A popover's
  * button says whether its popover is open. A badge is a count on its
- * corner (the Games button's games), part of its name for a screen reader.
+ * corner (the Games button's games), part of its name for a screen reader. A note is a dot on its corner
+ * instead (the Leagues button's, while the viewer's leagues keep games off the globe), the note itself
+ * part of its name and tooltip.
  */
 export function RailButton({
   label,
@@ -276,6 +284,7 @@ export function RailButton({
   popover,
   open,
   badge,
+  note,
   tooltipSide = 'left',
   onClick,
 }: {
@@ -284,16 +293,19 @@ export function RailButton({
   popover?: string
   open?: string | null
   badge?: number
+  /** Why its corner shows a dot, as words for its name and tooltip; no dot without one. */
+  note?: string
   /** Where its tooltip shows: on the left on the rail, so it covers none of the others; below on the top rail. */
   tooltipSide?: 'left' | 'below'
   onClick: () => void
 }) {
+  const name = note ? `${label} (${note})` : label
   return (
     <button
       type="button"
       className="rail__button"
-      aria-label={badge === undefined ? label : `${label} (${badge})`}
-      data-tooltip={label}
+      aria-label={badge === undefined ? name : `${name} (${badge})`}
+      data-tooltip={name}
       data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
@@ -306,6 +318,7 @@ export function RailButton({
     >
       <RailIcon className="rail__icon">{railIcon(label)}</RailIcon>
       {badge !== undefined && <span className="rail__badge" aria-hidden="true">{badge}</span>}
+      {note && <span className="rail__dot" aria-hidden="true" />}
     </button>
   )
 }

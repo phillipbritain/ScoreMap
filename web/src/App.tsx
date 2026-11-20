@@ -26,6 +26,7 @@ import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
 import { useLeaving } from './motion/useLeaving'
+import { LeaguesDotSwitcher } from './rail/LeaguesDotSwitcher'
 import { Rail } from './rail/Rail'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
@@ -196,6 +197,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
+      <LeaguesDotSwitcher />
       <div
         ref={globeArea}
         className={[

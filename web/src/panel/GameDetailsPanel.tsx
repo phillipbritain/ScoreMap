@@ -3,6 +3,7 @@ import type { Game, GameSides } from '../games/game'
 import { sidesTopFirst } from '../games/sides'
 import { RailIcon } from '../rail/railIcons'
 import type { GameDetails, GameDrive, GameScoringPlay, GameStatTeam, GameVideo } from './gameDetails'
+import { detailsOpen, rememberDetailsOpen } from './detailsOpen'
 import './gameDetailsPanel.css'
 
 type DetailTab = 'Score' | 'Scoring' | 'Drives' | 'Stats' | 'Videos'
@@ -64,7 +65,8 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
   tabs.push('Stats', 'Videos')
 
   const [selected, setSelected] = useState(tabs[0])
-  const [expanded, setExpanded] = useState(false)
+  // Open or closed as the last game panel's details were left (see detailsOpen).
+  const [expanded, setExpanded] = useState(detailsOpen)
   const tabList = useRef<HTMLDivElement>(null)
   const id = useId()
   const active = tabs.includes(selected) ? selected : tabs[0]
@@ -72,6 +74,7 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
   function collapse() {
     tabList.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus()
     setExpanded(false)
+    rememberDetailsOpen(false)
     onToggle(false)
   }
 
@@ -105,6 +108,7 @@ export function GameDetailsPanel({ game, details, failed, onToggle }: {
               onClick={() => {
                 setSelected(tab)
                 setExpanded(true)
+                rememberDetailsOpen(true)
                 onToggle(true)
               }} onKeyDown={(event) => moveFocus(event, index)}>
               {tab}

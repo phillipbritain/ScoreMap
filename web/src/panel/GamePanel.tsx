@@ -11,6 +11,7 @@ import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
+import { detailsOpen } from './detailsOpen'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -48,8 +49,9 @@ interface GamePanelProps {
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
 export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, demo = false, onClose, leaving = false, ref }: GamePanelProps) {
-  const [shown, setShown] = useState({ gameId: game.id, details: false, watch: false })
-  if (shown.gameId !== game.id) setShown({ gameId: game.id, details: false, watch: false })
+  // Its details open as the last panel's were left (see detailsOpen).
+  const [shown, setShown] = useState(() => ({ gameId: game.id, details: detailsOpen(), watch: false }))
+  if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen(), watch: false })
   const showingDetails = !leaving && shown.gameId === game.id && (shown.details || shown.watch)
   const { data: details, failed } = useGameDetails(game, showingDetails, demo)
   const { venue } = game

@@ -17,6 +17,7 @@ public sealed class BrowserAppTests : IDisposable
         File.WriteAllText(Path.Combine(_browserApp, "index.html"), IndexHtml);
         Directory.CreateDirectory(Path.Combine(_browserApp, "assets"));
         File.WriteAllText(Path.Combine(_browserApp, "assets", "index-abc123.js"), Script);
+        File.WriteAllText(Path.Combine(_browserApp, "manifest.webmanifest"), "{}");
     }
 
     public void Dispose() => Directory.Delete(_browserApp, recursive: true);
@@ -42,6 +43,17 @@ public sealed class BrowserAppTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(Script, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task The_web_app_manifest_is_served_as_one_so_browsers_can_install_the_app()
+    {
+        await using var server = new ScoreMapServer { BrowserAppFolder = _browserApp };
+
+        var response = await server.CreateClient().GetAsync("/manifest.webmanifest", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/manifest+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]

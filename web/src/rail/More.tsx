@@ -2,11 +2,31 @@ import { RailIcon } from './railIcons'
 
 /**
  * The rail's More popover: what's rarely needed, kept out of view until asked for, each with an icon.
+ * Install app, only where ScoreMap can be installed and isn't yet, closes it and installs (see installWay);
  * Send feedback opens the Feedback panel in its place; Welcome tour closes it and starts the tour afresh.
  */
-export function More({ onFeedback, onTourAgain }: { onFeedback: () => void; onTourAgain: () => void }) {
+export function More({
+  onInstall,
+  onFeedback,
+  onTourAgain,
+}: {
+  onInstall?: () => void
+  onFeedback: () => void
+  onTourAgain: () => void
+}) {
   return (
     <ul className="more">
+      {onInstall && (
+        <li>
+          <button type="button" className="more__item" onClick={onInstall}>
+            <RailIcon className="more__icon">
+              {/* An arrow down into a tray (Feather's "download"). */}
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+            </RailIcon>
+            Install app
+          </button>
+        </li>
+      )}
       <li>
         <button type="button" className="more__item" aria-haspopup="dialog" onClick={onFeedback}>
           <RailIcon className="more__icon">

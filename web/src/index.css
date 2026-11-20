@@ -3774,6 +3774,34 @@ body {
   fill: var(--loading-screen-rocket-color);
 }
 
+/* Round 2: today's rocket with the starfield's flame. Its body and fins in today's color, the stars
+   streaming past nearer (a shorter run, in today's smaller box). */
+.rp-today .rp-body,
+.rp-today .rp-fins {
+  fill: var(--loading-screen-rocket-color);
+}
+.rp-today--gold .rp-fins {
+  fill: var(--loading-screen-rocket-flame);
+}
+.rp-today--gold .loading-screen__rocket-window {
+  stroke: var(--loading-screen-rocket-flame);
+  stroke-width: 1.25;
+}
+.rp-today--glow .rp-flame-outer {
+  filter: drop-shadow(0 0 3px var(--rp-hot)) drop-shadow(0 0 6px color-mix(in srgb, var(--rp-hot) 60%, transparent));
+}
+.rp .rp-star--near {
+  animation-name: rp-stream-near;
+}
+@keyframes rp-stream-near {
+  from {
+    transform: translateY(-50px);
+  }
+  to {
+    transform: translateY(50px);
+  }
+}
+
 /* Starfield: stars streaming past, faster the bigger (nearer) they are. */
 .rp .rp-star--stream {
   animation: rp-stream linear infinite;

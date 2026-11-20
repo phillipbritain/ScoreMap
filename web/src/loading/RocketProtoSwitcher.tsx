@@ -12,7 +12,7 @@ function go(variant: RocketVariant) {
 }
 
 const step = (by: number) => {
-  const at = rocketProtoVariants.indexOf(rocketProto)
+  const at = (rocketProtoVariants as readonly RocketVariant[]).indexOf(rocketProto)
   go(rocketProtoVariants[(at + by + rocketProtoVariants.length) % rocketProtoVariants.length])
 }
 
@@ -35,7 +35,7 @@ export function RocketProtoSwitcher() {
         ‹ [
       </button>
       <span>
-        {rocketProtoVariants.indexOf(rocketProto) + 1}/{rocketProtoVariants.length} {rocketProto}
+        {(rocketProtoVariants as readonly RocketVariant[]).indexOf(rocketProto) + 1}/{rocketProtoVariants.length} {rocketProto}
         <span className="rocket-proto-bar__name">: {rocketNames[rocketProto]}</span>
       </span>
       <button type="button" onClick={() => step(1)}>

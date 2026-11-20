@@ -1,14 +1,21 @@
 // PROTOTYPE, throwaway: rocket-in-space variants for the loading screen, switched by `?rocketProto=`
-// (see RocketProtoSwitcher.tsx). Five variants on the real loading screen: today's rocket and four new
-// ones. Not for main.
+// (see RocketProtoSwitcher.tsx). Round 2 (cycled by the switcher): today's rocket, then today's with the
+// starfield's two-layer flame and a small step more each, then the starfield for reference. Round 1's
+// other looks (orbit, warp, retro) still open by their key in the URL. Not for main.
 /* oxlint-disable react/only-export-components -- a throwaway prototype, reloaded after each edit. */
 import type { ReactNode } from 'react'
 
-export const rocketProtoVariants = ['today', 'starfield', 'orbit', 'warp', 'retro'] as const
-export type RocketVariant = (typeof rocketProtoVariants)[number]
+/** The variants the switcher cycles through. */
+export const rocketProtoVariants = ['today', 'flame', 'flameGlow', 'flameStars', 'flameGold', 'starfield'] as const
+const allVariants = [...rocketProtoVariants, 'orbit', 'warp', 'retro'] as const
+export type RocketVariant = (typeof allVariants)[number]
 
 export const rocketNames: Record<RocketVariant, string> = {
   today: 'Today’s rocket',
+  flame: 'Today’s, with the starfield’s flame',
+  flameGlow: 'Today’s, starfield flame glowing',
+  flameStars: 'Today’s, starfield flame, stars for speed lines',
+  flameGold: 'Today’s, starfield flame, gold nose, fins and window rim',
   starfield: 'Sleek rocket through a starfield',
   orbit: 'Rocket orbiting a little globe',
   warp: 'Side-on rocket at warp speed',
@@ -18,13 +25,21 @@ export const rocketNames: Record<RocketVariant, string> = {
 const asked = new URLSearchParams(window.location.search).get('rocketProto')
 /** Whether the URL asks for the prototype: then the loading screen is held on screen to look at. */
 export const rocketProtoAsked = asked !== null
-export const rocketProto: RocketVariant = (rocketProtoVariants as readonly string[]).includes(asked ?? '')
+export const rocketProto: RocketVariant = (allVariants as readonly string[]).includes(asked ?? '')
   ? (asked as RocketVariant)
   : 'today'
 
 /** The variant's rocket, or null for today's (the loading screen draws its own). */
 export function ProtoRocket(): ReactNode {
   switch (rocketProto) {
+    case 'flame':
+      return <TodayWithFlame />
+    case 'flameGlow':
+      return <TodayWithFlame glow />
+    case 'flameStars':
+      return <TodayWithFlame stars />
+    case 'flameGold':
+      return <TodayWithFlame gold />
     case 'starfield':
       return <Starfield />
     case 'orbit':
@@ -38,6 +53,65 @@ export function ProtoRocket(): ReactNode {
   }
 }
 
+/**
+ * Today's rocket (as LoadingScreen's Rocket draws it, same classes, so the same bob, speed lines and
+ * reduce motion), with the starfield's two-layer flame; optionally glowing, with streaming stars in
+ * place of the speed lines, or with the starfield's gold nose, fins and window rim.
+ */
+function TodayWithFlame({ glow = false, stars = false, gold = false }: { glow?: boolean; stars?: boolean; gold?: boolean }) {
+  const className = ['loading-screen__rocket', 'rp', 'rp-today', glow && 'rp-today--glow', gold && 'rp-today--gold']
+    .filter(Boolean)
+    .join(' ')
+  return (
+    <svg className={className} viewBox="0 0 64 64" aria-hidden="true">
+      {stars && (
+        <>
+          <defs>
+            <radialGradient id="rp-today-fade">
+              <stop offset="0.5" stopColor="#fff" />
+              <stop offset="1" stopColor="#000" />
+            </radialGradient>
+            <mask id="rp-today-mask">
+              <circle cx="32" cy="32" r="46" fill="url(#rp-today-fade)" />
+            </mask>
+          </defs>
+          <g mask="url(#rp-today-mask)">
+            <g transform="rotate(45 32 32)">
+              {todayStars.map(({ a, b, c }, at) => (
+                <circle
+                  key={at}
+                  className="rp-star rp-star--stream rp-star--near"
+                  cx={-14 + a * 92}
+                  cy={-14 + b * 92}
+                  r={0.5 + c * 0.9}
+                  style={{ animationDuration: `${0.45 + (1 - c) * 0.8}s`, animationDelay: `${-b * 1.3}s` }}
+                />
+              ))}
+            </g>
+          </g>
+        </>
+      )}
+      <g transform="rotate(45 32 32)">
+        {!stars && (
+          <g className="loading-screen__rocket-lines">
+            <line x1="20" y1="44" x2="20" y2="56" />
+            <line x1="32" y1="50" x2="32" y2="62" />
+            <line x1="44" y1="44" x2="44" y2="56" />
+          </g>
+        )}
+        <g className="loading-screen__rocket-ship">
+          <path className="rp-flame-outer" d="M25.5 41 Q32 62 38.5 41 Z" />
+          <path className="rp-flame-inner" d="M28.5 41 Q32 54 35.5 41 Z" />
+          <path className="rp-fins" d="M24 29 L16 42 L25 39 Z M40 29 L48 42 L39 39 Z" />
+          <path className="rp-body" d="M32 4 C41 12 43 26 40 41 H24 C21 26 23 12 32 4 Z" />
+          {gold && <path className="rp-accent" d="M32 4 C35.6 7.2 38.2 11 39.8 15 H24.2 C25.8 11 28.4 7.2 32 4 Z" />}
+          <circle className="loading-screen__rocket-window" cx="32" cy="21" r="4.5" />
+        </g>
+      </g>
+    </svg>
+  )
+}
+
 // A steady pseudo-random spread, so the stars land in the same places each time.
 const spread = (count: number, seed: number) =>
   Array.from({ length: count }, (_, at) => {
@@ -47,6 +121,8 @@ const spread = (count: number, seed: number) =>
     }
     return { a: r(1), b: r(2), c: r(3) }
   })
+
+const todayStars = spread(22, 4)
 
 /** The sleek rocket, nose up in a 64 box: gold nose and fins, a ringed window, a two-layer flame. */
 function SleekRocket() {

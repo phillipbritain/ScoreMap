@@ -187,7 +187,7 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.outline` | The thin outline round the rail's popovers, lighter than the globe's land and sea so a popover stands off the globe under it, on the plain map and the satellite map alike, at desktop size and as a phone's sheet | `primary.light` |
 | `components.Tooltip.surface`, `.outline` | A tooltip (see [Tooltips](#tooltips)), a step lighter than the panels it may sit over, and its thin outline, which sets it off from them | `navy.700`, `navy.500` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
-| `components.Rail.open` | A rail button's icon while its popover is open, and Hide controls' while the rail's buttons show; the count on the Games button and its ring; and the ring round the map showing in Map Type | `secondary.main` (gold) |
+| `components.Rail.open` | A rail button's icon while its popover is open, and Hide controls' while the rail's buttons show; the count on the Games button and its ring; the dot on the Leagues button while games are filtered; and the ring round the map showing in Map Type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |

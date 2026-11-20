@@ -1592,6 +1592,20 @@ body {
   pointer-events: none;
 }
 
+/* A dot on a button's corner (the Leagues button's, while games are filtered): solid in the open color,
+   as the Games count is ringed in it, edged in the rail's glass so it stands off the button's. */
+.rail__dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rail-open);
+  box-shadow: 0 0 0 var(--shape-border-width-thin) var(--score-card-fill);
+  pointer-events: none;
+}
+
 .rail__icon {
   width: var(--rail-size-icon);
   height: var(--rail-size-icon);

@@ -9,7 +9,7 @@ import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { streamLinks } from './streamLinks'
 import type { StreamLink } from '../games/game'
 import { useSwipeToClose } from './useSwipeToClose'
-import { boutChip, chipSizers, fieldLines } from './panelLines'
+import { boutChip, chipSizers } from './panelLines'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
 
@@ -232,8 +232,8 @@ function ScoreChip({ score, scores }: { score: string; scores: string[] }) {
 }
 
 /**
- * A field's top two entrants by position, as its score card shows them (see FieldLine); before its field is
- * listed, the game's name.
+ * A field's whole leaderboard, a line each, in the score block: as tall as two lines, its top two as its
+ * score card shows them, scrolling to the last. Before its field is listed, the game's name.
  */
 function FieldRows({ field, name }: { field: GameField; name: string | null }) {
   if (field.entries.length === 0) return (
@@ -245,7 +245,15 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
       </div>
     )
   const sizers = chipSizers(field)
-  return fieldLines(field).leaders.map((entrant) => <FieldLine key={entrant.name} entrant={entrant} field={field} sizers={sizers} />)
+  return (
+    <ol className="game-panel__field-lines" data-panel-scroll aria-label="Leaderboard">
+      {field.entries.map((entrant) => (
+        <li key={entrant.name}>
+          <FieldLine entrant={entrant} field={field} sizers={sizers} />
+        </li>
+      ))}
+    </ol>
+  )
 }
 
 /**
@@ -292,30 +300,15 @@ function BoutChip({ side }: { side: GameBoutSide }) {
 const sideWithRecord = ({ name, record }: GameBoutSide): string => (record ? `${name} (${record})` : name)
 
 /**
- * The band under the strip: in tennis the scoreline set by set, or for a field the rest of its leaderboard
- * from 3rd, a line each and scrolling to its last, or for a fight card its bouts, each with its label. None for a game with none of them (its last score is in the
- * score block).
+ * The band under the strip: in tennis the scoreline set by set, or for a fight card its bouts, each with its
+ * label. None for a game with neither (a field's leaderboard is in the score block).
  */
 function GameBand({ game }: { game: Game }) {
   const { scoreline, contest } = game
-  const field: GameField = contest.kind === 'field' ? contest : { kind: 'field', entries: [] }
-  const { rest } = fieldLines(field)
-  const sizers = chipSizers(field)
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
-  if (!scoreline && rest.length === 0 && bouts.length === 0) return null
+  if (!scoreline && bouts.length === 0) return null
   return (
-    <div className={rest.length > 0 || bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
-      {rest.length > 0 && (
-        <BandCell label="Leaderboard" wide>
-          <ol className="game-panel__field-lines">
-            {rest.map((entrant) => (
-              <li key={entrant.name}>
-                <FieldLine entrant={entrant} field={field} sizers={sizers} />
-              </li>
-            ))}
-          </ol>
-        </BandCell>
-      )}
+    <div className={bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
       {bouts.length > 0 && (
         <BandCell label="Fight card" wide>
           <ol className="game-panel__bouts">

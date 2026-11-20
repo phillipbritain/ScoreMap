@@ -229,7 +229,7 @@ it("names a tennis match's home player first in its panel, as its score card doe
   expect(panelText().indexOf('Jannik Sinner')).toBeLessThan(panelText().indexOf('Carlos Alcaraz'))
 })
 
-it("lines up a field's whole leaderboard, its top two in the score block and every other from 3rd in the band, each once", async () => {
+it("lines up a field's whole leaderboard in the score block, a line each, with nothing in the band", async () => {
   // The 1st to 12th entrants as "Driver A" to "Driver L", so no name is part of another.
   const letters = 'ABCDEFGHIJKL'
   const race: Game = {
@@ -246,8 +246,8 @@ it("lines up a field's whole leaderboard, its top two in the score block and eve
   await open('R1')
   const names = (selector: string) =>
     [...container.querySelectorAll(`${selector} .game-panel__team-name`)].map((name) => name.textContent)
-  expect(names('.game-panel__score')).toEqual(['1 Driver A', '2 Driver B'])
-  expect(names('.game-panel__band')).toEqual([...letters.slice(2)].map((letter, i) => `${i + 3} Driver ${letter}`))
+  expect(names('.game-panel__score')).toEqual([...letters].map((letter, i) => `${i + 1} Driver ${letter}`))
+  expect(container.querySelector('.game-panel__band')).toBeNull()
   expect([...container.querySelectorAll('.game-panel button')].map((button) => button.textContent)).not.toContain('Show all 12')
 })
 

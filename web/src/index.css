@@ -203,10 +203,12 @@ body {
 /* The score block at the left, slanted on its right edge. Names are cut short within their share of
    each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
 .game-panel__score {
+  /* The space between its lines, and a field's lines (see .game-panel__field-lines). */
+  --game-panel-score-gap: calc(2 * var(--spacing));
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  gap: calc(2 * var(--spacing));
+  gap: var(--game-panel-score-gap);
   box-sizing: border-box;
   width: min(var(--game-panel-size-score-block), 42%);
   flex-shrink: 0;
@@ -558,14 +560,16 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* A field's leaderboard from 3rd, a line each as its leaders' in the score block, every one of them,
-   the band scrolling to the last. */
+/* A field's whole leaderboard in the score block, a line each, as tall as two lines (the score block's
+   height for two sides), scrolling to the last. */
 .game-panel__field-lines {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing);
+  display: grid;
+  gap: var(--game-panel-score-gap);
+  max-height: calc(2 * (var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding)) + var(--game-panel-score-gap));
   margin: 0;
   padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
@@ -625,7 +629,7 @@ body {
 
   .game-panel__score {
     width: auto;
-    gap: var(--spacing);
+    --game-panel-score-gap: var(--spacing);
     padding: calc(2 * var(--spacing));
     clip-path: none;
   }
@@ -2890,7 +2894,8 @@ body {
     border-width: var(--shape-border-width-thin) 0 0;
   }
 
-  .game-panel__band {
+  .game-panel__band,
+  .game-panel__field-lines {
     touch-action: pan-y;
   }
 
@@ -3553,7 +3558,8 @@ body {
       border-width: var(--shape-border-width-thin) var(--shape-border-width-thin) 0 0;
     }
 
-    .game-panel__band {
+    .game-panel__band,
+    .game-panel__field-lines {
       touch-action: pan-y;
     }
 
@@ -3570,7 +3576,7 @@ body {
   /* Half the strip, so names have room on a phone. */
   .game-panel__score {
     width: min(var(--game-panel-size-score-block), 50%);
-    gap: var(--spacing);
+    --game-panel-score-gap: var(--spacing);
     padding-block: calc(2 * var(--spacing));
   }
 

@@ -81,7 +81,7 @@ Where each game's score card goes on screen, and which games gather into card cl
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Game panel**:
-The view of one game, opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar. A band lists tennis sets, a field’s leaderboard or a fight card’s bouts when available.
+The view of one game, opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar. A field’s leaderboard scrolls in the score block; a band lists tennis sets or a fight card’s bouts when available.
 _Avoid_: Popup, detail page, modal
 
 **Rail**:

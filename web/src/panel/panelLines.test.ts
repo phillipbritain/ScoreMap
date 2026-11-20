@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameEntrant, GameField } from '../games/game'
-import { boutChip, chipSizers, fieldLines } from './panelLines'
+import { boutChip, chipSizers } from './panelLines'
 
 const entrant = (position: number, score: string | null = null): GameEntrant => ({
   position,
@@ -11,22 +11,6 @@ const entrant = (position: number, score: string | null = null): GameEntrant => 
 })
 
 const field = (...entries: GameEntrant[]): GameField => ({ kind: 'field', entries })
-
-describe('fieldLines', () => {
-  it('puts the top two in the score block and the whole rest of the field, from 3rd, in the band', () => {
-    const entries = Array.from({ length: 72 }, (_, i) => entrant(i + 1))
-    const { leaders, rest } = fieldLines(field(...entries))
-    expect(leaders.map((e) => e.position)).toEqual([1, 2])
-    expect(rest).toHaveLength(70)
-    expect(rest[0].position).toBe(3)
-    expect(rest.at(-1)?.position).toBe(72)
-  })
-
-  it('leaves the band empty for a field of two or fewer', () => {
-    expect(fieldLines(field(entrant(1), entrant(2))).rest).toEqual([])
-    expect(fieldLines(field()).leaders).toEqual([])
-  })
-})
 
 describe('chipSizers', () => {
   it('takes one score of each length', () => {

@@ -1,15 +1,4 @@
-import type { GameBoutSide, GameEntrant, GameField } from '../games/game'
-
-/** How many of a field lead it in the game panel's score block, as on its score card. */
-export const leaderCount = 2
-
-/**
- * A field as the game panel lines it up: its leaders in the score block, and the rest of it, from 3rd
- * down, in the band below, so the two read as one leaderboard.
- */
-export function fieldLines({ entries }: GameField): { leaders: GameEntrant[]; rest: GameEntrant[] } {
-  return { leaders: entries.slice(0, leaderCount), rest: entries.slice(leaderCount) }
-}
+import type { GameBoutSide, GameField } from '../games/game'
 
 /**
  * The scores that set the width of a field's score chips, so every line's chip is as wide as the widest:

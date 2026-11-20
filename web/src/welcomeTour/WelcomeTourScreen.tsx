@@ -426,7 +426,7 @@ interface TourPanelProps {
   heading: string
   headingLevel?: 'h2' | 'h3'
   children: ReactNode
-  /** The step's own button, at the panel's foot. */
+  /** The step's own buttons, in its action button panel at the panel's foot. */
   action?: ReactNode
   /** The panel itself, for a step's arrow to start from. */
   ref?: Ref<HTMLElement>

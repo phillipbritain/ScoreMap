@@ -69,7 +69,7 @@ public static partial class GameDetailsEndpoint
             {
                 GameSides sides => new ProviderSides(Team(sides.Home), Team(sides.Away)),
                 GameField field => new ProviderField(field.Entries.Select(entrant =>
-                    new ProviderEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl)).ToList()),
+                    new ProviderEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl, LogoUrl: entrant.LogoUrl)).ToList()),
                 GameBouts card => new ProviderBouts(card.Bouts.Select(bout => new ProviderBout(bout.Id,
                     Side(bout.First), Side(bout.Second), bout.WeightClass, bout.ScheduledRounds, Provider(bout.Status),
                     bout.Round, bout.Clock)).ToList()),

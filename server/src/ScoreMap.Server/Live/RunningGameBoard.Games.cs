@@ -233,7 +233,7 @@ public sealed partial class RunningGameBoard
         {
             ProviderSides sides => new GameSides(ToTeam(sides.Home, league), ToTeam(sides.Away, league)),
             ProviderField field => new GameField(field.Entries
-                .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl, ToParText(entrant.ToPar)))
+                .Select(entrant => new GameEntrant(entrant.Position, entrant.Name, entrant.ShortName, entrant.FlagUrl, ToParText(entrant.ToPar), entrant.LogoUrl))
                 .ToList()),
             ProviderBouts card => new GameBouts(card.Bouts.Select(ToBout).ToList()),
             _ => throw new ArgumentOutOfRangeException(nameof(contest), contest, "No such contest"),

@@ -1,12 +1,12 @@
-// Unofficial stream links (ADR-0002: hobby v1 only). Remove this file, the streamLinks line in GamePanel.tsx
+// Unofficial stream links (ADR-0002: hobby v1 only). Remove this file, the streamLinks line in EventPanel.tsx
 // and Game.streamLinks together with the server's stream finder before any public launch.
 import type { StreamLink } from '../games/game'
 
-/** The one site whose stream links the game panel shows. */
+/** The one site whose stream links the event panel shows. */
 const shownSite = 'streameast'
 
 /**
- * The unofficial stream links the game panel shows for a game: the server's links from StreamEast
+ * The unofficial stream links the event panel shows for a game: the server's links from StreamEast
  * (its site's name in any case), keeping only web addresses since they come from scraped pages.
  * Empty when the finder found nothing there.
  */

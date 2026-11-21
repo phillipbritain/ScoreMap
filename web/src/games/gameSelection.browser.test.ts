@@ -10,7 +10,7 @@ import type { Game } from './game'
 import type { GameDetails } from '../panel/gameDetails'
 import { GameNavigation } from './GameNavigation'
 import { useGameSelection } from './useGameSelection'
-import { GamePanel } from '../panel/GamePanel'
+import { EventPanel } from '../panel/EventPanel'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import '../index.css'
@@ -54,7 +54,7 @@ function Selection({ games }: { games: Game[] }) {
   return createElement('div', null,
     createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
     createElement(GameNavigation, { games, onSelect: selectGame }),
-    selectedGame && createElement(GamePanel, { ref: panel, game: selectedGame,
+    selectedGame && createElement(EventPanel, { ref: panel, game: selectedGame,
       color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, detailsOpen: false, onDetailsOpenChange: () => {},
       onClose: closeGame }),
   )
@@ -69,7 +69,7 @@ async function show(games: Game[]) {
 }
 const search = () => container.querySelector<HTMLInputElement>('input[type="search"]')!
 const choice = (id: string) => container.querySelector<HTMLButtonElement>(`[data-game-id="${id}"]`)!
-const close = () => container.querySelector<HTMLButtonElement>('.game-panel__close')!
+const close = () => container.querySelector<HTMLButtonElement>('.event-panel__close')!
 
 afterEach(async () => {
   await act(async () => root?.unmount())
@@ -85,7 +85,7 @@ it('opens the current game with Enter and Space and restores focus on close', as
   expect(document.activeElement).toBe(choice('A'))
   await userEvent.keyboard('{Enter}')
   expect(document.activeElement).toBe(close())
-  expect(container.querySelector('.game-panel')).not.toBeNull()
+  expect(container.querySelector('.event-panel')).not.toBeNull()
   await userEvent.keyboard('{Escape}')
   expect(document.activeElement).toBe(choice('A'))
   await userEvent.keyboard('{ArrowDown}')
@@ -95,10 +95,10 @@ it('opens the current game with Enter and Space and restores focus on close', as
   expect(choice('B').textContent).toContain('Updated Chiefs')
   await userEvent.keyboard(' ')
   expect(document.activeElement).toBe(close())
-  expect(container.querySelector('.game-panel')!.textContent).toContain('Updated Chiefs')
+  expect(container.querySelector('.event-panel')!.textContent).toContain('Updated Chiefs')
   if (updated.contest.kind === 'sides') updated.contest.home.score = '21'
   await show([game('A'), { ...updated }])
-  expect(container.querySelector('.game-panel')!.textContent).toContain('21')
+  expect(container.querySelector('.event-panel')!.textContent).toContain('21')
   expect(document.activeElement).toBe(close())
   await userEvent.keyboard('{Enter}')
   expect(document.activeElement).toBe(choice('B'))
@@ -113,11 +113,11 @@ it('recovers focus when filtering/removal detaches a list control or its open pa
   await userEvent.keyboard('{ArrowDown}{Enter}')
   expect(document.activeElement).toBe(close())
   await show([])
-  expect(container.querySelector('.game-panel')).toBeNull()
+  expect(container.querySelector('.event-panel')).toBeNull()
   // The list is still open, so back to its search.
   expect(document.activeElement).toBe(search())
   await show([game('B')])
-  expect(container.querySelector('.game-panel')).toBeNull()
+  expect(container.querySelector('.event-panel')).toBeNull()
 })
 
 it('puts the cursor in the search on opening and narrows the list as the viewer types', async () => {
@@ -198,14 +198,14 @@ it('selects a game from the list while it is in a card cluster', async () => {
     await show(games)
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')
     expect(document.activeElement).toBe(close())
-    expect(container.querySelector('.game-panel')!.textContent).toContain('Second game Chiefs')
+    expect(container.querySelector('.event-panel')!.textContent).toContain('Second game Chiefs')
   } finally {
     globe.destroy()
     mapContainer.remove()
   }
 })
 
-const panelText = () => container.querySelector('[aria-label="Game panel"]')?.textContent ?? ''
+const panelText = () => container.querySelector('[aria-label="Event panel"]')?.textContent ?? ''
 
 async function open(id: string) {
   await act(async () => choice(id).click())
@@ -245,10 +245,10 @@ it("lines up a field's whole leaderboard in the score block, a line each, with n
   await show([race])
   await open('R1')
   const names = (selector: string) =>
-    [...container.querySelectorAll(`${selector} .game-panel__team-name`)].map((name) => name.textContent)
-  expect(names('.game-panel__score')).toEqual([...letters].map((letter, i) => `${i + 1} Driver ${letter}`))
-  expect(container.querySelector('.game-panel__band')).toBeNull()
-  expect([...container.querySelectorAll('.game-panel button')].map((button) => button.textContent)).not.toContain('Show all 12')
+    [...container.querySelectorAll(`${selector} .event-panel__team-name`)].map((name) => name.textContent)
+  expect(names('.event-panel__score')).toEqual([...letters].map((letter, i) => `${i + 1} Driver ${letter}`))
+  expect(container.querySelector('.event-panel__band')).toBeNull()
+  expect([...container.querySelectorAll('.event-panel button')].map((button) => button.textContent)).not.toContain('Show all 12')
 })
 
 it("shows a fight card side's score chip only for the winner", async () => {
@@ -259,7 +259,7 @@ it("shows a fight card side's score chip only for the winner", async () => {
   })
   const card = (id: string, main: ReturnType<typeof bout>): Game => ({ ...game(id), league: 'UFC', sport: 'MMA', contest: { kind: 'bouts', bouts: [main] } })
   await show([card('U1', bout('upcoming', 'Upcoming', false)), card('U2', bout('won', 'Final', true))])
-  const chips = () => [...container.querySelectorAll('.game-panel__score .game-panel__team-score')].map((chip) => chip.firstElementChild?.textContent)
+  const chips = () => [...container.querySelectorAll('.event-panel__score .event-panel__team-score')].map((chip) => chip.firstElementChild?.textContent)
 
   await open('U1')
   expect(chips()).toEqual([])
@@ -339,7 +339,7 @@ it('loads details on opening a tab and collapses them without closing the game',
   await act(async () => collapse.click())
   expect(pane().closest('[inert]')).not.toBeNull()
   expect(document.activeElement).toBe(tab('Videos'))
-  expect(container.querySelector('.game-panel')).not.toBeNull()
+  expect(container.querySelector('.event-panel')).not.toBeNull()
 
   await open('B')
   expect(pane().closest('[inert]')).not.toBeNull()

@@ -13,7 +13,7 @@ const live: Pick<Game, 'status' | 'delayed' | 'clock' | 'startTime'> = {
 // A viewer in New York, for start times.
 const eastern = { timeZone: 'America/New_York', locale: 'en-US' }
 
-describe('progressLine in full, for the game panel', () => {
+describe('progressLine in full, for the event panel', () => {
   it('shows the period and clock of a Live game', () => {
     expect(progressLine(live, 'full')).toBe('Q3 4:12')
   })

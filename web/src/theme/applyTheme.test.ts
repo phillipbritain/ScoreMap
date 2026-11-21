@@ -60,15 +60,15 @@ describe('applyTheme', () => {
         json.shape.borderRadius = 3
         json.components.MenuItem.corner = 2
         json.components.Controls.corner = 'pill'
-        json.components.GamePanel.cutCorner = { on: false, size: 3 }
+        json.components.EventPanel.cutCorner = { on: false, size: 3 }
       }),
     )
     expect(properties.get('--spacing')).toBe('5px')
     expect(properties.get('--shape-border-radius')).toBe('3px')
     expect(properties.get('--menu-item-corner')).toBe('6px')
     expect(properties.get('--controls-corner')).toBe('999px')
-    expect(properties.get('--game-panel-cut-corner-size')).toBe('15px')
-    expect(properties.get('--game-panel-cut-corner-on')).toBe('0')
+    expect(properties.get('--event-panel-cut-corner-size')).toBe('15px')
+    expect(properties.get('--event-panel-cut-corner-on')).toBe('0')
   })
 
   it('writes the score card’s frost', () => {
@@ -76,16 +76,16 @@ describe('applyTheme', () => {
     expect(properties.get('--score-card-frost')).toBe('0.3')
   })
 
-  it('writes the game panel’s frost and its close tab’s size', () => {
+  it('writes the event panel’s frost and its close tab’s size', () => {
     const properties = propertiesOf(
       themeWith((json) => {
-        json.components.GamePanel.frost = 0.7
-        json.components.GamePanel.size.close = { width: 30, height: 20 }
+        json.components.EventPanel.frost = 0.7
+        json.components.EventPanel.size.close = { width: 30, height: 20 }
       }),
     )
-    expect(properties.get('--game-panel-frost')).toBe('0.7')
-    expect(properties.get('--game-panel-size-close-width')).toBe('30px')
-    expect(properties.get('--game-panel-size-close-height')).toBe('20px')
+    expect(properties.get('--event-panel-frost')).toBe('0.7')
+    expect(properties.get('--event-panel-size-close-width')).toBe('30px')
+    expect(properties.get('--event-panel-size-close-height')).toBe('20px')
   })
 
   it('writes the hovered card’s border width, and whether it turns solid as 1 or 0', () => {
@@ -94,21 +94,21 @@ describe('applyTheme', () => {
     expect(properties.get('--hover-card-solid')).toBe('0')
   })
 
-  it('writes a logo plate on the score card and game panel: its color, its padding in spacing units and its corner in radii, in pixels', () => {
+  it('writes a logo plate on the score card and event panel: its color, its padding in spacing units and its corner in radii, in pixels', () => {
     const properties = propertiesOf(
       themeWith((json) => {
         json.spacing = 4
         json.shape.borderRadius = 2
         json.components.ScoreCard.logo = { plate: { fill: '#f0f0f0', padding: 0.5, corner: 1 } }
-        json.components.GamePanel.logo = { plate: { fill: '#e0e0e0', padding: 1, corner: 'pill' } }
+        json.components.EventPanel.logo = { plate: { fill: '#e0e0e0', padding: 1, corner: 'pill' } }
       }),
     )
     expect(properties.get('--score-card-logo-plate-fill')).toBe('#f0f0f0')
     expect(properties.get('--score-card-logo-plate-padding')).toBe('2px')
     expect(properties.get('--score-card-logo-plate-corner')).toBe('2px')
-    expect(properties.get('--game-panel-logo-plate-fill')).toBe('#e0e0e0')
-    expect(properties.get('--game-panel-logo-plate-padding')).toBe('4px')
-    expect(properties.get('--game-panel-logo-plate-corner')).toBe('999px')
+    expect(properties.get('--event-panel-logo-plate-fill')).toBe('#e0e0e0')
+    expect(properties.get('--event-panel-logo-plate-padding')).toBe('4px')
+    expect(properties.get('--event-panel-logo-plate-corner')).toBe('999px')
   })
 
   it('writes the typography as its font family and each type style’s weight, size in pixels and letter spacing in ems', () => {
@@ -129,21 +129,21 @@ describe('applyTheme', () => {
       themeWith((json) => {
         json.components.ScoreCard.header.letterSpacing = 0.2
         json.components.PlaceNames.country.letterSpacing = 0.1
-        json.components.GamePanel.size.scoreWidth = 3
+        json.components.EventPanel.size.scoreWidth = 3
         json.components.Rail.size.countWidth = 1.1
       }),
     )
     expect(properties.get('--score-card-header-letter-spacing')).toBe('0.2em')
     expect(properties.get('--place-names-country-letter-spacing')).toBe('0.1em')
-    expect(properties.get('--game-panel-size-score-width')).toBe('3em')
+    expect(properties.get('--event-panel-size-score-width')).toBe('3em')
     expect(properties.get('--rail-size-count-width')).toBe('1.1em')
   })
 
   it('writes a shadow as a CSS shadow, its color resolved', () => {
     const properties = propertiesOf(
-      themeWith((json) => (json.components.GamePanel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
+      themeWith((json) => (json.components.EventPanel.shadow = { x: 1, y: -2, blur: 12, color: 'navy.900' })),
     )
-    expect(properties.get('--game-panel-shadow')).toBe('1px -2px 12px #000209')
+    expect(properties.get('--event-panel-shadow')).toBe('1px -2px 12px #000209')
   })
 
   it('writes every setting', () => {
@@ -180,9 +180,9 @@ describe('applyTheme', () => {
       // A score card's fill, text, shadow, frost, header's two, corner, four sizes,
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 4 + 3 + 7 + 3 * 3,
-      // The game panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
+      // The event panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
       // three, corner, cut corner's two, eight sizes (the close tab's two) and logo plate of three.
-      gamePanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
+      eventPanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
       // The rail's eleven colors and shadows, a lit chip's outline, tint and glow of two, and six sizes.

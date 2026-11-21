@@ -11,7 +11,7 @@ interface GameJustHappened {
 
 /**
  * What just happened to each game since the last snapshot, by game id: the notable changes the globe
- * pulses, and the side that last scored, which the score card and the game panel light up for a
+ * pulses, and the side that last scored, which the score card and the event panel light up for a
  * moment. A snapshot brings none: what changed while ScoreMap was away didn't just happen.
  */
 export type JustHappened = ReadonlyMap<string, GameJustHappened>

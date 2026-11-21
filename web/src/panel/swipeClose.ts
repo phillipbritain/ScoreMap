@@ -1,5 +1,5 @@
 /**
- * Swiping the game panel down to close it on a phone, where it's a bottom sheet: what makes a press a
+ * Swiping the event panel down to close it on a phone, where it's a bottom sheet: what makes a press a
  * drag, how far the panel follows it, and whether letting go closes it. See useSwipeToClose for the
  * gesture on the page.
  */

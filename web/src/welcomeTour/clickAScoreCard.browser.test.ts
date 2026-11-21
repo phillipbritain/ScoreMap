@@ -11,7 +11,7 @@ import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import { firstVisitSettings } from '../settings/viewerSettings'
 import { WelcomeTourScreen } from './WelcomeTourScreen'
-import { tourCamera, tourGames } from './tourGames'
+import { tourCamera, tourGameToTry, tourGames } from './tourGames'
 import '../index.css'
 
 // Click a score card, pointing at cards the globe gives it (see GlobeMap.shownScoreCards). The cards
@@ -50,7 +50,7 @@ async function mountStep(cards: FakeCard[]) {
   )
 }
 
-async function mountStepOn(scoreCards: () => ShownScoreCard[]) {
+async function mountStepOn(scoreCards: () => ShownScoreCard[], gameToTry = 'A') {
   const onOpenGame = vi.fn<(gameId: string) => void>()
   const onEvent = vi.fn()
   const container = document.createElement('div')
@@ -66,6 +66,7 @@ async function mountStepOn(scoreCards: () => ShownScoreCard[]) {
         onChange: () => {},
         onOpenGame,
         scoreCards,
+        gameToTry,
       }),
     ),
   )
@@ -94,16 +95,11 @@ it('says what a card opens, with nothing to press, when no card is clear of the 
   expect(openButton()).toBeNull()
 })
 
-it('keeps pointing at its card while it stays clear, though another comes nearer the middle', async () => {
-  const cards = [fakeCard('A', 'Game A', 40, 40)]
-  const { onOpenGame } = await mountStep(cards)
+it('points at only the game to try, though another card is nearer the middle', async () => {
+  // B above the panel, nearer the middle of the page than A.
+  const { onOpenGame } = await mountStep([fakeCard('B', 'Game B', 452, 40), fakeCard('A', 'Game A', 40, 40)])
   await vi.waitFor(() => expect(openButton()?.getAttribute('aria-label')).toBe('Open Game A'))
 
-  // Above the panel, nearer the middle of the page than A.
-  cards.push(fakeCard('B', 'Game B', 452, 40))
-  await new Promise((resolve) => setTimeout(resolve, 200))
-
-  expect(openButton()?.getAttribute('aria-label')).toBe('Open Game A')
   await userEvent.click(openButton()!)
   expect(onOpenGame).toHaveBeenCalledWith('A')
 })
@@ -177,7 +173,7 @@ it.each([
   { screen: 'a phone', width: 390, height: 844, kind: 'phone' },
   // An iPhone on its side in Safari, its bars taking some of the height.
   { screen: 'a phone on its side', width: 874, height: 300, kind: 'short' },
-] as const)("points at one of the tour's own games, wholly on screen, from the tour's camera, on $screen", async ({ width, height, kind }) => {
+] as const)("points at Ravens v Steelers, wholly on screen, from the tour's camera, on $screen", async ({ width, height, kind }) => {
   await page.viewport(width, height)
   try {
     const map = document.createElement('div')
@@ -190,7 +186,7 @@ it.each([
     opened.push(globe)
     globe.show(tourGames(Date.now()))
     await vi.waitFor(() => expect(globe.shownScoreCards().length).toBeGreaterThan(0), { timeout: 10_000 })
-    const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards())
+    const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards(), tourGameToTry)
 
     await vi.waitFor(() => expect(openButton()).not.toBeNull(), { timeout: 5_000 })
     // The lit card's button covers the card and its spotlight's rim, all on the screen.
@@ -199,7 +195,7 @@ it.each([
     expect(lit.bottom).toBeLessThanOrEqual(height)
     await userEvent.click(openButton()!)
 
-    expect(onOpenGame).toHaveBeenCalledWith(expect.stringMatching(/^tour-/))
+    expect(onOpenGame).toHaveBeenCalledWith(tourGameToTry)
   } finally {
     await page.viewport(1024, 768)
   }

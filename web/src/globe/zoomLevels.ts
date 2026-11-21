@@ -123,7 +123,7 @@ export interface GlobeCamera {
  * `atEquator` (see zoomAt), in a view `height` pixels tall seen through MapLibre's camera with a
  * vertical field of view of `fov` degrees. MapLibre's camera looks straight down at the middle of the
  * view, from as far above the globe's surface as a view this tall needs for its field of view; the
- * place is where the camera's ray through its point meets the globe. On a phone, with the game panel
+ * place is where the camera's ray through its point meets the globe. On a phone, with the event panel
  * up, the center can be some forty degrees from the game.
  */
 export function centerLatitude(latitude: number, below: number, atEquator: number, { height, fov }: { height: number; fov: number }): number {

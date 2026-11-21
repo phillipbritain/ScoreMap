@@ -20,12 +20,10 @@ import { DemoLabel } from './demo/DemoLabel'
 import { feedbackContext } from './feedback/feedbackForm'
 import { CutOffNote } from './live/CutOffNote'
 import { useLiveGames } from './live/useLiveGames'
-import { installHintStore, showsIosHint } from './install/install'
-import { IosInstallHint } from './install/IosInstallHint'
 import { useInstall } from './install/useInstall'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { revealPhase } from './loading/revealPhase'
-import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
+import { EventPanel, panelLeaveDuration } from './panel/EventPanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
 import { useLeaving } from './motion/useLeaving'
@@ -40,10 +38,10 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
-import { selectedTourGames, showsTourGames, tourCamera, tourCameraForGame, tourGames, type TourScreen } from './welcomeTour/tourGames'
+import { showsTourGames, shownTourGames, tourCamera, tourGames, tourGameToTry, type TourScreen } from './welcomeTour/tourGames'
 import { useTourPlay } from './welcomeTour/tourPlay'
 import { useTourVenuePhotos } from './welcomeTour/tourVenuePhotos'
-import { tourProgressAfter } from './welcomeTour/welcomeTour'
+import { tourLocksTabs, tourProgressAfter } from './welcomeTour/welcomeTour'
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -59,7 +57,6 @@ function tourScreen(): TourScreen {
 const savedStore = settingsStore(() => window.localStorage)
 const demoStore = unsavedSettingsStore()
 // Kept in a demo too: the hint is about this browser, not the viewer's settings.
-const hintStore = installHintStore(() => window.localStorage)
 // No games yet, kept as one array so it doesn't change from render to render.
 const noGames: Game[] = []
 
@@ -102,8 +99,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // Whether the viewer collapsed the rail out of the way after setting up.
   const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
-  // Whether a game panel's details were left open: the next panel opens them the same way.
+  // Whether a event panel's details were left open: the next panel opens them the same way, after a
+  // reload too; collapsed until the viewer first opens them. During the welcome tour, its panels start
+  // collapsed whatever was left, and what's done to them there isn't kept.
   const [detailsOpen, setDetailsOpen] = useState(store.loadDetailsOpen)
+  const [tourDetailsOpen, setTourDetailsOpen] = useState(false)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
   const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
@@ -130,16 +130,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   useEffect(() => store.saveTourProgress(tourProgress), [store, tourProgress])
   useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
   useEffect(() => store.saveDetailsOpen(detailsOpen), [store, detailsOpen])
-  // Installing ScoreMap as an app: More's Install app, and on iOS the install hint, once after the
-  // welcome tour, or again when asked for from More.
+  // Installing ScoreMap as an app: More's Install app, where the browser can be asked (ADR-0030).
   const install = useInstall()
-  const [installHintDismissed, setInstallHintDismissed] = useState(hintStore.dismissed)
-  const [installHintAsked, setInstallHintAsked] = useState(false)
-  const closeInstallHint = () => {
-    hintStore.dismiss()
-    setInstallHintDismissed(true)
-    setInstallHintAsked(false)
-  }
   // Nothing but the loading screen until the globe is ready; then the globe, the controls and the
   // welcome tour come in together as it fades away (see revealPhase).
   const reveal = revealPhase(stage, loadingScreenGone)
@@ -156,20 +148,15 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
   const showTourGames = showsTourGames(tourProgress)
   const tourConfirmed = showTourGames && tourProgress !== 'welcome'
-  const tourSelection = useMemo(
-    () => selectedTourGames(tourConfirmed, tourBoard, viewerSettings, leagues),
-    [tourConfirmed, tourBoard, viewerSettings, leagues],
-  )
-  const tourPlay = useTourPlay(tourSelection, touring)
+  const tourSelection = useMemo(() => shownTourGames(tourConfirmed, tourBoard), [tourConfirmed, tourBoard])
+  // The game whose panel is open, which the tour plays more often so its panel is seen to change.
+  const openGameId = useRef<string | null>(null)
+  const tourPlay = useTourPlay(tourSelection, touring, openGameId)
   const tourBoardWithPhotos = useTourVenuePhotos(tourPlay.games, tourConfirmed)
   const justHappened = showTourGames ? tourPlay.changes : liveChanges
-  useEffect(() => {
-    if (!loadingScreenGone) return
-    const camera = tourCameraForGame(tourSelection[0], tourScreen(), tourSelection.length === 1)
-    if (camera) globe.current?.flyTo(camera)
-  }, [loadingScreenGone, tourSelection])
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
+    setTourDetailsOpen(false)
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
     globe.current?.flyTo(tourCamera(tourScreen()))
   }
@@ -191,27 +178,23 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const colors = useMemo((): PickedColors => ({ sportColors, leagueColors }), [sportColors, leagueColors])
   // Not before the reveal, nor during the welcome tour.
   const message = revealed && !touring ? noPinsMessage(boardGames, visible, viewerSettings) : null
-  const iosHint = showsIosHint({
-    way: install.way,
-    revealed,
-    touring,
-    dismissed: installHintDismissed,
-    asked: installHintAsked,
-  })
 
   // Looked up among the visible games on every change, so the panel stays current; it closes if
   // the game's pin goes, whether the game left the pin window or the viewer's settings now hide it.
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(visible)
+  useEffect(() => {
+    openGameId.current = selectedGame?.id ?? null
+  })
   // A game finishing while its panel is open celebrates there, then the panel closes itself and the game
   // leaves the globe with it (see usePanelCelebration).
   const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])
   usePanelCelebration(selectedGame, panel, selectedGame && gameColor(colors, selectedGame, theme), celebrate)
-  // A closed panel stays a moment as it goes (see .game-panel--leaving), out of reach: longer when it
+  // A closed panel stays a moment as it goes (see .event-panel--leaving), out of reach: longer when it
   // closed itself after its game's celebration, as it slides away slower.
   const panelLeave = useCallback((game: Game) => (celebrated.has(game.id) ? celebratedPanelLeaveDuration : panelLeaveDuration), [celebrated])
   const { shown: panelGame, leaving: panelLeaving, key: panelKey } = useLeaving(selectedGame, panelLeave)
   const panelColor = panelGame && gameColor(colors, panelGame, theme)
-  // Where the rail ends, so the game panel stops short of it.
+  // Where the rail ends, so the event panel stops short of it.
   const globeArea = useRef<HTMLDivElement>(null)
   useRailClearance(globeArea)
 
@@ -264,7 +247,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             onGone={() => setLoadingScreenGone(true)}
           />
         )}
-        {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
+        {/* Not under the loading screen, which says so itself. Under the bottom stack, the event panel and
             the rail, which stay usable. */}
         {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
@@ -274,12 +257,12 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
               {message}
             </p>
           )}
-          {iosHint && <IosInstallHint onClose={closeInstallHint} />}
         </div>
-        {(demo || touring) && <DemoLabel />}
+        {/* Not during the welcome tour, whose own panels show its games off (ADR-0027). */}
+        {demo && !touring && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
         {panelGame && panelColor && (
-          <GamePanel
+          <EventPanel
             key={panelKey}
             ref={panelLeaving ? undefined : panel}
             game={panelGame}
@@ -287,8 +270,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             color={panelColor}
             textOnColor={textOn(panelColor, theme.palette.text.primary, theme.palette.background.paper)}
             venuePhotos={viewerSettings.venuePhotos}
-            detailsOpen={detailsOpen}
-            onDetailsOpenChange={setDetailsOpen}
+            detailsOpen={showTourGames ? tourDetailsOpen : detailsOpen}
+            onDetailsOpenChange={showTourGames ? setTourDetailsOpen : setDetailsOpen}
+            tabsLocked={tourLocksTabs(tourStep)}
             demo={demo}
             onClose={closeGame}
             leaving={panelLeaving}
@@ -305,7 +289,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onZoomIn={() => globe.current?.zoomIn()}
           onZoomOut={() => globe.current?.zoomOut()}
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
-          inert={touring}
+          touring={touring}
           games={visible}
           gamesReady={revealed}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
@@ -322,9 +306,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             })
           }
           onTourAgain={tourAgain}
-          onInstall={
-            install.way === 'prompt' ? install.prompt : install.way === 'iosSteps' ? () => setInstallHintAsked(true) : undefined
-          }
+          onInstall={install}
         />
         {/* The local-run tools, at the top left. Not while the tour shows, which keeps to the live site. */}
         <TopRail
@@ -354,6 +336,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             onChange={setViewerSettings}
             onOpenGame={selectGame}
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
+            gameToTry={tourGameToTry}
           />
         )}
       </div>

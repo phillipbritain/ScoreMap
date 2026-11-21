@@ -19,10 +19,10 @@ const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x
 /** StreamEast's logo ("STREAM" and "EAST" on a pill, on its red), as the link to a game's stream there. */
 const streamEastLogoUrl = '/streameast-logo.png'
 
-/** How long a closed panel takes to go, in milliseconds: its way out is the CSS's (`.game-panel--leaving`). */
+/** How long a closed panel takes to go, in milliseconds: its way out is the CSS's (`.event-panel--leaving`). */
 export const panelLeaveDuration = 160
 
-interface GamePanelProps {
+interface EventPanelProps {
   game: Game
   /** The side that last scored, lit up for a moment (see justHappened.ts); none since the last snapshot. */
   scorer?: Scorer
@@ -38,9 +38,11 @@ interface GamePanelProps {
   onDetailsOpenChange: (open: boolean) => void
   /** Whether the game is a demo's, whose details come from the demo board. */
   demo?: boolean
+  /** Whether its tabs can't be used yet: the welcome tour, until its Game details step (see tourLocksTabs). */
+  tabsLocked?: boolean
   onClose: () => void
   /**
-   * Whether the panel is on its way out, closed (see .game-panel--leaving): it can't be used meanwhile.
+   * Whether the panel is on its way out, closed (see .event-panel--leaving): it can't be used meanwhile.
    * It plays the default way out unless whatever closed it set the panel's data-leave to play its own.
    */
   leaving?: boolean
@@ -52,7 +54,7 @@ interface GamePanelProps {
  * The selected game's score and venue above a collapsible details pane. Venue photos stay
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, demo = false, onClose, leaving = false, ref }: GamePanelProps) {
+export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, demo = false, tabsLocked = false, onClose, leaving = false, ref }: EventPanelProps) {
   // Its details open as the last panel's were left.
   const [shown, setShown] = useState({ gameId: game.id, details: detailsOpen, watch: false })
   if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen, watch: false })
@@ -67,12 +69,12 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
   const placeLine = tennis ? '' : place
   const progress = progressLine(game, 'full')
   const leagueLabel = (
-    <div className="game-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+    <div className="event-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
       {game.league}
     </div>
   )
   const progressChip = progress && (
-    <div className="game-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
+    <div className="event-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
       {progress}
     </div>
   )
@@ -90,9 +92,9 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
   return (
     <aside
       ref={ref}
-      className={leaving ? 'game-panel game-panel--leaving' : 'game-panel'}
+      className={leaving ? 'event-panel event-panel--leaving' : 'event-panel'}
       style={colorStyle}
-      aria-label="Game panel"
+      aria-label="Event panel"
       aria-hidden={leaving || undefined}
       inert={leaving}
       {...swipe}
@@ -103,9 +105,9 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
       }
     }}>
       {/* Everything in the panel, clipped to its corners, the close button in its top right corner. */}
-      <div className="game-panel__body">
-        <div className="game-panel__main">
-          <div className="game-panel__score">
+      <div className="event-panel__body">
+        <div className="event-panel__main">
+          <div className="event-panel__score">
             <div className="game-details-score-header">{leagueLabel}{progressChip}</div>
             {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i, teams) => (
                 <TeamRow key={i} team={team} scores={teams.map(teamScore)} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
@@ -115,20 +117,20 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
           </div>
 
           {/* The venue and its watch links over the venue's photo, or a faint glow in its place when there's none or the viewer switched photos off. */}
-          <div className="game-panel__details">
+          <div className="event-panel__details">
             {photo && (
-              <img className="game-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
+              <img className="event-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
             )}
-            <div className="game-panel__venue">
-              <div className="game-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
+            <div className="event-panel__venue">
+              <div className="event-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
                 {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
               </div>
               {/* Its line held when there's none, so the panel keeps its height. */}
-              <div className="game-panel__muted game-panel__place" data-tooltip={placeLine || undefined} data-tooltip-when-clipped>
+              <div className="event-panel__muted event-panel__place" data-tooltip={placeLine || undefined} data-tooltip-when-clipped>
                 {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
               </div>
             </div>
-            <div className="game-panel__watch">
+            <div className="event-panel__watch">
               <WatchInfo key={game.id} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
                 {(game.espnUrl || links.length > 0) && <WatchLinks links={links} espnUrl={game.espnUrl} />}
               </WatchInfo>
@@ -137,13 +139,13 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
         </div>
 
         <GameBand game={game} />
-        <GameDetailsPanel key={game.id} game={game} details={details} failed={failed} open={detailsOpen}
+        <GameDetailsPanel key={game.id} game={game} details={details} failed={failed} open={detailsOpen} locked={tabsLocked}
           onToggle={(details) => {
             setShown((current) => ({ ...current, details }))
             onDetailsOpenChange(details)
           }} />
 
-        <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
+        <button type="button" className="event-panel__close" onClick={onClose} aria-label="Close event panel">
           ×
         </button>
       </div>
@@ -154,7 +156,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
 /** A link to a place (the venue, or its city) in Google Maps, in a new tab. */
 function MapsLink({ query, children }: { query: string; children: ReactNode }) {
   return (
-    <a className="game-panel__maps-link" href={mapsSearchUrl(query)} target="_blank" rel="noopener noreferrer">
+    <a className="event-panel__maps-link" href={mapsSearchUrl(query)} target="_blank" rel="noopener noreferrer">
       {children}
     </a>
   )
@@ -165,14 +167,14 @@ function WatchLinks({ links, espnUrl }: { links: StreamLink[]; espnUrl: string |
   return (
     <>
       {links.map((link) => (
-        <a key={link.url} className="game-panel__logo-link" href={link.url} target="_blank"
+        <a key={link.url} className="event-panel__logo-link" href={link.url} target="_blank"
           rel="noopener noreferrer nofollow" aria-label={`${link.site} (unofficial stream)`}>
-          <img className="game-panel__stream-logo" src={streamEastLogoUrl} alt="" />
+          <img className="event-panel__stream-logo" src={streamEastLogoUrl} alt="" />
         </a>
       ))}
       {espnUrl && (
-        <a className="game-panel__logo-link" href={espnUrl} target="_blank" rel="noopener noreferrer">
-          <img className="game-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
+        <a className="event-panel__logo-link" href={espnUrl} target="_blank" rel="noopener noreferrer">
+          <img className="event-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
         </a>
       )}
     </>
@@ -191,22 +193,22 @@ function TeamRow({ team, scores, scoredAt }: { team: GameTeam; scores: string[];
   useLayoutEffect(() => {
     const element = row.current
     if (!element) return
-    element.classList.remove('game-panel__team--scored')
+    element.classList.remove('event-panel__team--scored')
     const elapsed = spotlightElapsed(scoredAt === null ? undefined : { side: 'home', at: scoredAt }, performance.now())
     if (elapsed === null) return
     // Reading layout between removing and adding the class restarts a glow already playing.
     void element.offsetWidth
     element.style.setProperty('--scorer-spotlight-delay', `${-elapsed}ms`)
-    element.classList.add('game-panel__team--scored')
+    element.classList.add('event-panel__team--scored')
   }, [scoredAt])
   return (
-    <div ref={row} className="game-panel__team">
-      <TeamLogoImage team={team} markClassName="game-panel__logo game-panel__logo--mark" />
-      <span className="game-panel__team-name" data-tooltip={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
-        {team.rank !== null && <span className="game-panel__rank">#{team.rank} </span>}
+    <div ref={row} className="event-panel__team">
+      <TeamLogoImage team={team} markClassName="event-panel__logo event-panel__logo--mark" />
+      <span className="event-panel__team-name" data-tooltip={team.record ? `${name} (${team.record})` : name} data-tooltip-when-clipped>
+        {team.rank !== null && <span className="event-panel__rank">#{team.rank} </span>}
         {team.fullName}
       </span>
-      {team.record && <span className="game-panel__record">{team.record}</span>}
+      {team.record && <span className="event-panel__record">{team.record}</span>}
       <ScoreChip score={teamScore(team)} scores={scores} />
     </div>
   )
@@ -220,10 +222,10 @@ const teamScore = (team: GameTeam): string => team.score ?? '–'
  */
 function ScoreChip({ score, scores }: { score: string; scores: string[] }) {
   return (
-    <span className="game-panel__team-score">
+    <span className="event-panel__team-score">
       <span>{score}</span>
       {scores.map((other, i) => (
-        <span key={i} className="game-panel__team-score-sizer" aria-hidden="true">
+        <span key={i} className="event-panel__team-score-sizer" aria-hidden="true">
           {other}
         </span>
       ))}
@@ -237,16 +239,16 @@ function ScoreChip({ score, scores }: { score: string; scores: string[] }) {
  */
 function FieldRows({ field, name }: { field: GameField; name: string | null }) {
   if (field.entries.length === 0) return (
-      <div className="game-panel__team">
-        <span className="game-panel__logo" />
-        <span className="game-panel__team-name" data-tooltip={name ?? ''} data-tooltip-when-clipped>
+      <div className="event-panel__team">
+        <span className="event-panel__logo" />
+        <span className="event-panel__team-name" data-tooltip={name ?? ''} data-tooltip-when-clipped>
           {name}
         </span>
       </div>
     )
   const sizers = chipSizers(field)
   return (
-    <ol className="game-panel__field-lines" data-panel-scroll aria-label="Leaderboard">
+    <ol className="event-panel__field-lines" data-panel-scroll aria-label="Leaderboard">
       {field.entries.map((entrant) => (
         <li key={entrant.name}>
           <FieldLine entrant={entrant} field={field} sizers={sizers} />
@@ -263,10 +265,10 @@ function FieldRows({ field, name }: { field: GameField; name: string | null }) {
 function FieldLine({ entrant, field, sizers }: { entrant: GameEntrant; field: GameField; sizers: string[] }) {
   const position = positionText(entrant, field)
   return (
-    <div className="game-panel__team">
-      {entrantImage(entrant) ? <img src={entrantImage(entrant)!} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
-        <span className="game-panel__rank">{position} </span>
+    <div className="event-panel__team">
+      {entrantImage(entrant) ? <img src={entrantImage(entrant)!} alt="" /> : <span className="event-panel__logo" />}
+      <span className="event-panel__team-name" data-tooltip={`${position} ${entrant.name}`} data-tooltip-when-clipped>
+        <span className="event-panel__rank">{position} </span>
         {entrant.name}
       </span>
       {entrant.score !== null && <ScoreChip score={entrant.score} scores={sizers} />}
@@ -280,12 +282,12 @@ function FieldLine({ entrant, field, sizers }: { entrant: GameEntrant; field: Ga
  */
 function BoutRows({ bout }: { bout: GameBout }) {
   return [bout.first, bout.second].map((side) => (
-    <div key={side.name} className="game-panel__team">
-      {side.flagUrl ? <img src={side.flagUrl} alt="" /> : <span className="game-panel__logo" />}
-      <span className="game-panel__team-name" data-tooltip={sideWithRecord(side)} data-tooltip-when-clipped>
+    <div key={side.name} className="event-panel__team">
+      {side.flagUrl ? <img src={side.flagUrl} alt="" /> : <span className="event-panel__logo" />}
+      <span className="event-panel__team-name" data-tooltip={sideWithRecord(side)} data-tooltip-when-clipped>
         {side.name}
       </span>
-      {side.record && <span className="game-panel__record">{side.record}</span>}
+      {side.record && <span className="event-panel__record">{side.record}</span>}
       <BoutChip side={side} />
     </div>
   ))
@@ -308,10 +310,10 @@ function GameBand({ game }: { game: Game }) {
   const bouts = contest.kind === 'bouts' ? contest.bouts : []
   if (!scoreline && bouts.length === 0) return null
   return (
-    <div className={bouts.length > 0 ? 'game-panel__band game-panel__band--expanded' : 'game-panel__band'}>
+    <div className={bouts.length > 0 ? 'event-panel__band event-panel__band--expanded' : 'event-panel__band'}>
       {bouts.length > 0 && (
         <BandCell label="Fight card" wide>
-          <ol className="game-panel__bouts">
+          <ol className="event-panel__bouts">
             {bouts.map((bout) => (
               <Bout key={bout.id} bout={bout} />
             ))}
@@ -321,14 +323,14 @@ function GameBand({ game }: { game: Game }) {
       {scoreline && (
         // Each set in the progress line's look: its name, its score and who won it.
         <BandCell wide>
-          <div className="game-panel__sets">
+          <div className="event-panel__sets">
             {scoreline.sets.map((set) => (
-              <span key={set.name} className="game-panel__set">
+              <span key={set.name} className="event-panel__set">
                 {[set.name, set.score, set.winner].filter(Boolean).join(' · ')}
               </span>
             ))}
-            {scoreline.ending && <span className="game-panel__strong">{scoreline.ending}</span>}
-            {scoreline.advanced && <span className="game-panel__one-line">{scoreline.advanced} advances</span>}
+            {scoreline.ending && <span className="event-panel__strong">{scoreline.ending}</span>}
+            {scoreline.advanced && <span className="event-panel__one-line">{scoreline.advanced} advances</span>}
           </div>
         </BandCell>
       )}
@@ -345,11 +347,11 @@ function Bout({ bout }: { bout: GameBout }) {
   const tooltip = [`${sideWithRecord(bout.first)} v ${sideWithRecord(bout.second)}`, bout.weightClass, boutLine(bout)]
     .filter(Boolean)
     .join(' · ')
-  const side = ({ shortName, winner }: GameBoutSide) => (winner ? <span className="game-panel__strong">{shortName}</span> : shortName)
+  const side = ({ shortName, winner }: GameBoutSide) => (winner ? <span className="event-panel__strong">{shortName}</span> : shortName)
   return (
-    <li className="game-panel__bout" data-tooltip={tooltip}>
+    <li className="event-panel__bout" data-tooltip={tooltip}>
       {side(bout.first)} v {side(bout.second)}
-      {line && <span className="game-panel__muted"> · {line}</span>}
+      {line && <span className="event-panel__muted"> · {line}</span>}
     </li>
   )
 }
@@ -357,8 +359,8 @@ function Bout({ bout }: { bout: GameBout }) {
 /** A cell of the band, with its label above it when it has one. */
 function BandCell({ label, wide = false, children }: { label?: string; wide?: boolean; children: ReactNode }) {
   return (
-    <div className={wide ? 'game-panel__cell game-panel__cell--wide' : 'game-panel__cell'}>
-      {label && <div className="game-panel__label">{label}</div>}
+    <div className={wide ? 'event-panel__cell event-panel__cell--wide' : 'event-panel__cell'}>
+      {label && <div className="event-panel__label">{label}</div>}
       {children}
     </div>
   )

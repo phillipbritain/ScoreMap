@@ -27,7 +27,7 @@ export interface ViewerSettings {
   leagueColors: Readonly<Record<string, string>>
   /** What the globe is drawn as (see MapType): the plain map unless the viewer switched to satellite. */
   mapType: MapType
-  /** Whether the game panel shows the venue's photo behind its details: on unless the viewer switched it off in Display Settings. */
+  /** Whether the event panel shows the venue's photo behind its details: on unless the viewer switched it off in Display Settings. */
   venuePhotos: boolean
   /**
    * The conferences the viewer narrowed a league's games to, by league name: the league shows only its games

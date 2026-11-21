@@ -9,13 +9,15 @@ import {
 import {
   canShowPicks,
   isTourProgress,
-  middleClearsGamePanel,
+  middleClearsEventPanel,
   moveAndZoomWords,
   noPicks,
   picksFrom,
   scoreCardToTry,
   settingsForChoice,
   settingsForPicks,
+  progressAfterReload,
+  tourLocksTabs,
   tourProgressAfter,
   type TourEvent,
   type TourProgress,
@@ -27,13 +29,23 @@ describe('welcome tour progress', () => {
     ['welcome', { kind: 'chose', choice: 'everything' }, 'controls'],
     ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
     ['controls', { kind: 'next' }, 'scoreCard'],
-    ['scoreCard', { kind: 'gameOpened' }, 'allSet'],
+    ['scoreCard', { kind: 'gameOpened' }, 'eventPanel'],
+    ['eventPanel', { kind: 'next' }, 'panelTabs'],
+    ['panelTabs', { kind: 'next' }, 'panelWatch'],
+    ['panelWatch', { kind: 'next' }, 'allSet'],
+    ['panelTabs', { kind: 'closed' }, 'finished'],
+    ['panelWatch', { kind: 'closed' }, 'finished'],
+    ['eventPanel', { kind: 'closed' }, 'finished'],
     ['allSet', { kind: 'done' }, 'finished'],
     ['allSet', { kind: 'closed' }, 'finished'],
     ['welcome', { kind: 'closed' }, 'finished'],
     ['controls', { kind: 'closed' }, 'finished'],
     ['scoreCard', { kind: 'closed' }, 'finished'],
     ['finished', { kind: 'again' }, 'welcome'],
+    ['controls', { kind: 'again' }, 'welcome'],
+    ['scoreCard', { kind: 'again' }, 'welcome'],
+    ['eventPanel', { kind: 'again' }, 'welcome'],
+    ['allSet', { kind: 'again' }, 'welcome'],
   ])('moves from %s on %j to %s', (progress, event, after) => {
     expect(tourProgressAfter(progress, event)).toBe(after)
   })
@@ -48,11 +60,10 @@ describe('welcome tour progress', () => {
     ['scoreCard', { kind: 'chose', choice: 'topEvents' }],
     ['scoreCard', { kind: 'next' }],
     ['scoreCard', { kind: 'done' }],
+    ['eventPanel', { kind: 'gameOpened' }],
+    ['eventPanel', { kind: 'done' }],
     ['allSet', { kind: 'gameOpened' }],
     ['allSet', { kind: 'next' }],
-    ['welcome', { kind: 'again' }],
-    ['controls', { kind: 'again' }],
-    ['scoreCard', { kind: 'again' }],
   ])("stays at %s on %j, another step's event", (progress, event) => {
     expect(tourProgressAfter(progress, event)).toBe(progress)
   })
@@ -68,8 +79,38 @@ describe('welcome tour progress', () => {
   })
 })
 
+describe('tourLocksTabs', () => {
+  it('locks the event panel\'s tabs on The event panel, before Game details', () => {
+    expect(tourLocksTabs('eventPanel')).toBe(true)
+  })
+
+  it.each<TourProgress | null>(['panelTabs', 'panelWatch', 'allSet', 'finished', null])('leaves them usable at %s', (progress) => {
+    expect(tourLocksTabs(progress)).toBe(false)
+  })
+})
+
+describe('progressAfterReload', () => {
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'finished'])(
+    'carries on at %s',
+    (progress) => {
+      expect(progressAfterReload(progress)).toBe(progress)
+    },
+  )
+
+  it.each<TourProgress>(['eventPanel', 'panelTabs', 'panelWatch'])(
+    'goes back from %s to Click a score card, as the panel it lights is no longer open',
+    (progress) => {
+      expect(progressAfterReload(progress)).toBe('scoreCard')
+    },
+  )
+
+  it('finishes the tour from All set, straight into the live games', () => {
+    expect(progressAfterReload('allSet')).toBe('finished')
+  })
+})
+
 describe('isTourProgress', () => {
-  it.each(['welcome', 'controls', 'scoreCard', 'finished'])('takes %s as a step', (progress) => {
+  it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch', 'allSet', 'finished'])('takes %s as a step', (progress) => {
     expect(isTourProgress(progress)).toBe(true)
   })
 
@@ -215,13 +256,13 @@ describe("Click a score card's pick", () => {
   })
 })
 
-describe("where All set sits over the game panel on a desktop", () => {
-  it('sits in the middle of a tall screen, clear of the game panel', () => {
-    expect(middleClearsGamePanel(800, 168, 224)).toBe(true)
+describe("where All set sits over the event panel on a desktop", () => {
+  it('sits in the middle of a tall screen, clear of the event panel', () => {
+    expect(middleClearsEventPanel(800, 168, 224)).toBe(true)
   })
 
-  it('sits right above the game panel where the middle would run into it', () => {
-    expect(middleClearsGamePanel(600, 168, 224)).toBe(false)
+  it('sits right above the event panel where the middle would run into it', () => {
+    expect(middleClearsEventPanel(600, 168, 224)).toBe(false)
   })
 })
 

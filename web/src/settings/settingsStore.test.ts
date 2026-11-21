@@ -338,6 +338,15 @@ describe('settingsStore welcome tour progress', () => {
     },
   )
 
+  it('finishes the tour on a reload at All set', () => {
+    const storage = memoryStorage()
+    const store = settingsStore(() => storage)
+    store.save({ ...firstVisitSettings, topEventsOnly: true })
+    store.saveTourProgress('allSet')
+
+    expect(settingsStore(() => storage).loadTourProgress()).toBe('finished')
+  })
+
   it('keeps the progress apart from the other settings', () => {
     const storage = memoryStorage()
     const store = settingsStore(() => storage)
@@ -416,7 +425,7 @@ describe('settingsStore: the collapsed rail', () => {
   })
 })
 
-describe('settingsStore: the game panel\'s details', () => {
+describe('settingsStore: the event panel\'s details', () => {
   it('shows a first-time visitor the details minimized', () => {
     expect(settingsStore(() => memoryStorage()).loadDetailsOpen()).toBe(false)
   })
@@ -476,7 +485,7 @@ describe('unsavedSettingsStore', () => {
     expect(saved.loadCamera()).toEqual({ longitude: 10, latitude: 20, zoom: 3 })
   })
 
-  it('starts the welcome tour at Welcome every time and saves none of its progress', () => {
+  it('opens with the welcome tour finished every time, on a first visit too, and saves none of its progress', () => {
     const storage = memoryStorage()
     const saved = settingsStore(() => storage)
     saved.saveTourProgress('finished')
@@ -484,8 +493,8 @@ describe('unsavedSettingsStore', () => {
 
     store.saveTourProgress('scoreCard')
 
-    expect(store.loadTourProgress()).toBe('welcome')
-    expect(unsavedSettingsStore().loadTourProgress()).toBe('welcome')
+    expect(store.loadTourProgress()).toBe('finished')
+    expect(unsavedSettingsStore().loadTourProgress()).toBe('finished')
     expect(saved.loadTourProgress()).toBe('finished')
   })
 
@@ -500,7 +509,7 @@ describe('unsavedSettingsStore', () => {
     expect(saved.loadRailCollapsed()).toBe(false)
   })
 
-  it('opens a demo\'s game panels with their details minimized, and saves nothing when they open', () => {
+  it('opens a demo\'s event panels with their details minimized, and saves nothing when they open', () => {
     const storage = memoryStorage()
     const saved = settingsStore(() => storage)
     const store = unsavedSettingsStore()

@@ -101,7 +101,7 @@ describe('pageCheck', () => {
       expect(picked).toEqual([['london', 'paris']])
     })
 
-    it('makes it happen to the open game panel’s game first, its card picked out as selected', async () => {
+    it('makes it happen to the open event panel’s game first, its card picked out as selected', async () => {
       const picked = europe(['paris', 'london'])
       const selected = document.createElement('div')
       selected.className = 'score-card score-card--selected'
@@ -130,7 +130,7 @@ describe('pageCheck', () => {
     expect(await pageCheck({ check: 'read', selector: '#page-check .score' })).toEqual({ value: '3 – 1' })
     expect(await pageCheck({ check: 'read', selector: '#page-check .logo', property: 'width' })).toEqual({ value: 40 })
     expect(await pageCheck({ check: 'read', selector: '#page-check .logo', property: 'rect' })).toMatchObject({ value: { width: 40 } })
-    expect(await pageCheck({ check: 'read', selector: '.game-panel' })).toEqual({ missing: '.game-panel' })
+    expect(await pageCheck({ check: 'read', selector: '.event-panel' })).toEqual({ missing: '.event-panel' })
   })
 
   describe('finding where a touch lands', () => {
@@ -163,7 +163,7 @@ describe('pageCheck', () => {
       expect(await pageCheck({ check: 'point', selector: '#page-check .under' })).toEqual({
         unreachable: '#page-check .under is covered at its middle, by div.over',
       })
-      expect(await pageCheck({ check: 'point', selector: '.game-panel' })).toEqual({ missing: '.game-panel' })
+      expect(await pageCheck({ check: 'point', selector: '.event-panel' })).toEqual({ missing: '.event-panel' })
     })
   })
 })

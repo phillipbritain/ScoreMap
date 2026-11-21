@@ -5,7 +5,7 @@
 //   purpose; any other venue missing from the list stops startup, so a misspelled one can't slip by.
 // - A tied score, long team names, missing logos (Edmonton: no logo; Calgary: a logo ESPN gives that
 //   won't load, a non-Division I college team's) and three-digit scores.
-// - A NASCAR race under way with a field longer than the game panel's top 10, and one whose field
+// - A NASCAR race under way with a field longer than the event panel's top 10, and one whose field
 //   isn't listed yet, as ESPN lists none before a race starts, so its card shows the race's name.
 // - An F1 race under way, its whole field listed, at its circuit as ESPN gives it (Miami International
 //   Autodrome, in "Florida").

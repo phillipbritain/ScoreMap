@@ -8,7 +8,7 @@ using static ScoreMap.Server.Tests.Support.TestGames;
 namespace ScoreMap.Server.Tests.Scenarios;
 
 /// <summary>
-/// The game panel's tabs for a scenario's games: made up from each game, as the selected game's
+/// The event panel's tabs for a scenario's games: made up from each game, as the selected game's
 /// details are for real games from ESPN's summary.
 /// </summary>
 public class ScenarioGameDetailsTests

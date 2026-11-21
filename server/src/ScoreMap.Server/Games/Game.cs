@@ -7,7 +7,7 @@ namespace ScoreMap.Server.Games;
 /// A game as ScoreMap sends it to browsers. Serialized camelCase over SignalR;
 /// mirrored by <c>web/src/games/game.ts</c>. Its <see cref="Contest"/> is who competes and their scores
 /// (ADR-0020). <see cref="Hot"/> says whether the game is hot (see <see cref="HotGame"/>), by its sport's
-/// rule. The rest is extra detail for the game panel, each part null (or empty) when the feed gives none.
+/// rule. The rest is extra detail for the event panel, each part null (or empty) when the feed gives none.
 /// </summary>
 public sealed record Game(
     string Id,
@@ -42,7 +42,7 @@ public sealed record Game(
     /// <summary>Tennis: the score set by set, with tiebreaks; null in other sports and before play.</summary>
     public GameScoreline? Scoreline { get; init; }
 
-    /// <summary>The game's page on ESPN's website, linked from the game panel; null when ESPN lists none.</summary>
+    /// <summary>The game's page on ESPN's website, linked from the event panel; null when ESPN lists none.</summary>
     public string? EspnUrl { get; init; }
 }
 
@@ -158,7 +158,7 @@ public sealed record GameVenue(string? Name, string? City, string? Region, strin
 }
 
 /// <summary>
-/// A photo of a venue for the top of the game panel: from outside or of the playing area, whichever
+/// A photo of a venue for the top of the event panel: from outside or of the playing area, whichever
 /// its source gives. <see cref="Credit"/> is set when the photo's license asks for attribution
 /// (Wikimedia Commons photos); ESPN's photos have none.
 /// </summary>

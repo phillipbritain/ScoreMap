@@ -47,6 +47,12 @@ export interface CardScene {
    * card clusters. No limit, unless given.
    */
   cardCount?: number
+  /**
+   * Whether the card count changed since the cards were last laid out (the viewer picked another card
+   * density). On a still camera, the cards are laid out afresh, each looking for room, rather than holding
+   * where they were (see layOutCards), so the new count shows at once.
+   */
+  cardCountChanged?: boolean
 }
 
 /**
@@ -210,7 +216,7 @@ function differs(was: ReadonlyMap<string, Showing>, now: ReadonlyMap<string, Sho
 
 /**
  * Lays out the score cards on screen: while the camera moves, afresh each frame (see placeCards), and
- * once it's still, not at all. Then each card laid out last time holds where it was, its offset from
+ * once it's still, not at all, unless the card count changed (see CardScene.cardCountChanged). Then each card laid out last time holds where it was, its offset from
  * its venue, whether it's in a card cluster and its trail's route, so whatever changes on screen (a
  * score, a selection, a game gone), the cards stay as the viewer left them; only a game given for the
  * first time is placed, around the others. Before anything is laid out, they're placed as for a still
@@ -222,7 +228,7 @@ export function layOutCards(
   previous: ReadonlyMap<string, CardPlacement> = new Map(),
 ): CardPlacements {
   const moving = scene.moving === true || scene.cameraMoving === true
-  if (moving || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
+  if (moving || scene.cardCountChanged || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
   const placed = cards.every((card) => previous.has(card.gameId)) ? undefined : placeCards(cards, scene, previous)
   const placements = new Map(placed?.cards)
   for (const card of cards) {

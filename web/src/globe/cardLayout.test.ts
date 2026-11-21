@@ -872,6 +872,24 @@ describe('the card count, where it is busy', () => {
     expect(withCards(counted(cards, 1))).toEqual(['live'])
   })
 
+  it('gives every card it now allows room at once, on a still camera, when the count goes up', () => {
+    const cards = spread([0, 1, 2, 3, 4, 5, 6, 7])
+    const before = counted(cards, 2)
+
+    const after = layOutCards(cards, { ...scene, cardCount: 6, cardCountChanged: true }, before.cards)
+
+    expect(withCards(after)).toEqual(['g0', 'g1', 'g2', 'g3', 'g4', 'g5'])
+  })
+
+  it('counts the cards past it in card clusters at once, on a still camera, when the count goes down', () => {
+    const cards = spread([0, 1, 2, 3, 4, 5, 6, 7])
+    const before = counted(cards, 6)
+
+    const after = layOutCards(cards, { ...scene, cardCount: 2, cardCountChanged: true }, before.cards)
+
+    expect(withCards(after)).toEqual(['g0', 'g1'])
+  })
+
   it("keeps the selected game's card past the count", () => {
     const cards = spread([0, 1, 2])
     cards[2] = { ...cards[2], selected: true }

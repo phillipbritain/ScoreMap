@@ -107,6 +107,8 @@ export class ScoreCardMarkers {
   private mapSize: { width: number; height: number } | null = null
   /** How many cards show at once where it's busy (see cardCount). */
   private cardDensity: CardDensity
+  /** Whether the card density changed since the cards were last laid out (see CardScene.cardCountChanged). */
+  private cardCountChanged = false
 
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
@@ -145,7 +147,7 @@ export class ScoreCardMarkers {
   setCardDensity(density: CardDensity): void {
     if (density === this.cardDensity) return
     this.cardDensity = density
-    this.moving = true
+    this.cardCountChanged = true
     this.settling.settleAfresh()
     this.sync()
   }
@@ -352,8 +354,10 @@ export class ScoreCardMarkers {
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
       cardCount: cardCount(screen.width, this.cardDensity),
+      cardCountChanged: this.cardCountChanged,
     }
     this.moving = false
+    this.cardCountChanged = false
     traceLayout({ cards, scene })
     const changed = this.layout.layOut(cards, scene)
 

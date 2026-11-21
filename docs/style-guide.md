@@ -291,8 +291,8 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 
 | Type style | Which text | Dark theme |
 | --- | --- | --- |
-| `h6` | Scores on the event panel; a score card's scores take its weight; the event panel's close button and the loading screen's message take its size | 700, 20 |
-| `subtitle1` | Team names on the event panel; a score card's team abbreviations take its weight | 700, 16 |
+| `h6` | Scores on the event panel; a score card's scores take its weight; the event panel's and the rail's panels' close buttons and the loading screen's message take its size | 700, 20 |
+| `subtitle1` | Team names on the event panel; the name heading Leagues, Display Settings and Games, over a line, with a close button at its right, pinned as they scroll (Map Type and More, menus beside their buttons, and Feedback, with its Cancel, have none); a score card's team abbreviations take its weight | 700, 16 |
 | `subtitle2` | A score card's text and the loading screen's message take its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
 | `body2` | The event panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |

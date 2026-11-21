@@ -1,16 +1,12 @@
-import { useEffect, useState, type RefObject } from 'react'
 import type { Game, GameTeam } from '../games/game'
 import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
-
-/** How often one of the tour's games has a play: the open game every other time, so every 4 seconds. */
-const playIntervalMs = 2000
 
 /**
  * One simulated play on one of the tour's games (all two sides: see tourGames): the home side scores
  * on an even turn and the away side on an odd one, by what a score is worth in its sport, and a clock
  * runs on.
  */
-export function nextTourPlay(game: Game, turn: number): Game {
+function nextTourPlay(game: Game, turn: number): Game {
   const { contest } = game
   if (game.status !== 'Live' || contest.kind !== 'sides') return game
   const scoring = turn % 2 === 0 ? 'home' : 'away'
@@ -80,31 +76,4 @@ export function tourPlayTick(state: TourPlayState, openGameId: string | null, no
     ticks: state.ticks + 1,
     next,
   }
-}
-
-/**
- * Plays one local event at a time and passes it through the app's existing score animation record.
- * `openGameId` is read at each tick: the game whose panel is open then, if any.
- */
-export function useTourPlay(
-  source: readonly Game[],
-  active: boolean,
-  openGameId: RefObject<string | null>,
-): Pick<TourPlayState, 'games' | 'changes'> {
-  const [played, setPlayed] = useState<{ source: readonly Game[]; state: TourPlayState } | null>(null)
-  useEffect(() => {
-    if (!active || source.length === 0) return
-    const timer = window.setInterval(() => {
-      const now = performance.now()
-      const open = openGameId.current
-      setPlayed((before) => {
-        const current = before?.source === source ? before.state : tourPlayStart(source)
-        return { source, state: tourPlayTick(current, open, now) }
-      })
-    }, playIntervalMs)
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [source, active, openGameId])
-  return active && played?.source === source ? played.state : { games: source, changes: noneJustHappened }
 }

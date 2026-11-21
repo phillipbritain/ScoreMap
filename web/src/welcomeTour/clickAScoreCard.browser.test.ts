@@ -51,7 +51,6 @@ async function mountStep(cards: FakeCard[]) {
 }
 
 async function mountStepOn(scoreCards: () => ShownScoreCard[], gameToTry = 'A') {
-  const onOpenGame = vi.fn<(gameId: string) => void>()
   const onEvent = vi.fn()
   const container = document.createElement('div')
   document.body.append(container)
@@ -64,13 +63,12 @@ async function mountStepOn(scoreCards: () => ShownScoreCard[], gameToTry = 'A') 
         leagueList: { status: 'ready', leagues: [], retry: () => {} },
         settings: firstVisitSettings,
         onChange: () => {},
-        onOpenGame,
         scoreCards,
         gameToTry,
       }),
     ),
   )
-  return { onOpenGame, onEvent }
+  return { onEvent }
 }
 
 /** The lit card's button, by its name. */
@@ -78,13 +76,12 @@ const openButton = () => document.querySelector<HTMLButtonElement>('button[aria-
 
 it('points at a card clear of the panel, named as its game, and opens its game when pressed', async () => {
   const label = 'NFL · Buffalo Bills 17 vs Kansas City Chiefs 21 · Live · Q3 4:12'
-  const { onOpenGame, onEvent } = await mountStep([fakeCard('A', label, 40, 40)])
+  const { onEvent } = await mountStep([fakeCard('A', label, 40, 40)])
 
   await vi.waitFor(() => expect(openButton()?.getAttribute('aria-label')).toBe(`Open ${label}`))
   await userEvent.click(openButton()!)
 
-  expect(onOpenGame).toHaveBeenCalledWith('A')
-  expect(onEvent).toHaveBeenCalledWith({ kind: 'gameOpened' })
+  expect(onEvent).toHaveBeenCalledExactlyOnceWith({ kind: 'gameOpened', gameId: 'A' })
 })
 
 it('says what a card opens, with nothing to press, when no card is clear of the panel', async () => {
@@ -97,11 +94,11 @@ it('says what a card opens, with nothing to press, when no card is clear of the 
 
 it('points at only the game to try, though another card is nearer the middle', async () => {
   // B above the panel, nearer the middle of the page than A.
-  const { onOpenGame } = await mountStep([fakeCard('B', 'Game B', 452, 40), fakeCard('A', 'Game A', 40, 40)])
+  const { onEvent } = await mountStep([fakeCard('B', 'Game B', 452, 40), fakeCard('A', 'Game A', 40, 40)])
   await vi.waitFor(() => expect(openButton()?.getAttribute('aria-label')).toBe('Open Game A'))
 
   await userEvent.click(openButton()!)
-  expect(onOpenGame).toHaveBeenCalledWith('A')
+  expect(onEvent).toHaveBeenCalledExactlyOnceWith({ kind: 'gameOpened', gameId: 'A' })
 })
 
 it("renames its button as its game's name changes, with a new score", async () => {
@@ -158,14 +155,14 @@ it("points at a card on the globe, named as the card's own button names its game
   opened.push(globe)
   globe.show([bills])
   await vi.waitFor(() => expect(globe.shownScoreCards()).toHaveLength(1), { timeout: 10_000 })
-  const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards())
+  const { onEvent } = await mountStepOn(() => globe.shownScoreCards())
 
   const cardButton = globe.shownScoreCards()[0].element
   await vi.waitFor(() => expect(openButton()?.getAttribute('aria-label')).toBe(`Open ${cardButton.getAttribute('aria-label')}`))
   expect(openButton()!.getAttribute('aria-label')).toContain('Buffalo Bills 17 vs Kansas City Chiefs 21')
   await userEvent.click(openButton()!)
 
-  expect(onOpenGame).toHaveBeenCalledWith('A')
+  expect(onEvent).toHaveBeenCalledExactlyOnceWith({ kind: 'gameOpened', gameId: 'A' })
 })
 
 it.each([
@@ -186,7 +183,7 @@ it.each([
     opened.push(globe)
     globe.show(tourGames(Date.now()))
     await vi.waitFor(() => expect(globe.shownScoreCards().length).toBeGreaterThan(0), { timeout: 10_000 })
-    const { onOpenGame } = await mountStepOn(() => globe.shownScoreCards(), tourGameToTry)
+    const { onEvent } = await mountStepOn(() => globe.shownScoreCards(), tourGameToTry)
 
     await vi.waitFor(() => expect(openButton()).not.toBeNull(), { timeout: 5_000 })
     // The lit card's button covers the card and its spotlight's rim, all on the screen.
@@ -195,7 +192,7 @@ it.each([
     expect(lit.bottom).toBeLessThanOrEqual(height)
     await userEvent.click(openButton()!)
 
-    expect(onOpenGame).toHaveBeenCalledWith(tourGameToTry)
+    expect(onEvent).toHaveBeenCalledExactlyOnceWith({ kind: 'gameOpened', gameId: tourGameToTry })
   } finally {
     await page.viewport(1024, 768)
   }

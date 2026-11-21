@@ -33,8 +33,6 @@ interface WelcomeTourScreenProps {
   settings: ViewerSettings
   /** Sets the viewer settings, as Leagues on the rail would, for the choice made on Welcome. */
   onChange: (settings: ViewerSettings) => void
-  /** Opens a game's panel, as clicking its score card on the globe would: Click a score card's lit card. */
-  onOpenGame: (gameId: string) => void
   /** The score cards a viewer can see now, for Click a score card to point at (see GlobeMap.shownScoreCards). */
   scoreCards: () => ShownScoreCard[]
   /** The game whose card Click a score card points at, whatever else is on screen (see tourGameToTry). */
@@ -47,7 +45,7 @@ interface WelcomeTourScreenProps {
  * choice or button; its panel's ×, Welcome's Skip tour, or Escape closes the tour, which finishes it.
  * There are no dots. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards, gameToTry }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, scoreCards, gameToTry }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
   const choose = (choice: TourChoice) => {
     // My leagues applies its completed picks before making the choice.
@@ -81,10 +79,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
           <ScoreCardStep
             scoreCards={scoreCards}
             gameToTry={gameToTry}
-            onOpenGame={(gameId) => {
-              onOpenGame(gameId)
-              onEvent({ kind: 'gameOpened' })
-            }}
+            onOpenGame={(gameId) => onEvent({ kind: 'gameOpened', gameId })}
           />
         )}
         {isEventPanelStep(progress) && <EventPanelStep step={progress} onNext={() => onEvent({ kind: 'next' })} />}

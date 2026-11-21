@@ -1,4 +1,4 @@
-import { act, createElement, useState } from 'react'
+import { act, createElement, useReducer, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
@@ -6,8 +6,9 @@ import { EventPanel } from '../panel/EventPanel'
 import { firstVisitSettings, type ViewerSettings } from '../settings/viewerSettings'
 import { useLeagues } from '../settings/leagues'
 import { WelcomeTourScreen } from './WelcomeTourScreen'
-import { tourGames, tourGameToTry } from './tourGames'
-import { tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
+import { noneJustHappened } from '../games/justHappened'
+import type { TourProgress } from './welcomeTour'
+import { readWelcomeTour, startWelcomeTour, welcomeTourAfter } from './welcomeTourLifecycle'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 let root: Root | undefined
@@ -41,7 +42,7 @@ async function mountTour(progress: Exclude<TourProgress, 'finished'> = 'welcome'
     const leagueList = useLeagues()
     const [settings, setSettings] = useState(firstVisitSettings)
     return createElement(WelcomeTourScreen, {
-      progress, leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [], gameToTry: 'A',
+      progress, leagueList, settings, onEvent: event, scoreCards: () => [], gameToTry: 'A',
       onChange: (next) => { changed(next); setSettings(next) },
     })
   }
@@ -289,21 +290,26 @@ it("leaves Escape to the rail's popovers, usable during the tour, whichever hear
 })
 
 it.each(['click', 'Enter', 'Space'] as const)('moves from Game details to Where to watch when an event panel tab opens with %s', async (activation) => {
-  const game = tourGames(Date.now()).find(({ id }) => id === tourGameToTry)!
   vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })))
+  const running = { games: null, justHappened: noneJustHappened, detailsOpen: false }
+  const tour = startWelcomeTour('scoreCard', Date.now(), 'wide')
+  const { gameToTry } = readWelcomeTour(tour, running, true)
+  const opened = welcomeTourAfter(tour, { kind: 'gameOpened', gameId: gameToTry })
+  const atTabs = welcomeTourAfter(opened, { kind: 'next' })
   function TourWithEventPanel() {
-    const [progress, setProgress] = useState<TourProgress>('panelTabs')
-    const onEvent = (event: TourEvent) => setProgress((current) => tourProgressAfter(current, event))
+    const [state, send] = useReducer(welcomeTourAfter, atTabs)
+    const { step, games, openGameId, detailsOpen, tabsLocked } = readWelcomeTour(state, running, true)
+    const game = games?.find(({ id }) => id === openGameId)
     return createElement('div', null,
-      createElement(EventPanel, {
-        game, color: '#d4ac63', textOnColor: '#000e28', venuePhotos: false, detailsOpen: false,
-        onDetailsOpenChange: () => {}, onClose: () => {},
-        onDetailsTabOpened: () => onEvent({ kind: 'detailsTabOpened' }),
+      game && createElement(EventPanel, {
+        game, color: '#d4ac63', textOnColor: '#000e28', venuePhotos: false, detailsOpen, tabsLocked,
+        onDetailsOpenChange: (open) => send({ kind: 'detailsChanged', open }), onClose: () => send({ kind: 'gameClosed' }),
+        onDetailsTabOpened: () => send({ kind: 'detailsTabOpened' }),
       }),
-      progress !== 'finished' && createElement(WelcomeTourScreen, {
-        progress, onEvent, leagueList: { status: 'ready', leagues, retry: () => {} },
-        settings: firstVisitSettings, onChange: () => {}, onOpenGame: () => {},
-        scoreCards: () => [], gameToTry: tourGameToTry,
+      step && createElement(WelcomeTourScreen, {
+        progress: step, onEvent: send, leagueList: { status: 'ready', leagues, retry: () => {} },
+        settings: firstVisitSettings, onChange: () => {},
+        scoreCards: () => [], gameToTry,
       }),
     )
   }

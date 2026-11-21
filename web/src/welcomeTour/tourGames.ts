@@ -1,6 +1,5 @@
 import type { Camera } from '../globe/camera'
 import type { Game, GameSituation, GameStatus } from '../games/game'
-import type { TourProgress } from './welcomeTour'
 
 /**
  * The Tour games: the same six every time, whatever the viewer chooses on Welcome, around the opening
@@ -26,33 +25,13 @@ export function tourCamera(screen: TourScreen): Camera {
   return screen === 'phone' ? phoneCamera : screen === 'short' ? shortCamera : camera
 }
 
-/**
- * Whether the globe shows the tour's games in place of real ones (or the scenario's): from the tour's
- * start until it's finished, when they go at once, with any panel of theirs still open.
- */
-export function showsTourGames(progress: TourProgress): boolean {
-  return progress !== 'finished'
-}
-
-/**
- * The tour's games, timed from `now` (ms since the epoch): each Live game started a while before it,
- * each Upcoming one starts within half an hour, and the Final one ended a moment ago. Everything else
- * is the same every time.
- */
+/** The tour's six Live games, timed from when the tour starts. */
 export function tourGames(now: number): Game[] {
-  return specs.map((spec) => made(spec, now))
+  return specs.map((spec) => live(made(spec, now)))
 }
 
 /** The Click a score card step's game: Ravens v Steelers, in Pittsburgh. */
 export const tourGameToTry = 'tour-nfl-pit'
-
-/**
- * The tour's games on the globe: none on Welcome, so the globe starts empty, then all six once the
- * viewer has made a choice, whatever it is, every one of them Live.
- */
-export function shownTourGames(confirmed: boolean, games: readonly Game[]): Game[] {
-  return confirmed ? games.map(live) : []
-}
 
 function live(game: Game): Game {
   if (game.status === 'Live' || game.contest.kind !== 'sides') return game

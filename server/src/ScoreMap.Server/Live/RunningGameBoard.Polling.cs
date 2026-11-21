@@ -8,6 +8,11 @@ public sealed partial class RunningGameBoard
 {
     private const int MaximumConcurrentFetches = 4;
     private static readonly TimeSpan SnapshotFreshnessBudget = TimeSpan.FromMilliseconds(250);
+    /// <summary>
+    /// How long a joining viewer waits for the scoreboards its join had to fetch afresh: long enough for
+    /// a feed to answer, short of the 10 s after which the loading screen says what's holding it up.
+    /// </summary>
+    private static readonly TimeSpan CatchUpBudget = TimeSpan.FromSeconds(5);
 
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly SemaphoreSlim _fetchSlots = new(MaximumConcurrentFetches);
@@ -26,6 +31,8 @@ public sealed partial class RunningGameBoard
     private readonly HashSet<string> _fetching = [];
     private readonly HashSet<string> _enriching = [];
     private readonly HashSet<Task> _work = [];
+    // League scoreboard fetches a join started, the board having been idle or cold (see JoinAsync).
+    private readonly HashSet<Task> _catchingUp = [];
     private TaskCompletionSource _wake = NewSignal();
     private int _joining;
     private const string TopEventsKey = "#top-events";
@@ -59,8 +66,9 @@ public sealed partial class RunningGameBoard
         }
     }
 
-    // Called under the board gate. Workers yield before calling any outside dependency.
-    private void ScheduleDue()
+    // Called under the board gate. Workers yield before calling any outside dependency. A join catches
+    // up: the league fetches it starts are ones the board missed while idle, which its snapshot awaits.
+    private void ScheduleDue(bool catchingUp = false)
     {
         var now = _clock.GetUtcNow();
         Schedule(TopEventsKey, null);
@@ -75,7 +83,7 @@ public sealed partial class RunningGameBoard
             // A top-events refresh must not update old games about to be replaced by this fetch.
             _applied.Remove(key);
             var startedAt = now;
-            StartWork(async token =>
+            var fetch = StartWork(async token =>
             {
                 await _fetchSlots.WaitAsync(token);
                 startedAt = _clock.GetUtcNow();
@@ -115,16 +123,20 @@ public sealed partial class RunningGameBoard
                     }, () => _enriching.Remove(key));
                 }
             });
+            if (catchingUp && league is not null)
+                _catchingUp.Add(fetch);
         }
     }
 
-    private void StartWork(Func<CancellationToken, Task> action, Action finish)
+    // Called under the board gate.
+    private Task StartWork(Func<CancellationToken, Task> action, Action finish)
     {
         var generation = Generation;
         generation.Workers++;
         Task? task = null;
         task = RunAsync();
         _work.Add(task);
+        return task;
         async Task RunAsync()
         {
             await Task.Yield();
@@ -143,6 +155,7 @@ public sealed partial class RunningGameBoard
                     if (generation == _generation && !token.IsCancellationRequested)
                         finish();
                     _work.Remove(task!);
+                    _catchingUp.Remove(task!);
                     generation.Workers--;
                     if (generation.Retired && generation.Workers == 0)
                         generation.Cancellation.Dispose();
@@ -151,6 +164,31 @@ public sealed partial class RunningGameBoard
                 finally { _lock.Release(); }
             }
         }
+    }
+
+    /// <summary>
+    /// Waits until the work <paramref name="pending"/> gives (read under the board gate, and again as
+    /// each lot finishes, for work started meanwhile) is done, or <paramref name="budget"/> has passed.
+    /// </summary>
+    private async Task WaitForWorkAsync(Func<HashSet<Task>> pending, TimeSpan budget, CancellationToken cancellationToken)
+    {
+        using var timer = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        // Real time: a scenario clock or fake scheduling clock must not lengthen this bound.
+        timer.CancelAfter(budget);
+        try
+        {
+            while (true)
+            {
+                Task[] work;
+                await _lock.WaitAsync(timer.Token);
+                try { work = pending().ToArray(); }
+                finally { _lock.Release(); }
+                if (work.Length == 0)
+                    break;
+                await Task.WhenAll(work).WaitAsync(timer.Token);
+            }
+        }
+        catch (OperationCanceledException) when (timer.IsCancellationRequested && !cancellationToken.IsCancellationRequested) { }
     }
 
     private async Task ApplyAsync(Func<IReadOnlyList<GameChange>> apply, CancellationToken cancellationToken)

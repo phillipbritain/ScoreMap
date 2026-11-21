@@ -309,15 +309,6 @@ function EventPanelStep({ step, onNext }: { step: EventPanelStepName; onNext: ()
   const { heading, words } = eventPanelStepParts[step]
   // Game details sits right above the tabs it lights, over the event panel; the others as All set does.
   useRightAbove(step === 'panelTabs', panel, panelParts[step])
-  // Pressing one of the tabs Game details lights does what it says, so the tour moves on, the tab's details opening as it would.
-  useEffect(() => {
-    if (step !== 'panelTabs') return
-    const onClick = (event: MouseEvent) => {
-      if (event.target instanceof Element && event.target.closest('.event-panel:not(.event-panel--leaving) .game-details-tabs [role="tab"]')) onNext()
-    }
-    document.addEventListener('click', onClick)
-    return () => document.removeEventListener('click', onClick)
-  }, [step, onNext])
   return (
     <>
       <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={step === 'panelWatch'} flush />

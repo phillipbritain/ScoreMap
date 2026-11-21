@@ -273,6 +273,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             venuePhotos={viewerSettings.venuePhotos}
             detailsOpen={showTourGames ? tourDetailsOpen : detailsOpen}
             onDetailsOpenChange={showTourGames ? setTourDetailsOpen : setDetailsOpen}
+            onDetailsTabOpened={touring && !panelLeaving
+              ? () => setTourProgress((current) => tourProgressAfter(current, { kind: 'detailsTabOpened' }))
+              : undefined}
             tabsLocked={tourLocksTabs(tourStep)}
             demo={demo}
             onClose={closeGame}

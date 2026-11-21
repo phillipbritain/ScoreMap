@@ -36,6 +36,8 @@ interface EventPanelProps {
   detailsOpen: boolean
   /** The viewer opened the details (a tab) or minimized them. */
   onDetailsOpenChange: (open: boolean) => void
+  /** The viewer opened a Game details tab. */
+  onDetailsTabOpened?: () => void
   /** Whether the game is a demo's, whose details come from the demo board. */
   demo?: boolean
   /** Whether its tabs can't be used yet: the welcome tour, until its Game details step (see tourLocksTabs). */
@@ -54,7 +56,7 @@ interface EventPanelProps {
  * The selected game's score and venue above a collapsible details pane. Venue photos stay
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, demo = false, tabsLocked = false, onClose, leaving = false, ref }: EventPanelProps) {
+export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, onDetailsTabOpened, demo = false, tabsLocked = false, onClose, leaving = false, ref }: EventPanelProps) {
   // Its details open as the last panel's were left.
   const [shown, setShown] = useState({ gameId: game.id, details: detailsOpen, watch: false })
   if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen, watch: false })
@@ -140,6 +142,7 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
 
         <GameBand game={game} />
         <GameDetailsPanel key={game.id} game={game} details={details} failed={failed} open={detailsOpen} locked={tabsLocked}
+          onTabOpened={onDetailsTabOpened}
           onToggle={(details) => {
             setShown((current) => ({ ...current, details }))
             onDetailsOpenChange(details)

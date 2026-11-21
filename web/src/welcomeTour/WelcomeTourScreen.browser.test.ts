@@ -1,10 +1,13 @@
 import { act, createElement, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { userEvent } from 'vitest/browser'
+import { EventPanel } from '../panel/EventPanel'
 import { firstVisitSettings, type ViewerSettings } from '../settings/viewerSettings'
 import { useLeagues } from '../settings/leagues'
 import { WelcomeTourScreen } from './WelcomeTourScreen'
-import type { TourProgress } from './welcomeTour'
+import { tourGames, tourGameToTry } from './tourGames'
+import { tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 let root: Root | undefined
@@ -285,15 +288,47 @@ it("leaves Escape to the rail's popovers, usable during the tour, whichever hear
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
 })
 
-it('moves on from Game details when one of the event panel\'s tabs is pressed', async () => {
-  const { event } = await mountTour('panelTabs')
-  const eventPanel = document.createElement('section')
-  eventPanel.className = 'event-panel'
-  eventPanel.innerHTML = '<div class="game-details-tabs" role="tablist"><button role="tab">Scoring</button></div><button class="other">Other</button>'
-  document.body.append(eventPanel)
+it.each(['click', 'Enter', 'Space'] as const)('moves from Game details to Where to watch when an event panel tab opens with %s', async (activation) => {
+  const game = tourGames(Date.now()).find(({ id }) => id === tourGameToTry)!
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })))
+  function TourWithEventPanel() {
+    const [progress, setProgress] = useState<TourProgress>('panelTabs')
+    const onEvent = (event: TourEvent) => setProgress((current) => tourProgressAfter(current, event))
+    return createElement('div', null,
+      createElement(EventPanel, {
+        game, color: '#d4ac63', textOnColor: '#000e28', venuePhotos: false, detailsOpen: false,
+        onDetailsOpenChange: () => {}, onClose: () => {},
+        onDetailsTabOpened: () => onEvent({ kind: 'detailsTabOpened' }),
+      }),
+      progress !== 'finished' && createElement(WelcomeTourScreen, {
+        progress, onEvent, leagueList: { status: 'ready', leagues, retry: () => {} },
+        settings: firstVisitSettings, onChange: () => {}, onOpenGame: () => {},
+        scoreCards: () => [], gameToTry: tourGameToTry,
+      }),
+    )
+  }
+  const container = document.createElement('div')
+  document.body.append(container)
+  root = createRoot(container)
+  await act(() => root!.render(createElement(TourWithEventPanel)))
 
-  await act(() => eventPanel.querySelector<HTMLButtonElement>('.other')!.click())
-  expect(event).not.toHaveBeenCalled()
-  await act(() => eventPanel.querySelector<HTMLButtonElement>('[role="tab"]')!.click())
-  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'next' })
+  const heading = () => container.querySelector('[role="dialog"] h3')?.textContent
+  const scoring = button('Scoring')
+  expect(heading()).toBe('Game details')
+  expect(scoring.getAttribute('aria-selected')).toBe('false')
+
+  if (activation === 'click') {
+    await act(() => userEvent.click(scoring))
+  } else {
+    button('Score').focus()
+    await act(() => userEvent.keyboard('{ArrowRight}'))
+    expect(document.activeElement).toBe(scoring)
+    expect(heading()).toBe('Game details')
+    await act(() => userEvent.keyboard(activation === 'Enter' ? '{Enter}' : ' '))
+  }
+
+  expect(scoring.getAttribute('aria-selected')).toBe('true')
+  expect(heading()).toBe('Where to watch')
+  await click('Stats')
+  expect(heading()).toBe('Where to watch')
 })

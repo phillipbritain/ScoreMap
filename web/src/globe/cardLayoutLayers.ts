@@ -4,8 +4,8 @@ import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
 import { clusterColor, sharedColorProperty, sharedColorKey } from './clusterColor'
 import {
-  clusterFlameLayout,
-  clusterFlameImage,
+  clusterHotIndicatorLayout,
+  clusterHotIndicatorImage,
   clusterFootprintAcross,
   clusterFootprintLayout,
   type PinSet,
@@ -51,7 +51,7 @@ export const cardLayoutSourceSpec: GeoJSONSourceSpecification = { type: 'geojson
 export interface CardOnGlobe extends ScreenCard {
   lngLat: [number, number]
   color: string
-  flames: boolean
+  hotIndicator: boolean
 }
 
 /** A card cluster as drawn: its games, those with no room first (see Showing), and where on the globe it's drawn. */
@@ -114,8 +114,8 @@ export function cardLayoutDrawing(
     }
     if (kind === 'venueDot') continue
     if (kind === 'smallPin') {
-      const [{ gameId, status, color, flames }] = noRoom
-      features.push(feature({ kind: 'smallPin', gameId, status, color, flames }, { type: 'Point', coordinates: lngLat }))
+      const [{ gameId, status, color, hotIndicator }] = noRoom
+      features.push(feature({ kind: 'smallPin', gameId, status, color, hotIndicator }, { type: 'Point', coordinates: lngLat }))
       continue
     }
     const games = [...noRoom, ...withTrails]
@@ -127,8 +127,8 @@ export function cardLayoutDrawing(
     cardClusters.push({ gameIds: games.map((card) => card.gameId), lngLat })
     features.push(
       feature(
-        // Flames for a game with no room: one whose card is on screen shows its own.
-        { kind: 'cardCluster', ...shared, count: games.length, firstGameId: games[0].gameId, flames: noRoom.some((card) => card.flames) },
+        // The hot indicator for a game with no room: one whose card is on screen shows its own.
+        { kind: 'cardCluster', ...shared, count: games.length, firstGameId: games[0].gameId, hotIndicator: noRoom.some((card) => card.hotIndicator) },
         { type: 'Point', coordinates: lngLat },
       ),
     )
@@ -148,8 +148,8 @@ function feature(properties: Feature['properties'], geometry: Feature['geometry'
  * dot in a ring, in its games' color (see clusterColor), with no count: its games' cards are on
  * screen. A card cluster is a disc outlined and lit in its games' color, with the count in it (see
  * cardClusterReach). A card cluster holding a game that shows
- * flames has a flame on its top edge; a venue cluster never does, as its games' cards are on screen,
- * flames and all.
+ * the hot indicator has it around its disc; a venue cluster never does, as its games' cards are on screen,
+ * indicators and all.
  */
 export function cardLayoutLayers(
   theme: Theme,
@@ -199,11 +199,11 @@ export function cardLayoutLayers(
       },
     },
     {
-      id: 'card-cluster-flames',
+      id: 'card-cluster-hot-indicator',
       type: 'symbol',
       source: cardLayoutSource,
-      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'flames'], true]],
-      layout: clusterFlameLayout(clusterFlameImage(theme, cluster.radius)),
+      filter: ['all', kindIs('cardCluster'), ['==', ['get', 'hotIndicator'], true]],
+      layout: clusterHotIndicatorLayout(clusterHotIndicatorImage(theme, cluster.radius)),
       paint: { 'icon-opacity': byStatus(theme, (look) => look.clusterOpacity) },
     },
     {

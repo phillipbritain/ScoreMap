@@ -1035,14 +1035,14 @@ body {
   letter-spacing: var(--score-card-header-letter-spacing);
 }
 
-/* Fire wraps the whole edge. The card's box is masked out, so its glass stays clear. */
-.score-card__flames {
-  --fire-reach: max(var(--score-card-flames-glow-radius), var(--score-card-flames-width));
+/* A hot game's indicator: a glowing orange outline wraps the whole edge. The card's box is masked out, so its glass stays clear. */
+.score-card__hot-indicator {
+  --hot-indicator-reach: max(var(--score-card-hot-indicator-glow-radius), var(--score-card-hot-indicator-width));
   position: absolute;
-  inset: calc(-1 * var(--fire-reach));
+  inset: calc(-1 * var(--hot-indicator-reach));
   z-index: -1;
   box-sizing: border-box;
-  padding: var(--fire-reach);
+  padding: var(--hot-indicator-reach);
   pointer-events: none;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -1053,40 +1053,40 @@ body {
     linear-gradient(#000 0 0);
 }
 
-.score-card__flames::before {
+.score-card__hot-indicator::before {
   content: '';
   position: absolute;
-  inset: var(--fire-reach);
+  inset: var(--hot-indicator-reach);
   border-radius: var(--score-card-corner);
   box-shadow:
-    0 0 var(--score-card-flames-glow-radius) var(--score-card-flames-glow-spread)
-      color-mix(in srgb, var(--score-card-flames-middle) calc(100% * var(--score-card-flames-glow-opacity)), transparent),
-    0 0 calc(var(--score-card-flames-glow-radius) / 3) calc(var(--score-card-flames-width) * 2 / 3) var(--score-card-flames-tips);
-  animation: score-card-flames-glow 0.6s steps(2) infinite;
+    0 0 var(--score-card-hot-indicator-glow-radius) var(--score-card-hot-indicator-glow-spread)
+      color-mix(in srgb, var(--score-card-hot-indicator-middle) calc(100% * var(--score-card-hot-indicator-glow-opacity)), transparent),
+    0 0 calc(var(--score-card-hot-indicator-glow-radius) / 3) calc(var(--score-card-hot-indicator-width) * 2 / 3) var(--score-card-hot-indicator-tips);
+  animation: score-card-hot-indicator-glow 0.6s steps(2) infinite;
 }
 
-@property --score-card-fire-angle {
+@property --score-card-hot-indicator-angle {
   syntax: '<angle>';
   inherits: false;
   initial-value: 0deg;
 }
 
-.score-card__flames::after {
+.score-card__hot-indicator::after {
   content: '';
   position: absolute;
-  inset: calc(var(--fire-reach) - var(--score-card-flames-width));
+  inset: calc(var(--hot-indicator-reach) - var(--score-card-hot-indicator-width));
   box-sizing: border-box;
-  padding: var(--score-card-flames-width);
-  border-radius: calc(var(--score-card-corner) + var(--score-card-flames-width));
+  padding: var(--score-card-hot-indicator-width);
+  border-radius: calc(var(--score-card-corner) + var(--score-card-hot-indicator-width));
   background: conic-gradient(
-    from var(--score-card-fire-angle),
-    var(--score-card-flames-core),
-    var(--score-card-flames-middle) 20%,
-    var(--score-card-flames-tips) 40%,
-    var(--score-card-flames-middle) 55%,
-    var(--score-card-flames-core) 70%,
-    var(--score-card-flames-middle) 85%,
-    var(--score-card-flames-core)
+    from var(--score-card-hot-indicator-angle),
+    var(--score-card-hot-indicator-core),
+    var(--score-card-hot-indicator-middle) 20%,
+    var(--score-card-hot-indicator-tips) 40%,
+    var(--score-card-hot-indicator-middle) 55%,
+    var(--score-card-hot-indicator-core) 70%,
+    var(--score-card-hot-indicator-middle) 85%,
+    var(--score-card-hot-indicator-core)
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -1095,18 +1095,18 @@ body {
   mask:
     linear-gradient(#000 0 0) content-box exclude,
     linear-gradient(#000 0 0);
-  animation: score-card-flames-crawl 2.4s linear infinite;
+  animation: score-card-hot-indicator-crawl 2.4s linear infinite;
 }
 
-@keyframes score-card-flames-glow {
+@keyframes score-card-hot-indicator-glow {
   50% {
     opacity: 0.7;
   }
 }
 
-@keyframes score-card-flames-crawl {
+@keyframes score-card-hot-indicator-crawl {
   to {
-    --score-card-fire-angle: 360deg;
+    --score-card-hot-indicator-angle: 360deg;
   }
 }
 
@@ -1416,7 +1416,7 @@ body {
 }
 
 /* Changes still show, and nothing moves or blinks: a score's glow fades without shrinking, a hot game's
-   flames stand still, every pin's ring fades in place and a hovered card changes at once. */
+   indicator stands still, every pin's ring fades in place and a hovered card changes at once. */
 @media (prefers-reduced-motion: reduce) {
   .score-card {
     transition: none;
@@ -1431,8 +1431,8 @@ body {
     animation-name: score-card-fade-out;
   }
 
-  .score-card__flames::before,
-  .score-card__flames::after {
+  .score-card__hot-indicator::before,
+  .score-card__hot-indicator::after {
     animation: none;
   }
 
@@ -1488,7 +1488,7 @@ body {
 
 /* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
    controls step brings it in: all but More, and its popover, which stay in reach throughout the tour.
-   Until then More sits at the rail's top, where Hide controls is, rather than alone partway down; it
+   Until then More sits at the rail's top, rather than alone partway down; it
    goes back to its place as the rest of the rail comes in. */
 .globe-area--rail-hidden > .rail {
   visibility: hidden;
@@ -1517,23 +1517,12 @@ body {
   z-index: 3;
 }
 
-/* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
-   it, their groups rising and fading one after another, leaving it alone at the top right as Show
-   controls (a menu); they drop back down the same way. Folded, they take no room and no pointer. The
-   inner box clips them as they fold; its padding, reaching past them, leaves room for the Games count's
-   corner, and takes no pointer itself, so the globe beside the rail stays usable. */
+/* The rail's buttons. The inner box's padding, reaching past them, leaves room for the Events count's
+   corner where the box clips (scrolling on a short screen, see below), and takes no pointer itself, so
+   the globe beside the rail stays usable. */
 .rail__buttons {
   display: grid;
   grid-template-rows: 1fr;
-  transition: grid-template-rows 220ms ease-out, margin 220ms ease-out, opacity 220ms ease-out, visibility 0s;
-}
-
-.rail__buttons--collapsed {
-  grid-template-rows: 0fr;
-  margin-top: calc(-1 * var(--rail-group-gap));
-  opacity: 0;
-  visibility: hidden;
-  transition: grid-template-rows 220ms ease-in, margin 220ms ease-in, opacity 160ms ease-in, visibility 0s 220ms;
 }
 
 .rail__buttons-inner {
@@ -1549,34 +1538,6 @@ body {
 
 .rail__buttons-inner > .rail__group {
   pointer-events: auto;
-  transition: opacity 180ms ease-out, translate 180ms ease-out;
-}
-
-.rail__buttons-inner > .rail__group:nth-child(2) {
-  transition-delay: 50ms;
-}
-
-.rail__buttons-inner > .rail__group:nth-child(3) {
-  transition-delay: 100ms;
-}
-
-.rail__buttons-inner > .rail__group:nth-child(4) {
-  transition-delay: 150ms;
-}
-
-.rail__buttons--collapsed .rail__buttons-inner > .rail__group {
-  opacity: 0;
-  translate: 0 calc(-3 * var(--spacing));
-  transition-delay: 0ms;
-}
-
-/* With reduce motion the rail's buttons go and come back at once. */
-@media (prefers-reduced-motion: reduce) {
-  .rail__buttons,
-  .rail__buttons--collapsed,
-  .rail__buttons-inner > .rail__group {
-    transition: none;
-  }
 }
 
 /* A rail popover opening slides out a little from the rail as it fades in, over 160 ms; closed, it slides
@@ -1647,10 +1608,10 @@ body {
 }
 
 /* On a phone the rail's popovers (Games, Leagues, Display Settings) are sheets across the width from
-   the rail's top, which the top rail would lie over: it hides while one is open. Not for Map Type's,
-   which sits level with its own button, lower down and only as wide as its two pictures, nor More's. */
+   the rail's top, which the top rail would lie over: it hides while one is open. Not for More's, which
+   sits level with its own button, lower down and only as wide as its menu. */
 @media (max-width: 640px) {
-  .globe-area:has(> .rail .rail__popover:not(.rail__popover--map-type, .rail__popover--more)) > .top-rail {
+  .globe-area:has(> .rail .rail__popover:not(.rail__popover--more)) > .top-rail {
     display: none;
   }
 }
@@ -1730,8 +1691,7 @@ body {
   cursor: default;
 }
 
-/* A popover's button, while its popover is open, in the theme's open color (gold); Hide controls too,
-   while the rail's buttons show. */
+/* A popover's button, while its popover is open, in the theme's open color (gold). */
 .rail__button[aria-expanded='true'] {
   color: var(--rail-open);
 }
@@ -1896,16 +1856,11 @@ body {
   }
 }
 
-/* The Map Type popover (see MapTypes): a picture of each map type side by side, its name under it,
-   level with its button (Rail sets its top), as narrow as they are, on a phone too. */
-.rail__popover--map-type {
-  width: auto;
-  padding: calc(2 * var(--spacing));
-}
-
+/* Display Settings' Map type (see MapTypes): a picture of each map type side by side, its name under it. */
 .map-types {
   display: flex;
   gap: calc(2 * var(--spacing));
+  margin-bottom: calc(4 * var(--spacing));
 }
 
 .map-type {
@@ -2287,7 +2242,7 @@ body {
   border-left: var(--shape-border-width-medium) solid var(--palette-divider);
 }
 
-/* Display Settings: an on/off switch ("Only show live games", "Display venue photo on Event Panel"), its
+/* Display Settings: an on/off switch ("Only show live events", "Display venue photo on Event Panel"), its
    name at the left and its switch at the right, above "Card colors". */
 .display-switch {
   display: flex;
@@ -2311,40 +2266,40 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: "Card density", its three levels joined as one toggle button group, as MUI's
+/* Display Settings: "Card count", its three levels joined as one toggle button group, as MUI's
    ToggleButtonGroup: chips sharing their borders, cornered only at the group's ends, the one picked lit as
    a league chip that's on is. */
-.card-densities {
+.card-counts {
   display: flex;
   margin-bottom: calc(4 * var(--spacing));
 }
 
-.card-densities .rail-chip {
+.card-counts .rail-chip {
   flex: 1;
   border-radius: 0;
 }
 
-.card-densities .rail-chip + .rail-chip {
+.card-counts .rail-chip + .rail-chip {
   margin-left: calc(-1 * var(--shape-border-width-thin));
 }
 
-.card-densities .rail-chip:first-child {
+.card-counts .rail-chip:first-child {
   border-radius: var(--controls-corner) 0 0 var(--controls-corner);
 }
 
-.card-densities .rail-chip:last-child {
+.card-counts .rail-chip:last-child {
   border-radius: 0 var(--controls-corner) var(--controls-corner) 0;
 }
 
 /* The lit one, and the one under the pointer, draw their whole outline over their neighbors' shared edges. */
-.card-densities .rail-chip[aria-pressed='true'],
-.card-densities .rail-chip:hover,
-.card-densities .rail-chip:focus-visible {
+.card-counts .rail-chip[aria-pressed='true'],
+.card-counts .rail-chip:hover,
+.card-counts .rail-chip:focus-visible {
   position: relative;
   z-index: 1;
 }
 
-/* Display Settings: a section's heading, "Card density" or "Card colors": small gold capitals, a line running on from it to
+/* Display Settings: a section's heading, "Card count" or "Card colors": small gold capitals, a line running on from it to
    the edge, set apart from the sports' names under it. */
 .display-section {
   display: flex;

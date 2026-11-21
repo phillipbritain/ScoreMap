@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameStatus } from '../games/game'
-import { cardCount, cardLayout, layOutCards, type CardPlacement, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
+import { mostCards, cardLayout, layOutCards, type CardPlacement, type CardPlacements, type CardScene, type LayoutScene, type ScreenCard, type ScreenOffset } from './cardLayout'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { gatheringRulesBroken } from './gatheringRules'
@@ -845,7 +845,7 @@ describe('cardLayout', () => {
 })
 
 describe('the card count, where it is busy', () => {
-  const counted = (cards: ScreenCard[], count: number) => layOutCards(cards, { ...scene, cardCount: count })
+  const counted = (cards: ScreenCard[], count: number) => layOutCards(cards, { ...scene, mostCards: count })
   const withCards = (layout: CardPlacements) => [...shiftsOf(layout).keys()].sort()
   const ranked = (gameId: string, x: number, y: number, rank: number): ScreenCard => ({ ...card(gameId, x, y), rank })
   // Spread out with room for every card: x 100 to 900, y 150 and 550.
@@ -876,7 +876,7 @@ describe('the card count, where it is busy', () => {
     const cards = spread([0, 1, 2, 3, 4, 5, 6, 7])
     const before = counted(cards, 2)
 
-    const after = layOutCards(cards, { ...scene, cardCount: 6, cardCountChanged: true }, before.cards)
+    const after = layOutCards(cards, { ...scene, mostCards: 6, mostCardsChanged: true }, before.cards)
 
     expect(withCards(after)).toEqual(['g0', 'g1', 'g2', 'g3', 'g4', 'g5'])
   })
@@ -885,7 +885,7 @@ describe('the card count, where it is busy', () => {
     const cards = spread([0, 1, 2, 3, 4, 5, 6, 7])
     const before = counted(cards, 6)
 
-    const after = layOutCards(cards, { ...scene, cardCount: 2, cardCountChanged: true }, before.cards)
+    const after = layOutCards(cards, { ...scene, mostCards: 2, mostCardsChanged: true }, before.cards)
 
     expect(withCards(after)).toEqual(['g0', 'g1'])
   })
@@ -911,13 +911,13 @@ describe('the card count, where it is busy', () => {
   })
 
   it.each([
-    ['minimal', 10, 20],
+    ['fewer', 10, 20],
     ['default', 20, 30],
-    ['dense', 30, 40],
-  ] as const)('shows at most so many cards at once at %s card density: on a phone, then on a wider screen', (density, phone, wider) => {
-    expect(cardCount(390, density)).toBe(phone)
-    expect(cardCount(640, density)).toBe(phone)
-    expect(cardCount(641, density)).toBe(wider)
-    expect(cardCount(1280, density)).toBe(wider)
+    ['more', 30, 40],
+  ] as const)('shows at most so many cards at once at %s card count: on a phone, then on a wider screen', (count, phone, wider) => {
+    expect(mostCards(390, count)).toBe(phone)
+    expect(mostCards(640, count)).toBe(phone)
+    expect(mostCards(641, count)).toBe(wider)
+    expect(mostCards(1280, count)).toBe(wider)
   })
 })

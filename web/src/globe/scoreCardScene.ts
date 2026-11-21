@@ -1,10 +1,10 @@
 import type { PlacedGame } from '../games/placedGames'
-import type { CardDensity } from '../settings/viewerSettings'
+import type { CardCount } from '../settings/viewerSettings'
 import { cardComings, type CardComing } from './cardComings'
 import { cardMoves, type CardMove } from './cardMoves'
 import type { CardPin } from './cardPins'
 import { cardRank, nearCenter } from './cardRank'
-import { cardCount, cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type ScreenOffset, type Showing } from './cardLayout'
+import { mostCards, cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type ScreenOffset, type Showing } from './cardLayout'
 import type { AfterCardSync, GlobeSettling } from './globeSettling'
 import type { LaidOutFrame } from './layoutTrace'
 import type { TrailOnGlobe } from './trailLayer'
@@ -70,7 +70,7 @@ export interface CardsOnPage {
 /**
  * The score cards' scene: which games have score cards, and each frame, what becomes of them (see
  * frame). A plain object, holding no page element or map: told what happens (games, selection, card
- * density, the camera, a restyle, each frame of the map), it decides, and has the cards on the page
+ * count, the camera, a restyle, each frame of the map), it decides, and has the cards on the page
  * (see CardsOnPage) follow. It reports to the globe's settling, which says when to ask for a frame.
  */
 export interface ScoreCardScene {
@@ -81,8 +81,8 @@ export interface ScoreCardScene {
   showGames(games: readonly PlacedGame[]): void
   /** The selected game, whose card has a place on screen wherever its venue is. The cards settle afresh. */
   select(gameId: string | null): void
-  /** Shows as many cards at once as this card density allows (see cardCount), laid out afresh. False if it was the density already. */
-  setCardDensity(density: CardDensity): boolean
+  /** Shows as many cards at once as this card count allows (see mostCards), laid out afresh. False if it was that count already. */
+  setCardCount(count: CardCount): boolean
   /** The cards were restyled, so they're laid out afresh: held where they were, they would overlap. */
   restyled(): void
   /** The camera has moved: the cards settle afresh, laid out as for a moving camera. */
@@ -119,7 +119,7 @@ export interface ScoreCardSceneOptions {
   page: CardsOnPage
   /** The globe's settling, told each frame's result and each change from outside (see GlobeSettling). */
   settling: GlobeSettling
-  cardDensity: CardDensity
+  cardCount: CardCount
   /** Whether the viewer asks for less motion: cards then go straight where they're moved. */
   reducedMotion: () => boolean
   /** The time now, as `performance.now()` gives it. */
@@ -129,7 +129,7 @@ export interface ScoreCardSceneOptions {
 }
 
 /** The score cards' scene (see ScoreCardScene). */
-export function scoreCardScene({ page, settling, cardDensity: density, reducedMotion, now = () => performance.now(), laidOut }: ScoreCardSceneOptions): ScoreCardScene {
+export function scoreCardScene({ page, settling, cardCount: count, reducedMotion, now = () => performance.now(), laidOut }: ScoreCardSceneOptions): ScoreCardScene {
   const cards = new Map<string, Card>()
   let games = new Map<string, PlacedGame>()
   let selectedGameId: string | null = null
@@ -151,9 +151,9 @@ export function scoreCardScene({ page, settling, cardDensity: density, reducedMo
   let layout: CardLayout = cardLayout()
   /** Whether the camera has moved since the cards were last laid out (see cardLayout's CardScene.moving). */
   let moving = false
-  let cardDensity = density
-  /** Whether the card density changed since the cards were last laid out (see cardLayout's CardScene.cardCountChanged). */
-  let cardCountChanged = false
+  let cardCount = count
+  /** Whether the card count changed since the cards were last laid out (see cardLayout's CardScene.mostCardsChanged). */
+  let mostCardsChanged = false
 
   /**
    * Whether cards fade into view and out of it, and glide as they're moved: only once the globe is
@@ -212,11 +212,11 @@ export function scoreCardScene({ page, settling, cardDensity: density, reducedMo
       ...screen,
       ...frame.layoutScene(),
       moving,
-      cardCount: cardCount(screen.width, cardDensity),
-      cardCountChanged,
+      mostCards: mostCards(screen.width, cardCount),
+      mostCardsChanged,
     }
     moving = false
-    cardCountChanged = false
+    mostCardsChanged = false
     laidOut?.({ cards: screenCards, scene })
     const changed = layout.layOut(screenCards, scene)
 
@@ -266,10 +266,10 @@ export function scoreCardScene({ page, settling, cardDensity: density, reducedMo
       settling.settleAfresh()
     },
 
-    setCardDensity(next) {
-      if (next === cardDensity) return false
-      cardDensity = next
-      cardCountChanged = true
+    setCardCount(next) {
+      if (next === cardCount) return false
+      cardCount = next
+      mostCardsChanged = true
       settling.settleAfresh()
       return true
     },

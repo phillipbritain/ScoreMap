@@ -1,8 +1,8 @@
 import { useId, useState, type CSSProperties, type ReactNode } from 'react'
 import { pickableColors } from '../settings/gameColor'
 import {
-  cardDensities,
-  cardDensityNames,
+  cardCounts,
+  cardCountNames,
   hasColors,
   leaguesBySport,
   withLeagueColor,
@@ -11,6 +11,7 @@ import {
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
+import { MapTypes } from './MapTypes'
 
 interface DisplaySettingsProps {
   leagues: readonly League[]
@@ -24,9 +25,11 @@ interface DisplaySettingsProps {
 }
 
 /**
- * The rail's Display Settings popover: an "Only show live games" switch, which hides every Upcoming game
- * (ADR-0029), and a "Display venue photo on Event Panel" switch for the event panel's photo, then, under "Card density", Minimal, Default and Dense side by side,
- * the one picked lit (see CardDensity), then, under "Card colors", each sport, then its leagues, by name, with a swatch of
+ * The rail's Display Settings popover: an "Only show live events" switch, which hides every Upcoming game
+ * (ADR-0029), and a "Display venue photo on Event Panel" switch for the event panel's photo, a "Hot event indicator" switch for the
+ * indicator on hot games' score cards, pins and clusters, then, under "Map type", the
+ * plain map and satellite imagery to pick between (see MapTypes), then, under "Card count", Fewer, Default and More side by side,
+ * the one picked lit (see CardCount), then, under "Card colors", each sport, then its leagues, by name, with a swatch of
  * its games' color, which opens a grid of the colors there are to pick (see pickableColors) under its
  * row, and a control to clear it; a league with no color of its own shows its sport's, marked as
  * taken from the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -67,29 +70,37 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
     )
   }
   const photos = settings.venuePhotos
-  const densityHeading = useId()
+  const mapTypeHeading = useId()
+  const countHeading = useId()
   const colorsHeading = useId()
   return (
     <>
-      <Switch on={settings.onlyLiveGames} onChange={(on) => onChange({ ...settings, onlyLiveGames: on })}>
-        Only show live games
+      <Switch on={settings.onlyLiveEvents} onChange={(on) => onChange({ ...settings, onlyLiveEvents: on })}>
+        Only show live events
       </Switch>
       <Switch on={photos} onChange={(on) => onChange({ ...settings, venuePhotos: on })}>
         Display venue photo on Event Panel
       </Switch>
-      <h3 id={densityHeading} className="display-section">
-        Card density
+      <Switch on={settings.hotEventIndicator} onChange={(on) => onChange({ ...settings, hotEventIndicator: on })}>
+        Hot event indicator
+      </Switch>
+      <h3 id={mapTypeHeading} className="display-section">
+        Map type
       </h3>
-      <div className="card-densities" role="group" aria-labelledby={densityHeading}>
-        {cardDensities.map((density) => (
+      <MapTypes settings={settings} onChange={onChange} labelledBy={mapTypeHeading} />
+      <h3 id={countHeading} className="display-section">
+        Card count
+      </h3>
+      <div className="card-counts" role="group" aria-labelledby={countHeading}>
+        {cardCounts.map((count) => (
           <button
-            key={density}
+            key={count}
             type="button"
             className="rail-chip"
-            aria-pressed={settings.cardDensity === density}
-            onClick={() => onChange({ ...settings, cardDensity: density })}
+            aria-pressed={settings.cardCount === count}
+            onClick={() => onChange({ ...settings, cardCount: count })}
           >
-            {cardDensityNames[density]}
+            {cardCountNames[count]}
           </button>
         ))}
       </div>

@@ -11,7 +11,7 @@ import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
-import type { CardDensity, MapType } from '../settings/viewerSettings'
+import type { CardCount, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
@@ -26,7 +26,7 @@ import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
 import type { ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
-import { drawFlamesOnDemand } from './flames'
+import { drawHotIndicatorsOnDemand } from './hotIndicator'
 import {
   cardClusterLayer,
   cardlessSmallPinLayer,
@@ -63,13 +63,15 @@ export interface GlobeMapOptions {
   cityLabels?: CityLabelSettings
   /** The colors the viewer picked for games, to start with: none unless given. They change with setColors. */
   colors?: PickedColors
+  /** Whether hot games show their indicator, to start with: on unless given. It changes with setHotIndicators. */
+  hotIndicator?: boolean
   /**
    * The map type to start with (see globeStyle), when made over from a base style: the plain map
    * unless given. It changes with setMapType.
    */
   mapType?: MapType
-  /** How many score cards show at once where it's busy, to start with (see cardCount): Default unless given. It changes with setCardDensity. */
-  cardDensity?: CardDensity
+  /** How many score cards show at once where it's busy, to start with (see mostCards): Default unless given. It changes with setCardCount. */
+  cardCount?: CardCount
   /**
    * How far out and in the globe zooms to start with: the app's own for a laptop unless given. They
    * change with setZoomLimits.
@@ -107,6 +109,8 @@ export class GlobeMap {
   private theme: Theme
   /** The colors the viewer picked for games (see gameColor). */
   private colors: PickedColors
+  /** Whether hot games show their indicator (see hotIndicatorOf). */
+  private hotIndicator: boolean
   /** The map type the globe's style is made in (see globeStyle). */
   private mapType: MapType
   /** The base style the globe's style was made over from, once it has loaded (none for a finished style). */
@@ -143,9 +147,10 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colors = noColors, mapType = 'plain', cardDensity = 'default', zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colors = colors
+    this.hotIndicator = hotIndicator
     this.mapType = mapType
     this.onSelect = onSelect
     this.onCameraMove = onCameraMove
@@ -203,11 +208,12 @@ export class GlobeMap {
         map,
         currentTheme,
         this.colorOf,
+        this.hotIndicatorOf,
         this.names,
         this.trails,
         (gameId) => this.onSelect(gameId),
         this.settling,
-        cardDensity,
+        cardCount,
       )
       this.moves = new CameraMoves(map, {
         game: (gameId) => this.shown.get(gameId),
@@ -220,7 +226,7 @@ export class GlobeMap {
           this.pins?.select(gameId)
         },
       })
-      drawFlamesOnDemand(map)
+      drawHotIndicatorsOnDemand(map)
 
       map.on('style.load', this.addPins)
       // Each frame event syncs the cards, then tells the settling: one listener for each, so the
@@ -347,10 +353,10 @@ export class GlobeMap {
     return layerChanges(globeStyle(this.base, theme, mapType).layers, globeStyle(this.base, this.theme, this.mapType).layers)
   }
 
-  /** Shows as many score cards at once as this card density allows from now on (see cardCount). */
-  setCardDensity(density: CardDensity): void {
+  /** Shows as many score cards at once as this card count allows from now on (see mostCards). */
+  setCardCount(count: CardCount): void {
     this.unsettle()
-    this.cards.setCardDensity(density)
+    this.cards.setCardCount(count)
   }
 
   /** Shows each game in these colors from now on (see gameColor): its pin, score card, trail and pulses. */
@@ -364,6 +370,21 @@ export class GlobeMap {
 
   /** A game's color, in the colors and theme the globe has now. */
   private readonly colorOf = (game: Game): string => gameColor(this.colors, game, this.theme)
+
+  /**
+   * Shows the hot indicator on hot games from now on, or no longer: on their score cards, small pins and the
+   * clusters they're in. A game stays hot either way, still ranked first for a card (see cardRank).
+   */
+  setHotIndicators(on: boolean): void {
+    if (on === this.hotIndicator) return
+    this.hotIndicator = on
+    this.unsettle()
+    this.pins?.showGames([...this.shown.values()])
+    this.cards.restyle()
+  }
+
+  /** Whether a game shows the hot indicator now: a hot game, while they're on. */
+  private readonly hotIndicatorOf = (game: Game): boolean => this.hotIndicator && game.hot
 
   /** Labels cities by these settings from now on. */
   setCityLabelSettings(settings: CityLabelSettings): void {
@@ -477,7 +498,7 @@ export class GlobeMap {
   private readonly addPins = () => {
     const map = this.map
     map.setProjection({ type: 'globe' })
-    const pins = addPinSource(map, { games: [...this.shown.values()], theme: this.theme, colorOf: this.colorOf })
+    const pins = addPinSource(map, { games: [...this.shown.values()], theme: this.theme, colorOf: this.colorOf, hotIndicatorOf: this.hotIndicatorOf })
     this.pins = pins
     map.addSource(cardLayoutSource, cardLayoutSourceSpec)
     addBlankImage(map, cardFootprint.image, cardFootprint.width, cardFootprint.height)

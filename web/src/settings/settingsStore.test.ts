@@ -22,13 +22,14 @@ describe('settingsStore', () => {
     const chosen = {
       hiddenLeagues: ['NBA', 'MLS'],
       topEventsOnly: true,
-      onlyLiveGames: true,
+      onlyLiveEvents: true,
       sportColors: { Football: '#123456', Soccer: '#abcdef' },
       leagueColors: { NFL: '#fedcba' },
       mapType: 'satellite' as const,
       venuePhotos: false,
       chosenConferences: { 'NCAA Football': ['SEC', 'ACC'] },
-      cardDensity: 'minimal' as const,
+      cardCount: 'fewer' as const,
+      hotEventIndicator: false,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -87,22 +88,22 @@ describe('settingsStore', () => {
     expect(JSON.parse(storage.getItem('scoremap.settings')!)).not.toHaveProperty('showDisrupted')
   })
 
-  it('ignores a saved hot-game flames switch and stops persisting it, keeping other preferences', () => {
-    const storage = memoryStorage()
-    const chosen = {
-      ...firstVisitSettings,
-      hiddenLeagues: ['NBA'],
-      topEventsOnly: true,
-      sportColors: { Football: '#123456' },
-      leagueColors: { NFL: '#fedcba' },
-      mapType: 'satellite' as const,
-    }
-    storage.setItem('scoremap.settings', JSON.stringify({ ...chosen, hotGameFlames: false }))
-    const store = settingsStore(() => storage)
+  it('shows a first-time visitor the hot games indicator', () => {
+    expect(settingsStore(() => memoryStorage()).load().hotEventIndicator).toBe(true)
+  })
 
-    expect(store.load()).toEqual(chosen)
-    store.save(store.load())
-    expect(JSON.parse(storage.getItem('scoremap.settings')!)).toEqual(chosen)
+  it('remembers the hot games indicator switched off after a page reload', () => {
+    const storage = memoryStorage()
+    settingsStore(() => storage).save({ ...firstVisitSettings, hotEventIndicator: false })
+
+    expect(settingsStore(() => storage).load().hotEventIndicator).toBe(false)
+  })
+
+  it.each([['off'], [0], [null]])('shows the hot games indicator for a saved switch it can\'t read (%j)', (hotEventIndicator) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], hotEventIndicator }))
+
+    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
   it('shows the plain map to a viewer whose settings were saved before there was a satellite map', () => {
@@ -119,27 +120,27 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
-  it('shows a first-time visitor Default card density', () => {
-    expect(settingsStore(() => memoryStorage()).load().cardDensity).toBe('default')
+  it('shows a first-time visitor Default card count', () => {
+    expect(settingsStore(() => memoryStorage()).load().cardCount).toBe('default')
   })
 
-  it.each([['minimal'], ['dense']] as const)('remembers the card density picked (%s) after a page reload', (cardDensity) => {
+  it.each([['fewer'], ['more']] as const)('remembers the card count picked (%s) after a page reload', (cardCount) => {
     const storage = memoryStorage()
-    settingsStore(() => storage).save({ ...firstVisitSettings, cardDensity })
+    settingsStore(() => storage).save({ ...firstVisitSettings, cardCount })
 
-    expect(settingsStore(() => storage).load().cardDensity).toBe(cardDensity)
+    expect(settingsStore(() => storage).load().cardCount).toBe(cardCount)
   })
 
-  it('shows Default card density to a viewer whose settings were saved before it could be picked', () => {
+  it('shows Default card count to a viewer whose settings were saved before it could be picked', () => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
 
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
-  it.each([['sparse'], [25], [null]])('shows Default card density for a saved one it doesn\'t know (%j)', (cardDensity) => {
+  it.each([['sparse'], [25], [null]])('shows Default card count for a saved one it doesn\'t know (%j)', (cardCount) => {
     const storage = memoryStorage()
-    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], cardDensity }))
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], cardCount }))
 
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
@@ -169,13 +170,14 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: false,
-      onlyLiveGames: false,
+      onlyLiveEvents: false,
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
       venuePhotos: true,
       chosenConferences: {},
-      cardDensity: 'default',
+      cardCount: 'default',
+      hotEventIndicator: true,
     })
   })
 
@@ -186,13 +188,14 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({
       hiddenLeagues: ['NBA'],
       topEventsOnly: true,
-      onlyLiveGames: false,
+      onlyLiveEvents: false,
       sportColors: {},
       leagueColors: {},
       mapType: 'plain',
       venuePhotos: true,
       chosenConferences: {},
-      cardDensity: 'default',
+      cardCount: 'default',
+      hotEventIndicator: true,
     })
   })
 
@@ -284,13 +287,14 @@ describe('settingsStore', () => {
       expect(settingsStore(() => storage).load()).toEqual({
         hiddenLeagues: ['NBA', 'MLS'],
         topEventsOnly: true,
-        onlyLiveGames: false,
+        onlyLiveEvents: false,
         sportColors: {},
         leagueColors: {},
         mapType: 'plain',
         venuePhotos: true,
         chosenConferences: {},
-        cardDensity: 'default',
+        cardCount: 'default',
+        hotEventIndicator: true,
       })
     },
   )
@@ -412,48 +416,6 @@ describe('settingsStore welcome tour progress', () => {
   })
 })
 
-describe('settingsStore: the collapsed rail', () => {
-  it('shows a first-time visitor the rail open', () => {
-    expect(settingsStore(() => memoryStorage()).loadRailCollapsed()).toBe(false)
-  })
-
-  it('keeps the rail collapsed, or open again, after a page reload', () => {
-    const storage = memoryStorage()
-
-    settingsStore(() => storage).saveRailCollapsed(true)
-    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(true)
-
-    settingsStore(() => storage).saveRailCollapsed(false)
-    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(false)
-  })
-
-  it('keeps the rail apart from the settings, so collapsing it changes none of them', () => {
-    const storage = memoryStorage()
-    const store = settingsStore(() => storage)
-    store.save({ ...firstVisitSettings, topEventsOnly: true })
-
-    store.saveRailCollapsed(true)
-
-    expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
-  })
-
-  it('opens the rail when what was saved is unreadable', () => {
-    const storage = memoryStorage()
-    storage.setItem('scoremap.railCollapsed', '{not json')
-
-    expect(settingsStore(() => storage).loadRailCollapsed()).toBe(false)
-  })
-
-  it('still works when the browser blocks storage, with the rail open', () => {
-    const store = settingsStore(() => {
-      throw new DOMException('The operation is insecure.', 'SecurityError')
-    })
-
-    expect(() => store.saveRailCollapsed(true)).not.toThrow()
-    expect(store.loadRailCollapsed()).toBe(false)
-  })
-})
-
 describe('settingsStore: the event panel\'s details', () => {
   it('shows a first-time visitor the details minimized', () => {
     expect(settingsStore(() => memoryStorage()).loadDetailsOpen()).toBe(false)
@@ -469,7 +431,7 @@ describe('settingsStore: the event panel\'s details', () => {
     expect(settingsStore(() => storage).loadDetailsOpen()).toBe(false)
   })
 
-  it('keeps the details apart from the settings and the rail, so opening them changes neither', () => {
+  it('keeps the details apart from the settings, so opening them changes none of them', () => {
     const storage = memoryStorage()
     const store = settingsStore(() => storage)
     store.save({ ...firstVisitSettings, topEventsOnly: true })
@@ -477,7 +439,6 @@ describe('settingsStore: the event panel\'s details', () => {
     store.saveDetailsOpen(true)
 
     expect(store.load()).toEqual({ ...firstVisitSettings, topEventsOnly: true })
-    expect(store.loadRailCollapsed()).toBe(false)
   })
 
   it('minimizes the details when what was saved is unreadable', () => {
@@ -525,17 +486,6 @@ describe('unsavedSettingsStore', () => {
     expect(store.loadTourProgress()).toBe('finished')
     expect(unsavedSettingsStore().loadTourProgress()).toBe('finished')
     expect(saved.loadTourProgress()).toBe('finished')
-  })
-
-  it('opens the rail every time and saves none of its collapsing', () => {
-    const storage = memoryStorage()
-    const saved = settingsStore(() => storage)
-    const store = unsavedSettingsStore()
-
-    store.saveRailCollapsed(true)
-
-    expect(store.loadRailCollapsed()).toBe(false)
-    expect(saved.loadRailCollapsed()).toBe(false)
   })
 
   it('opens a demo\'s event panels with their details minimized, and saves nothing when they open', () => {

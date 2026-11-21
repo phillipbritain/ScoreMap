@@ -16,12 +16,12 @@ export const fillInReach = 6 * 60 * 60_000
  * under the viewer's settings (see visibleGames). Every game on now shows: Live, Final, or Upcoming and
  * starting within 30 minutes. When fewer than 12 of those show across the whole globe, Upcoming games
  * fill in, soonest first, to make 12 (ADR-0029): each starting within 6 hours, on the same day as now in
- * the viewer's time zone (`timeZone`, the browser's unless given). With "Only show live games" on, no
+ * the viewer's time zone (`timeZone`, the browser's unless given). With "Only show live events" on, no
  * Upcoming game shows at all, but Final games still do.
  */
 export function gamesOnGlobe(games: readonly Game[], settings: ViewerSettings, now: number, timeZone?: string): Game[] {
   const visible = visibleGames(games, settings)
-  if (settings.onlyLiveGames) return visible.filter((game) => game.status !== 'Upcoming')
+  if (settings.onlyLiveEvents) return visible.filter((game) => game.status !== 'Upcoming')
   const startsIn = (game: Game) => Date.parse(game.startTime) - now
   const isOnNow = (game: Game) => game.status !== 'Upcoming' || startsIn(game) <= startsSoon
   const onNow = visible.filter(isOnNow)

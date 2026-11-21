@@ -21,7 +21,7 @@ async function mountRail(touring: boolean) {
   await act(() => root!.render(createElement(Rail, {
     leagues: [], settings: firstVisitSettings, onChange: vi.fn(), accent: '#fff', camera: null, zoomSettings,
     onZoomIn: vi.fn(), onZoomOut: vi.fn(), onHome: vi.fn(), touring, games: [], gamesReady: true,
-    onSelectGame: vi.fn(), collapsed: false, onCollapsedChange: vi.fn(),
+    onSelectGame: vi.fn(),
     feedbackContext: () => { throw new Error('not sent') }, onTourAgain,
   })))
   return { onTourAgain }
@@ -33,7 +33,7 @@ const usable = (element: Element) => !element.closest('[inert]')
 it("keeps More, its popover and the Feedback panel usable during the welcome tour, and nothing else on the rail", async () => {
   const { onTourAgain } = await mountRail(true)
   expect(usable(button('More'))).toBe(true)
-  for (const label of ['Hide controls', 'Zoom in', 'Home', 'Leagues', 'Display Settings', 'Map Type', 'Events']) {
+  for (const label of ['Zoom in', 'Home', 'Leagues', 'Display Settings', 'Events']) {
     expect(usable(button(label)), label).toBe(false)
   }
 
@@ -52,10 +52,10 @@ it("keeps More, its popover and the Feedback panel usable during the welcome tou
 
 it('leaves every button usable once the tour is over', async () => {
   await mountRail(false)
-  for (const label of ['Hide controls', 'Zoom in', 'Leagues', 'Events', 'More']) expect(usable(button(label)), label).toBe(true)
+  for (const label of ['Zoom in', 'Leagues', 'Events', 'More']) expect(usable(button(label)), label).toBe(true)
 })
 
-it('gives Leagues, Display Settings and Events a close button that closes them, and none to the menus', async () => {
+it('gives Leagues, Display Settings and Events a close button that closes them, and none to More', async () => {
   await mountRail(false)
   const close = () => document.querySelector<HTMLButtonElement>('#rail-popover .rail__popover-close')
   for (const label of ['Leagues', 'Display Settings', 'Events']) {
@@ -66,9 +66,7 @@ it('gives Leagues, Display Settings and Events a close button that closes them, 
     expect(document.getElementById('rail-popover'), label).toBeNull()
     expect(document.activeElement, label).toBe(button(label))
   }
-  for (const label of ['Map Type', 'More']) {
-    await act(() => button(label).click())
-    expect(close(), label).toBeNull()
-    await act(() => button(label).click())
-  }
+  await act(() => button('More').click())
+  expect(close()).toBeNull()
+  await act(() => button('More').click())
 })

@@ -36,8 +36,8 @@ export interface ScoreCard {
   rows: ScoreCardRow[]
   /** Its start time before an Upcoming game starts; blank when there is nothing to show. */
   clockLine: string
-  /** Flames around its edge when its game is hot. */
-  flames: boolean
+  /** The hot indicator, a glowing outline around its edge, when its game is hot. */
+  hotIndicator: boolean
 }
 
 /**
@@ -50,7 +50,7 @@ export function scoreCard(game: Game, viewer: Viewer = {}): ScoreCard {
     status: game.status,
     rows: cardRows(game),
     clockLine: progressLine(game, 'short', viewer) ?? '',
-    flames: game.hot,
+    hotIndicator: game.hot,
   }
 }
 

@@ -15,7 +15,7 @@ import { cardJump } from './cardJump'
 import { cardMoveDuration } from './cardMoves'
 import { cardClusterLayer, cardLayoutSource, cardlessSelectedPinLayer, cardlessSmallPinLayer } from './cardLayoutLayers'
 import { GlobeMap, type LoadingStage } from './globeMap'
-import { flameImage } from './flames'
+import { hotIndicatorImage } from './hotIndicator'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
 import {
@@ -1428,16 +1428,16 @@ describe('glow', () => {
   })
 })
 
-describe('flames', () => {
+describe('hot indicator', () => {
   const hot = (id: string, at: GameAt) => ({ ...game(id, at), hot: true })
 
-  it('animates a used fire image in place, and stops and resumes with reduce motion', async () => {
+  it('animates a used hot indicator image in place, and stops and resumes with reduce motion', async () => {
     await commands.reduceMotion(false)
     try {
-      // A small pin's fire: a score card's is drawn by the page. A strip of globe with room for one
+      // A small pin's hot indicator: a score card's is drawn by the page. A strip of globe with room for one
       // card: A beside it is left its small pin.
       const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 40 })
-      const id = flameImage(builtInTheme, builtInTheme.components.Pin.flame, 5)
+      const id = hotIndicatorImage(builtInTheme, builtInTheme.components.Pin.hotIndicator, 5)
       globe.show([game('CARD'), hot('A', { longitude: 3 })])
       await vi.waitFor(() => expect(map.hasImage(id)).toBe(true), { timeout: 10_000 })
       const pixels = () => Array.from(map.getImage(id).data.data)
@@ -1460,7 +1460,21 @@ describe('flames', () => {
     }
   })
 
-  it('shows on a card cluster holding a hot game', async () => {
+  it('shows on a hot game’s score card, only while they are on', async () => {
+    const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    globe.show([hot('A', {}), game('B', { longitude: 2 })])
+    const a = await cardShown('A')
+    await vi.waitFor(() => expect(a.querySelector('.score-card__hot-indicator')).not.toBeNull())
+    expect(card('B')!.querySelector('.score-card__hot-indicator')).toBeNull()
+
+    globe.setHotIndicators(false)
+    await vi.waitFor(() => expect(card('A')!.querySelector('.score-card__hot-indicator')).toBeNull())
+
+    globe.setHotIndicators(true)
+    await vi.waitFor(() => expect(card('A')!.querySelector('.score-card__hot-indicator')).not.toBeNull())
+  })
+
+  it('shows on a card cluster holding a hot game, only while they are on', async () => {
     const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
     // As in zooming in to a card cluster: far too close for their cards to fit.
     const games = Array.from({ length: 36 }, (_, i) => ({
@@ -1478,9 +1492,25 @@ describe('flames', () => {
               [x - 30, y - 30],
               [x + 30, y + 30],
             ],
-            { layers: ['card-cluster-flames'] },
+            { layers: ['card-cluster-hot-indicator'] },
           ),
         ).not.toEqual([]),
+      { timeout: 10_000 },
+    )
+
+    // Switched off, the cluster's indicator goes with its games'.
+    globe.setHotIndicators(false)
+    await vi.waitFor(
+      () =>
+        expect(
+          map.queryRenderedFeatures(
+            [
+              [x - 30, y - 30],
+              [x + 30, y + 30],
+            ],
+            { layers: ['card-cluster-hot-indicator'] },
+          ),
+        ).toEqual([]),
       { timeout: 10_000 },
     )
   })

@@ -1,7 +1,7 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
 import { isTourProgress, progressAfterReload, type TourProgress } from '../welcomeTour/welcomeTour'
-import { firstVisitSettings, isCardDensity, isMapType, type ViewerSettings } from './viewerSettings'
+import { firstVisitSettings, isCardCount, isMapType, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
 export type SettingsStorage = Pick<Storage, 'getItem' | 'setItem'>
@@ -18,9 +18,6 @@ export interface SettingsStore {
    */
   loadTourProgress(): TourProgress
   saveTourProgress(progress: TourProgress): void
-  /** Whether the viewer collapsed the rail out of the way: open on a first visit. */
-  loadRailCollapsed(): boolean
-  saveRailCollapsed(collapsed: boolean): void
   /** Whether the event panel's details were left open, so the next panel opens them too: minimized on a first visit. */
   loadDetailsOpen(): boolean
   saveDetailsOpen(open: boolean): void
@@ -32,8 +29,6 @@ const cameraKey = 'scoremap.camera'
 // Kept apart from the settings, so settings saved before the tour existed can be told from a first visit.
 const tourKey = 'scoremap.welcomeTour'
 // Kept apart from the settings: it's how the page is laid out, not what the globe shows.
-const railCollapsedKey = 'scoremap.railCollapsed'
-// Kept apart from the settings, as the rail's is.
 const detailsOpenKey = 'scoremap.detailsOpen'
 
 /**
@@ -92,20 +87,6 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
         // The tour will just show again from Welcome next time.
       }
     },
-    loadRailCollapsed() {
-      try {
-        return storage().getItem(railCollapsedKey) === 'true'
-      } catch {
-        return false
-      }
-    },
-    saveRailCollapsed(collapsed) {
-      try {
-        storage().setItem(railCollapsedKey, String(collapsed))
-      } catch {
-        // The rail will just open again next time.
-      }
-    },
     loadDetailsOpen() {
       try {
         return storage().getItem(detailsOpenKey) === 'true'
@@ -136,8 +117,6 @@ export function unsavedSettingsStore(): SettingsStore {
     saveCamera() {},
     loadTourProgress: () => 'finished',
     saveTourProgress() {},
-    loadRailCollapsed: () => false,
-    saveRailCollapsed() {},
     loadDetailsOpen: () => false,
     saveDetailsOpen() {},
   }
@@ -169,13 +148,13 @@ function cameraFromSaved(saved: unknown): Camera | null {
  * Reads saved settings field by field, so settings saved by an older version of the app (or
  * damaged ones) keep what is still valid and take first-visit defaults for the rest. Settings the
  * app no longer has, such as the old "Card style" or the rail's old "Live games only" (liveOnly, not
- * Display Settings' "Only show live games"), "Show Disrupted games" and "Flames on hot games" switches,
+ * Display Settings' "Only show live events"), "Show Disrupted games" switch,
  * are ignored. Colors saved under their old British names (sportColours,
  * leagueColours) load as the new ones, so a returning viewer keeps their picks.
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, onlyLiveGames, mapType, venuePhotos, chosenConferences, cardDensity } = fields
+  const { hiddenLeagues, topEventsOnly, onlyLiveEvents, mapType, venuePhotos, chosenConferences, cardCount, hotEventIndicator } = fields
   const sportColors = fields.sportColors ?? fields.sportColours
   const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
@@ -183,13 +162,14 @@ function fromSaved(saved: unknown): ViewerSettings {
       ? hiddenLeagues.filter((league): league is string => typeof league === 'string')
       : firstVisitSettings.hiddenLeagues,
     topEventsOnly: typeof topEventsOnly === 'boolean' ? topEventsOnly : firstVisitSettings.topEventsOnly,
-    onlyLiveGames: typeof onlyLiveGames === 'boolean' ? onlyLiveGames : firstVisitSettings.onlyLiveGames,
+    onlyLiveEvents: typeof onlyLiveEvents === 'boolean' ? onlyLiveEvents : firstVisitSettings.onlyLiveEvents,
     sportColors: colorsFromSaved(sportColors),
     leagueColors: colorsFromSaved(leagueColors),
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
     venuePhotos: typeof venuePhotos === 'boolean' ? venuePhotos : firstVisitSettings.venuePhotos,
     chosenConferences: conferencesFromSaved(chosenConferences),
-    cardDensity: isCardDensity(cardDensity) ? cardDensity : firstVisitSettings.cardDensity,
+    cardCount: isCardCount(cardCount) ? cardCount : firstVisitSettings.cardCount,
+    hotEventIndicator: typeof hotEventIndicator === 'boolean' ? hotEventIndicator : firstVisitSettings.hotEventIndicator,
   }
 }
 

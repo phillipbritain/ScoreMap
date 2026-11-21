@@ -45,7 +45,7 @@ export const satelliteLayer = 'satellite'
 
 const satelliteTiles = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg'
 
-/** One tile of the satellite map's imagery, the address of its picture: Map Type shows one (see MapTypes). */
+/** One tile of the satellite map's imagery, the address of its picture: Display Settings' Map type shows one (see MapTypes). */
 export function satelliteTile(z: number, y: number, x: number): string {
   return satelliteTiles.replace('{z}', String(z)).replace('{y}', String(y)).replace('{x}', String(x))
 }

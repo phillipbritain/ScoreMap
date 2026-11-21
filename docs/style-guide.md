@@ -116,7 +116,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card colors" heading (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card density" and "Card colors" headings (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -192,7 +192,7 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
 | `components.Rail.chip.badge` | The badge counting leagues, after a sport's name and on the "All leagues" chip | `primary.dark` |
-| `components.Rail.on.fill`, `.outline`, `.text` | A league chip that's on, lit as a Live score card is: its fill, with `Rail.on.tint` of its outline's color mixed in (0.14), its outline and glow (`Rail.on.glow.radius` and `.opacity`, 8 and 0.35), and its text. The chosen "Top Events" or "My leagues" in Leagues is lit the same way, its radio dot filled in the outline's color, and the welcome tour's Next and Done buttons are lit the same way | `primary.dark`, `secondary.main`, `secondary.light` |
+| `components.Rail.on.fill`, `.outline`, `.text` | A league chip that's on, lit as a Live score card is: its fill, with `Rail.on.tint` of its outline's color mixed in (0.14), its outline and glow (`Rail.on.glow.radius` and `.opacity`, 8 and 0.35), and its text. The chosen "Top Events" or "My leagues" in Leagues, and the card density picked in Display Settings, are lit the same way, its radio dot filled in the outline's color, and the welcome tour's Next and Done buttons are lit the same way | `primary.dark`, `secondary.main`, `secondary.light` |
 | `components.LoadingScreen.dim.color` | The loading screen, solid, hiding the globe while ScoreMap loads; and the cut-off note's dim over the globe, as opaque as `components.LoadingScreen.dim.opacity` (see [On the page](#on-the-page)) so the globe shows through | `background.default`, as the sky |
 | `components.LoadingScreen.rocket.color` | The loading screen's flying rocket: its body and fins, and the stars streaming past it (its window is the dim's color) | `text.primary` |
 | `components.LoadingScreen.rocket.flame.outer`, `.inner` | The flame under the rocket: its outer layer, and the inner one inside it | `warning.main` (orange), `secondary.main` (gold) |
@@ -296,9 +296,9 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `subtitle2` | A score card's text and the loading screen's message take its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
 | `body2` | The event panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |
-| `button` | Buttons: sport names in Display Settings, league chips, the scenario pill and the scenario it has on | 600, 14 |
+| `button` | Buttons: sport names in Display Settings, league chips, card density's (joined as one toggle button group), the scenario pill and the scenario it has on | 600, 14 |
 | `caption` | Secondary lines: the event panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
-| `overline` | The event panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card colors" heading, in capitals | 700, 12, 0.14em |
+| `overline` | The event panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card density" and "Card colors" headings, in capitals | 700, 12, 0.14em |
 | `footnote` | The event panel's labels on a phone | 400, 11 |
 | `small` | A score card's text: its team abbreviations and scores, in their own weights, and the rest in `subtitle2`'s | 600, 10 |
 | `tiny` | The smallest on the page: a score card's header line, and a ranked college team's poll place before its abbreviation (in `text.secondary`) | 400, 9 |

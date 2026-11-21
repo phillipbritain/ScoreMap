@@ -1,6 +1,8 @@
 import { useId, useState, type CSSProperties, type ReactNode } from 'react'
 import { pickableColors } from '../settings/gameColor'
 import {
+  cardDensities,
+  cardDensityNames,
   hasColors,
   leaguesBySport,
   withLeagueColor,
@@ -23,7 +25,8 @@ interface DisplaySettingsProps {
 
 /**
  * The rail's Display Settings popover: an "Only show live games" switch, which hides every Upcoming game
- * (ADR-0029), and a "Display venue photo on Event Panel" switch for the event panel's photo, then, under "Card colors", each sport, then its leagues, by name, with a swatch of
+ * (ADR-0029), and a "Display venue photo on Event Panel" switch for the event panel's photo, then, under "Card density", Minimal, Default and Dense side by side,
+ * the one picked lit (see CardDensity), then, under "Card colors", each sport, then its leagues, by name, with a swatch of
  * its games' color, which opens a grid of the colors there are to pick (see pickableColors) under its
  * row, and a control to clear it; a league with no color of its own shows its sport's, marked as
  * taken from the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -64,6 +67,7 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
     )
   }
   const photos = settings.venuePhotos
+  const densityHeading = useId()
   const colorsHeading = useId()
   return (
     <>
@@ -73,6 +77,22 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
       <Switch on={photos} onChange={(on) => onChange({ ...settings, venuePhotos: on })}>
         Display venue photo on Event Panel
       </Switch>
+      <h3 id={densityHeading} className="display-section">
+        Card density
+      </h3>
+      <div className="card-densities" role="group" aria-labelledby={densityHeading}>
+        {cardDensities.map((density) => (
+          <button
+            key={density}
+            type="button"
+            className="rail-chip"
+            aria-pressed={settings.cardDensity === density}
+            onClick={() => onChange({ ...settings, cardDensity: density })}
+          >
+            {cardDensityNames[density]}
+          </button>
+        ))}
+      </div>
       <h3 id={colorsHeading} className="display-section">
         Card colors
       </h3>

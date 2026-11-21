@@ -69,8 +69,12 @@ Games shown as one marker because there's no room to show them apart: a card clu
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Card cluster**:
-A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most 40 cards (25 on a phone), for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), and the selected game's. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.
+A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most as many cards as the viewer's card density allows, for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), and the selected game's. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.
 _Avoid_: Crowd, cluster (when it matters that it's cards)
+
+**Card density**:
+How many score cards a screen shows at once where it's busy, picked in Display Settings on the rail: Minimal (10 on a phone, 20 on a wider screen), Default (20, 30) or Dense (30, 40). The rest are in card clusters. Fewer cards means fewer trails.
+_Avoid_: Card count, max cards (to the viewer)
 
 **Venue cluster**:
 A cluster where score cards' trails meet, in place of their venue dots, which would overlap. Its games' cards are already on screen, so it shows no count, and selecting it does nothing.
@@ -85,7 +89,7 @@ The view of one event (a game, a race or tournament, a fight card), opened by se
 _Avoid_: Event panel (not everything on the globe is a game), Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens; these three left out on a touchscreen, which pinches to zoom), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Events (every event shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens; these three left out on a touchscreen, which pinches to zoom), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, the card density, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Events (every event shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:

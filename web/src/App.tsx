@@ -220,6 +220,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           zoomSettings={zoom}
           colors={colors}
           mapType={viewerSettings.mapType}
+          cardDensity={viewerSettings.cardDensity}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={boardGames && visible}
           justHappened={justHappened}

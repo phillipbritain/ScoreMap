@@ -1,4 +1,5 @@
 import type { GameStatus } from '../games/game'
+import type { CardDensity } from '../settings/viewerSettings'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
@@ -46,15 +47,23 @@ export interface CardScene {
    * card clusters. No limit, unless given.
    */
   cardCount?: number
+  /**
+   * Whether the card count changed since the cards were last laid out (the viewer picked another card
+   * density). On a still camera, the cards are laid out afresh, each looking for room, rather than holding
+   * where they were (see layOutCards), so the new count shows at once.
+   */
+  cardCountChanged?: boolean
 }
 
 /**
- * The most score cards a screen this wide shows at once where it's busy, so a crowded view keeps to
- * the games most worth watching (see cardRank): fewer on a phone.
+ * The most score cards a screen this wide shows at once where it's busy, at the viewer's card density,
+ * so a crowded view keeps to the games most worth watching (see cardRank): 10 more past a phone's width.
  */
-export function cardCount(screenWidth: number): number {
-  return screenWidth <= phoneWidth ? 25 : 40
+export function cardCount(screenWidth: number, density: CardDensity): number {
+  return cardCounts[density] + (screenWidth <= phoneWidth ? 0 : 10)
 }
+// The most cards at each density on a phone.
+const cardCounts: Record<CardDensity, number> = { minimal: 10, default: 20, dense: 30 }
 // The widest screen laid out as a phone's, as the page's CSS has it (max-width: 640px).
 const phoneWidth = 640
 
@@ -207,7 +216,7 @@ function differs(was: ReadonlyMap<string, Showing>, now: ReadonlyMap<string, Sho
 
 /**
  * Lays out the score cards on screen: while the camera moves, afresh each frame (see placeCards), and
- * once it's still, not at all. Then each card laid out last time holds where it was, its offset from
+ * once it's still, not at all, unless the card count changed (see CardScene.cardCountChanged). Then each card laid out last time holds where it was, its offset from
  * its venue, whether it's in a card cluster and its trail's route, so whatever changes on screen (a
  * score, a selection, a game gone), the cards stay as the viewer left them; only a game given for the
  * first time is placed, around the others. Before anything is laid out, they're placed as for a still
@@ -219,7 +228,7 @@ export function layOutCards(
   previous: ReadonlyMap<string, CardPlacement> = new Map(),
 ): CardPlacements {
   const moving = scene.moving === true || scene.cameraMoving === true
-  if (moving || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
+  if (moving || scene.cardCountChanged || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
   const placed = cards.every((card) => previous.has(card.gameId)) ? undefined : placeCards(cards, scene, previous)
   const placements = new Map(placed?.cards)
   for (const card of cards) {

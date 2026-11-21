@@ -2226,7 +2226,40 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: a section's heading, "Card colors": small gold capitals, a line running on from it to
+/* Display Settings: "Card density", its three levels joined as one toggle button group, as MUI's
+   ToggleButtonGroup: chips sharing their borders, cornered only at the group's ends, the one picked lit as
+   a league chip that's on is. */
+.card-densities {
+  display: flex;
+  margin-bottom: calc(4 * var(--spacing));
+}
+
+.card-densities .rail-chip {
+  flex: 1;
+  border-radius: 0;
+}
+
+.card-densities .rail-chip + .rail-chip {
+  margin-left: calc(-1 * var(--shape-border-width-thin));
+}
+
+.card-densities .rail-chip:first-child {
+  border-radius: var(--controls-corner) 0 0 var(--controls-corner);
+}
+
+.card-densities .rail-chip:last-child {
+  border-radius: 0 var(--controls-corner) var(--controls-corner) 0;
+}
+
+/* The lit one, and the one under the pointer, draw their whole outline over their neighbors' shared edges. */
+.card-densities .rail-chip[aria-pressed='true'],
+.card-densities .rail-chip:hover,
+.card-densities .rail-chip:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+/* Display Settings: a section's heading, "Card density" or "Card colors": small gold capitals, a line running on from it to
    the edge, set apart from the sports' names under it. */
 .display-section {
   display: flex;

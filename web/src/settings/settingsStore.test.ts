@@ -28,6 +28,7 @@ describe('settingsStore', () => {
       mapType: 'satellite' as const,
       venuePhotos: false,
       chosenConferences: { 'NCAA Football': ['SEC', 'ACC'] },
+      cardDensity: 'minimal' as const,
     }
 
     settingsStore(() => storage).save(chosen)
@@ -118,6 +119,31 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
+  it('shows a first-time visitor Default card density', () => {
+    expect(settingsStore(() => memoryStorage()).load().cardDensity).toBe('default')
+  })
+
+  it.each([['minimal'], ['dense']] as const)('remembers the card density picked (%s) after a page reload', (cardDensity) => {
+    const storage = memoryStorage()
+    settingsStore(() => storage).save({ ...firstVisitSettings, cardDensity })
+
+    expect(settingsStore(() => storage).load().cardDensity).toBe(cardDensity)
+  })
+
+  it('shows Default card density to a viewer whose settings were saved before it could be picked', () => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'] }))
+
+    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+  })
+
+  it.each([['sparse'], [25], [null]])('shows Default card density for a saved one it doesn\'t know (%j)', (cardDensity) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], cardDensity }))
+
+    expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
+  })
+
   it('shows venue photos to a first-time visitor', () => {
     expect(settingsStore(() => memoryStorage()).load().venuePhotos).toBe(true)
   })
@@ -149,6 +175,7 @@ describe('settingsStore', () => {
       mapType: 'plain',
       venuePhotos: true,
       chosenConferences: {},
+      cardDensity: 'default',
     })
   })
 
@@ -165,6 +192,7 @@ describe('settingsStore', () => {
       mapType: 'plain',
       venuePhotos: true,
       chosenConferences: {},
+      cardDensity: 'default',
     })
   })
 
@@ -262,6 +290,7 @@ describe('settingsStore', () => {
         mapType: 'plain',
         venuePhotos: true,
         chosenConferences: {},
+        cardDensity: 'default',
       })
     },
   )

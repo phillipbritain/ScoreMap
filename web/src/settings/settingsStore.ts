@@ -1,7 +1,7 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
 import { isTourProgress, progressAfterReload, type TourProgress } from '../welcomeTour/welcomeTour'
-import { firstVisitSettings, isMapType, type ViewerSettings } from './viewerSettings'
+import { firstVisitSettings, isCardDensity, isMapType, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
 export type SettingsStorage = Pick<Storage, 'getItem' | 'setItem'>
@@ -175,7 +175,7 @@ function cameraFromSaved(saved: unknown): Camera | null {
  */
 function fromSaved(saved: unknown): ViewerSettings {
   const fields = typeof saved === 'object' && saved !== null ? (saved as Record<string, unknown>) : {}
-  const { hiddenLeagues, topEventsOnly, onlyLiveGames, mapType, venuePhotos, chosenConferences } = fields
+  const { hiddenLeagues, topEventsOnly, onlyLiveGames, mapType, venuePhotos, chosenConferences, cardDensity } = fields
   const sportColors = fields.sportColors ?? fields.sportColours
   const leagueColors = fields.leagueColors ?? fields.leagueColours
   return {
@@ -189,6 +189,7 @@ function fromSaved(saved: unknown): ViewerSettings {
     mapType: isMapType(mapType) ? mapType : firstVisitSettings.mapType,
     venuePhotos: typeof venuePhotos === 'boolean' ? venuePhotos : firstVisitSettings.venuePhotos,
     chosenConferences: conferencesFromSaved(chosenConferences),
+    cardDensity: isCardDensity(cardDensity) ? cardDensity : firstVisitSettings.cardDensity,
   }
 }
 

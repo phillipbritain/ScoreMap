@@ -1437,7 +1437,9 @@ describe('hot indicator', () => {
       // A small pin's hot indicator: a score card's is drawn by the page. A strip of globe with room for one
       // card: A beside it is left its small pin.
       const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 }, { width: 400, height: 40 })
-      const id = hotIndicatorImage(builtInTheme, builtInTheme.components.Pin.hotIndicator, 5)
+      // Around a Live small pin's core and ring (see smallPinLayers).
+      const { core } = builtInTheme.components.Pin.live
+      const id = hotIndicatorImage(builtInTheme, builtInTheme.components.Pin.hotIndicator, core.radius + core.ring)
       globe.show([game('CARD'), hot('A', { longitude: 3 })])
       await vi.waitFor(() => expect(map.hasImage(id)).toBe(true), { timeout: 10_000 })
       const pixels = () => Array.from(map.getImage(id).data.data)

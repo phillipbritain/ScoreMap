@@ -2991,6 +2991,12 @@ body {
   padding-left: calc(4 * var(--spacing));
 }
 
+/* Welcome, with the rail out of sight but for More at its top (see .globe-area--rail-hidden), in the
+   middle of the whole screen, as wide as it fits. */
+.globe-area--rail-hidden > .welcome-tour.welcome-tour--welcome {
+  padding-right: calc(4 * var(--spacing));
+}
+
 /* A light dim, so the live pins still show behind the panel, which catches every press. */
 .welcome-tour__dim {
   position: absolute;
@@ -3360,6 +3366,10 @@ body {
   .welcome-tour {
     padding-right: calc(var(--rail-left-inset, 0px) + 3 * var(--spacing));
     padding-left: calc(3 * var(--spacing));
+  }
+
+  .globe-area--rail-hidden > .welcome-tour.welcome-tour--welcome {
+    padding-right: calc(3 * var(--spacing));
   }
 
   .welcome-tour__panel {

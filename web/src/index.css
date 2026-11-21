@@ -592,8 +592,9 @@ body {
   gap: var(--event-panel-score-gap);
   max-height: calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--event-panel-score-gap));
   margin: 0;
-  /* Room between the scores and the scroll bar. */
-  padding: 0 var(--spacing) 0 0;
+  /* Room between the scores and the scroll bar, where the scroll bar takes room of its own (as on
+     Windows) and where it lies over the lines (as on a Mac). */
+  padding: 0 calc(3 * var(--spacing)) 0 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -3648,11 +3649,13 @@ body {
     min-height: 0;
   }
 
-  /* Half the strip, so names have room on a phone. */
+  /* Half the strip, so names have room on a phone. Its foot keeps the desktop's room under the last
+     row, which is the room between the rows and the sideways scroll bar when the block scrolls (see
+     .event-panel__score). */
   .event-panel__score {
     width: min(var(--event-panel-size-score-block), 50%);
     --event-panel-score-gap: var(--spacing);
-    padding-block: calc(2 * var(--spacing));
+    padding-block: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   }
 
   .event-panel__details {

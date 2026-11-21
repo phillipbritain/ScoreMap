@@ -1,5 +1,5 @@
 import { shownBout } from '../games/bouts'
-import { entrantImage, positionText, type Game, type GameBoutSide, type GameEntrant, type GameField, type GameStatus, type GameTeam } from '../games/game'
+import { entrantImage, type Game, type GameBoutSide, type GameEntrant, type GameStatus, type GameTeam } from '../games/game'
 import { progressLine, type Viewer } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { logoMark } from '../games/teamLogo'
@@ -8,7 +8,7 @@ import type { Theme } from '../theme/theme'
 
 export interface ScoreCardRow {
   /**
-   * A side's abbreviation, an entrant's position and short name ("1 K. Larson"), a bout's side's short name
+   * A side's abbreviation, an entrant's short name ("K. Larson"), a bout's side's short name
    * ("J. Jones"), or a game's name before its field is listed.
    */
   label: string
@@ -23,16 +23,17 @@ export interface ScoreCardRow {
 
 /**
  * What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst),
- * and a short clock line. A field shows its top two entrants by position ("1 K. Larson") with their flags
- * and in golf their scores to par, or before its field is listed, the game's name (its note) on top. A fight card shows the
- * bout on now, else its main event (see shownBout), as two sides with their flags, the winner marked "W".
+ * and a short clock line. A field shows its top three entrants (fewer when it has fewer, but always two
+ * rows) by name with their flags, in order, so their places go unsaid; in golf with their scores to par.
+ * Before its field is listed, the game's name (its note) on top. A fight card shows the bout on now, else
+ * its main event (see shownBout), as two sides with their flags, the winner marked "W".
  */
 export interface ScoreCard {
   gameId: string
   /** Drives the card's style, matching the small pin's status style. */
   status: GameStatus
-  top: ScoreCardRow
-  bottom: ScoreCardRow
+  /** Its rows, top first: two sides, or a field's top three. */
+  rows: ScoreCardRow[]
   /** Its start time before an Upcoming game starts; blank when there is nothing to show. */
   clockLine: string
   /** Flames around its edge when its game is hot. */
@@ -44,12 +45,10 @@ export interface ScoreCard {
  * time ("1:00 PM"; ADR-0029): `viewer` gives the time zone and locale, the browser's unless given.
  */
 export function scoreCard(game: Game, viewer: Viewer = {}): ScoreCard {
-  const [top, bottom] = cardRows(game)
   return {
     gameId: game.id,
     status: game.status,
-    top,
-    bottom,
+    rows: cardRows(game),
     clockLine: progressLine(game, 'short', viewer) ?? '',
     flames: game.hot,
   }
@@ -69,7 +68,10 @@ export function headerText(color: string, theme: Theme): string {
   return textOn(mixColors(fill, color, card.header.tint), text, fill)
 }
 
-function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] {
+/** How many of a field its score card shows, top first. */
+const fieldRows = 3
+
+function cardRows({ sport, contest, note }: Game): ScoreCardRow[] {
   if (contest.kind === 'sides') {
     const [top, bottom] = sidesTopFirst(sport, contest)
     return [cardTeam(top), cardTeam(bottom)]
@@ -80,8 +82,8 @@ function cardRows({ sport, contest, note }: Game): [ScoreCardRow, ScoreCardRow] 
   }
   const blank: ScoreCardRow = { label: '', logoUrl: null, score: '' }
   if (contest.entries.length === 0) return [{ ...blank, label: note ?? '' }, blank]
-  const [first, second] = contest.entries.map((entrant) => cardEntrant(entrant, contest))
-  return [first, second ?? blank]
+  const rows = contest.entries.slice(0, fieldRows).map(cardEntrant)
+  return rows.length === 1 ? [...rows, blank] : rows
 }
 
 function cardTeam({ abbreviation, logoUrl, score, rank }: GameTeam): ScoreCardRow {
@@ -93,6 +95,7 @@ function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRo
   return { label: shortName, logoUrl: flagUrl, score: winner ? 'W' : '' }
 }
 
-function cardEntrant(entrant: GameEntrant, field: GameField): ScoreCardRow {
-  return { label: `${positionText(entrant, field)} ${entrant.shortName}`, logoUrl: entrantImage(entrant), score: entrant.score ?? '' }
+/** An entrant on a score card: their short name, and in golf their score to par; their place is their row's. */
+function cardEntrant(entrant: GameEntrant): ScoreCardRow {
+  return { label: entrant.shortName, logoUrl: entrantImage(entrant), score: entrant.score ?? '' }
 }

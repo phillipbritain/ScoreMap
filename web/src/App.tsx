@@ -99,8 +99,11 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // Whether the viewer collapsed the rail out of the way after setting up.
   const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
-  // Whether a game panel's details were left open: the next panel opens them the same way.
+  // Whether a game panel's details were left open: the next panel opens them the same way, after a
+  // reload too; collapsed until the viewer first opens them. During the welcome tour, its panels start
+  // collapsed whatever was left, and what's done to them there isn't kept.
   const [detailsOpen, setDetailsOpen] = useState(store.loadDetailsOpen)
+  const [tourDetailsOpen, setTourDetailsOpen] = useState(false)
   // How far the globe zooms out depends on the window's size, so it fits a phone as it fits a laptop.
   const fittedZoom = useFittedZoom(zoomSettings)
   // The satellite map zooms further in; switching back to the plain map zooms out to its limit (see GlobeMap.setZoomLimits).
@@ -153,6 +156,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const justHappened = showTourGames ? tourPlay.changes : liveChanges
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
+    setTourDetailsOpen(false)
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
     globe.current?.flyTo(tourCamera(tourScreen()))
   }
@@ -266,8 +270,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             color={panelColor}
             textOnColor={textOn(panelColor, theme.palette.text.primary, theme.palette.background.paper)}
             venuePhotos={viewerSettings.venuePhotos}
-            detailsOpen={detailsOpen}
-            onDetailsOpenChange={setDetailsOpen}
+            detailsOpen={showTourGames ? tourDetailsOpen : detailsOpen}
+            onDetailsOpenChange={showTourGames ? setTourDetailsOpen : setDetailsOpen}
             demo={demo}
             onClose={closeGame}
             leaving={panelLeaving}

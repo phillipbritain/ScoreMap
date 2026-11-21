@@ -903,6 +903,13 @@ describe('the card count, where it is busy', () => {
     expect(withCards(layout)).toEqual(['onScreen'])
   })
 
+  it("doesn't count a card sitting wholly off screen, above a venue just inside the top edge", () => {
+    // Its venue 3 px inside the top edge, the card above it.
+    const layout = counted([ranked('atTheEdge', mx, 3 - 30 - venueGap, 0), ranked('below', mx, my, 5)], 1)
+
+    expect(withCards(layout)).toEqual(['atTheEdge', 'below'])
+  })
+
   it.each([
     ['minimal', 10, 20],
     ['default', 20, 30],

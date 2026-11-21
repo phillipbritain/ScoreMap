@@ -39,13 +39,13 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
 const flame = () => element('score-card score-card--live', 'score-card__flames')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start'] as const
-const rocket = () => element('loading-screen', 'loading-screen__rocket-ship')
+const rocket = () => element('loading-screen', 'loading-screen__rocket', 'loading-screen__rocket-heading', 'loading-screen__rocket-ship')
 
 /** A star streaming past the loading screen's rocket. */
 function star(): Element {
-  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-  element('loading-screen', 'loading-screen__rocket-stars').append(circle)
-  return circle
+  const streaming = document.createElement('span')
+  element('loading-screen', 'loading-screen__rocket', 'loading-screen__rocket-stars').append(streaming)
+  return streaming
 }
 
 const leavingLoadingScreen = () => element('loading-screen loading-screen--leaving')

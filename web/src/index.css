@@ -2602,16 +2602,40 @@ body {
   animation: loading-screen-leave 0.4s ease-out forwards;
 }
 
+/* The rocket's box, drawn in units of a 64th of it across (--loading-screen-rocket-unit). Each moving
+   part is an element of its own, moved only by its transform, so the compositor flies it even while the
+   page is busy loading (see Rocket in LoadingScreen.tsx). */
 .loading-screen__rocket {
+  --loading-screen-rocket-unit: calc(var(--loading-screen-rocket-size) / 64);
+  position: relative;
   width: var(--loading-screen-rocket-size);
   height: var(--loading-screen-rocket-size);
-  overflow: visible;
   color: var(--loading-screen-rocket-color);
 }
 
+/* Turned to fly up and to the right, around the middle of the box. */
+.loading-screen__rocket-heading {
+  position: absolute;
+  inset: 0;
+  transform: rotate(45deg);
+}
+
 .loading-screen__rocket-ship {
-  fill: currentColor;
+  position: absolute;
+  inset: 0;
   animation: loading-screen-rocket-bob 0.8s ease-in-out infinite alternate;
+}
+
+.loading-screen__rocket-ship svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.loading-screen__rocket-body {
+  fill: currentColor;
 }
 
 /* The dim, showing through the rocket's window. */
@@ -2619,10 +2643,12 @@ body {
   fill: var(--loading-screen-dim-color);
 }
 
-/* The flame: an outer layer and a quicker inner one, flickering out of step. */
+/* The flame: an outer layer and a quicker inner one, flickering out of step, each stretching down from
+   the foot of the ship (41 units down its box). */
 .loading-screen__rocket-flame {
-  transform-box: fill-box;
-  transform-origin: top center;
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% calc(41 / 64 * 100%);
   animation: loading-screen-rocket-flame 0.15s ease-in-out infinite alternate;
 }
 
@@ -2636,11 +2662,28 @@ body {
   animation-direction: alternate-reverse;
 }
 
-/* Stars streaming past the rocket, the nearer (bigger) ones quicker: each its own speed and start
-   (LoadingScreen.tsx gives them). */
-.loading-screen__rocket-stars circle {
-  fill: currentColor;
+/* Stars streaming past the rocket, down and to the left, the nearer (bigger) ones quicker: each its own
+   place, size, speed and start (LoadingScreen.tsx gives them). Their field reaches 14 units past each
+   side of the box, and fades them out toward the edge of the circle it fits. */
+.loading-screen__rocket-stars {
+  position: absolute;
+  inset: calc(-14 * var(--loading-screen-rocket-unit));
+  mask-image: radial-gradient(closest-side, #000 50%, transparent);
+}
+
+.loading-screen__rocket-stars span {
+  position: absolute;
+  width: calc(3 * var(--loading-screen-rocket-unit));
+  height: calc(3 * var(--loading-screen-rocket-unit));
+  margin: calc(-1.5 * var(--loading-screen-rocket-unit)) 0 0 calc(-1.5 * var(--loading-screen-rocket-unit));
   animation: loading-screen-rocket-star 1s linear infinite;
+}
+
+.loading-screen__rocket-stars svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
 }
 
 /* Under the rocket, saying it's loading or what's holding it up, its words drifting up into place one
@@ -2724,10 +2767,10 @@ body {
 
 @keyframes loading-screen-rocket-bob {
   from {
-    transform: translateY(1.5px);
+    transform: translateY(calc(1.5 * var(--loading-screen-rocket-unit)));
   }
   to {
-    transform: translateY(-1.5px);
+    transform: translateY(calc(-1.5 * var(--loading-screen-rocket-unit)));
   }
 }
 
@@ -2740,12 +2783,13 @@ body {
   }
 }
 
+/* 50 units either side of a star's place, back along the rocket's heading (45 degrees) and on past it. */
 @keyframes loading-screen-rocket-star {
   from {
-    transform: translateY(-50px);
+    transform: translate(calc(35.355 * var(--loading-screen-rocket-unit)), calc(-35.355 * var(--loading-screen-rocket-unit)));
   }
   to {
-    transform: translateY(50px);
+    transform: translate(calc(-35.355 * var(--loading-screen-rocket-unit)), calc(35.355 * var(--loading-screen-rocket-unit)));
   }
 }
 
@@ -2785,7 +2829,7 @@ body {
   }
 
   .loading-screen__rocket-flame,
-  .loading-screen__rocket-stars circle,
+  .loading-screen__rocket-stars span,
   .loading-screen__word,
   .loading-screen__dots,
   .loading-screen__dots span {

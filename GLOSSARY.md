@@ -57,7 +57,7 @@ The marker for one game on the globe, placed at the game's venue. A game whose v
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
+At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top three; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:

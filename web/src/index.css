@@ -584,7 +584,7 @@ body {
 
 /* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
    the last; sideways, the score block scrolls it with the rest (see .event-panel__score). On a phone it's
-   as tall as two lines, as a team game's score block is, and holds there (see the narrow screens' rules). */
+   as tall as three lines where they fit (see the narrow screens' rules). */
 .event-panel__field-lines {
   --lines: 5;
   --line-height: calc(var(--event-panel-size-logo) + 2 * var(--event-panel-logo-plate-padding));
@@ -661,10 +661,19 @@ body {
     clip-path: none;
   }
 
-  /* A field's leaderboard two lines tall, as a team game's two rows are, so its panel leaves the tabs
-     as much room as a team game's does. It holds its height, as a team game's rows do. */
+  /* A field's leaderboard three lines tall, its top three, where the panel has room for them below the
+     rail (--rail-bottom) and above the tabs at their least (see .game-details); on a screen too short for
+     that, shorter, as far as two lines, as a team game's two rows are. --rest is the rest of the panel
+     at its least: the score block's padding and header, the venue's row, the tabs and the gap above the
+     panel. It holds that height, as a team game's rows do. */
   .event-panel__field-lines {
-    --lines: 2;
+    --lines: 3;
+    --rest: 232px;
+    max-height: clamp(
+      calc(2 * var(--line-height) + var(--event-panel-score-gap)),
+      calc(100dvh - var(--rail-bottom, 0px) - var(--rest)),
+      calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--event-panel-score-gap))
+    );
   }
 
   /* The block is the panel's whole width here, so it doesn't scroll sideways: names are cut short as far

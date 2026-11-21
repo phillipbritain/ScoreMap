@@ -3,7 +3,7 @@ import type { Game } from '../games/game'
 import { panelBox } from '../panel/panelBox'
 import type { JustHappened } from '../games/justHappened'
 import type { PickedColors } from '../settings/gameColor'
-import type { CardDensity, MapType } from '../settings/viewerSettings'
+import type { CardCount, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
@@ -23,8 +23,10 @@ interface GlobeProps {
   colors: PickedColors
   /** What the globe is drawn as (see globeStyle). A change restyles it in place (see GlobeMap.setMapType). */
   mapType: MapType
-  /** How many score cards show at once where it's busy (see cardCount). A change lays them out afresh (see GlobeMap.setCardDensity). */
-  cardDensity: CardDensity
+  /** How many score cards show at once where it's busy (see mostCards). A change lays them out afresh (see GlobeMap.setCardCount). */
+  cardCount: CardCount
+  /** Whether hot games show their indicator. A change shows or clears them in place (see GlobeMap.setHotIndicators). */
+  hotIndicator: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
   games: readonly Game[] | null
   /**
@@ -70,14 +72,14 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, cardDensity, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType, cardDensity })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType, cardDensity }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, mapType, cardDensity])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount])
 
   useEffect(() => {
     if (!container.current) return
@@ -90,7 +92,8 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, cardDe
         zoomSettings: latest.current.zoomSettings,
         colors: latest.current.colors,
         mapType: latest.current.mapType,
-        cardDensity: latest.current.cardDensity,
+        cardCount: latest.current.cardCount,
+        hotIndicator: latest.current.hotIndicator,
         startCamera: latest.current.startCamera,
         onSelect: (gameId) => latest.current.onSelectGame(gameId),
         onCameraMove: (camera) => latest.current.onCameraMove(camera),
@@ -130,7 +133,8 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, mapType, cardDe
   useEffect(() => globe.current?.setZoomLimits(zoomSettings), [zoomSettings])
   useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
-  useEffect(() => globe.current?.setCardDensity(cardDensity), [cardDensity])
+  useEffect(() => globe.current?.setCardCount(cardCount), [cardCount])
+  useEffect(() => globe.current?.setHotIndicators(hotIndicator), [hotIndicator])
   // In this order, so a game picked from the Games list is among the games shown when the globe centers
   // it above the panel. The panel opens in the same render, so it's on the page by now, though only
   // starting to slide in: it's measured where it comes to rest (see panelBox).

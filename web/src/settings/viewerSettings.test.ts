@@ -163,7 +163,7 @@ describe('leaguesFilterGames', () => {
     expect(leaguesFilterGames(withLeague(firstVisitSettings, 'XFL', false), leagues)).toBe(false)
   })
 
-  it("ignores Only show live games, which isn't in Leagues", () => {
-    expect(leaguesFilterGames({ ...firstVisitSettings, onlyLiveGames: true }, leagues)).toBe(false)
+  it("ignores Only show live events, which isn't in Leagues", () => {
+    expect(leaguesFilterGames({ ...firstVisitSettings, onlyLiveEvents: true }, leagues)).toBe(false)
   })
 })

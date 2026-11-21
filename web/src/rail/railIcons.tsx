@@ -30,16 +30,14 @@ export function HomeIcon() {
   return <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
 }
 
-/** Leagues: a trophy (Lucide's "trophy"). */
+/** Leagues: a ball with a basketball's seams, for sports in general. */
 export function LeaguesIcon() {
   return (
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z" />
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2v20M2 12h20M5.6 4.8c3.2 3.4 3.2 11 0 14.4M18.4 4.8c-3.2 3.4-3.2 11 0 14.4" />
+    </>
   )
-}
-
-/** Map Type: a stack of layers, a map's layers to pick between. */
-export function MapTypeIcon() {
-  return <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
 }
 
 /** Display Settings: three sliders, settings to adjust (Lucide's "sliders-horizontal"). */
@@ -73,12 +71,3 @@ export function MoreIcon() {
   )
 }
 
-/** Hide controls: a cross, closing the rail's buttons up into it (Feather's "x"). */
-export function HideControlsIcon() {
-  return <path d="M18 6 6 18M6 6l12 12" />
-}
-
-/** Show controls: a menu, the rail's buttons folded into it (Feather's "menu"). */
-export function ShowControlsIcon() {
-  return <path d="M4 6h16M4 12h16M4 18h16" />
-}

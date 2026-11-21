@@ -8,7 +8,7 @@ import { logoFailed, shownLogo } from '../games/teamLogo'
 import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
-import type { CardDensity } from '../settings/viewerSettings'
+import type { CardCount } from '../settings/viewerSettings'
 import { cardPins } from './cardPins'
 import type { CardLayout, Showing, VenueSizes } from './cardLayout'
 import { cardClusterReach, cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
@@ -74,6 +74,8 @@ export class ScoreCardMarkers {
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
   private readonly colorOf: (game: Game) => string
+  /** Whether a game's card shows the hot indicator now (see GlobeMap.setHotIndicators). */
+  private readonly hotIndicatorOf: (game: Game) => boolean
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
   private readonly onSelect: (gameId: string) => void
@@ -95,31 +97,33 @@ export class ScoreCardMarkers {
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
    * game's color as it is now (see gameColor), for its card, its trail and its pulses over card
-   * clusters; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
+   * clusters; `hotIndicatorOf` whether a game shows the hot indicator now, on its card and the clusters it's in; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
    * trails; `onSelect` is called with a game's id when its card is selected; `settling` is the
-   * globe's settling, which the cards report to and which says when to ask for a frame; `cardDensity`
-   * says how many cards show at once where it's busy, until setCardDensity.
+   * globe's settling, which the cards report to and which says when to ask for a frame; `cardCount`
+   * says how many cards show at once where it's busy, until setCardCount.
    */
   constructor(
     map: MapLibreMap,
     theme: () => Theme,
     colorOf: (game: Game) => string,
+    hotIndicatorOf: (game: Game) => boolean,
     placeNames: PlaceNames,
     trails: TrailLayer,
     onSelect: (gameId: string) => void,
     settling: GlobeSettling,
-    cardDensity: CardDensity,
+    cardCount: CardCount,
   ) {
     this.map = map
     this.theme = theme
     this.colorOf = colorOf
+    this.hotIndicatorOf = hotIndicatorOf
     this.placeNames = placeNames
     this.trails = trails
     this.onSelect = onSelect
     this.scene = scoreCardScene({
       page: this.page,
       settling,
-      cardDensity,
+      cardCount,
       reducedMotion: () => this.reducedMotion.matches,
       laidOut: traceLayout,
     })
@@ -130,9 +134,9 @@ export class ScoreCardMarkers {
     map.on('resize', this.resized)
   }
 
-  /** Shows as many cards at once as this card density allows (see cardCount), laid out afresh. */
-  setCardDensity(density: CardDensity): void {
-    if (this.scene.setCardDensity(density)) this.sync()
+  /** Shows as many cards at once as this card count allows (see mostCards), laid out afresh. */
+  setCardCount(count: CardCount): void {
+    if (this.scene.setCardCount(count)) this.sync()
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -261,14 +265,14 @@ export class ScoreCardMarkers {
   /** Draws a card for its game as it is now, if anything it's drawn from has changed: true if it was redrawn. */
   private draw(placed: PlacedCard, gameId: string, game: PlacedGame): boolean {
     const color = this.colorOf(game)
-    const flames = game.hot
+    const hotIndicator = this.hotIndicatorOf(game)
     const selected = gameId === this.selectedGameId
     const theme = this.theme()
     const scorer = scorerOf(this.justHappened, gameId)
     const from = placed.drawnFrom
-    if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme && from.scorer === scorer) return false
-    placed.drawnFrom = { game, color, flames, selected, theme, scorer }
-    const card = scoreCard(game)
+    if (from?.game === game && from.color === color && from.hotIndicator === hotIndicator && from.selected === selected && from.theme === theme && from.scorer === scorer) return false
+    placed.drawnFrom = { game, color, hotIndicator, selected, theme, scorer }
+    const card = { ...scoreCard(game), hotIndicator }
     placed.element.setAttribute('aria-label', gameLabel(game))
     const header = headerText(color, theme)
     const drawn = JSON.stringify({ card, color, header, selected, scorer })
@@ -295,7 +299,7 @@ export class ScoreCardMarkers {
   private drawLayout(laidOut: readonly CardLaidOut[], layout: CardLayout, moving: boolean): TrailOnGlobe[] | null {
     const cards = laidOut.map((card): CardOnGlobe => {
       const game = this.games.get(card.gameId)!
-      return { ...card, color: this.colorOf(game), flames: game.hot }
+      return { ...card, color: this.colorOf(game), hotIndicator: this.hotIndicatorOf(game) }
     })
     // Each point worked out on screen, by the place on the globe it was turned into.
     const onScreen = new Map<[number, number], [number, number]>()
@@ -442,13 +446,13 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   header.append(span('score-card__clock', card.clockLine || card.status))
   const rows = card.rows.map(team)
   element.replaceChildren(header, ...rows)
-  if (card.flames) element.append(flames())
+  if (card.hotIndicator) element.append(hotIndicatorElement())
   // Where its trail meets it, put there by its placed card (see showTrailDot).
   element.append(span('score-card__trail-dot', ''))
   return rows
 }
 
-/** The fire outline around a hot game's card, shaped and animated by the CSS. */
+/** The hot indicator around a hot game's card, a glowing outline shaped and animated by the CSS. */
 /**
  * Lights up the row of the side that just scored, for what's left of its spotlight: the glow is the
  * CSS's, started as far in as the spotlight already is, so a card redrawn partway (for its clock)
@@ -462,8 +466,8 @@ function spotlightScorer(rows: readonly Element[], game: Game, scorer: Scorer | 
   row?.style.setProperty('--scorer-spotlight-delay', `${-elapsed}ms`)
 }
 
-function flames(): HTMLElement {
-  const outline = span('score-card__flames', '')
+function hotIndicatorElement(): HTMLElement {
+  const outline = span('score-card__hot-indicator', '')
   outline.setAttribute('aria-hidden', 'true')
   return outline
 }

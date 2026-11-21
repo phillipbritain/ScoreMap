@@ -425,13 +425,13 @@ const settings = {
      * the ring of the game's color around it) and the soft glow around that, in the game's color (its
      * radius, out to where it has faded to nothing, and its opacity at the middle). A core whose color
      * is just its status's palette color is in the game's color; any other (Live's paler core, say)
-     * stays as given, so status still shows by brightness. A hot game's pin has a thin fire outline around its core, in fire's
-     * colors (ScoreCard.flames), with a glow reaching `flame.size` pixels beyond it. The outline's
+     * stays as given, so status still shows by brightness. A hot game's pin has its hot indicator, a thin glowing outline around its core, in the indicator's
+     * colors (ScoreCard.hotIndicator), with a glow reaching `hotIndicator.size` pixels beyond it. The outline's
      * width and opacity, and the glow's opacity, are tunable separately.
      */
     Pin: {
       ...byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
-      flame: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
+      hotIndicator: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
     },
     /**
      * A card cluster is a disc filled with this, outlined this wide and lit in its games' color (the
@@ -439,7 +439,7 @@ const settings = {
      * glow, so a cluster of a status whose pins don't glow doesn't either. Its disc reaches `radius`,
      * outline and all, and its glow `glowRadius`. Its count is in a font the map's font server has
      * (ADR-0006), at a type style's size. By the status it shows as, how opaque it is: its disc,
-     * outline and count alike. A card cluster holding a hot game has a fire outline and glow around
+     * outline and count alike. A card cluster holding a hot game has the hot indicator, a glowing outline, around
      * its disc, with its own size, width and opacities.
      */
     Cluster: {
@@ -449,7 +449,7 @@ const settings = {
       outlineWidth: pixels,
       glowOpacity: opacity,
       count: { font: globeFont, size: textSize },
-      flame: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
+      hotIndicator: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
       ...byStatus({ opacity }),
     },
     /**
@@ -496,9 +496,9 @@ const settings = {
      * globe lays cards out by this). The plate each logo sits on (see logoPlate). By its status, how it
      * fades and glows (see cardStatus). Its glass's frost: its fill,
      * drop shadow, header tint, glow inside and logo plates clear with it, while its text, logos, scores,
-     * and outline stay solid. A hot game's card has an animated fire
+     * and outline stay solid. A hot game's card has an animated hot indicator
      * outline around its entire edge, cut out behind the glass. Its width, glow radius, spread and
-     * opacity are tunable, in fire's colors: red tips, orange middle and white-hot core.
+     * opacity are tunable, in its colors: red tips, orange middle and white-hot core.
      */
     ScoreCard: {
       fill: color,
@@ -509,7 +509,7 @@ const settings = {
       corner,
       size: { minWidth: pixels, logo: pixels, venueGap: pixels, nameClearance: pixels },
       logo: { plate: logoPlate },
-      flames: {
+      hotIndicator: {
         width: pixels,
         glow: { radius: pixels, spread: pixels, opacity },
         tips: color,
@@ -601,13 +601,13 @@ const settings = {
     /**
      * The loading screen, shown over the globe until ScoreMap is ready: the dim over the globe (its color,
      * and how opaque it is, so the globe still shows through) and the flying rocket (its body and the
-     * stars streaming past it, its flame's outer and inner layers, and how big its box is across), the text of the message under the rocket, and
+     * stars streaming past it, its hotIndicator's outer and inner layers, and how big its box is across), the text of the message under the rocket, and
      * the glow its words drift in with (its color, how far it reaches and how strong it is), which also
      * lights the dots of a closing ellipsis (how big each is across).
      */
     LoadingScreen: {
       dim: { color, opacity },
-      rocket: { color, flame: { outer: color, inner: color }, size: pixels },
+      rocket: { color, hotIndicator: { outer: color, inner: color }, size: pixels },
       message: color,
       glow: { color, radius: pixels, opacity },
       dot: pixels,

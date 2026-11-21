@@ -40,7 +40,7 @@ describe('scoreCard', () => {
       status: 'Live',
       rows: [{ label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', mark: 'B', score: '17' }, { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', mark: 'K', score: '21' }],
       clockLine: '4:12',
-      flames: false,
+      hotIndicator: false,
     })
   })
 

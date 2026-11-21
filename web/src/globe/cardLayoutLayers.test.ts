@@ -15,7 +15,7 @@ const card = (gameId: string, venueX: number, venueY: number, lngLat: [number, n
   width: 100,
   height: 60,
   lngLat,
-  flames: false,
+  hotIndicator: false,
 })
 
 const sitting: Showing = { as: 'card', offset: { dx: 0, dy: -6 }, moved: false, trail: { x1: 100, y1: 194, x2: 100, y2: 200 } }
@@ -80,7 +80,7 @@ describe('cardLayoutDrawing', () => {
       {
         type: 'Feature',
         // c's and d's colors differ (see clusterColor).
-        properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c', flames: false },
+        properties: { kind: 'cardCluster', status: 'Final', sharedColor: 'mixed', count: 2, firstGameId: 'c', hotIndicator: false },
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
     ])
@@ -88,23 +88,23 @@ describe('cardLayoutDrawing', () => {
   })
 
   it('draws a lone game with no room as its small pin at its venue, named for its game', () => {
-    const lone = { ...c, status: 'Live' as const, flames: true }
+    const lone = { ...c, status: 'Live' as const, hotIndicator: true }
     const alone = drawing([lone], laidOut({ c: { as: 'smallPin' } }, [{ kind: 'smallPin', trails: [], noRoom: ['c'], at: { venueOf: 'c' } }]))
     expect(alone.cardClusters).toEqual([])
     expect(alone.source.features).toEqual([
       {
         type: 'Feature',
-        properties: { kind: 'smallPin', gameId: 'c', status: 'Live', color: '#cccccc', flames: true },
+        properties: { kind: 'smallPin', gameId: 'c', status: 'Live', color: '#cccccc', hotIndicator: true },
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
     ])
   })
 
-  it('shows flames on a card cluster holding a game showing flames, but never on a venue cluster', () => {
-    const flaming = [{ ...a, flames: true }, b, c, { ...d, flames: true }]
+  it('shows the hot indicator on a card cluster holding a game showing it, but never on a venue cluster', () => {
+    const hot = [{ ...a, hotIndicator: true }, b, c, { ...d, hotIndicator: true }]
 
-    expect(features('cardCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([true])
-    expect(features('venueCluster', flaming).map(({ properties }) => properties?.flames)).toEqual([undefined])
+    expect(features('cardCluster', hot).map(({ properties }) => properties?.hotIndicator)).toEqual([true])
+    expect(features('venueCluster', hot).map(({ properties }) => properties?.hotIndicator)).toEqual([undefined])
   })
 
   it('gives every card with room a footprint where it is, moved or not, at its venue and offset to it on screen', () => {
@@ -119,7 +119,7 @@ describe('cardLayoutDrawing', () => {
   describe('a card cluster that cards’ trails meet at', () => {
     // p and q with no room, r's and s's cards on screen, their trails meeting at the card cluster between their venues.
     const p = card('p', 500, 500, [50, -50])
-    const q = { ...card('q', 500, 500, [50, -50]), flames: true }
+    const q = { ...card('q', 500, 500, [50, -50]), hotIndicator: true }
     const r = { ...card('r', 490, 500, [49, -50]), status: 'Upcoming' as const }
     const s = { ...card('s', 510, 500, [51, -50]), status: 'Final' as const }
     const games = ['p', 'q', 'r', 's']
@@ -134,11 +134,11 @@ describe('cardLayoutDrawing', () => {
     )
     const crowd = (cards: CardOnGlobe[] = [p, q, r, s]) => drawing(cards, layout)
 
-    it('counts every game, and shows as the most prominent status among them, with flames only for a game with no room', () => {
+    it('counts every game, and shows as the most prominent status among them, with the hot indicator only for a game with no room', () => {
       const [cluster] = crowd().source.features.filter((feature) => feature.properties?.kind === 'cardCluster')
-      expect([cluster.properties?.count, cluster.properties?.status, cluster.properties?.flames]).toEqual([4, 'Live', true])
-      const onlyOnScreenHot = [p, { ...q, flames: false }, { ...r, flames: true }, s]
-      expect(crowd(onlyOnScreenHot).source.features.find((feature) => feature.properties?.kind === 'cardCluster')?.properties?.flames).toBe(false)
+      expect([cluster.properties?.count, cluster.properties?.status, cluster.properties?.hotIndicator]).toEqual([4, 'Live', true])
+      const onlyOnScreenHot = [p, { ...q, hotIndicator: false }, { ...r, hotIndicator: true }, s]
+      expect(crowd(onlyOnScreenHot).source.features.find((feature) => feature.properties?.kind === 'cardCluster')?.properties?.hotIndicator).toBe(false)
     })
 
     it('has the trails of its games with cards on screen meet at it, where it is on the globe', () => {

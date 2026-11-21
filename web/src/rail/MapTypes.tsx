@@ -2,19 +2,21 @@ import { satelliteTile } from '../globe/globeStyle'
 import { mapTypeNames, mapTypes, withMapType, type MapType, type ViewerSettings } from '../settings/viewerSettings'
 
 /**
- * The rail's Map Type popover: a small picture of each of the globe's map types side by side, Plain
+ * Display Settings' Map type: a small picture of each of the globe's map types side by side, Plain
  * and Satellite, its name under it, the one showing ringed in gold, as map apps' layer pickers are.
- * Picking one draws the globe as it, and closes the popover.
+ * Picking one draws the globe as it.
  */
-export function MapTypes({ settings, onChange, onPicked }: { settings: ViewerSettings; onChange: (settings: ViewerSettings) => void; onPicked: () => void }) {
-  const pick = (mapType: MapType) => {
-    onChange(withMapType(settings, mapType))
-    onPicked()
-  }
+export function MapTypes({ settings, onChange, labelledBy }: { settings: ViewerSettings; onChange: (settings: ViewerSettings) => void; labelledBy: string }) {
   return (
-    <div className="map-types" role="group" aria-label="Map type">
+    <div className="map-types" role="group" aria-labelledby={labelledBy}>
       {mapTypes.map((mapType) => (
-        <button key={mapType} type="button" className="map-type" aria-pressed={settings.mapType === mapType} onClick={() => pick(mapType)}>
+        <button
+          key={mapType}
+          type="button"
+          className="map-type"
+          aria-pressed={settings.mapType === mapType}
+          onClick={() => onChange(withMapType(settings, mapType))}
+        >
           <MapPicture mapType={mapType} />
           {mapTypeNames[mapType]}
         </button>

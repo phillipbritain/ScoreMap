@@ -36,7 +36,7 @@ function keyframesOf(target: HTMLElement): ComputedKeyframe[] {
   return (animations[0].effect as KeyframeEffect).getKeyframes()
 }
 
-const flame = () => element('score-card score-card--live', 'score-card__flames')
+const hotIndicator = () => element('score-card score-card--live', 'score-card__hot-indicator')
 const pinRing = (animation: string) => element(`pin-pulse pin-pulse--pin pin-pulse--${animation}`)
 const pinAnimations = ['score', 'start'] as const
 const rocket = () => element('loading-screen', 'loading-screen__rocket', 'loading-screen__rocket-heading', 'loading-screen__rocket-ship')
@@ -59,9 +59,9 @@ function messageDots(): HTMLElement {
 }
 
 describe('with reduce motion off', () => {
-  it('animates a hot game’s fire outline and glow', () => {
-    const fire = flame()
-    expect(fire.getAnimations({ subtree: true }).length).toBeGreaterThan(0)
+  it('animates a hot game’s indicator, its glowing outline', () => {
+    const indicator = hotIndicator()
+    expect(indicator.getAnimations({ subtree: true }).length).toBeGreaterThan(0)
   })
 
   it.each(pinAnimations)('grows a pin’s %s ring', (animation) => {
@@ -117,8 +117,8 @@ describe('with reduce motion on', () => {
     await commands.reduceMotion(true)
   })
 
-  it('keeps a hot game’s flames, standing still', () => {
-    const still = flame()
+  it('keeps a hot game’s indicator, standing still', () => {
+    const still = hotIndicator()
 
     expect(still.getAnimations({ subtree: true })).toEqual([])
     expect(getComputedStyle(still).display).not.toBe('none')

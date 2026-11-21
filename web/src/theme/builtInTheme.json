@@ -92,7 +92,7 @@
         "core": { "color": "final.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
         "glow": { "radius": 0, "opacity": 0 }
       },
-      "flame": { "size": 6.6, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 }
+      "hotIndicator": { "size": 6.6, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 }
     },
     "Cluster": {
       "fill": "primary.dark",
@@ -101,7 +101,7 @@
       "outlineWidth": 1.5,
       "glowOpacity": 0.6,
       "count": { "font": "Open Sans Bold", "size": "footnote" },
-      "flame": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
+      "hotIndicator": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },
       "final": { "opacity": 0.55 }
@@ -133,7 +133,7 @@
       "corner": 1.5,
       "size": { "minWidth": 64, "logo": 12, "venueGap": 16, "nameClearance": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 0.25, "corner": 0.5 } },
-      "flames": { "width": 3, "glow": { "radius": 14.4, "spread": 4.32, "opacity": 0.75 }, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
+      "hotIndicator": { "width": 3, "glow": { "radius": 14.4, "spread": 4.32, "opacity": 0.75 }, "tips": "#d42a12", "middle": "#ff8a00", "core": "#fff3a8" },
       "live": { "fade": 0, "glow": { "radius": 12, "opacity": 0.8 } },
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
@@ -186,7 +186,7 @@
     "Tooltip": { "surface": "navy.700", "outline": "navy.500" },
     "LoadingScreen": {
       "dim": { "color": "background.default", "opacity": 0.6 },
-      "rocket": { "color": "text.primary", "flame": { "outer": "warning.main", "inner": "secondary.main" }, "size": 64 },
+      "rocket": { "color": "text.primary", "hotIndicator": { "outer": "warning.main", "inner": "secondary.main" }, "size": 64 },
       "message": "text.primary",
       "glow": { "color": "secondary.main", "radius": 14, "opacity": 0.45 },
       "dot": 5

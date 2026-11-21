@@ -194,7 +194,7 @@ export interface Game {
   period: number | null
   /**
    * Whether the game is hot (see GLOSSARY.md): Live, the trailing side one score from tying or taking
-   * the lead, with little left to play, by its sport's rule (the server's HotGame). It shows flames.
+   * the lead, with little left to play, by its sport's rule (the server's HotGame). It shows the hot indicator, unless the viewer switched it off.
    */
   hot: boolean
   venue: GameVenue

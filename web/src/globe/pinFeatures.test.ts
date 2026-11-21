@@ -6,6 +6,9 @@ import { pinFeatures } from './pinFeatures'
 /** Every game in one color. */
 const inRed = () => '#ff0000'
 
+/** No game showing the hot indicator. */
+const noHotIndicators = () => false
+
 const arrowhead: PlacedGame = {
   id: '401',
   league: 'NFL',
@@ -44,7 +47,7 @@ const arrowhead: PlacedGame = {
 
 describe('pinFeatures', () => {
   it('places one pin per game at its venue, longitude first', () => {
-    const collection = pinFeatures([arrowhead], inRed)
+    const collection = pinFeatures([arrowhead], inRed, noHotIndicators)
 
     expect(collection).toEqual({
       type: 'FeatureCollection',
@@ -53,14 +56,14 @@ describe('pinFeatures', () => {
           type: 'Feature',
           id: '401',
           geometry: { type: 'Point', coordinates: [-94.4839, 39.0489] },
-          properties: { gameId: '401', status: 'Live', color: '#ff0000', flames: false },
+          properties: { gameId: '401', status: 'Live', color: '#ff0000', hotIndicator: false },
         },
       ],
     })
   })
 
   it('gives games at the same venue pins of their own, both exactly at the venue', () => {
-    const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed).features
+    const [first, second] = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, noHotIndicators).features
 
     expect(first.properties.gameId).toBe('401')
     expect(second.properties.gameId).toBe('402')
@@ -71,8 +74,16 @@ describe('pinFeatures', () => {
   it("colors each pin in its game's color", () => {
     const colorOf = (game: Game) => (game.id === '401' ? '#123456' : '#654321')
 
-    const colors = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colorOf).features.map((pin) => pin.properties.color)
+    const colors = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], colorOf, noHotIndicators).features.map((pin) => pin.properties.color)
 
     expect(colors).toEqual(['#123456', '#654321'])
+  })
+
+  it('marks the pins of the games showing the hot indicator', () => {
+    const hotIndicatorOf = (game: Game) => game.id === '402'
+
+    const hotIndicator = pinFeatures([arrowhead, { ...arrowhead, id: '402' }], inRed, hotIndicatorOf).features.map((pin) => pin.properties.hotIndicator)
+
+    expect(hotIndicator).toEqual([false, true])
   })
 })

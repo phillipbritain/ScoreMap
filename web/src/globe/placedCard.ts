@@ -33,7 +33,7 @@ export class PlacedCard {
   /** The card last drawn into the element, so an unchanged card isn't redrawn every frame. */
   drawn = ''
   /** What the card was last drawn from, so it's worked out afresh only when one of them changes. */
-  drawnFrom: { game: Game; color: string; flames: boolean; selected: boolean; theme: Theme; scorer: Scorer | undefined } | null = null
+  drawnFrom: { game: Game; color: string; hotIndicator: boolean; selected: boolean; theme: Theme; scorer: Scorer | undefined } | null = null
   /** The card's two rows as last drawn, top first. */
   rows: Element[] = []
   /** The card's size on screen, as last measured. */

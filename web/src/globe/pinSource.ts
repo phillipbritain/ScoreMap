@@ -39,17 +39,19 @@ export interface PinSourceOptions {
   theme: Theme
   /** A game's color, in the colors and theme the globe has now. */
   colorOf: (game: Game) => string
+  /** Whether a game shows the hot indicator now (see GlobeMap.setHotIndicators). */
+  hotIndicatorOf: (game: Game) => boolean
 }
 
 /**
  * Adds the pin source to a map whose style has just loaded, with the small pins' footprint image
  * (see pinFootprint).
  */
-export function addPinSource(map: MapLibreMap, { games, theme, colorOf }: PinSourceOptions): PinSource {
+export function addPinSource(map: MapLibreMap, { games, theme, colorOf, hotIndicatorOf }: PinSourceOptions): PinSource {
   let shown = games
   const source = () => map.getSource<GeoJSONSource>(pinSource)
 
-  const initialPins = pinFeatures(shown, colorOf)
+  const initialPins = pinFeatures(shown, colorOf, hotIndicatorOf)
   // The pins last given the source, so it's reloaded only when they change.
   let pinsKey = JSON.stringify(initialPins)
   map.addSource(pinSource, { type: 'geojson', data: initialPins })
@@ -59,7 +61,7 @@ export function addPinSource(map: MapLibreMap, { games, theme, colorOf }: PinSou
   const showPins = () => {
     // Reloading the pin source for a change pins don't show would only hold back placing cards (see
     // ScoreCardMarkers.sync).
-    const pins = pinFeatures(shown, colorOf)
+    const pins = pinFeatures(shown, colorOf, hotIndicatorOf)
     const key = JSON.stringify(pins)
     if (key === pinsKey) return
     pinsKey = key

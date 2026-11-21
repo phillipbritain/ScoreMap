@@ -1,5 +1,5 @@
 import type { GameStatus } from '../games/game'
-import type { CardDensity } from '../settings/viewerSettings'
+import type { CardCount } from '../settings/viewerSettings'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
@@ -43,27 +43,27 @@ export interface CardScene {
    */
   cameraMoving?: boolean
   /**
-   * The most cards with room at once (see cardCount): the rest, least worth watching, are counted in
+   * The most cards with room at once (see mostCards): the rest, least worth watching, are counted in
    * card clusters. No limit, unless given.
    */
-  cardCount?: number
+  mostCards?: number
   /**
    * Whether the card count changed since the cards were last laid out (the viewer picked another card
-   * density). On a still camera, the cards are laid out afresh, each looking for room, rather than holding
+   * count). On a still camera, the cards are laid out afresh, each looking for room, rather than holding
    * where they were (see layOutCards), so the new count shows at once.
    */
-  cardCountChanged?: boolean
+  mostCardsChanged?: boolean
 }
 
 /**
- * The most score cards a screen this wide shows at once where it's busy, at the viewer's card density,
+ * The most score cards a screen this wide shows at once where it's busy, at the viewer's card count,
  * so a crowded view keeps to the games most worth watching (see cardRank): 10 more past a phone's width.
  */
-export function cardCount(screenWidth: number, density: CardDensity): number {
-  return cardCounts[density] + (screenWidth <= phoneWidth ? 0 : 10)
+export function mostCards(screenWidth: number, count: CardCount): number {
+  return mostCardsOnPhone[count] + (screenWidth <= phoneWidth ? 0 : 10)
 }
-// The most cards at each density on a phone.
-const cardCounts: Record<CardDensity, number> = { minimal: 10, default: 20, dense: 30 }
+// The most cards at each card count on a phone.
+const mostCardsOnPhone: Record<CardCount, number> = { fewer: 10, default: 20, more: 30 }
 // The widest screen laid out as a phone's, as the page's CSS has it (max-width: 640px).
 const phoneWidth = 640
 
@@ -167,7 +167,7 @@ export type Showing =
  * lone games with no room as their small pins. It keeps the frame before itself, so cards stay put
  * from one frame to the next: offsets, who's in a card cluster, and their turns at looking for room;
  * games no longer given drop out of it. All in screen pixels; turning them into places on the globe,
- * and color and flames, are for the drawing.
+ * and color and hot indicator, are for the drawing.
  */
 export interface CardLayout {
   /** Lays out a frame. True if it differs from the last: a card moved, or a game changed how it shows. */
@@ -216,7 +216,7 @@ function differs(was: ReadonlyMap<string, Showing>, now: ReadonlyMap<string, Sho
 
 /**
  * Lays out the score cards on screen: while the camera moves, afresh each frame (see placeCards), and
- * once it's still, not at all, unless the card count changed (see CardScene.cardCountChanged). Then each card laid out last time holds where it was, its offset from
+ * once it's still, not at all, unless the card count changed (see CardScene.mostCardsChanged). Then each card laid out last time holds where it was, its offset from
  * its venue, whether it's in a card cluster and its trail's route, so whatever changes on screen (a
  * score, a selection, a game gone), the cards stay as the viewer left them; only a game given for the
  * first time is placed, around the others. Before anything is laid out, they're placed as for a still
@@ -228,7 +228,7 @@ export function layOutCards(
   previous: ReadonlyMap<string, CardPlacement> = new Map(),
 ): CardPlacements {
   const moving = scene.moving === true || scene.cameraMoving === true
-  if (moving || scene.cardCountChanged || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
+  if (moving || scene.mostCardsChanged || !cards.some((card) => previous.has(card.gameId))) return placeCards(cards, scene, previous)
   const placed = cards.every((card) => previous.has(card.gameId)) ? undefined : placeCards(cards, scene, previous)
   const placements = new Map(placed?.cards)
   for (const card of cards) {
@@ -268,7 +268,7 @@ export function layOutCards(
  * untangle), and each moved card's trail is routed round the cards in its way (see routeTrails). Cards get room by rank
  * (see cardRank; by status, most prominent first, unless given), those whose venues are on screen
  * first, whichever is selected, so selecting a card never moves it; a card with no room within reach
- * joins a card cluster, as does every card past the card count (see cardCount) but the selected game's. Cards whose venues are well off screen stay where they'd
+ * joins a card cluster, as does every card past the card count (see mostCards) but the selected game's. Cards whose venues are well off screen stay where they'd
  * sit: nothing on screen can get in their way. Given where the cards were last time (`previous`), a
  * card stays where it was while that still has room, moving only back over its venue, a card the
  * globe turns off screen pushes the cards in its way along rather than leave them, and a card looking
@@ -551,7 +551,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
 
   for (const [index, card] of boxes.entries()) {
     // Past the card count: counted in a card cluster, without looking for room.
-    const counted = !card.selected && screen.cardCount !== undefined && shown >= screen.cardCount
+    const counted = !card.selected && screen.mostCards !== undefined && shown >= screen.mostCards
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight

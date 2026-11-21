@@ -263,3 +263,16 @@ it("leaves Escape to the rail's popovers, usable during the tour, whichever hear
   await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
 })
+
+it('moves on from Game details when one of the event panel\'s tabs is pressed', async () => {
+  const { event } = await mountTour('panelTabs')
+  const eventPanel = document.createElement('section')
+  eventPanel.className = 'event-panel'
+  eventPanel.innerHTML = '<div class="game-details-tabs" role="tablist"><button role="tab">Scoring</button></div><button class="other">Other</button>'
+  document.body.append(eventPanel)
+
+  await act(() => eventPanel.querySelector<HTMLButtonElement>('.other')!.click())
+  expect(event).not.toHaveBeenCalled()
+  await act(() => eventPanel.querySelector<HTMLButtonElement>('[role="tab"]')!.click())
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'next' })
+})

@@ -308,7 +308,7 @@ export class ScoreCardMarkers {
       onScreen.set(lngLat, [x, y])
       return lngLat
     }
-    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, layout, unproject)
+    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, layout, unproject, this.theme())
     this.cardClustersDrawn = cardClusters
     const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
     if (!source) return null

@@ -20,7 +20,7 @@ describe('layerChanges', () => {
     const wider = themeWith((json) => (json.components.Cluster.outlineWidth = 3))
     expect(layerChanges(layersIn(builtInTheme), layersIn(wider))).toEqual([
       // A card cluster's outline is inside its size, so its footprint doesn't change.
-      { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 10 },
+      { layer: 'card-clusters', kind: 'paint', property: 'circle-radius', value: 5 },
       { layer: 'card-clusters', kind: 'paint', property: 'circle-stroke-width', value: 3 },
     ])
   })

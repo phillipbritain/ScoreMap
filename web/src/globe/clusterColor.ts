@@ -9,12 +9,13 @@ import type { Theme } from '../theme/theme'
  * the theme, so the pin source needn't change when the theme does.
  */
 export const sharedColorProperty = 'sharedColor'
-const mixed = 'mixed'
+/** The shared color key of games whose colors differ. */
+export const mixedColors = 'mixed'
 
 /** The shared color key of a group of games, each with its game color (see gameColor). */
 export function sharedColorKey(games: readonly { color: string }[]): string {
   const colors = new Set(games.map((game) => game.color))
-  return colors.size === 1 ? [...colors][0] : mixed
+  return colors.size === 1 ? [...colors][0] : mixedColors
 }
 
 /**
@@ -22,5 +23,5 @@ export function sharedColorKey(games: readonly { color: string }[]): string {
  * when they're of different colors, so a cluster's color never misleads.
  */
 export function clusterColor(theme: Theme): ExpressionSpecification {
-  return ['match', ['get', sharedColorProperty], mixed, accentColor(theme), ['to-string', ['get', sharedColorProperty]]]
+  return ['match', ['get', sharedColorProperty], mixedColors, accentColor(theme), ['to-string', ['get', sharedColorProperty]]]
 }

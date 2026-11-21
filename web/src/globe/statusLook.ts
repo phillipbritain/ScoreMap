@@ -1,5 +1,6 @@
 import type { ExpressionSpecification } from 'maplibre-gl'
 import type { GameStatus } from '../games/game'
+import { isHexColor, mixColors } from '../theme/palette'
 import { statusKey, type Theme } from '../theme/theme'
 
 /**
@@ -36,6 +37,18 @@ export function statusLook(theme: Theme, status: GameStatus): StatusLook {
     card: { fade, glow },
     stacking: stacking[status],
   }
+}
+
+/**
+ * A game's color as its status dims it on its small pin, venue dot or venue cluster, and trail
+ * (Pin's `dim`): mixed toward the background's paper, solid rather than see-through, as a score
+ * card fades (ADR-0012: status shows by brightness, color stands for the game's sport or league).
+ */
+export function dimmedColor(theme: Theme, color: string, status: GameStatus): string {
+  const dim = theme.components.Pin[statusKey(status)].dim
+  const paper = theme.palette.background.paper
+  // A color the theme gives directly, not as #rrggbb, can't be mixed, so it stays as it is.
+  return dim === 0 || !isHexColor(color) || !isHexColor(paper) ? color : mixColors(color, paper, dim)
 }
 
 /** The selected game's score card draws above every other card. */

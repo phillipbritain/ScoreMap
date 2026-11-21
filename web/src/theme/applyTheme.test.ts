@@ -158,8 +158,8 @@ describe('applyTheme', () => {
       typography: 1 + 11 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // A small pin's core of four and glow of two, for each of three statuses, and its hot indicator's size, width and two opacities.
-      pin: 3 * 6 + 4,
+      // A small pin's core of four, glow of two and dim, for each of three statuses, and its hot indicator's size, width and two opacities.
+      pin: 3 * 7 + 4,
       // A surface, the sea, four kinds of line (their colors) and two halo colors.
       globe: 8,
       // Three kinds of place name (city, state and country), each with a color, an outline (its color, width and blur), a

@@ -2,6 +2,8 @@ import type { Feature, Point } from 'geojson'
 import { describe, expect, it } from 'vitest'
 import type { CardLayout, Gathering, Showing } from './cardLayout'
 import { cardLayoutDrawing, type CardOnGlobe } from './cardLayoutLayers'
+import { mixColors } from '../theme/palette'
+import { themeWith } from '../theme/testTheme'
 
 // A stand-in for the map's: screen pixels to longitude and latitude, simply scaled.
 const unproject = (x: number, y: number): [number, number] => [x / 10, -y / 10]
@@ -44,7 +46,7 @@ const allFour = laidOut(
   ],
 )
 
-const drawing = (cards: CardOnGlobe[] = [a, b, c, d], layout = allFour) => cardLayoutDrawing(cards, layout, unproject)
+const drawing = (cards: CardOnGlobe[] = [a, b, c, d], layout = allFour) => cardLayoutDrawing(cards, layout, unproject, themeWith())
 const features = (kind: string, cards?: CardOnGlobe[], layout?: Pick<CardLayout, 'shows' | 'gatherings'>) =>
   drawing(cards, layout).source.features.filter((feature) => feature.properties?.kind === kind)
 
@@ -98,6 +100,34 @@ describe('cardLayoutDrawing', () => {
         geometry: { type: 'Point', coordinates: [30, -40.5] },
       } satisfies Feature<Point>,
     ])
+  })
+
+  it("dims an Upcoming or Final game's color toward the paper, as far as its status's dim, on its trail, small pin and venue cluster", () => {
+    const dimmed = themeWith((json) => {
+      json.components.Pin.upcoming.dim = 0.5
+      json.components.Pin.final.dim = 1
+    })
+    const paper = dimmed.palette.background.paper
+    const draw = (cards: CardOnGlobe[], layout: Pick<CardLayout, 'shows' | 'gatherings'>) => cardLayoutDrawing(cards, layout, unproject, dimmed)
+    const kind = (drawn: ReturnType<typeof draw>, k: string) => drawn.source.features.filter((f) => f.properties?.kind === k)
+
+    // A Live game's trail keeps its color; an Upcoming game's is mixed halfway; a Final game's all the way.
+    const upcoming = { ...a, status: 'Upcoming' as const }
+    expect(draw([a], laidOut({ a: sitting }, [dot('a')])).trails[0].color).toBe('#aaaaaa')
+    expect(draw([upcoming], laidOut({ a: sitting }, [dot('a')])).trails[0].color).toBe(mixColors('#aaaaaa', paper, 0.5))
+    expect(draw([c], laidOut({ c: sitting }, [dot('c')])).trails[0].color).toBe(paper)
+
+    const pin = draw([c], laidOut({ c: { as: 'smallPin' } }, [{ kind: 'smallPin', trails: [], noRoom: ['c'], at: { venueOf: 'c' } }]))
+    expect(kind(pin, 'smallPin')[0].properties?.color).toBe(paper)
+
+    // A venue cluster dims by the status it shows as: Final only when all its games are, in the accent
+    // where their colors differ.
+    const atOneVenue = laidOut({ a: sitting, b: moved }, [{ kind: 'venueCluster', trails: ['a', 'b'], noRoom: [], at: { x: 100, y: 200 } }])
+    const finals = [{ ...a, status: 'Final' as const }, { ...b, status: 'Final' as const }]
+    expect(kind(draw(finals, atOneVenue), 'venueCluster')[0].properties?.color).toBe(paper)
+    const sameColor = [upcoming, { ...a, gameId: 'b', status: 'Final' as const }]
+    expect(kind(draw(sameColor, atOneVenue), 'venueCluster')[0].properties?.color).toBe(mixColors('#aaaaaa', paper, 0.5))
+    expect(kind(draw([a, b], atOneVenue), 'venueCluster')[0].properties?.color).toBe(dimmed.palette.live.main)
   })
 
   it('shows the hot indicator on a card cluster holding a game showing it, but never on a venue cluster', () => {

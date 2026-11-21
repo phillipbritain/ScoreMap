@@ -25,6 +25,7 @@ function testTheme(): Theme {
     json.components.Pin[status] = {
       core: { color: '#ffffff', radius: coreRadius, opacity: 0.9, ring: 1 },
       glow: { radius: glowRadius, opacity: 0.5 },
+      dim: 0,
     }
     json.components.Cluster[status].opacity = coreRadius / 4
     Object.assign(json.components.ScoreCard[status], { fade: 0, glow: { radius: glowRadius / 2, opacity: 0.5 } })

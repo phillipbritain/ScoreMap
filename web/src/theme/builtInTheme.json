@@ -81,26 +81,29 @@
     },
     "Pin": {
       "live": {
-        "core": { "color": "gold.100", "radius": 3.5, "opacity": 1, "ring": 1.5 },
-        "glow": { "radius": 15, "opacity": 0.8 }
+        "core": { "color": "live.main", "radius": 3, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 15, "opacity": 0 },
+        "dim": 0
       },
       "upcoming": {
-        "core": { "color": "upcoming.main", "radius": 3, "opacity": 0.9, "ring": 0 },
-        "glow": { "radius": 9, "opacity": 0.4 }
+        "core": { "color": "upcoming.main", "radius": 3, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 9, "opacity": 0 },
+        "dim": 0.35
       },
       "final": {
-        "core": { "color": "final.main", "radius": 2.5, "opacity": 0.5, "ring": 0 },
-        "glow": { "radius": 0, "opacity": 0 }
+        "core": { "color": "final.main", "radius": 3, "opacity": 1, "ring": 1.5 },
+        "glow": { "radius": 0, "opacity": 0 },
+        "dim": 0.6
       },
       "hotIndicator": { "size": 6.6, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 }
     },
     "Cluster": {
       "fill": "primary.dark",
-      "radius": 13,
-      "glowRadius": 26,
+      "radius": 8,
+      "glowRadius": 16,
       "outlineWidth": 1.5,
-      "glowOpacity": 0.6,
-      "count": { "font": "Open Sans Bold", "size": "caption" },
+      "glowOpacity": 0,
+      "count": { "font": "Open Sans Bold", "size": "small" },
       "hotIndicator": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },
@@ -111,8 +114,8 @@
       "opacity": 0.63,
       "glow": { "width": 4, "blur": 3, "opacity": 0.25 },
       "venue": {
-        "radius": 2,
-        "ring": { "radius": 5, "width": 1 }
+        "radius": 1.75,
+        "ring": { "radius": 4, "width": 1 }
       },
       "cardDot": { "radius": 2 }
     },
@@ -120,10 +123,10 @@
     "Hover": {
       "card": { "borderWidth": 2.5, "solid": true },
       "trail": { "width": 2.5, "opacity": 1 },
-      "venue": { "radius": 3.5, "glow": { "radius": 12, "opacity": 0.6 } },
+      "venue": { "radius": 2.5, "glow": { "radius": 12, "opacity": 0.6 } },
       "cardDot": { "radius": 2.75 }
     },
-    "Pulse": { "size": { "pin": 16, "cluster": 36 }, "ring": 3 },
+    "Pulse": { "size": { "pin": 16, "cluster": 23 }, "ring": 3 },
     "ScoreCard": {
       "fill": "primary.dark",
       "text": "text.primary",

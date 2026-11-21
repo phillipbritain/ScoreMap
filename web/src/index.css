@@ -3344,6 +3344,15 @@ body {
   padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
 }
 
+/* On a screen with room, its top level with the rail's, so it reads as the rail's own; a phone, upright
+   or on its side, keeps the Demo Mode label's room above it, as its panel reaches under the label. */
+@media (min-width: 641px) and (min-height: 501px) {
+  .globe-area--touring > .welcome-tour.welcome-tour--controls {
+    align-items: flex-start;
+    padding-top: calc(3 * var(--spacing));
+  }
+}
+
 /* While Your controls lights the rail, its groups are solid, as its popovers are, rather than glass, so
    they read clearly over a score card behind them. */
 .globe-area:has(> .welcome-tour--controls) > .rail .rail__group {

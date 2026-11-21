@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from '../games/game'
 import type { TourProgress } from './welcomeTour'
+import { streamLinks } from '../panel/streamLinks'
 import { nextTourPlay, tourPlayStart, tourPlayTick } from './tourPlay'
 import { showsTourGames, shownTourGames, tourCamera, tourGameToTry, tourGames } from './tourGames'
 
@@ -54,6 +55,12 @@ describe("the welcome tour's games", () => {
     expect(game.clock).not.toBeNull()
     expect([game.contest.away.record, game.contest.home.record].every((record) => record !== null)).toBe(true)
     expect(game.situation?.downAndDistance).not.toBeNull()
+  })
+
+  it('give Ravens v Steelers ESPN and StreamEast links, for Where to watch to show', () => {
+    const game = tourGames(now).find(({ id }) => id === tourGameToTry)!
+    expect(game.espnUrl).not.toBeNull()
+    expect(streamLinks(game.streamLinks)).toHaveLength(1)
   })
 
   it('sit in a fixed place, around the camera the tour opens on', () => {

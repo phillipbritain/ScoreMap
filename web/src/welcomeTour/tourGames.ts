@@ -90,6 +90,11 @@ interface GameSpec {
   startsIn: number
   home: SideSpec
   away: SideSpec
+  /**
+   * Links for the event panel's ESPN and StreamEast logos, as a scenario's made-up ones do: each to its
+   * site's home page, the game not being real.
+   */
+  links?: boolean
   /** As a real game's scoreboard gives it (so its city, region and country are ESPN's), with ESPN's id for it in the league. */
   venue: { name: string; city: string; region: string | null; country: string | null; latitude: number; longitude: number; timeZone: string; espnId: string }
 }
@@ -118,14 +123,14 @@ function made(spec: GameSpec, now: number): Game {
     hot: false,
     // Its photo comes from the server, as a real game's does (see tourVenuePhotos).
     venue: { ...spec.venue, photo: null, court: null },
-    streamLinks: [],
+    streamLinks: spec.links ? [{ site: 'StreamEast', url: 'https://streameast.cool/' }] : [],
     note: null,
     situation: spec.situation ?? null,
     keyEvents: [],
     // So they show whichever choice the viewer makes on Welcome.
     topEvent: true,
     scoreline: null,
-    espnUrl: null,
+    espnUrl: spec.links ? 'https://www.espn.com/' : null,
   }
 }
 
@@ -165,7 +170,7 @@ const specs: GameSpec[] = [
     venue: { name: 'Soldier Field', city: 'Chicago, Illinois', region: null, country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago', espnId: '1452' },
   },
   {
-    id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95,
+    id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95, links: true,
     home: { abbreviation: 'PIT', fullName: 'Pittsburgh Steelers', logoUrl: logo('nfl', 'pit'), score: '13', record: '6-3' },
     away: { abbreviation: 'BAL', fullName: 'Baltimore Ravens', logoUrl: logo('nfl', 'bal'), score: '17', record: '7-2' },
     situation: {

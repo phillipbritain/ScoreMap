@@ -93,7 +93,7 @@ What a first visit shows once ScoreMap is ready, in seven steps, each a panel in
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 
 **Tour games**:
-Simulated Live games between real teams at real venues, the same six every time (Ravens v Steelers among them, the one Click a score card points at), shown once the viewer makes a choice on Welcome, whatever it is. Their scores or event progress change until the tour ends: one game has a play every 2 seconds, the game whose panel is open every other one, so its panel and card are seen to change, and its game details are made up again with each.
+Simulated Live games between real teams at real venues, the same six every time (Ravens v Steelers among them, the one Click a score card points at, with ESPN and StreamEast links to their home pages), shown once the viewer makes a choice on Welcome, whatever it is. Their scores or event progress change until the tour ends: one game has a play every 2 seconds, the game whose panel is open every other one, so its panel and card are seen to change, and its game details are made up again with each.
 _Avoid_: Sample games, dummy games, onboarding games, example games
 
 **Game details**:

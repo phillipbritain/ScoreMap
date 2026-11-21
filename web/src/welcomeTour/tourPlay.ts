@@ -1,36 +1,34 @@
-import type { Game, GameTeam } from '../games/game'
 import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
+import { tourClockLine, type TourClock, type TourGame } from './tourGame'
 
 /**
  * One simulated play on one of the tour's games (all two sides: see tourGames): the home side scores
  * on an even turn and the away side on an odd one, by what a score is worth in its sport, and a clock
  * runs on.
  */
-function nextTourPlay(game: Game, turn: number): Game {
-  const { contest } = game
-  if (game.status !== 'Live' || contest.kind !== 'sides') return game
+function nextTourPlay(game: TourGame, turn: number): TourGame {
+  const { contest, tourPlay } = game
   const scoring = turn % 2 === 0 ? 'home' : 'away'
+  const points = game.sport === 'Football' ? 3 : game.sport === 'Basketball' ? 2 + turn % 2 : 1
+  const score = tourPlay.scores[scoring] + points
+  const clock = nextTourClock(tourPlay.clock)
   return {
     ...game,
-    clock: nextTeamClock(game.clock),
-    contest: { ...contest, [scoring]: scoreTeam(contest[scoring], game.sport, turn) },
+    clock: tourClockLine(clock),
+    contest: { ...contest, [scoring]: { ...contest[scoring], score: String(score) } },
+    tourPlay: { ...tourPlay, clock, scores: { ...tourPlay.scores, [scoring]: score } },
   }
 }
 
-function nextTeamClock(clock: string | null): string | null {
-  const countdown = clock?.match(/^(.* )(\d+):(\d{2})$/)
-  if (countdown) {
-    const [, period, minutes, seconds] = countdown
-    const remaining = Math.max(1, Number(minutes) * 60 + Number(seconds) - 12)
-    return `${period}${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`
+function nextTourClock(clock: TourClock): TourClock {
+  switch (clock.kind) {
+    case 'countdown':
+      return { ...clock, seconds: Math.max(1, clock.seconds - 12) }
+    case 'minute':
+      return { ...clock, minute: Math.min(89, clock.minute + 1) }
+    case 'fixed':
+      return clock
   }
-  const minute = clock?.match(/^(\d+)'$/)
-  return minute ? `${Math.min(89, Number(minute[1]) + 1)}'` : clock
-}
-
-function scoreTeam(team: GameTeam, sport: string, turn: number): GameTeam {
-  const points = sport === 'Football' ? 3 : sport === 'Basketball' ? 2 + turn % 2 : 1
-  return { ...team, score: String(Number(team.score ?? '0') + points) }
 }
 
 /**
@@ -38,14 +36,14 @@ function scoreTeam(team: GameTeam, sport: string, turn: number): GameTeam {
  * had (for nextTourPlay's turn), how many ticks have gone, and where the round of the others has got to.
  */
 export interface TourPlayState {
-  games: readonly Game[]
+  games: readonly TourGame[]
   changes: JustHappened
   plays: Readonly<Record<string, number>>
   ticks: number
   next: number
 }
 
-export function tourPlayStart(games: readonly Game[]): TourPlayState {
+export function tourPlayStart(games: readonly TourGame[]): TourPlayState {
   return { games, changes: noneJustHappened, plays: {}, ticks: 0, next: 0 }
 }
 

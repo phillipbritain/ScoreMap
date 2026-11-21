@@ -1,26 +1,33 @@
-import { useEffect, useRef, useState } from 'react'
-import type { Game } from '../games/game'
+import { useEffect, useState } from 'react'
+import type { Game, GameTeam } from '../games/game'
+import type { TourGame } from '../welcomeTour/tourGame'
 import type { GameDetails } from './gameDetails'
 
 const refreshInterval = 20_000
 
-/** The welcome tour's games are made up in the browser; the server makes up their details from the game sent. */
-export const isTourGame = ({ id }: Game) => id.startsWith('tour-')
+function isTourGame(game: Game): game is TourGame {
+  return 'tourPlay' in game
+}
+
+function tourDetailsBody({ id, league, status, period, note, contest, tourPlay }: TourGame): string {
+  const team = ({ abbreviation, fullName, logoUrl }: GameTeam) => ({ abbreviation, fullName, logoUrl })
+  const { phase, scores, clock } = tourPlay
+  return JSON.stringify({
+    id, league, status, period, note, phase,
+    contest: { kind: contest.kind, home: team(contest.home), away: team(contest.away) },
+    homeScore: scores.home, awayScore: scores.away,
+    minute: clock.kind === 'minute' ? clock.minute : null,
+  })
+}
 
 /**
  * The selected game's details, refreshed while it's Live: a game on the board by its id, a demo's game
- * on the demo board, and a tour game by sending the game as it is now, again each time it has a play.
+ * on the demo board, and a tour game by sending the facts its details are made from.
  */
 export function useGameDetails(game: Game, enabled: boolean, demo = false) {
   const { id, league, status } = game
-  const tour = isTourGame(game)
-  // A tour game's play changes its details at once, so they're asked for again as it changes.
-  const tourPlay = tour ? JSON.stringify([game.contest, game.clock, game.scoreline]) : null
-  const key = new URLSearchParams({ id, league, ...(demo && !tour ? { demo: 'true' } : {}) }).toString()
-  const current = useRef(game)
-  useEffect(() => {
-    current.current = game
-  })
+  const body = isTourGame(game) ? tourDetailsBody(game) : null
+  const key = new URLSearchParams({ id, league, ...(demo && body === null ? { demo: 'true' } : {}) }).toString()
   const [result, setResult] = useState<{ key: string; data: GameDetails | null; failed: boolean } | null>(null)
 
   useEffect(() => {
@@ -30,11 +37,11 @@ export function useGameDetails(game: Game, enabled: boolean, demo = false) {
 
     async function refresh() {
       try {
-        const response = tour
+        const response = body !== null
           ? await fetch('/api/tour-game-details', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(current.current),
+            body,
             signal: controller.signal,
           })
           : await fetch(`/api/game-details?${key}`, { signal: controller.signal })
@@ -55,7 +62,7 @@ export function useGameDetails(game: Game, enabled: boolean, demo = false) {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [enabled, key, status, tour, tourPlay])
+  }, [enabled, key, status, body])
 
   const shown = result?.key === key ? result : null
   return { data: shown?.data ?? null, failed: shown?.failed ?? false }

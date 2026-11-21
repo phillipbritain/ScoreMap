@@ -3,19 +3,20 @@ import type { Game, VenuePhoto } from '../games/game'
 import type { JustHappened } from '../games/justHappened'
 import type { Camera } from '../globe/camera'
 import type { SettingsStore } from '../settings/settingsStore'
+import type { TourGame } from './tourGame'
 import { tourCamera, tourGames, tourGameToTry, type TourScreen } from './tourGames'
 import { tourPlayStart, tourPlayTick, type TourPlayState } from './tourPlay'
 import { fetchVenuePhotos, withVenuePhotos } from './tourVenuePhotos'
 import { tourProgressAfter, type TourEvent, type TourProgress } from './welcomeTour'
 
-const noGames: readonly Game[] = []
+const noGames: readonly TourGame[] = []
 /** One game has a play every 2 seconds, the open game every other time. */
 const playIntervalMs = 2000
 
 interface WelcomeTour {
   progress: TourProgress
   camera: Camera
-  board: readonly Game[]
+  board: readonly TourGame[]
   play: TourPlayState
   photos: ReadonlyMap<string, VenuePhoto>
   openGameId: string | null

@@ -263,7 +263,7 @@ const panelPart = (selector: string) => () => document.querySelectorAll(`.event-
 
 /**
  * The event panel's steps (see eventPanelSteps): each lights one part of the panel Click a score card
- * opened, dimming the rest of it with the globe, with no arrow but for Where to watch's, to the small TV button. The panel stays usable, so the viewer
+ * opened, dimming the rest of it with the globe, with no arrow but for Where to watch's, to the small TV button, and Game details' tabs ringed, as they'd otherwise blend into the panel. The panel stays usable, so the viewer
  * can try what's lit. With no panel open (closed, or the tour picked up here after a reload), a step says
  * the same with nothing lit.
  */
@@ -299,7 +299,7 @@ function EventPanelStep({ step, onNext }: { step: EventPanelStepName; onNext: ()
   useRightAbove(step === 'panelTabs', panel, panelParts[step])
   return (
     <>
-      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={step === 'panelWatch'} flush />
+      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={step === 'panelWatch'} ringed={step === 'panelTabs'} flush />
       <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text">{words}</p>
       </TourPanel>

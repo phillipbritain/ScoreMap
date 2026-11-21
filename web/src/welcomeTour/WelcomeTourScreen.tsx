@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
-import { RailIcon } from '../rail/railIcons'
+import { HideControlsIcon, RailIcon } from '../rail/railIcons'
 import type { ViewerSettings } from '../settings/viewerSettings'
 import { LeaguePicker } from '../rail/LeaguePicker'
 import type { LeagueList } from '../settings/leagues'
@@ -229,34 +229,29 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   More: 'More: send feedback, or see this tour again',
 }
 
-/** The rail's groups of buttons, which Your controls lights and points at. */
-const railGroups = () => document.querySelectorAll('.rail__buttons-inner > .rail__group')
-
-/** The rail's Zoom in and Zoom out buttons, which Your controls' arrow aims at on a phone. */
-const zoomButtons = () => document.querySelectorAll('.rail__buttons-inner > .rail__group:first-child > :nth-child(-n + 2)')
-
-/** The app's phone layout, where Your controls' arrow runs from the top of its panel to the zoom buttons. */
-const phoneScreen = '(max-width: 640px)'
+/** The rail's groups of buttons, Hide controls' included, which Your controls lights. */
+const railGroups = () => document.querySelectorAll('.rail > .rail__group--collapse, .rail__buttons-inner > .rail__group')
 
 /**
  * Your controls: how to move and zoom the globe, in words for the viewer's touchscreen or mouse, then
- * each of the rail's buttons and what it's for, with the rail lit and pointed at (on a
- * phone, from the top of its panel to the zoom buttons, so the arrow rises clear of the panel).
+ * each of the rail's buttons and what it's for, Hide controls first, with the rail lit (solid while it is,
+ * see .globe-area:has(> .welcome-tour--controls)) and the step's panel right beside it, with no arrow.
  */
 function ControlsStep({ onNext }: { onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   const [touch] = useState(() => window.matchMedia(touchPointer).matches)
   return (
     <>
-      <TourPointer
-        panel={panel}
-        target={railGroups}
-        aim={() => (window.matchMedia(phoneScreen).matches ? zoomButtons() : [])}
-        fromTopWhen={phoneScreen}
-      />
+      <TourPointer panel={panel} target={railGroups} arrow={false} />
       <TourPanel ref={panel} heading="Your controls" action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text welcome-tour__move">{moveAndZoomWords(touch)}</p>
         <ul className="welcome-tour__controls">
+          <li className="welcome-tour__control">
+            <RailIcon className="welcome-tour__control-icon">
+              <HideControlsIcon />
+            </RailIcon>
+            Hide controls: fold these buttons away, and bring them back
+          </li>
           {railButtons.map(({ name, icon }) => (
             <li key={name} className="welcome-tour__control">
               <RailIcon className="welcome-tour__control-icon">{icon}</RailIcon>

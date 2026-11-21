@@ -3337,10 +3337,23 @@ body {
   }
 }
 
+/* Your controls, right beside the rail it lights, rather than in the middle of the screen. Over the
+   short screen's room for an arrow (below), which it has no need of. */
+.welcome-tour.welcome-tour--controls {
+  justify-content: flex-end;
+  padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
+}
+
+/* While Your controls lights the rail, its groups are solid, as its popovers are, rather than glass, so
+   they read clearly over a score card behind them. */
+.globe-area:has(> .welcome-tour--controls) > .rail .rail__group {
+  background: var(--rail-surface);
+}
+
 /* On a phone (the app's phone layout): each step's panel across the screen, in its middle as on a
    larger screen, laid over the rail rather than kept clear of it; what doesn't fit scrolls in the panel
-   (My leagues' picker). Your controls' panel alone keeps left of the rail it points at, with room for
-   its arrow, so the rail is never under it. */
+   (My leagues' picker). Your controls' panel alone keeps left of the rail it lights, so the rail is
+   never under it. */
 @media (max-width: 640px) {
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
@@ -3350,8 +3363,8 @@ body {
     padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
-  .welcome-tour--controls {
-    padding: 0 calc(var(--rail-left-inset, 0px) + 8 * var(--spacing)) 0 calc(3 * var(--spacing));
+  .welcome-tour.welcome-tour--controls {
+    padding: 0 calc(var(--rail-left-inset, 0px) + 3 * var(--spacing)) 0 calc(3 * var(--spacing));
   }
 
   .welcome-tour--controls .welcome-tour__panel {

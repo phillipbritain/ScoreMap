@@ -1,13 +1,23 @@
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import type { Game, GameSides } from '../games/game'
+import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import type { Game, GameSides, GameTeam, GameVenue } from '../games/game'
 import { sidesTopFirst } from '../games/sides'
+import { TeamLogoImage } from '../games/TeamLogoImage'
 import { RailIcon } from '../rail/railIcons'
+import { mapsSearchUrl, venuePlace } from './venuePlace'
 import type { GameDetails, GameDrive, GameScoringPlay, GameStatTeam, GameVideo } from './gameDetails'
 import './gameDetailsPanel.css'
 
 type DetailTab = 'Score' | 'Scoring' | 'Drives' | 'Stats' | 'Videos'
 
-export function WatchInfo({ details, failed, onToggle, children }: {
+/**
+ * The TV button, and the Where to watch dialog it opens: a tile for each network showing the game, its
+ * links (children, each a tile), and the venue over its photo (photo, when shown), linking to the map,
+ * with when the game starts.
+ */
+export function WatchInfo({ game, photo, details, failed, onToggle, children }: {
+  game: Game
+  /** The venue's photo as the panel shows it; none when there isn't one or photos are switched off. */
+  photo: string | null
   details: GameDetails | null
   failed: boolean
   onToggle: (open: boolean) => void
@@ -15,37 +25,63 @@ export function WatchInfo({ details, failed, onToggle, children }: {
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
   const title = useId()
+  const networks = details?.broadcasts ?? []
   return (
     <>
       <button type="button" className="game-details-tv" aria-label="Watch and game info" data-tooltip="Watch and game info" aria-haspopup="dialog" onClick={() => {
         dialog.current?.showModal()
         onToggle(true)
       }}>
-        <RailIcon className="game-details-tv-icon">
-          <rect x="3" y="4" width="18" height="13" rx="2" />
-          <path d="M8 21h8m-4-4v4" />
-        </RailIcon>
+        <TvIcon className="game-details-tv-icon" />
       </button>
       <dialog ref={dialog} className="game-details-dialog" aria-labelledby={title} onClose={() => onToggle(false)}
         onKeyDown={(event) => { if (event.key === 'Escape') event.stopPropagation() }}>
         <div className="game-details-dialog-heading">
-          <h2 id={title}>Watch and game info</h2>
-          <button type="button" aria-label="Close watch and game info" onClick={() => dialog.current?.close()}>×</button>
+          <div>
+            <div className="game-details-section-title">{game.league}</div>
+            <h2 id={title}>Where to watch</h2>
+          </div>
+          <button type="button" className="game-details-dialog-close" aria-label="Close watch and game info" onClick={() => dialog.current?.close()}>
+            <RailIcon className="game-details-dialog-close-icon"><path d="M6 6l12 12M18 6 6 18" /></RailIcon>
+          </button>
         </div>
-        <section>
-          <h3>Broadcast network</h3>
-          {details?.broadcasts.length
-            ? <p>{details.broadcasts.join(' · ')}</p>
-            : <DetailsMessage details={details} failed={failed}>No broadcast network listed.</DetailsMessage>}
-        </section>
-        <section>
-          <h3>Game links</h3>
-          {children
-            ? <div className="game-details-watch-links">{children}</div>
-            : <p className="game-details-muted">No links available for this game.</p>}
-        </section>
+        <div className="game-details-tiles">
+          {networks.length
+            ? networks.map((network) => (
+                <div key={network} className="game-details-tile">
+                  <TvIcon className="game-details-tile-icon" /><strong>{network}</strong><span>TV</span>
+                </div>
+              ))
+            : (
+                <div className="game-details-tile">
+                  <TvIcon className="game-details-tile-icon" />
+                  <DetailsMessage details={details} failed={failed}>No broadcast network listed.</DetailsMessage>
+                </div>
+              )}
+          {children}
+          <VenueTile venue={game.venue} photo={photo} startTime={game.startTime} />
+        </div>
       </dialog>
     </>
+  )
+}
+
+function TvIcon({ className }: { className: string }) {
+  return <RailIcon className={className}><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></RailIcon>
+}
+
+/** The venue's tile, the width of the dialog, over its photo: its name and place, and when the game starts. */
+function VenueTile({ venue, photo, startTime }: { venue: GameVenue; photo: string | null; startTime: string }) {
+  const place = venuePlace(venue)
+  const start = new Date(startTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return (
+    <a className="game-details-tile game-details-tile--venue" href={mapsSearchUrl([venue.name, place].filter(Boolean).join(', '))}
+      target="_blank" rel="noopener noreferrer" style={photo ? { '--game-details-venue-photo': `url("${photo}")` } as CSSProperties : undefined}>
+      <RailIcon className="game-details-tile-icon"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></RailIcon>
+      <strong>{venue.name ?? 'Unknown venue'}</strong>
+      {place && <span>{place}</span>}
+      <span>{start}</span>
+    </a>
   )
 }
 
@@ -132,10 +168,10 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
               : <DetailsMessage details={details} failed={failed}>No period scores available.</DetailsMessage>)}
             {active === 'Scoring' && <Scoring game={game} details={details} failed={failed} />}
             {active === 'Drives' && (details?.drives.length
-              ? <Drives drives={details.drives} />
+              ? <Drives game={game} drives={details.drives} />
               : <DetailsMessage details={details} failed={failed}>No drives available.</DetailsMessage>)}
             {active === 'Stats' && (details?.stats.length
-              ? <PlayerStats teams={details.stats} />
+              ? <PlayerStats game={game} teams={details.stats} />
               : <DetailsMessage details={details} failed={failed}>No player stats available.</DetailsMessage>)}
             {active === 'Videos' && (details?.videos.length
               ? <Highlights videos={details.videos} />
@@ -147,28 +183,56 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
   )
 }
 
+/**
+ * The score by period on its own card, in the middle of the pane: the period being played (the last with a
+ * score, while Live) and the leading side's total picked out.
+ */
 function LineScore({ game, contest, details }: { game: Game; contest: GameSides; details: GameDetails }) {
+  const sides = sidesTopFirst(game.sport, contest)
+  const total = (team: GameTeam) => (team === contest.home ? details.homeTotal : details.awayTotal)
+  const [first, second] = sides.map((team) => Number(total(team) ?? NaN))
+  const leading = first > second ? sides[0] : second > first ? sides[1] : null
+  const current = game.status === 'Live' ? details.periodScores.findLastIndex((period) => period.home !== null || period.away !== null) : -1
   return (
-    <div className="game-details-table-scroll">
-      {/* No caption on screen: the chart is plainly the score by period. Named for a screen reader. */}
-      <table className="game-details-table game-details-line-score"
-        aria-label={game.sport === 'Football' ? 'Score by quarter' : 'Line score'}>
-        {/* The team column needs no heading on screen; it keeps its name for a screen reader. */}
-        <thead><tr><th scope="col" aria-label="Team" />
-          {details.periodScores.map((period) => <th key={period.label} scope="col">{period.label}</th>)}
-          <th scope="col">{game.status === 'Final' ? 'Final' : 'Total'}</th>
-        </tr></thead>
-        <tbody>
-          {sidesTopFirst(game.sport, contest).map((team) => {
-            const home = team === contest.home
-            return <tr key={team.abbreviation}><th scope="row">{team.abbreviation}</th>
-              {details.periodScores.map((period) => <td key={period.label}>{(home ? period.home : period.away) ?? '–'}</td>)}
-              <td>{(home ? details.homeTotal : details.awayTotal) ?? '–'}</td>
-            </tr>
-          })}
-        </tbody>
-      </table>
+    <div className="game-details-line-score">
+      <div className="game-details-table-scroll game-details-line-score-card">
+        {/* No caption on screen: the chart is plainly the score by period. Named for a screen reader. */}
+        <table className="game-details-line-score-table"
+          aria-label={game.sport === 'Football' ? 'Score by quarter' : 'Line score'}>
+          {/* The team column needs no heading on screen; it keeps its name for a screen reader. */}
+          <thead><tr><th scope="col" aria-label="Team" />
+            {details.periodScores.map((period, i) => <th key={period.label} scope="col" data-current={i === current || undefined}>{period.label}</th>)}
+            <th scope="col">{game.status === 'Final' ? 'Final' : 'T'}</th>
+          </tr></thead>
+          <tbody>
+            {sides.map((team) => {
+              const home = team === contest.home
+              return <tr key={team.abbreviation} data-leading={team === leading || undefined}><th scope="row">{team.abbreviation}</th>
+                {details.periodScores.map((period) => <td key={period.label}>{(home ? period.home : period.away) ?? '–'}</td>)}
+                <td>{total(team) ?? '–'}</td>
+              </tr>
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
+  )
+}
+
+/** A team of the game by its abbreviation, for its logo; none for one the game doesn't have. */
+function teamOf(game: Game, abbreviation: string): GameTeam | null {
+  if (game.contest.kind !== 'sides') return null
+  return [game.contest.away, game.contest.home].find((team) => team.abbreviation === abbreviation) ?? null
+}
+
+/** A team's abbreviation (or its full name, `full`) after its logo, when the game has the team. */
+function TeamLabel({ game, abbreviation, full = false }: { game: Game; abbreviation: string; full?: boolean }) {
+  const team = teamOf(game, abbreviation)
+  return (
+    <strong className="game-details-team">
+      {team && <TeamLogoImage team={team} className="game-details-logo" markClassName="game-details-logo game-details-logo--mark" />}
+      {full ? team?.fullName ?? abbreviation : abbreviation}
+    </strong>
   )
 }
 
@@ -188,7 +252,7 @@ function Scoring({ game, details, failed }: { game: Game; details: GameDetails |
     <ol className="game-details-list">
       {plays.map(({ when, team, text, homeScore, awayScore }, index) => (
         <li key={index} className="game-details-play">
-          <span className="game-details-muted">{when}</span><strong>{team}</strong><span>{text}</span>
+          <span className="game-details-muted">{when}</span><TeamLabel game={game} abbreviation={team} /><span>{text}</span>
           {homeScore !== null && awayScore !== null && <strong className="game-details-running-score">{awayScore}–{homeScore}</strong>}
         </li>
       ))}
@@ -196,12 +260,12 @@ function Scoring({ game, details, failed }: { game: Game; details: GameDetails |
   )
 }
 
-function Drives({ drives }: { drives: GameDrive[] }) {
+function Drives({ game, drives }: { game: Game; drives: GameDrive[] }) {
   return (
     <ol className="game-details-list game-details-drive-list">
       {drives.map(({ team, outcome, scored, plays, yards, duration, start, end }, index) => (
         <li key={index}>
-          <strong>{team} <span className="game-details-muted">· Drive {index + 1}</span></strong>
+          <span className="game-details-drive-head"><TeamLabel game={game} abbreviation={team} /><span className="game-details-muted">· Drive {index + 1}</span></span>
           <span className="game-details-outcome" data-scored={scored}>{outcome ?? 'In progress'}</span>
           <span>{[plays === null ? null : `${plays} plays`, yards === null ? null : `${yards} yards`, duration].filter(Boolean).join(' · ')}</span>
           <span className="game-details-muted">{[start, end].filter(Boolean).join(' → ')}</span>
@@ -211,35 +275,50 @@ function Drives({ drives }: { drives: GameDrive[] }) {
   )
 }
 
-function PlayerStats({ teams }: { teams: GameStatTeam[] }) {
-  const [selected, setSelected] = useState(teams[0].team)
-  const team = teams.find((entry) => entry.team === selected) ?? teams[0]
+/**
+ * Each category of player stats once, its teams side by side under their names (one over the other on a
+ * narrow panel), in the order the game's sides show.
+ */
+function PlayerStats({ game, teams }: { game: Game; teams: GameStatTeam[] }) {
+  const order = game.contest.kind === 'sides' ? sidesTopFirst(game.sport, game.contest).map((team) => team.abbreviation) : []
+  const sorted = [...teams].sort((a, b) => order.indexOf(a.team) - order.indexOf(b.team))
+  const categories = [...new Set(sorted.flatMap((team) => team.sections.map((section) => section.name)))]
   return (
-    <>
-      {teams.length > 1 && (
-        <div className="game-details-teams" role="group" aria-label="Stats team">
-          {teams.map((entry) => (
-            <button key={entry.team} type="button" aria-pressed={team === entry}
-              onClick={() => setSelected(entry.team)}>{entry.team}</button>
-          ))}
-        </div>
-      )}
-      <div className="game-details-stat-tables">
-        {team.sections.map(({ name, columns, players }) => (
-          <div key={name} className="game-details-table-scroll">
-            <table className="game-details-table">
-              <caption>{name}</caption>
-              <thead><tr><th scope="col">Player</th>{columns.map((column, index) => <th key={index} scope="col">{column}</th>)}</tr></thead>
-              <tbody>
-                {players.map(({ name: player, values }, index) => (
-                  <tr key={index}><th scope="row">{player}</th>{values.map((value, at) => <td key={at}>{value}</td>)}</tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="game-details-stats">
+      {categories.map((category) => (
+        <section key={category} className="game-details-stats-category">
+          <h3 className="game-details-section-title">{category}</h3>
+          <div className="game-details-stats-teams">
+            {sorted.map(({ team, sections }) => {
+              const section = sections.find((entry) => entry.name === category)
+              return (
+                <div key={team}>
+                  <div className="game-details-stats-team"><TeamLabel game={game} abbreviation={team} full /></div>
+                  {section
+                    ? <StatTable name={`${category}, ${teamOf(game, team)?.fullName ?? team}`} columns={section.columns} players={section.players} />
+                    : <p className="game-details-muted">None</p>}
+                </div>
+              )
+            })}
           </div>
-        ))}
-      </div>
-    </>
+        </section>
+      ))}
+    </div>
+  )
+}
+
+function StatTable({ name, columns, players }: { name: string; columns: string[]; players: { name: string; values: string[] }[] }) {
+  return (
+    <div className="game-details-table-scroll">
+      <table className="game-details-table" aria-label={name}>
+        <thead><tr><th scope="col">Player</th>{columns.map((column, index) => <th key={index} scope="col">{column}</th>)}</tr></thead>
+        <tbody>
+          {players.map(({ name: player, values }, index) => (
+            <tr key={index}><th scope="row">{player}</th>{values.map((value, at) => <td key={at}>{value}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
@@ -249,6 +328,7 @@ function Highlights({ videos }: { videos: GameVideo[] }) {
       {videos.map(({ title, url, duration }) => (
         <li key={url}>
           <a className="game-details-video" href={url} target="_blank" rel="noopener noreferrer">
+            <span className="game-details-video-thumb" aria-hidden="true"><RailIcon className="game-details-video-play"><path d="m9 7 8 5-8 5z" /></RailIcon></span>
             <strong>{title}</strong>
             <span className="game-details-muted">ESPN{duration !== null
               && ` · ${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>

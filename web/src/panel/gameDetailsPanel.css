@@ -1,28 +1,11 @@
-.game-details-score-header {
-  display: flex;
-  align-items: center;
-  gap: calc(3 * var(--spacing));
-}
-
-.game-details-score-header .event-panel__league {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.game-details-score-header .event-panel__progress {
-  flex: 0 1 auto;
-  max-width: 75%;
-  margin: 0;
-}
-/* The tabs at the panel's foot, and the open tab's content above them. They keep their room: never shorter
-   than the tab bar, and with a tab open, than the tab bar and --game-details-pane-least of its content, so
-   nothing above them (a field's leaderboard, a tall band) can squeeze them out; the rest of the panel gives
-   way first (see .event-panel__band and .event-panel__field-lines). The tab bar's height is its padding, a
-   line of text, its tabs' underline and the two lines above it. Its floor grows and shrinks as the tab's
-   content slides open and shut. */
+/* The tabs at the panel's foot, a dock of their names, and the open tab's content above them. They keep
+   their room: never shorter than the tab bar, and with a tab open, than the tab bar and
+   --game-details-pane-least of its content, so nothing above them (a field's leaderboard, a tall band) can
+   squeeze them out; the rest of the panel gives way first (see .event-panel__band and
+   .event-panel__field-lines). The tab bar's height is its padding, a line of text and the line above the
+   tab that's open. Its floor grows and shrinks as the tab's content slides open and shut. */
 .game-details {
-  --game-details-tab-bar-height: calc(4 * var(--spacing) + 1lh + 4px);
+  --game-details-tab-bar-height: calc(5 * var(--spacing) + 1lh + 2px);
   --game-details-pane-least: 96px;
   grid-area: details;
   display: flex;
@@ -39,6 +22,7 @@
   order: 1;
   flex-shrink: 0;
   border-top: 1px solid transparent;
+  background: color-mix(in srgb, var(--palette-background-default) 40%, transparent);
 }
 
 .game-details-tabs {
@@ -48,8 +32,11 @@
   overflow-x: auto;
 }
 
+/* The open tab's content, no wider than the panel: a wide table (a nine-inning score) scrolls inside it
+   rather than widening it. */
 .game-details-reveal {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 0fr;
   min-height: 0;
   transition: grid-template-rows 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -109,21 +96,27 @@
   }
 }
 
+/* A tab: its name, lit when open, with a line in the game's color along its top. */
 .game-details-tabs button {
   flex: 1;
-  padding: calc(2 * var(--spacing)) var(--spacing);
+  padding: calc(2.5 * var(--spacing)) var(--spacing);
   border: 0;
-  border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--palette-text-secondary);
   font: inherit;
   font-weight: var(--typography-button-font-weight);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
   cursor: pointer;
+  transition: color 160ms;
+}
+
+.game-details-tabs button:hover {
+  color: var(--palette-text-primary);
 }
 
 .game-details-tabs button[aria-selected='true'] {
-  border-bottom-color: var(--game-color);
-  background: var(--palette-action-hover);
+  box-shadow: inset 0 2px 0 var(--game-color);
   color: var(--palette-text-primary);
 }
 
@@ -134,7 +127,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-x pan-y;
-  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
   scrollbar-color: var(--palette-divider) transparent;
 }
 
@@ -149,6 +142,41 @@
   color: var(--palette-text-secondary);
 }
 
+/* A category's name (Passing, Batting) and the league over the Where to watch dialog's title. */
+.game-details-section-title {
+  margin: 0 0 var(--spacing);
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+}
+
+/* A team's abbreviation after its logo, on its plate (see .event-panel__team img). */
+.game-details-team {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+}
+
+.game-details-logo {
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 2px;
+  border-radius: var(--shape-border-radius);
+  background: var(--event-panel-logo-plate-fill);
+  object-fit: contain;
+}
+
+.game-details-logo--mark {
+  display: inline-grid;
+  place-items: center;
+  color: var(--event-panel-score-block-top);
+  font-size: var(--typography-small-font-size);
+}
+
 .game-details-table-scroll {
   min-width: 0;
   overflow-x: auto;
@@ -158,18 +186,9 @@
 .game-details-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: var(--typography-caption-font-size);
   font-variant-numeric: tabular-nums;
   text-align: right;
-}
-
-.game-details-line-score {
-  max-width: 510px;
-}
-
-.game-details-table caption {
-  padding-bottom: var(--spacing);
-  font-weight: var(--typography-button-font-weight);
-  text-align: left;
 }
 
 .game-details-table :is(th, td) {
@@ -181,14 +200,91 @@
   text-align: left;
 }
 
-.game-details-table thead {
-  color: var(--palette-text-secondary);
-  font-size: var(--typography-caption-font-size);
+.game-details-table tbody th {
+  font-weight: var(--typography-button-font-weight);
 }
 
-.game-details-table thead th:last-child,
-.game-details-line-score td:last-child {
+.game-details-table thead {
+  color: var(--palette-text-secondary);
+}
+
+.game-details-table thead th:last-child {
   font-weight: var(--typography-button-font-weight);
+}
+
+/* The score by period on its own card, in the middle of the pane both ways; the period being played
+   and the leading side's total in the game's color. */
+.game-details-line-score {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.game-details-line-score-card {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  border-radius: calc(3 * var(--shape-border-radius));
+  background: color-mix(in srgb, var(--palette-text-primary) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 8%, transparent);
+}
+
+.game-details-line-score-table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.game-details-line-score-table :is(th, td) {
+  min-width: 40px;
+  padding: calc(1.5 * var(--spacing)) calc(2.5 * var(--spacing));
+}
+
+.game-details-line-score-table thead th {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.game-details-line-score-table thead th[data-current] {
+  color: var(--game-color);
+}
+
+.game-details-line-score-table tbody th {
+  padding-right: calc(4 * var(--spacing));
+  font-weight: var(--typography-subtitle1-font-weight);
+  text-align: left;
+}
+
+.game-details-line-score-table tbody td {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-button-font-weight);
+}
+
+.game-details-line-score-table tbody tr + tr :is(th, td) {
+  border-top: 1px solid var(--palette-divider);
+}
+
+.game-details-line-score-table tbody td:last-child {
+  color: var(--palette-text-primary);
+  font-size: var(--typography-h6-font-size);
+  font-weight: 800;
+}
+
+.game-details-line-score-table tbody tr[data-leading] td:last-child {
+  color: var(--game-color);
+}
+
+/* A phone on its side: columns a little tighter, so nine innings and the total fit beside the rail. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-details-line-score-table :is(th, td) {
+    min-width: 28px;
+    padding: calc(1.25 * var(--spacing)) calc(1.5 * var(--spacing));
+  }
 }
 
 .game-details-list {
@@ -201,8 +297,8 @@
 
 .game-details-play {
   display: grid;
-  grid-template-columns: 84px 36px minmax(0, 1fr) auto;
-  align-items: baseline;
+  grid-template-columns: 72px 76px minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--spacing);
   padding: var(--spacing) calc(2 * var(--spacing));
   border-bottom: 1px solid var(--palette-divider);
@@ -221,15 +317,21 @@
 .game-details-drive-list > li {
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: baseline;
+  align-items: center;
   gap: var(--spacing);
   padding: calc(2 * var(--spacing));
-  border: 1px solid var(--palette-divider);
-  border-radius: var(--shape-border-radius);
+  border-radius: calc(3 * var(--shape-border-radius));
+  background: color-mix(in srgb, var(--palette-text-primary) 4%, transparent);
 }
 
 .game-details-drive-list > li > :nth-child(n + 3) {
   grid-column: 1 / -1;
+}
+
+.game-details-drive-head {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing);
 }
 
 .game-details-outcome {
@@ -242,58 +344,44 @@
   color: var(--game-color);
 }
 
-.game-details-teams,
-.game-details-watch-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: calc(2 * var(--spacing));
-}
-
-.game-details-teams {
-  margin-bottom: calc(2 * var(--spacing));
-}
-
-.game-details-stat-tables {
+/* Player stats: each category once, its teams side by side, or one over the other on a narrow panel. */
+.game-details-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(315px, 100%), 1fr));
-  gap: calc(3 * var(--spacing));
+  gap: calc(5 * var(--spacing));
 }
 
-.game-details-tv,
-.game-details-teams button,
-.game-details-dialog button {
-  display: inline-flex;
+.game-details-stats-teams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: calc(4 * var(--spacing));
+}
+
+.game-details-stats-team {
+  display: flex;
   align-items: center;
-  gap: var(--spacing);
-  padding: var(--spacing) calc(2 * var(--spacing));
+  gap: calc(2 * var(--spacing));
+  padding-bottom: calc(1.5 * var(--spacing));
+  border-bottom: 2px solid color-mix(in srgb, var(--game-color) 55%, transparent);
+  font-weight: var(--typography-subtitle1-font-weight);
+}
+
+.game-details-tv {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--palette-divider);
   border-radius: var(--shape-border-radius);
   background: var(--event-panel-surface-bottom);
   color: var(--palette-text-primary);
-  font: inherit;
-  font-weight: var(--typography-button-font-weight);
-  text-decoration: none;
   cursor: pointer;
 }
 
 .game-details-tv:hover,
-.game-details-teams button:hover,
-.game-details-dialog button:hover,
-.game-details-watch-links a:hover,
 .game-details-video:hover {
   background: var(--palette-action-hover);
-}
-
-.game-details-teams button[aria-pressed='true'] {
-  border-color: var(--game-color);
-  color: var(--game-color);
-}
-
-.game-details-tv {
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
 }
 
 .game-details-tv-icon {
@@ -301,13 +389,35 @@
   height: 18px;
 }
 
+/* A video: a play button on a tile in the game's color, then its title and length. */
 .game-details-video {
-  display: block;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: calc(3 * var(--spacing));
+  align-items: center;
   padding: calc(2 * var(--spacing));
-  border: 1px solid var(--palette-divider);
-  border-radius: var(--shape-border-radius);
+  border-radius: calc(3 * var(--shape-border-radius));
+  background: color-mix(in srgb, var(--palette-text-primary) 4%, transparent);
   color: var(--palette-text-primary);
   text-decoration: none;
+}
+
+.game-details-video-thumb {
+  display: grid;
+  grid-row: 1 / 3;
+  place-items: center;
+  height: 44px;
+  border-radius: calc(2 * var(--shape-border-radius));
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--game-color) 45%, transparent), transparent 70%),
+    color-mix(in srgb, var(--palette-text-primary) 8%, transparent);
+}
+
+.game-details-video-play {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .game-details-video .game-details-muted {
@@ -315,70 +425,189 @@
   font-size: var(--typography-caption-font-size);
 }
 
-.game-details-watch-links a {
-  display: inline-flex;
-  min-width: 44px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding-inline: calc(2 * var(--spacing));
-  border: 1px solid var(--palette-divider);
-  border-radius: var(--shape-border-radius);
-}
-
+/* The Where to watch dialog: a tile for each network, each link and the venue. */
 .game-details-dialog {
   box-sizing: border-box;
-  width: min(440px, calc(100% - 6 * var(--spacing)));
+  width: min(460px, calc(100% - 6 * var(--spacing)));
   max-height: 80dvh;
   overflow: auto;
   touch-action: pan-x pan-y;
-  padding: calc(4 * var(--spacing));
-  border: 1px solid var(--palette-divider);
-  border-radius: var(--event-panel-corner);
+  padding: calc(5 * var(--spacing));
+  border: 1px solid color-mix(in srgb, var(--palette-text-primary) 14%, transparent);
+  border-radius: calc(4 * var(--shape-border-radius));
   background: var(--event-panel-surface-bottom);
   color: var(--palette-text-primary);
   text-align: left;
   text-shadow: none;
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--palette-background-default) 80%, transparent);
 }
 
 .game-details-dialog::backdrop {
-  background: color-mix(in srgb, var(--palette-background-default) 72%, transparent);
+  background: color-mix(in srgb, var(--palette-background-default) 60%, transparent);
+  backdrop-filter: blur(6px);
 }
 
 .game-details-dialog-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: calc(2 * var(--spacing));
+  gap: calc(3 * var(--spacing));
+  margin-bottom: calc(4 * var(--spacing));
+}
+
+.game-details-dialog-heading .game-details-section-title {
+  margin-bottom: 2px;
 }
 
 .game-details-dialog h2 {
   margin: 0;
   font-size: var(--typography-h6-font-size);
+  font-weight: 800;
 }
 
-.game-details-dialog section {
-  margin-top: calc(3 * var(--spacing));
-  padding-top: calc(2 * var(--spacing));
-  border-top: 1px solid var(--palette-divider);
+.game-details-dialog-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--palette-text-primary) 10%, transparent);
+  color: var(--palette-text-primary);
+  cursor: pointer;
 }
 
-.game-details-dialog h3,
-.game-details-dialog p {
-  margin: 0 0 var(--spacing);
+.game-details-dialog-close:hover {
+  background: color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
 }
 
-.game-details-dialog h3 {
-  font-size: inherit;
+.game-details-dialog-close-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.game-details-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(2 * var(--spacing));
+}
+
+.game-details-tile {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--spacing);
+  min-height: 84px;
+  padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
+  border-radius: calc(3.5 * var(--shape-border-radius));
+  background: color-mix(in srgb, var(--palette-text-primary) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 10%, transparent);
+  color: var(--palette-text-primary);
+  text-decoration: none;
+}
+
+.game-details-tile span,
+.game-details-tile p {
+  margin: 0;
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-caption-font-size);
+}
+
+.game-details-tile-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--game-color);
+}
+
+/* A link's tile: its site's logo on a logo plate. */
+.game-details-tile--link {
+  justify-items: center;
+  background: var(--event-panel-logo-plate-fill);
+}
+
+.game-details-tile--link span {
+  color: var(--event-panel-score-block-top);
+}
+
+.game-details-tile--link img {
+  max-width: 90px;
+  max-height: 24px;
+}
+
+.game-details-tile--link .event-panel__stream-logo {
+  border-radius: var(--shape-border-radius);
+}
+
+a.game-details-tile:hover {
+  filter: brightness(1.08);
+}
+
+.game-details-tile:focus-visible,
+.game-details-dialog-close:focus-visible {
+  outline: 2px solid var(--game-color);
+  outline-offset: 2px;
+}
+
+/* The venue's tile, the dialog's width, its photo fading in from the right. */
+.game-details-tile--venue {
+  grid-column: 1 / -1;
+  min-height: 96px;
+  background:
+    linear-gradient(90deg,
+      var(--event-panel-surface-bottom) 35%,
+      color-mix(in srgb, var(--event-panel-surface-bottom) 55%, transparent) 65%,
+      color-mix(in srgb, var(--event-panel-surface-bottom) 20%, transparent)),
+    var(--game-details-venue-photo, none) center / cover,
+    color-mix(in srgb, var(--palette-text-primary) 6%, transparent);
 }
 
 @media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
-  .game-details-score-header {
-    padding-right: calc(var(--event-panel-size-close-width) + var(--spacing));
+  /* The tabs' room set outright, not left to the sheet's grid: Safari on an iPhone can briefly measure
+     the last row at its least while the globe moves, and the tabs would jump up. */
+  .game-details {
+    --game-details-tab-bar-height: 42px;
+    height: var(--game-details-tab-bar-height);
+    transition: min-height 220ms cubic-bezier(0.2, 0.8, 0.2, 1), height 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .game-details[data-expanded='true'] {
+    height: calc(var(--game-details-tab-bar-height) + clamp(145px, 27dvh, 238px));
+  }
+
+  .game-details-tab-bar {
+    box-sizing: border-box;
+    height: var(--game-details-tab-bar-height);
+  }
+
+  .game-details-tabs button {
+    padding-inline: 0;
   }
 
   .game-details-pane {
     height: clamp(145px, 27dvh, 238px);
     padding-inline: calc(2 * var(--spacing));
+  }
+
+  .game-details-line-score-card {
+    padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  }
+
+  /* Tight enough for nine innings and the total on a phone; longer games scroll inside the card. */
+  .game-details-line-score-table :is(th, td) {
+    min-width: 22px;
+    padding: calc(1.5 * var(--spacing)) 3px;
+  }
+
+  .game-details-line-score-table tbody th {
+    padding-right: calc(2 * var(--spacing));
+  }
+
+  .game-details-line-score-table tbody td {
+    font-size: var(--typography-body2-font-size);
+  }
+
+  .game-details-line-score-table tbody td:last-child {
+    font-size: var(--typography-subtitle1-font-size);
   }
 }

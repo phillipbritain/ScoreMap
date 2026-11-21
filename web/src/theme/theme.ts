@@ -529,7 +529,8 @@ const settings = {
      * on a tab of that color above it. Its corners, and its bottom left corner cut off, like a broadcast
      * graphic, or not: this many spacing units along each side. Its size: its width at most, the strip's
      * minimum height (on a desktop); the score block's maximum width and how far its right edge slants; a
-     * team's logo; the close button's tab; and a team's score box, in ems of its digits. The plate each
+     * team's logo; the close button's tab; a team's score box, in ems of its digits; and the game clock's time
+     * over the venue's photo, large (a desktop) and small (a phone's sheet). The plate each
      * logo sits on (see logoPlate). It sits clear of the scenario controls by their keys' size.
      */
     EventPanel: {
@@ -552,6 +553,7 @@ const settings = {
         logo: pixels,
         close: { width: pixels, height: pixels },
         scoreWidth: ems,
+        clock: { large: pixels, small: pixels },
       },
     },
     /** A menu's corners (the rail and its popovers, the list of scenarios). */

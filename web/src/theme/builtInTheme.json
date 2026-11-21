@@ -157,7 +157,8 @@
         "slant": 16,
         "logo": 28,
         "close": { "width": 30, "height": 26 },
-        "scoreWidth": 2.6
+        "scoreWidth": 2.6,
+        "clock": { "large": 30, "small": 22 }
       }
     },
     "Menu": { "corner": 2 },

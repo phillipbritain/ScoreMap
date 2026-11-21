@@ -273,7 +273,9 @@ it("links the panel to a game's StreamEast stream and ESPN page, and has no link
     streamLinks: [{ site: 'StreamEast', url: 'https://streameast.test/nfl/game/1' }],
     espnUrl: 'https://www.espn.com/nfl/game/_/gameId/1',
   }
+  // The game's own links; the venue's tile links to the map whatever the game has.
   const links = () => [...document.querySelectorAll<HTMLAnchorElement>('dialog[open] a')].map((a) => a.href)
+    .filter((href) => !href.startsWith('https://www.google.com/maps'))
   vi.stubGlobal('fetch', vi.fn(async () => Response.json(details)))
   await show([game('N'), linked])
 
@@ -287,6 +289,7 @@ it("links the panel to a game's StreamEast stream and ESPN page, and has no link
   await clickTv()
   expect(links()).toEqual(['https://streameast.test/nfl/game/1', 'https://www.espn.com/nfl/game/_/gameId/1'])
   expect(container.querySelector('dialog[open]')?.textContent).toContain('ESPN2')
+  expect(document.querySelector<HTMLAnchorElement>('dialog[open] a[href^="https://www.google.com/maps"]')).not.toBeNull()
 })
 
 

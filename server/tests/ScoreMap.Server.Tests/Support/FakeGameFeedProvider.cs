@@ -165,6 +165,25 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
     }
 
     /// <summary>
+    /// Makes every fetch of the league answer only after <paramref name="takes"/> of real time, as a
+    /// feed far away would: real, as some waits on the server are bounded in real time.
+    /// </summary>
+    public void AnswerAfter(string leagueKey, TimeSpan takes)
+    {
+        lock (_scoreboards)
+            _answerAfter[leagueKey] = takes;
+    }
+
+    private readonly Dictionary<string, TimeSpan> _answerAfter = new();
+
+    private async Task<IReadOnlyList<ProviderGame>> AnswerLaterAsync(string leagueKey, TimeSpan takes, CancellationToken cancellationToken)
+    {
+        await Task.Delay(takes, cancellationToken);
+        lock (_scoreboards)
+            return Scoreboard(leagueKey);
+    }
+
+    /// <summary>
     /// Makes fetches of the league wait until <see cref="Release"/> is called, then answer as usual: a
     /// fetch under way for as long as a test needs.
     /// </summary>
@@ -239,6 +258,8 @@ public sealed class FakeGameFeedProvider : IGameFeedProvider
                 return Task.FromException<IReadOnlyList<ProviderGame>>(new TaskCanceledException(
                     "The request was canceled due to the configured HttpClient.Timeout of 10 seconds elapsing.",
                     new TimeoutException("The operation was canceled.")));
+            if (_answerAfter.TryGetValue(leagueKey, out var takes))
+                return AnswerLaterAsync(leagueKey, takes, cancellationToken);
             if (_gates.TryGetValue(leagueKey, out var gate))
                 return AnswerOnceReleasedAsync(leagueKey, gate.Task, _ignoreCancellation.Contains(leagueKey) ? CancellationToken.None : cancellationToken);
             return Task.FromResult(Scoreboard(leagueKey));

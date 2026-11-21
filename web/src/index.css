@@ -3353,8 +3353,8 @@ body {
 
 /* On a phone (the app's phone layout): each step's panel across the screen, in its middle as on a
    larger screen, laid over the rail rather than kept clear of it; what doesn't fit scrolls in the panel
-   (My leagues' picker). Your controls' panel alone keeps left of the rail it lights, so the rail is
-   never under it. */
+   (My leagues' picker). Your controls' and Click a score card's panels keep left of the rail, so the
+   rail is never under them. */
 @media (max-width: 640px) {
   .welcome-tour__panel {
     width: calc(100% - 6 * var(--spacing));
@@ -3368,8 +3368,15 @@ body {
     padding: 0 calc(var(--rail-left-inset, 0px) + 3 * var(--spacing)) 0 calc(3 * var(--spacing));
   }
 
-  .welcome-tour--controls .welcome-tour__panel {
+  .welcome-tour--controls .welcome-tour__panel,
+  .welcome-tour--scoreCard .welcome-tour__panel {
     width: 100%;
+  }
+
+  /* Click a score card as wide as Your controls, left of the rail, so it never lies over the rail. */
+  .welcome-tour.welcome-tour--scoreCard {
+    padding-right: calc(var(--rail-left-inset, 0px) + 3 * var(--spacing));
+    padding-left: calc(3 * var(--spacing));
   }
 }
 

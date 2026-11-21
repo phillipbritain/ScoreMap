@@ -296,7 +296,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `subtitle2` | A score card's text and the loading screen's message take its weight | 600, 12 |
 | `body1` | Body text | 400, 16 |
 | `body2` | The event panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |
-| `button` | Buttons: sport names in Display Settings, league chips and card density's, the scenario pill and the scenario it has on | 600, 14 |
+| `button` | Buttons: sport names in Display Settings, league chips, card density's (joined as one toggle button group), the scenario pill and the scenario it has on | 600, 14 |
 | `caption` | Secondary lines: the event panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
 | `overline` | The event panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card density" and "Card colors" headings, in capitals | 700, 12, 0.14em |
 | `footnote` | The event panel's labels on a phone | 400, 11 |

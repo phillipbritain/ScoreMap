@@ -134,7 +134,7 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
   }
   return (
     <TourPanel
-      heading="Welcome to ScoreMap"
+      heading="Welcome to ScoreMap!"
       headingLevel="h2"
       action={
         picking && (

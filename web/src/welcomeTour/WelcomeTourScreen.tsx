@@ -6,8 +6,6 @@ import { LeaguePicker } from '../rail/LeaguePicker'
 import type { LeagueList } from '../settings/leagues'
 import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
-import { PanelStepProtoBar } from './PanelStepProtoBar'
-import { useAboveLitPart, usePanelStepProto } from './panelStepProto'
 import {
   canShowPicks,
   gamePanelSteps,
@@ -308,18 +306,53 @@ const panelParts = Object.fromEntries(
 function GamePanelStep({ step, onNext }: { step: GamePanelStepName; onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   const { heading, words } = gamePanelStepParts[step]
-  // PROTOTYPE: ?panelStepProto= (see panelStepProto.ts).
-  const proto = usePanelStepProto()
-  useAboveLitPart(proto === 'above', panel, panelParts[step])
+  // Game details sits right above the tabs it lights, over the game panel; the others as All set does.
+  useRightAbove(step === 'panelTabs', panel, panelParts[step])
   return (
     <>
-      <PanelStepProtoBar variant={proto} />
       <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={false} flush />
       <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text">{words}</p>
       </TourPanel>
     </>
   )
+}
+
+/** The least room between a step and the part of the game panel it sits right above, and the screen's edges. */
+const rightAboveGap = 12
+
+/**
+ * While `on`, keeps a step's panel right above a part of the game panel (`part`), over the panel,
+ * centered on the part as far as the room left of the rail allows (the tour's padding, see
+ * .welcome-tour), as wide as a step's panel is in that room.
+ */
+function useRightAbove(on: boolean, panel: RefObject<HTMLElement | null>, part: () => Iterable<Element>) {
+  useEffect(() => {
+    const element = panel.current
+    const layerElement = element?.closest<HTMLElement>('.welcome-tour')
+    if (!on || !element || !layerElement) return
+    let frame = 0
+    const look = () => {
+      frame = requestAnimationFrame(look)
+      const target = [...part()][0]?.getBoundingClientRect()
+      if (!target) return
+      const layer = layerElement.getBoundingClientRect()
+      const style = getComputedStyle(layerElement)
+      const roomLeft = parseFloat(style.paddingLeft)
+      const roomRight = layer.width - parseFloat(style.paddingRight)
+      element.style.position = 'absolute'
+      element.style.width = `min(calc(110 * var(--spacing)), ${roomRight - roomLeft}px)`
+      const width = element.offsetWidth
+      const middle = target.left - layer.left + target.width / 2
+      element.style.left = `${Math.max(roomLeft, Math.min(middle - width / 2, roomRight - width))}px`
+      element.style.top = `${Math.max(rightAboveGap, target.top - layer.top - rightAboveGap - element.offsetHeight)}px`
+    }
+    look()
+    return () => {
+      cancelAnimationFrame(frame)
+      for (const property of ['position', 'width', 'left', 'top']) element.style.removeProperty(property)
+    }
+  }, [on, panel, part])
 }
 
 /** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */

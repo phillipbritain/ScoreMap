@@ -17,6 +17,7 @@ import {
   settingsForChoice,
   settingsForPicks,
   progressAfterReload,
+  tourLocksTabs,
   tourProgressAfter,
   type TourEvent,
   type TourProgress,
@@ -75,6 +76,16 @@ describe('welcome tour progress', () => {
     { kind: 'closed' },
   ])('stays finished on %j', (event) => {
     expect(tourProgressAfter('finished', event)).toBe('finished')
+  })
+})
+
+describe('tourLocksTabs', () => {
+  it('locks the event panel\'s tabs on The event panel, before Game details', () => {
+    expect(tourLocksTabs('eventPanel')).toBe(true)
+  })
+
+  it.each<TourProgress | null>(['panelTabs', 'panelWatch', 'allSet', 'finished', null])('leaves them usable at %s', (progress) => {
+    expect(tourLocksTabs(progress)).toBe(false)
   })
 })
 

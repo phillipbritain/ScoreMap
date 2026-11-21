@@ -41,7 +41,7 @@ import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
 import { showsTourGames, shownTourGames, tourCamera, tourGames, tourGameToTry, type TourScreen } from './welcomeTour/tourGames'
 import { useTourPlay } from './welcomeTour/tourPlay'
 import { useTourVenuePhotos } from './welcomeTour/tourVenuePhotos'
-import { tourProgressAfter } from './welcomeTour/welcomeTour'
+import { tourLocksTabs, tourProgressAfter } from './welcomeTour/welcomeTour'
 
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
@@ -272,6 +272,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             venuePhotos={viewerSettings.venuePhotos}
             detailsOpen={showTourGames ? tourDetailsOpen : detailsOpen}
             onDetailsOpenChange={showTourGames ? setTourDetailsOpen : setDetailsOpen}
+            tabsLocked={tourLocksTabs(tourStep)}
             demo={demo}
             onClose={closeGame}
             leaving={panelLeaving}

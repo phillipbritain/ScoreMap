@@ -53,6 +53,14 @@ export function overEventPanel(progress: TourProgress): boolean {
 }
 
 /**
+ * Whether the event panel's tabs can't be used yet: on The event panel, before Game details, which is
+ * about them, so the viewer meets them there.
+ */
+export function tourLocksTabs(progress: TourProgress | null): boolean {
+  return progress === 'eventPanel'
+}
+
+/**
  * The progress a page reload carries on at, from the progress saved: where it was left, but the game
  * panel's steps go back to Click a score card, as the panel they light isn't open after a reload, and
  * All set, with nothing left to show, finishes the tour, straight into the live games.

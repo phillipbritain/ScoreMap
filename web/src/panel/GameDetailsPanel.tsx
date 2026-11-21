@@ -49,12 +49,14 @@ export function WatchInfo({ details, failed, onToggle, children }: {
   )
 }
 
-export function GameDetailsPanel({ game, details, failed, open, onToggle }: {
+export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle }: {
   game: Game
   details: GameDetails | null
   failed: boolean
   /** Whether it opens with its details showing, as the last event panel's were left. */
   open: boolean
+  /** Whether its tabs (and minimize button) can't be used yet, as in the welcome tour before Game details. */
+  locked?: boolean
   onToggle: (open: boolean) => void
 }) {
   const contest = game.contest.kind === 'sides' ? game.contest : null
@@ -99,7 +101,7 @@ export function GameDetailsPanel({ game, details, failed, open, onToggle }: {
         collapse()
       }
     }}>
-      <div className="game-details-tab-bar">
+      <div className="game-details-tab-bar" inert={locked}>
         <div ref={tabList} className="game-details-tabs" role="tablist" aria-label="Game details">
           {tabs.map((tab, index) => (
             <button key={tab} id={`${id}-tab-${tab}`} type="button" role="tab"

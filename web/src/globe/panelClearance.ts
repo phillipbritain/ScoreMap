@@ -11,7 +11,7 @@ export const smallPinReach = 16
 
 /**
  * Where on the page a game picked from the Games list is centered: the middle of the globe (its box on the
- * page) above the game panel, a strip across its bottom; or of the whole globe with no panel, or one that
+ * page) above the event panel, a strip across its bottom; or of the whole globe with no panel, or one that
  * leaves no room above it.
  */
 export function clearCenter(globe: ScreenBox, panel: ScreenBox | null): { x: number; y: number } {

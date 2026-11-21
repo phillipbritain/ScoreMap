@@ -13,12 +13,12 @@ namespace ScoreMap.Server.Venues;
 /// league; then ESPN's photo of the venue in another league that plays there (from
 /// <see cref="VenueLeagueCatalog"/>: ESPN gives each league its own id for a venue, and its own photos); then the images Wikidata gives for the venue
 /// (its interior images, P5775, then its main ones, P18), found through the Wikidata item OpenStreetMap links the venue to, served by
-/// Wikimedia Commons with their author and license. Both are asked for a photo about twice the game panel's width. Only a good photo
+/// Wikimedia Commons with their author and license. Both are asked for a photo about twice the event panel's width. Only a good photo
 /// is taken (see <see cref="IsGoodPhoto"/>): with none, the venue has no photo rather than a poor one.
 /// </summary>
 public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSearch places, VenueLeagueCatalog? leagues = null) : IVenuePhotoSearch
 {
-    /// <summary>Width asked for, in pixels: the game panel is 360 CSS pixels wide, so this stays sharp on high-density screens.</summary>
+    /// <summary>Width asked for, in pixels: the event panel is 360 CSS pixels wide, so this stays sharp on high-density screens.</summary>
     public const int PhotoWidth = 720;
 
     private const string EspnCoreApi = "https://sports.core.api.espn.com/v2/sports/";
@@ -129,7 +129,7 @@ public sealed partial class VenuePhotoSearch(HttpClient http, NominatimPlaceSear
     }
 
     /// <summary>
-    /// Whether a Commons image is good enough for the game panel: a photo (not a drawing) at least
+    /// Whether a Commons image is good enough for the event panel: a photo (not a drawing) at least
     /// <see cref="PhotoWidth"/> pixels wide, so it isn't blown up, and not taken from the air: no satellite,
     /// aerial or drone view in its file name, description or categories.
     /// </summary>

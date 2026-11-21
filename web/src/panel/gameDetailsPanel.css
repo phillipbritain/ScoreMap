@@ -4,13 +4,13 @@
   gap: calc(3 * var(--spacing));
 }
 
-.game-details-score-header .game-panel__league {
+.game-details-score-header .event-panel__league {
   min-width: 0;
   margin: 0;
   padding: 0;
 }
 
-.game-details-score-header .game-panel__progress {
+.game-details-score-header .event-panel__progress {
   flex: 0 1 auto;
   max-width: 75%;
   margin: 0;
@@ -22,7 +22,7 @@
   min-height: 0;
   min-width: 0;
   border-top: 1px solid var(--palette-divider);
-  background: var(--game-panel-surface-bottom);
+  background: var(--event-panel-surface-bottom);
 }
 
 .game-details-tab-bar {
@@ -254,7 +254,7 @@
   padding: var(--spacing) calc(2 * var(--spacing));
   border: 1px solid var(--palette-divider);
   border-radius: var(--shape-border-radius);
-  background: var(--game-panel-surface-bottom);
+  background: var(--event-panel-surface-bottom);
   color: var(--palette-text-primary);
   font: inherit;
   font-weight: var(--typography-button-font-weight);
@@ -320,8 +320,8 @@
   touch-action: pan-x pan-y;
   padding: calc(4 * var(--spacing));
   border: 1px solid var(--palette-divider);
-  border-radius: var(--game-panel-corner);
-  background: var(--game-panel-surface-bottom);
+  border-radius: var(--event-panel-corner);
+  background: var(--event-panel-surface-bottom);
   color: var(--palette-text-primary);
   text-align: left;
   text-shadow: none;
@@ -360,7 +360,7 @@
 
 @media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
   .game-details-score-header {
-    padding-right: calc(var(--game-panel-size-close-width) + var(--spacing));
+    padding-right: calc(var(--event-panel-size-close-width) + var(--spacing));
   }
 
   .game-details-pane {

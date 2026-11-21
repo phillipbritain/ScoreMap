@@ -12,11 +12,11 @@ export interface Leaving<T> {
 }
 
 /**
- * Something shown while it's given (a rail popover, the game panel), kept on the page `duration`
+ * Something shown while it's given (a rail popover, the event panel), kept on the page `duration`
  * milliseconds once it's no longer given, so it can play its way out (its look is the CSS's); with the
  * device's reduce motion setting on, it goes at once. `value` should keep its identity from one render
  * to the next while it's the same thing. `duration` can depend on what's leaving, for something that
- * leaves its own way at times (the game panel closing itself after its game's celebration).
+ * leaves its own way at times (the event panel closing itself after its game's celebration).
  */
 export function useLeaving<T>(value: T | null, duration: number | ((leaving: T) => number)): Leaving<T> {
   const [given, setGiven] = useState<T | null>(value)

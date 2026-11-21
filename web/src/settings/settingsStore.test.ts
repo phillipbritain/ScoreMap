@@ -425,7 +425,7 @@ describe('settingsStore: the collapsed rail', () => {
   })
 })
 
-describe('settingsStore: the game panel\'s details', () => {
+describe('settingsStore: the event panel\'s details', () => {
   it('shows a first-time visitor the details minimized', () => {
     expect(settingsStore(() => memoryStorage()).loadDetailsOpen()).toBe(false)
   })
@@ -509,7 +509,7 @@ describe('unsavedSettingsStore', () => {
     expect(saved.loadRailCollapsed()).toBe(false)
   })
 
-  it('opens a demo\'s game panels with their details minimized, and saves nothing when they open', () => {
+  it('opens a demo\'s event panels with their details minimized, and saves nothing when they open', () => {
     const storage = memoryStorage()
     const saved = settingsStore(() => storage)
     const store = unsavedSettingsStore()

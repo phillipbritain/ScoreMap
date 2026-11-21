@@ -49,7 +49,7 @@ Every setting is required, and nothing else is allowed: a theme missing a settin
 
 The code reads only the resolved theme, never the JSON:
 
-- **The page** (the event panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.GamePanel.surface.top` is `--game-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colors, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
+- **The page** (the event panel, score cards, the rail, the scenario controls, the loading screen): the resolved theme is written to the page's root as CSS custom properties, one per setting, named by where it sits in the theme in kebab case, as MUI's CSS theme variables are. `palette.text.primary` is `--palette-text-primary`, `typography.body2.fontSize` is `--typography-body2-font-size`, `spacing` is `--spacing`, `palette.live.main` is `--palette-live-main`. A component's are named by the component alone: `components.ScoreCard.fill` is `--score-card-fill`, `components.EventPanel.surface.top` is `--event-panel-surface-top`. Sizes are written in pixels (`12px`), or in ems where they go with their text (`0.14em`), on or off as `1` or `0`, and a shadow as one CSS shadow (`0px 8px 30px #000e28`). A globe font is written as its `-name`, `-family`, `-weight` and `-style`. The page's CSS (`web/src/index.css`) reads a settled look's colors, fonts, text sizes, spacing, corners, sizes and opacities through these, rather than naming its own (see [What stays in code](#what-stays-in-code) for what it may name, and for a look still being tried). A space is a number of spacing units, `calc(3 * var(--spacing))`, as MUI's `theme.spacing(3)` gives it.
 - **The globe**: its map style (land, sea, coastlines and borders), place names, the halo, pins, clusters, trails, the selected pin's ring and pulses read the resolved theme directly, since MapLibre needs the values themselves, not CSS custom properties. Widths and text sizes that change with zoom, the disputed borders' dash pattern and the halo's sizes are read only by the globe and aren't written to CSS.
 - **The theme is chosen** to start in, in `web/src/main.tsx`, and **changes one way**, as the app runs: through `useTheme` (`web/src/theme/useTheme.ts`), which writes it to the page before the page paints and hands it down through `App` and `Globe` to the globe. The globe restyles itself in place (`GlobeMap.setTheme`): it sets just the map layer properties that differ between the two themes, redraws the halo, reclusters small pins and measures score cards afresh. Nothing is made again and the camera stays where it is.
 
@@ -116,7 +116,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Game Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card colors" heading (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card colors" heading (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
 | `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
@@ -177,12 +177,12 @@ Beside the palette's background, text, divider and hover:
 | `components.Controls.surface` | The "No games right now." message | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
 | `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
-| `components.GamePanel.surface.top`, `.bottom` | The event panel (on a desktop, its venue part and band), shading from top to bottom | `background.paper`, `background.paper` (solid) |
-| `components.GamePanel.scoreBlock.top`, `.bottom` | The event panel's score block, shading from top to bottom: on a desktop the tint of its glass (see [Glass](#glass)) | `primary.dark`, `primary.dark` |
-| `components.GamePanel.score.fill`, `.text` | A team's score box on the event panel; on a desktop the box is a pane of the score block's glass instead, only its text this color | `navy.600`, `text.primary` |
-| `components.GamePanel.unofficial` | The note on unofficial stream links | `text.secondary` |
-| `components.GamePanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
-| `components.GamePanel.shadow.color` | The event panel's drop shadow | `transparent` |
+| `components.EventPanel.surface.top`, `.bottom` | The event panel (on a desktop, its venue part and band), shading from top to bottom | `background.paper`, `background.paper` (solid) |
+| `components.EventPanel.scoreBlock.top`, `.bottom` | The event panel's score block, shading from top to bottom: on a desktop the tint of its glass (see [Glass](#glass)) | `primary.dark`, `primary.dark` |
+| `components.EventPanel.score.fill`, `.text` | A team's score box on the event panel; on a desktop the box is a pane of the score block's glass instead, only its text this color | `navy.600`, `text.primary` |
+| `components.EventPanel.unofficial` | The note on unofficial stream links | `text.secondary` |
+| `components.EventPanel.photo.glow` | The glow behind the venue and its links when the venue has no photo | `navy.600` |
+| `components.EventPanel.shadow.color` | The event panel's drop shadow | `transparent` |
 | `components.Rail.surface` | The rail's popovers (Leagues, Display Settings, Games, More and the Feedback panel); on local runs, the top rail's Scenario popover too. The rail's groups of buttons are score cards' glass instead (see [Glass](#glass)) | `background.paper` |
 | `components.Rail.outline` | The thin outline round the rail's popovers, lighter than the globe's land and sea so a popover stands off the globe under it, on the plain map and the satellite map alike, at desktop size and as a phone's sheet | `primary.light` |
 | `components.Tooltip.surface`, `.outline` | A tooltip (see [Tooltips](#tooltips)), a step lighter than the panels it may sit over, and its thin outline, which sets it off from them | `navy.700`, `navy.500` |
@@ -266,7 +266,7 @@ The gradients' shapes, the card glow's tighter band and flicker, and animation t
 
 ### Glass
 
-Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So are the rail's groups of buttons (and the top rail's, on local runs), as a score card's glass, tinted with its fill as solid as its frost but casting no shadow, the lines between their buttons faint and straight across, and the count on the Games button, a chip of the same glass ringed and numbered in `components.Rail.open`. So, on a desktop and on a short screen on its side, is the event panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.GamePanel.frost` (0.55 in the dark theme), its outer edges lit by the panel's edge line; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the event panel, the rail's popovers (Map Type, Games, Leagues, Display Settings, More and the Feedback panel, and the top rail's Scenario popover on local runs), welcome tour panels, the no-pins message, the demo label, and tooltips. Pins are unchanged.
+Score cards are glass (ADR-0018): a pane the globe shows through, tinted with the card's fill (`components.ScoreCard.fill`). So are the rail's groups of buttons (and the top rail's, on local runs), as a score card's glass, tinted with its fill as solid as its frost but casting no shadow, the lines between their buttons faint and straight across, and the count on the Games button, a chip of the same glass ringed and numbered in `components.Rail.open`. So, on a desktop and on a short screen on its side, is the event panel's score block: the globe shows through it blurred, tinted with the score block's colors as solid as `components.EventPanel.frost` (0.55 in the dark theme), its outer edges lit by the panel's edge line; its scores sit on panes of the same glass, a faint light tint with a hairline rim, and its records are lifted off it. The rest of the panel, and the score block on a phone (where the venue's photo fills the panel), is solid. Everything else over the globe is solid, its theme surface color with nothing behind it blurred, so its contents stay readable (ADR-0023): the rest of the event panel, the rail's popovers (Map Type, Games, Leagues, Display Settings, More and the Feedback panel, and the top rail's Scenario popover on local runs), welcome tour panels, the no-pins message, the demo label, and tooltips. Pins are unchanged.
 
 A score card's glass has a **frost**, from 0 to 1 (`components.ScoreCard.frost`, 0.6 in the dark theme):
 
@@ -320,13 +320,13 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | Setting | Which corners | Dark theme |
 | --- | --- | --- |
 | `components.ScoreCard.corner` | A score card's | 1.5 (6px) |
-| `components.GamePanel.corner` | The event panel's | 2 (8px) |
+| `components.EventPanel.corner` | The event panel's | 2 (8px) |
 | `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers (More's rows too), the Feedback panel's text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
 | `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: a speed key, league chips, "Reset colors", the Feedback panel's buttons | `pill` |
 
-The **cut corner** cuts off the event panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.GamePanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. It's beveled (CSS `corner-shape`) rather than clipped, which would stop the score block's glass seeing the globe, and only on a desktop. The dark theme has it off (size 4, unused). The panel's top right corner is square, where the close button's tab rises from it, and on a phone (640px wide or less) every corner is.
+The **cut corner** cuts off the event panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.EventPanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. It's beveled (CSS `corner-shape`) rather than clipped, which would stop the score block's glass seeing the globe, and only on a desktop. The dark theme has it off (size 4, unused). The panel's top right corner is square, where the close button's tab rises from it, and on a phone (640px wide or less) every corner is.
 
 ### Logo plates
 
@@ -334,9 +334,9 @@ Every team logo, on a score card and in the event panel, sits on a **plate**: a 
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.ScoreCard.logo.plate.fill`, `components.GamePanel.logo.plate.fill` | The plate's color (a color job) | `offWhite.500`, `offWhite.500` |
-| `components.ScoreCard.logo.plate.padding`, `components.GamePanel.logo.plate.padding` | How far the plate reaches past the logo on each side, in spacing units. The logo keeps its size (`size.logo`); the plate adds to it | 0.25 (1px), 1 (4px) |
-| `components.ScoreCard.logo.plate.corner`, `components.GamePanel.logo.plate.corner` | The plate's corners, in corner radii or `"pill"` | 0.5 (2px), 1 (4px) |
+| `components.ScoreCard.logo.plate.fill`, `components.EventPanel.logo.plate.fill` | The plate's color (a color job) | `offWhite.500`, `offWhite.500` |
+| `components.ScoreCard.logo.plate.padding`, `components.EventPanel.logo.plate.padding` | How far the plate reaches past the logo on each side, in spacing units. The logo keeps its size (`size.logo`); the plate adds to it | 0.25 (1px), 1 (4px) |
+| `components.ScoreCard.logo.plate.corner`, `components.EventPanel.logo.plate.corner` | The plate's corners, in corner radii or `"pill"` | 0.5 (2px), 1 (4px) |
 
 The logos are ESPN's usual ones, drawn for a light background, which the plate gives them. ESPN also lists a logo for dark backgrounds for most teams, but for about half of them it's the same picture, and the feed's scoreboard doesn't carry it, so ScoreMap doesn't use it: the plate is the fix for every team alike.
 
@@ -374,14 +374,14 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 The event panel opens with its score, venue and bottom tab bar. The league and progress chip share a row above the scores. Long names and clock lines use an ellipsis with the full text on hover or tap. The TV icon opens **Watch and game info**, with the broadcast network when available and logo links to StreamEast and ESPN. The close button sits in the panel’s upper-right corner.
 
-On desktop the score block is glass (see [Glass](#glass)), with the venue photo cropped to the area beside its slanted edge. On narrow screens, the photo is behind the score and venue rows, with the same crop while another part of the panel changes height. The photo uses `components.GamePanel.photo.opacity`; a faint glow fills its place when there is no photo. A field’s whole leaderboard is in the score block, a line each, scrolling within its two-line height. A band below the header holds tennis sets or a fight card’s bouts. The panel edge uses `text.primary` at 18%, and when a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)).
+On desktop the score block is glass (see [Glass](#glass)), with the venue photo cropped to the area beside its slanted edge. On narrow screens, the photo is behind the score and venue rows, with the same crop while another part of the panel changes height. The photo uses `components.EventPanel.photo.opacity`; a faint glow fills its place when there is no photo. A field’s whole leaderboard is in the score block, a line each, scrolling within its two-line height. A band below the header holds tennis sets or a fight card’s bouts. The panel edge uses `text.primary` at 18%, and when a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)).
 
 Selecting a tab slides its content up above the tab bar over 220 ms. The down chevron collapses it. The tab bar stays at the foot of the panel, and the details and sport-specific band can scroll when space is tight. With reduced motion, opening and collapsing are immediate.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
-| `components.GamePanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its color | none (`transparent`, blur 0) |
-| `components.GamePanel.glow.y`, `.blur`, `.opacity` | The glow in the game's color along the event panel's top | 0, 0, 0 (none) |
+| `components.EventPanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its color | none (`transparent`, blur 0) |
+| `components.EventPanel.glow.y`, `.blur`, `.opacity` | The glow in the game's color along the event panel's top | 0, 0, 0 (none) |
 | `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether it frosts over fully (see [Hover](#hover)) | 2.5, on |
 | `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's color, 0 to 1, at a frost of 1: the tint clears with the card's glass (see [Glass](#glass)). The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
@@ -391,13 +391,13 @@ Selecting a tab slides its content up above the tab bar over 220 ms. The down ch
 | `components.WelcomeTour.dim.opacity`, `.arrow.width` | How opaque the welcome tour's dim is over the globe (in the background's color, under a step's panel and around its spotlight), 0 to 1, and how wide the flowing arrow from a step's panel is | 0.6, 2.5 |
 | `components.WelcomeTour.choice.topEvents`, `.myLeagues`, `.everything` | The outline of each of Welcome's choices, a color of its own so the three tell apart; it stays on hover, which lights the choice behind | `gold.500`, `navy.300`, `#6dbb8a` (a green outside the theme's colors) |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
-| `components.GamePanel.photo.opacity` | How opaque the venue's photo is behind the venue (on a phone, behind the header), 0 to 1 | 0.4 |
-| `components.GamePanel.size.width` | The event panel's width at most | 900 |
-| `components.GamePanel.size.height` | The score and venue header’s minimum height on desktop | 128 |
-| `components.GamePanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
-| `components.GamePanel.size.logo` | A team's logo | 28 |
-| `components.GamePanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
-| `components.GamePanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
+| `components.EventPanel.photo.opacity` | How opaque the venue's photo is behind the venue (on a phone, behind the header), 0 to 1 | 0.4 |
+| `components.EventPanel.size.width` | The event panel's width at most | 900 |
+| `components.EventPanel.size.height` | The score and venue header’s minimum height on desktop | 128 |
+| `components.EventPanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |
+| `components.EventPanel.size.logo` | A team's logo | 28 |
+| `components.EventPanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
+| `components.EventPanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest. Its size is set when it's first drawn (see [Where the theme reaches](#where-the-theme-reaches)) | 64 |
 | `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |

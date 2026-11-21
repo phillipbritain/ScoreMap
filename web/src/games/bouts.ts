@@ -1,7 +1,7 @@
 import type { GameBout, GameBouts } from './game'
 
 /**
- * The bout a fight card's score card and game panel show as its two sides: the bout on now, else the main
+ * The bout a fight card's score card and event panel show as its two sides: the bout on now, else the main
  * event (before the card starts, between bouts and once it's over). As the server's ProviderBouts.OnNow has
  * it, the bouts are listed main event first, so the bout on now is the last Live one.
  */

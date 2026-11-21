@@ -5,7 +5,7 @@ export type Side = 'home' | 'away'
 
 /**
  * The side that last scored in a game, and when (the clock liveGames reads: performance.now() in the
- * app): what the score card and the game panel light up for a moment (see spotlightMs), kept for each
+ * app): what the score card and the event panel light up for a moment (see spotlightMs), kept for each
  * game since the last snapshot in what just happened (see justHappened.ts).
  */
 export interface Scorer {

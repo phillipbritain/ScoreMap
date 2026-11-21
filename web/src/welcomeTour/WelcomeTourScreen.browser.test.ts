@@ -211,7 +211,7 @@ it.each([false, true])('aborts an unanswered request on unmount (retry: %s)', as
   expect(fetchList).toHaveBeenCalledTimes(retrying ? 2 : 1)
 })
 
-it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch'] as const)("closes from %s by the panel's ×", async (progress) => {
+it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch'] as const)("closes from %s by the panel's ×", async (progress) => {
   const { changed, event } = await mountTour(progress)
   const close = document.querySelector<HTMLButtonElement>('[aria-label="Close welcome tour"]')
   expect(close?.closest('[role="dialog"]')).not.toBeNull()
@@ -220,7 +220,7 @@ it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWat
   expect(changed).not.toHaveBeenCalled()
 })
 
-it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch'] as const)('closes from %s by Escape, wherever focus is', async (progress) => {
+it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch'] as const)('closes from %s by Escape, wherever focus is', async (progress) => {
   const { changed, event } = await mountTour(progress)
   await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
@@ -239,10 +239,10 @@ it("closes from My leagues' picker by Escape without applying its picks", async 
 })
 
 it.each([
-  ['gamePanel', 'No need to refresh'],
+  ['eventPanel', 'No need to refresh'],
   ['panelTabs', 'Open a tab'],
   ['panelWatch', 'TV button'],
-] as const)('moves on from the game panel step %s by Next, saying what it lights', async (progress, words) => {
+] as const)('moves on from the event panel step %s by Next, saying what it lights', async (progress, words) => {
   const { event } = await mountTour(progress)
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain(words)
   await click('Next')

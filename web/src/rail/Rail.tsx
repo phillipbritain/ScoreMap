@@ -244,7 +244,7 @@ export function Rail({
               games={games}
               onSelect={(gameId) => {
                 onSelectGame(gameId)
-                // On a phone the list closes, as it and the game panel would cover the whole globe.
+                // On a phone the list closes, as it and the event panel would cover the whole globe.
                 if (window.matchMedia(phoneScreen).matches) setOpen(null)
               }}
             />

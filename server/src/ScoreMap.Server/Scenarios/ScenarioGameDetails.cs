@@ -8,7 +8,7 @@ using static ScoreMap.Server.Sports.Shared.ScenarioFabrication;
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// The game panel's details for a made-up game (a scenario's, a demo's or the welcome tour's), shaped as
+/// The event panel's details for a made-up game (a scenario's, a demo's or the welcome tour's), shaped as
 /// ESPN's summary is mapped so the panel needs nothing of its own for them: something in each tab the
 /// game's sport has, made up from the game itself. Each part is picked by the game's id, so a game gets
 /// the same details every time it's asked about, and they grow as it goes on: a period's score once it

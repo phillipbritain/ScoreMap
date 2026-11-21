@@ -1,7 +1,7 @@
 namespace ScoreMap.Server.Games;
 
 /// <summary>
-/// Spells out a venue's region for the game panel: a US state or Canadian province abbreviation
+/// Spells out a venue's region for the event panel: a US state or Canadian province abbreviation
 /// ("AZ", "ON") becomes its full name ("Arizona", "Ontario"); any other region is passed on as given.
 /// No US and Canadian abbreviation is the same, so one table serves both.
 /// </summary>

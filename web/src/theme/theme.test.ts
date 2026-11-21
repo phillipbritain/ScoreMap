@@ -115,8 +115,8 @@ describe('resolveTheme', () => {
 
   it('takes transparent as a color given directly, for a shadow or glow that isn’t there', () => {
     const json = themeJson()
-    json.components.GamePanel.shadow.color = 'transparent'
-    expect(resolved(json).components.GamePanel.shadow.color).toBe('transparent')
+    json.components.EventPanel.shadow.color = 'transparent'
+    expect(resolved(json).components.EventPanel.shadow.color).toBe('transparent')
   })
 
   it('takes a color given directly in any form both CSS and MapLibre read', () => {
@@ -185,7 +185,7 @@ describe('resolveTheme', () => {
     json.colors.navy.shade = 'deep'
     json.components.Globe.surfce = 'navy.500'
     json.typography.h1 = { fontWeight: 300, fontSize: 96, letterSpacing: 0 }
-    json.components.GamePanel.shadow.spread = 4
+    json.components.EventPanel.shadow.spread = 4
     json.palette.divider = 'navy.950'
     expect(resolveTheme(json)).toEqual({
       ok: false,
@@ -195,7 +195,7 @@ describe('resolveTheme', () => {
         'palette.divider names "navy.950", a color the theme doesn’t have',
         'typography.h1 isn’t a setting a theme has',
         'components.Globe.surfce isn’t a setting a theme has',
-        'components.GamePanel.shadow.spread isn’t a setting a theme has',
+        'components.EventPanel.shadow.spread isn’t a setting a theme has',
       ],
     })
   })
@@ -287,10 +287,10 @@ describe('resolveTheme', () => {
 
   it('rejects a shadow without its color or with an offset that isn’t a number', () => {
     const json = themeJson()
-    json.components.GamePanel.shadow = { x: 0, y: '8px', blur: 30 }
+    json.components.EventPanel.shadow = { x: 0, y: '8px', blur: 30 }
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['components.GamePanel.shadow.y is "8px", not a number of pixels', 'components.GamePanel.shadow.color is missing'],
+      problems: ['components.EventPanel.shadow.y is "8px", not a number of pixels', 'components.EventPanel.shadow.color is missing'],
     })
   })
 
@@ -298,7 +298,7 @@ describe('resolveTheme', () => {
     const json = themeJson()
     json.components.Cluster.count.size = 'h1'
     json.components.PlaceNames.city.size = { '4': 'caption', '11': 12 }
-    json.components.GamePanel.cutCorner.size = 'xl'
+    json.components.EventPanel.cutCorner.size = 'xl'
     json.components.ScoreCard.corner = 'huge'
     const styles = 'h6, subtitle1, subtitle2, body1, body2, button, caption, overline, footnote, small, tiny'
     expect(resolveTheme(json)).toEqual({
@@ -307,7 +307,7 @@ describe('resolveTheme', () => {
         `components.PlaceNames.city.size.11 is 12, not a type style (${styles})`,
         `components.Cluster.count.size is "h1", not a type style (${styles})`,
         'components.ScoreCard.corner is "huge", not a number of corner radii (shape.borderRadius) or "pill"',
-        'components.GamePanel.cutCorner.size is "xl", not a number of spacing units',
+        'components.EventPanel.cutCorner.size is "xl", not a number of spacing units',
       ],
     })
   })
@@ -336,13 +336,13 @@ describe('resolveTheme', () => {
     json.shape.borderRadius = 3
     json.components.Cluster.count.size = 'h6'
     json.components.PlaceNames.country.size = { '1': 'h6', '4.5': 'h6' }
-    json.components.GamePanel.cutCorner.size = 2.5
+    json.components.EventPanel.cutCorner.size = 2.5
     json.components.Menu.corner = 2
     json.components.Controls.corner = 'pill'
     const theme = resolved(json)
     expect(theme.components.Cluster.count.size).toBe(22)
     expect(theme.components.PlaceNames.country.size).toEqual({ '1': 22, '4.5': 22 })
-    expect(theme.components.GamePanel.cutCorner.size).toBe(12.5)
+    expect(theme.components.EventPanel.cutCorner.size).toBe(12.5)
     expect(theme.components.Menu.corner).toBe(6)
     expect(theme.components.Controls.corner).toBe(999)
   })
@@ -365,14 +365,14 @@ describe('resolveTheme', () => {
     json.components.Globe.disputedBorders.dash = [2]
     json.components.Globe.halo.inner.blur = { share: '12%', max: 60 }
     json.typography.overline.letterSpacing = '0.14em'
-    json.components.GamePanel.size.scoreWidth = -1
+    json.components.EventPanel.size.scoreWidth = -1
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
         'typography.overline.letterSpacing is "0.14em", not a number of ems',
         'components.Globe.disputedBorders.dash is [2], not a dash pattern: dash and gap lengths in line widths, such as [2, 2]',
         'components.Globe.halo.inner.blur.share is "12%", not a share of the globe’s radius, such as 0.12',
-        'components.GamePanel.size.scoreWidth is -1, not a number of ems',
+        'components.EventPanel.size.scoreWidth is -1, not a number of ems',
       ],
     })
   })
@@ -383,7 +383,7 @@ describe('resolveTheme', () => {
     delete json.components.Globe.halo
     delete json.palette.warning
     delete json.components.ScoreCard.logo
-    delete json.components.GamePanel.logo.plate
+    delete json.components.EventPanel.logo.plate
     expect(resolveTheme(json)).toEqual({
       ok: false,
       problems: [
@@ -391,7 +391,7 @@ describe('resolveTheme', () => {
         'components.Globe.coastlines is missing',
         'components.Globe.halo is missing',
         'components.ScoreCard.logo is missing',
-        'components.GamePanel.logo.plate is missing',
+        'components.EventPanel.logo.plate is missing',
       ],
     })
   })

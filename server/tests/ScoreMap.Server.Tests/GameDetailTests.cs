@@ -5,7 +5,7 @@ using static ScoreMap.Server.Tests.Support.TestGames;
 
 namespace ScoreMap.Server.Tests;
 
-/// <summary>The extra detail for the game panel a connected client receives with each game.</summary>
+/// <summary>The extra detail for the event panel a connected client receives with each game.</summary>
 public class GameDetailTests
 {
     private static async Task<Game> SnapshotOfAsync(ProviderGame game)

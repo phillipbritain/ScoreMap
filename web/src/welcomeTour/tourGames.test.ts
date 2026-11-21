@@ -68,7 +68,7 @@ describe("the welcome tour's games", () => {
 })
 
 describe('when the globe shows the tour games', () => {
-  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'gamePanel', 'allSet'])('shows them through the tour (%s)', (progress) => {
+  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'eventPanel', 'allSet'])('shows them through the tour (%s)', (progress) => {
     expect(showsTourGames(progress)).toBe(true)
   })
 

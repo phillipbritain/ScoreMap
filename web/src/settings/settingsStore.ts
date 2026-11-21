@@ -21,7 +21,7 @@ export interface SettingsStore {
   /** Whether the viewer collapsed the rail out of the way: open on a first visit. */
   loadRailCollapsed(): boolean
   saveRailCollapsed(collapsed: boolean): void
-  /** Whether the game panel's details were left open, so the next panel opens them too: minimized on a first visit. */
+  /** Whether the event panel's details were left open, so the next panel opens them too: minimized on a first visit. */
   loadDetailsOpen(): boolean
   saveDetailsOpen(open: boolean): void
 }
@@ -117,7 +117,7 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
       try {
         storage().setItem(detailsOpenKey, String(open))
       } catch {
-        // Game panels will just open with their details minimized next time.
+        // Event panels will just open with their details minimized next time.
       }
     },
   }

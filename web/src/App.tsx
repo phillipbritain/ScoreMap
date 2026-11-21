@@ -23,7 +23,7 @@ import { useLiveGames } from './live/useLiveGames'
 import { useInstall } from './install/useInstall'
 import { LoadingScreen } from './loading/LoadingScreen'
 import { revealPhase } from './loading/revealPhase'
-import { GamePanel, panelLeaveDuration } from './panel/GamePanel'
+import { EventPanel, panelLeaveDuration } from './panel/EventPanel'
 import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
 import { useLeaving } from './motion/useLeaving'
@@ -99,7 +99,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourProgress, setTourProgress] = useState(store.loadTourProgress)
   // Whether the viewer collapsed the rail out of the way after setting up.
   const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
-  // Whether a game panel's details were left open: the next panel opens them the same way, after a
+  // Whether a event panel's details were left open: the next panel opens them the same way, after a
   // reload too; collapsed until the viewer first opens them. During the welcome tour, its panels start
   // collapsed whatever was left, and what's done to them there isn't kept.
   const [detailsOpen, setDetailsOpen] = useState(store.loadDetailsOpen)
@@ -189,12 +189,12 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // leaves the globe with it (see usePanelCelebration).
   const celebrate = useCallback((gameId: string) => setCelebrated((before) => withCelebrated(before, gameId, games ?? [])), [games])
   usePanelCelebration(selectedGame, panel, selectedGame && gameColor(colors, selectedGame, theme), celebrate)
-  // A closed panel stays a moment as it goes (see .game-panel--leaving), out of reach: longer when it
+  // A closed panel stays a moment as it goes (see .event-panel--leaving), out of reach: longer when it
   // closed itself after its game's celebration, as it slides away slower.
   const panelLeave = useCallback((game: Game) => (celebrated.has(game.id) ? celebratedPanelLeaveDuration : panelLeaveDuration), [celebrated])
   const { shown: panelGame, leaving: panelLeaving, key: panelKey } = useLeaving(selectedGame, panelLeave)
   const panelColor = panelGame && gameColor(colors, panelGame, theme)
-  // Where the rail ends, so the game panel stops short of it.
+  // Where the rail ends, so the event panel stops short of it.
   const globeArea = useRef<HTMLDivElement>(null)
   useRailClearance(globeArea)
 
@@ -247,7 +247,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             onGone={() => setLoadingScreenGone(true)}
           />
         )}
-        {/* Not under the loading screen, which says so itself. Under the bottom stack, the game panel and
+        {/* Not under the loading screen, which says so itself. Under the bottom stack, the event panel and
             the rail, which stay usable. */}
         {loadingScreenGone && <CutOffNote cutOffSince={cutOffSince} waking={waking} />}
         {/* The no-pins message. Before the rail, so an open popover lies over it on a phone. */}
@@ -262,7 +262,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
         {demo && !touring && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
         {panelGame && panelColor && (
-          <GamePanel
+          <EventPanel
             key={panelKey}
             ref={panelLeaving ? undefined : panel}
             game={panelGame}

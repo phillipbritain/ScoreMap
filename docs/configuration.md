@@ -44,7 +44,7 @@ Matching compares complete side names, ignoring case, accents, punctuation and e
 
 When a listing supplies `start`, it must be an ISO 8601 timestamp with an explicit time zone and within 30 minutes of the game's scheduled start. Malformed timestamps are rejected. StreamEast currently exposes only relative display times, so its shipped pattern leaves `start` absent: matching relies on the current schedule, league and complete side names, and cannot verify the date or distinguish an unlisted rematch. Unknown abbreviated names and unsupported categories yield no link until explicitly mapped. Fields and fight cards have no two-side match and get no links from this finder.
 
-The finder sits behind `IStreamLinkSource`; before any public launch remove it by deleting `WatchLinks/StreamFinder*.cs` and the `AddStreamFinder` line in `Program.cs`, after which a no-op source gives every game no stream links (optionally also drop `Game.StreamLinks`, `web/src/panel/streamLinks.ts` and its line in `GamePanel.tsx`).
+The finder sits behind `IStreamLinkSource`; before any public launch remove it by deleting `WatchLinks/StreamFinder*.cs` and the `AddStreamFinder` line in `Program.cs`, after which a no-op source gives every game no stream links (optionally also drop `Game.StreamLinks`, `web/src/panel/streamLinks.ts` and its line in `EventPanel.tsx`).
 
 ## Feedback
 

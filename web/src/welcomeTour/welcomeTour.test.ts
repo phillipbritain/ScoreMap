@@ -9,7 +9,7 @@ import {
 import {
   canShowPicks,
   isTourProgress,
-  middleClearsGamePanel,
+  middleClearsEventPanel,
   moveAndZoomWords,
   noPicks,
   picksFrom,
@@ -28,13 +28,13 @@ describe('welcome tour progress', () => {
     ['welcome', { kind: 'chose', choice: 'everything' }, 'controls'],
     ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
     ['controls', { kind: 'next' }, 'scoreCard'],
-    ['scoreCard', { kind: 'gameOpened' }, 'gamePanel'],
-    ['gamePanel', { kind: 'next' }, 'panelTabs'],
+    ['scoreCard', { kind: 'gameOpened' }, 'eventPanel'],
+    ['eventPanel', { kind: 'next' }, 'panelTabs'],
     ['panelTabs', { kind: 'next' }, 'panelWatch'],
     ['panelWatch', { kind: 'next' }, 'allSet'],
     ['panelTabs', { kind: 'closed' }, 'finished'],
     ['panelWatch', { kind: 'closed' }, 'finished'],
-    ['gamePanel', { kind: 'closed' }, 'finished'],
+    ['eventPanel', { kind: 'closed' }, 'finished'],
     ['allSet', { kind: 'done' }, 'finished'],
     ['allSet', { kind: 'closed' }, 'finished'],
     ['welcome', { kind: 'closed' }, 'finished'],
@@ -43,7 +43,7 @@ describe('welcome tour progress', () => {
     ['finished', { kind: 'again' }, 'welcome'],
     ['controls', { kind: 'again' }, 'welcome'],
     ['scoreCard', { kind: 'again' }, 'welcome'],
-    ['gamePanel', { kind: 'again' }, 'welcome'],
+    ['eventPanel', { kind: 'again' }, 'welcome'],
     ['allSet', { kind: 'again' }, 'welcome'],
   ])('moves from %s on %j to %s', (progress, event, after) => {
     expect(tourProgressAfter(progress, event)).toBe(after)
@@ -59,8 +59,8 @@ describe('welcome tour progress', () => {
     ['scoreCard', { kind: 'chose', choice: 'topEvents' }],
     ['scoreCard', { kind: 'next' }],
     ['scoreCard', { kind: 'done' }],
-    ['gamePanel', { kind: 'gameOpened' }],
-    ['gamePanel', { kind: 'done' }],
+    ['eventPanel', { kind: 'gameOpened' }],
+    ['eventPanel', { kind: 'done' }],
     ['allSet', { kind: 'gameOpened' }],
     ['allSet', { kind: 'next' }],
   ])("stays at %s on %j, another step's event", (progress, event) => {
@@ -86,7 +86,7 @@ describe('progressAfterReload', () => {
     },
   )
 
-  it.each<TourProgress>(['gamePanel', 'panelTabs', 'panelWatch'])(
+  it.each<TourProgress>(['eventPanel', 'panelTabs', 'panelWatch'])(
     'goes back from %s to Click a score card, as the panel it lights is no longer open',
     (progress) => {
       expect(progressAfterReload(progress)).toBe('scoreCard')
@@ -99,7 +99,7 @@ describe('progressAfterReload', () => {
 })
 
 describe('isTourProgress', () => {
-  it.each(['welcome', 'controls', 'scoreCard', 'gamePanel', 'panelTabs', 'panelWatch', 'allSet', 'finished'])('takes %s as a step', (progress) => {
+  it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch', 'allSet', 'finished'])('takes %s as a step', (progress) => {
     expect(isTourProgress(progress)).toBe(true)
   })
 
@@ -245,13 +245,13 @@ describe("Click a score card's pick", () => {
   })
 })
 
-describe("where All set sits over the game panel on a desktop", () => {
-  it('sits in the middle of a tall screen, clear of the game panel', () => {
-    expect(middleClearsGamePanel(800, 168, 224)).toBe(true)
+describe("where All set sits over the event panel on a desktop", () => {
+  it('sits in the middle of a tall screen, clear of the event panel', () => {
+    expect(middleClearsEventPanel(800, 168, 224)).toBe(true)
   })
 
-  it('sits right above the game panel where the middle would run into it', () => {
-    expect(middleClearsGamePanel(600, 168, 224)).toBe(false)
+  it('sits right above the event panel where the middle would run into it', () => {
+    expect(middleClearsEventPanel(600, 168, 224)).toBe(false)
   })
 })
 

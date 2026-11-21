@@ -10,7 +10,7 @@ export type ColoredGame = Pick<Game, 'league' | 'sport' | 'status'>
 
 /**
  * The color a game shows in wherever it's drawn: its small pin, its score card, its trail, its
- * pulses and the game panel. The color the viewer picked for it (see pickedColor), else the theme's
+ * pulses and the event panel. The color the viewer picked for it (see pickedColor), else the theme's
  * color for its status. Color stands for the game's league or sport, not its status (ADR-0012, ADR-0017), so
  * a picked color stays the same whatever the status.
  */

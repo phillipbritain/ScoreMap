@@ -28,7 +28,7 @@ interface TourPointerProps {
   arrow?: boolean
   /**
    * Whether the spotlight sits flush on the target, square, rather than with room around it: for a part
-   * of the game panel, so the room doesn't take in the panel's parts beside it.
+   * of the event panel, so the room doesn't take in the panel's parts beside it.
    */
   flush?: boolean
 }

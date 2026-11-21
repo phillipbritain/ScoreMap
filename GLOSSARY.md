@@ -82,7 +82,7 @@ _Avoid_: Card placement (for the whole of it: placing is only where the cards go
 
 **Event panel**:
 The view of one event (a game, a race or tournament, a fight card), opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar; a panel opens them as the last one's were left, open or collapsed, after a reload too, collapsed until the viewer first opens them, and a welcome tour's panel always opens them collapsed, keeping nothing done to them there. A field’s leaderboard scrolls in the score block; a band lists tennis sets or a fight card’s bouts when available.
-_Avoid_: Game panel (not everything on the globe is a game), Popup, detail page, modal
+_Avoid_: Event panel (not everything on the globe is a game), Popup, detail page, modal
 
 **Rail**:
 The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).

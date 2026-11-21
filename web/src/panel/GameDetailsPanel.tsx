@@ -53,7 +53,7 @@ export function GameDetailsPanel({ game, details, failed, open, onToggle }: {
   game: Game
   details: GameDetails | null
   failed: boolean
-  /** Whether it opens with its details showing, as the last game panel's were left. */
+  /** Whether it opens with its details showing, as the last event panel's were left. */
   open: boolean
   onToggle: (open: boolean) => void
 }) {

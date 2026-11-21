@@ -138,7 +138,7 @@
       "upcoming": { "fade": 0.15, "glow": { "radius": 4, "opacity": 0.3 } },
       "final": { "fade": 0.45, "glow": { "radius": 0, "opacity": 0 } }
     },
-    "GamePanel": {
+    "EventPanel": {
       "surface": { "top": "background.paper", "bottom": "background.paper" },
       "scoreBlock": { "top": "primary.dark", "bottom": "primary.dark" },
       "score": { "fill": "navy.600", "text": "text.primary" },

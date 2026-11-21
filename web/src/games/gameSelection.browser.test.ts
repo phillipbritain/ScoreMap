@@ -48,11 +48,11 @@ function game(id: string): Game {
 
 let root: Root
 let container: HTMLElement
-/** The Games popover open, as the rail shows it, beside a stand-in for the rail's Games button. */
+/** The Events popover open, as the rail shows it, beside a stand-in for the rail's Events button. */
 function Selection({ games }: { games: Game[] }) {
   const { selectedGame, panel, selectGame, closeGame } = useGameSelection(games)
   return createElement('div', null,
-    createElement('button', { type: 'button', 'data-game-navigation': true }, 'Games'),
+    createElement('button', { type: 'button', 'data-game-navigation': true }, 'Events'),
     createElement(GameNavigation, { games, onSelect: selectGame }),
     selectedGame && createElement(EventPanel, { ref: panel, game: selectedGame,
       color: '#d4ac63', textOnColor: '#000e28', venuePhotos: true, detailsOpen: false, onDetailsOpenChange: () => {},
@@ -132,7 +132,7 @@ it('puts the cursor in the search on opening and narrows the list as the viewer 
   expect(choice('B')).not.toBeNull()
 
   await userEvent.keyboard(' raiders')
-  expect(container.querySelector('ul')!.textContent).toBe('No games match your search.')
+  expect(container.querySelector('ul')!.textContent).toBe('No events match your search.')
 })
 
 it('moves through the games with the arrow keys, across leagues, and Tab leaves the list', async () => {

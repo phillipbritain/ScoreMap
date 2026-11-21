@@ -12,7 +12,7 @@ export const railButtons = [
   { name: 'Leagues', icon: <LeaguesIcon /> },
   { name: 'Display Settings', icon: <DisplaySettingsIcon /> },
   { name: 'Map Type', icon: <MapTypeIcon /> },
-  { name: 'Games', icon: <GamesIcon /> },
+  { name: 'Events', icon: <GamesIcon /> },
   { name: 'More', icon: <MoreIcon /> },
 ] as const
 

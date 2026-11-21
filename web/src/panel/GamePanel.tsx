@@ -92,7 +92,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
       ref={ref}
       className={leaving ? 'game-panel game-panel--leaving' : 'game-panel'}
       style={colorStyle}
-      aria-label="Game panel"
+      aria-label="Event panel"
       aria-hidden={leaving || undefined}
       inert={leaving}
       {...swipe}
@@ -143,7 +143,7 @@ export function GamePanel({ game, scorer, color, textOnColor, venuePhotos, detai
             onDetailsOpenChange(details)
           }} />
 
-        <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close game panel">
+        <button type="button" className="game-panel__close" onClick={onClose} aria-label="Close event panel">
           ×
         </button>
       </div>

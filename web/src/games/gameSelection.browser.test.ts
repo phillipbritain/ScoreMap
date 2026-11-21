@@ -205,7 +205,7 @@ it('selects a game from the list while it is in a card cluster', async () => {
   }
 })
 
-const panelText = () => container.querySelector('[aria-label="Game panel"]')?.textContent ?? ''
+const panelText = () => container.querySelector('[aria-label="Event panel"]')?.textContent ?? ''
 
 async function open(id: string) {
   await act(async () => choice(id).click())

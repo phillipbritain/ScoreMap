@@ -281,7 +281,7 @@ const panelPart = (selector: string) => () => document.querySelectorAll(`.game-p
 const gamePanelStepParts: Record<GamePanelStepName, { heading: string; part: string; words: string }> = {
   // The tour plays the open game more often, so its score is seen to change (see tourPlayTick).
   gamePanel: {
-    heading: 'The game panel',
+    heading: 'The event panel',
     part: '.game-panel__score',
     words: "ScoreMap is live: scores change here and on the game's card, as it happens. No need to refresh.",
   },

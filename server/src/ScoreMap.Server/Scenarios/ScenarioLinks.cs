@@ -4,7 +4,7 @@ using ScoreMap.Server.WatchLinks;
 namespace ScoreMap.Server.Scenarios;
 
 /// <summary>
-/// A scenario game's made-up links, for the game panel's ESPN and StreamEast logos (ADR-0009): picked by
+/// A scenario game's made-up links, for the event panel's ESPN and StreamEast logos (ADR-0009): picked by
 /// its id, so a game keeps them while it runs, about a quarter of games having both, a quarter only an ESPN
 /// page, a quarter only a StreamEast stream and a quarter neither. Each goes to its site's home page, as the
 /// games aren't real.

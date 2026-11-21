@@ -71,7 +71,7 @@ public sealed partial class RunningGameBoard : BackgroundService
 
     /// <summary>
     /// The details of game <paramref name="id"/> in <paramref name="league"/> from the board's feed, for the
-    /// game panel. Only the board's own games are looked up.
+    /// event panel. Only the board's own games are looked up.
     /// </summary>
     public async Task<(DetailsLookup Lookup, GameDetails? Details)> FetchGameDetailsAsync(
         League league, string id, CancellationToken cancellationToken)

@@ -34,8 +34,11 @@ interface RailProps {
   onZoomOut: () => void
   /** Flies the camera back to the viewer's region, at the start zoom (see homeCamera). */
   onHome: () => void
-  /** Whether the rail can't be used at all, while the welcome tour shows. */
-  inert?: boolean
+  /**
+   * Whether the welcome tour shows: only More, its popover and the Feedback panel can be used then, lifted
+   * above the tour (see .rail--touring); the rest of the rail can't.
+   */
+  touring?: boolean
   /** The games shown on the globe, which the Games popover lists. */
   games: readonly Game[]
   /** Whether the games are in yet, so the Games button can be used (not under the loading screen). */
@@ -52,7 +55,7 @@ interface RailProps {
   feedbackContext: () => FeedbackContext
   /** Starts the welcome tour afresh, from More. */
   onTourAgain: () => void
-  /** Installs ScoreMap as an app, from More, or nothing where it can't be (see installWay). */
+  /** Installs ScoreMap as an app by the browser's own dialog, from More, or nothing where the browser hasn't offered (see offersInstall). */
   onInstall?: () => void
 }
 
@@ -78,7 +81,7 @@ export function Rail({
   onZoomIn,
   onZoomOut,
   onHome,
-  inert = false,
+  touring = false,
   games,
   gamesReady,
   onSelectGame,
@@ -88,7 +91,7 @@ export function Rail({
   onTourAgain,
   onInstall,
 }: RailProps) {
-  const collapsed = collapsedSaved && !inert
+  const collapsed = collapsedSaved && !touring
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   // The Feedback panel's note, kept while it's closed, so Cancel or a click away keeps it for next time.
@@ -116,7 +119,10 @@ export function Rail({
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen((current) => nextPopover(current, 'escape'))
+      if (event.key !== 'Escape') return
+      // Taken, so the welcome tour, which Escape otherwise closes, leaves it to the popover.
+      event.preventDefault()
+      setOpen((current) => nextPopover(current, 'escape'))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -131,8 +137,7 @@ export function Rail({
   return (
     <div
       ref={rail}
-      className="rail"
-      inert={inert}
+      className={touring ? 'rail rail--touring' : 'rail'}
       onKeyDown={(event) => {
         const key = event.key
         const onItsButton = open && (event.target as Element).closest(`[data-popover-button="${open}"]`)
@@ -140,7 +145,7 @@ export function Rail({
       }}
     >
       {/* Not one of the welcome tour's controls (see railButtons), which it lights and points at. */}
-      <div className="rail__group rail__group--collapse">
+      <div className="rail__group rail__group--collapse" inert={touring}>
         <button
           type="button"
           className="rail__button"
@@ -162,12 +167,12 @@ export function Rail({
         {/* Folds away to nothing, its groups clipped as they go (see .rail__buttons). */}
         <div className="rail__buttons-inner">
           {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
-          <div className="rail__group" data-keeps-popovers>
+          <div className="rail__group" data-keeps-popovers inert={touring}>
             <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
             <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
             <RailButton label="Home" disabled={!camera} onClick={onHome} />
           </div>
-          <div className="rail__group">
+          <div className="rail__group" inert={touring}>
             <RailButton
               label="Leagues"
               popover="leagues"
@@ -178,7 +183,7 @@ export function Rail({
             <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
             <RailButton label="Map Type" popover="mapType" open={open} onClick={() => popoverEvent({ press: 'mapType' })} />
           </div>
-          <div className="rail__group">
+          <div className="rail__group" inert={touring}>
             <RailButton
               label="Games"
               popover="games"
@@ -188,7 +193,7 @@ export function Rail({
               onClick={() => popoverEvent({ press: 'games' })}
             />
           </div>
-          <div className="rail__group">
+          <div className="rail__group rail__group--more">
             <RailButton
               label="More"
               popover="more"
@@ -239,7 +244,7 @@ export function Rail({
               games={games}
               onSelect={(gameId) => {
                 onSelectGame(gameId)
-                // On a phone the list closes, as it and the game panel would cover the whole globe.
+                // On a phone the list closes, as it and the event panel would cover the whole globe.
                 if (window.matchMedia(phoneScreen).matches) setOpen(null)
               }}
             />

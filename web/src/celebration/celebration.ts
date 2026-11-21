@@ -1,8 +1,8 @@
 /**
  * Draws a game's celebration as it finishes (see GLOSSARY.md "Celebration"): confetti over its score
- * card, and a fireworks show inside its game panel. Each plays on a canvas of its own inside what it
+ * card, and a fireworks show inside its event panel. Each plays on a canvas of its own inside what it
  * celebrates, so it's kept to it (clipped to its box), moves with it, and sits where it does among
- * everything else on the page: a card's under the game panel and the rail. With the device's reduce
+ * everything else on the page: a card's under the event panel and the rail. With the device's reduce
  * motion setting on, nothing plays.
  */
 
@@ -166,7 +166,7 @@ const cardConfetti = { count: 34, duration: 2800 }
  * Confetti over a score card that just finished, in `colors`: a small shower kept to the card. Pieces
  * pop out along its very top edge and drift down through it, more falling in from its top over the
  * first half of the time. On a canvas in the card's marker (`marker`), over the card, so it goes with
- * the card, and the game panel and the rail lie over it.
+ * the card, and the event panel and the rail lie over it.
  */
 export function confettiOnCard(card: HTMLElement, marker: HTMLElement, colors: readonly string[]): void {
   if (reduceMotion() || !colors.length || card.offsetWidth === 0) return
@@ -206,13 +206,13 @@ export function confettiOnCard(card: HTMLElement, marker: HTMLElement, colors: r
   }, pieces)
 }
 
-// --- Fireworks in the game panel ------------------------------------------------------------------
+// --- Fireworks in the event panel ------------------------------------------------------------------
 
 /** The show: how many rockets, over how long (ms), the sparks in each burst and how long they last (ms). */
 const panelFireworks = { rockets: 6, over: 1800, sparks: 55, duration: 1700 }
 
 /**
- * A fireworks show inside the game panel, in `colors` lifted toward white so they glow: rockets from
+ * A fireworks show inside the event panel, in `colors` lifted toward white so they glow: rockets from
  * along its foot, one after another, each bursting into a ring of sparks between a fifth and half of
  * the way down it. On a canvas filling the panel, so it's kept to it, moves with it, and goes with it.
  */
@@ -281,7 +281,7 @@ export function fireworksInPanel(panel: HTMLElement, colors: readonly string[]):
       onEnd: burst,
     })
   }
-  start(panel, 'game-panel__celebration', () => (panel.isConnected ? { width: panel.offsetWidth, height: panel.offsetHeight } : null), pieces)
+  start(panel, 'event-panel__celebration', () => (panel.isConnected ? { width: panel.offsetWidth, height: panel.offsetHeight } : null), pieces)
 }
 
 /** A color (`#rrggbb` or `rgb(r g b)`) lifted toward white by `amount` (0 to 1); others as they are. */

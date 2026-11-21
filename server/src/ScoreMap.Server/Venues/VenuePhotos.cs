@@ -6,7 +6,7 @@ using ScoreMap.Server.Games;
 namespace ScoreMap.Server.Venues;
 
 /// <summary>
-/// Each venue's photo for the game panel. Searches run in the background, one at a time, so
+/// Each venue's photo for the event panel. Searches run in the background, one at a time, so
 /// asking for a photo never waits: it returns the photo found so far (none at first) and the
 /// game picks it up on a later poll. Every answer, no photo too, is saved to a file marked with its
 /// <see cref="SavedFileVersion"/>, so each venue is searched for only once under it. A failed

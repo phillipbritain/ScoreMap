@@ -356,15 +356,15 @@ const palette = {
    * Each game status's color, as MUI's palette takes colors of a theme's own: the color a game
    * shows in, by its status, unless the viewer picked one for its sport or league (see gameColor): a
    * small pin's ring and glow, its score card's outline, header, status light and glow, its trail, a
-   * cluster's outline, glow and count, its pulse, and the game panel's top edge and progress line.
+   * cluster's outline, glow and count, its pulse, and the event panel's top edge and progress line.
    * Text written on it is the theme's main text or paper surface, whichever reads better on the color
    * (see palette's textOn), so a status has no contrastText of its own.
    */
   ...byStatus(statusColor),
-  /** The page behind everything, and the surfaces on it: the game panel, the menus and the controls. */
+  /** The page behind everything, and the surfaces on it: the event panel, the menus and the controls. */
   background: { default: color, paper: color },
   /**
-   * Text on the game panel, the rail and the scenario controls: main text; secondary text (the game
+   * Text on the event panel, the rail and the scenario controls: main text; secondary text (the game
    * panel's league and labels and the lines under a venue or time, league chips that are off and the
    * count on the "All leagues" chip); and links.
    */
@@ -380,7 +380,7 @@ const settings = {
   palette,
   /**
    * The page's text, shaped as MUI's typography is: one font family, and type styles, each a weight,
-   * size and letter spacing. Body text is body1, and the game panel and menus body2; the game panel's
+   * size and letter spacing. Body text is body1, and the event panel and menus body2; the event panel's
    * team names are subtitle1, its scores h6, and its league, labels and progress line overline (the
    * labels tracked out, like the country names on the globe); a score card's text is small in
    * subtitle2's weight, its clock line tiny, its team abbreviations subtitle1's weight and scores h6's; tabs, chips, buttons and the scenario
@@ -521,7 +521,7 @@ const settings = {
       final: cardStatus,
     },
     /**
-     * The game panel: its surface and the score block's, each shading from top to bottom, a team's score,
+     * The event panel: its surface and the score block's, each shading from top to bottom, a team's score,
      * unofficial stream links, the venue's photo behind the venue and watch links (the glow in its place
      * when there's none, and how opaque the photo is) and the panel's drop shadow. On a desktop its score
      * block is glass, this frosted (ADR-0023's exception); the rest is solid. Its top edge is the game's
@@ -532,7 +532,7 @@ const settings = {
      * team's logo; the close button's tab; and a team's score box, in ems of its digits. The plate each
      * logo sits on (see logoPlate). It sits clear of the scenario controls by their keys' size.
      */
-    GamePanel: {
+    EventPanel: {
       surface: { top: color, bottom: color },
       scoreBlock: { top: color, bottom: color },
       score: { fill: color, text: color },

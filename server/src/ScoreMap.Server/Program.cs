@@ -66,7 +66,7 @@ builder.Services.AddSingleton(sp => new NominatimPlaceSearch(
 builder.Services.AddSingleton<IPlaceSearch>(sp => sp.GetRequiredService<NominatimPlaceSearch>());
 builder.Services.AddSingleton<VenueLocator>();
 
-// Venue photos for the game panel: ESPN's, else Wikidata's from Wikimedia Commons. The Wikidata
+// Venue photos for the event panel: ESPN's, else Wikidata's from Wikimedia Commons. The Wikidata
 // item comes from Nominatim, through the same place search so its rate limit covers both.
 builder.Services.AddHttpClient(nameof(VenuePhotoSearch), client => client.Timeout = TimeSpan.FromSeconds(10))
     .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler

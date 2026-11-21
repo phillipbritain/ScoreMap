@@ -7,7 +7,7 @@ import { Tooltips } from './Tooltips'
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
 let root: Root
 
-/** A line of text as the game panel has them: one line, cut short where it's longer, its link to Google Maps in it. */
+/** A line of text as the event panel has them: one line, cut short where it's longer, its link to Google Maps in it. */
 function line(text: string): HTMLAnchorElement {
   const element = document.createElement('div')
   element.style.cssText = 'width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis'

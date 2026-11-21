@@ -36,7 +36,7 @@ interface GlobeProps {
    * above the panel (see GlobeMap.pickGame).
    */
   selectedGameId: string | null
-  /** The game panel's element, there once the panel has opened. */
+  /** The event panel's element, there once the panel has opened. */
   panel: RefObject<HTMLElement | null>
   onSelectGame: (gameId: string) => void
   /** Where the globe opens. Only read when the globe is created. */

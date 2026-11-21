@@ -4,7 +4,7 @@ namespace ScoreMap.Server.GameFeed;
 /// A game as a game feed provider reports it, in provider-neutral terms. Its <see cref="Contest"/> is who
 /// competes and their scores (ADR-0020).
 /// <see cref="Phase"/> says where play stands within <see cref="Period"/> while the game is under way.
-/// The rest is extra detail for the game panel, each part null (or empty) when the provider gives none:
+/// The rest is extra detail for the event panel, each part null (or empty) when the provider gives none:
 /// a note on the game, the crowd, the betting line, where play stands right now, the last score,
 /// in soccer and rugby the scores and cards, and in tennis the games in each set and how a match ended early.
 /// </summary>

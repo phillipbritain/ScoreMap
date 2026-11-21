@@ -53,7 +53,7 @@ public class StreamFinderTests
     }
 
     [Fact]
-    public async Task A_link_a_site_has_for_the_game_reaches_the_game_panel_on_the_next_poll()
+    public async Task A_link_a_site_has_for_the_game_reaches_the_event_panel_on_the_next_poll()
     {
         await using var server = new ScoreMapServer();
         server.AddStreamSite("Streams One", "https://streams-one.test/search?q={query}", Anchor);

@@ -38,7 +38,7 @@ async function mountTour(progress: Exclude<TourProgress, 'finished'> = 'welcome'
     const leagueList = useLeagues()
     const [settings, setSettings] = useState(firstVisitSettings)
     return createElement(WelcomeTourScreen, {
-      progress, leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [],
+      progress, leagueList, settings, onEvent: event, onOpenGame: vi.fn(), scoreCards: () => [], gameToTry: 'A',
       onChange: (next) => { changed(next); setSettings(next) },
     })
   }
@@ -211,7 +211,7 @@ it.each([false, true])('aborts an unanswered request on unmount (retry: %s)', as
   expect(fetchList).toHaveBeenCalledTimes(retrying ? 2 : 1)
 })
 
-it.each(['welcome', 'controls', 'scoreCard'] as const)("closes from %s by the panel's ×", async (progress) => {
+it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch'] as const)("closes from %s by the panel's ×", async (progress) => {
   const { changed, event } = await mountTour(progress)
   const close = document.querySelector<HTMLButtonElement>('[aria-label="Close welcome tour"]')
   expect(close?.closest('[role="dialog"]')).not.toBeNull()
@@ -220,7 +220,7 @@ it.each(['welcome', 'controls', 'scoreCard'] as const)("closes from %s by the pa
   expect(changed).not.toHaveBeenCalled()
 })
 
-it.each(['welcome', 'controls', 'scoreCard'] as const)('closes from %s by Escape, wherever focus is', async (progress) => {
+it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch'] as const)('closes from %s by Escape, wherever focus is', async (progress) => {
   const { changed, event } = await mountTour(progress)
   await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
@@ -236,4 +236,43 @@ it("closes from My leagues' picker by Escape without applying its picks", async 
   await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
   expect(changed).not.toHaveBeenCalled()
+})
+
+it.each([
+  ['eventPanel', 'No need to refresh'],
+  ['panelTabs', 'Open a tab'],
+  ['panelWatch', 'TV button'],
+] as const)('moves on from the event panel step %s by Next, saying what it lights', async (progress, words) => {
+  const { event } = await mountTour(progress)
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain(words)
+  await click('Next')
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'next' })
+})
+
+it("leaves Escape to the rail's popovers, usable during the tour, whichever hears it first", async () => {
+  const { event } = await mountTour('controls')
+  const taken = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+  taken.preventDefault()
+  await act(() => document.body.dispatchEvent(taken))
+  const popover = document.createElement('div')
+  popover.id = 'rail-popover'
+  document.body.append(popover)
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).not.toHaveBeenCalled()
+  popover.remove()
+  await act(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+})
+
+it('moves on from Game details when one of the event panel\'s tabs is pressed', async () => {
+  const { event } = await mountTour('panelTabs')
+  const eventPanel = document.createElement('section')
+  eventPanel.className = 'event-panel'
+  eventPanel.innerHTML = '<div class="game-details-tabs" role="tablist"><button role="tab">Scoring</button></div><button class="other">Other</button>'
+  document.body.append(eventPanel)
+
+  await act(() => eventPanel.querySelector<HTMLButtonElement>('.other')!.click())
+  expect(event).not.toHaveBeenCalled()
+  await act(() => eventPanel.querySelector<HTMLButtonElement>('[role="tab"]')!.click())
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'next' })
 })

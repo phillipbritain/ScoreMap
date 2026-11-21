@@ -9,12 +9,12 @@ export const celebrationLength = 4200
 
 /**
  * How long a panel closing itself after its game's celebration takes to go, in milliseconds: it slides
- * down slower than a close does (see .game-panel--leaving[data-leave='celebrated']).
+ * down slower than a close does (see .event-panel--leaving[data-leave='celebrated']).
  */
 export const celebratedPanelLeaveDuration = 550
 
 /**
- * The game panel's part in a game's celebration (see GLOSSARY.md "Celebration"): when its game finishes
+ * The event panel's part in a game's celebration (see GLOSSARY.md "Celebration"): when its game finishes
  * while it's open, a fireworks show inside it in the teams' colors (`gameColor` and white where they
  * can't be read), then, `celebrationLength` after the finish, it closes itself, sliding down its own way
  * (its data-leave), as `onCelebrated` takes the game off the globe. Closing the panel first, or picking

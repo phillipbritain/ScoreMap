@@ -19,7 +19,7 @@ public sealed class StreamFinderOptions
 /// <summary>One unofficial stream site, as the owner describes it.</summary>
 public sealed class StreamSite
 {
-    /// <summary>The name the game panel shows with the site's links.</summary>
+    /// <summary>The name the event panel shows with the site's links.</summary>
     public string Name { get; set; } = "";
 
     /// <summary>

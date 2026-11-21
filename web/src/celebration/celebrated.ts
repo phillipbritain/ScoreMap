@@ -15,7 +15,7 @@ export function finishedWhileShown(before: SeenGame | null, game: SeenGame | nul
 }
 
 /**
- * The games whose celebration has run its course in the game panel, by id: the panel closed itself after
+ * The games whose celebration has run its course in the event panel, by id: the panel closed itself after
  * it, and the game left the globe with it, in this browser, before the server drops it (a few minutes
  * after it ends, ADR-0021). They stay off the globe until the server drops them too.
  */
@@ -23,7 +23,7 @@ export type Celebrated = ReadonlySet<string>
 
 export const noneCelebrated: Celebrated = new Set()
 
-/** The games without those celebrated: what the globe, the Games list and the game panel go on. */
+/** The games without those celebrated: what the globe, the Games list and the event panel go on. */
 export function withoutCelebrated(games: readonly Game[], celebrated: Celebrated): readonly Game[] {
   return celebrated.size ? games.filter((game) => !celebrated.has(game.id)) : games
 }

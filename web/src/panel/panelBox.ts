@@ -1,7 +1,7 @@
 import type { ScreenBox } from '../globe/panelClearance'
 
 /**
- * Where the game panel sits on the page once it has opened: its box with no slide (see game-panel-in),
+ * Where the event panel sits on the page once it has opened: its box with no slide (see event-panel-in),
  * though it may still be sliding in. Measured as it opens, so the globe can center a game picked from the
  * Games list above it while it slides in, its box on screen would still be below the screen's foot.
  */

@@ -4,7 +4,7 @@ using ScoreMap.Server.Tests.Support;
 
 namespace ScoreMap.Server.Tests.Scenarios;
 
-/// <summary>Made-up ESPN and StreamEast links on a scenario's games, so the game panel's logos show without real games.</summary>
+/// <summary>Made-up ESPN and StreamEast links on a scenario's games, so the event panel's logos show without real games.</summary>
 public class ScenarioLinksTests
 {
     private static string Games(IEnumerable<string> ids) => $$"""

@@ -2,7 +2,7 @@ import type { Game } from './game'
 
 /**
  * How much room the line has: `short` for pins and score cards, where the pin's color already
- * shows the status; `full` for the game panel, which names the status when there's nothing more to say.
+ * shows the status; `full` for the event panel, which names the status when there's nothing more to say.
  */
 export type ProgressLineForm = 'short' | 'full'
 

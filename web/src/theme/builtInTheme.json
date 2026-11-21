@@ -191,7 +191,7 @@
       "dot": 5
     },
     "WelcomeTour": {
-      "dim": { "opacity": 0.3 },
+      "dim": { "opacity": 0.6 },
       "arrow": { "width": 2.5 },
       "choice": { "topEvents": "gold.500", "myLeagues": "navy.300", "everything": "#6dbb8a" }
     }

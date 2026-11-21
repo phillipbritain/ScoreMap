@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Game } from '../games/game'
-import { firstVisitSettings } from '../settings/viewerSettings'
-import { settingsForChoice, settingsForPicks, type TourProgress } from './welcomeTour'
+import type { TourProgress } from './welcomeTour'
 import { nextTourPlay, tourPlayStart, tourPlayTick } from './tourPlay'
-import { selectedTourGames, showsTourGames, tourCamera, tourCameraForGame, tourGames } from './tourGames'
+import { showsTourGames, shownTourGames, tourCamera, tourGameToTry, tourGames } from './tourGames'
 
 const now = Date.parse('2026-11-16T20:00:00Z')
 const minutes = (iso: string | null) => (Date.parse(iso!) - now) / 60_000
@@ -78,42 +77,18 @@ describe('when the globe shows the tour games', () => {
   })
 })
 
-describe('the games shown for a confirmed Welcome choice', () => {
-  const leagues = [
-    { name: 'NFL', sport: 'Football', conferences: [] },
-    { name: 'NHL', sport: 'Hockey', conferences: [] },
-    { name: 'NCAA Football', sport: 'Football', conferences: ['ACC', 'SEC'] },
-    { name: 'Formula 1', sport: 'Racing', conferences: [] },
-  ]
+describe('the games shown for a Welcome choice', () => {
   const games = tourGames(now)
 
-  it('keeps Welcome empty even when a returning viewer already has league settings', () => {
-    const settings = settingsForPicks(firstVisitSettings, { leagues: ['NHL'], conferences: {} }, leagues)
-    expect(selectedTourGames(false, games, settings, leagues)).toEqual([])
+  it('keeps Welcome empty, so the globe starts with no cards', () => {
+    expect(shownTourGames(false, games)).toEqual([])
   })
 
-  it('shows the featured examples for Top Events', () => {
-    const settings = settingsForChoice(firstVisitSettings, 'topEvents', leagues)
-    const ordinaryGame = { ...games[0], id: 'tour-ordinary', topEvent: false }
-    const shown = selectedTourGames(true, [...games, ordinaryGame], settings, leagues)
-
+  it('shows the same six, all Live, whatever the choice, with Ravens v Steelers to try', () => {
+    const shown = shownTourGames(true, games)
     expect(shown.map(({ id }) => id)).toEqual(games.map(({ id }) => id))
     expect(shown.every(({ status, endTime }) => status === 'Live' && endTime === null)).toBe(true)
-  })
-
-  it('keeps the matching examples and supplies one for a picked league or conference without one', () => {
-    const settings = settingsForPicks(firstVisitSettings, {
-      leagues: ['NHL', 'NCAA Football', 'Formula 1'],
-      conferences: { 'NCAA Football': ['ACC', 'SEC'] },
-    }, leagues)
-    const configuredGames = games.filter((game) => leagues.some((league) => league.name === game.league))
-    const shown = selectedTourGames(true, configuredGames, settings, leagues)
-
-    expect(shown.map((game) => game.league)).toEqual(['NHL', 'NCAA Football', 'NCAA Football', 'Formula 1'])
-    expect(shown[0].id).toBe('tour-nhl-tor')
-    expect(shown[1].contest).toMatchObject({ kind: 'sides', home: { conference: 'ACC' } })
-    expect(shown[2].contest).toMatchObject({ kind: 'sides', home: { conference: 'SEC' } })
-    expect(shown[3].contest.kind).toBe('field')
+    expect(shown.map(({ id }) => id)).toContain(tourGameToTry)
   })
 })
 
@@ -122,18 +97,6 @@ describe('simulated event progress', () => {
     const game = tourGames(now).find(({ id }) => id === 'tour-nfl-pit')!
     expect(nextTourPlay(game, 0)).toMatchObject({
       contest: { home: { score: '16' }, away: { score: '17' } },
-    })
-  })
-
-  it('brings a distant selected race into view and advances its laps and positions', () => {
-    const league = { name: 'Formula 1', sport: 'Racing', conferences: [] }
-    const settings = settingsForPicks(firstVisitSettings, { leagues: [league.name], conferences: {} }, [league, { name: 'NFL', sport: 'Football', conferences: [] }])
-    const [game] = selectedTourGames(true, [tourGames(now)[0]], settings, [league])
-    expect(tourCameraForGame(game, 'wide')).toMatchObject({ longitude: game.venue.longitude })
-    const advanced = nextTourPlay(game, 0)
-    expect(advanced).toMatchObject({
-      clock: 'Lap 43',
-      contest: { kind: 'field', entries: [{ name: 'Oscar Piastri', position: 1 }, { name: 'Lando Norris', position: 2 }] },
     })
   })
 })

@@ -1,5 +1,5 @@
 // PROTOTYPE (throwaway): how the game panel's steps sit, switched by ?panelStepProto= or the [ and ] keys.
-// Arrow: today's, the step in the middle (or above the panel) with an arrow to the lit part.
+// Arrow (A): the step in the middle (or right above the panel); no arrow now in either.
 // Above: the step right above the lit part, with no arrow.
 import { useEffect, useState, type RefObject } from 'react'
 

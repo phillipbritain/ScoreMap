@@ -39,6 +39,8 @@ interface WelcomeTourScreenProps {
   onOpenGame: (gameId: string) => void
   /** The score cards a viewer can see now, for Click a score card to point at (see GlobeMap.shownScoreCards). */
   scoreCards: () => ShownScoreCard[]
+  /** The game whose card Click a score card points at, whatever else is on screen (see tourGameToTry). */
+  gameToTry: string
 }
 
 /**
@@ -47,7 +49,7 @@ interface WelcomeTourScreenProps {
  * choice or button; its panel's ×, or Escape, closes the tour, which finishes it. There is no Skip or
  * dots. What each step does is welcomeTour's; this only draws it.
  */
-export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards }: WelcomeTourScreenProps) {
+export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards, gameToTry }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
   const choose = (choice: TourChoice) => {
     // My leagues applies its completed picks before making the choice.
@@ -80,6 +82,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
         {progress === 'scoreCard' && (
           <ScoreCardStep
             scoreCards={scoreCards}
+            gameToTry={gameToTry}
             onOpenGame={(gameId) => {
               onOpenGame(gameId)
               onEvent({ kind: 'gameOpened' })
@@ -273,7 +276,7 @@ const panelPart = (selector: string) => () => document.querySelectorAll(`.game-p
 
 /**
  * The game panel's steps (see gamePanelSteps): each lights one part of the panel Click a score card
- * opened, dimming the rest of it with the globe, and points at it. The panel stays usable, so the viewer
+ * opened, dimming the rest of it with the globe, with no arrow: what's lit is plain enough. The panel stays usable, so the viewer
  * can try what's lit. With no panel open (closed, or the tour picked up here after a reload), a step says
  * the same with nothing lit.
  */
@@ -311,7 +314,7 @@ function GamePanelStep({ step, onNext }: { step: GamePanelStepName; onNext: () =
   return (
     <>
       <PanelStepProtoBar variant={proto} />
-      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={proto === 'arrow'} flush />
+      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={false} flush />
       <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text">{words}</p>
       </TourPanel>
@@ -366,17 +369,18 @@ function useAboveGamePanel(screen: RefObject<HTMLElement | null>, on: boolean) {
 interface ScoreCardStepProps {
   onOpenGame: (gameId: string) => void
   scoreCards: () => ShownScoreCard[]
+  gameToTry: string
 }
 
 /**
- * Click a score card: what a score card opens, pointing at one of the tour's games to try (see
- * scoreCardToTry), lit and pressable as part of the tour. The tour's camera keeps a card clear of the
- * panel; on a screen where none is, the step says the same without pointing. Nothing moves the globe
+ * Click a score card: what a score card opens, pointing at the tour's game to try (Ravens v Steelers,
+ * see tourGameToTry), lit and pressable as part of the tour, when it's clear of the panel (see
+ * scoreCardToTry). The tour's camera keeps it so; on a screen where it isn't, the step says the same without pointing. Nothing moves the globe
  * to bring a card into view. It has no Done: pressing the card moves on to The game panel, and its × closes the tour.
  */
-function ScoreCardStep({ onOpenGame, scoreCards }: ScoreCardStepProps) {
+function ScoreCardStep({ onOpenGame, scoreCards, gameToTry }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
-  const toTry = useScoreCardToTry(panel, scoreCards)
+  const toTry = useScoreCardToTry(panel, scoreCards, gameToTry)
   const card = () => scoreCards().filter((shown) => shown.gameId === toTry?.gameId)
   return (
     <>
@@ -415,11 +419,10 @@ interface CardToTry {
 
 /**
  * The score card for Click a score card to point at, following the cards as they're laid out: null
- * for none, undefined until the panel has been measured. Once picked, a card is
- * kept for as long as it stays clear of the panel, so the arrow doesn't hop between cards; its name
- * follows its game (a new score, say).
+ * for none, undefined until the panel has been measured. Only `gameToTry`'s card is pointed at,
+ * while it's clear of the panel; its name follows its game (a new score, say).
  */
-function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () => ShownScoreCard[]): CardToTry | null | undefined {
+function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () => ShownScoreCard[], gameToTry: string): CardToTry | null | undefined {
   const [toTry, setToTry] = useState<CardToTry | null | undefined>(undefined)
   const latest = useRef(scoreCards)
   useEffect(() => {
@@ -432,10 +435,9 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () 
       const panelBox = panel.current?.getBoundingClientRect()
       const screen = panel.current?.closest('.welcome-tour')?.getBoundingClientRect()
       if (!panelBox || !screen) return
-      const cards = latest.current()
+      const cards = latest.current().filter((card) => card.gameId === gameToTry)
       setToTry((current) => {
-        const kept = cards.filter((card) => card.gameId === current?.gameId)
-        const gameId = scoreCardToTry(kept, panelBox, screen) ?? scoreCardToTry(cards, panelBox, screen)
+        const gameId = scoreCardToTry(cards, panelBox, screen)
         const picked = cards.find((card) => card.gameId === gameId)
         if (!picked) return null
         return current?.gameId === picked.gameId && current.label === picked.label ? current : { gameId: picked.gameId, label: picked.label }
@@ -443,7 +445,7 @@ function useScoreCardToTry(panel: RefObject<HTMLElement | null>, scoreCards: () 
     }
     look()
     return () => cancelAnimationFrame(frame)
-  }, [panel])
+  }, [panel, gameToTry])
   return toTry
 }
 

@@ -1,13 +1,10 @@
 import type { Camera } from '../globe/camera'
 import type { Game, GameSituation, GameStatus } from '../games/game'
-import { chosenConferences, isLeagueOn, type League, type ViewerSettings } from '../settings/viewerSettings'
-import { visibleGames } from '../settings/visibleGames'
-import { leagueTourExample } from './tourExamples'
 import type { TourProgress } from './welcomeTour'
 
 /**
- * The featured Tour games cluster around the opening camera. Other selections can use real venues
- * farther away, so the tour can bring a selected game into view.
+ * The Tour games: the same six every time, whatever the viewer chooses on Welcome, around the opening
+ * camera, so the tour is the same for everyone (ADR-0027). Click a score card points at Ravens v Steelers.
  */
 
 /** Where the globe looks while the tour's games show: on all six, with the tour's panel clear of them. */
@@ -46,32 +43,15 @@ export function tourGames(now: number): Game[] {
   return specs.map((spec) => made(spec, now))
 }
 
-/** The tour begins with an empty globe and uses matching, simulated games after confirmation. */
-export function selectedTourGames(
-  confirmed: boolean,
-  examples: readonly Game[],
-  settings: ViewerSettings,
-  leagues: readonly League[],
-): Game[] {
-  if (!confirmed) return []
-  const matching = visibleGames(examples, settings).map(live)
-  if (settings.topEventsOnly) return matching
+/** The Click a score card step's game: Ravens v Steelers, in Pittsburgh. */
+export const tourGameToTry = 'tour-nfl-pit'
 
-  const seed = examples.find((game) => game.status === 'Live')
-  if (!seed) return matching
-  for (const league of leagues) {
-    if (!isLeagueOn(settings, league.name)) continue
-    const conferences = chosenConferences(settings, league.name)
-    for (const conference of conferences.length === 0 ? [null] : conferences) {
-      const alreadyShown = matching.some(({ league: name, contest }) =>
-        league.name === name && (conference === null ||
-          (contest.kind === 'sides' && [contest.home.conference, contest.away.conference].includes(conference))))
-      if (alreadyShown) continue
-      const game = leagueTourExample(league, conference, seed)
-      if (game) matching.push(game)
-    }
-  }
-  return matching
+/**
+ * The tour's games on the globe: none on Welcome, so the globe starts empty, then all six once the
+ * viewer has made a choice, whatever it is, every one of them Live.
+ */
+export function shownTourGames(confirmed: boolean, games: readonly Game[]): Game[] {
+  return confirmed ? games.map(live) : []
 }
 
 function live(game: Game): Game {
@@ -88,16 +68,6 @@ function live(game: Game): Game {
       away: { ...game.contest.away, score: game.contest.away.score ?? '0' },
     },
   }
-}
-
-/** Keeps the first selected game in view when its real venue is outside the tour's opening region. */
-export function tourCameraForGame(game: Game | undefined, screen: TourScreen, single = false): Camera | null {
-  const defaultCamera = tourCamera(screen)
-  const { longitude, latitude } = game?.venue ?? {}
-  if (longitude == null || latitude == null) return null
-  if (!single && Math.abs(longitude - defaultCamera.longitude) < 10 && Math.abs(latitude - defaultCamera.latitude) < 8) return null
-  const offset = screen === 'short' ? 1 : screen === 'phone' ? 5 : 4
-  return { longitude, latitude: Math.max(-85, latitude - offset), zoom: defaultCamera.zoom }
 }
 
 interface SideSpec {

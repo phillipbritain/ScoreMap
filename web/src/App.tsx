@@ -38,7 +38,7 @@ import { textOn } from './theme/palette'
 import type { Theme } from './theme/theme'
 import { useTheme } from './theme/useTheme'
 import { WelcomeTourScreen } from './welcomeTour/WelcomeTourScreen'
-import { selectedTourGames, showsTourGames, tourCamera, tourCameraForGame, tourGames, type TourScreen } from './welcomeTour/tourGames'
+import { showsTourGames, shownTourGames, tourCamera, tourGames, tourGameToTry, type TourScreen } from './welcomeTour/tourGames'
 import { useTourPlay } from './welcomeTour/tourPlay'
 import { useTourVenuePhotos } from './welcomeTour/tourVenuePhotos'
 import { tourProgressAfter } from './welcomeTour/welcomeTour'
@@ -145,20 +145,12 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [tourBoard, setTourBoard] = useState(() => tourGames(Date.now()))
   const showTourGames = showsTourGames(tourProgress)
   const tourConfirmed = showTourGames && tourProgress !== 'welcome'
-  const tourSelection = useMemo(
-    () => selectedTourGames(tourConfirmed, tourBoard, viewerSettings, leagues),
-    [tourConfirmed, tourBoard, viewerSettings, leagues],
-  )
+  const tourSelection = useMemo(() => shownTourGames(tourConfirmed, tourBoard), [tourConfirmed, tourBoard])
   // The game whose panel is open, which the tour plays more often so its panel is seen to change.
   const openGameId = useRef<string | null>(null)
   const tourPlay = useTourPlay(tourSelection, touring, openGameId)
   const tourBoardWithPhotos = useTourVenuePhotos(tourPlay.games, tourConfirmed)
   const justHappened = showTourGames ? tourPlay.changes : liveChanges
-  useEffect(() => {
-    if (!loadingScreenGone) return
-    const camera = tourCameraForGame(tourSelection[0], tourScreen(), tourSelection.length === 1)
-    if (camera) globe.current?.flyTo(camera)
-  }, [loadingScreenGone, tourSelection])
   const tourAgain = () => {
     setTourBoard(tourGames(Date.now()))
     setTourProgress((current) => tourProgressAfter(current, { kind: 'again' }))
@@ -339,6 +331,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             onChange={setViewerSettings}
             onOpenGame={selectGame}
             scoreCards={() => globe.current?.shownScoreCards() ?? []}
+            gameToTry={tourGameToTry}
           />
         )}
       </div>

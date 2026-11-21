@@ -3427,8 +3427,10 @@ body {
 }
 
 /* Skip tour, at the start of the action button panel, apart from the step's own buttons at its end. */
+/* Skip tour, outlined in grey (its words' own color) rather than the rail's blue. */
 .welcome-tour__button--skip {
   margin-right: auto;
+  border-color: var(--palette-text-secondary);
 }
 
 /* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
@@ -3504,6 +3506,12 @@ body {
   position: absolute;
   border-radius: var(--spotlight-corner);
   box-shadow: 0 0 0 200vmax var(--dim);
+}
+
+/* Ringed in the arrow's Live color, drawn just inside the hole so it stays on what's lit (Game details' tabs). */
+.welcome-tour__spotlight--ringed {
+  outline: var(--welcome-tour-arrow-width) solid var(--palette-live-main);
+  outline-offset: calc(-1 * var(--welcome-tour-arrow-width));
 }
 
 /* Over a lit score card, so a press on it opens its game: the card itself is under the dim. */

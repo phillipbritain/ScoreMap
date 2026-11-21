@@ -781,10 +781,17 @@ body {
     isolation: isolate;
   }
 
+  /* Two teams' rows: their fades reach well above and below them, with room between them to keep apart.
+     A field's lines stay close together, their fades just past them. */
+  .event-panel__score:not(:has(> .event-panel__field-lines)) {
+    --event-panel-score-gap: calc(3 * var(--spacing));
+    --event-panel-row-fade-y: calc(1.25 * var(--spacing));
+  }
+
   .event-panel__score .event-panel__team::after {
     content: '';
     position: absolute;
-    inset: calc(-0.25 * var(--spacing)) calc(-2 * var(--spacing));
+    inset: calc(-1 * var(--event-panel-row-fade-y, 0.25 * var(--spacing))) calc(-2 * var(--spacing));
     z-index: -2;
     background: linear-gradient(
       90deg,
@@ -799,9 +806,9 @@ body {
      light has gone; its fade reaches past that padding as far as every other row's does past its edge. */
   .event-panel__score .event-panel__team--scored::after {
     inset:
-      calc(var(--reach-y) - 0.25 * var(--spacing))
+      calc(var(--reach-y) - var(--event-panel-row-fade-y, 0.25 * var(--spacing)))
       calc(var(--reach-right) - 2 * var(--spacing))
-      calc(var(--reach-y) - 0.25 * var(--spacing))
+      calc(var(--reach-y) - var(--event-panel-row-fade-y, 0.25 * var(--spacing)))
       calc(var(--reach-x) - 2 * var(--spacing));
   }
 

@@ -48,7 +48,7 @@ export interface ShownScoreCard {
   box: DOMRect
   /** The card itself. */
   element: Element
-  /** Its two rows, top first: for an arrow to end level with. */
+  /** Its rows, top first: for an arrow to end level with. */
   rows: Element[]
 }
 
@@ -566,7 +566,7 @@ interface CardColors {
   header: string
 }
 
-/** Draws a score card into its element, giving its two rows, top first. */
+/** Draws a score card into its element, giving its rows, top first. */
 function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: headerColor }: CardColors, selected: boolean, animation?: PinAnimation): Element[] {
   element.className = `score-card score-card--${statusKey(card.status)}`
   // In its game's color, in place of its status's from the page's CSS.
@@ -579,7 +579,7 @@ function drawScoreCard(element: HTMLElement, card: ScoreCard, { color, header: h
   const header = document.createElement('div')
   header.className = 'score-card__header'
   header.append(span('score-card__clock', card.clockLine || card.status))
-  const rows = [team(card.top), team(card.bottom)]
+  const rows = card.rows.map(team)
   element.replaceChildren(header, ...rows)
   if (card.flames) element.append(flames())
   // Where its trail meets it, put there by its placed card (see showTrailDot).

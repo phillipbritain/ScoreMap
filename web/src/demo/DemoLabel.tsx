@@ -5,7 +5,7 @@
 export function DemoLabel() {
   return (
     <p className="demo-label">
-      Demo Mode
+      Demo
     </p>
   )
 }

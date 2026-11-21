@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
-import { railButtons, type LiveRailButtonName } from '../rail/railButtons'
+import { shownRailButtons, type LiveRailButtonName } from '../rail/railButtons'
 import { HideControlsIcon, RailIcon } from '../rail/railIcons'
 import type { ViewerSettings } from '../settings/viewerSettings'
 import { LeaguePicker } from '../rail/LeaguePicker'
@@ -253,7 +253,7 @@ function ControlsStep({ onNext }: { onNext: () => void }) {
             </RailIcon>
             Hide controls: fold these buttons away, and bring them back
           </li>
-          {railButtons.map(({ name, icon }) => (
+          {shownRailButtons(touch).map(({ name, icon }) => (
             <li key={name} className="welcome-tour__control">
               <RailIcon className="welcome-tour__control-icon">{icon}</RailIcon>
               {railButtonWords[name]}

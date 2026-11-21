@@ -57,7 +57,7 @@ The marker for one game on the globe, placed at the game's venue. A game whose v
 _Avoid_: Marker, dot, icon
 
 **Score card**:
-At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top two; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
+At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top three; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
 **Trail**:
@@ -85,7 +85,7 @@ The view of one event (a game, a race or tournament, a fight card), opened by se
 _Avoid_: Event panel (not everything on the globe is a game), Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens; these three left out on a touchscreen, which pinches to zoom), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:

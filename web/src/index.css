@@ -193,20 +193,28 @@ body {
   }
 }
 
-/* The strip: the score block, then the details over the photo. */
+/* The strip: the score block, then the details over the photo. It keeps its height, but for a field's,
+   whose leaderboard gives way, scrolling, down to the strip's least height, when the tabs need the room
+   (see .game-details). */
 .event-panel__main {
   display: flex;
   flex-shrink: 0;
   min-height: var(--event-panel-size-height);
 }
 
+.event-panel__main:has(.event-panel__field-lines) {
+  flex-shrink: 1;
+}
+
 /* The score block at the left, slanted on its right edge. Names are cut short within their share of
-   each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
+   each row, keeping logos, records and scores aligned, down to their narrowest (see .event-panel__team-name);
+   narrower than that, the block scrolls sideways, so the scores stay whole. Reserve room for the details
+   beside it. */
 .event-panel__score {
   /* The space between its lines, and a field's lines (see .event-panel__field-lines). */
   --event-panel-score-gap: calc(2 * var(--spacing));
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(min-content, 1fr);
   align-content: center;
   gap: var(--event-panel-score-gap);
   box-sizing: border-box;
@@ -215,6 +223,9 @@ body {
   position: relative;
   z-index: 1;
   padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--event-panel-size-slant)) 100%, 0 100%);
 }
 
@@ -307,10 +318,15 @@ body {
   line-height: 1;
 }
 
-/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel taller. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel
+   taller. It takes the row's room left by the logo, record and score, which never give way, and is cut
+   short no narrower than its --event-panel-name-min: past that the score block scrolls sideways. Its width
+   of 0 keeps its whole text out of the row's narrowest, so the narrowest is its minimum. */
 .event-panel__team-name {
-  flex: 1;
-  min-width: 0;
+  --event-panel-name-min: 7em;
+  flex: 1 1 0;
+  width: 0;
+  min-width: var(--event-panel-name-min);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -495,7 +511,8 @@ body {
    would cover keeps clear of it (see .event-panel__venue, and on a phone .event-panel__league). A welcome
    tour panel's × is the same, in its own top right corner. */
 .event-panel__close,
-.welcome-tour__close {
+.welcome-tour__close,
+.rail__popover-close {
   position: absolute;
   top: 0;
   right: 0;
@@ -515,7 +532,8 @@ body {
 }
 
 .event-panel__close:hover,
-.welcome-tour__close:hover {
+.welcome-tour__close:hover,
+.rail__popover-close:hover {
   color: var(--palette-text-primary);
 }
 
@@ -560,16 +578,25 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* A field's score block: its leaderboard's row gives way, scrolling, when the strip does. */
+.event-panel__score:has(> .event-panel__field-lines) {
+  grid-template-rows: auto minmax(0, auto);
+  min-height: 0;
+}
+
 /* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
-   the last, never sideways. */
+   the last; sideways, the score block scrolls it with the rest (see .event-panel__score). On a phone it's
+   as tall as three lines where they fit (see the narrow screens' rules). */
 .event-panel__field-lines {
   --lines: 5;
+  --line-height: calc(var(--event-panel-size-logo) + 2 * var(--event-panel-logo-plate-padding));
   display: grid;
   gap: var(--event-panel-score-gap);
-  max-height: calc(var(--lines) * (var(--event-panel-size-logo) + 2 * var(--event-panel-logo-plate-padding)) + (var(--lines) - 1) * var(--event-panel-score-gap));
+  max-height: calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--event-panel-score-gap));
   margin: 0;
-  /* Room between the scores and the scroll bar. */
-  padding: 0 var(--spacing) 0 0;
+  /* Room between the scores and the scroll bar, where the scroll bar takes room of its own (as on
+     Windows) and where it lies over the lines (as on a Mac). */
+  padding: 0 calc(3 * var(--spacing)) 0 0;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -637,6 +664,33 @@ body {
     clip-path: none;
   }
 
+  /* A field's leaderboard three lines tall, its top three, where the panel has room for them below the
+     rail (--rail-bottom) and above the tabs at their least (see .game-details); on a screen too short for
+     that, shorter, as far as two lines, as a team game's two rows are. --rest is the rest of the panel
+     at its least: the score block's padding and header, the venue's row, the tabs and the gap above the
+     panel. It holds that height, as a team game's rows do. */
+  .event-panel__field-lines {
+    --lines: 3;
+    --rest: 232px;
+    max-height: clamp(
+      calc(2 * var(--line-height) + var(--event-panel-score-gap)),
+      calc(100dvh - var(--rail-bottom, 0px) - var(--rest)),
+      calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--event-panel-score-gap))
+    );
+  }
+
+  /* The block is the panel's whole width here, so it doesn't scroll sideways: names are cut short as far
+     as they need, and the block holds its height. */
+  .event-panel__score,
+  .event-panel__score:has(> .event-panel__field-lines) {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .event-panel__team-name {
+    min-width: 0;
+  }
+
   /* The league, at the panel's top, keeps clear of the close button in its corner. */
   .event-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
@@ -692,11 +746,12 @@ body {
     pointer-events: none;
   }
 
-  /* The score and venue rows hold their size while the lower bands give way and scroll. */
+  /* The score and venue rows hold their size while the band gives way and scrolls; the tabs keep their
+     least room (see .game-details). */
   .event-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
-    grid-template-rows: auto auto minmax(0, auto) minmax(0, auto);
+    grid-template-rows: auto auto minmax(0, auto) auto;
     grid-template-areas:
       'score score'
       'venue watch'
@@ -1645,6 +1700,7 @@ body {
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
    surface, outlined to stand off the globe under it. */
 .rail__popover {
+  --rail-popover-padding: calc(3 * var(--spacing));
   position: absolute;
   top: 0;
   right: calc(100% + 2 * var(--spacing));
@@ -1653,13 +1709,44 @@ body {
   max-width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
   max-height: calc(100dvh - 6 * var(--spacing));
   overflow-y: auto;
-  padding: calc(3 * var(--spacing));
+  padding: var(--rail-popover-padding);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   background: var(--rail-surface);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   box-shadow: var(--rail-shadow);
+}
+
+/* A panel popover's header (Leagues, Display Settings and Games, see Rail): its name, and a close button
+   at its right as the event panel's, across the popover's top and pinned there as the popover scrolls,
+   a line under it. */
+.rail__popover-header {
+  position: sticky;
+  top: calc(-1 * var(--rail-popover-padding));
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  margin: calc(-1 * var(--rail-popover-padding)) calc(-1 * var(--rail-popover-padding)) var(--rail-popover-padding);
+  padding: var(--spacing) var(--spacing) var(--spacing) var(--rail-popover-padding);
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+  background: var(--rail-surface);
+}
+
+/* In the header's flow, not in a corner as the event panel's is. */
+.rail__popover-close {
+  position: static;
+  flex: none;
+}
+
+.rail__popover-title {
+  margin: 0;
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
 /* On a phone: a sheet across all the width left of the rail, from the rail's top down, so the rail's
@@ -1671,10 +1758,11 @@ body {
 }
 
 /* The More popover (see More): its few choices as a list of rows, level with its button (Rail sets its
-   top), as narrow as they are, on a phone too. */
+   top), as narrow as they are, on a phone too. The rows fill it edge to edge, so a row's hover fills its
+   whole rectangle, the popover's rounded corners clipping the first and last. */
 .rail__popover--more {
   width: auto;
-  padding: var(--spacing);
+  padding: 0;
 }
 
 .more {
@@ -1693,9 +1781,9 @@ body {
   align-items: center;
   gap: calc(2.5 * var(--spacing));
   width: 100%;
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  padding: calc(2.5 * var(--spacing)) calc(4 * var(--spacing));
   border: none;
-  border-radius: var(--menu-corner);
+  border-radius: 0;
   background: none;
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
@@ -1710,6 +1798,11 @@ body {
   flex: none;
   width: var(--rail-size-icon);
   height: var(--rail-size-icon);
+}
+
+.more__item:focus-visible {
+  /* Inside the row, as the popover clips anything at its edges. */
+  outline-offset: calc(-2 * var(--shape-border-width-thin) - 1px);
 }
 
 @media (hover: hover) {
@@ -2950,7 +3043,8 @@ body {
 }
 
 /* The label over the globe in a demo (ADR-0019), saying its games are made up: a small pane of the
-   controls' surface at the top, centered, which clicks pass through to the globe. */
+   controls' surface at the top, centered, ringed as the rail's popovers are, which clicks pass through to
+   the globe. */
 .demo-label {
   position: absolute;
   top: calc(3 * var(--spacing));
@@ -2959,6 +3053,7 @@ body {
   margin: 0;
   padding: var(--spacing) calc(4 * var(--spacing));
   line-height: var(--demo-label-line-height);
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--controls-corner);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
@@ -3395,12 +3490,17 @@ body {
 /* The Games popover (see Rail): the search, then the games scrolling under it while the popover stays
    still. Keyboard selection stays available for games in a card cluster. */
 .rail__popover--games {
+  --rail-popover-padding: calc(1.5 * var(--spacing));
   display: flex;
   flex-direction: column;
   width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
   max-height: min(70dvh, calc(100dvh - 6 * var(--spacing)));
   overflow: hidden;
-  padding: calc(1.5 * var(--spacing));
+}
+
+/* Its header in the popover's flow, which doesn't scroll, above the search. */
+.rail__popover--games > .rail__popover-header {
+  position: static;
 }
 
 .game-navigation {
@@ -3588,11 +3688,13 @@ body {
     min-height: 0;
   }
 
-  /* Half the strip, so names have room on a phone. */
+  /* Half the strip, so names have room on a phone. Its foot keeps the desktop's room under the last
+     row, which is the room between the rows and the sideways scroll bar when the block scrolls (see
+     .event-panel__score). */
   .event-panel__score {
     width: min(var(--event-panel-size-score-block), 50%);
     --event-panel-score-gap: var(--spacing);
-    padding-block: calc(2 * var(--spacing));
+    padding-block: calc(2 * var(--spacing)) calc(3 * var(--spacing));
   }
 
   .event-panel__details {

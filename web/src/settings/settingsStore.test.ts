@@ -485,7 +485,7 @@ describe('unsavedSettingsStore', () => {
     expect(saved.loadCamera()).toEqual({ longitude: 10, latitude: 20, zoom: 3 })
   })
 
-  it('starts the welcome tour at Welcome every time and saves none of its progress', () => {
+  it('opens with the welcome tour finished every time, on a first visit too, and saves none of its progress', () => {
     const storage = memoryStorage()
     const saved = settingsStore(() => storage)
     saved.saveTourProgress('finished')
@@ -493,8 +493,8 @@ describe('unsavedSettingsStore', () => {
 
     store.saveTourProgress('scoreCard')
 
-    expect(store.loadTourProgress()).toBe('welcome')
-    expect(unsavedSettingsStore().loadTourProgress()).toBe('welcome')
+    expect(store.loadTourProgress()).toBe('finished')
+    expect(unsavedSettingsStore().loadTourProgress()).toBe('finished')
     expect(saved.loadTourProgress()).toBe('finished')
   })
 

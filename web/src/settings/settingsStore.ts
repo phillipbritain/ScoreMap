@@ -125,7 +125,8 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
 
 /**
  * A store for a demo (ADR-0019), which opens on first-visit settings and the viewer's region, as every
- * demo does, and saves nothing, so the viewer's own saved settings are as they were after it.
+ * demo does, with the welcome tour finished (straight into the demo's games; More's Welcome tour still
+ * shows it), and saves nothing, so the viewer's own saved settings are as they were after it.
  */
 export function unsavedSettingsStore(): SettingsStore {
   return {
@@ -133,7 +134,7 @@ export function unsavedSettingsStore(): SettingsStore {
     save() {},
     loadCamera: () => null,
     saveCamera() {},
-    loadTourProgress: () => 'welcome',
+    loadTourProgress: () => 'finished',
     saveTourProgress() {},
     loadRailCollapsed: () => false,
     saveRailCollapsed() {},

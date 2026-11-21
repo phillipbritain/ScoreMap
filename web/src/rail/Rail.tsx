@@ -55,7 +55,7 @@ interface RailProps {
   feedbackContext: () => FeedbackContext
   /** Starts the welcome tour afresh, from More. */
   onTourAgain: () => void
-  /** Installs ScoreMap as an app, from More, or nothing where it can't be (see installWay). */
+  /** Installs ScoreMap as an app by the browser's own dialog, from More, or nothing where the browser hasn't offered (see offersInstall). */
   onInstall?: () => void
 }
 

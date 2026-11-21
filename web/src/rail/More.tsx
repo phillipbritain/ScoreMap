@@ -2,7 +2,8 @@ import { RailIcon } from './railIcons'
 
 /**
  * The rail's More popover: what's rarely needed, kept out of view until asked for, each with an icon.
- * Install app, only where ScoreMap can be installed and isn't yet, closes it and installs (see installWay);
+ * Install app, only where the browser has offered to install ScoreMap (see offersInstall), closes it and opens the
+ * browser's own install dialog;
  * Send feedback opens the Feedback panel in its place; Welcome tour closes it and starts the tour afresh.
  */
 export function More({

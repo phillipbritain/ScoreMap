@@ -367,7 +367,7 @@ function useRightAbove(on: boolean, panel: RefObject<HTMLElement | null>, part: 
 /** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */
 function AllSetStep({ onDone }: { onDone: () => void }) {
   return (
-    <TourPanel heading="You're all set" action={<TourButton onClick={onDone}>Done</TourButton>}>
+    <TourPanel heading="You're all set!" action={<TourButton onClick={onDone}>Done</TourButton>}>
       <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the games.</p>
     </TourPanel>
   )

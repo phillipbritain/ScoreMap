@@ -44,7 +44,7 @@ export async function fetchVenuePhotos(
 }
 
 /** The games, each with its venue's photo where there is one. */
-export function withVenuePhotos(games: readonly Game[], photos: ReadonlyMap<string, VenuePhoto>): Game[] {
+export function withVenuePhotos<T extends Game>(games: readonly T[], photos: ReadonlyMap<string, VenuePhoto>): T[] {
   return games.map((game) => {
     const photo = photos.get(game.id)
     return photo ? { ...game, venue: { ...game.venue, photo } } : game

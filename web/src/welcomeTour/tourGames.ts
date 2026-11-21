@@ -1,5 +1,6 @@
 import type { Camera } from '../globe/camera'
-import type { Game, GameSituation, GameStatus } from '../games/game'
+import type { GameSituation } from '../games/game'
+import { tourClockLine, type TourClock, type TourGame } from './tourGame'
 
 /**
  * The Tour games: the same six every time, whatever the viewer chooses on Welcome, around the opening
@@ -26,34 +27,18 @@ export function tourCamera(screen: TourScreen): Camera {
 }
 
 /** The tour's six Live games, timed from when the tour starts. */
-export function tourGames(now: number): Game[] {
-  return specs.map((spec) => live(made(spec, now)))
+export function tourGames(now: number): TourGame[] {
+  return specs.map((spec) => made(spec, now))
 }
 
 /** The Click a score card step's game: Ravens v Steelers, in Pittsburgh. */
 export const tourGameToTry = 'tour-nfl-pit'
 
-function live(game: Game): Game {
-  if (game.status === 'Live' || game.contest.kind !== 'sides') return game
-  return {
-    ...game,
-    status: 'Live',
-    startTime: game.status === 'Upcoming' ? new Date(Date.parse(game.startTime) - 60 * 60_000).toISOString() : game.startTime,
-    endTime: null,
-    clock: game.sport === 'Basketball' ? 'Q2 6:24' : "62'",
-    contest: {
-      kind: 'sides',
-      home: { ...game.contest.home, score: game.contest.home.score ?? '0' },
-      away: { ...game.contest.away, score: game.contest.away.score ?? '0' },
-    },
-  }
-}
-
 interface SideSpec {
   abbreviation: string
   fullName: string
   logoUrl: string
-  score?: string
+  score: number
   record?: string
 }
 
@@ -61,9 +46,9 @@ interface GameSpec {
   id: string
   league: string
   sport: string
-  status: GameStatus
-  clock?: string
-  period?: number
+  clock: TourClock
+  period: number
+  phase?: TourGame['tourPlay']['phase']
   situation?: GameSituation
   /** Minutes from now: negative for a game under way or over. */
   startsIn: number
@@ -78,12 +63,12 @@ interface GameSpec {
   venue: { name: string; city: string; region: string | null; country: string | null; latitude: number; longitude: number; timeZone: string; espnId: string }
 }
 
-function made(spec: GameSpec, now: number): Game {
+function made(spec: GameSpec, now: number): TourGame {
   const side = ({ abbreviation, fullName, logoUrl, score, record }: SideSpec) => ({
     abbreviation,
     fullName,
     logoUrl,
-    score: spec.status === 'Upcoming' ? null : (score ?? '0'),
+    score: String(score),
     rank: null,
     record: record ?? null,
     conference: null,
@@ -93,12 +78,17 @@ function made(spec: GameSpec, now: number): Game {
     league: spec.league,
     sport: spec.sport,
     startTime: new Date(now + spec.startsIn * 60_000).toISOString(),
-    status: spec.status,
+    status: 'Live',
     delayed: false,
-    endTime: spec.status === 'Final' ? new Date(now - 2 * 60_000).toISOString() : null,
+    endTime: null,
     contest: { kind: 'sides', home: side(spec.home), away: side(spec.away) },
-    clock: spec.clock ?? null,
-    period: spec.period ?? null,
+    clock: tourClockLine(spec.clock),
+    period: spec.period,
+    tourPlay: {
+      scores: { home: spec.home.score, away: spec.away.score },
+      phase: spec.phase ?? 'Playing',
+      clock: spec.clock,
+    },
     hot: false,
     // Its photo comes from the server, as a real game's does (see tourVenuePhotos).
     venue: { ...spec.venue, photo: null, court: null },
@@ -119,39 +109,39 @@ const eastern = 'America/New_York'
 
 const specs: GameSpec[] = [
   {
-    id: 'nfl-nyg', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q2 2:31', startsIn: -60,
-    home: { abbreviation: 'NYG', fullName: 'New York Giants', logoUrl: logo('nfl', 'nyg'), score: '10' },
-    away: { abbreviation: 'WSH', fullName: 'Washington Commanders', logoUrl: logo('nfl', 'wsh'), score: '14' },
+    id: 'nfl-nyg', league: 'NFL', sport: 'Football', period: 2, clock: { kind: 'countdown', label: 'Q2', seconds: 151 }, startsIn: -60,
+    home: { abbreviation: 'NYG', fullName: 'New York Giants', logoUrl: logo('nfl', 'nyg'), score: 10 },
+    away: { abbreviation: 'WSH', fullName: 'Washington Commanders', logoUrl: logo('nfl', 'wsh'), score: 14 },
     venue: { name: 'MetLife Stadium', city: 'East Rutherford', region: 'New Jersey', country: 'USA', latitude: 40.8135, longitude: -74.0745, timeZone: eastern, espnId: '3839' },
   },
   {
-    id: 'mlb-nyy', league: 'MLB', sport: 'Baseball', status: 'Live', clock: 'Bot 6th', startsIn: -110,
-    home: { abbreviation: 'NYY', fullName: 'New York Yankees', logoUrl: logo('mlb', 'nyy'), score: '4' },
-    away: { abbreviation: 'BOS', fullName: 'Boston Red Sox', logoUrl: logo('mlb', 'bos'), score: '2' },
+    id: 'mlb-nyy', league: 'MLB', sport: 'Baseball', period: 6, phase: 'InningBottom', clock: { kind: 'fixed', line: 'Bot 6th' }, startsIn: -110,
+    home: { abbreviation: 'NYY', fullName: 'New York Yankees', logoUrl: logo('mlb', 'nyy'), score: 4 },
+    away: { abbreviation: 'BOS', fullName: 'Boston Red Sox', logoUrl: logo('mlb', 'bos'), score: 2 },
     venue: { name: 'Yankee Stadium', city: 'Bronx', region: 'New York', country: null, latitude: 40.8296, longitude: -73.9262, timeZone: eastern, espnId: '208' },
   },
   {
-    id: 'nba-bkn', league: 'NBA', sport: 'Basketball', status: 'Upcoming', startsIn: 25,
-    home: { abbreviation: 'BKN', fullName: 'Brooklyn Nets', logoUrl: logo('nba', 'bkn') },
-    away: { abbreviation: 'MIA', fullName: 'Miami Heat', logoUrl: logo('nba', 'mia') },
+    id: 'nba-bkn', league: 'NBA', sport: 'Basketball', period: 2, clock: { kind: 'countdown', label: 'Q2', seconds: 384 }, startsIn: -35,
+    home: { abbreviation: 'BKN', fullName: 'Brooklyn Nets', logoUrl: logo('nba', 'bkn'), score: 0 },
+    away: { abbreviation: 'MIA', fullName: 'Miami Heat', logoUrl: logo('nba', 'mia'), score: 0 },
     venue: { name: 'Barclays Center', city: 'Brooklyn', region: 'New York', country: null, latitude: 40.6826, longitude: -73.9754, timeZone: eastern, espnId: '3559' },
   },
   {
-    id: 'nhl-tor', league: 'NHL', sport: 'Hockey', status: 'Live', clock: '2nd 8:04', startsIn: -50,
-    home: { abbreviation: 'TOR', fullName: 'Toronto Maple Leafs', logoUrl: logo('nhl', 'tor'), score: '1' },
-    away: { abbreviation: 'MTL', fullName: 'Montreal Canadiens', logoUrl: logo('nhl', 'mtl'), score: '1' },
+    id: 'nhl-tor', league: 'NHL', sport: 'Hockey', period: 2, clock: { kind: 'countdown', label: '2nd', seconds: 484 }, startsIn: -50,
+    home: { abbreviation: 'TOR', fullName: 'Toronto Maple Leafs', logoUrl: logo('nhl', 'tor'), score: 1 },
+    away: { abbreviation: 'MTL', fullName: 'Montreal Canadiens', logoUrl: logo('nhl', 'mtl'), score: 1 },
     venue: { name: 'Scotiabank Arena', city: 'Toronto', region: 'Ontario', country: 'Canada', latitude: 43.6435, longitude: -79.3791, timeZone: 'America/Toronto', espnId: '1838' },
   },
   {
-    id: 'mls-chi', league: 'MLS', sport: 'Soccer', status: 'Final', clock: 'FT', startsIn: -130,
-    home: { abbreviation: 'CHI', fullName: 'Chicago Fire FC', logoUrl: soccerLogo(182), score: '2' },
-    away: { abbreviation: 'CLB', fullName: 'Columbus Crew', logoUrl: soccerLogo(183), score: '0' },
+    id: 'mls-chi', league: 'MLS', sport: 'Soccer', period: 2, clock: { kind: 'minute', minute: 62 }, startsIn: -130,
+    home: { abbreviation: 'CHI', fullName: 'Chicago Fire FC', logoUrl: soccerLogo(182), score: 2 },
+    away: { abbreviation: 'CLB', fullName: 'Columbus Crew', logoUrl: soccerLogo(183), score: 0 },
     venue: { name: 'Soldier Field', city: 'Chicago, Illinois', region: null, country: 'USA', latitude: 41.8623, longitude: -87.6167, timeZone: 'America/Chicago', espnId: '1452' },
   },
   {
-    id: 'nfl-pit', league: 'NFL', sport: 'Football', status: 'Live', clock: 'Q3 6:12', period: 3, startsIn: -95, links: true,
-    home: { abbreviation: 'PIT', fullName: 'Pittsburgh Steelers', logoUrl: logo('nfl', 'pit'), score: '13', record: '6-3' },
-    away: { abbreviation: 'BAL', fullName: 'Baltimore Ravens', logoUrl: logo('nfl', 'bal'), score: '17', record: '7-2' },
+    id: 'nfl-pit', league: 'NFL', sport: 'Football', period: 3, clock: { kind: 'countdown', label: 'Q3', seconds: 372 }, startsIn: -95, links: true,
+    home: { abbreviation: 'PIT', fullName: 'Pittsburgh Steelers', logoUrl: logo('nfl', 'pit'), score: 13, record: '6-3' },
+    away: { abbreviation: 'BAL', fullName: 'Baltimore Ravens', logoUrl: logo('nfl', 'bal'), score: 17, record: '7-2' },
     situation: {
       lastPlay: 'J. Warren rush to the right for 6 yards to the BAL 38',
       downAndDistance: '2nd & 4 at BAL 38',

@@ -289,27 +289,23 @@ public class ScenarioGameDetailsTests
         Assert.Equal(HttpStatusCode.NotFound, (await http.GetAsync("/api/game-details?id=real-game&league=NFL&demo=true", cancellationToken)).StatusCode);
     }
 
-    /// <summary>A welcome tour's game as the browser has it, in the game list's shape.</summary>
-    private static object TourGame(string id, string league, string clock = "Q2 2:31", int? period = 2) => new
+    /// <summary>The facts the browser sends for a tour game, with display text supplied to test that it has no effect.</summary>
+    private static object TourGame(string id, string league, int period = 2, string phase = "Playing", string? clock = null) => new
     {
         id,
         league,
-        sport = "Football",
-        startTime = "2026-10-04T17:00:00Z",
         status = "Live",
-        delayed = false,
-        endTime = (string?)null,
         contest = new
         {
             kind = "sides",
-            home = new { abbreviation = "NYG", fullName = "New York Giants", logoUrl = (string?)null, score = "17" },
-            away = new { abbreviation = "DAL", fullName = "Dallas Cowboys", logoUrl = (string?)null, score = "10" },
+            home = new { abbreviation = "NYG", fullName = "New York Giants", logoUrl = (string?)null, score = "99" },
+            away = new { abbreviation = "DAL", fullName = "Dallas Cowboys", logoUrl = (string?)null, score = "77" },
         },
         clock,
         period,
-        hot = false,
-        venue = new { name = "MetLife Stadium", city = "East Rutherford", region = "NJ", country = "USA" },
-        streamLinks = Array.Empty<object>(),
+        phase,
+        homeScore = 17,
+        awayScore = 10,
     };
 
     [Fact]
@@ -347,19 +343,23 @@ public class ScenarioGameDetailsTests
     }
 
     [Theory]
-    [InlineData("NFL", "Q2 2:31", 2)]
-    [InlineData("NHL", "2nd 8:04", 2)]
-    [InlineData("MLB", "Bot 6th", 6)]
-    public async Task A_tour_game_without_a_period_has_the_one_its_clock_line_names(string league, string clock, int periods)
+    [InlineData("InningTop", "Bot 9th", false)]
+    [InlineData("InningBottom", "Top 1st", true)]
+    public async Task A_tour_games_details_follow_its_period_phase_and_numeric_scores(string phase, string clock, bool homeHasBatted)
     {
         await using var server = new ScoreMapServer { Environment = "Production" };
         using var http = server.CreateClient();
         var cancellationToken = TestContext.Current.CancellationToken;
 
-        var response = await http.PostAsJsonAsync("/api/tour-game-details", TourGame("tour-game", league, clock, period: null), cancellationToken);
+        var response = await http.PostAsJsonAsync("/api/tour-game-details",
+            TourGame("tour-mlb-game", "MLB", period: 6, phase: phase, clock: clock), cancellationToken);
 
         response.EnsureSuccessStatusCode();
         var details = await response.Content.ReadFromJsonAsync<GameDetails>(cancellationToken);
-        Assert.Equal(periods, details!.PeriodScores.Count(period => period.Away is not null));
+        Assert.NotNull(details);
+        Assert.Equal(6, details.PeriodScores.Count(period => period.Away is not null));
+        Assert.Equal(homeHasBatted, details.PeriodScores[5].Home is not null);
+        Assert.Equal(("17", "10"), (details.HomeTotal, details.AwayTotal));
+        Assert.Equal((17, 10), (details.Scoring[^1].HomeScore, details.Scoring[^1].AwayScore));
     }
 }

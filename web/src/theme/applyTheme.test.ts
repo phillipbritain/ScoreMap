@@ -158,7 +158,7 @@ describe('applyTheme', () => {
       typography: 1 + 11 * 3,
       // The spacing unit, the corner radius and three border widths.
       shape: 1 + 1 + 3,
-      // A small pin's core of four and glow of two, for each of three statuses, and its fire outline's size, width and two opacities.
+      // A small pin's core of four and glow of two, for each of three statuses, and its hot indicator's size, width and two opacities.
       pin: 3 * 6 + 4,
       // A surface, the sea, four kinds of line (their colors) and two halo colors.
       globe: 8,
@@ -168,7 +168,7 @@ describe('applyTheme', () => {
       // The sky's color, three stars and two star sizes.
       sky: 1 + 3 + 2,
       // A card cluster's fill, radius, glow radius, outline width and glow opacity, its count's font
-      // (of four) and size, its fire outline's four settings, and its opacity for each of three statuses.
+      // (of four) and size, its hot indicator's four settings, and its opacity for each of three statuses.
       cluster: 5 + 5 + 4 + 3,
       // A trail's width and opacity, its glow's three, its venue's three and its card dot's radius.
       trail: 9,
@@ -178,7 +178,7 @@ describe('applyTheme', () => {
       // Two sizes and two ring widths.
       pulse: 3,
       // A score card's fill, text, shadow, frost, header's two, corner, four sizes,
-      // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
+      // logo plate of three and hot indicator's seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 4 + 3 + 7 + 3 * 3,
       // The event panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
       // three, corner, cut corner's two, ten sizes (the close tab's two, the clock's two) and logo plate of three.

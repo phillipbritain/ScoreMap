@@ -84,8 +84,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // The app's hold on the globe (its camera, and the score cards the welcome tour points at), and where the camera last settled, for the zoom buttons' limits.
   const globe = useRef<GlobeHandle>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
-  // Whether the viewer collapsed the rail out of the way after setting up.
-  const [railCollapsed, setRailCollapsed] = useState(store.loadRailCollapsed)
   // Whether a event panel's details were left open: the next panel opens them the same way, after a
   // reload too; collapsed until the viewer first opens them. During the welcome tour, its panels start
   // collapsed whatever was left, and what's done to them there isn't kept.
@@ -108,7 +106,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
     setScenarioListing,
   )
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
-  useEffect(() => store.saveRailCollapsed(railCollapsed), [store, railCollapsed])
   useEffect(() => store.saveDetailsOpen(detailsOpen), [store, detailsOpen])
   // Installing ScoreMap as an app: More's Install app, where the browser can be asked (ADR-0030).
   const install = useInstall()
@@ -177,7 +174,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           zoomSettings={zoom}
           colors={colors}
           mapType={viewerSettings.mapType}
-          cardDensity={viewerSettings.cardDensity}
+          cardCount={viewerSettings.cardCount}
+          hotIndicator={viewerSettings.hotEventIndicator}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={shownGames}
           justHappened={justHappened}
@@ -252,8 +250,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           games={visible}
           gamesReady={revealed}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
-          collapsed={railCollapsed}
-          onCollapsedChange={setRailCollapsed}
           feedbackContext={() =>
             feedbackContext({
               screen: { width: window.innerWidth, height: window.innerHeight },

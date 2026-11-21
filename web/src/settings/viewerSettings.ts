@@ -11,10 +11,10 @@ export interface ViewerSettings {
    */
   topEventsOnly: boolean
   /**
-   * "Only show live games" in Display Settings: no Upcoming game shows, neither those starting within 30
+   * "Only show live events" in Display Settings: no Upcoming game shows, neither those starting within 30
    * minutes nor those filling a globe with few games on (ADR-0029). Final games still do.
    */
-  onlyLiveGames: boolean
+  onlyLiveEvents: boolean
   /**
    * The color the viewer picked for each sport, by name, as #rrggbb: every game in the sport shows
    * in it (see gameColor). A sport with none takes the theme's colors.
@@ -34,24 +34,26 @@ export interface ViewerSettings {
    * with a team in one of them. A league not listed shows all its games, as does every league on Top Events.
    */
   chosenConferences: Readonly<Record<string, readonly string[]>>
-  /** How many score cards the globe shows at once where it's busy (see CardDensity): Default unless the viewer picked another in Display Settings. */
-  cardDensity: CardDensity
+  /** How many score cards the globe shows at once where it's busy (see CardCount): Default unless the viewer picked another in Display Settings. */
+  cardCount: CardCount
+  /** Whether hot games show their indicator (a glowing orange outline), on their score cards, small pins and clusters: on unless the viewer switched them off in Display Settings. */
+  hotEventIndicator: boolean
 }
 
 /**
  * How many score cards the globe shows at once where it's busy, the rest counted in card clusters (see
- * cardCount): Minimal for the fewest, and the fewest trails, Dense for the most.
+ * mostCards): Fewer for the fewest, and the fewest trails, More for the most.
  */
-export const cardDensities = ['minimal', 'default', 'dense'] as const
+export const cardCounts = ['fewer', 'default', 'more'] as const
 
-export type CardDensity = (typeof cardDensities)[number]
+export type CardCount = (typeof cardCounts)[number]
 
-export function isCardDensity(value: unknown): value is CardDensity {
-  return cardDensities.includes(value as CardDensity)
+export function isCardCount(value: unknown): value is CardCount {
+  return cardCounts.includes(value as CardCount)
 }
 
-/** Each card density's name, as Display Settings lists it. */
-export const cardDensityNames: Record<CardDensity, string> = { minimal: 'Minimal', default: 'Default', dense: 'Dense' }
+/** Each card count's name, as Display Settings lists it. */
+export const cardCountNames: Record<CardCount, string> = { fewer: 'Fewer', default: 'Default', more: 'More' }
 
 /**
  * The globe's map types: the plain map of borders and place names in the theme's colors, or
@@ -65,23 +67,24 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on with all its conferences, Top Events and Only show live games off, no colors picked, the plain map, venue photos on and Default card density. */
+/** Every league on with all its conferences, Top Events and Only show live events off, no colors picked, the plain map, venue photos on, Default card count and the hot games indicator on. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
-  onlyLiveGames: false,
+  onlyLiveEvents: false,
   sportColors: {},
   leagueColors: {},
   mapType: 'plain',
   venuePhotos: true,
   chosenConferences: {},
-  cardDensity: 'default',
+  cardCount: 'default',
+  hotEventIndicator: true,
 }
 
-/** Each map type's name, as Map Type on the rail lists it. */
+/** Each map type's name, as Display Settings lists it. */
 export const mapTypeNames: Record<MapType, string> = { plain: 'Plain', satellite: 'Satellite' }
 
-/** The settings with the globe drawn as this map type, picked in Map Type on the rail. */
+/** The settings with the globe drawn as this map type, picked in Display Settings. */
 export function withMapType(settings: ViewerSettings, mapType: MapType): ViewerSettings {
   return { ...settings, mapType }
 }
@@ -166,7 +169,7 @@ export function hasColors(settings: ViewerSettings): boolean {
 /**
  * Whether the viewer's Leagues choices keep games of these leagues off the globe, so the Leagues button on the
  * rail marks it: Top Events on, a league switched off, or a league that's on narrowed to some conferences. A
- * league no longer in the list doesn't count. Only show live games doesn't either: it's in Display Settings,
+ * league no longer in the list doesn't count. Only show live events doesn't either: it's in Display Settings,
  * not Leagues, where the viewer would look for it.
  */
 export function leaguesFilterGames(settings: ViewerSettings, leagues: readonly League[]): boolean {

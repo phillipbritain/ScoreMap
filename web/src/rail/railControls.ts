@@ -16,12 +16,11 @@ export function canZoom({ latitude, zoom }: Camera, limits: ZoomSettings = zoomS
 }
 
 /**
- * The rail's popovers: Leagues (which leagues show), Display Settings (the colors picked
- * for sports and leagues), Map Type (the plain map or the satellite
- * map), Games (every game shown, to find one and go to it), More (what's rarely needed: sending
+ * The rail's popovers: Leagues (which leagues show), Display Settings (the map type, and the colors picked
+ * for sports and leagues), Games (every game shown, to find one and go to it), More (what's rarely needed: sending
  * feedback, seeing the welcome tour again) and the Feedback panel, which opens from More in its place.
  */
-export type RailPopover = 'leagues' | 'display' | 'mapType' | 'games' | 'more' | 'feedback'
+export type RailPopover = 'leagues' | 'display' | 'games' | 'more' | 'feedback'
 
 /** What opens or closes a popover: its button pressed, Escape, or a click outside the open one. */
 export type PopoverEvent<P extends string = RailPopover> = { press: P } | 'escape' | 'outside'

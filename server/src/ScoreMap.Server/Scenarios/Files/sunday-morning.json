@@ -4,7 +4,7 @@
 // off in an hour (1:00 PM Eastern) and four at 4:25 PM; three NBA games tip off in 8 hours and two NHL
 // games start tomorrow morning. A browser fills the globe to 12 games with the soonest-starting of those
 // within 6 hours on the viewer's day, so the three Live games show with nine of the 1:00 PM games, and
-// none of the NBA or NHL games; "Only show live games" leaves the three. A timeline (no play, whose fill
+// none of the NBA or NHL games; "Only show live events" leaves the three. A timeline (no play, whose fill
 // would crowd the globe) scores the Live games and finishes Liverpool v Manchester City 40 minutes in,
 // so one more game fills in once it goes; at 1:00 PM the ten NFL games kick off, the globe has more than
 // 12 games on, and the fill-in games go. After 6 hours it starts again.

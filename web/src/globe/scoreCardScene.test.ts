@@ -52,7 +52,7 @@ function sceneOnPage() {
   const page = fakePage()
   const settling = globeSettling({ onStage: () => {}, onReady: () => {} })
   const clock = { now: 0 }
-  const scene = scoreCardScene({ page: page.cardsOnPage, settling, cardDensity: 'default', reducedMotion: () => false, now: () => clock.now })
+  const scene = scoreCardScene({ page: page.cardsOnPage, settling, cardCount: 'default', reducedMotion: () => false, now: () => clock.now })
   return { scene, settling, clock, ...page }
 }
 
@@ -134,7 +134,7 @@ describe('scoreCardScene', () => {
       ['a selection', (scene) => scene.select('A')],
       ['a restyle', (scene) => scene.restyled()],
       ['new games', (scene) => scene.showGames([game('A'), game('B')])],
-      ['a change of card density', (scene) => scene.setCardDensity('dense')],
+      ['a change of card count', (scene) => scene.setCardCount('more')],
     ]
 
     it.each(changesFromOutside)('holds the layout as last drawn, frame after frame, until %s', (_change, change) => {

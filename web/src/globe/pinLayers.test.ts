@@ -141,7 +141,7 @@ describe("a cluster's color", () => {
       width: 100,
       height: 60,
       lngLat: [0, 0] as [number, number],
-      flames: false,
+      hotIndicator: false,
     }))
     const gameIds = cards.map(({ gameId }) => gameId)
     const layout: Pick<CardLayout, 'shows' | 'gatherings'> = {

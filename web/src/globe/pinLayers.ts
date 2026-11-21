@@ -1,6 +1,6 @@
 import type { CircleLayerSpecification, ExpressionSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 import type { Theme } from '../theme/theme'
-import { flameImage } from './flames'
+import { hotIndicatorImage } from './hotIndicator'
 import { smallPinReach } from './panelClearance'
 import { byStatus, smallPinWidth } from './statusLook'
 
@@ -44,9 +44,9 @@ function inSet({ source, prefix }: PinSet, id: string) {
 }
 
 /**
- * Fire surrounding a cluster, in fire's colors (see flameImage), centered behind its disc.
+ * The hot indicator surrounding a cluster, in its colors (see hotIndicatorImage), centered behind its disc.
  */
-export function clusterFlameLayout(image: ExpressionSpecification | string): SymbolLayerSpecification['layout'] {
+export function clusterHotIndicatorLayout(image: ExpressionSpecification | string): SymbolLayerSpecification['layout'] {
   return {
     'icon-image': image,
     'icon-anchor': 'center',
@@ -55,9 +55,9 @@ export function clusterFlameLayout(image: ExpressionSpecification | string): Sym
   }
 }
 
-/** Fire wrapping a cluster reaching this far, including its outline. */
-export function clusterFlameImage(theme: Theme, reach: number): string {
-  return flameImage(theme, theme.components.Cluster.flame, reach)
+/** The hot indicator wrapping a cluster, reaching this far, including its outline. */
+export function clusterHotIndicatorImage(theme: Theme, reach: number): string {
+  return hotIndicatorImage(theme, theme.components.Cluster.hotIndicator, reach)
 }
 
 /** A small pin's game's color (see gameColor). */
@@ -68,8 +68,8 @@ const gameColor: ExpressionSpecification = ['get', 'color']
  * for a card (see cardlessPins). The glows are a layer beneath the cores, so a core is never dimmed
  * by a neighbor's glow. Glow, ring and core are in the game's color, but for a core the theme gives
  * a status of its own, apart from the status's color (Live's paler core, say): color stands for the
- * game's league, and status shows by glow and brightness (ADR-0017). A game showing flames has a
- * thin outline in fire's colors (see flameImage) and a soft glow around its core.
+ * game's league, and status shows by glow and brightness (ADR-0017). A game showing the hot indicator has a
+ * thin outline in its colors (see hotIndicatorImage) and a soft glow around its core.
  */
 export function smallPinLayers(
   theme: Theme,
@@ -88,11 +88,11 @@ export function smallPinLayers(
       },
     },
     {
-      ...inSet(set, 'pin-flames'),
+      ...inSet(set, 'pin-hot-indicator'),
       type: 'symbol',
-      filter: ['all', set.only, ['==', ['get', 'flames'], true]],
+      filter: ['all', set.only, ['==', ['get', 'hotIndicator'], true]],
       layout: {
-        'icon-image': byStatus(theme, (look) => flameImage(theme, theme.components.Pin.flame, look.core.radius + look.core.ring)),
+        'icon-image': byStatus(theme, (look) => hotIndicatorImage(theme, theme.components.Pin.hotIndicator, look.core.radius + look.core.ring)),
         'icon-anchor': 'center',
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,

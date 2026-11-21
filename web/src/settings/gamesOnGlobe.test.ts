@@ -87,8 +87,8 @@ describe('gamesOnGlobe', () => {
     ])
   })
 
-  it('shows no Upcoming game at all with Only show live games on, but keeps Final games', () => {
-    const settings = { ...firstVisitSettings, onlyLiveGames: true }
+  it('shows no Upcoming game at all with Only show live events on, but keeps Final games', () => {
+    const settings = { ...firstVisitSettings, onlyLiveEvents: true }
     const games = [game('live', 'Live', -60), game('soon', 'Upcoming', 10), game('kickoff', 'Upcoming', 180), game('finished', 'Final', -200)]
 
     expect(onGlobe(games, settings)).toEqual(['live', 'finished'])

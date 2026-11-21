@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Game, VenuePhoto } from '../games/game'
 
 /**
@@ -50,22 +49,4 @@ export function withVenuePhotos(games: readonly Game[], photos: ReadonlyMap<stri
     const photo = photos.get(game.id)
     return photo ? { ...game, venue: { ...game.venue, photo } } : game
   })
-}
-
-/**
- * The tour's games with their venue photos. Ask once per game when it joins a confirmed selection.
- */
-export function useTourVenuePhotos(games: readonly Game[], showing: boolean): Game[] {
-  const [photos, setPhotos] = useState<ReadonlyMap<string, VenuePhoto>>(new Map())
-  const asked = useRef(new Set<string>())
-  useEffect(() => {
-    if (!showing) return
-    const unasked = games.filter(({ id }) => !asked.current.has(id))
-    if (!unasked.length) return
-    for (const { id } of unasked) asked.current.add(id)
-    void fetchVenuePhotos(unasked).then((found) => {
-      if (found.size) setPhotos((previous) => new Map([...previous, ...found]))
-    })
-  }, [showing, games])
-  return useMemo(() => withVenuePhotos(games, photos), [games, photos])
 }

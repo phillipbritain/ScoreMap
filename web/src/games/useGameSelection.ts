@@ -2,16 +2,23 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { Game } from './game'
 import { focusGameNavigation } from './gameFocus'
 
+interface GameSelection {
+  gameId: string | null
+  onChange: (gameId: string | null) => void
+}
+
 /** Current selection and the keyboard's journey into and back from the event panel. */
-export function useGameSelection(games: readonly Game[]) {
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+export function useGameSelection(games: readonly Game[], selection?: GameSelection) {
+  const [localGameId, setLocalGameId] = useState<string | null>(null)
+  const selectedGameId = selection ? selection.gameId : localGameId
+  const setSelectedGameId = selection?.onChange ?? setLocalGameId
   const panel = useRef<HTMLElement>(null)
   const origin = useRef<HTMLElement | null>(null)
   const focusPanel = useRef(false)
   const focused = useRef<HTMLElement | null>(null)
   const selectedGame = games.find((game) => game.id === selectedGameId) ?? null
   // Forget a hidden/removed selection so it cannot reopen if the game returns.
-  if (!selectedGame && selectedGameId !== null) setSelectedGameId(null)
+  if (localGameId !== null && (selection || !selectedGame)) setLocalGameId(null)
 
   useEffect(() => {
     const remember = (event: FocusEvent) => {
@@ -50,12 +57,12 @@ export function useGameSelection(games: readonly Game[]) {
       panel.current?.querySelector<HTMLElement>('.event-panel__close')?.focus({ preventScroll: true })
       focusPanel.current = false
     }
-  }, [selectedGameId])
+  }, [selectedGameId, setSelectedGameId])
 
   const closeGame = useCallback(() => {
     setSelectedGameId(null)
     returnFocus()
-  }, [returnFocus])
+  }, [returnFocus, setSelectedGameId])
 
   return { selectedGame, panel, selectGame, closeGame }
 }

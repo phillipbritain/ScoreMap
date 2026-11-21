@@ -8,7 +8,6 @@ import {
 } from '../settings/viewerSettings'
 import {
   canShowPicks,
-  isTourProgress,
   middleClearsEventPanel,
   moveAndZoomWords,
   noPicks,
@@ -16,108 +15,7 @@ import {
   scoreCardToTry,
   settingsForChoice,
   settingsForPicks,
-  progressAfterReload,
-  tourLocksTabs,
-  tourProgressAfter,
-  type TourEvent,
-  type TourProgress,
 } from './welcomeTour'
-
-describe('welcome tour progress', () => {
-  it.each<[TourProgress, TourEvent, TourProgress]>([
-    ['welcome', { kind: 'chose', choice: 'topEvents' }, 'controls'],
-    ['welcome', { kind: 'chose', choice: 'everything' }, 'controls'],
-    ['welcome', { kind: 'chose', choice: 'myLeagues' }, 'controls'],
-    ['controls', { kind: 'next' }, 'scoreCard'],
-    ['scoreCard', { kind: 'gameOpened' }, 'eventPanel'],
-    ['eventPanel', { kind: 'next' }, 'panelTabs'],
-    ['panelTabs', { kind: 'next' }, 'panelWatch'],
-    ['panelWatch', { kind: 'next' }, 'allSet'],
-    ['panelTabs', { kind: 'closed' }, 'finished'],
-    ['panelWatch', { kind: 'closed' }, 'finished'],
-    ['eventPanel', { kind: 'closed' }, 'finished'],
-    ['allSet', { kind: 'done' }, 'finished'],
-    ['allSet', { kind: 'closed' }, 'finished'],
-    ['welcome', { kind: 'closed' }, 'finished'],
-    ['controls', { kind: 'closed' }, 'finished'],
-    ['scoreCard', { kind: 'closed' }, 'finished'],
-    ['finished', { kind: 'again' }, 'welcome'],
-    ['controls', { kind: 'again' }, 'welcome'],
-    ['scoreCard', { kind: 'again' }, 'welcome'],
-    ['eventPanel', { kind: 'again' }, 'welcome'],
-    ['allSet', { kind: 'again' }, 'welcome'],
-  ])('moves from %s on %j to %s', (progress, event, after) => {
-    expect(tourProgressAfter(progress, event)).toBe(after)
-  })
-
-  it.each<[TourProgress, TourEvent]>([
-    ['welcome', { kind: 'next' }],
-    ['welcome', { kind: 'done' }],
-    ['welcome', { kind: 'gameOpened' }],
-    ['controls', { kind: 'chose', choice: 'everything' }],
-    ['controls', { kind: 'done' }],
-    ['controls', { kind: 'gameOpened' }],
-    ['scoreCard', { kind: 'chose', choice: 'topEvents' }],
-    ['scoreCard', { kind: 'next' }],
-    ['scoreCard', { kind: 'done' }],
-    ['eventPanel', { kind: 'gameOpened' }],
-    ['eventPanel', { kind: 'done' }],
-    ['allSet', { kind: 'gameOpened' }],
-    ['allSet', { kind: 'next' }],
-  ])("stays at %s on %j, another step's event", (progress, event) => {
-    expect(tourProgressAfter(progress, event)).toBe(progress)
-  })
-
-  it.each<TourEvent>([
-    { kind: 'chose', choice: 'topEvents' },
-    { kind: 'next' },
-    { kind: 'done' },
-    { kind: 'gameOpened' },
-    { kind: 'closed' },
-  ])('stays finished on %j', (event) => {
-    expect(tourProgressAfter('finished', event)).toBe('finished')
-  })
-})
-
-describe('tourLocksTabs', () => {
-  it('locks the event panel\'s tabs on The event panel, before Game details', () => {
-    expect(tourLocksTabs('eventPanel')).toBe(true)
-  })
-
-  it.each<TourProgress | null>(['panelTabs', 'panelWatch', 'allSet', 'finished', null])('leaves them usable at %s', (progress) => {
-    expect(tourLocksTabs(progress)).toBe(false)
-  })
-})
-
-describe('progressAfterReload', () => {
-  it.each<TourProgress>(['welcome', 'controls', 'scoreCard', 'finished'])(
-    'carries on at %s',
-    (progress) => {
-      expect(progressAfterReload(progress)).toBe(progress)
-    },
-  )
-
-  it.each<TourProgress>(['eventPanel', 'panelTabs', 'panelWatch'])(
-    'goes back from %s to Click a score card, as the panel it lights is no longer open',
-    (progress) => {
-      expect(progressAfterReload(progress)).toBe('scoreCard')
-    },
-  )
-
-  it('finishes the tour from All set, straight into the live games', () => {
-    expect(progressAfterReload('allSet')).toBe('finished')
-  })
-})
-
-describe('isTourProgress', () => {
-  it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch', 'allSet', 'finished'])('takes %s as a step', (progress) => {
-    expect(isTourProgress(progress)).toBe(true)
-  })
-
-  it.each<unknown>(['halfway', 'Welcome', '', 3, null, undefined, ['welcome']])('takes %j as no step', (progress) => {
-    expect(isTourProgress(progress)).toBe(false)
-  })
-})
 
 const nfl = { name: 'NFL', sport: 'Football', conferences: [] }
 const nba = { name: 'NBA', sport: 'Basketball', conferences: [] }

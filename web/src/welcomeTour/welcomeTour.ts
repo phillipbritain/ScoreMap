@@ -21,24 +21,22 @@ export type TourEvent =
   /** All set → finished, by its Done button. */
   | { kind: 'done' }
   /** Click a score card → The event panel, by pressing the lit card, which opens its game's panel. */
-  | { kind: 'gameOpened' }
+  | { kind: 'gameOpened'; gameId: string }
   /** Game details → Where to watch, by opening a tab in the event panel. */
   | { kind: 'detailsTabOpened' }
   /** Any step → finished, by the panel's ×, Welcome's Skip tour or Escape. */
   | { kind: 'closed' }
-  /** Any step, or finished → Welcome, by "Welcome tour" in More on the rail, which stays usable during the tour. */
-  | { kind: 'again' }
 
 /** Each step, with the events that move it on and where they lead. */
 const moves: Record<TourProgress, Partial<Record<TourEvent['kind'], TourProgress>>> = {
-  welcome: { chose: 'controls', closed: 'finished', again: 'welcome' },
-  controls: { next: 'scoreCard', closed: 'finished', again: 'welcome' },
-  scoreCard: { gameOpened: 'eventPanel', closed: 'finished', again: 'welcome' },
-  eventPanel: { next: 'panelTabs', closed: 'finished', again: 'welcome' },
-  panelTabs: { next: 'panelWatch', detailsTabOpened: 'panelWatch', closed: 'finished', again: 'welcome' },
-  panelWatch: { next: 'allSet', closed: 'finished', again: 'welcome' },
-  allSet: { done: 'finished', closed: 'finished', again: 'welcome' },
-  finished: { again: 'welcome' },
+  welcome: { chose: 'controls', closed: 'finished' },
+  controls: { next: 'scoreCard', closed: 'finished' },
+  scoreCard: { gameOpened: 'eventPanel', closed: 'finished' },
+  eventPanel: { next: 'panelTabs', closed: 'finished' },
+  panelTabs: { next: 'panelWatch', detailsTabOpened: 'panelWatch', closed: 'finished' },
+  panelWatch: { next: 'allSet', closed: 'finished' },
+  allSet: { done: 'finished', closed: 'finished' },
+  finished: {},
 }
 
 /** Whether something (saved progress, read back) is one of the tour's steps. */
@@ -52,14 +50,6 @@ export const eventPanelSteps = ['eventPanel', 'panelTabs', 'panelWatch'] as cons
 /** Whether a step sits over the event panel Click a score card opened: the event panel's steps and All set. */
 export function overEventPanel(progress: TourProgress): boolean {
   return progress === 'allSet' || (eventPanelSteps as readonly TourProgress[]).includes(progress)
-}
-
-/**
- * Whether the event panel's tabs can't be used yet: on The event panel, before Game details, which is
- * about them, so the viewer meets them there.
- */
-export function tourLocksTabs(progress: TourProgress | null): boolean {
-  return progress === 'eventPanel'
 }
 
 /**

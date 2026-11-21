@@ -40,7 +40,7 @@ interface EventPanelProps {
   onDetailsTabOpened?: () => void
   /** Whether the game is a demo's, whose details come from the demo board. */
   demo?: boolean
-  /** Whether its tabs can't be used yet: the welcome tour, until its Game details step (see tourLocksTabs). */
+  /** Whether its tabs can't be used yet: the welcome tour, until its Game details step. */
   tabsLocked?: boolean
   onClose: () => void
   /**

@@ -13,12 +13,12 @@ afterEach(() => {
   area = null
 })
 
-/** A game panel opening on a globe area the size of a desktop's, as the app's does: sliding in from below. */
+/** A event panel opening on a globe area the size of a desktop's, as the app's does: sliding in from below. */
 function openPanel(): HTMLElement {
   area = document.createElement('div')
   area.style.cssText = 'position: relative; width: 1280px; height: 800px; overflow: hidden'
   const panel = document.createElement('div')
-  panel.className = 'game-panel'
+  panel.className = 'event-panel'
   panel.style.height = '200px'
   area.append(panel)
   document.body.append(area)

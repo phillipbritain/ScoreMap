@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { installPrompts, installWay, isIos, type InstallWay } from './install'
+import { installPrompts, offersInstall } from './install'
 
 // Listening from when the app's code loads, as the browser may offer before the app first renders.
 const prompts = installPrompts(window)
@@ -9,9 +9,8 @@ function runningInstalled(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true
 }
 
-/** How ScoreMap can be installed here (see installWay), and Install app's action for the browser's way. */
-export function useInstall(): { way: InstallWay | null; prompt: () => void } {
+/** More's Install app: the browser's own install dialog, where the browser has offered one (see offersInstall); else none. */
+export function useInstall(): (() => void) | undefined {
   const canPrompt = useSyncExternalStore(prompts.subscribe, prompts.canPrompt)
-  const way = installWay({ installed: runningInstalled(), ios: isIos(navigator.userAgent, navigator.maxTouchPoints), canPrompt })
-  return { way, prompt: prompts.prompt }
+  return offersInstall({ installed: runningInstalled(), canPrompt }) ? prompts.prompt : undefined
 }

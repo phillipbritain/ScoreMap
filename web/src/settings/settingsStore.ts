@@ -1,6 +1,6 @@
 import type { Camera } from '../globe/camera'
 import { isHexColor } from '../theme/palette'
-import { isTourProgress, type TourProgress } from '../welcomeTour/welcomeTour'
+import { isTourProgress, progressAfterReload, type TourProgress } from '../welcomeTour/welcomeTour'
 import { firstVisitSettings, isMapType, type ViewerSettings } from './viewerSettings'
 
 /** The part of the browser's localStorage the store uses. */
@@ -21,7 +21,7 @@ export interface SettingsStore {
   /** Whether the viewer collapsed the rail out of the way: open on a first visit. */
   loadRailCollapsed(): boolean
   saveRailCollapsed(collapsed: boolean): void
-  /** Whether the game panel's details were left open, so the next panel opens them too: minimized on a first visit. */
+  /** Whether the event panel's details were left open, so the next panel opens them too: minimized on a first visit. */
   loadDetailsOpen(): boolean
   saveDetailsOpen(open: boolean): void
 }
@@ -117,7 +117,7 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
       try {
         storage().setItem(detailsOpenKey, String(open))
       } catch {
-        // Game panels will just open with their details minimized next time.
+        // Event panels will just open with their details minimized next time.
       }
     },
   }
@@ -125,7 +125,8 @@ export function settingsStore(storage: () => SettingsStorage): SettingsStore {
 
 /**
  * A store for a demo (ADR-0019), which opens on first-visit settings and the viewer's region, as every
- * demo does, and saves nothing, so the viewer's own saved settings are as they were after it.
+ * demo does, with the welcome tour finished (straight into the demo's games; More's Welcome tour still
+ * shows it), and saves nothing, so the viewer's own saved settings are as they were after it.
  */
 export function unsavedSettingsStore(): SettingsStore {
   return {
@@ -133,7 +134,7 @@ export function unsavedSettingsStore(): SettingsStore {
     save() {},
     loadCamera: () => null,
     saveCamera() {},
-    loadTourProgress: () => 'welcome',
+    loadTourProgress: () => 'finished',
     saveTourProgress() {},
     loadRailCollapsed: () => false,
     saveRailCollapsed() {},
@@ -149,7 +150,7 @@ export function unsavedSettingsStore(): SettingsStore {
 function tourProgressFromSaved(saved: string): TourProgress {
   try {
     const progress: unknown = JSON.parse(saved)
-    return isTourProgress(progress) ? progress : 'finished'
+    return isTourProgress(progress) ? progressAfterReload(progress) : 'finished'
   } catch {
     return 'finished'
   }

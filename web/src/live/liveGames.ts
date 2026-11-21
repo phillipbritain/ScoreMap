@@ -36,7 +36,7 @@ export interface LiveGamesState {
   games: Game[] | null
   /**
    * What just happened in the games since the last snapshot: the changes the server judged notable, for
-   * the globe to animate, and the side that last scored in each, for its score card and game panel to
+   * the globe to animate, and the side that last scored in each, for its score card and event panel to
    * light up. A snapshot brings none, so the globe shows it without pulses.
    */
   justHappened: JustHappened

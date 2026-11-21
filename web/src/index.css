@@ -2,7 +2,7 @@
    from the theme, which is written to the page's root as custom properties, one per setting, named as
    MUI's CSS theme variables are (see theme/theme.ts' customProperties): --palette-text-primary,
    --typography-body2-font-size, --spacing, --shape-border-width-thin, --palette-live-main, and a
-   component's own as --score-card-corner, --game-panel-shadow, --score-card-size-logo and so on.
+   component's own as --score-card-corner, --event-panel-shadow, --score-card-size-logo and so on.
    Text takes its weight and size from the theme's type styles, every space is a number of its spacing
    unit (calc(3 * var(--spacing))), and corners are a component's own. Motion (durations, easings and
    the animations' own shapes), the starfield's pattern, and layout (percentages, line counts in lh, a
@@ -22,7 +22,7 @@ body {
   font-size: var(--typography-body1-font-size);
 }
 
-/* Every scrollbar (the welcome tour's panel, the game panel, the Games list, the rail's popovers):
+/* Every scrollbar (the welcome tour's panel, the event panel, the Games list, the rail's popovers):
    slim, a soft thumb in the theme's text color on no track, so it sits in the dark surfaces rather
    than standing out as the browser's light one. */
 * {
@@ -66,7 +66,7 @@ body {
   }
 }
 
-/* The globe fills the screen; an open game panel lies over the bottom of it. */
+/* The globe fills the screen; an open event panel lies over the bottom of it. */
 .app {
   display: flex;
   height: 100%;
@@ -105,8 +105,8 @@ body {
 
 /* Glass: a score card is a pane of glass the globe shows through (ADR-0018). Its frost, 0 to 1, says
    how far: at 0 clear glass, its edges catching the light; at 1 opaque. The glass is tinted with the
-   card's own surface color (--glass-tint), as solid as the frost. The game panel's score block is glass
-   too on a desktop (see .game-panel__score). Every other surface over the globe (the rest of the game
+   card's own surface color (--glass-tint), as solid as the frost. The event panel's score block is glass
+   too on a desktop (see .event-panel__score). Every other surface over the globe (the rest of the game
    panel, the rail and its popovers, the no-pins message, the demo label, the Feedback button and panel,
    welcome tour panels and tooltips) is solid, its surface color with nothing behind it blurred
    (ADR-0023). */
@@ -127,37 +127,37 @@ body {
   box-shadow: var(--glass-rim);
 }
 
-/* The game panel: the score and venue header, a sport-specific band when available, and the
+/* The event panel: the score and venue header, a sport-specific band when available, and the
    collapsible game details at the foot. Only the content below the header scrolls. */
-.game-panel {
+.event-panel {
   /* How far it sits above the screen's foot: none on a phone (see below). */
-  --game-panel-bottom: calc(3 * var(--spacing));
+  --event-panel-bottom: calc(3 * var(--spacing));
   position: absolute;
   left: 50%;
-  bottom: var(--game-panel-bottom);
+  bottom: var(--event-panel-bottom);
   z-index: 1;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   /* Never so tall that it reaches the rail above its right end (--rail-bottom, see useRailClearance):
-     its band gives way and scrolls instead (see .game-panel__band). On a screen too short for both, it keeps
+     its band gives way and scrolls instead (see .event-panel__band). On a screen too short for both, it keeps
      a quarter of the screen; a short screen on its side has it beside the rail instead (see "A short
      screen" at the end). */
-  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--game-panel-bottom)));
-  width: min(var(--game-panel-size-width), calc(100% - 6 * var(--spacing)));
-  border-radius: var(--game-panel-corner);
+  max-height: max(25%, calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing) - var(--event-panel-bottom)));
+  width: min(var(--event-panel-size-width), calc(100% - 6 * var(--spacing)));
+  border-radius: var(--event-panel-corner);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   transform: translateX(-50%);
   box-shadow:
-    var(--game-panel-shadow),
-    0 var(--game-panel-glow-y) var(--game-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--game-panel-glow-opacity) * 100%), transparent);
+    var(--event-panel-shadow),
+    0 var(--event-panel-glow-y) var(--event-panel-glow-blur) color-mix(in srgb, var(--game-color) calc(var(--event-panel-glow-opacity) * 100%), transparent);
 }
 
 /* Everything in the panel, clipped to its corners, the close button in its top right corner. Its own
    surfaces (the score block's glass, the details and the band) paint the panel: on a desktop it has none
    of its own. */
-.game-panel__body {
+.event-panel__body {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -171,7 +171,7 @@ body {
    round its corners, and the score block's glass, lit at its top and left, would draw a second line
    beside it. Where the panel meets the screen's edges, on a phone, the line keeps to the edges facing the
    globe (see the phone's and "A short screen"'s rules). */
-.game-panel__body::after {
+.event-panel__body::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -185,9 +185,9 @@ body {
 /* The bottom left corner cut off, like a broadcast graphic, where the theme cuts it: beveled rather than
    clipped, as a clip path would stop the score block's glass seeing the globe behind the panel. */
 @media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
-  @container style(--game-panel-cut-corner-on: 1) {
-    .game-panel__body {
-      border-bottom-left-radius: var(--game-panel-cut-corner-size);
+  @container style(--event-panel-cut-corner-on: 1) {
+    .event-panel__body {
+      border-bottom-left-radius: var(--event-panel-cut-corner-size);
       corner-bottom-left-shape: bevel;
     }
   }
@@ -196,29 +196,29 @@ body {
 /* The strip: the score block, then the details over the photo. It keeps its height, but for a field's,
    whose leaderboard gives way, scrolling, down to the strip's least height, when the tabs need the room
    (see .game-details). */
-.game-panel__main {
+.event-panel__main {
   display: flex;
   flex-shrink: 0;
-  min-height: var(--game-panel-size-height);
+  min-height: var(--event-panel-size-height);
 }
 
-.game-panel__main:has(.game-panel__field-lines) {
+.event-panel__main:has(.event-panel__field-lines) {
   flex-shrink: 1;
 }
 
 /* The score block at the left, slanted on its right edge. Names are cut short within their share of
-   each row, keeping logos, records and scores aligned, down to their narrowest (see .game-panel__team-name);
+   each row, keeping logos, records and scores aligned, down to their narrowest (see .event-panel__team-name);
    narrower than that, the block scrolls sideways, so the scores stay whole. Reserve room for the details
    beside it. */
-.game-panel__score {
-  /* The space between its lines, and a field's lines (see .game-panel__field-lines). */
-  --game-panel-score-gap: calc(2 * var(--spacing));
+.event-panel__score {
+  /* The space between its lines, and a field's lines (see .event-panel__field-lines). */
+  --event-panel-score-gap: calc(2 * var(--spacing));
   display: grid;
   grid-template-columns: minmax(min-content, 1fr);
   align-content: center;
-  gap: var(--game-panel-score-gap);
+  gap: var(--event-panel-score-gap);
   box-sizing: border-box;
-  width: min(var(--game-panel-size-score-block), 42%);
+  width: min(var(--event-panel-size-score-block), 42%);
   flex-shrink: 0;
   position: relative;
   z-index: 1;
@@ -226,38 +226,38 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
-  clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--event-panel-size-slant)) 100%, 0 100%);
 }
 
 /* On a desktop, and on a short screen on its side, which takes the desktop's strip (see "A short screen"
    at the end), the score block is glass (ADR-0023's exception): the globe shows through it, blurred, under
    its colors as solid as the panel's frost, its outer edges lit by the panel's edge line. */
 @media (min-width: 961px), (orientation: landscape) and (max-height: 500px) {
-  .game-panel__score {
+  .event-panel__score {
     background: linear-gradient(
       180deg,
-      color-mix(in srgb, var(--game-panel-score-block-top) calc(var(--game-panel-frost) * 100%), transparent),
-      color-mix(in srgb, var(--game-panel-score-block-bottom) calc(var(--game-panel-frost) * 100%), transparent)
+      color-mix(in srgb, var(--event-panel-score-block-top) calc(var(--event-panel-frost) * 100%), transparent),
+      color-mix(in srgb, var(--event-panel-score-block-bottom) calc(var(--event-panel-frost) * 100%), transparent)
     );
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
     backdrop-filter: blur(16px) saturate(1.4);
   }
 
   /* Its scores on panes of the same glass, and its records lifted off it. */
-  .game-panel__score .game-panel__team-score {
+  .event-panel__score .event-panel__team-score {
     background: color-mix(in srgb, var(--palette-text-primary) 12%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 25%, transparent);
   }
 
-  .game-panel__score .game-panel__record {
+  .event-panel__score .event-panel__record {
     color: color-mix(in srgb, var(--palette-text-primary) 80%, transparent);
     text-shadow: 0 1px 2px var(--palette-background-default);
   }
 }
 
 /* Secondary text, tracked out like the country names on the globe. */
-.game-panel__league,
-.game-panel__label {
+.event-panel__league,
+.event-panel__label {
   color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-overline-font-size);
@@ -267,7 +267,7 @@ body {
 }
 
 /* One line, cut short with an ellipsis and in full on hover or a tap, so a long league name doesn't make the panel taller. */
-.game-panel__league {
+.event-panel__league {
   margin-bottom: var(--spacing);
   padding-right: calc(5 * var(--spacing));
   overflow: hidden;
@@ -275,12 +275,12 @@ body {
   text-overflow: ellipsis;
 }
 
-.game-panel__label {
+.event-panel__label {
   margin-bottom: calc(0.5 * var(--spacing));
   font-size: var(--typography-footnote-font-size);
 }
 
-.game-panel__team {
+.event-panel__team {
   display: flex;
   align-items: center;
   gap: calc(2 * var(--spacing));
@@ -292,41 +292,41 @@ body {
 /* A logo sits on its plate, so a logo near the panel's color can still be seen. A team with no logo,
    or one that won't load, shows its initial on the plate instead; for a flag, the space is left
    empty, plate and all. */
-.game-panel__team img,
-.game-panel__logo {
+.event-panel__team img,
+.event-panel__logo {
   box-sizing: content-box;
-  width: var(--game-panel-size-logo);
-  height: var(--game-panel-size-logo);
-  padding: var(--game-panel-logo-plate-padding);
-  border-radius: var(--game-panel-logo-plate-corner);
+  width: var(--event-panel-size-logo);
+  height: var(--event-panel-size-logo);
+  padding: var(--event-panel-logo-plate-padding);
+  border-radius: var(--event-panel-logo-plate-corner);
   object-fit: contain;
   flex-shrink: 0;
 }
 
-.game-panel__team img,
-.game-panel__logo--mark {
-  background: var(--game-panel-logo-plate-fill);
+.event-panel__team img,
+.event-panel__logo--mark {
+  background: var(--event-panel-logo-plate-fill);
 }
 
-.game-panel__logo--mark {
+.event-panel__logo--mark {
   display: grid;
   place-items: center;
-  color: var(--game-panel-score-block-top);
+  color: var(--event-panel-score-block-top);
   font-family: var(--typography-font-family);
-  font-size: calc(0.7 * var(--game-panel-size-logo));
+  font-size: calc(0.7 * var(--event-panel-size-logo));
   font-weight: 700;
   line-height: 1;
 }
 
 /* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel
    taller. It takes the row's room left by the logo, record and score, which never give way, and is cut
-   short no narrower than its --game-panel-name-min: past that the score block scrolls sideways. Its width
+   short no narrower than its --event-panel-name-min: past that the score block scrolls sideways. Its width
    of 0 keeps its whole text out of the row's narrowest, so the narrowest is its minimum. */
-.game-panel__team-name {
-  --game-panel-name-min: 7em;
+.event-panel__team-name {
+  --event-panel-name-min: 7em;
   flex: 1 1 0;
   width: 0;
-  min-width: var(--game-panel-name-min);
+  min-width: var(--event-panel-name-min);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -334,14 +334,14 @@ body {
 }
 
 /* A team's poll ranking before its name, and its record after it, quieter than the name. */
-.game-panel__rank,
-.game-panel__record {
+.event-panel__rank,
+.event-panel__record {
   color: var(--palette-text-secondary);
   font-size: var(--typography-caption-font-size);
   font-weight: var(--typography-caption-font-weight);
 }
 
-.game-panel__record {
+.event-panel__record {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
@@ -349,15 +349,15 @@ body {
 /* Wide enough for three digits, so a score of 100 doesn't move anything, and wider for a longer score
    (cricket's "170/6"), as wide as the widest of its rows' scores, which lie unseen in each chip (see
    ScoreChip), so every row's chip is the same width. */
-.game-panel__team-score {
+.event-panel__team-score {
   display: inline-grid;
   justify-items: center;
   box-sizing: border-box;
-  min-width: var(--game-panel-size-score-width);
+  min-width: var(--event-panel-size-score-width);
   padding-inline: 0.3em;
   flex-shrink: 0;
-  background: var(--game-panel-score-fill);
-  color: var(--game-panel-score-text);
+  background: var(--event-panel-score-fill);
+  color: var(--event-panel-score-text);
   font-family: var(--typography-font-family);
   font-size: var(--typography-h6-font-size);
   font-weight: var(--typography-h6-font-weight);
@@ -367,23 +367,23 @@ body {
 }
 
 /* The score and the unseen scores under it, in the same place. */
-.game-panel__team-score > * {
+.event-panel__team-score > * {
   grid-area: 1 / 1;
 }
 
-.game-panel__team-score-sizer {
+.event-panel__team-score-sizer {
   visibility: hidden;
 }
 
-.game-panel__progress {
+.event-panel__progress {
   justify-self: start;
   max-width: calc(100% - 2 * var(--spacing));
   margin-top: var(--spacing);
 }
 
 /* The progress line, and in the band each of a tennis match's sets, in the game's color. */
-.game-panel__progress,
-.game-panel__set {
+.event-panel__progress,
+.event-panel__set {
   padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
   overflow: hidden;
   background: var(--game-color);
@@ -397,11 +397,11 @@ body {
   transform: skewX(-14deg);
 }
 
-/* The venue at the top and its watch links at the foot, over the venue's photo (see .game-panel__photo),
+/* The venue at the top and its watch links at the foot, over the venue's photo (see .event-panel__photo),
    or the faint glow that holds its place when there's none, on the panel's surface. It reaches back under
    the score block's slant, cut on that diagonal, and lies over the score block there, so the photo fills
    the wedge and the glass, whose blur may be drawn past its edge, can't frost it. */
-.game-panel__details {
+.event-panel__details {
   position: relative;
   z-index: 2;
   isolation: isolate;
@@ -411,19 +411,19 @@ body {
   grid-template-rows: auto 1fr;
   gap: calc(2 * var(--spacing));
   min-width: 0;
-  margin-left: calc(-1 * var(--game-panel-size-slant));
-  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing) + var(--game-panel-size-slant));
+  margin-left: calc(-1 * var(--event-panel-size-slant));
+  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing) + var(--event-panel-size-slant));
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 85% 40%, var(--game-panel-photo-glow), transparent 60%),
-    linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
-  clip-path: polygon(var(--game-panel-size-slant) 0, 100% 0, 100% 100%, 0 100%);
+    radial-gradient(ellipse at 85% 40%, var(--event-panel-photo-glow), transparent 60%),
+    linear-gradient(180deg, var(--event-panel-surface-top), var(--event-panel-surface-bottom));
+  clip-path: polygon(var(--event-panel-size-slant) 0, 100% 0, 100% 100%, 0 100%);
   text-shadow: 0 1px 3px var(--palette-background-default);
 }
 
 /* The venue's photo, filling the details behind them up to the score block's slant, dimmed by the theme's
    opacity so the text over it stays readable. */
-.game-panel__photo {
+.event-panel__photo {
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -431,29 +431,29 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: var(--game-panel-photo-opacity);
+  opacity: var(--event-panel-photo-opacity);
 }
 
 /* The venue at the details' top right keeps clear of the close button in the panel's corner. */
-.game-panel__venue {
-  padding-right: calc(var(--game-panel-size-close-width) - 2 * var(--spacing));
+.event-panel__venue {
+  padding-right: calc(var(--event-panel-size-close-width) - 2 * var(--spacing));
 }
 
 /* One line for a venue's name, cut short with an ellipsis and in full on hover or a tap. */
-.game-panel__value {
+.event-panel__value {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   line-height: 1.3;
 }
 
-.game-panel__muted {
+.event-panel__muted {
   color: var(--palette-text-secondary);
   font-size: var(--typography-caption-font-size);
 }
 
 /* One line under a venue's name, held empty when there's no place to name. */
-.game-panel__place {
+.event-panel__place {
   min-height: 1lh;
   overflow: hidden;
   white-space: nowrap;
@@ -461,7 +461,7 @@ body {
 }
 
 /* The TV button sits at the foot of the venue details. */
-.game-panel__watch {
+.event-panel__watch {
   align-self: end;
   justify-self: end;
   display: flex;
@@ -471,53 +471,53 @@ body {
 }
 
 /* The venue and its city link to Google Maps, kept in their own colors. */
-.game-panel__maps-link {
+.event-panel__maps-link {
   color: inherit;
   text-decoration: none;
 }
 
-.game-panel__maps-link:hover {
+.event-panel__maps-link:hover {
   text-decoration: underline;
 }
 
 /* The Watch and game info dialog uses the existing stream and ESPN logos. */
-.game-panel__logo-link {
+.event-panel__logo-link {
   flex-shrink: 0;
   line-height: 0;
 }
 
-.game-panel__logo-link img {
+.event-panel__logo-link img {
   display: block;
   height: calc(4 * var(--spacing));
   filter: drop-shadow(0 1px 2px var(--palette-background-default));
 }
 
-.game-panel__logo-link:hover img {
+.event-panel__logo-link:hover img {
   filter: drop-shadow(0 1px 2px var(--palette-background-default)) brightness(1.15);
 }
 
 /* StreamEast's logo, a red badge, with the theme's corners. */
-.game-panel__logo-link img.game-panel__stream-logo {
+.event-panel__logo-link img.event-panel__stream-logo {
   border-radius: var(--shape-border-radius);
 }
 
-.game-panel__unofficial {
-  color: var(--game-panel-unofficial);
+.event-panel__unofficial {
+  color: var(--event-panel-unofficial);
   font-size: var(--typography-caption-font-size);
 }
 
 /* The close button: a bare ×, no fill, flush in the panel's top right corner under its top edge, over
    the details and the photo, quiet until hovered; a shadow keeps it readable over the photo. The text it
-   would cover keeps clear of it (see .game-panel__venue, and on a phone .game-panel__league). A welcome
+   would cover keeps clear of it (see .event-panel__venue, and on a phone .event-panel__league). A welcome
    tour panel's × is the same, in its own top right corner. */
-.game-panel__close,
+.event-panel__close,
 .welcome-tour__close {
   position: absolute;
   top: 0;
   right: 0;
   z-index: 3;
-  width: var(--game-panel-size-close-width);
-  height: var(--game-panel-size-close-height);
+  width: var(--event-panel-size-close-width);
+  height: var(--event-panel-size-close-height);
   padding: 0;
   border: none;
   background: none;
@@ -530,14 +530,14 @@ body {
   cursor: pointer;
 }
 
-.game-panel__close:hover,
+.event-panel__close:hover,
 .welcome-tour__close:hover {
   color: var(--palette-text-primary);
 }
 
 /* A field's leaderboard, a fight card or tennis sets below the strip, on the panel's own surface (no
    photo), as tall as they are. Wide cells give scorelines and leaderboards more room. */
-.game-panel__band {
+.event-panel__band {
   display: flex;
   gap: calc(4 * var(--spacing));
   box-sizing: border-box;
@@ -548,22 +548,22 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   border-top: var(--shape-border-width-thin) solid var(--palette-divider);
-  background: var(--game-panel-surface-bottom);
+  background: var(--event-panel-surface-bottom);
   line-height: 1.3;
 }
 
-.game-panel__cell {
+.event-panel__cell {
   flex: 1 1 0;
   min-width: 0;
 }
 
-.game-panel__cell--wide {
+.event-panel__cell--wide {
   flex-grow: 2;
 }
 
 /* A tennis match's sets side by side, wrapping onto a second line when they run out of room, then how
    it ended early and who advanced. */
-.game-panel__sets {
+.event-panel__sets {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -571,26 +571,26 @@ body {
   min-width: 0;
 }
 
-.game-panel__set {
+.event-panel__set {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 
 /* A field's score block: its leaderboard's row gives way, scrolling, when the strip does. */
-.game-panel__score:has(> .game-panel__field-lines) {
+.event-panel__score:has(> .event-panel__field-lines) {
   grid-template-rows: auto minmax(0, auto);
   min-height: 0;
 }
 
 /* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
-   the last; sideways, the score block scrolls it with the rest (see .game-panel__score). On a phone it's
+   the last; sideways, the score block scrolls it with the rest (see .event-panel__score). On a phone it's
    as tall as two lines, as a team game's score block is, and holds there (see the narrow screens' rules). */
-.game-panel__field-lines {
+.event-panel__field-lines {
   --lines: 5;
-  --line-height: calc(var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding));
+  --line-height: calc(var(--event-panel-size-logo) + 2 * var(--event-panel-logo-plate-padding));
   display: grid;
-  gap: var(--game-panel-score-gap);
-  max-height: calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--game-panel-score-gap));
+  gap: var(--event-panel-score-gap);
+  max-height: calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--event-panel-score-gap));
   margin: 0;
   /* Room between the scores and the scroll bar. */
   padding: 0 var(--spacing) 0 0;
@@ -602,7 +602,7 @@ body {
 
 /* A fight card's bouts: side by side in order, wrapping onto the band's next line, every bout listed,
    the band growing and scrolling. */
-.game-panel__bouts {
+.event-panel__bouts {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -612,23 +612,23 @@ body {
   list-style: none;
 }
 
-.game-panel__bout {
+.event-panel__bout {
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.game-panel__band.game-panel__band--expanded {
+.event-panel__band.event-panel__band--expanded {
   height: auto;
   max-height: calc(4 * var(--spacing) + 8lh);
   overflow-y: auto;
 }
 
-.game-panel__strong {
+.event-panel__strong {
   font-weight: var(--typography-button-font-weight);
 }
 
 /* One line, cut short with an ellipsis, such as a tennis match's advancing player. */
-.game-panel__one-line {
+.event-panel__one-line {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -639,88 +639,88 @@ body {
    side, such as a phone in landscape, which has the width for the desktop's strip but not the height for
    this (see "A short screen" at the end). */
 @media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
-  .game-panel__main {
+  .event-panel__main {
     flex-direction: column;
     min-height: 0;
   }
 
-  .game-panel__band {
+  .event-panel__band {
     flex-wrap: wrap;
     gap: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
-  .game-panel__cell {
+  .event-panel__cell {
     flex-basis: calc(50% - 2 * var(--spacing));
   }
 
-  .game-panel__score {
+  .event-panel__score {
     width: auto;
-    --game-panel-score-gap: var(--spacing);
+    --event-panel-score-gap: var(--spacing);
     padding: calc(2 * var(--spacing));
     clip-path: none;
   }
 
   /* A field's leaderboard two lines tall, as a team game's two rows are, so its panel leaves the tabs
      as much room as a team game's does. It holds its height, as a team game's rows do. */
-  .game-panel__field-lines {
+  .event-panel__field-lines {
     --lines: 2;
   }
 
   /* The block is the panel's whole width here, so it doesn't scroll sideways: names are cut short as far
      as they need, and the block holds its height. */
-  .game-panel__score,
-  .game-panel__score:has(> .game-panel__field-lines) {
+  .event-panel__score,
+  .event-panel__score:has(> .event-panel__field-lines) {
     min-height: auto;
     overflow: visible;
   }
 
-  .game-panel__team-name {
+  .event-panel__team-name {
     min-width: 0;
   }
 
   /* The league, at the panel's top, keeps clear of the close button in its corner. */
-  .game-panel__league {
+  .event-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
-    padding-right: calc(var(--game-panel-size-close-width) + var(--spacing));
+    padding-right: calc(var(--event-panel-size-close-width) + var(--spacing));
   }
 
-  .game-panel__progress {
+  .event-panel__progress {
     margin-top: calc(0.5 * var(--spacing));
   }
 
-  .game-panel__details {
+  .event-panel__details {
     gap: var(--spacing);
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   }
 
   /* The venue's photo behind the score and venue rows. The strip and venue details give way to
      their contents in the grid, and the score block has no color of its own. */
-  .game-panel {
+  .event-panel {
     background:
-      radial-gradient(ellipse at 85% 75%, var(--game-panel-photo-glow), transparent 60%),
-      linear-gradient(180deg, var(--game-panel-surface-top), var(--game-panel-surface-bottom));
+      radial-gradient(ellipse at 85% 75%, var(--event-panel-photo-glow), transparent 60%),
+      linear-gradient(180deg, var(--event-panel-surface-top), var(--event-panel-surface-bottom));
   }
 
-  .game-panel__main,
-  .game-panel__details {
+  .event-panel__main,
+  .event-panel__details {
     display: contents;
     text-shadow: none;
   }
 
-  .game-panel__score {
+  .event-panel__score {
     background: none;
   }
 
   /* A fade behind each line in the score block, so it reads over the photo: dark at the left under the
      logo and name, clearing to nothing by the score, out to the panel's edges with a thin gap between
      lines. It's behind the row and under the scorer's light, so nothing in the row moves. */
-  .game-panel__score .game-panel__team {
+  .event-panel__score .event-panel__team {
     position: relative;
     isolation: isolate;
   }
 
-  .game-panel__score .game-panel__team::after {
+  .event-panel__score .event-panel__team::after {
     content: '';
     position: absolute;
     inset: calc(-0.25 * var(--spacing)) calc(-2 * var(--spacing));
@@ -736,7 +736,7 @@ body {
 
   /* The score and venue rows hold their size while the band gives way and scrolls; the tabs keep their
      least room (see .game-details). */
-  .game-panel__body {
+  .event-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
     grid-template-rows: auto auto minmax(0, auto) auto;
@@ -748,20 +748,20 @@ body {
   }
 
   /* The photo's crop follows the header independently of the expandable details. */
-  .game-panel__photo {
+  .event-panel__photo {
     grid-row: score-start / venue-end;
     grid-column: 1 / -1;
   }
 
-  .game-panel__score {
+  .event-panel__score {
     grid-area: score;
   }
 
-  .game-panel__band {
+  .event-panel__band {
     grid-area: band;
   }
 
-  .game-panel__venue {
+  .event-panel__venue {
     grid-area: venue;
     align-self: end;
     min-width: 0;
@@ -769,7 +769,7 @@ body {
   }
 
   /* The TV button sits beside the venue on narrow screens. */
-  .game-panel__watch {
+  .event-panel__watch {
     grid-area: watch;
     align-self: end;
     flex-direction: row;
@@ -1231,23 +1231,23 @@ body {
   }
 }
 
-/* The side that just scored, lit in its game's color on its score card's row and in the game panel
+/* The side that just scored, lit in its game's color on its score card's row and in the event panel
    (see games/scorers.ts): steady, then fading out. 3s is spotlightMs; the delay, set where the row is
    drawn, starts a row drawn partway through as far in as the spotlight already is. */
 .score-card__team--scored,
-.game-panel__team--scored::before {
+.event-panel__team--scored::before {
   border-radius: var(--shape-border-radius);
   animation: scorer-spotlight 3s ease-in var(--scorer-spotlight-delay, 0ms);
 }
 
-/* In the game panel the light reaches past the row, as far beyond the logo as beyond the score, padded out
+/* In the event panel the light reaches past the row, as far beyond the logo as beyond the score, padded out
    inside a matching negative margin so nothing in the row moves. Its right edge slants with the score chip
    (skewX(-10deg) above), the same distance from the chip all the way down, measured across a one-line
    row: one with a name on two lines keeps the angle. */
-.game-panel__team--scored {
+.event-panel__team--scored {
   --reach-x: calc(2 * var(--spacing));
   --reach-y: var(--spacing);
-  --row-height: calc(var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding));
+  --row-height: calc(var(--event-panel-size-logo) + 2 * var(--event-panel-logo-plate-padding));
   --reach-right: calc(var(--reach-x) + tan(10deg) * (var(--reach-y) + var(--row-height) / 2));
   position: relative;
   isolation: isolate;
@@ -1258,13 +1258,13 @@ body {
 /* On a phone the score block's padding is tighter, so the light reaches less far out to stay within it, still
    as far beyond the logo as beyond the score. */
 @media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
-  .game-panel__team--scored {
+  .event-panel__team--scored {
     --reach-x: var(--spacing);
   }
 }
 
 /* The light itself, behind the row: its bottom right corner rounded on the slant as the others are. */
-.game-panel__team--scored::before {
+.event-panel__team--scored::before {
   --corner: calc(1.5 * var(--shape-border-radius));
   --cut: calc(tan(10deg) * (var(--row-height) + 2 * var(--reach-y)));
   content: '';
@@ -1284,7 +1284,7 @@ body {
 }
 
 .score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
-.game-panel__team--scored :is(.game-panel__team-name, .game-panel__team-score) {
+.event-panel__team--scored :is(.event-panel__team-name, .event-panel__team-score) {
   animation: scorer-spotlight-text 3s ease-in var(--scorer-spotlight-delay, 0ms);
 }
 
@@ -1351,9 +1351,9 @@ body {
   }
 
   .score-card__team--scored,
-  .game-panel__team--scored::before,
+  .event-panel__team--scored::before,
   .score-card__team--scored :is(.score-card__abbreviation, .score-card__score),
-  .game-panel__team--scored :is(.game-panel__team-name, .game-panel__team-score) {
+  .event-panel__team--scored :is(.event-panel__team-name, .event-panel__team-score) {
     animation-timing-function: step-end;
   }
 
@@ -1371,7 +1371,7 @@ body {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  /* The game panel slides in and out past the screen's foot (see .game-panel), which mustn't make the page scroll. */
+  /* The event panel slides in and out past the screen's foot (see .event-panel), which mustn't make the page scroll. */
   overflow: clip;
 }
 
@@ -1390,9 +1390,34 @@ body {
 }
 
 /* Out of sight, yet still laid out (so the rail's clearance is measured), until the welcome tour's Your
-   controls step brings it in. */
+   controls step brings it in: all but More, and its popover, which stay in reach throughout the tour.
+   Until then More sits at the rail's top, where Hide controls is, rather than alone partway down; it
+   goes back to its place as the rest of the rail comes in. */
 .globe-area--rail-hidden > .rail {
   visibility: hidden;
+}
+
+.globe-area--rail-hidden > .rail .rail__group--more,
+.globe-area--rail-hidden > .rail > .rail__popover {
+  visibility: visible;
+}
+
+.globe-area--rail-hidden > .rail .rail__group--more {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* While the welcome tour shows, the rail sits under it, dimmed and out of use, but for More, its popover
+   and the Feedback panel, lifted above the tour so they can be used (see Rail's touring). The rail has no
+   layer of its own then, so they can rise out of it. */
+.rail--touring {
+  z-index: auto;
+}
+
+.rail--touring .rail__group--more,
+.rail--touring > .rail__popover {
+  z-index: 3;
 }
 
 /* The rail's buttons under its Hide controls button (a cross, gold while they show), which fold up into
@@ -2133,7 +2158,7 @@ body {
   border-left: var(--shape-border-width-medium) solid var(--palette-divider);
 }
 
-/* Display Settings: an on/off switch ("Only show live games", "Display venue photo on Game Panel"), its
+/* Display Settings: an on/off switch ("Only show live games", "Display venue photo on Event Panel"), its
    name at the left and its switch at the right, above "Card colors". */
 .display-switch {
   display: flex;
@@ -2722,53 +2747,6 @@ body {
   color: var(--palette-text-primary);
 }
 
-/* The iOS install hint (see IosInstallHint): a message as the no-pins one is, with a close button on
-   its right, the only part of the bottom stack that takes a tap. Share's icon sits in the line. */
-.install-hint {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing);
-  padding: var(--spacing) var(--spacing) var(--spacing) calc(4 * var(--spacing));
-  border-radius: var(--controls-message-corner);
-  background: var(--controls-surface);
-  color: var(--palette-text-primary);
-  pointer-events: auto;
-}
-
-.install-hint__text {
-  margin: 0;
-}
-
-.install-hint__share {
-  width: 1.15em;
-  height: 1.15em;
-  vertical-align: -0.2em;
-}
-
-.install-hint__close {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: calc(10 * var(--spacing));
-  height: calc(10 * var(--spacing));
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--palette-text-secondary);
-  cursor: pointer;
-}
-
-.install-hint__close svg {
-  width: var(--rail-size-icon);
-  height: var(--rail-size-icon);
-}
-
-@media (hover: hover) {
-  .install-hint__close:hover {
-    color: var(--palette-text-primary);
-  }
-}
-
 .scenario-clock {
   box-sizing: border-box;
   height: var(--controls-bar-height);
@@ -2930,69 +2908,69 @@ body {
   }
 }
 
-/* On a phone the game panel runs edge to edge along the bottom of the screen, its corners square. It's
+/* On a phone the event panel runs edge to edge along the bottom of the screen, its corners square. It's
    swiped down to close (see useSwipeToClose), so the browser takes no drag on it for a scroll or zoom,
    bar a vertical one in the band, which is the band's. */
 @media (max-width: 640px) {
-  .game-panel {
-    --game-panel-bottom: 0px;
+  .event-panel {
+    --event-panel-bottom: 0px;
     /* Its least height, kept even where that reaches past the rail's foot (a short phone's): a team
        game's score block (two rows), the venue's row, the tab bar and a tab's least room (see
        .game-details), so the tabs are never squeezed out. */
-    --game-panel-least-height: 304px;
-    max-height: max(25%, min(var(--game-panel-least-height), 100%), calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing)));
+    --event-panel-least-height: 304px;
+    max-height: max(25%, min(var(--event-panel-least-height), 100%), calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing)));
     width: 100%;
     border-radius: 0;
     touch-action: none;
   }
 
   /* Its edge line along its top alone, the other edges being the screen's. */
-  .game-panel__body::after {
+  .event-panel__body::after {
     border-width: var(--shape-border-width-thin) 0 0;
   }
 
-  .game-panel__band,
-  .game-panel__field-lines {
+  .event-panel__band,
+  .event-panel__field-lines {
     touch-action: pan-y;
   }
 
-  .game-panel[data-dragging] {
+  .event-panel[data-dragging] {
     user-select: none;
   }
 }
 
-/* The game panel opening slides up into place from below the screen's foot, over 220 ms; closed, it
-   slides back down off it, over 160 ms (panelLeaveDuration, in web/src/panel/GamePanel.tsx, keeps it on
+/* The event panel opening slides up into place from below the screen's foot, over 220 ms; closed, it
+   slides back down off it, over 160 ms (panelLeaveDuration, in web/src/panel/EventPanel.tsx, keeps it on
    the page that long), out of reach meanwhile. It doesn't fade: below full opacity, the score block's
    glass stops seeing the globe behind it, and its blur would flash off and on. That way out is the default: a close with its own sets the panel's data-leave, and plays
    it in place of this one (a swipe, which has already slid it off the screen, sets "swiped-off" and
    plays nothing more). With reduce motion it's there at once, and goes at once. On the panel's
    translate, as a swipe moves it, so neither clashes with its centering. */
-.game-panel {
-  animation: game-panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+.event-panel {
+  animation: event-panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.game-panel--leaving {
-  animation: game-panel-out 160ms ease-in forwards;
+.event-panel--leaving {
+  animation: event-panel-out 160ms ease-in forwards;
   pointer-events: none;
 }
 
-.game-panel--leaving[data-leave] {
+.event-panel--leaving[data-leave] {
   animation: none;
 }
 
 /* A panel closing itself after its game's celebration (see usePanelCelebration) slides down off the
    screen as a close does, but slower, over 550 ms (celebratedPanelLeaveDuration keeps it on the page
    that long), easing in. */
-.game-panel--leaving[data-leave='celebrated'] {
-  animation: game-panel-out 550ms cubic-bezier(0.5, 0, 0.8, 0.4) forwards;
+.event-panel--leaving[data-leave='celebrated'] {
+  animation: event-panel-out 550ms cubic-bezier(0.5, 0, 0.8, 0.4) forwards;
 }
 
-/* A game's celebration (see celebration/celebration.ts): the game panel's fireworks on a canvas filling
+/* A game's celebration (see celebration/celebration.ts): the event panel's fireworks on a canvas filling
    it, over its content, clipped to its corners; a score card's confetti on a canvas over the card, in
-   its marker, so it goes with the card and lies under the game panel and the rail. Their sizes are set
+   its marker, so it goes with the card and lies under the event panel and the rail. Their sizes are set
    in px as they play. Clicks pass through. */
-.game-panel__celebration {
+.event-panel__celebration {
   position: absolute;
   top: 0;
   left: 0;
@@ -3006,21 +2984,21 @@ body {
   pointer-events: none;
 }
 
-@keyframes game-panel-in {
+@keyframes event-panel-in {
   from {
-    translate: 0 calc(100% + var(--game-panel-bottom));
+    translate: 0 calc(100% + var(--event-panel-bottom));
   }
 }
 
-@keyframes game-panel-out {
+@keyframes event-panel-out {
   to {
-    translate: 0 calc(100% + var(--game-panel-bottom));
+    translate: 0 calc(100% + var(--event-panel-bottom));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-panel,
-  .game-panel--leaving[data-leave='celebrated'] {
+  .event-panel,
+  .event-panel--leaving[data-leave='celebrated'] {
     animation: none;
   }
 }
@@ -3050,13 +3028,9 @@ body {
   user-select: none;
 }
 
-.globe-area--touring > .demo-label {
-  z-index: 3;
-}
-
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
-   from being used. The Feedback button is lifted above it while it shows, so it
-   stays usable. */
+   from being used. The rail's More, its popover and the Feedback panel are lifted above it while it
+   shows, so they stay usable (see .rail--touring). */
 .welcome-tour {
   /* The dim over the globe, as opaque as the theme says: under the panel, or around a step's spotlight. */
   --dim: color-mix(in srgb, var(--palette-background-default) calc(var(--welcome-tour-dim-opacity) * 100%), transparent);
@@ -3068,6 +3042,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Every step's panel keeps left of the rail, never over it, centered in what's left. */
+  padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
+  padding-left: calc(4 * var(--spacing));
+}
+
+/* Welcome, with the rail out of sight but for More at its top (see .globe-area--rail-hidden), in the
+   middle of the whole screen, as wide as it fits. */
+.globe-area--rail-hidden > .welcome-tour.welcome-tour--welcome {
+  padding-right: calc(4 * var(--spacing));
 }
 
 /* A light dim, so the live pins still show behind the panel, which catches every press. */
@@ -3085,12 +3068,12 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: min(calc(110 * var(--spacing)), calc(100vw - 8 * var(--spacing)));
+  width: min(calc(110 * var(--spacing)), 100%);
   max-height: calc(100% - 12 * var(--spacing));
   overflow: hidden;
   /* Its padding at the sides, which its scrolling content reaches across (see .welcome-tour__body). */
   --panel-side: calc(6 * var(--spacing));
-  /* Its padding at the foot, which the step's buttons' band reaches across (see .welcome-tour__actions). */
+  /* Its padding at the foot, which the action button panel reaches across (see .welcome-tour__actions). */
   --panel-end: calc(5 * var(--spacing));
   padding: calc(5 * var(--spacing)) var(--panel-side) var(--panel-end);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
@@ -3107,7 +3090,7 @@ body {
   flex: none;
   margin: 0 0 calc(2 * var(--spacing));
   /* Clear of the close button in the panel's corner. */
-  padding-right: var(--game-panel-size-close-width);
+  padding-right: var(--event-panel-size-close-width);
   font-size: var(--typography-h6-font-size);
   font-weight: var(--typography-h6-font-weight);
 }
@@ -3140,7 +3123,7 @@ body {
   column-gap: calc(2.5 * var(--spacing));
   align-items: center;
   padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
-  border: var(--shape-border-width-thin) solid var(--rail-chip-outline);
+  border: var(--shape-border-width-medium) solid var(--rail-chip-outline);
   border-radius: var(--controls-corner);
   background: transparent;
   color: var(--palette-text-primary);
@@ -3184,7 +3167,7 @@ body {
   margin: 0 0 calc(3 * var(--spacing));
 }
 
-/* A switch, its knob at the right when on: Display Settings' "Display venue photo on Game Panel". */
+/* A switch, its knob at the right when on: Display Settings' "Display venue photo on Event Panel". */
 .switch {
   position: relative;
   flex: none;
@@ -3234,8 +3217,8 @@ body {
   padding-right: var(--panel-side);
 }
 
-/* Above the step's buttons, the room between its content and their band is at the foot of what
-   scrolls, not outside it, so content that overflows runs right up to the band, with no gap. */
+/* Above the action button panel, the room between the step's content and it is at the foot of what
+   scrolls, not outside it, so content that overflows runs right up to the action button panel, with no gap. */
 .welcome-tour__body:has(+ .welcome-tour__actions) {
   margin-bottom: 0;
   padding-bottom: calc(4 * var(--spacing));
@@ -3248,17 +3231,18 @@ body {
   flex-wrap: wrap;
   gap: calc(2 * var(--spacing));
   justify-content: flex-end;
-  /* A band of its own across the panel's foot, set off from the step's content above by a line and a
-     slightly lighter fill. */
+  /* The action button panel: a band of its own across the panel's foot, holding the step's buttons
+     (Back, Show these, Next, Done), set off from the step's content above by a line and a slightly
+     lighter fill. Slim, so the buttons sit close to its line and the panel's foot. */
   margin: 0 calc(-1 * var(--panel-side)) calc(-1 * var(--panel-end));
-  padding: calc(3 * var(--spacing)) var(--panel-side) var(--panel-end);
+  padding: calc(2 * var(--spacing)) var(--panel-side);
   border-top: var(--shape-border-width-thin) solid var(--rail-outline);
   background: color-mix(in srgb, var(--palette-text-primary) 4%, var(--rail-surface));
 }
 
-/* A step's own button (Next, Done), lit as a chip that's on. */
+/* A step's own button (Next, Done), lit as a chip that's on, in the action button panel. */
 .welcome-tour__button {
-  padding: calc(2 * var(--spacing)) calc(4 * var(--spacing));
+  padding: calc(1.25 * var(--spacing)) calc(3.5 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--rail-on-outline);
   border-radius: var(--controls-corner);
   background: color-mix(in srgb, var(--rail-on-outline) calc(var(--rail-on-tint) * 100%), var(--rail-on-fill));
@@ -3414,25 +3398,53 @@ body {
   }
 }
 
-/* On a phone (the app's phone layout): each step's panel across the screen, in its middle as on a
-   larger screen, laid over the rail rather than kept clear of it; what doesn't fit scrolls in the panel
-   (My leagues' picker). Your controls' panel alone keeps left of the rail it points at, with room for
-   its arrow, so the rail is never under it. */
+/* Your controls, right beside the rail it lights, rather than in the middle of the screen. Over the
+   short screen's room for an arrow (below), which it has no need of. */
+.welcome-tour.welcome-tour--controls {
+  justify-content: flex-end;
+  padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
+}
+
+/* At the top, beside the rail, its top level with the rail's, so it reads as the rail's own. */
+.welcome-tour.welcome-tour--controls {
+  align-items: flex-start;
+}
+
+/* While Your controls lights the rail, its groups are solid, as its popovers are, rather than glass, so
+   they read clearly over a score card behind them. */
+.globe-area:has(> .welcome-tour--controls) > .rail .rail__group {
+  background: var(--rail-surface);
+}
+
+/* On a phone (the app's phone layout): each step's panel across the screen left of the rail, in its
+   middle as on a larger screen; what doesn't fit scrolls in the panel (My leagues' picker). */
 @media (max-width: 640px) {
+  .welcome-tour {
+    padding-right: calc(var(--rail-left-inset, 0px) + 3 * var(--spacing));
+    padding-left: calc(3 * var(--spacing));
+  }
+
+  .globe-area--rail-hidden > .welcome-tour.welcome-tour--welcome {
+    padding-right: calc(3 * var(--spacing));
+  }
+
   .welcome-tour__panel {
-    width: calc(100% - 6 * var(--spacing));
+    width: 100%;
     max-height: calc(100% - 6 * var(--spacing));
     --panel-side: calc(5 * var(--spacing));
     --panel-end: calc(4 * var(--spacing));
     padding: calc(4 * var(--spacing)) var(--panel-side) var(--panel-end);
   }
 
-  .welcome-tour--controls {
-    padding: 0 calc(var(--rail-left-inset, 0px) + 8 * var(--spacing)) 0 calc(3 * var(--spacing));
+  .welcome-tour.welcome-tour--controls {
+    padding-right: calc(var(--rail-left-inset, 0px) + 3 * var(--spacing));
   }
 
-  .welcome-tour--controls .welcome-tour__panel {
-    width: 100%;
+  /* Click a score card just below the tour's games (see tourCamera), Ravens v
+     Steelers among them, clear of them yet not far down. */
+  .welcome-tour--scoreCard {
+    align-items: flex-end;
+    padding-bottom: 35dvh;
   }
 }
 
@@ -3574,78 +3586,78 @@ body {
 }
 
 .score-card:focus-visible,
-.game-panel button:focus-visible,
-.game-panel a:focus-visible {
+.event-panel button:focus-visible,
+.event-panel a:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--spacing);
 }
 
 /* A short screen: a phone on its side, or a short desktop window. Here, after the rules it changes, so it
    wins over them. The screen is wide but short, so things lie side by side rather than stacked: the game
-   panel takes the desktop's strip (see .game-panel__main) at the screen's foot left of the rail, as tall as
+   panel takes the desktop's strip (see .event-panel__main) at the screen's foot left of the rail, as tall as
    it needs rather than stopping short of the rail's foot; the popovers, the Games list and the welcome
    tour's steps use the height there is (the dynamic viewport's, so not under a phone browser's bars). */
 @media (orientation: landscape) and (max-height: 500px) {
-  .game-panel {
-    --game-panel-bottom: calc(3 * var(--spacing));
+  .event-panel {
+    --event-panel-bottom: calc(3 * var(--spacing));
     left: calc(3 * var(--spacing));
-    max-height: calc(100% - 2 * var(--game-panel-bottom));
-    width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 5 * var(--spacing)));
-    border-radius: var(--game-panel-corner);
+    max-height: calc(100% - 2 * var(--event-panel-bottom));
+    width: min(var(--event-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 5 * var(--spacing)));
+    border-radius: var(--event-panel-corner);
     transform: none;
   }
 
   /* On a phone on its side (a touch screen), a sheet at the screen's foot and left edge, its outer
      corners square, swiped down to close as on a phone held upright (see useSwipeToClose). */
   @media (pointer: coarse) {
-    .game-panel {
-      --game-panel-bottom: 0px;
+    .event-panel {
+      --event-panel-bottom: 0px;
       left: 0;
-      width: min(var(--game-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 2 * var(--spacing)));
+      width: min(var(--event-panel-size-width), calc(100% - var(--rail-left-inset, 0px) - 2 * var(--spacing)));
       max-height: calc(100% - 3 * var(--spacing));
-      border-radius: 0 var(--game-panel-corner) 0 0;
+      border-radius: 0 var(--event-panel-corner) 0 0;
       touch-action: none;
     }
 
     /* No cut corner, as on a phone held upright: it would show the globe at the screen's corner. */
-    .game-panel__body {
+    .event-panel__body {
       border-bottom-left-radius: 0;
     }
 
     /* Its edge line along its top and right, the edges facing the globe, meeting in its one round corner. */
-    .game-panel__body::after {
+    .event-panel__body::after {
       border-width: var(--shape-border-width-thin) var(--shape-border-width-thin) 0 0;
     }
 
-    .game-panel__band,
-    .game-panel__field-lines {
+    .event-panel__band,
+    .event-panel__field-lines {
       touch-action: pan-y;
     }
 
-    .game-panel[data-dragging] {
+    .event-panel[data-dragging] {
       user-select: none;
     }
   }
 
   /* Spaced as tightly as on a phone held upright, so the strip takes less of the height. */
-  .game-panel__main {
+  .event-panel__main {
     min-height: 0;
   }
 
   /* Half the strip, so names have room on a phone. */
-  .game-panel__score {
-    width: min(var(--game-panel-size-score-block), 50%);
-    --game-panel-score-gap: var(--spacing);
+  .event-panel__score {
+    width: min(var(--event-panel-size-score-block), 50%);
+    --event-panel-score-gap: var(--spacing);
     padding-block: calc(2 * var(--spacing));
   }
 
-  .game-panel__details {
+  .event-panel__details {
     gap: var(--spacing);
     padding-block: calc(2 * var(--spacing));
   }
 
   /* The watch links side by side, as on a phone held upright, rather than stacked. */
-  .game-panel__watch {
+  .event-panel__watch {
     flex-direction: row;
     align-items: center;
     gap: calc(2 * var(--spacing));
@@ -3671,26 +3683,27 @@ body {
     padding-bottom: calc(3 * var(--spacing));
   }
 
-  /* All set, compact so it fits in the little height above the game panel without covering it: Done
-     beside its words, at the foot of a column of its own, clear of the × above it. */
-  .welcome-tour--allSet .welcome-tour__panel {
+  /* The steps over the event panel (its own and All set), compact so they fit in the little height above
+     it without covering it: Next or Done beside the words, at the foot of a column of its own, clear of
+     the × above it. */
+  .welcome-tour--over-event-panel .welcome-tour__panel {
     display: grid;
     grid-template-columns: 1fr auto;
     column-gap: calc(4 * var(--spacing));
     padding-block: calc(3 * var(--spacing));
   }
 
-  .welcome-tour--allSet .welcome-tour__heading {
+  .welcome-tour--over-event-panel .welcome-tour__heading {
     margin-bottom: var(--spacing);
   }
 
-  .welcome-tour--allSet .welcome-tour__body {
+  .welcome-tour--over-event-panel .welcome-tour__body {
     grid-column: 1;
     margin-bottom: calc(-1 * var(--spacing));
     padding-bottom: var(--spacing);
   }
 
-  .welcome-tour--allSet .welcome-tour__actions {
+  .welcome-tour--over-event-panel .welcome-tour__actions {
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: end;
@@ -3724,42 +3737,42 @@ body {
   }
 }
 
-/* All set with the game's panel Click a score card opened: the step right above that panel (its top,
-   --above-game-panel, measured by useAboveGamePanel), or, with too little room there (a phone on its
+/* A step over the game's panel Click a score card opened (the event panel's own, and All set): the step right above that panel (its top,
+   --above-event-panel, measured by useAboveEventPanel), or, with too little room there (a phone on its
    side), at the top of the screen over the panel's top, never cut short, so Done is always in view.
-   The game panel, under the tour, stays usable: the tour takes no press but on the step's panel, and
+   The event panel, under the tour, stays usable: the tour takes no press but on the step's panel, and
    has no dim (the globe and rail are inert while it shows). After the short screen's centering above,
    which it overrides. */
-.welcome-tour[data-above-game-panel] {
+.welcome-tour[data-above-event-panel] {
   align-items: safe flex-end;
   padding-top: calc(3 * var(--spacing));
-  padding-bottom: calc(var(--above-game-panel, 0px) + 3 * var(--spacing));
+  padding-bottom: calc(var(--above-event-panel, 0px) + 3 * var(--spacing));
   pointer-events: none;
 }
 
-.welcome-tour[data-above-game-panel] > .welcome-tour__dim {
+.welcome-tour[data-above-event-panel] > .welcome-tour__dim {
   display: none;
 }
 
-/* Leave room for the label even when the tour panel fills a short screen. */
+/* Room at the top, as the rail has, even when the tour panel fills a short screen. */
 .globe-area--touring > .welcome-tour {
-  --demo-label-clearance: calc(var(--demo-label-line-height) + 6 * var(--spacing));
-  padding-top: var(--demo-label-clearance);
+  --tour-top-room: calc(3 * var(--spacing));
+  padding-top: var(--tour-top-room);
 }
 
-.welcome-tour[data-above-game-panel] .welcome-tour__panel {
+.welcome-tour[data-above-event-panel] .welcome-tour__panel {
   flex: none;
   max-height: none;
   pointer-events: auto;
 }
 
-/* On a desktop, where the game panel is a strip along the foot of the screen, All set sits in the
-   middle of the screen instead, as the other steps do, when that's clear of the game panel (see
-   middleClearsGamePanel); not on a phone, held upright or on its side. */
+/* On a desktop, where the event panel is a strip along the foot of the screen, a step over it sits in the
+   middle of the screen instead, as the other steps do, when that's clear of the event panel (see
+   middleClearsEventPanel); not on a phone, held upright or on its side. */
 @media (min-width: 641px) and (min-height: 501px), (min-width: 641px) and (orientation: portrait) {
-  .welcome-tour[data-above-game-panel][data-middle-clears-game-panel] {
+  .welcome-tour[data-above-event-panel][data-middle-clears-event-panel] {
     align-items: safe center;
-    padding-bottom: var(--demo-label-clearance);
+    padding-bottom: var(--tour-top-room);
   }
 }
 
@@ -3784,5 +3797,12 @@ body {
     pointer-events: auto;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
     mask-image: linear-gradient(to bottom, #000 calc(100% - 7 * var(--spacing)), transparent);
+  }
+
+  /* Its fade makes the buttons a layer of their own, which More can't rise out of: the whole column is
+     lifted over the welcome tour instead, all but More still out of use. */
+  .rail--touring .rail__buttons-inner {
+    position: relative;
+    z-index: 3;
   }
 }

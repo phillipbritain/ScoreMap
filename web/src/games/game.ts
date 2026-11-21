@@ -39,7 +39,7 @@ export interface GameVenue {
   espnId?: string
 }
 
-/** A photo of a venue, for the top of the game panel. */
+/** A photo of a venue, for the top of the event panel. */
 export interface VenuePhoto {
   url: string
   /** Set when the photo's license asks for attribution (Wikimedia Commons photos). */
@@ -210,7 +210,7 @@ export interface Game {
   topEvent: boolean
   /** Tennis: the score set by set; null in other sports and before play. */
   scoreline: GameScoreline | null
-  /** The game's page on ESPN's website, linked from the game panel; null when ESPN lists none. */
+  /** The game's page on ESPN's website, linked from the event panel; null when ESPN lists none. */
   espnUrl: string | null
 }
 

@@ -567,7 +567,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     }
 
     /// <summary>
-    /// A round in tennis's shorthand, so the game panel's note fits on its one line: "R1", "R16", "QF",
+    /// A round in tennis's shorthand, so the event panel's note fits on its one line: "R1", "R16", "QF",
     /// "SF"; any other ("Final") as ESPN names it.
     /// </summary>
     private static string? ShortRound(string? round) => round switch

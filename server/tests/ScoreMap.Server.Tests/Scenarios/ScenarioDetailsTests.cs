@@ -7,7 +7,7 @@ using ScoreMap.Server.Tests.Support;
 namespace ScoreMap.Server.Tests.Scenarios;
 
 /// <summary>
-/// The game panel's extra detail the scenario feed makes up for its games, watched as the poller asks for
+/// The event panel's extra detail the scenario feed makes up for its games, watched as the poller asks for
 /// each league, every 6 s on the scenario clock, while sixty games play.
 /// </summary>
 public sealed class ScenarioDetailsTests : IDisposable

@@ -241,7 +241,7 @@ function venueOnPage(map: MapLibreMap, { venue }: PlacedGame) {
   return { x: left + x, y: top + y }
 }
 
-/** A game panel's box on the page, as the app's sits across the bottom of the globe. */
+/** A event panel's box on the page, as the app's sits across the bottom of the globe. */
 function panelAcrossBottom() {
   const { left, top, width, height } = container.getBoundingClientRect()
   return { left: left + 100, top: top + height - 140, right: left + width - 100, bottom: top + height - 12 }

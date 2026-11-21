@@ -6,7 +6,7 @@ using static ScoreMap.Server.Tests.Support.TestGames;
 namespace ScoreMap.Server.Tests;
 
 /// <summary>
-/// Venue photos for the game panel. Photos are searched for in the background, so a venue's
+/// Venue photos for the event panel. Photos are searched for in the background, so a venue's
 /// photo reaches browsers with the poll after it is found, and is saved so it's found only once.
 /// </summary>
 public class VenuePhotoTests
@@ -16,7 +16,7 @@ public class VenuePhotoTests
     private static readonly VenuePhoto ArrowheadPhoto = new("https://photos.test/arrowhead.jpg", null);
 
     [Fact]
-    public async Task A_venues_photo_reaches_the_game_panel_on_the_next_poll()
+    public async Task A_venues_photo_reaches_the_event_panel_on_the_next_poll()
     {
         await using var server = new ScoreMapServer();
         server.Photos.Add(Arrowhead, ArrowheadPhoto);

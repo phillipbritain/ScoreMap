@@ -17,7 +17,7 @@ interface Press {
 }
 
 /**
- * Swiping the game panel down to close it, on a phone, upright or on its side: a press anywhere on the panel that moves down
+ * Swiping the event panel down to close it, on a phone, upright or on its side: a press anywhere on the panel that moves down
  * becomes a drag the panel follows. Let go past 30% of its height, or flicked down, it slides off the
  * screen and closes; otherwise it springs back (see swipeClose.ts). A press starting in the band (a
  * leaderboard, fight card or sets, which can scroll) is the band's. A drag doesn't follow the link or
@@ -47,7 +47,7 @@ export function useSwipeToClose(gameId: string, onClose: () => void) {
   return {
     onPointerDown(event: PointerEvent<HTMLElement>) {
       if (event.button !== 0 || !window.matchMedia(sheetScreen).matches) return
-      if ((event.target as Element).closest('.game-panel__band, [data-panel-scroll], dialog')) return
+      if ((event.target as Element).closest('.event-panel__band, [data-panel-scroll], dialog')) return
       press.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, dragging: false, samples: [] }
     },
     onPointerMove(event: PointerEvent<HTMLElement>) {
@@ -91,7 +91,7 @@ export function useSwipeToClose(gameId: string, onClose: () => void) {
       const closing = gameId
       const after = settle(panel, '0 100%', slideOffDuration)
       setTimeout(() => {
-        // Already off the screen, it doesn't play the default way out as well (see .game-panel--leaving).
+        // Already off the screen, it doesn't play the default way out as well (see .event-panel--leaving).
         if (shownGame.current === closing) {
           panel.dataset.leave = 'swiped-off'
           onClose()

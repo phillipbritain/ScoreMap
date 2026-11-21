@@ -30,7 +30,7 @@ _Avoid_: Competitor, participant, opponent
 
 **Field**:
 Everyone competing in a game that has no two sides, such as a NASCAR race, an F1 race or a golf tournament, ranked by position.
-_Avoid_: Grid, leaderboard (that's the field as the game panel lists it), competitors
+_Avoid_: Grid, leaderboard (that's the field as the event panel lists it), competitors
 
 **Entrant**:
 One of a field: a driver, or a golfer.
@@ -80,24 +80,24 @@ _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 Where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out each frame from the last so cards don't jump about, only while the camera moves: a card moves only to keep clear of others, to come back over its venue, or to come within 80 px of it. Once the camera stops, every card and trail stays where it is until it moves again, and a card keeps the size it was first drawn at. When cards are first laid out, those moved aside around a city are handed round their spots so they go round it in the same order as their venues, and their trails don't cross.
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
-**Game panel**:
-The view of one game, opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar. A field’s leaderboard scrolls in the score block; a band lists tennis sets or a fight card’s bouts when available.
-_Avoid_: Popup, detail page, modal
+**Event panel**:
+The view of one event (a game, a race or tournament, a fight card), opened by selecting its pin. It shows the score, clock and venue across the bottom of the globe, with a TV button for Watch and game info. Tabs open the game details above the tab bar; a panel opens them as the last one's were left, open or collapsed, after a reload too, collapsed until the viewer first opens them, and a welcome tour's panel always opens them collapsed, keeping nothing done to them there. A field’s leaderboard scrolls in the score block; a band lists tennis sets or a fight card’s bouts when available.
+_Avoid_: Event panel (not everything on the globe is a game), Popup, detail page, modal
 
 **Rail**:
-The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (whether the game panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
+The column of buttons down the right of the globe: zoom in and out, Home (back to the viewer's region, where a first visit opens), Leagues (which leagues show), Display Settings (whether the event panel shows venue photos, and the colors picked for sports and leagues), Map Type (the globe as its Plain map or as satellite imagery, ADR-0022) and Games (every game shown, by league, with a search, to find one and go to it).
 _Avoid_: Settings menu, quick settings, toolbar
 
 **Welcome tour**:
-What a first visit shows once ScoreMap is ready, in four steps, each a panel in the middle of the screen: Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything; My leagues opens the same leagues to pick, conferences included, as Leagues on the rail, applied only with "Show these"), Your controls (how to move and zoom the globe, worded for a touchscreen or a mouse, then each button on the rail, with an arrow to it), Click a score card (with an arrow to one, and no Done: pressing the card moves on) and, once that card is pressed and its game's panel opens, All set (the end of the tour, with Done: in the middle of the screen on a desktop, or right above that panel on a phone or where the middle would run into it). The Demo label stays visible throughout. The globe starts empty and shows Tour games after the viewer confirms a choice. Closing it, by its panel's × or Escape, finishes it as Done does; until it's finished or closed, it carries on where it was left. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo shows it every time.
+What a first visit shows once ScoreMap is ready, in seven steps, each a panel in the middle of the screen: Welcome (what ScoreMap is, and what to see first: Top Events, My leagues or Everything; My leagues opens the same leagues to pick, conferences included, as Leagues on the rail, applied only with "Show these"), Your controls (how to move and zoom the globe, worded for a touchscreen or a mouse, then each button on the rail, Hide controls included, with the rail lit and the step right beside it), Click a score card (with an arrow to the Ravens v Steelers card, and no Done: pressing the card moves on), then, once that card is pressed and its game's panel opens, the event panel's three, each lighting a part of the panel (dimming the rest of it with the globe), with no arrow, the panel usable throughout, but for its tabs until Game details: The event panel (its score block: ScoreMap is live, scores changing there and on the game's card as it happens, with no need to refresh), Game details (its tabs, the step right above them, over the panel; pressing a tab moves on, as Next does) and Where to watch (its TV button, with an arrow to it); and All set (the end of the tour, with Done). The rest of these last four sit in the middle of the screen on a desktop, or right above that panel on a phone or where the middle would run into it. The rail can't be used under it, but for More (its Send feedback, Install app and Welcome tour, which starts the tour again from Welcome), shown throughout: on Welcome, before the rest of the rail comes in, at the rail's top, where Hide controls is. A step's buttons (Back, Show these, Next, Done) sit in its action button panel, a slim band across the foot of the step's panel. The Demo Mode label doesn't show while it does, in a demo too: the tour itself says its games are there to show ScoreMap off. The globe starts empty and shows Tour games once the viewer makes a choice. Every step's panel keeps left of the rail, but for Welcome's, in the middle of the screen while the rail is out of sight. Closing it, by its panel's × or Escape, finishes it as Done does; until it's finished or closed, it carries on where it was left, but for the event panel's three, which a reload takes back to Click a score card (the panel they light isn't open then), and All set, which a reload finishes, straight into the live games. Once finished it comes back only when the viewer asks for it, from More on the rail ("Welcome tour"); a demo doesn't show it unless asked, even on a first visit.
 _Avoid_: Onboarding, tutorial, walkthrough, intro, first-visit tour
 
 **Tour games**:
-Simulated Live games featuring real teams or competitors at real venues, shown after the viewer confirms what they want to see on Welcome. They match the selected leagues and conferences, and their scores or event progress change under the Demo label until the tour ends.
+Simulated Live games between real teams at real venues, the same six every time (Ravens v Steelers among them, the one Click a score card points at, with ESPN and StreamEast links to their home pages), shown once the viewer makes a choice on Welcome, whatever it is. Their scores or event progress change until the tour ends: one game has a play every 2 seconds, the game whose panel is open every other one, so its panel and card are seen to change, and its game details are made up again with each.
 _Avoid_: Sample games, dummy games, onboarding games, example games
 
 **Game details**:
-The content opened by the tabs at the foot of the game panel. It includes period scores in the Score tab, scoring plays in order, football drives, player stats and ESPN highlights where the feed supplies them. A scenario’s, a demo’s and the tour’s games have theirs made up.
+The content opened by the tabs at the foot of the event panel. It includes period scores in the Score tab, scoring plays in order, football drives, player stats and ESPN highlights where the feed supplies them. A scenario’s, a demo’s and the tour’s games have theirs made up.
 
 **Situation**:
 Where play stands in a Live game right now: in football the down and distance and who has the ball, in baseball the count, outs and runners, and in every sport the feed covers the last play.
@@ -112,7 +112,7 @@ The short animation a pin, score card or cluster plays to draw the eye to a chan
 _Avoid_: Blip, alert, notification, highlight (the selected pin is highlighted), flash
 
 **Celebration**:
-What a game finishing plays while ScoreMap is watching it: confetti in its teams' colors over its score card, where it has one on screen, and, when its game panel is open, a fireworks show inside the panel, after which the panel closes itself and the game leaves the globe with it, there and then rather than when its pin's time is up (see Final). Like a pulse, it doesn't play for a game that finished while ScoreMap was asleep or cut off. With the device's reduce motion setting on, nothing plays, but the panel still closes itself. How it looks is in `docs/style-guide.md`.
+What a game finishing plays while ScoreMap is watching it: confetti in its teams' colors over its score card, where it has one on screen, and, when its event panel is open, a fireworks show inside the panel, after which the panel closes itself and the game leaves the globe with it, there and then rather than when its pin's time is up (see Final). Like a pulse, it doesn't play for a game that finished while ScoreMap was asleep or cut off. With the device's reduce motion setting on, nothing plays, but the panel still closes itself. How it looks is in `docs/style-guide.md`.
 _Avoid_: Party, confetti (for the whole), animation
 
 **Hot game**:
@@ -176,7 +176,7 @@ What a color in a theme is for, such as the globe's surface, Live's color or mai
 _Avoid_: Token, semantic color
 
 **Game color**:
-The color a game shows in on its pin, score card, trail and pulses and in the game panel: the color the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's color for its status. A league with no color of its own, including one added to the server later, takes its sport's.
+The color a game shows in on its pin, score card, trail and pulses and in the event panel: the color the viewer picked for its league in Display Settings on the rail, else the one picked for its sport, else the theme's color for its status. A league with no color of its own, including one added to the server later, takes its sport's.
 _Avoid_: Status color (for a game's color), team color
 
 **Type style**:
@@ -184,7 +184,7 @@ One of a theme's kinds of text, named as MUI's typography variants are (`body2`,
 _Avoid_: Variant, text size, font role
 
 **Glass**:
-What a score card is made of: a pane the globe shows through, tinted with the card's fill, its edges catching the light (ADR-0018); on a desktop, the game panel's score block too, blurring the globe. Every other surface over the globe (the rest of the game panel, the rail, the scenario controls, tooltips) is solid (ADR-0023).
+What a score card is made of: a pane the globe shows through, tinted with the card's fill, its edges catching the light (ADR-0018); on a desktop, the event panel's score block too, blurring the globe. Every other surface over the globe (the rest of the event panel, the rail, the scenario controls, tooltips) is solid (ADR-0023).
 _Avoid_: Background, see-through fill
 
 **Frost**:
@@ -212,7 +212,7 @@ A game that was postponed, suspended or canceled, so it won't be played or finis
 _Avoid_: Called off, halted, inactive
 
 **Final**:
-A game that finished within the last 5 minutes, so it still gets a pin, showing its final score; a game whose game panel closed itself after its celebration leaves the globe at once, in that browser.
+A game that finished within the last 5 minutes, so it still gets a pin, showing its final score; a game whose event panel closed itself after its celebration leaves the globe at once, in that browser.
 _Avoid_: Finished, completed, over, ended
 
 ### Local runs

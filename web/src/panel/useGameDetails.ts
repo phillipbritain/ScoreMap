@@ -9,11 +9,13 @@ export const isTourGame = ({ id }: Game) => id.startsWith('tour-')
 
 /**
  * The selected game's details, refreshed while it's Live: a game on the board by its id, a demo's game
- * on the demo board, and a tour game by sending the game as it is now.
+ * on the demo board, and a tour game by sending the game as it is now, again each time it has a play.
  */
 export function useGameDetails(game: Game, enabled: boolean, demo = false) {
   const { id, league, status } = game
   const tour = isTourGame(game)
+  // A tour game's play changes its details at once, so they're asked for again as it changes.
+  const tourPlay = tour ? JSON.stringify([game.contest, game.clock, game.scoreline]) : null
   const key = new URLSearchParams({ id, league, ...(demo && !tour ? { demo: 'true' } : {}) }).toString()
   const current = useRef(game)
   useEffect(() => {
@@ -53,7 +55,7 @@ export function useGameDetails(game: Game, enabled: boolean, demo = false) {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [enabled, key, status, tour])
+  }, [enabled, key, status, tour, tourPlay])
 
   const shown = result?.key === key ? result : null
   return { data: shown?.data ?? null, failed: shown?.failed ?? false }

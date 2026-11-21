@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { Game } from './game'
 import { focusGameNavigation } from './gameFocus'
 
-/** Current selection and the keyboard's journey into and back from the game panel. */
+/** Current selection and the keyboard's journey into and back from the event panel. */
 export function useGameSelection(games: readonly Game[]) {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const panel = useRef<HTMLElement>(null)
@@ -32,7 +32,7 @@ export function useGameSelection(games: readonly Game[]) {
 
   useLayoutEffect(() => {
     if (selectedGame && focusPanel.current) {
-      panel.current?.querySelector<HTMLElement>('.game-panel__close')?.focus({ preventScroll: true })
+      panel.current?.querySelector<HTMLElement>('.event-panel__close')?.focus({ preventScroll: true })
       focusPanel.current = false
     } else if (focused.current && !focused.current.isConnected && document.activeElement === document.body) {
       // A filter or a feed removal detached the focused panel or control.
@@ -47,7 +47,7 @@ export function useGameSelection(games: readonly Game[]) {
     focusPanel.current = keyboard
     setSelectedGameId(gameId)
     if (keyboard && gameId === selectedGameId) {
-      panel.current?.querySelector<HTMLElement>('.game-panel__close')?.focus({ preventScroll: true })
+      panel.current?.querySelector<HTMLElement>('.event-panel__close')?.focus({ preventScroll: true })
       focusPanel.current = false
     }
   }, [selectedGameId])

@@ -16,7 +16,7 @@ export interface FeedbackContext {
   screenWidth?: number
   screenHeight?: number
   phoneLayout?: boolean
-  /** The open game's ID, if a game panel is open. */
+  /** The open game's ID, if a event panel is open. */
   gameId?: string | null
   /** The leagues switched on, by name; left out until the league list has loaded. */
   leagues?: string[]

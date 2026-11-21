@@ -660,7 +660,7 @@ public class EspnGameFeedProviderTests
 
         var match = Assert.Single(games, g => g.Id == "185777");
         Assert.Equal(new ProviderVenue("Curitiba Open", "Curitiba, Brazil", null, null, Court: "Quadra Central"), match.Venue);
-        // The round in tennis's shorthand, so the note fits on the game panel's one line.
+        // The round in tennis's shorthand, so the note fits on the event panel's one line.
         Assert.Equal("Curitiba Open · QF", match.Note);
         // A match with no court named yet has none.
         Assert.Null(Assert.Single(games, g => g.Id == "185706").Venue!.Court);

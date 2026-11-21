@@ -511,7 +511,8 @@ body {
    would cover keeps clear of it (see .event-panel__venue, and on a phone .event-panel__league). A welcome
    tour panel's × is the same, in its own top right corner. */
 .event-panel__close,
-.welcome-tour__close {
+.welcome-tour__close,
+.rail__popover-close {
   position: absolute;
   top: 0;
   right: 0;
@@ -531,7 +532,8 @@ body {
 }
 
 .event-panel__close:hover,
-.welcome-tour__close:hover {
+.welcome-tour__close:hover,
+.rail__popover-close:hover {
   color: var(--palette-text-primary);
 }
 
@@ -1698,6 +1700,7 @@ body {
 /* A popover, Leagues or Display Settings, to the left of the rail and level with its top, on the rail's
    surface, outlined to stand off the globe under it. */
 .rail__popover {
+  --rail-popover-padding: calc(3 * var(--spacing));
   position: absolute;
   top: 0;
   right: calc(100% + 2 * var(--spacing));
@@ -1706,13 +1709,44 @@ body {
   max-width: calc(100vw - var(--rail-size-button) - 8 * var(--spacing));
   max-height: calc(100dvh - 6 * var(--spacing));
   overflow-y: auto;
-  padding: calc(3 * var(--spacing));
+  padding: var(--rail-popover-padding);
   border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--menu-corner);
   background: var(--rail-surface);
   color: var(--palette-text-primary);
   font-size: var(--typography-body2-font-size);
   box-shadow: var(--rail-shadow);
+}
+
+/* A panel popover's header (Leagues, Display Settings and Games, see Rail): its name, and a close button
+   at its right as the event panel's, across the popover's top and pinned there as the popover scrolls,
+   a line under it. */
+.rail__popover-header {
+  position: sticky;
+  top: calc(-1 * var(--rail-popover-padding));
+  z-index: 2;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(2 * var(--spacing));
+  margin: calc(-1 * var(--rail-popover-padding)) calc(-1 * var(--rail-popover-padding)) var(--rail-popover-padding);
+  padding: var(--spacing) var(--spacing) var(--spacing) var(--rail-popover-padding);
+  border-bottom: var(--shape-border-width-thin) solid var(--palette-divider);
+  background: var(--rail-surface);
+}
+
+/* In the header's flow, not in a corner as the event panel's is. */
+.rail__popover-close {
+  position: static;
+  flex: none;
+}
+
+.rail__popover-title {
+  margin: 0;
+  font-family: var(--typography-font-family);
+  font-size: var(--typography-subtitle1-font-size);
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
 /* On a phone: a sheet across all the width left of the rail, from the rail's top down, so the rail's
@@ -3456,12 +3490,17 @@ body {
 /* The Games popover (see Rail): the search, then the games scrolling under it while the popover stays
    still. Keyboard selection stays available for games in a card cluster. */
 .rail__popover--games {
+  --rail-popover-padding: calc(1.5 * var(--spacing));
   display: flex;
   flex-direction: column;
   width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
   max-height: min(70dvh, calc(100dvh - 6 * var(--spacing)));
   overflow: hidden;
-  padding: calc(1.5 * var(--spacing));
+}
+
+/* Its header in the popover's flow, which doesn't scroll, above the search. */
+.rail__popover--games > .rail__popover-header {
+  position: static;
 }
 
 .game-navigation {

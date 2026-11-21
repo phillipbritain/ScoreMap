@@ -222,6 +222,24 @@ export function Rail({
           inert={leaving}
           onKeyDown={(event) => moveByArrows(event.nativeEvent, event.currentTarget)}
         >
+          {closable.includes(shown) && (
+            <div className="rail__popover-header">
+              <h2 className="rail__popover-title">{popoverNames[shown]}</h2>
+              <button
+                type="button"
+                className="rail__popover-close"
+                aria-label={`Close ${popoverNames[shown]}`}
+                onClick={(event) => {
+                  const button = rail.current?.querySelector<HTMLElement>(`[data-popover-button="${shown}"]`)
+                  setOpen(null)
+                  // Pressed from the keyboard (a click with no pointer), keyboard focus goes back to its button.
+                  if (event.detail === 0) button?.focus()
+                }}
+              >
+                ×
+              </button>
+            </div>
+          )}
           {shown === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {shown === 'mapType' && <MapTypes settings={settings} onChange={onChange} onPicked={() => setOpen(null)} />}
           {shown === 'more' && (
@@ -271,6 +289,13 @@ function popoverClassName(popover: RailPopover, leaving: boolean): string {
 
 /** The popovers with a look of their own, by their class's modifier. */
 const popoverClasses: Partial<Record<RailPopover, string>> = { games: 'games', mapType: 'map-type', more: 'more' }
+
+/**
+ * The popovers that are panels, with a header of their name and a close button, as the event panel and
+ * the welcome tour have: Map Type and More are menus beside their buttons, closed by a pick or a click
+ * away, and Feedback has its own Cancel.
+ */
+const closable: readonly RailPopover[] = ['leagues', 'display', 'games']
 
 const popoverNames: Record<RailPopover, string> = {
   leagues: 'Leagues',

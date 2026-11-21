@@ -54,3 +54,21 @@ it('leaves every button usable once the tour is over', async () => {
   await mountRail(false)
   for (const label of ['Hide controls', 'Zoom in', 'Leagues', 'Games', 'More']) expect(usable(button(label)), label).toBe(true)
 })
+
+it('gives Leagues, Display Settings and Games a close button that closes them, and none to the menus', async () => {
+  await mountRail(false)
+  const close = () => document.querySelector<HTMLButtonElement>('#rail-popover .rail__popover-close')
+  for (const label of ['Leagues', 'Display Settings', 'Games']) {
+    await act(() => button(label).click())
+    expect(close()?.getAttribute('aria-label'), label).toBe(`Close ${label}`)
+    // A click with no pointer, as a key press makes: keyboard focus goes back to the popover's button.
+    await act(() => close()!.click())
+    expect(document.getElementById('rail-popover'), label).toBeNull()
+    expect(document.activeElement, label).toBe(button(label))
+  }
+  for (const label of ['Map Type', 'More']) {
+    await act(() => button(label).click())
+    expect(close(), label).toBeNull()
+    await act(() => button(label).click())
+  }
+})

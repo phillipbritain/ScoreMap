@@ -19,7 +19,7 @@ test('checks actual git history and squash-message input without counting existi
     git('commit', '--allow-empty', '-m', message)
     return git('rev-parse', 'HEAD')
   }
-  const check = (base, head, extraEnv = {}) => spawnSync(process.execPath, [script, base, head], {
+  const check = (base, head, extraEnv = {}) => spawnSync(process.execPath, [script, base, head].filter(Boolean), {
     cwd, env: { ...env, ...extraEnv }, encoding: 'utf8',
   })
 
@@ -48,7 +48,9 @@ test('checks actual git history and squash-message input without counting existi
   const event = join(cwd, 'event.json')
   writeFileSync(event, JSON.stringify({ pull_request: { title: 'Clean title',
     body: 'Description\n\nCo-authored-by: Claude <noreply@anthropic.com>' } }))
-  assert.equal(check(oldCredit, clean, { GITHUB_EVENT_PATH: event }).status, 1, 'catches a squash description')
+  assert.equal(check('--pr', undefined, { GITHUB_EVENT_PATH: event }).status, 1, 'catches a squash description')
+  assert.equal(check(oldCredit, clean, { GITHUB_EVENT_PATH: event }).status, 0,
+    'leaves the description to --pr, so an edit reruns only the metadata check')
   writeFileSync(event, JSON.stringify({ pull_request: { title: 'Disable Claude attribution', body: null } }))
-  assert.equal(check(oldCredit, clean, { GITHUB_EVENT_PATH: event }).status, 0, 'allows a clean PR')
+  assert.equal(check('--pr', undefined, { GITHUB_EVENT_PATH: event }).status, 0, 'allows a clean PR')
 })

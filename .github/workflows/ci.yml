@@ -5,10 +5,13 @@
 # web/server checks, so another merge makes an older PR update and recheck before it can merge.
 name: ci
 
+# Not on `edited`: a title/description edit would start a run that cancels the one testing the
+# push. The PR's title and description are checked by pr-metadata.yml instead. So retargeting a
+# PR into main (also `edited`) runs nothing here: push again after retargeting.
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
 
 # A newer push to the same pull request replaces a check still running on the old one.
 concurrency:
@@ -35,7 +38,8 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Check new commits, including old history brought back by a merge, before it reaches main.
+      # Check new commits, including old history brought back by a merge, before it reaches main
+      # (the PR's title and description: pr-metadata.yml).
       - name: Check commit attribution
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

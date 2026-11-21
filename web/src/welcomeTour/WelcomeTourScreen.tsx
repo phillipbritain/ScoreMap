@@ -274,7 +274,7 @@ const panelPart = (selector: string) => () => document.querySelectorAll(`.game-p
 
 /**
  * The game panel's steps (see gamePanelSteps): each lights one part of the panel Click a score card
- * opened, dimming the rest of it with the globe, with no arrow: what's lit is plain enough. The panel stays usable, so the viewer
+ * opened, dimming the rest of it with the globe, with no arrow but for Where to watch's, to the small TV button. The panel stays usable, so the viewer
  * can try what's lit. With no panel open (closed, or the tour picked up here after a reload), a step says
  * the same with nothing lit.
  */
@@ -288,12 +288,12 @@ const gamePanelStepParts: Record<GamePanelStepName, { heading: string; part: str
   panelTabs: {
     heading: 'Game details',
     part: '.game-details-tabs',
-    words: 'Open a tab for the score by period, scoring plays, drives, player stats and highlights, as the sport has them.',
+    words: 'Open a tab for the score breakdowns, scoring plays, drives, player stats, and highlights.',
   },
   panelWatch: {
     heading: 'Where to watch',
     part: '.game-details-tv',
-    words: 'The TV button shows where to watch the game, and more about it.',
+    words: 'The TV button shows which platform is broadcasting the event plus possible streaming and event detail links.',
   },
 }
 
@@ -310,7 +310,7 @@ function GamePanelStep({ step, onNext }: { step: GamePanelStepName; onNext: () =
   useRightAbove(step === 'panelTabs', panel, panelParts[step])
   return (
     <>
-      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={false} flush />
+      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={step === 'panelWatch'} flush />
       <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text">{words}</p>
       </TourPanel>

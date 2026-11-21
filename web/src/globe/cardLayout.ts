@@ -522,7 +522,7 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * gap from its own venue. No card covers a name in `names`; trails may cross them. A spot
  * whose trail crosses no card and that sits on no trail is taken over a nearer one while its trail
  * is at most clearTrailAllowance longer. A card with no spot within reach joins a card cluster
- * instead, as does a card once the card count have room (but the selected game's). So cards don't jump about as the globe turns, a card keeps where it was last time while it
+ * instead, as does a card once the card count have room on screen (but the selected game's). So cards don't jump about as the globe turns, a card keeps where it was last time while it
  * fits, give or take the drift, moving only back over its venue once that's clear; and a card looking
  * for room leaves the cards still to be placed where they were.
  *
@@ -541,6 +541,9 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     : undefined
   const lookedAgo = new Map<string, number>()
   const placed: CardBox[] = []
+  // How many cards placed show on screen, at least in part: a card sitting wholly off it (above a venue
+  // at the screen's edge) can't be seen, so it takes none of the card count's room.
+  let shown = 0
   // From each card's center to its venue: the part outside the card is its trail.
   const trails: Segment[] = []
   const shifts = new Map<string, ScreenOffset>()
@@ -548,7 +551,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
 
   for (const [index, card] of boxes.entries()) {
     // Past the card count: counted in a card cluster, without looking for room.
-    const counted = !card.selected && screen.cardCount !== undefined && placed.length >= screen.cardCount
+    const counted = !card.selected && screen.cardCount !== undefined && shown >= screen.cardCount
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
@@ -730,6 +733,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       const x = card.x + shift.dx
       const y = card.y + shift.dy
       placed.push({ ...card, x, y })
+      if (x + card.width / 2 > 0 && x - card.width / 2 < screen.width && y + card.height / 2 > 0 && y - card.height / 2 < screen.height) shown++
       trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
       continue
     }

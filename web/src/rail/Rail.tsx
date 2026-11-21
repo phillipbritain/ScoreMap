@@ -40,11 +40,11 @@ interface RailProps {
    * above the tour (see .rail--touring); the rest of the rail can't.
    */
   touring?: boolean
-  /** The games shown on the globe, which the Games popover lists. */
+  /** The games shown on the globe, which the Events popover lists. */
   games: readonly Game[]
-  /** Whether the games are in yet, so the Games button can be used (not under the loading screen). */
+  /** Whether the games are in yet, so the Events button can be used (not under the loading screen). */
   gamesReady: boolean
-  /** Opens a game picked from the Games popover. */
+  /** Opens a game picked from the Events popover. */
   onSelectGame: (gameId: string) => void
   /**
    * Whether the viewer collapsed the rail out of the way, leaving only its Show controls button. The
@@ -62,11 +62,11 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in four groups: zoom in, zoom
- * out and Home, which move the camera, left out on a touchscreen (see shownRailButtons); Leagues, Display Settings and Map Type; Games (with its
+ * out and Home, which move the camera, left out on a touchscreen (see shownRailButtons); Leagues, Display Settings and Map Type; Events (with its
  * count of games on it); and More (installing the app, sending feedback, the welcome tour again), whose Send feedback opens
  * the Feedback panel in its place. Each of the last five opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
- * Games popover closes on picking a game too. The arrow keys
+ * Events popover closes on picking a game too. The arrow keys
  * move through an open popover's controls, coming in from its button (see moveByArrows).
  *
  * Above them all, Hide controls folds the rest of the rail up into itself and, staying where it is as
@@ -190,7 +190,7 @@ export function Rail({
           </div>
           <div className="rail__group" inert={touring}>
             <RailButton
-              label="Games"
+              label="Events"
               popover="games"
               open={open}
               disabled={!gamesReady}
@@ -301,7 +301,7 @@ const popoverNames: Record<RailPopover, string> = {
   leagues: 'Leagues',
   display: 'Display Settings',
   mapType: 'Map Type',
-  games: 'Games',
+  games: 'Events',
   more: 'More',
   feedback: 'Feedback',
 }
@@ -309,7 +309,7 @@ const popoverNames: Record<RailPopover, string> = {
 /**
  * One of the rail's icon buttons, its icon found by its name, which is its tooltip too. A popover's
  * button says whether its popover is open. A badge is a count on its
- * corner (the Games button's games), part of its name for a screen reader. A note is a dot on its corner
+ * corner (the Events button's games), part of its name for a screen reader. A note is a dot on its corner
  * instead (the Leagues button's, while the viewer's leagues keep games off the globe), the note itself
  * part of its name and tooltip.
  */

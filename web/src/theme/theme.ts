@@ -561,7 +561,7 @@ const settings = {
     /**
      * The rail and its popovers (Leagues, Display Settings and Games): their surface, the popovers' thin
      * outline that sets them off from the globe, and their drop shadow; the
-     * icon of a button whose popover is open (and the Games button's count); the count of a sport's leagues that are on, the hint
+     * icon of a button whose popover is open (and the Events button's count); the count of a sport's leagues that are on, the hint
      * beside "All leagues", a league chip's outline and the badge counting leagues, and a chip that's
      * on: lit as a Live score card is, its fill with this share of its outline's color mixed in, its
      * text, and a glow in its outline's color, this far and this strong. Its size: a button and its

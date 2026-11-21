@@ -207,6 +207,8 @@ A game's status shows by **brightness and glow, not color** (ADR-0012). Color is
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 
+In the dark theme only score cards glow: small pins and clusters have none, so they keep out of the way of the cards, and show their status by their cores and how far they fade.
+
 A score card fades by color, not by being see-through: its game's color, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
 
 Each status still has its own color in the palette, though all three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A color the viewer picks takes the place of its status's, and text written on it (a tennis set in the event panel's band) is the theme's main text or its paper surface, whichever stands out from it more.
@@ -218,7 +220,7 @@ A status's color is the palette's; the rest of its look is each component's own,
 | `palette.<status>` | The game's color, and the text written on it (see [The palette](#the-palette)) |
 | `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its color, radius in pixels and opacity |
 | `components.Pin.<status>.core.ring` | The width of the ring of the game's color around the core, in pixels (0 is no ring) |
-| `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 is no glow) |
+| `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 or opacity 0 is no glow). The radius also sets the room a small pin keeps clear of place names, glow or not |
 | `components.Cluster.<status>.opacity` | How opaque a card cluster showing as this status is: its disc, outline and count alike. A venue cluster doesn't fade, as a venue dot doesn't |
 | `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
 | `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity |
@@ -227,15 +229,15 @@ The dark theme's:
 
 | Status | Color | Pin core | Pin glow | Cluster | Card fade | Card glow |
 | --- | --- | --- | --- | --- | --- | --- |
-| Live | `gold.500` | `gold.100`, 3.5px, opacity 1, 1.5px ring | 15px at 0.8 | 1 | 0 | 12px at 0.8 |
-| Upcoming | `gold.500` | `upcoming.main`, 3px, 0.9, no ring | 9px at 0.4 | 0.9 | 0.15 | 4px at 0.3 |
+| Live | `gold.500` | `gold.100`, 3.5px, opacity 1, 1.5px ring | none (15px reach) | 1 | 0 | 12px at 0.8 |
+| Upcoming | `gold.500` | `upcoming.main`, 3px, 0.9, no ring | none (9px reach) | 0.9 | 0.15 | 4px at 0.3 |
 | Final | `gold.500` | `final.main`, 2.5px, 0.5, no ring | none | 0.55 | 0.45 | none |
 
 The card fades are what the cards' opacities were before cards were made solid (1 minus 1, 0.85 and 0.55), so they look as close to that as a solid card can.
 
 How status reaches the rest of the globe:
 
-- **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme that's 0.6, so a Live cluster glows at 0.48. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the game color its games share, or the accent (`palette.live.main`) when their colors differ.
+- **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme it's 0 and the pins don't glow, so no cluster does. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the game color its games share, or the accent (`palette.live.main`) when their colors differ.
 - **Pulses** play in the game's color, over its small pin, score card or cluster alike. A score and a start play the same pulse: one small ring over a small pin or a cluster, and the card's edge lit over a score card, which doesn't move (a pop there made cards jump). A finish plays none; it celebrates instead (see [Where the theme reaches](#where-the-theme-reaches)).
 - **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
 - **Glow means a game.** Panels and controls have no glow: in the dark theme the event panel's glow has opacity 0, and their drop shadows are `transparent`, so they cast none (see [Glass](#glass)).
@@ -351,10 +353,10 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
 | `components.PlaceNames.city.dot.radius`, `.ring` | The dot where a named city is, in the city name's color, and the ring around it in the name's outline color | 2.25 and 0.75 |
-| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 10 |
-| `components.Cluster.glowRadius` | Its glow's radius | 20 |
+| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 8.5 |
+| `components.Cluster.glowRadius` | Its glow's radius | 17 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
-| `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
+| `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 2 |
@@ -365,7 +367,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
 | `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's color | 12, 0.6 |
 | `components.Hover.cardDot.radius` | A hovered card's dot where its trail meets it | 2.75 |
-| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 28 |
+| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 24 |
 | `components.Pulse.ring` | How thick a pulse's ring is | 3 |
 
 ### On the page
@@ -427,7 +429,7 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 | `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
 | `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.18, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
-| `components.Cluster.count.size` | Its size, a type style's | `footnote` |
+| `components.Cluster.count.size` | Its size, a type style's | `small` |
 
 ## What checking rejects
 

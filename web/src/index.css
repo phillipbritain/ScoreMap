@@ -2914,11 +2914,6 @@ body {
 @media (max-width: 640px) {
   .event-panel {
     --event-panel-bottom: 0px;
-    /* Its least height, kept even where that reaches past the rail's foot (a short phone's): a team
-       game's score block (two rows), the venue's row, the tab bar and a tab's least room (see
-       .game-details), so the tabs are never squeezed out. */
-    --event-panel-least-height: 304px;
-    max-height: max(25%, min(var(--event-panel-least-height), 100%), calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing)));
     width: 100%;
     border-radius: 0;
     touch-action: none;

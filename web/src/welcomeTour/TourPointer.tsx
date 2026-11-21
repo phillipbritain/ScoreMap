@@ -31,6 +31,8 @@ interface TourPointerProps {
    * of the event panel, so the room doesn't take in the panel's parts beside it.
    */
   flush?: boolean
+  /** Whether the spotlight is ringed in the theme's Live color, to call attention to a target that would otherwise blend in (Game details' tabs). */
+  ringed?: boolean
 }
 
 interface Boxes {
@@ -46,7 +48,7 @@ interface Boxes {
  * theme's Live color runs from the panel's edge to it. Neither catches a press; the lit target can
  * be given its own button over it (Click a score card's card). Drawn in the tour's layer, which it fills.
  */
-export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fromTopWhen, arrow: drawArrow = true, flush = false }: TourPointerProps) {
+export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fromTopWhen, arrow: drawArrow = true, flush = false, ringed = false }: TourPointerProps) {
   const layer = useRef<HTMLDivElement>(null)
   const find = useRef({ target, aim, fromTopWhen })
   useLayoutEffect(() => {
@@ -97,7 +99,7 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fr
       <div ref={layer} className="welcome-tour__pointer" aria-hidden="true">
         {hole && arrow && (
           <>
-            <div className="welcome-tour__spotlight" style={hole} />
+            <div className={ringed ? 'welcome-tour__spotlight welcome-tour__spotlight--ringed' : 'welcome-tour__spotlight'} style={hole} />
             <svg className="welcome-tour__arrow">
               <defs>
                 {/* Its base at the line's end, its tip headLength on (see tourArrow). */}

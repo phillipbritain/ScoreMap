@@ -223,16 +223,10 @@ export class GlobeMap {
       drawFlamesOnDemand(map)
 
       map.on('style.load', this.addPins)
-      // Cards follow the pin source, which changes as the camera moves and data arrives.
-      map.on('render', this.syncCards)
-      // And once the map goes idle, which can be the first the pin source counts as loaded: MapLibre
-      // lets go of tiles held over from the last load after a frame's render event, and goes idle
-      // without drawing another frame (as after the pin source reloads).
-      map.on('idle', this.syncCards)
-      // MapLibre goes idle after a frame with nothing loading, moving or left to place (see settled).
-      // After the cards' sync above: the settling checks Ready on idle, after that idle's card sync.
-      map.on('render', this.drew)
-      map.on('idle', this.goneIdle)
+      // Each frame event syncs the cards, then tells the settling: one listener for each, so the
+      // settling always hears of a frame or idle after that event's card sync (see frameDrawn, wentIdle).
+      map.on('render', this.frameDrawn)
+      map.on('idle', this.wentIdle)
       map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
       map.on('click', cardlessSmallPinLayer, this.selectPin)
       for (const layer of [cardClusterLayer, cardlessSmallPinLayer]) {
@@ -496,10 +490,23 @@ export class GlobeMap {
     for (const layer of layers.belowGameNames) map.addLayer(layer, gameCityNameLayer)
   }
 
-  private readonly syncCards = () => this.cards.sync()
+  /** The map has drawn a frame: the cards follow the pin source, which changes as the camera moves and data arrives. */
+  private readonly frameDrawn = () => {
+    this.cards.sync()
+    this.settling.frameDrawn()
+  }
 
-  private readonly drew = () => this.settling.frameDrawn()
-  private readonly goneIdle = () => this.settling.wentIdle({ pinsLoaded: this.pinsLoaded() })
+  /**
+   * The map has gone idle, with nothing loading, moving or left to place (see settled). The cards
+   * sync first, as this can be the first the pin source counts as loaded: MapLibre lets go of tiles
+   * held over from the last load after a frame's render event, and goes idle without drawing another
+   * frame (as after the pin source reloads). Only then is the settling told, so Ready is checked
+   * after this idle's card sync.
+   */
+  private readonly wentIdle = () => {
+    this.cards.sync()
+    this.settling.wentIdle({ pinsLoaded: this.pinsLoaded() })
+  }
 
   /** Not settled until the map has drawn a frame since, so drawing one even if nothing else asks for it. */
   private unsettle(): void {

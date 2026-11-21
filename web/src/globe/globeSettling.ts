@@ -16,9 +16,8 @@ export type SettlingStage = Exclude<LoadingStage, 'constructionError'>
  *
  * Whether the pin source has loaded is given in by its caller each time it's needed.
  *
- * It relies on one order of events from the map: as the map goes idle, the score cards sync (see
- * cardsSynced) before the settling is told the map went idle (see wentIdle), so Ready is checked
- * after that idle's card sync.
+ * GlobeMap tells it of each frame and idle only after that event's score card sync (see
+ * cardsSynced), so Ready is checked on going idle after that idle's card sync (see wentIdle).
  */
 export interface GlobeSettling {
   /**

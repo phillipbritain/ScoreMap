@@ -22,7 +22,7 @@ export type TourEvent =
   | { kind: 'done' }
   /** Click a score card → The event panel, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened' }
-  /** Any step → finished, by the panel's ×, its Skip tour or Escape. */
+  /** Any step → finished, by the panel's ×, Welcome's Skip tour or Escape. */
   | { kind: 'closed' }
   /** Any step, or finished → Welcome, by "Welcome tour" in More on the rail, which stays usable during the tour. */
   | { kind: 'again' }

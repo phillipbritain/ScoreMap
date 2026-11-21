@@ -44,9 +44,8 @@ interface WelcomeTourScreenProps {
 /**
  * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen, over a
  * light dim that keeps the globe and rail from being used beneath it. Each step moves on with its own
- * choice or button; its panel's ×, its Skip tour (every step but All set, whose Done ends it already), or
- * Escape closes the tour, which finishes it. There are no dots. What each step does is welcomeTour's;
- * this only draws it.
+ * choice or button; its panel's ×, Welcome's Skip tour, or Escape closes the tour, which finishes it.
+ * There are no dots. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards, gameToTry }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
@@ -137,6 +136,7 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
     <TourPanel
       heading="Welcome to ScoreMap!"
       headingLevel="h2"
+      skippable
       action={
         picking && (
           <>
@@ -368,7 +368,7 @@ function useRightAbove(on: boolean, panel: RefObject<HTMLElement | null>, part: 
 /** All set: the end of the tour, over the game's panel the score card opened, until Done finishes it. */
 function AllSetStep({ onDone }: { onDone: () => void }) {
   return (
-    <TourPanel heading="You're all set!" action={<TourButton onClick={onDone}>Done</TourButton>} skippable={false}>
+    <TourPanel heading="You're all set!" action={<TourButton onClick={onDone}>Done</TourButton>}>
       <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the games.</p>
     </TourPanel>
   )
@@ -419,7 +419,7 @@ interface ScoreCardStepProps {
  * Click a score card: what a score card opens, pointing at the tour's game to try (Ravens v Steelers,
  * see tourGameToTry), lit and pressable as part of the tour, when it's clear of the panel (see
  * scoreCardToTry). The tour's camera keeps it so; on a screen where it isn't, the step says the same without pointing. Nothing moves the globe
- * to bring a card into view. It has no Done: pressing the card moves on to The event panel, and its × or Skip tour closes the tour.
+ * to bring a card into view. It has no Done: pressing the card moves on to The event panel, and its × closes the tour.
  */
 function ScoreCardStep({ onOpenGame, scoreCards, gameToTry }: ScoreCardStepProps) {
   const panel = useRef<HTMLElement>(null)
@@ -498,7 +498,7 @@ interface TourPanelProps {
   children: ReactNode
   /** The step's own buttons, in its action button panel at the panel's foot. */
   action?: ReactNode
-  /** Whether the action button panel starts with Skip tour, which closes the tour as the × does: all but All set's. */
+  /** Whether the action button panel starts with Skip tour, which closes the tour as the × does: Welcome's only. */
   skippable?: boolean
   /** The panel itself, for a step's arrow to start from. */
   ref?: Ref<HTMLElement>
@@ -506,10 +506,10 @@ interface TourPanelProps {
 
 /**
  * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the event
- * panel's, that closes the tour, and Skip tour, doing the same, first in its action button panel. Its
+ * panel's, that closes the tour, and on Welcome Skip tour, doing the same, first in its action button panel. Its
  * content scrolls between the heading and the step's buttons.
  */
-function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, skippable = true, ref }: TourPanelProps) {
+function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, skippable = false, ref }: TourPanelProps) {
   const headingId = useId()
   const close = useContext(TourClose)
   return (

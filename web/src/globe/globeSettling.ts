@@ -12,7 +12,7 @@ export type SettlingStage = Exclude<LoadingStage, 'constructionError'>
 /**
  * The globe's settling: when the globe is still right now (settled), and when it first becomes
  * Ready (see GLOSSARY.md). A plain object, told what happens on the map and answering what follows;
- * it never touches MapLibre or the page. GlobeMap and ScoreCardMarkers both report to the one object.
+ * it never touches MapLibre or the page. GlobeMap and the score card scene (see ScoreCardScene) both report to the one object.
  *
  * Whether the pin source has loaded is given in by its caller each time it's needed.
  *

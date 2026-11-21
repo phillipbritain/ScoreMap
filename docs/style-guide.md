@@ -353,8 +353,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
 | `components.PlaceNames.city.dot.radius`, `.ring` | The dot where a named city is, in the city name's color, and the ring around it in the name's outline color | 2.25 and 0.75 |
-| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 13 |
-| `components.Cluster.glowRadius` | Its glow's radius | 26 |
+| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 10 |
+| `components.Cluster.glowRadius` | Its glow's radius | 20 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0.6 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
@@ -367,7 +367,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
 | `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's color | 12, 0.6 |
 | `components.Hover.cardDot.radius` | A hovered card's dot where its trail meets it | 2.75 |
-| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 36 |
+| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 28 |
 | `components.Pulse.ring` | How thick a pulse's ring is | 3 |
 
 ### On the page
@@ -429,7 +429,7 @@ Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropoli
 | `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
 | `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.18, country 0.12 |
 | `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
-| `components.Cluster.count.size` | Its size, a type style's | `caption` |
+| `components.Cluster.count.size` | Its size, a type style's | `footnote` |
 
 ## What checking rejects
 

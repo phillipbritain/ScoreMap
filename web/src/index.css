@@ -1652,7 +1652,7 @@ body {
 }
 
 
-/* A count on a button's corner (the Games button's games): a chip of the rail's glass, ringed and
+/* A count on a button's corner (the Events button's games): a chip of the rail's glass, ringed and
    numbered in the open color, as a score card is outlined in its game's. */
 .rail__button { position: relative; }
 
@@ -3283,7 +3283,7 @@ body {
   gap: calc(2 * var(--spacing));
   justify-content: flex-end;
   /* The action button panel: a band of its own across the panel's foot, holding the step's buttons
-     (Back, Show these, Next, Done), set off from the step's content above by a line and a slightly
+     (Skip tour, Back, Show these, Next, Done), set off from the step's content above by a line and a slightly
      lighter fill. Slim, so the buttons sit close to its line and the panel's foot. */
   margin: 0 calc(-1 * var(--panel-side)) calc(-1 * var(--panel-end));
   padding: calc(2 * var(--spacing)) var(--panel-side);
@@ -3319,6 +3319,11 @@ body {
     background: var(--palette-action-hover);
     color: var(--palette-text-primary);
   }
+}
+
+/* Skip tour, at the start of the action button panel, apart from the step's own buttons at its end. */
+.welcome-tour__button--skip {
+  margin-right: auto;
 }
 
 /* "Show these" before the leagues have loaded, or with nothing picked yet (still pressable, to say why). */
@@ -3499,7 +3504,7 @@ body {
   }
 }
 
-/* The Games popover (see Rail): the search, then the games scrolling under it while the popover stays
+/* The Events popover (see Rail): the search, then the games scrolling under it while the popover stays
    still. Keyboard selection stays available for games in a card cluster. */
 .rail__popover--games {
   --rail-popover-padding: calc(1.5 * var(--spacing));

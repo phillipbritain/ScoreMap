@@ -6,7 +6,7 @@ import { sidesTopFirst } from './sides'
 import { TeamLogoImage } from './TeamLogoImage'
 
 /**
- * The Games popover's list (see Rail): every filtered game, independent of the camera and of which pins
+ * The Events popover's list (see Rail): every filtered game, independent of the camera and of which pins
  * have joined a cluster, with a search to narrow it, which takes the cursor on opening where there's a
  * mouse (on a touch screen it waits for a tap, so the keyboard doesn't cover the list). The games are
  * grouped under their leagues, each a row of the two teams' logos and the matchup; a matchup cut short
@@ -44,11 +44,11 @@ export function GameNavigation({ games, onSelect }: {
         type="search"
         className="game-navigation__search"
         placeholder="Search teams, leagues, places"
-        aria-label="Search games"
+        aria-label="Search events"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      <ul aria-label="Games" onFocus={(event) => { focusedGame.current = event.target }}>
+      <ul aria-label="Events" onFocus={(event) => { focusedGame.current = event.target }}>
         {byLeague(found).map(([league, inLeague]) => [
           <li key={`league:${league}`} className="game-navigation__league" role="presentation">{league}</li>,
           ...inLeague.map((game) => (
@@ -64,7 +64,7 @@ export function GameNavigation({ games, onSelect }: {
           )),
         ])}
         {found.length === 0 && (
-          <li className="game-navigation__none">{games.length === 0 ? 'No games match your filters.' : 'No games match your search.'}</li>
+          <li className="game-navigation__none">{games.length === 0 ? 'No events match your filters.' : 'No events match your search.'}</li>
         )}
       </ul>
     </div>

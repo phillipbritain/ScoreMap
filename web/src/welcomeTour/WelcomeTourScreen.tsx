@@ -44,8 +44,8 @@ interface WelcomeTourScreenProps {
 /**
  * The welcome tour (see GLOSSARY.md): its step's panel of glass in the middle of the screen, over a
  * light dim that keeps the globe and rail from being used beneath it. Each step moves on with its own
- * choice or button; its panel's ×, or Escape, closes the tour, which finishes it. There is no Skip or
- * dots. What each step does is welcomeTour's; this only draws it.
+ * choice or button; its panel's ×, Welcome's Skip tour, or Escape closes the tour, which finishes it.
+ * There are no dots. What each step does is welcomeTour's; this only draws it.
  */
 export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onChange, onOpenGame, scoreCards, gameToTry }: WelcomeTourScreenProps) {
   const { leagues } = leagueList
@@ -94,7 +94,7 @@ export function WelcomeTourScreen({ progress, onEvent, leagueList, settings, onC
   )
 }
 
-/** Closes the tour, for each step's panel's ×. */
+/** Closes the tour, for each step's panel's × and Skip tour. */
 const TourClose = createContext<() => void>(() => {})
 
 /** How long the note on why "Show these" can't go on stays (its fade is in the CSS, .welcome-tour__nothing-picked). */
@@ -136,6 +136,7 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
     <TourPanel
       heading="Welcome to ScoreMap!"
       headingLevel="h2"
+      skippable
       action={
         picking && (
           <>
@@ -226,7 +227,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   Leagues: 'Leagues: Select which sports, leagues, and conferences you want to see',
   'Display Settings': 'Display Settings: colors for each sport and league',
   'Map Type': 'Map Type: the plain map or satellite imagery',
-  Games: 'Games: find any game and go to it',
+  Events: 'Events: find any event and go to it',
   More: 'More: send feedback, or see this tour again',
 }
 
@@ -497,15 +498,18 @@ interface TourPanelProps {
   children: ReactNode
   /** The step's own buttons, in its action button panel at the panel's foot. */
   action?: ReactNode
+  /** Whether the action button panel starts with Skip tour, which closes the tour as the × does: Welcome's only. */
+  skippable?: boolean
   /** The panel itself, for a step's arrow to start from. */
   ref?: Ref<HTMLElement>
 }
 
 /**
- * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the game
- * panel's, that closes the tour. Its content scrolls between the heading and the step's buttons.
+ * A step's panel: centered, labeled by its heading, with a × in its top right corner, as the event
+ * panel's, that closes the tour, and on Welcome Skip tour, doing the same, first in its action button panel. Its
+ * content scrolls between the heading and the step's buttons.
  */
-function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, ref }: TourPanelProps) {
+function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, skippable = false, ref }: TourPanelProps) {
   const headingId = useId()
   const close = useContext(TourClose)
   return (
@@ -515,7 +519,16 @@ function TourPanel({ heading, headingLevel: Heading = 'h3', children, action, re
       </Heading>
       {/* Scrolls on its own when it doesn't fit, so the heading and the step's buttons stay in view. */}
       <div className="welcome-tour__body">{children}</div>
-      {action && <div className="welcome-tour__actions">{action}</div>}
+      {(action || skippable) && (
+        <div className="welcome-tour__actions">
+          {skippable && (
+            <TourButton onClick={close} quiet skip>
+              Skip tour
+            </TourButton>
+          )}
+          {action}
+        </div>
+      )}
       <button type="button" className="welcome-tour__close" onClick={close} aria-label="Close welcome tour">
         ×
       </button>
@@ -530,14 +543,17 @@ interface TourButtonProps {
   unavailable?: boolean
   /** A way back rather than on (Back): outlined but not lit, so the step's own button stands out beside it. */
   quiet?: boolean
+  /** Skip tour: at the start of the action button panel, apart from the step's own buttons at its end. */
+  skip?: boolean
   children: ReactNode
 }
 
-function TourButton({ onClick, disabled, unavailable, quiet, children }: TourButtonProps) {
+function TourButton({ onClick, disabled, unavailable, quiet, skip, children }: TourButtonProps) {
+  const className = ['welcome-tour__button', quiet && 'welcome-tour__button--quiet', skip && 'welcome-tour__button--skip'].filter(Boolean).join(' ')
   return (
     <button
       type="button"
-      className={quiet ? 'welcome-tour__button welcome-tour__button--quiet' : 'welcome-tour__button'}
+      className={className}
       onClick={onClick}
       disabled={disabled}
       aria-disabled={unavailable || undefined}

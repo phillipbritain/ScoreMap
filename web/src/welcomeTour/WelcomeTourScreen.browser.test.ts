@@ -227,6 +227,27 @@ it.each(['welcome', 'controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWa
   expect(changed).not.toHaveBeenCalled()
 })
 
+it('closes from Welcome by Skip tour, as the × does', async () => {
+  const { changed, event } = await mountTour()
+  await click('Skip tour')
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+  expect(changed).not.toHaveBeenCalled()
+})
+
+it("closes from My leagues' picker by Skip tour without applying its picks", async () => {
+  const { changed, event } = await mountTour()
+  await click('My leagues')
+  await click('NBA')
+  await click('Skip tour')
+  expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
+  expect(changed).not.toHaveBeenCalled()
+})
+
+it.each(['controls', 'scoreCard', 'eventPanel', 'panelTabs', 'panelWatch', 'allSet'] as const)('has no Skip tour on %s, past Welcome', async (progress) => {
+  await mountTour(progress)
+  expect([...document.querySelectorAll('button')].map((found) => found.textContent?.trim())).not.toContain('Skip tour')
+})
+
 it("closes from My leagues' picker by Escape without applying its picks", async () => {
   const { changed, event } = await mountTour()
   await click('My leagues')

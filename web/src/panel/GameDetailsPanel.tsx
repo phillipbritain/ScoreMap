@@ -49,7 +49,7 @@ export function WatchInfo({ details, failed, onToggle, children }: {
   )
 }
 
-export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle }: {
+export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle, onTabOpened }: {
   game: Game
   details: GameDetails | null
   failed: boolean
@@ -58,6 +58,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
   /** Whether its tabs (and minimize button) can't be used yet, as in the welcome tour before Game details. */
   locked?: boolean
   onToggle: (open: boolean) => void
+  onTabOpened?: () => void
 }) {
   const contest = game.contest.kind === 'sides' ? game.contest : null
   const periodSport = ['Football', 'Basketball', 'Baseball', 'Hockey'].includes(game.sport)
@@ -110,6 +111,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
                 setSelected(tab)
                 setExpanded(true)
                 onToggle(true)
+                onTabOpened?.()
               }} onKeyDown={(event) => moveFocus(event, index)}>
               {tab}
             </button>

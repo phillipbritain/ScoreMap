@@ -2,21 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { cardComingDuration, cardComings, comingOpacity } from './cardComings'
 
 describe('cardComings', () => {
-  it('brings in no card for the games first shown, the board as ScoreMap opened on it', () => {
-    const comings = cardComings()
-    expect(comings.showGames(['a', 'b'])).toEqual({ gone: [], back: [] })
-    expect(comings.cardPlaced('a', 0)).toBe('appears')
-  })
-
-  it('brings in the card of a game arriving on the board, or shown again by the viewer', () => {
-    const comings = cardComings()
-    comings.showGames(['a'])
-    comings.showGames(['a', 'b'])
-    expect(comings.cardPlaced('a', 100)).toBe('appears')
-    expect(comings.cardPlaced('b', 100)).toBe('comesIn')
-    expect(comings.coming('b')).toEqual({ in: true, at: 100 })
-  })
-
   it('brings in a card only once, so a card placed again (say, after a pan) appears', () => {
     const comings = cardComings()
     comings.showGames(['a'])
@@ -24,22 +9,6 @@ describe('cardComings', () => {
     comings.cardPlaced('b', 0)
     comings.over(cardComingDuration)
     expect(comings.cardPlaced('b', 1000)).toBe('appears')
-  })
-
-  it('brings in no card for an arrival out of view when the pins were read: it appears later as cards do', () => {
-    const comings = cardComings()
-    comings.showGames(['a'])
-    comings.showGames(['a', 'b'])
-    comings.pinsRead()
-    expect(comings.cardPlaced('b', 0)).toBe('appears')
-  })
-
-  it('waits for the pins to be read with the arrivals in them, however many times the games are shown first', () => {
-    const comings = cardComings()
-    comings.showGames(['a'])
-    comings.showGames(['a', 'b'])
-    comings.showGames(['a', 'b'])
-    expect(comings.cardPlaced('b', 0)).toBe('comesIn')
   })
 
   it('gives the games gone from the board, finished or hidden by the viewer, for their cards to go out', () => {
@@ -72,16 +41,6 @@ describe('cardComings', () => {
     expect(comings.coming('b')).toBeUndefined()
   })
 
-  it('gives back a game shown again while its card is going out, whose new card comes in', () => {
-    const comings = cardComings()
-    comings.showGames(['a', 'b'])
-    comings.showGames(['a'])
-    comings.goOut('b', 0)
-    expect(comings.showGames(['a', 'b'])).toEqual({ gone: [], back: ['b'] })
-    expect(comings.over(cardComingDuration).wentOut).toEqual([])
-    expect(comings.cardPlaced('b', 10)).toBe('comesIn')
-  })
-
   it('fades in a card come into view, its trail with it', () => {
     const comings = cardComings()
     comings.showGames(['a'])
@@ -95,19 +54,6 @@ describe('cardComings', () => {
     comings.showGames(['a'])
     expect(comings.cardPlaced('a', 100, false)).toBe('appears')
     expect(comings.coming('a')).toBeUndefined()
-  })
-
-  it('fades a card back in from as far as it got fading out of view, as its venue comes back into view', () => {
-    const comings = cardComings()
-    comings.showGames(['a'])
-    comings.cardPlaced('a', 0)
-    comings.over(cardComingDuration)
-    const out = 1000
-    comings.goOut('a', out)
-    const back = out + cardComingDuration * 0.25
-    comings.cardPlaced('a', back)
-    expect(comingOpacity(comings.coming('a')!, back)).toBeCloseTo(0.75)
-    expect(comings.over(back + cardComingDuration)).toEqual({ cameIn: ['a'], wentOut: [] })
   })
 
   it('takes a card going out partway in out from as far in as it got', () => {

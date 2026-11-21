@@ -9,11 +9,8 @@ import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHapp
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import type { CardDensity } from '../settings/viewerSettings'
-import { cardComings } from './cardComings'
-import { cardMoves } from './cardMoves'
-import { cardPins, type CardPin } from './cardPins'
-import { cardRank, nearCenter } from './cardRank'
-import { cardCount, cardLayout, type CardLayout, type LayoutScene, type ScreenCard, type Showing, type VenueSizes } from './cardLayout'
+import { cardPins } from './cardPins'
+import type { CardLayout, Showing, VenueSizes } from './cardLayout'
 import { cardClusterReach, cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
 import type { PinAnimation } from './pinAnimation'
 import { PlacedCard, animationClass } from './placedCard'
@@ -29,6 +26,7 @@ import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scor
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { cardDotAt } from './cardDot'
 import { selectedStacking, stacking } from './statusLook'
+import { scoreCardScene, type CardLaidOut, type CardsOnPage, type ScoreCardScene } from './scoreCardScene'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -57,38 +55,30 @@ export interface ShownScoreCard {
  * abbreviations, score, clock line). Cards that would overlap are moved apart with a trail back to
  * their venue; where there's no room for them all, the rest are shown as a card cluster. The trails
  * and card clusters are drawn by the map, beneath the place names (see cardLayoutLayers).
+ *
+ * Which games have cards, and what becomes of them each frame, is the score card scene's (see
+ * ScoreCardScene): this tells it what happens on the map, and applies what it decides to the page's
+ * elements and to MapLibre.
  */
 export class ScoreCardMarkers {
   private readonly placed = new Map<string, PlacedCard>()
+  /** Cards going out, as the scene has them go (see ScoreCardScene). */
+  private readonly goingOut = new Map<string, PlacedCard>()
   private games = new Map<string, PlacedGame>()
   private justHappened: JustHappened = noneJustHappened
   private selectedGameId: string | null = null
   /** The game whose card the pointer is on, if any: its trail and venue dot are drawn bolder (see cardLayoutLayers). */
   private hoveredGameId: string | null = null
-  /**
-   * Which cards are coming in or going out, as their games arrive on the board or leave it, or their
-   * venues come into view or go out of it (see cardComings).
-   */
-  private readonly comings = cardComings()
-  /** Which cards are gliding to where the card layout moved them (see cardMoves). */
-  private moves = cardMoves()
   /** Whether the viewer asks for less motion: cards then go straight where they're moved. */
   private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
-  /**
-   * Cards going out, their games gone from the board or their venues out of view: out of the layout,
-   * so they hold no room, and drawn with the trail they had until they've gone.
-   */
-  private readonly goingOut = new Map<string, PlacedCard>()
-  /** The trails of the cards laid out, as last drawn (see drawLayout). */
-  private layoutTrails: TrailOnGlobe[] = []
   private readonly map: MapLibreMap
   private readonly theme: () => Theme
   private readonly colorOf: (game: Game) => string
   private readonly placeNames: PlaceNames
   private readonly trails: TrailLayer
   private readonly onSelect: (gameId: string) => void
-  /** Where each card goes, and how each game shows, as last laid out (see cardLayout). */
-  private layout: CardLayout = cardLayout()
+  /** Which games have cards, and what becomes of them each frame (see ScoreCardScene). */
+  private readonly scene: ScoreCardScene
   /** The card clusters as last drawn, for pulses over them (see cardLayoutDrawing). */
   private cardClustersDrawn: DrawnCardCluster[] = []
   /**
@@ -96,19 +86,11 @@ export class ScoreCardMarkers {
    * features with the points worked out on screen left blank, and where on the globe those points were put.
    */
   private layoutDrawn: { shape: string; lngLats: [number, number][]; footprints: number[][] } = { shape: '', lngLats: [], footprints: [] }
-  /** The globe's settling, told each sync's result and each change from outside (see GlobeSettling). */
-  private readonly settling: GlobeSettling
-  /** Whether the camera has moved since the cards were last laid out (see CardScene.moving). */
-  private moving = false
   /**
    * The map's size on screen, until it's resized: reading it from the page each frame would have the
    * browser work out the cards' styles, just moved, there and then.
    */
   private mapSize: { width: number; height: number } | null = null
-  /** How many cards show at once where it's busy (see cardCount). */
-  private cardDensity: CardDensity
-  /** Whether the card density changed since the cards were last laid out (see CardScene.cardCountChanged). */
-  private cardCountChanged = false
 
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
@@ -128,14 +110,19 @@ export class ScoreCardMarkers {
     settling: GlobeSettling,
     cardDensity: CardDensity,
   ) {
-    this.settling = settling
-    this.cardDensity = cardDensity
     this.map = map
     this.theme = theme
     this.colorOf = colorOf
     this.placeNames = placeNames
     this.trails = trails
     this.onSelect = onSelect
+    this.scene = scoreCardScene({
+      page: this.page,
+      settling,
+      cardDensity,
+      reducedMotion: () => this.reducedMotion.matches,
+      laidOut: traceLayout,
+    })
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
     map.on('move', this.cameraMoved)
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
@@ -145,18 +132,14 @@ export class ScoreCardMarkers {
 
   /** Shows as many cards at once as this card density allows (see cardCount), laid out afresh. */
   setCardDensity(density: CardDensity): void {
-    if (density === this.cardDensity) return
-    this.cardDensity = density
-    this.cardCountChanged = true
-    this.settling.settleAfresh()
-    this.sync()
+    if (this.scene.setCardDensity(density)) this.sync()
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
   setSelected(gameId: string | null): void {
     this.selectedGameId = gameId
     this.trails.select(gameId)
-    this.settling.settleAfresh()
+    this.scene.select(gameId)
     this.sync()
   }
 
@@ -166,8 +149,7 @@ export class ScoreCardMarkers {
    */
   restyle(): void {
     for (const placed of this.placed.values()) placed.measureAfresh()
-    this.layout = cardLayout()
-    this.settling.settleAfresh()
+    this.scene.restyled()
     this.sync()
   }
 
@@ -190,201 +172,114 @@ export class ScoreCardMarkers {
   setGames(games: readonly PlacedGame[], justHappened: JustHappened = noneJustHappened): void {
     this.games = new Map(games.map((game) => [game.id, game]))
     this.justHappened = justHappened
-    const { gone, back } = this.comings.showGames(this.games.keys())
-    // A game back while its card was going out gets a new card, coming in: the old one goes at once.
-    for (const gameId of back) this.removeGoingOut(gameId)
-    const now = performance.now()
-    for (const gameId of gone) {
-      const placed = this.placed.get(gameId)
-      // A card on screen goes out; one with no room (or not yet laid out) just goes, as sync removes it.
-      if (placed?.offset && !placed.inCardCluster) this.goOut(gameId, now)
-    }
-    this.settling.settleAfresh()
+    this.scene.showGames(games)
     this.sync()
   }
 
   /**
-   * Places, updates and removes cards to match what the pin source shows, for every game whose venue is on screen on the side of the globe facing the viewer, and the selected game's: at every zoom, with no reach from the center of the view. The card count and room decide which have cards (see layOutCards).
+   * Shows the score card scene a frame of the map (see ScoreCardScene.frame): the pins as the pin
+   * source has them, if it can be read, and where their venues are on screen.
    */
   sync(): void {
-    if (!this.map.getSource(pinSource)) return
-    const pinsLoaded = this.map.isSourceLoaded(pinSource)
-    let changed = !pinsLoaded
-    const pins = pinsLoaded
-      ? cardPins(this.map.querySourceFeatures(pinSource) as Feature<Point>[])
-      : // The source reloads after every change of games, and can't be read until it has. Live games
-        // can change faster than it loads, so meanwhile the cards placed stay put but still show
-        // each change.
-        this.placedPins()
-    // A venue behind the globe gets no card, rather than one MapLibre fades (and its trail and
-    // room in the layout with it): cards fade in and out as their venues cross the horizon, out of
-    // the layout at once.
-    // Nor does a venue off screen (but the selected game's), so no card hangs over the edge for a venue out of view.
-    const canvas = this.map.getCanvas()
-    const inView = (gameId: string, lngLat: [number, number]) => {
-      if (gameId === this.selectedGameId) return true
-      const { x, y } = this.map.project(lngLat)
-      return x >= 0 && y >= 0 && x <= canvas.clientWidth && y <= canvas.clientHeight
-    }
-    const wanted = pins.filter(({ gameId, lngLat }) => !isBehindGlobe(this.map, lngLat) && inView(gameId, lngLat))
+    const map = this.map
+    if (!map.getSource(pinSource)) return
+    const pins = map.isSourceLoaded(pinSource) ? cardPins(map.querySourceFeatures(pinSource) as Feature<Point>[]) : null
+    const after = this.scene.frame({
+      pins,
+      behindGlobe: (lngLat) => isBehindGlobe(map, lngLat),
+      onScreen: (lngLat) => {
+        const canvas = map.getCanvas()
+        const { x, y } = map.project(lngLat)
+        return x >= 0 && y >= 0 && x <= canvas.clientWidth && y <= canvas.clientHeight
+      },
+      venue: (lngLat) => map.project(lngLat),
+      screen: () => (this.mapSize ??= { width: map.getCanvas().clientWidth, height: map.getCanvas().clientHeight }),
+      layoutScene: () => {
+        const theme = this.theme()
+        return {
+          venueGap: theme.components.ScoreCard.size.venueGap,
+          names: this.placeNames.layOutCityNames(),
+          cameraMoving: map.isMoving(),
+          venueSizes: venueSizes(theme),
+        }
+      },
+    })
+    if (after === 'askForFrame') map.triggerRepaint()
+  }
 
-    const keep = new Set<string>()
-    for (const { gameId, lngLat } of wanted) {
-      const game = this.games.get(gameId)
-      if (!game) continue
-      keep.add(gameId)
-      const color = this.colorOf(game)
-      const flames = game.hot
-      const selected = gameId === this.selectedGameId
-      const theme = this.theme()
-      const scorer = scorerOf(this.justHappened, gameId)
-      let placed = this.placed.get(gameId)
-      if (!placed) {
-        placed = new PlacedCard(this.map, gameId, lngLat, {
+  private readonly resized = () => (this.mapSize = null)
+
+  private readonly cameraMoved = () => this.scene.cameraMoved()
+
+  private readonly cameraStopped = () => {
+    this.scene.cameraStopped()
+    this.map.triggerRepaint()
+  }
+
+  /** The cards on the page and the map, as the score card scene has them (see CardsOnPage). */
+  private readonly page: CardsOnPage = {
+    place: (gameId, lngLat) => {
+      this.placed.set(
+        gameId,
+        new PlacedCard(this.map, gameId, lngLat, {
           select: () => this.onSelect(gameId),
           hover: (on) => {
             if (on) this.hover(gameId)
             else if (this.hoveredGameId === gameId) this.hover(null)
           },
-        })
-        const now = performance.now()
-        const comes = this.comings.cardPlaced(gameId, now, this.animates())
-        // Its old card, still fading out of view, goes at once: the new one fades in from as far as that got.
-        this.removeGoingOut(gameId)
-        if (comes === 'comesIn') placed.comeIn(this.comingsOver)
-        else if (this.animates()) placed.appear(now - this.comings.coming(gameId)!.at, this.comingsOver)
-        this.placed.set(gameId, placed)
-        changed = true
-      } else placed.moveTo(lngLat)
-      const from = placed.drawnFrom
-      if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme && from.scorer === scorer) continue
-      placed.drawnFrom = { game, color, flames, selected, theme, scorer }
-      const card = scoreCard(game)
-      placed.element.setAttribute('aria-label', gameLabel(game))
-      const header = headerText(color, theme)
-      const drawn = JSON.stringify({ card, color, header, selected, scorer })
-      if (placed.drawn !== drawn) {
-        // Live cards draw on top, as Live small pins do; the selected card above all.
-        placed.markerElement.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
-        placed.rows = drawScoreCard(placed.element, card, { color, header }, selected, placed.animation)
-        spotlightScorer(placed.rows, game, scorer)
-        placed.drawn = drawn
-        placed.measure()
-        changed = true
-      }
-    }
-
-    // Any game arrived and not given a card now comes into view later as cards always have, at once.
-    if (pinsLoaded) this.comings.pinsRead()
-
-    // Having given up settling, the cards stay as the map last drew them and their trails, so the two
-    // match, unless a card is new and has yet to be laid out (see GlobeSettling.holdsLayout).
-    const held = this.settling.holdsLayout({ everyCardLaidOut: [...keep].every((gameId) => this.placed.get(gameId)!.offset) })
-    if (!held && this.layOut(keep)) changed = true
-
-    const now = performance.now()
-    for (const [gameId, placed] of this.placed) {
-      if (keep.has(gameId)) continue
-      // A card on screen whose venue has gone out of view (behind the globe, or off screen)
-      // fades out; one with no room, or not yet laid out, just goes.
-      if (this.animates() && this.games.has(gameId) && placed.offset && !placed.inCardCluster) this.goOut(gameId, now, true)
-      else {
-        this.takeOff(gameId)?.dispose()
-        this.moves.forget(gameId)
-      }
-      changed = true
-    }
-    // Still unsettled, but asking for no frames: the map can go idle.
-    if (held) return
-    // Each frame's layout starts from the last, and the map draws a frame only when something on it
-    // changes: so while the cards are still moving, ask for another (see GlobeSettling.cardsSynced).
-    if (this.settling.cardsSynced({ changed, pinsLoaded }) === 'askForFrame') this.map.triggerRepaint()
-  }
-
-  /**
-   * Whether cards fade into view and out of it, and glide as they're moved: only once the globe is
-   * Ready. Behind the loading screen no one sees them, and the frames their trails ask for would keep
-   * the globe from settling as it becomes Ready.
-   */
-  private animates(): boolean {
-    return this.settling.stage() === 'ready'
-  }
-
-  private readonly resized = () => (this.mapSize = null)
-
-  private readonly cameraMoved = () => {
-    this.moving = true
-    this.settling.settleAfresh()
-  }
-
-  private readonly cameraStopped = () => {
-    this.settling.settleAfresh()
-    this.map.triggerRepaint()
-  }
-
-  /** Where the cards placed now are. */
-  private placedPins(): CardPin[] {
-    return [...this.placed].map(([gameId, { lngLat }]) => ({ gameId, lngLat }))
-  }
-
-  /**
-   * Lays out the cards (see cardLayout) and puts each where the layout has it: moved aside with a trail
-   * back to its venue, or hidden while there's no room for it. True if the layout differs from the
-   * frame before.
-   */
-  private layOut(gameIds: ReadonlySet<string>): boolean {
-    // In game order, as the pins come in any order: the layout lands the same way whatever order they
-    // come in, and so then do its trails, so the layout isn't given to the map again for their order alone.
-    this.mapSize ??= { width: this.map.getCanvas().clientWidth, height: this.map.getCanvas().clientHeight }
-    const screen = this.mapSize
-    const cards = [...gameIds].sort().map((gameId): ScreenCard => {
-      const { lngLat, width, height } = this.placed.get(gameId)!
-      const venue = this.map.project(lngLat)
-      const game = this.games.get(gameId)!
-      const rank = cardRank(game, nearCenter(venue.x, venue.y, screen.width, screen.height))
-      const selected = gameId === this.selectedGameId
-      return { gameId, status: game.status, rank, selected, venueX: venue.x, venueY: venue.y, width, height }
-    })
-    const theme = this.theme()
-    const scene: LayoutScene = {
-      ...this.mapSize,
-      venueGap: theme.components.ScoreCard.size.venueGap,
-      names: this.placeNames.layOutCityNames(),
-      moving: this.moving,
-      cameraMoving: this.map.isMoving(),
-      venueSizes: venueSizes(theme),
-      cardCount: cardCount(screen.width, this.cardDensity),
-      cardCountChanged: this.cardCountChanged,
-    }
-    this.moving = false
-    this.cardCountChanged = false
-    traceLayout({ cards, scene })
-    const changed = this.layout.layOut(cards, scene)
-
-    // Hidden at the venue gap above its venue while there's no room for it. A card moved further than
-    // a step glides there (see cardMoves), unless the viewer asks for less motion.
-    const noRoom = { dx: 0, dy: -scene.venueGap }
-    const now = performance.now()
-    const glides = this.animates() && !this.reducedMotion.matches
-    for (const gameId of gameIds) {
+        }),
+      )
+    },
+    comeIn: (gameId) => this.placed.get(gameId)!.comeIn(this.comingsOver),
+    appear: (gameId, since) => this.placed.get(gameId)!.appear(since, this.comingsOver),
+    cameIn: (gameId) => this.placed.get(gameId)?.cameIn(),
+    moveTo: (gameId, lngLat) => this.placed.get(gameId)!.moveTo(lngLat),
+    draw: (gameId, game) => this.draw(this.placed.get(gameId)!, gameId, game),
+    size: (gameId) => this.placed.get(gameId)!,
+    placeAt: (gameId, { offset, moved, glide, inCardCluster }) => {
       const placed = this.placed.get(gameId)!
-      const showing = this.layout.shows(gameId)
-      if (showing.as === 'card') {
-        placed.placeAt(showing.offset, showing.moved)
-        const move = glides ? this.moves.placeAt(gameId, showing.offset, now) : undefined
-        if (move) placed.glide(move)
-      } else {
-        placed.placeAt(noRoom, false)
-        this.moves.forget(gameId)
-      }
-      placed.setInCardCluster(showing.as !== 'card')
-    }
-    const onGlobe = cards.map((card): CardOnGlobe => {
-      const game = this.games.get(card.gameId)!
-      return { ...card, lngLat: this.placed.get(card.gameId)!.lngLat, color: this.colorOf(game), flames: game.hot }
-    })
-    this.cardClustersDrawn = this.drawLayout(onGlobe, scene.moving === true)
-    return changed
+      placed.placeAt(offset, moved)
+      if (glide) placed.glide(glide)
+      placed.setInCardCluster(inCardCluster)
+    },
+    drawLayout: (cards, layout, moving) => this.drawLayout(cards, layout, moving),
+    showTrails: (trails) => this.trails.show(trails),
+    goOut: (gameId, since, trail, outOfView) => {
+      const placed = this.takeOff(gameId)!
+      placed.goOut(since, trail, this.comingsOver, outOfView)
+      this.goingOut.set(gameId, placed)
+    },
+    dispose: (gameId) => this.takeOff(gameId)?.dispose(),
+    removeGoingOut: (gameId) => {
+      this.goingOut.get(gameId)?.dispose()
+      this.goingOut.delete(gameId)
+    },
+  }
+
+  private readonly comingsOver = () => this.scene.comingsOver()
+
+  /** Draws a card for its game as it is now, if anything it's drawn from has changed: true if it was redrawn. */
+  private draw(placed: PlacedCard, gameId: string, game: PlacedGame): boolean {
+    const color = this.colorOf(game)
+    const flames = game.hot
+    const selected = gameId === this.selectedGameId
+    const theme = this.theme()
+    const scorer = scorerOf(this.justHappened, gameId)
+    const from = placed.drawnFrom
+    if (from?.game === game && from.color === color && from.flames === flames && from.selected === selected && from.theme === theme && from.scorer === scorer) return false
+    placed.drawnFrom = { game, color, flames, selected, theme, scorer }
+    const card = scoreCard(game)
+    placed.element.setAttribute('aria-label', gameLabel(game))
+    const header = headerText(color, theme)
+    const drawn = JSON.stringify({ card, color, header, selected, scorer })
+    if (placed.drawn === drawn) return false
+    // Live cards draw on top, as Live small pins do; the selected card above all.
+    placed.markerElement.style.zIndex = String(selected ? selectedStacking : stacking[card.status])
+    placed.rows = drawScoreCard(placed.element, card, { color, header }, selected, placed.animation)
+    spotlightScorer(placed.rows, game, scorer)
+    placed.drawn = drawn
+    placed.measure()
+    return true
   }
 
   /**
@@ -394,9 +289,14 @@ export class ScoreCardMarkers {
    * move on screen with it: they're given again only when the layout changes, or the globe turning
    * has carried a point worked out on screen (a venue cluster's, between its venues) or a footprint
    * off where it should be. Giving them again sends them to MapLibre's worker to be made into tiles,
-   * too slow for every frame of a pan. Gives back the card clusters as drawn.
+   * too slow for every frame of a pan. Gives back the moved cards' trails, or null if the map has no
+   * source for the layout yet.
    */
-  private drawLayout(cards: readonly CardOnGlobe[], moving: boolean): DrawnCardCluster[] {
+  private drawLayout(laidOut: readonly CardLaidOut[], layout: CardLayout, moving: boolean): TrailOnGlobe[] | null {
+    const cards = laidOut.map((card): CardOnGlobe => {
+      const game = this.games.get(card.gameId)!
+      return { ...card, color: this.colorOf(game), flames: game.hot }
+    })
     // Each point worked out on screen, by the place on the globe it was turned into.
     const onScreen = new Map<[number, number], [number, number]>()
     const unproject = (x: number, y: number) => {
@@ -404,11 +304,10 @@ export class ScoreCardMarkers {
       onScreen.set(lngLat, [x, y])
       return lngLat
     }
-    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, this.layout, unproject)
+    const { source: features, trails, cardClusters } = cardLayoutDrawing(cards, layout, unproject)
+    this.cardClustersDrawn = cardClusters
     const source = this.map.getSource<GeoJSONSource>(cardLayoutSource)
-    if (!source) return cardClusters
-    this.layoutTrails = trails
-    this.showTrails()
+    if (!source) return null
     // A dot on each card where its trail meets it, so it's plain which card a trail is.
     const starts = new Map(trails.map(({ gameId, start }) => [gameId, start]))
     for (const { gameId } of cards) {
@@ -434,16 +333,14 @@ export class ScoreCardMarkers {
         return Math.hypot(at.x - x, at.y - y) <= max.point
       }) &&
       footprints.every(([dx, dy], i) => Math.hypot(dx - drawn.footprints[i][0], dy - drawn.footprints[i][1]) <= max.footprint)
-    if (held) return cardClusters
-    void source.setData(features)
-    this.layoutDrawn = { shape, lngLats: [...onScreen.keys()], footprints }
-    return cardClusters
+    if (!held) {
+      void source.setData(features)
+      this.layoutDrawn = { shape, lngLats: [...onScreen.keys()], footprints }
+    }
+    return trails
   }
 
-  /**
-   * Takes a game's card off the layout, its hover with it, for it to be disposed or go out: the one way
-   * a card laid out leaves.
-   */
+  /** Takes a game's card off the layout, its hover with it, for it to be disposed or go out: the one way a card laid out leaves. */
   private takeOff(gameId: string): PlacedCard | undefined {
     const placed = this.placed.get(gameId)
     if (!placed) return undefined
@@ -452,61 +349,14 @@ export class ScoreCardMarkers {
     return placed
   }
 
-  /**
-   * A game gone from the board, or its venue out of view: its card, on screen, goes out, out of the
-   * layout so it holds no room.
-   */
-  private goOut(gameId: string, now: number, outOfView = false): void {
-    const placed = this.takeOff(gameId)
-    if (!placed) return
-    this.comings.goOut(gameId, now)
-    const trail = this.layoutTrails.find((trail) => trail.gameId === gameId)
-    placed.goOut(now - this.comings.coming(gameId)!.at, trail, this.comingsOver, outOfView)
-    this.goingOut.set(gameId, placed)
-    this.layoutTrails = this.layoutTrails.filter((trail) => trail.gameId !== gameId)
-    this.showTrails()
-  }
-
-  private removeGoingOut(gameId: string): void {
-    const placed = this.goingOut.get(gameId)
-    if (!placed) return
-    placed.dispose()
-    this.goingOut.delete(gameId)
-    this.moves.forget(gameId)
-  }
-
-  /** Cards done coming in are left as they are; those done going out are removed, and their trails with them. */
-  private readonly comingsOver = () => {
-    const { cameIn, wentOut } = this.comings.over(performance.now())
-    for (const gameId of cameIn) this.placed.get(gameId)?.cameIn()
-    for (const gameId of wentOut) this.removeGoingOut(gameId)
-    if (cameIn.length > 0 || wentOut.length > 0) this.showTrails()
-  }
-
-  /**
-   * Gives the trail layer the laid-out cards' trails and those going out, each fading with its card if
-   * it's coming in or going out, and gliding with it if it's gliding.
-   */
-  private showTrails(): void {
-    const now = performance.now()
-    const withComing = (trail: TrailOnGlobe): TrailOnGlobe => {
-      const coming = this.comings.coming(trail.gameId)
-      const move = this.moves.move(trail.gameId, now)
-      if (!coming && !move) return trail
-      return { ...trail, ...(coming && { coming }), ...(move && { move }) }
-    }
-    const goingOut = [...this.goingOut.values()].flatMap(({ trail }) => (trail ? [trail] : []))
-    this.trails.show([...this.layoutTrails, ...goingOut].map(withComing))
-  }
-
   /** How a game shows on screen now (see cardLayout). */
   shows(gameId: string): Showing {
-    return this.layout.shows(gameId)
+    return this.scene.shows(gameId)
   }
 
   /** The games in each card cluster on screen now, those with no room first. */
   cardClusters(): readonly (readonly string[])[] {
-    return this.layout.cardClusters()
+    return this.scene.cardClusters()
   }
 
   /**
@@ -515,7 +365,7 @@ export class ScoreCardMarkers {
    */
   animate(gameId: string, animation: PinAnimation): boolean {
     // A game whose card is on screen animates its card, though its trail meets at a card cluster.
-    const showing = this.layout.shows(gameId)
+    const showing = this.scene.shows(gameId)
     const game = this.games.get(gameId)
     const placed = this.placed.get(gameId)
     if (showing.as === 'inCardCluster' && game) {
@@ -540,7 +390,7 @@ export class ScoreCardMarkers {
   celebrate(gameId: string): void {
     const game = this.games.get(gameId)
     const placed = this.placed.get(gameId)
-    if (!game || !placed || this.layout.shows(gameId).as !== 'card') return
+    if (!game || !placed || this.scene.shows(gameId).as !== 'card') return
     // In the color it played in, not Final's.
     void teamColors(game, this.colorOf({ ...game, status: 'Live' })).then((colors) => {
       if (this.placed.get(gameId) === placed) confettiOnCard(placed.element, placed.markerElement, colors)
@@ -554,12 +404,8 @@ export class ScoreCardMarkers {
   }
 
   clear(): void {
-    for (const gameId of [...this.placed.keys()]) this.takeOff(gameId)!.dispose()
+    this.scene.clear()
     this.hover(null)
-    for (const gameId of [...this.goingOut.keys()]) this.removeGoingOut(gameId)
-    this.layoutTrails = []
-    this.layout = cardLayout()
-    this.moves = cardMoves()
     this.cardClustersDrawn = []
   }
 }

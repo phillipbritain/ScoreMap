@@ -3384,11 +3384,11 @@ body {
     padding-right: calc(var(--rail-left-inset, 0px) + 3 * var(--spacing));
   }
 
-  /* Click a score card below the middle, clear of the tour's games above it (see tourCamera), Ravens v
-     Steelers among them, without going all the way to the foot. */
+  /* Click a score card just below the tour's games (see tourCamera), Ravens v
+     Steelers among them, clear of them yet not far down. */
   .welcome-tour--scoreCard {
     align-items: flex-end;
-    padding-bottom: 20vh;
+    padding-bottom: 35vh;
   }
 }
 

@@ -126,7 +126,7 @@ describe('scoreCard', () => {
       expect(scoreCard(badged)).toMatchObject({ top: { logoUrl: badge }, bottom: { logoUrl: usa } })
     })
 
-    it("shows a golf tournament's top two with their scores to par, a tie marked", () => {
+    it("shows a golf tournament's top two by name with their scores to par, without their places", () => {
       const mexicoOpen: Game = {
         ...talladega,
         sport: 'Golf',
@@ -142,8 +142,8 @@ describe('scoreCard', () => {
       }
 
       expect(scoreCard(mexicoOpen)).toMatchObject({
-        top: { label: '1 B. Griffin', logoUrl: usa, score: '-12' },
-        bottom: { label: 'T2 K. Akina', logoUrl: usa, score: '-11' },
+        top: { label: 'B. Griffin', logoUrl: usa, score: '-12' },
+        bottom: { label: 'K. Akina', logoUrl: usa, score: '-11' },
         clockLine: 'R2 · Thru 14',
       })
     })

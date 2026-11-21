@@ -193,20 +193,28 @@ body {
   }
 }
 
-/* The strip: the score block, then the details over the photo. */
+/* The strip: the score block, then the details over the photo. It keeps its height, but for a field's,
+   whose leaderboard gives way, scrolling, down to the strip's least height, when the tabs need the room
+   (see .game-details). */
 .game-panel__main {
   display: flex;
   flex-shrink: 0;
   min-height: var(--game-panel-size-height);
 }
 
+.game-panel__main:has(.game-panel__field-lines) {
+  flex-shrink: 1;
+}
+
 /* The score block at the left, slanted on its right edge. Names are cut short within their share of
-   each row, keeping logos, records and scores aligned. Reserve room for the details beside it. */
+   each row, keeping logos, records and scores aligned, down to their narrowest (see .game-panel__team-name);
+   narrower than that, the block scrolls sideways, so the scores stay whole. Reserve room for the details
+   beside it. */
 .game-panel__score {
   /* The space between its lines, and a field's lines (see .game-panel__field-lines). */
   --game-panel-score-gap: calc(2 * var(--spacing));
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(min-content, 1fr);
   align-content: center;
   gap: var(--game-panel-score-gap);
   box-sizing: border-box;
@@ -215,6 +223,9 @@ body {
   position: relative;
   z-index: 1;
   padding: calc(3 * var(--spacing)) calc(6 * var(--spacing)) calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   clip-path: polygon(0 0, 100% 0, calc(100% - var(--game-panel-size-slant)) 100%, 0 100%);
 }
 
@@ -307,10 +318,15 @@ body {
   line-height: 1;
 }
 
-/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel taller. */
+/* One line, cut short with an ellipsis and in full on hover or a tap, so a long name doesn't make the panel
+   taller. It takes the row's room left by the logo, record and score, which never give way, and is cut
+   short no narrower than its --game-panel-name-min: past that the score block scrolls sideways. Its width
+   of 0 keeps its whole text out of the row's narrowest, so the narrowest is its minimum. */
 .game-panel__team-name {
-  flex: 1;
-  min-width: 0;
+  --game-panel-name-min: 7em;
+  flex: 1 1 0;
+  width: 0;
+  min-width: var(--game-panel-name-min);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -560,13 +576,21 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* A field's score block: its leaderboard's row gives way, scrolling, when the strip does. */
+.game-panel__score:has(> .game-panel__field-lines) {
+  grid-template-rows: auto minmax(0, auto);
+  min-height: 0;
+}
+
 /* A field's whole leaderboard in the score block, a line each, as tall as --lines of them, scrolling to
-   the last, never sideways. */
+   the last; sideways, the score block scrolls it with the rest (see .game-panel__score). On a phone it's
+   as tall as two lines, as a team game's score block is, and holds there (see the narrow screens' rules). */
 .game-panel__field-lines {
   --lines: 5;
+  --line-height: calc(var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding));
   display: grid;
   gap: var(--game-panel-score-gap);
-  max-height: calc(var(--lines) * (var(--game-panel-size-logo) + 2 * var(--game-panel-logo-plate-padding)) + (var(--lines) - 1) * var(--game-panel-score-gap));
+  max-height: calc(var(--lines) * var(--line-height) + (var(--lines) - 1) * var(--game-panel-score-gap));
   margin: 0;
   /* Room between the scores and the scroll bar. */
   padding: 0 var(--spacing) 0 0;
@@ -637,6 +661,24 @@ body {
     clip-path: none;
   }
 
+  /* A field's leaderboard two lines tall, as a team game's two rows are, so its panel leaves the tabs
+     as much room as a team game's does. It holds its height, as a team game's rows do. */
+  .game-panel__field-lines {
+    --lines: 2;
+  }
+
+  /* The block is the panel's whole width here, so it doesn't scroll sideways: names are cut short as far
+     as they need, and the block holds its height. */
+  .game-panel__score,
+  .game-panel__score:has(> .game-panel__field-lines) {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .game-panel__team-name {
+    min-width: 0;
+  }
+
   /* The league, at the panel's top, keeps clear of the close button in its corner. */
   .game-panel__league {
     margin-bottom: calc(0.5 * var(--spacing));
@@ -692,11 +734,12 @@ body {
     pointer-events: none;
   }
 
-  /* The score and venue rows hold their size while the lower bands give way and scroll. */
+  /* The score and venue rows hold their size while the band gives way and scrolls; the tabs keep their
+     least room (see .game-details). */
   .game-panel__body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
-    grid-template-rows: auto auto minmax(0, auto) minmax(0, auto);
+    grid-template-rows: auto auto minmax(0, auto) auto;
     grid-template-areas:
       'score score'
       'venue watch'
@@ -1646,10 +1689,11 @@ body {
 }
 
 /* The More popover (see More): its few choices as a list of rows, level with its button (Rail sets its
-   top), as narrow as they are, on a phone too. */
+   top), as narrow as they are, on a phone too. The rows fill it edge to edge, so a row's hover fills its
+   whole rectangle, the popover's rounded corners clipping the first and last. */
 .rail__popover--more {
   width: auto;
-  padding: var(--spacing);
+  padding: 0;
 }
 
 .more {
@@ -1668,9 +1712,9 @@ body {
   align-items: center;
   gap: calc(2.5 * var(--spacing));
   width: 100%;
-  padding: calc(2 * var(--spacing)) calc(3 * var(--spacing));
+  padding: calc(2.5 * var(--spacing)) calc(4 * var(--spacing));
   border: none;
-  border-radius: var(--menu-corner);
+  border-radius: 0;
   background: none;
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);
@@ -1685,6 +1729,11 @@ body {
   flex: none;
   width: var(--rail-size-icon);
   height: var(--rail-size-icon);
+}
+
+.more__item:focus-visible {
+  /* Inside the row, as the popover clips anything at its edges. */
+  outline-offset: calc(-2 * var(--shape-border-width-thin) - 1px);
 }
 
 @media (hover: hover) {
@@ -2887,6 +2936,11 @@ body {
 @media (max-width: 640px) {
   .game-panel {
     --game-panel-bottom: 0px;
+    /* Its least height, kept even where that reaches past the rail's foot (a short phone's): a team
+       game's score block (two rows), the venue's row, the tab bar and a tab's least room (see
+       .game-details), so the tabs are never squeezed out. */
+    --game-panel-least-height: 304px;
+    max-height: max(25%, min(var(--game-panel-least-height), 100%), calc(100% - var(--rail-bottom, 0px) - 2 * var(--spacing)));
     width: 100%;
     border-radius: 0;
     touch-action: none;
@@ -2972,7 +3026,8 @@ body {
 }
 
 /* The label over the globe in a demo (ADR-0019), saying its games are made up: a small pane of the
-   controls' surface at the top, centered, which clicks pass through to the globe. */
+   controls' surface at the top, centered, ringed as the rail's popovers are, which clicks pass through to
+   the globe. */
 .demo-label {
   position: absolute;
   top: calc(3 * var(--spacing));
@@ -2981,6 +3036,7 @@ body {
   margin: 0;
   padding: var(--spacing) calc(4 * var(--spacing));
   line-height: var(--demo-label-line-height);
+  border: var(--shape-border-width-thin) solid var(--rail-outline);
   border-radius: var(--controls-corner);
   color: var(--palette-text-primary);
   font-family: var(--typography-font-family);

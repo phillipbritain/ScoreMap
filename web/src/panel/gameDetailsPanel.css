@@ -15,12 +15,21 @@
   max-width: 75%;
   margin: 0;
 }
+/* The tabs at the panel's foot, and the open tab's content above them. They keep their room: never shorter
+   than the tab bar, and with a tab open, than the tab bar and --game-details-pane-least of its content, so
+   nothing above them (a field's leaderboard, a tall band) can squeeze them out; the rest of the panel gives
+   way first (see .game-panel__band and .game-panel__field-lines). The tab bar's height is its padding, a
+   line of text, its tabs' underline and the two lines above it. Its floor grows and shrinks as the tab's
+   content slides open and shut. */
 .game-details {
+  --game-details-tab-bar-height: calc(4 * var(--spacing) + 1lh + 4px);
+  --game-details-pane-least: 96px;
   grid-area: details;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: var(--game-details-tab-bar-height);
   min-width: 0;
+  transition: min-height 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
   border-top: 1px solid var(--palette-divider);
   background: var(--game-panel-surface-bottom);
 }
@@ -44,6 +53,10 @@
   grid-template-rows: 0fr;
   min-height: 0;
   transition: grid-template-rows 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.game-details[data-expanded='true'] {
+  min-height: calc(var(--game-details-tab-bar-height) + var(--game-details-pane-least));
 }
 
 .game-details[data-expanded='true'] .game-details-reveal {
@@ -90,6 +103,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .game-details,
   .game-details-reveal {
     transition: none;
   }

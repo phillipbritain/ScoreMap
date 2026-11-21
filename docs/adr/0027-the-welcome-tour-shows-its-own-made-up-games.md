@@ -12,7 +12,7 @@ The original tour used six fixed example games, chosen in a prototype to start o
 
 ## Consequences
 
-- The live site shows made-up scores to every first visitor and to anyone who asks for the tour again. The Demo Mode label identifies them while the welcome tour is visible. The tour's games go once the tour is finished.
+- The live site shows made-up scores to every first visitor and to anyone who asks for the tour again. The Demo label identifies them while the welcome tour is visible. The tour's games go once the tour is finished.
 - Click a score card points to a matching card when one is clear of the panel. The tour opens on a camera of its own on a phone, further south and out, to give the cards room. When no card is clear of the panel, the step describes what a card opens.
 - Asking for the tour again flies the camera to the tour's games; it stays there after the tour.
 - The tour's games link to ESPN's team logos, so they need the network as real games do.

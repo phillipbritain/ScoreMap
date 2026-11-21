@@ -8,7 +8,7 @@ import type { Theme } from '../theme/theme'
 
 export interface ScoreCardRow {
   /**
-   * A side's abbreviation, an entrant's position and short name ("1 K. Larson"), a bout's side's short name
+   * A side's abbreviation, an entrant's short name, after their position in racing ("1 K. Larson"), a bout's side's short name
    * ("J. Jones"), or a game's name before its field is listed.
    */
   label: string
@@ -23,8 +23,8 @@ export interface ScoreCardRow {
 
 /**
  * What a zoomed-in pin shows: both sides' logos, abbreviations and scores, top first (see sidesTopFirst),
- * and a short clock line. A field shows its top two entrants by position ("1 K. Larson") with their flags
- * and in golf their scores to par, or before its field is listed, the game's name (its note) on top. A fight card shows the
+ * and a short clock line. A field shows its top two entrants with their flags: in racing by position
+ * ("1 K. Larson"), in golf by name with their scores to par, or before its field is listed, the game's name (its note) on top. A fight card shows the
  * bout on now, else its main event (see shownBout), as two sides with their flags, the winner marked "W".
  */
 export interface ScoreCard {
@@ -93,6 +93,12 @@ function cardBoutSide({ shortName, flagUrl, winner }: GameBoutSide): ScoreCardRo
   return { label: shortName, logoUrl: flagUrl, score: winner ? 'W' : '' }
 }
 
+/**
+ * An entrant on a score card: in golf their short name and score to par, the score saying who leads; in
+ * racing, with no score, their position before their short name ("1 K. Larson").
+ */
 function cardEntrant(entrant: GameEntrant, field: GameField): ScoreCardRow {
-  return { label: `${positionText(entrant, field)} ${entrant.shortName}`, logoUrl: entrantImage(entrant), score: entrant.score ?? '' }
+  const { shortName, score } = entrant
+  const label = score === null ? `${positionText(entrant, field)} ${shortName}` : shortName
+  return { label, logoUrl: entrantImage(entrant), score: score ?? '' }
 }

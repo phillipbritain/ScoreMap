@@ -885,10 +885,14 @@ describe('the card count, where it is busy', () => {
     expect(withCards(layout)).toEqual(['onScreen'])
   })
 
-  it('shows fewer cards at once on a phone than on a wider screen', () => {
-    expect(cardCount(390)).toBe(25)
-    expect(cardCount(640)).toBe(25)
-    expect(cardCount(641)).toBe(40)
-    expect(cardCount(1280)).toBe(40)
+  it.each([
+    ['minimal', 10, 20],
+    ['default', 20, 30],
+    ['dense', 30, 40],
+  ] as const)('shows at most so many cards at once at %s card density: on a phone, then on a wider screen', (density, phone, wider) => {
+    expect(cardCount(390, density)).toBe(phone)
+    expect(cardCount(640, density)).toBe(phone)
+    expect(cardCount(641, density)).toBe(wider)
+    expect(cardCount(1280, density)).toBe(wider)
   })
 })

@@ -34,7 +34,24 @@ export interface ViewerSettings {
    * with a team in one of them. A league not listed shows all its games, as does every league on Top Events.
    */
   chosenConferences: Readonly<Record<string, readonly string[]>>
+  /** How many score cards the globe shows at once where it's busy (see CardDensity): Default unless the viewer picked another in Display Settings. */
+  cardDensity: CardDensity
 }
+
+/**
+ * How many score cards the globe shows at once where it's busy, the rest counted in card clusters (see
+ * cardCount): Minimal for the fewest, and the fewest trails, Dense for the most.
+ */
+export const cardDensities = ['minimal', 'default', 'dense'] as const
+
+export type CardDensity = (typeof cardDensities)[number]
+
+export function isCardDensity(value: unknown): value is CardDensity {
+  return cardDensities.includes(value as CardDensity)
+}
+
+/** Each card density's name, as Display Settings lists it. */
+export const cardDensityNames: Record<CardDensity, string> = { minimal: 'Minimal', default: 'Default', dense: 'Dense' }
 
 /**
  * The globe's map types: the plain map of borders and place names in the theme's colors, or
@@ -48,7 +65,7 @@ export function isMapType(value: unknown): value is MapType {
   return mapTypes.includes(value as MapType)
 }
 
-/** Every league on with all its conferences, Top Events and Only show live games off, no colors picked, the plain map and venue photos on. */
+/** Every league on with all its conferences, Top Events and Only show live games off, no colors picked, the plain map, venue photos on and Default card density. */
 export const firstVisitSettings: ViewerSettings = {
   hiddenLeagues: [],
   topEventsOnly: false,
@@ -58,6 +75,7 @@ export const firstVisitSettings: ViewerSettings = {
   mapType: 'plain',
   venuePhotos: true,
   chosenConferences: {},
+  cardDensity: 'default',
 }
 
 /** Each map type's name, as Map Type on the rail lists it. */

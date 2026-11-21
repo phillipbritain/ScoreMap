@@ -2226,7 +2226,19 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: a section's heading, "Card colors": small gold capitals, a line running on from it to
+/* Display Settings: "Card density", its three levels side by side as chips, the one picked lit as a league
+   chip that's on is. */
+.card-densities {
+  display: flex;
+  gap: calc(2 * var(--spacing));
+  margin-bottom: calc(4 * var(--spacing));
+}
+
+.card-densities .rail-chip {
+  flex: 1;
+}
+
+/* Display Settings: a section's heading, "Card density" or "Card colors": small gold capitals, a line running on from it to
    the edge, set apart from the sports' names under it. */
 .display-section {
   display: flex;

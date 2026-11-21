@@ -11,7 +11,7 @@ import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
-import type { MapType } from '../settings/viewerSettings'
+import type { CardDensity, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
@@ -68,6 +68,8 @@ export interface GlobeMapOptions {
    * unless given. It changes with setMapType.
    */
   mapType?: MapType
+  /** How many score cards show at once where it's busy, to start with (see cardCount): Default unless given. It changes with setCardDensity. */
+  cardDensity?: CardDensity
   /**
    * How far out and in the globe zooms to start with: the app's own for a laptop unless given. They
    * change with setZoomLimits.
@@ -141,7 +143,7 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colors = noColors, mapType = 'plain', zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, mapType = 'plain', cardDensity = 'default', zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colors = colors
     this.mapType = mapType
@@ -205,6 +207,7 @@ export class GlobeMap {
         this.trails,
         (gameId) => this.onSelect(gameId),
         this.settling,
+        cardDensity,
       )
       this.moves = new CameraMoves(map, {
         game: (gameId) => this.shown.get(gameId),
@@ -348,6 +351,12 @@ export class GlobeMap {
   private mapStyleChanges(theme: Theme, mapType: MapType): LayerChange[] {
     if (!this.base) return []
     return layerChanges(globeStyle(this.base, theme, mapType).layers, globeStyle(this.base, this.theme, this.mapType).layers)
+  }
+
+  /** Shows as many score cards at once as this card density allows from now on (see cardCount). */
+  setCardDensity(density: CardDensity): void {
+    this.unsettle()
+    this.cards.setCardDensity(density)
   }
 
   /** Shows each game in these colors from now on (see gameColor): its pin, score card, trail and pulses. */

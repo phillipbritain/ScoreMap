@@ -8,6 +8,7 @@ import { logoFailed, shownLogo } from '../games/teamLogo'
 import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
+import type { CardDensity } from '../settings/viewerSettings'
 import { cardComings } from './cardComings'
 import { cardMoves } from './cardMoves'
 import { cardPins, type CardPin } from './cardPins'
@@ -28,7 +29,6 @@ import { headerText, scoreCard, type ScoreCard, type ScoreCardRow } from './scor
 import type { TrailLayer, TrailOnGlobe } from './trailLayer'
 import { cardDotAt } from './cardDot'
 import { selectedStacking, stacking } from './statusLook'
-import { onPrototypeCardCount, prototypeCardCount } from './cardCountPrototypeState'
 
 // How far, in pixels, what's given to the map of a layout may come off where the layout puts it on
 // screen before it's given again (see drawLayout): a point worked out on screen as the globe turns,
@@ -105,13 +105,16 @@ export class ScoreCardMarkers {
    * browser work out the cards' styles, just moved, there and then.
    */
   private mapSize: { width: number; height: number } | null = null
+  /** How many cards show at once where it's busy (see cardCount). */
+  private cardDensity: CardDensity
 
   /**
    * `theme` gives the theme as it is now, for how far above its venue a card sits; `colorOf` gives a
    * game's color as it is now (see gameColor), for its card, its trail and its pulses over card
    * clusters; `placeNames` gives the names cards keep clear of; `trails` draws the moved cards'
    * trails; `onSelect` is called with a game's id when its card is selected; `settling` is the
-   * globe's settling, which the cards report to and which says when to ask for a frame.
+   * globe's settling, which the cards report to and which says when to ask for a frame; `cardDensity`
+   * says how many cards show at once where it's busy, until setCardDensity.
    */
   constructor(
     map: MapLibreMap,
@@ -121,8 +124,10 @@ export class ScoreCardMarkers {
     trails: TrailLayer,
     onSelect: (gameId: string) => void,
     settling: GlobeSettling,
+    cardDensity: CardDensity,
   ) {
     this.settling = settling
+    this.cardDensity = cardDensity
     this.map = map
     this.theme = theme
     this.colorOf = colorOf
@@ -134,9 +139,15 @@ export class ScoreCardMarkers {
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
     map.on('moveend', this.cameraStopped)
     map.on('resize', this.resized)
-    // PROTOTYPE: the card count slider lays the cards out afresh.
-    onPrototypeCardCount(this.cameraMoved)
-    onPrototypeCardCount(() => this.sync())
+  }
+
+  /** Shows as many cards at once as this card density allows (see cardCount), laid out afresh. */
+  setCardDensity(density: CardDensity): void {
+    if (density === this.cardDensity) return
+    this.cardDensity = density
+    this.moving = true
+    this.settling.settleAfresh()
+    this.sync()
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */
@@ -340,7 +351,7 @@ export class ScoreCardMarkers {
       moving: this.moving,
       cameraMoving: this.map.isMoving(),
       venueSizes: venueSizes(theme),
-      cardCount: prototypeCardCount() ?? cardCount(screen.width),
+      cardCount: cardCount(screen.width, this.cardDensity),
     }
     this.moving = false
     traceLayout({ cards, scene })

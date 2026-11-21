@@ -28,9 +28,6 @@ import { useRailClearance } from './panel/useRailClearance'
 import { celebratedPanelLeaveDuration, usePanelCelebration } from './panel/usePanelCelebration'
 import { useLeaving } from './motion/useLeaving'
 import { Rail } from './rail/Rail'
-import { CardCountPrototypeBar } from './globe/cardCountPrototype'
-import { cardCountPrototypeOn } from './globe/cardCountPrototypeState'
-import { cardCount } from './globe/cardLayout'
 import { TopRail } from './rail/TopRail'
 import { ScenarioClock } from './scenarios/ScenarioClock'
 import { ScenarioPill } from './scenarios/ScenarioPill'
@@ -204,7 +201,6 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   return (
     <div className="app">
       <Tooltips />
-      {cardCountPrototypeOn && <CardCountPrototypeBar defaultCount={cardCount} />}
       <div
         ref={globeArea}
         className={[
@@ -224,6 +220,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           zoomSettings={zoom}
           colors={colors}
           mapType={viewerSettings.mapType}
+          cardDensity={viewerSettings.cardDensity}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={boardGames && visible}
           justHappened={justHappened}

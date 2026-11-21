@@ -1,4 +1,5 @@
 import type { GameStatus } from '../games/game'
+import type { CardDensity } from '../settings/viewerSettings'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
@@ -49,12 +50,14 @@ export interface CardScene {
 }
 
 /**
- * The most score cards a screen this wide shows at once where it's busy, so a crowded view keeps to
- * the games most worth watching (see cardRank): fewer on a phone.
+ * The most score cards a screen this wide shows at once where it's busy, at the viewer's card density,
+ * so a crowded view keeps to the games most worth watching (see cardRank): 10 more past a phone's width.
  */
-export function cardCount(screenWidth: number): number {
-  return screenWidth <= phoneWidth ? 25 : 40
+export function cardCount(screenWidth: number, density: CardDensity): number {
+  return cardCounts[density] + (screenWidth <= phoneWidth ? 0 : 10)
 }
+// The most cards at each density on a phone.
+const cardCounts: Record<CardDensity, number> = { minimal: 10, default: 20, dense: 30 }
 // The widest screen laid out as a phone's, as the page's CSS has it (max-width: 640px).
 const phoneWidth = 640
 

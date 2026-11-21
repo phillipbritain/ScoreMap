@@ -795,6 +795,16 @@ body {
     pointer-events: none;
   }
 
+  /* A row that scored holds the light's reach as padding (see .event-panel__team--scored), long after the
+     light has gone; its fade reaches past that padding as far as every other row's does past its edge. */
+  .event-panel__score .event-panel__team--scored::after {
+    inset:
+      calc(var(--reach-y) - 0.25 * var(--spacing))
+      calc(var(--reach-right) - 2 * var(--spacing))
+      calc(var(--reach-y) - 0.25 * var(--spacing))
+      calc(var(--reach-x) - 2 * var(--spacing));
+  }
+
   /* The score and venue rows hold their size while the band gives way and scrolls; the tabs keep their
      least room (see .game-details). The rows are packed to the top: Safari on an iPhone can briefly
      measure the tabs short while the globe moves, and the room that leaves mustn't stretch the rows

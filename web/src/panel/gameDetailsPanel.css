@@ -127,7 +127,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-x pan-y;
-  padding: calc(3 * var(--spacing)) calc(4 * var(--spacing));
+  padding: calc(1.5 * var(--spacing)) calc(4 * var(--spacing)) calc(3 * var(--spacing));
   scrollbar-color: var(--palette-divider) transparent;
 }
 

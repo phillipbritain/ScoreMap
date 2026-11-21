@@ -1095,6 +1095,35 @@ describe('settling', () => {
     expect(cardsOnPage()).toHaveLength(crowd.length)
   })
 
+  it('becomes ready with every score card and trail landed, its pins readable only as the map goes idle', async () => {
+    const { globe, map, onStage } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
+    // The pins can't be read as the map draws a frame, only once it goes idle, as when MapLibre lets
+    // go of tiles held over from the last load after a frame's render event and goes idle without
+    // drawing another frame: so each idle is the first the pins are readable since the last frame.
+    let pinsReadable = false
+    const isSourceLoaded = map.isSourceLoaded.bind(map)
+    vi.spyOn(map, 'isSourceLoaded').mockImplementation((source) => (source === pinSource && !pinsReadable ? false : isSourceLoaded(source)))
+    const fire = map.fire.bind(map)
+    vi.spyOn(map, 'fire').mockImplementation((event, properties) => {
+      // MapLibre fires its own events as Event objects, which the spy's types don't allow for.
+      const { type } = event as unknown as { type: string }
+      if (type === 'render' || type === 'idle') pinsReadable = type === 'idle'
+      return fire(event, properties)
+    })
+    let atReady: { cards: string[]; trails: string[] } | undefined
+    onStage.mockImplementation((stage) => {
+      if (stage === 'ready') atReady ??= { cards: cardsOnPage(), trails: trailsDrawn(map).map(({ gameId }) => gameId) }
+    })
+    globe.show(crowd)
+
+    await vi.waitFor(() => expect(atReady).toBeDefined(), { timeout: 10_000 })
+    expect(atReady!.cards).toHaveLength(crowd.length)
+    expect(atReady!.trails).not.toEqual([])
+    await pause(500)
+    expect(cardsOnPage()).toEqual(atReady!.cards)
+    expect(trailsDrawn(map).map(({ gameId }) => gameId)).toEqual(atReady!.trails)
+  })
+
   it('is unsettled by a change of games until the change has been shown and has settled', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show(crowd.slice(0, 2))

@@ -38,8 +38,7 @@ describe('scoreCard', () => {
     expect(scoreCard(arrowhead)).toEqual({
       gameId: '401',
       status: 'Live',
-      top: { label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', mark: 'B', score: '17' },
-      bottom: { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', mark: 'K', score: '21' },
+      rows: [{ label: 'BUF', logoUrl: 'https://a.espncdn.com/buf.png', mark: 'B', score: '17' }, { label: 'KC', logoUrl: 'https://a.espncdn.com/kc.png', mark: 'K', score: '21' }],
       clockLine: '4:12',
       flames: false,
     })
@@ -48,20 +47,20 @@ describe('scoreCard', () => {
   it("shows a team ESPN gives no logo with its mark in the logo's place", () => {
     const card = scoreCard({ ...arrowhead, contest: { ...sides, away: { ...sides.away, abbreviation: 'LCHR', logoUrl: null } } })
 
-    expect(card.top).toMatchObject({ label: 'LCHR', logoUrl: null, mark: 'L' })
+    expect(card.rows[0]).toMatchObject({ label: 'LCHR', logoUrl: null, mark: 'L' })
   })
 
   it("shows a ranked team's poll place before its abbreviation, and none for an unranked team", () => {
     const card = scoreCard({ ...arrowhead, contest: { ...sides, away: { ...sides.away, rank: 5 } } })
 
-    expect(card.top).toMatchObject({ label: 'BUF', rank: '5' })
-    expect(card.bottom).not.toHaveProperty('rank')
+    expect(card.rows[0]).toMatchObject({ label: 'BUF', rank: '5' })
+    expect(card.rows[1]).not.toHaveProperty('rank')
   })
 
   it('shows a tennis match with the home side on top', () => {
     const card = scoreCard({ ...arrowhead, sport: 'Tennis' })
 
-    expect([card.top.label, card.bottom.label]).toEqual(['KC', 'BUF'])
+    expect([card.rows[0].label, card.rows[1].label]).toEqual(['KC', 'BUF'])
   })
 
   it("leaves scores blank and shows the start time, in the viewer's time, before an Upcoming game starts", () => {
@@ -79,8 +78,7 @@ describe('scoreCard', () => {
 
     expect(scoreCard(upcoming, eastern)).toMatchObject({
       status: 'Upcoming',
-      top: { score: '' },
-      bottom: { score: '' },
+      rows: [{ score: '' }, { score: '' }],
       clockLine: '1:00 PM',
     })
   })
@@ -111,10 +109,13 @@ describe('scoreCard', () => {
       },
     }
 
-    it('shows the top two entrants by position, with no score, and the lap', () => {
+    it('shows the top three entrants in order, without their places, with no score, and the lap', () => {
       expect(scoreCard(talladega)).toMatchObject({
-        top: { label: '1 K. Larson', logoUrl: usa, score: '' },
-        bottom: { label: '2 W. Byron', logoUrl: usa, score: '' },
+        rows: [
+          { label: 'K. Larson', logoUrl: usa, score: '' },
+          { label: 'W. Byron', logoUrl: usa, score: '' },
+          { label: 'R. Blaney', logoUrl: usa, score: '' },
+        ],
         clockLine: 'Lap 189',
       })
     })
@@ -123,10 +124,10 @@ describe('scoreCard', () => {
       const badge = 'https://cf.nascar.com/data/images/carbadges/1/5.png'
       const [larson, ...rest] = (talladega.contest as GameField).entries
       const badged: Game = { ...talladega, contest: { kind: 'field', entries: [{ ...larson, logoUrl: badge }, ...rest] } }
-      expect(scoreCard(badged)).toMatchObject({ top: { logoUrl: badge }, bottom: { logoUrl: usa } })
+      expect(scoreCard(badged)).toMatchObject({ rows: [{ logoUrl: badge }, { logoUrl: usa }, { logoUrl: usa }] })
     })
 
-    it("shows a golf tournament's top two with their scores to par, a tie marked", () => {
+    it("shows a golf tournament's top three by name with their scores to par, without their places", () => {
       const mexicoOpen: Game = {
         ...talladega,
         sport: 'Golf',
@@ -142,18 +143,28 @@ describe('scoreCard', () => {
       }
 
       expect(scoreCard(mexicoOpen)).toMatchObject({
-        top: { label: '1 B. Griffin', logoUrl: usa, score: '-12' },
-        bottom: { label: 'T2 K. Akina', logoUrl: usa, score: '-11' },
+        rows: [
+          { label: 'B. Griffin', logoUrl: usa, score: '-12' },
+          { label: 'K. Akina', logoUrl: usa, score: '-11' },
+          { label: 'A. Novak', logoUrl: usa, score: '-11' },
+        ],
         clockLine: 'R2 · Thru 14',
       })
+    })
+
+    it('shows a field of two as two rows, and one of one with a blank row under it', () => {
+      const [larson, byron] = (talladega.contest as GameField).entries
+      const labels = (entries: GameField['entries']) => scoreCard({ ...talladega, contest: { kind: 'field', entries } }).rows.map(({ label }) => label)
+
+      expect(labels([larson, byron])).toEqual(['K. Larson', 'W. Byron'])
+      expect(labels([larson])).toEqual(['K. Larson', ''])
     })
 
     it("shows the race's name before its field is listed", () => {
       const upcoming: Game = { ...talladega, status: 'Upcoming', clock: null, contest: { kind: 'field', entries: [] } }
 
       expect(scoreCard(upcoming)).toMatchObject({
-        top: { label: 'NASCAR Cup Series at Talladega', logoUrl: null, score: '' },
-        bottom: { label: '', logoUrl: null, score: '' },
+        rows: [{ label: 'NASCAR Cup Series at Talladega', logoUrl: null, score: '' }, { label: '', logoUrl: null, score: '' }],
       })
     })
   })
@@ -194,8 +205,7 @@ describe('scoreCard for a fight card', () => {
 
   it('shows the bout on now as two sides, with their flags and no score, and its round', () => {
     expect(scoreCard(ufc309)).toMatchObject({
-      top: { label: 'C. Oliveira', logoUrl: bra, score: '' },
-      bottom: { label: 'M. Chandler', logoUrl: usa, score: '' },
+      rows: [{ label: 'C. Oliveira', logoUrl: bra, score: '' }, { label: 'M. Chandler', logoUrl: usa, score: '' }],
       clockLine: 'R2',
     })
   })
@@ -209,8 +219,7 @@ describe('scoreCard for a fight card', () => {
     }
 
     expect(scoreCard({ ...upcoming, startTime: '2026-11-17T03:00:00Z' }, eastern)).toMatchObject({
-      top: { label: 'J. Jones' },
-      bottom: { label: 'S. Miocic' },
+      rows: [{ label: 'J. Jones' }, { label: 'S. Miocic' }],
       clockLine: '10:00 PM',
     })
   })
@@ -225,8 +234,7 @@ describe('scoreCard for a fight card', () => {
     }
 
     expect(scoreCard(final)).toMatchObject({
-      top: { label: 'J. Jones', score: '' },
-      bottom: { label: 'S. Miocic', score: 'W' },
+      rows: [{ label: 'J. Jones', score: '' }, { label: 'S. Miocic', score: 'W' }],
       clockLine: 'KO/TKO · R3',
     })
   })

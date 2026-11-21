@@ -15,6 +15,7 @@ import { MapTypes } from './MapTypes'
 import { More } from './More'
 import { railIcon, type RailButtonName } from './railButtons'
 import { HideControlsIcon, RailIcon, ShowControlsIcon } from './railIcons'
+import { touchPointer } from '../welcomeTour/welcomeTour'
 import { canZoom, morePress, nextPopover, popoverLeaveDuration, type PopoverEvent, type RailPopover } from './railControls'
 
 interface RailProps {
@@ -61,7 +62,7 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in four groups: zoom in, zoom
- * out and Home, which move the camera; Leagues, Display Settings and Map Type; Games (with its
+ * out and Home, which move the camera, left out on a touchscreen (see shownRailButtons); Leagues, Display Settings and Map Type; Games (with its
  * count of games on it); and More (installing the app, sending feedback, the welcome tour again), whose Send feedback opens
  * the Feedback panel in its place. Each of the last five opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
@@ -92,6 +93,8 @@ export function Rail({
   onInstall,
 }: RailProps) {
   const collapsed = collapsedSaved && !touring
+  // A touchscreen pinches to zoom and drags the globe, so it has no camera buttons (see shownRailButtons).
+  const [touch] = useState(() => window.matchMedia(touchPointer).matches)
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
   // The Feedback panel's note, kept while it's closed, so Cancel or a click away keeps it for next time.
@@ -167,11 +170,13 @@ export function Rail({
         {/* Folds away to nothing, its groups clipped as they go (see .rail__buttons). */}
         <div className="rail__buttons-inner">
           {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
-          <div className="rail__group" data-keeps-popovers inert={touring}>
-            <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
-            <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
-            <RailButton label="Home" disabled={!camera} onClick={onHome} />
-          </div>
+          {!touch && (
+            <div className="rail__group" data-keeps-popovers inert={touring}>
+              <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
+              <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
+              <RailButton label="Home" disabled={!camera} onClick={onHome} />
+            </div>
+          )}
           <div className="rail__group" inert={touring}>
             <RailButton
               label="Leagues"

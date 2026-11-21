@@ -24,6 +24,13 @@ interface TourPointerProps {
   targetLabel?: string
   /** A media query: while it matches, the arrow starts at the middle of the panel's top edge. */
   fromTopWhen?: string
+  /** Whether to draw the arrow: without it, only the spotlight shows. */
+  arrow?: boolean
+  /**
+   * Whether the spotlight sits flush on the target, square, rather than with room around it: for a part
+   * of the game panel, so the room doesn't take in the panel's parts beside it.
+   */
+  flush?: boolean
 }
 
 interface Boxes {
@@ -39,7 +46,7 @@ interface Boxes {
  * theme's Live color runs from the panel's edge to it. Neither catches a press; the lit target can
  * be given its own button over it (Click a score card's card). Drawn in the tour's layer, which it fills.
  */
-export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fromTopWhen }: TourPointerProps) {
+export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fromTopWhen, arrow: drawArrow = true, flush = false }: TourPointerProps) {
   const layer = useRef<HTMLDivElement>(null)
   const find = useRef({ target, aim, fromTopWhen })
   useLayoutEffect(() => {
@@ -77,11 +84,13 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fr
     boxes &&
     (boxes.aim ? tourArrow(boxes.panel, boxes.aim, 'side', startAt) : tourArrow(boxes.panel, boxes.target, 'facing', startAt))
   // The spotlight's hole, where the lit target's own button sits too.
+  const room = flush ? 0 : spotlightPadding
   const hole = boxes && {
-    left: boxes.target.left - spotlightPadding,
-    top: boxes.target.top - spotlightPadding,
-    width: boxes.target.right - boxes.target.left + 2 * spotlightPadding,
-    height: boxes.target.bottom - boxes.target.top + 2 * spotlightPadding,
+    left: boxes.target.left - room,
+    top: boxes.target.top - room,
+    width: boxes.target.right - boxes.target.left + 2 * room,
+    height: boxes.target.bottom - boxes.target.top + 2 * room,
+    ...(flush && { borderRadius: 0 }),
   }
   return (
     <>
@@ -105,7 +114,7 @@ export function TourPointer({ panel, target, aim, onTargetClick, targetLabel, fr
                   <path d="M0 0 10 5 0 10z" />
                 </marker>
               </defs>
-              <path className="welcome-tour__arrow-flow" d={arrow.path} markerEnd={`url(#${head})`} />
+              {drawArrow && <path className="welcome-tour__arrow-flow" d={arrow.path} markerEnd={`url(#${head})`} />}
             </svg>
           </>
         )}

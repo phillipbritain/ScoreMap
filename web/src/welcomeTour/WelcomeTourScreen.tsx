@@ -6,6 +6,8 @@ import { LeaguePicker } from '../rail/LeaguePicker'
 import type { LeagueList } from '../settings/leagues'
 import type { ShownScoreCard } from '../globe/scoreCardMarkers'
 import { TourPointer } from './TourPointer'
+import { PanelStepProtoBar } from './PanelStepProtoBar'
+import { useAboveLitPart, usePanelStepProto } from './panelStepProto'
 import {
   canShowPicks,
   gamePanelSteps,
@@ -301,12 +303,20 @@ const gamePanelStepParts: Record<GamePanelStepName, { heading: string; part: str
 
 type GamePanelStepName = (typeof gamePanelSteps)[number]
 
+const panelParts = Object.fromEntries(
+  Object.entries(gamePanelStepParts).map(([step, { part }]) => [step, panelPart(part)]),
+) as Record<GamePanelStepName, () => NodeListOf<Element>>
+
 function GamePanelStep({ step, onNext }: { step: GamePanelStepName; onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
-  const { heading, part, words } = gamePanelStepParts[step]
+  const { heading, words } = gamePanelStepParts[step]
+  // PROTOTYPE: ?panelStepProto= (see panelStepProto.ts).
+  const proto = usePanelStepProto()
+  useAboveLitPart(proto === 'above', panel, panelParts[step])
   return (
     <>
-      <TourPointer key={step} panel={panel} target={panelPart(part)} />
+      <PanelStepProtoBar variant={proto} />
+      <TourPointer key={step} panel={panel} target={panelParts[step]} arrow={proto === 'arrow'} flush />
       <TourPanel ref={panel} heading={heading} action={<TourButton onClick={onNext}>Next</TourButton>}>
         <p className="welcome-tour__text">{words}</p>
       </TourPanel>

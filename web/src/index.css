@@ -3388,7 +3388,7 @@ body {
      Steelers among them, clear of them yet not far down. */
   .welcome-tour--scoreCard {
     align-items: flex-end;
-    padding-bottom: 35vh;
+    padding-bottom: 35dvh;
   }
 }
 

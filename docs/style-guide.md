@@ -353,8 +353,8 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Globe.halo.inner.blur`, `.spread`, and `outer`'s | How far each of the halo's glows blurs and spreads, growing with the globe on screen: `{ share, max }`, that share of the globe's radius on screen, but never more than `max` pixels | inner blur 0.12 up to 60, spread 0.04 up to 20; outer blur 0.35 up to 160, spread 0.08 up to 40 |
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
 | `components.PlaceNames.city.dot.radius`, `.ring` | The dot where a named city is, in the city name's color, and the ring around it in the name's outline color | 2.25 and 0.75 |
-| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 8.5 |
-| `components.Cluster.glowRadius` | Its glow's radius | 17 |
+| `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 8 |
+| `components.Cluster.glowRadius` | Its glow's radius | 16 |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
@@ -367,7 +367,7 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Hover.venue.radius` | A hovered card's venue dot | 3.5 |
 | `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's color | 12, 0.6 |
 | `components.Hover.cardDot.radius` | A hovered card's dot where its trail meets it | 2.75 |
-| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 24 |
+| `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 23 |
 | `components.Pulse.ring` | How thick a pulse's ring is | 3 |
 
 ### On the page

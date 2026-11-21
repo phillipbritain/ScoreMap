@@ -96,8 +96,8 @@
     },
     "Cluster": {
       "fill": "primary.dark",
-      "radius": 8.5,
-      "glowRadius": 17,
+      "radius": 8,
+      "glowRadius": 16,
       "outlineWidth": 1.5,
       "glowOpacity": 0,
       "count": { "font": "Open Sans Bold", "size": "small" },
@@ -123,7 +123,7 @@
       "venue": { "radius": 3.5, "glow": { "radius": 12, "opacity": 0.6 } },
       "cardDot": { "radius": 2.75 }
     },
-    "Pulse": { "size": { "pin": 16, "cluster": 24 }, "ring": 3 },
+    "Pulse": { "size": { "pin": 16, "cluster": 23 }, "ring": 3 },
     "ScoreCard": {
       "fill": "primary.dark",
       "text": "text.primary",

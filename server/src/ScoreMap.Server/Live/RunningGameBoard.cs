@@ -167,7 +167,9 @@ public sealed partial class RunningGameBoard : BackgroundService
 
     /// <summary>
     /// Sends a snapshot, subscribes to ordered changes and counts the viewer, as one hand-off.
-    /// Waits at most 250 ms for fresh dependency results before sending the current games.
+    /// Waits at most 5 s for the league scoreboards a join had to fetch afresh (the board idle or cold,
+    /// so without them the snapshot would be empty or out of date), then at most 250 ms for any other
+    /// fresh dependency results, before sending the current games.
     /// </summary>
     public async Task JoinAsync(string connectionId, CancellationToken cancellationToken)
     {
@@ -176,25 +178,10 @@ public sealed partial class RunningGameBoard : BackgroundService
         var joined = false;
         try
         {
-            try { ScheduleDue(); }
+            try { ScheduleDue(catchingUp: true); }
             finally { _lock.Release(); }
-            using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            // Real time: a scenario clock or fake scheduling clock must not lengthen this bound.
-            budget.CancelAfter(SnapshotFreshnessBudget);
-            try
-            {
-                while (true)
-                {
-                    Task[] work;
-                    await _lock.WaitAsync(budget.Token);
-                    try { work = _work.ToArray(); }
-                    finally { _lock.Release(); }
-                    if (work.Length == 0)
-                        break;
-                    await Task.WhenAll(work).WaitAsync(budget.Token);
-                }
-            }
-            catch (OperationCanceledException) when (budget.IsCancellationRequested && !cancellationToken.IsCancellationRequested) { }
+            await WaitForWorkAsync(() => _catchingUp, CatchUpBudget, cancellationToken);
+            await WaitForWorkAsync(() => _work, SnapshotFreshnessBudget, cancellationToken);
 
             await _lock.WaitAsync(cancellationToken);
             try

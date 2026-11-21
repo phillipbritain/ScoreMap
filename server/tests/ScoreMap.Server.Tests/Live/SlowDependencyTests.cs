@@ -70,6 +70,36 @@ public class SlowDependencyTests
     }
 
     [Fact]
+    public async Task A_cold_boards_first_viewer_waits_for_a_slow_scoreboard_rather_than_get_an_empty_snapshot()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        // Longer than the 250 ms a join gives fresh results it didn't have to fetch itself.
+        server.Feed.AnswerAfter(Nfl, TimeSpan.FromMilliseconds(600));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Equal("401", Assert.Single(await client.NextSnapshotAsync()).Id);
+        Assert.False(client.ChangePrecededSnapshot);
+    }
+
+    [Fact]
+    public async Task The_first_viewer_after_an_idle_spell_waits_for_a_slow_scoreboard_rather_than_get_stale_games()
+    {
+        await using var server = new ScoreMapServer();
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401"));
+        await server.SnapshotOnceAsync();
+        // Nobody watching: the board polls nothing while its games go stale.
+        server.Feed.SetScoreboard(Nfl, LiveGame(server.Clock, "401", homeScore: 42));
+        server.Clock.Advance(TimeSpan.FromMinutes(10));
+        server.Feed.AnswerAfter(Nfl, TimeSpan.FromMilliseconds(600));
+
+        await using var client = await server.ConnectClientAsync();
+
+        Assert.Equal("42", Assert.Single(await client.NextSnapshotAsync()).Sides().Home.Score);
+    }
+
+    [Fact]
     public async Task Switching_source_cancels_old_fetches_before_publishing_the_new_source()
     {
         await using var server = new ScoreMapServer();

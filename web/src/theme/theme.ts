@@ -427,10 +427,16 @@ const settings = {
      * is just its status's palette color is in the game's color; any other (Live's paler core, say)
      * stays as given, so status still shows by brightness. A hot game's pin has its hot indicator, a thin glowing outline around its core, in the indicator's
      * colors (ScoreCard.hotIndicator), with a glow reaching `hotIndicator.size` pixels beyond it. The outline's
-     * width and opacity, and the glow's opacity, are tunable separately.
+     * width and opacity, and the glow's opacity, are tunable separately. By its status, how far a
+     * game's color is dimmed toward the background's paper (0 not at all, 1 all the way) on its small
+     * pin, its venue dot and venue cluster, and its trail, solid rather than see-through.
      */
     Pin: {
-      ...byStatus({ core: { color, radius: pixels, opacity, ring: pixels }, glow: { radius: pixels, opacity } }),
+      ...byStatus({
+        core: { color, radius: pixels, opacity, ring: pixels },
+        glow: { radius: pixels, opacity },
+        dim: numberFrom(0, 1, 'a dim from 0 to 1'),
+      }),
       hotIndicator: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
     },
     /**

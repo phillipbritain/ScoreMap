@@ -2,7 +2,8 @@ import type { CircleLayerSpecification, GeoJSONSourceSpecification, SymbolLayerS
 import type { Feature, FeatureCollection } from 'geojson'
 import type { Theme } from '../theme/theme'
 import type { CardLayout, ScreenCard } from './cardLayout'
-import { clusterColor, sharedColorProperty, sharedColorKey } from './clusterColor'
+import { accentColor } from '../settings/gameColor'
+import { clusterColor, mixedColors, sharedColorProperty, sharedColorKey } from './clusterColor'
 import {
   clusterHotIndicatorLayout,
   clusterHotIndicatorImage,
@@ -10,7 +11,7 @@ import {
   clusterFootprintLayout,
   type PinSet,
 } from './pinLayers'
-import { byStatus, groupStatus } from './statusLook'
+import { byStatus, dimmedColor, groupStatus } from './statusLook'
 import type { TrailOnGlobe } from './trailLayer'
 
 /**
@@ -80,6 +81,7 @@ export function cardLayoutDrawing(
   cards: readonly CardOnGlobe[],
   layout: Pick<CardLayout, 'shows' | 'gatherings'>,
   unproject: (x: number, y: number) => [number, number],
+  theme: Theme,
 ): CardLayoutDrawing {
   const features: Feature[] = []
   const trails: TrailOnGlobe[] = []
@@ -104,7 +106,7 @@ export function cardLayoutDrawing(
       const start = { dx: showing.trail.x1 - card.venueX, dy: showing.trail.y1 - card.venueY }
       trails.push({
         gameId: card.gameId,
-        color: card.color,
+        color: dimmedColor(theme, card.color, card.status),
         venue: card.lngLat,
         start,
         end: lngLat,
@@ -115,13 +117,15 @@ export function cardLayoutDrawing(
     if (kind === 'venueDot') continue
     if (kind === 'smallPin') {
       const [{ gameId, status, color, hotIndicator }] = noRoom
-      features.push(feature({ kind: 'smallPin', gameId, status, color, hotIndicator }, { type: 'Point', coordinates: lngLat }))
+      features.push(feature({ kind: 'smallPin', gameId, status, color: dimmedColor(theme, color, status), hotIndicator }, { type: 'Point', coordinates: lngLat }))
       continue
     }
     const games = [...noRoom, ...withTrails]
     const shared = { status: groupStatus(games.map((card) => card.status)), [sharedColorProperty]: sharedColorKey(games) }
     if (kind === 'venueCluster') {
-      features.push(feature({ kind: 'venueCluster', ...shared }, { type: 'Point', coordinates: lngLat }))
+      // Dimmed by the status it shows as, in its games' color, or the accent where they differ (see clusterColor).
+      const color = shared[sharedColorProperty] === mixedColors ? accentColor(theme) : shared[sharedColorProperty]
+      features.push(feature({ kind: 'venueCluster', ...shared, color: dimmedColor(theme, color, shared.status) }, { type: 'Point', coordinates: lngLat }))
       continue
     }
     cardClusters.push({ gameIds: games.map((card) => card.gameId), lngLat })
@@ -176,7 +180,7 @@ export function cardLayoutLayers(
         'circle-radius': venue.ring.radius,
         'circle-opacity': 0,
         'circle-stroke-width': venue.ring.width,
-        'circle-stroke-color': clusterPaint,
+        'circle-stroke-color': ['get', 'color'],
       },
     },
     {
@@ -184,7 +188,7 @@ export function cardLayoutLayers(
       type: 'circle',
       source: cardLayoutSource,
       filter: kindIs('venueCluster'),
-      paint: { 'circle-radius': venue.radius, 'circle-color': clusterPaint },
+      paint: { 'circle-radius': venue.radius, 'circle-color': ['get', 'color'] },
     },
     {
       id: 'card-cluster-glows',

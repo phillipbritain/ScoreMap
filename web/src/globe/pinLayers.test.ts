@@ -148,7 +148,7 @@ describe("a cluster's color", () => {
       shows: () => ({ as: 'inCardCluster', cardCluster: gameIds }),
       gatherings: () => [{ kind: 'cardCluster', trails: [], noRoom: gameIds, at: { venueOf: gameIds[0] } }],
     }
-    const { features } = cardLayoutDrawing(cards, layout, (x, y) => [x, y]).source
+    const { features } = cardLayoutDrawing(cards, layout, (x, y) => [x, y], themeWith()).source
     return features.find((feature) => feature.properties?.kind === 'cardCluster')!.properties!
   }
 

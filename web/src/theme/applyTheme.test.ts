@@ -181,8 +181,8 @@ describe('applyTheme', () => {
       // logo plate of three and flames' seven (width, glow of three and three colors); for each of three statuses its fade and glow of two.
       scoreCard: 3 + 1 + 2 + 1 + 4 + 3 + 7 + 3 * 3,
       // The event panel's eight colors and shadows, the photo's opacity, the score block's frost, glow of
-      // three, corner, cut corner's two, eight sizes (the close tab's two) and logo plate of three.
-      eventPanel: 8 + 1 + 1 + 3 + 1 + 2 + 8 + 3,
+      // three, corner, cut corner's two, ten sizes (the close tab's two, the clock's two) and logo plate of three.
+      eventPanel: 8 + 1 + 1 + 3 + 1 + 2 + 10 + 3,
       // A menu's corner and a menu item's.
       menus: 2,
       // The rail's eleven colors and shadows, a lit chip's outline, tint and glow of two, and six sizes.

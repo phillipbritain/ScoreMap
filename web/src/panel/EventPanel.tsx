@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, 
 import { boutLine, shownBout } from '../games/bouts'
 import { entrantImage, positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam } from '../games/game'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
-import { progressLine } from '../games/progressLine'
 import { sidesTopFirst } from '../games/sides'
 import { TeamLogoImage } from '../games/TeamLogoImage'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
@@ -12,6 +11,7 @@ import { useSwipeToClose } from './useSwipeToClose'
 import { boutChip, chipSizers } from './panelLines'
 import { GameDetailsPanel, WatchInfo } from './GameDetailsPanel'
 import { useGameDetails } from './useGameDetails'
+import { panelClock } from './panelClock'
 
 /** ESPN's red wordmark, from ESPN's own image server, as the link to a game's page on ESPN. */
 const espnLogoUrl = 'https://a.espncdn.com/redesign/assets/img/logos/espn-404@2x.png'
@@ -69,17 +69,6 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
   const venueName = (tennis ? [venue.court, place].filter(Boolean).join(' · ') : venue.name) || 'Unknown venue'
   // The place under the venue's name; in tennis, already on the venue's line.
   const placeLine = tennis ? '' : place
-  const progress = progressLine(game, 'full')
-  const leagueLabel = (
-    <div className="event-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
-      {game.league}
-    </div>
-  )
-  const progressChip = progress && (
-    <div className="event-panel__progress" data-tooltip={progress} data-tooltip-when-clipped>
-      {progress}
-    </div>
-  )
   const { contest } = game
   // Unofficial stream links (ADR-0002: hobby v1 only); see streamLinks.ts for removal.
   const links = streamLinks(game.streamLinks)
@@ -110,7 +99,9 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
       <div className="event-panel__body">
         <div className="event-panel__main">
           <div className="event-panel__score">
-            <div className="game-details-score-header">{leagueLabel}{progressChip}</div>
+            <div className="event-panel__league" data-tooltip={game.league} data-tooltip-when-clipped>
+              {game.league}
+            </div>
             {contest.kind === 'sides' && sidesTopFirst(game.sport, contest).map((team, i, teams) => (
                 <TeamRow key={i} team={team} scores={teams.map(teamScore)} scoredAt={scorer && contest[scorer.side] === team ? scorer.at : null} />
               ))}
@@ -123,6 +114,7 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
             {photo && (
               <img className="event-panel__photo" src={photo.url} alt={venue.name ?? 'The venue'} onError={() => setBrokenPhotoUrl(photo.url)} />
             )}
+            <Clock game={game} />
             <div className="event-panel__venue">
               <div className="event-panel__value" data-tooltip={venueName} data-tooltip-when-clipped>
                 {venue.name ? <MapsLink query={[venue.name, place].filter(Boolean).join(', ')}>{venueName}</MapsLink> : venueName}
@@ -133,7 +125,7 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
               </div>
             </div>
             <div className="event-panel__watch">
-              <WatchInfo key={game.id} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
+              <WatchInfo key={game.id} game={game} photo={photo?.url ?? null} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
                 {(game.espnUrl || links.length > 0) && <WatchLinks links={links} espnUrl={game.espnUrl} />}
               </WatchInfo>
             </div>
@@ -156,6 +148,22 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
   )
 }
 
+/** The game clock over the venue's photo (see panelClock): its label, lit by a dot while it runs, over its time. */
+function Clock({ game }: { game: Game }) {
+  const { label, main, live } = panelClock(game)
+  return (
+    <div className="event-panel__clock" data-status={game.status}>
+      {label && (
+        <span className="event-panel__clock-label">
+          {live && <span className="event-panel__clock-dot" aria-hidden="true" />}
+          {label}
+        </span>
+      )}
+      <span className="event-panel__clock-time">{main}</span>
+    </div>
+  )
+}
+
 /** A link to a place (the venue, or its city) in Google Maps, in a new tab. */
 function MapsLink({ query, children }: { query: string; children: ReactNode }) {
   return (
@@ -165,19 +173,21 @@ function MapsLink({ query, children }: { query: string; children: ReactNode }) {
   )
 }
 
-/** The game's StreamEast and ESPN links as logo buttons. */
+/** The game's StreamEast and ESPN links, each a tile of the Where to watch dialog with its site's logo. */
 function WatchLinks({ links, espnUrl }: { links: StreamLink[]; espnUrl: string | null }) {
   return (
     <>
       {links.map((link) => (
-        <a key={link.url} className="event-panel__logo-link" href={link.url} target="_blank"
+        <a key={link.url} className="game-details-tile game-details-tile--link" href={link.url} target="_blank"
           rel="noopener noreferrer nofollow" aria-label={`${link.site} (unofficial stream)`}>
           <img className="event-panel__stream-logo" src={streamEastLogoUrl} alt="" />
+          <span>Unofficial stream</span>
         </a>
       ))}
       {espnUrl && (
-        <a className="event-panel__logo-link" href={espnUrl} target="_blank" rel="noopener noreferrer">
+        <a className="game-details-tile game-details-tile--link" href={espnUrl} target="_blank" rel="noopener noreferrer">
           <img className="event-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
+          <span>Game page</span>
         </a>
       )}
     </>

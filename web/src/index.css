@@ -375,14 +375,7 @@ body {
   visibility: hidden;
 }
 
-.event-panel__progress {
-  justify-self: start;
-  max-width: calc(100% - 2 * var(--spacing));
-  margin-top: var(--spacing);
-}
-
-/* The progress line, and in the band each of a tennis match's sets, in the game's color. */
-.event-panel__progress,
+/* In the band, each of a tennis match's sets, in the game's color. */
 .event-panel__set {
   padding: calc(0.5 * var(--spacing)) calc(2 * var(--spacing));
   overflow: hidden;
@@ -397,8 +390,8 @@ body {
   transform: skewX(-14deg);
 }
 
-/* The venue at the top and its watch links at the foot, over the venue's photo (see .event-panel__photo),
-   or the faint glow that holds its place when there's none, on the panel's surface. It reaches back under
+/* The game clock at the top, and the venue and its TV button at the foot, over the venue's photo (see
+   .event-panel__photo), or the faint glow that holds its place when there's none, on the panel's surface. It reaches back under
    the score block's slant, cut on that diagonal, and lies over the score block there, so the photo fills
    the wedge and the glass, whose blur may be drawn past its edge, can't frost it. */
 .event-panel__details {
@@ -407,8 +400,8 @@ body {
   isolation: isolate;
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr auto;
   gap: calc(2 * var(--spacing));
   min-width: 0;
   margin-left: calc(-1 * var(--event-panel-size-slant));
@@ -434,9 +427,67 @@ body {
   opacity: var(--event-panel-photo-opacity);
 }
 
-/* The venue at the details' top right keeps clear of the close button in the panel's corner. */
+/* The game clock at the details' top left (see panelClock.ts): its label, lit by a red dot while the
+   clock runs, over its time in big type. */
+.event-panel__clock {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  min-width: 0;
+}
+
+.event-panel__clock-label {
+  display: flex;
+  align-items: center;
+  gap: calc(1.5 * var(--spacing));
+  font-size: var(--typography-overline-font-size);
+  font-weight: var(--typography-overline-font-weight);
+  letter-spacing: var(--typography-overline-letter-spacing);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.event-panel__clock-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--palette-error-main);
+  animation: event-panel-clock-dot 1.6s ease-out infinite;
+}
+
+@keyframes event-panel-clock-dot {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--palette-error-main) 70%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 7px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-panel__clock-dot {
+    animation: none;
+  }
+}
+
+/* The time, its digits all one width so it doesn't shift as it runs. A period or a start time in its
+   place is a step smaller. */
+.event-panel__clock-time {
+  font-size: var(--event-panel-size-clock-large);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.event-panel__clock:not([data-status='Live']) .event-panel__clock-time {
+  font-size: var(--event-panel-size-clock-small);
+}
+
+/* The venue at the details' foot left, keeping clear of the TV button. */
 .event-panel__venue {
-  padding-right: calc(var(--event-panel-size-close-width) - 2 * var(--spacing));
+  grid-row: 2;
+  grid-column: 1;
+  align-self: end;
+  min-width: 0;
 }
 
 /* One line for a venue's name, cut short with an ellipsis and in full on hover or a tap. */
@@ -460,8 +511,10 @@ body {
   text-overflow: ellipsis;
 }
 
-/* The TV button sits at the foot of the venue details. */
+/* The TV button sits at the foot of the venue details, beside the venue. */
 .event-panel__watch {
+  grid-row: 2;
+  grid-column: 2;
   align-self: end;
   justify-self: end;
   display: flex;
@@ -697,10 +750,6 @@ body {
     padding-right: calc(var(--event-panel-size-close-width) + var(--spacing));
   }
 
-  .event-panel__progress {
-    margin-top: calc(0.5 * var(--spacing));
-  }
-
   .event-panel__details {
     gap: var(--spacing);
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
@@ -732,10 +781,17 @@ body {
     isolation: isolate;
   }
 
+  /* Two teams' rows: their fades reach well above and below them, with room between them to keep apart.
+     A field's lines stay close together, their fades just past them. */
+  .event-panel__score:not(:has(> .event-panel__field-lines)) {
+    --event-panel-score-gap: calc(3 * var(--spacing));
+    --event-panel-row-fade-y: calc(1.25 * var(--spacing));
+  }
+
   .event-panel__score .event-panel__team::after {
     content: '';
     position: absolute;
-    inset: calc(-0.25 * var(--spacing)) calc(-2 * var(--spacing));
+    inset: calc(-1 * var(--event-panel-row-fade-y, 0.25 * var(--spacing))) calc(-2 * var(--spacing));
     z-index: -2;
     background: linear-gradient(
       90deg,
@@ -746,17 +802,30 @@ body {
     pointer-events: none;
   }
 
+  /* A row that scored holds the light's reach as padding (see .event-panel__team--scored), long after the
+     light has gone; its fade reaches past that padding as far as every other row's does past its edge. */
+  .event-panel__score .event-panel__team--scored::after {
+    inset:
+      calc(var(--reach-y) - var(--event-panel-row-fade-y, 0.25 * var(--spacing)))
+      calc(var(--reach-right) - 2 * var(--spacing))
+      calc(var(--reach-y) - var(--event-panel-row-fade-y, 0.25 * var(--spacing)))
+      calc(var(--reach-x) - 2 * var(--spacing));
+  }
+
   /* The score and venue rows hold their size while the band gives way and scrolls; the tabs keep their
-     least room (see .game-details). */
+     least room (see .game-details). The rows are packed to the top: Safari on an iPhone can briefly
+     measure the tabs short while the globe moves, and the room that leaves mustn't stretch the rows
+     above them. */
   .event-panel__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, max-content);
     grid-template-rows: auto auto minmax(0, auto) auto;
     grid-template-areas:
-      'score score'
-      'venue watch'
-      'band band'
-      'details details';
+      'score score score'
+      'venue clock watch'
+      'band band band'
+      'details details details';
+    align-content: start;
   }
 
   /* The photo's crop follows the header independently of the expandable details. */
@@ -778,6 +847,22 @@ body {
     align-self: end;
     min-width: 0;
     padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
+  }
+
+  /* The clock beside the venue, right of it, by the TV button. */
+  .event-panel__clock {
+    grid-area: clock;
+    align-self: end;
+    justify-items: end;
+    padding-block: calc(1.5 * var(--spacing));
+  }
+
+  .event-panel__clock-label {
+    font-size: var(--typography-tiny-font-size);
+  }
+
+  .event-panel__clock-time {
+    font-size: var(--event-panel-size-clock-small);
   }
 
   /* The TV button sits beside the venue on narrow screens. */

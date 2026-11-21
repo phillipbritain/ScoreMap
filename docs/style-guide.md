@@ -117,7 +117,7 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
 | `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card density" and "Card colors" headings (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
-| `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and progress line. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
+| `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and the line over its open tab. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the event panel, the menus and the controls | `navy.800` |
@@ -211,7 +211,7 @@ A game's status shows by **brightness and glow, not color** (ADR-0012). Color is
 
 A score card fades by color, not by being see-through: its game's color, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
 
-Each status still has its own color in the palette, though all three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A color the viewer picks takes the place of its status's, and text written on it (the event panel's progress line) is the theme's main text or its paper surface, whichever stands out from it more.
+Each status still has its own color in the palette, though all three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A color the viewer picks takes the place of its status's, and text written on it (a tennis set in the event panel's band) is the theme's main text or its paper surface, whichever stands out from it more.
 
 A status's color is the palette's; the rest of its look is each component's own, as MUI's components style each color they come in, so a component's settings hold all of how it looks:
 
@@ -298,7 +298,7 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 | `body2` | The event panel (its close button takes its weight), the rail's popovers, the scenario clock and the loading screen's error | 400, 14 |
 | `button` | Buttons: sport names in Display Settings, league chips, card density's (joined as one toggle button group), the scenario pill and the scenario it has on | 600, 14 |
 | `caption` | Secondary lines: the event panel's notes and stream links, the counts and hint in Leagues; tooltips | 400, 12 |
-| `overline` | The event panel's headings: its league and labels, tracked out, and its progress line; a sport's name in Leagues, and Display Settings' "Card density" and "Card colors" headings, in capitals | 700, 12, 0.14em |
+| `overline` | The event panel's headings: its league and labels, tracked out, the clock's period and the stats' categories; a sport's name in Leagues, and Display Settings' "Card density" and "Card colors" headings, in capitals | 700, 12, 0.14em |
 | `footnote` | The event panel's labels on a phone | 400, 11 |
 | `small` | A score card's text: its team abbreviations and scores, in their own weights, and the rest in `subtitle2`'s | 600, 10 |
 | `tiny` | The smallest on the page: a score card's header line, and a ranked college team's poll place before its abbreviation (in `text.secondary`) | 400, 9 |
@@ -372,11 +372,13 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 ### On the page
 
-The event panel opens with its score, venue and bottom tab bar. The league and progress chip share a row above the scores. Long names and clock lines use an ellipsis with the full text on hover or tap. The TV icon opens **Watch and game info**, with the broadcast network when available and logo links to StreamEast and ESPN. The close button sits in the panel’s upper-right corner.
+The event panel opens with its score, venue and bottom tab bar. The league sits above the scores. The game clock is over the venue's photo: on desktop at its top left, its time in big type under the period in words ("2nd Quarter", see `web/src/panel/panelClock.ts`) and a red dot while it runs; on a phone, smaller, beside the venue. Long names use an ellipsis with the full text on hover or tap. The TV icon opens **Where to watch**: a tile for each broadcast network, a logo tile for each link (StreamEast and ESPN), and the venue over its photo, linking to the map, with the start time. The close button sits in the panel’s upper-right corner.
 
 On desktop the score block is glass (see [Glass](#glass)), with the venue photo cropped to the area beside its slanted edge. On narrow screens, the photo is behind the score and venue rows, with the same crop while another part of the panel changes height. The photo uses `components.EventPanel.photo.opacity`; a faint glow fills its place when there is no photo. A field’s whole leaderboard is in the score block, a line each, scrolling within its two-line height. A band below the header holds tennis sets or a fight card’s bouts. The panel edge uses `text.primary` at 18%, and when a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)).
 
-Selecting a tab slides its content up above the tab bar over 220 ms. The down chevron collapses it. The tab bar stays at the foot of the panel, and the details and sport-specific band can scroll when space is tight. With reduced motion, opening and collapsing are immediate.
+Selecting a tab slides its content up above the tab bar over 220 ms. The down chevron collapses it. The tab bar stays at the foot of the panel, a dock of the tabs' names, the open one marked by a line in the game's color along its top; the details and sport-specific band can scroll when space is tight. The tabs' contents have no titles. The score by period sits on its own card in the middle of its pane, without logos, the period being played and the leading side's total in the game's color; it fits nine innings and the total on a phone, upright or on its side, and anything wider scrolls inside the card. Player stats show each category once, both teams side by side (one over the other on a narrow panel). With reduced motion, opening and collapsing are immediate, and the clock's dot doesn't pulse.
+
+The user picked this look, variant D of four prototyped on November 21, 2026 with their tweaks, preserved on the throwaway branch `phillipbritain/game-panel-polish-prototype`.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
@@ -398,6 +400,7 @@ Selecting a tab slides its content up above the tab bar over 220 ms. The down ch
 | `components.EventPanel.size.logo` | A team's logo | 28 |
 | `components.EventPanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
 | `components.EventPanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
+| `components.EventPanel.size.clock.large`, `.small` | The game clock's time over the venue's photo: large on a desktop while it runs; small on a phone, and for a period, a start time or a final result in its place | 30, 22 |
 | `components.ScoreCard.size.minWidth` | A score card's narrowest. Its size is set when it's first drawn (see [Where the theme reaches](#where-the-theme-reaches)) | 64 |
 | `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |

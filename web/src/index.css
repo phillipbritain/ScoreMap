@@ -3344,11 +3344,15 @@ body {
   padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
 }
 
-/* On a screen with room, its top level with the rail's, so it reads as the rail's own; a phone, upright
-   or on its side, keeps the Demo Mode label's room above it, as its panel reaches under the label. */
+/* At the top, beside the rail: on a screen with room, its top level with the rail's, so it reads as the
+   rail's own; on a phone, upright or on its side, where its panel reaches under the Demo Mode label,
+   right under the label. */
+.welcome-tour.welcome-tour--controls {
+  align-items: flex-start;
+}
+
 @media (min-width: 641px) and (min-height: 501px) {
   .globe-area--touring > .welcome-tour.welcome-tour--controls {
-    align-items: flex-start;
     padding-top: calc(3 * var(--spacing));
   }
 }

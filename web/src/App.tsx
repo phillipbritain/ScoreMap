@@ -262,7 +262,8 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             </p>
           )}
         </div>
-        {(demo || touring) && <DemoLabel />}
+        {/* Not during the welcome tour, whose own panels show its games off (ADR-0027). */}
+        {demo && !touring && <DemoLabel />}
         {/* Over the bottom of the globe. Before the rail, so an open popover lies over it on a phone. */}
         {panelGame && panelColor && (
           <GamePanel

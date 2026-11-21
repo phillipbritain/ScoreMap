@@ -2972,10 +2972,6 @@ body {
   user-select: none;
 }
 
-.globe-area--touring > .demo-label {
-  z-index: 3;
-}
-
 /* The welcome tour (see welcomeTour/WelcomeTourScreen.tsx): over the globe and the rail, which it keeps
    from being used. The rail's More, its popover and the Feedback panel are lifted above it while it
    shows, so they stay usable (see .rail--touring). */
@@ -3344,17 +3340,9 @@ body {
   padding-right: calc(var(--rail-left-inset, 0px) + 4 * var(--spacing));
 }
 
-/* At the top, beside the rail: on a screen with room, its top level with the rail's, so it reads as the
-   rail's own; on a phone, upright or on its side, where its panel reaches under the Demo Mode label,
-   right under the label. */
+/* At the top, beside the rail, its top level with the rail's, so it reads as the rail's own. */
 .welcome-tour.welcome-tour--controls {
   align-items: flex-start;
-}
-
-@media (min-width: 641px) and (min-height: 501px) {
-  .globe-area--touring > .welcome-tour.welcome-tour--controls {
-    padding-top: calc(3 * var(--spacing));
-  }
 }
 
 /* While Your controls lights the rail, its groups are solid, as its popovers are, rather than glass, so
@@ -3691,10 +3679,10 @@ body {
   display: none;
 }
 
-/* Leave room for the label even when the tour panel fills a short screen. */
+/* Room at the top, as the rail has, even when the tour panel fills a short screen. */
 .globe-area--touring > .welcome-tour {
-  --demo-label-clearance: calc(var(--demo-label-line-height) + 6 * var(--spacing));
-  padding-top: var(--demo-label-clearance);
+  --tour-top-room: calc(3 * var(--spacing));
+  padding-top: var(--tour-top-room);
 }
 
 .welcome-tour[data-above-game-panel] .welcome-tour__panel {
@@ -3709,7 +3697,7 @@ body {
 @media (min-width: 641px) and (min-height: 501px), (min-width: 641px) and (orientation: portrait) {
   .welcome-tour[data-above-game-panel][data-middle-clears-game-panel] {
     align-items: safe center;
-    padding-bottom: var(--demo-label-clearance);
+    padding-bottom: var(--tour-top-room);
   }
 }
 

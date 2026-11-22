@@ -13,9 +13,6 @@ resource "azapi_resource" "app" {
     identity_ids = [azurerm_user_assigned_identity.feedback.id]
   }
 
-  ignore_missing_property   = false
-  schema_validation_enabled = false
-
   body = {
     properties = {
       managedEnvironmentId = azapi_resource.environment.id
@@ -72,6 +69,7 @@ resource "azapi_resource" "app" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes  = [body.properties.template.containers[0].image]
+    # GitHub Actions updates the one ScoreMap container's image.
+    ignore_changes = [body.properties.template.containers[0].image]
   }
 }

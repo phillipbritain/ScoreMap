@@ -28,6 +28,18 @@ terraform plan -input=false -lock-timeout=60s -var-file=production.tfvars -detai
 
 Exit 0 is a clean plan, exit 2 means Terraform proposes changes, and exit 1 means the plan could not run. The default workspace uses the state key in the backend configuration. Both computers must use the same state key and provider lock file. Azure Blob leases serialize operations on the state. Keep state, plan files and provider debug logs out of Git and shared folders.
 
+In PowerShell, after signing in and selecting the production subscription, use these equivalent commands from `infra/terraform`. Check the configured and ready revision names and the revision's health as above before planning.
+
+```powershell
+$env:TF_VAR_subscription_id = az account show --query id -o tsv
+$env:TF_VAR_tenant_id = az account show --query tenantId -o tsv
+terraform init -reconfigure '-lockfile=readonly' '-backend-config=production.azurerm.tfbackend'
+$ready = az containerapp show -g scoremap-rg -n scoremap --query properties.latestReadyRevisionName -o tsv
+$env:TF_VAR_image = az containerapp revision show -g scoremap-rg -n scoremap --revision $ready --query 'properties.template.containers[0].image' -o tsv
+terraform plan -input=false '-lock-timeout=60s' '-var-file=production.tfvars' -detailed-exitcode
+$LASTEXITCODE
+```
+
 ## Adopting the existing deployment
 
 1. Agree on the handoff window with the owner. Wait for the latest `main` deploy to complete and check that the live revision is healthy. Record its image and revision, identity IDs and role scopes, Key Vault reference, mounted share and log settings using only the needed fields from the Azure API. Check the state backend and that the production state is empty or contains only verified bindings from an interrupted adoption.

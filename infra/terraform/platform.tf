@@ -16,12 +16,17 @@ resource "azapi_resource" "logs" {
     }
   }
 
-  response_export_values = {
-    customer_id = "properties.customerId"
-  }
-
   lifecycle {
     prevent_destroy = true
+  }
+}
+
+data "azapi_resource" "logs" {
+  type        = azapi_resource.logs.type
+  resource_id = azapi_resource.logs.id
+
+  response_export_values = {
+    customer_id = "properties.customerId"
   }
 }
 
@@ -36,12 +41,13 @@ resource "azapi_resource" "environment" {
       appLogsConfiguration = {
         destination = "log-analytics"
         logAnalyticsConfiguration = {
-          customerId = azapi_resource.logs.output.customer_id
+          customerId = data.azapi_resource.logs.output.customer_id
         }
       }
     }
   }
 
+  # The ARM read redacts the link key. Supply it only for writes that need it.
   sensitive_body = var.log_analytics_key == null ? null : {
     properties = {
       appLogsConfiguration = {
@@ -110,6 +116,7 @@ resource "azapi_resource" "mount" {
     }
   }
 
+  # The app mounts SMB with the account key. Keep it out of the persisted body.
   sensitive_body = var.files_account_key == null ? null : {
     properties = {
       azureFile = {
@@ -132,6 +139,11 @@ variable "log_analytics_key" {
   default   = null
   sensitive = true
   ephemeral = true
+
+  validation {
+    condition     = var.log_analytics_key == null || var.log_analytics_key_version != null
+    error_message = "Set log_analytics_key_version whenever you supply a Log Analytics key."
+  }
 }
 
 variable "log_analytics_key_version" {
@@ -144,6 +156,11 @@ variable "files_account_key" {
   default   = null
   sensitive = true
   ephemeral = true
+
+  validation {
+    condition     = var.files_account_key == null || var.files_account_key_version != null
+    error_message = "Set files_account_key_version whenever you supply an Azure Files key."
+  }
 }
 
 variable "files_account_key_version" {

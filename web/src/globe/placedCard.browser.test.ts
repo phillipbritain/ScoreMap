@@ -174,10 +174,17 @@ describe('a placed card', () => {
   it('is disposed with its coming in still pending, its owner still told when it would have been over', async () => {
     const card = place()
     const over = vi.fn()
-    card.comeIn(over)
+    const notified = new Promise<void>((resolve) => {
+      card.comeIn(() => {
+        over()
+        resolve()
+      })
+    })
     card.dispose()
     expect(card.markerElement.isConnected).toBe(false)
-    await vi.waitFor(() => expect(over).toHaveBeenCalledOnce())
+    expect(over).not.toHaveBeenCalled()
+    await notified
+    expect(over).toHaveBeenCalledOnce()
     card.cameIn()
     expect(card.markerElement.isConnected).toBe(false)
   })

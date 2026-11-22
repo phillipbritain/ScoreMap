@@ -5,7 +5,7 @@ import { progressLine } from '../games/progressLine'
  * The game clock as the event panel shows it over the venue's photo: a small label over a big line. Live
  * with a running clock, the period in words over the time ("4th Quarter" over "8:30"); Live with none, the
  * period itself ("Bot 4th", "Halftime", "65'") under "Live", or "Delayed" while it's held up; Upcoming,
- * the start time under "Starts"; Final, how it ended ("Final/OT", "FT") alone. `live` lights the dot
+ * the start time under "Starts"; Final, how it ended ("Final/OT", "Final/ET") alone. `live` lights the dot
  * that says the clock is running.
  */
 export interface PanelClock {

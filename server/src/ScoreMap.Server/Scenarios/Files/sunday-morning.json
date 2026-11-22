@@ -219,7 +219,7 @@
       { "at": "10m", "game": "sunday-man-united-tottenham", "score": { "home": 1 }, "clock": "43'" },
       { "at": "20m", "game": "sunday-ireland-france", "score": { "away": 14 }, "clock": "64'" },
       { "at": "37m", "game": "sunday-liverpool-man-city", "score": { "home": 2 }, "clock": "90+2'" },
-      { "at": "40m", "game": "sunday-liverpool-man-city", "status": "final", "clock": "FT" },
+      { "at": "40m", "game": "sunday-liverpool-man-city", "status": "final", "clock": "Final" },
       { "at": "1h", "game": "sunday-bills-dolphins", "status": "live", "period": 1, "clock": "15:00" },
       { "at": "1h", "game": "sunday-patriots-jets", "status": "live", "period": 1, "clock": "15:00" },
       { "at": "1h", "game": "sunday-ravens-bengals", "status": "live", "period": 1, "clock": "15:00" },

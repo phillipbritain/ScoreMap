@@ -79,11 +79,11 @@ public class ClockLineTests
     [Theory]
     [InlineData(InProgress, "67'", 2, Playing, "67'")]
     [InlineData(InProgress, "45'+2'", 1, Playing, "45'+2'")]
-    [InlineData(InProgress, "45'", 1, Break, "HT")]
-    [InlineData(InProgress, "105'", 3, Break, "ET HT")]
+    [InlineData(InProgress, "45'", 1, Break, "Halftime")]
+    [InlineData(InProgress, "105'", 3, Break, "Halftime/ET")]
     [InlineData(InProgress, "120'", 5, Shootout, "Pens")]
-    [InlineData(Final, "90'+5'", 2, Playing, "FT")]
-    [InlineData(Final, "120'+5'", 4, Playing, "AET")]
+    [InlineData(Final, "90'+5'", 2, Playing, "Final")]
+    [InlineData(Final, "120'+5'", 4, Playing, "Final/ET")]
     public async Task Soccer(ProviderStatus status, string clock, int period, ProviderPeriodPhase phase, string expected) =>
         Assert.Equal(expected, await ClockLineAsync("soccer/eng.1", status, clock, period, phase));
 

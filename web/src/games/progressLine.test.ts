@@ -47,7 +47,7 @@ describe('progressLine in short, for pins and score cards', () => {
   })
 
   it("shows a Final game's own final line, or just Final", () => {
-    expect(progressLine({ ...live, status: 'Final', clock: 'AET' }, 'short')).toBe('AET')
+    expect(progressLine({ ...live, status: 'Final', clock: 'Final/ET' }, 'short')).toBe('Final/ET')
     expect(progressLine({ ...live, status: 'Final', clock: null }, 'short')).toBe('Final')
   })
 

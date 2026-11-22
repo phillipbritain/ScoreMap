@@ -38,9 +38,18 @@ param githubIdentityName string = 'scoremap-github'
 @description('Subject of the GitHub token Azure trusts, naming the repo and branch. See docs/deploy.md.')
 param githubSubject string
 
-@secure()
-@description('Fine-grained GitHub token that can only write this repo\'s issues, for filing feedback (docs/configuration.md). Left empty, feedback is only logged; main.bicepparam refuses that unless it\'s meant.')
-param feedbackGitHubToken string = ''
+@description('Whether to file feedback with the token in Key Vault. Set false to only log feedback.')
+param feedbackEnabled bool = true
+
+var feedbackIdentityId = resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', '${appName}-feedback')
+
+module feedbackVault 'feedback-vault.bicep' = if (feedbackEnabled) {
+  name: '${appName}-feedback-vault'
+  params: {
+    appName: appName
+    location: location
+  }
+}
 
 // The app's logs, and Container Apps' own, for `az containerapp logs show`. The daily cap keeps it
 // inside Log Analytics' free 5 GB a month; past it, logs stop until the next day (UTC).
@@ -118,7 +127,6 @@ resource environmentStorage 'Microsoft.App/managedEnvironments/storages@2025-01-
 }
 
 var hasCustomDomain = !empty(customDomain)
-var hasFeedbackToken = !empty(feedbackGitHubToken)
 
 // Container Apps' free certificate for the custom domain, renewed by Azure. Issued only once the
 // domain's DNS records point here and the domain is on the app (see bindCustomDomain).
@@ -135,6 +143,14 @@ resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2025
 resource app 'Microsoft.App/containerApps@2025-01-01' = {
   name: appName
   location: location
+  identity: feedbackEnabled ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${feedbackIdentityId}': {}
+    }
+  } : {
+    type: 'None'
+  }
   properties: {
     managedEnvironmentId: environment.id
     configuration: {
@@ -159,11 +175,12 @@ resource app 'Microsoft.App/containerApps@2025-01-01' = {
             ]
           : []
       }
-      secrets: hasFeedbackToken
+      secrets: feedbackEnabled
         ? [
             {
-              name: 'feedback-github-token'
-              value: feedbackGitHubToken
+              name: 'feedback-github-token-kv'
+              keyVaultUrl: feedbackVault!.outputs.secretUrl
+              identity: feedbackIdentityId
             }
           ]
         : []
@@ -198,12 +215,11 @@ resource app 'Microsoft.App/containerApps@2025-01-01' = {
                 value: '/data/event-venues.json'
               }
             ],
-            hasFeedbackToken
+            feedbackEnabled
               ? [
                   {
-                    // Files feedback as issues in the repo (docs/configuration.md); passed in on each run.
                     name: 'Feedback__GitHubToken'
-                    secretRef: 'feedback-github-token'
+                    secretRef: 'feedback-github-token-kv'
                   }
                 ]
               : []

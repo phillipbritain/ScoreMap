@@ -16,7 +16,7 @@ export interface Viewer {
 
 /**
  * Where a game stands, in one line. The server's clock line already carries the period in the
- * sport's style ("Q3 4:12", "Final/OT", "FT"), so this adds only the delay and fallbacks. Short:
+ * sport's style ("Q3 4:12", "Final/OT", "Final/ET"), so this adds only the delay and fallbacks. Short:
  * "Q3 4:12", "Delayed", "Final", or null. Full: also
  * "Q3 4:12 · Delayed", "Live". In either, an Upcoming game's start time in the viewer's time,
  * "1:00 PM" (ADR-0029).

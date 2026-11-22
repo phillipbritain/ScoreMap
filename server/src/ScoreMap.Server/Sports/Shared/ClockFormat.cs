@@ -21,12 +21,12 @@ internal static class ClockFormat
     internal static string? Halves(ProviderGame game, int period, int regulation)
     {
         if (game.Status == ProviderStatus.Final)
-            return period > regulation ? "AET" : "FT";
+            return period > regulation ? "Final/ET" : "Final";
         return game.Phase switch
         {
             ProviderPeriodPhase.Shootout => "Pens",
-            ProviderPeriodPhase.Break when period == 1 => "HT",
-            ProviderPeriodPhase.Break when period == regulation + 1 => "ET HT",
+            ProviderPeriodPhase.Break when period == 1 => "Halftime",
+            ProviderPeriodPhase.Break when period == regulation + 1 => "Halftime/ET",
             _ => game.DisplayClock,
         };
     }

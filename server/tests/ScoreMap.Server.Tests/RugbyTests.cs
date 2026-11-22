@@ -46,19 +46,19 @@ public class RugbyTests
     }
 
     [Theory]
-    [InlineData(1, Break, "HT")]
+    [InlineData(1, Break, "Halftime")]
     [InlineData(1, Playing, "12'")]
-    public async Task The_progress_line_reads_half_time_on_the_break(int period, ProviderPeriodPhase phase, string expected) =>
+    public async Task The_progress_line_reads_halftime_on_the_break(int period, ProviderPeriodPhase phase, string expected) =>
         Assert.Equal(expected, (await SentAsync(Match(InProgress, period, "12'", 7, 3, phase))).Clock);
 
     [Fact]
-    public async Task A_finished_match_reads_full_time()
+    public async Task A_finished_match_reads_final()
     {
         await using var server = new ScoreMapServer();
         server.Feed.SetScoreboard(SixNations, Match(Final, 2, "81'", 43, 21) with { StartTime = server.Clock.GetUtcNow().AddHours(-2) });
         await using var client = await server.ConnectClientAsync();
 
-        Assert.Equal("FT", Assert.Single(await client.NextSnapshotAsync()).Clock);
+        Assert.Equal("Final", Assert.Single(await client.NextSnapshotAsync()).Clock);
     }
 
     [Fact]

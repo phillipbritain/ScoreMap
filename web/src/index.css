@@ -3676,11 +3676,13 @@ body {
   width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
   max-height: min(70dvh, calc(100dvh - 6 * var(--spacing)));
   overflow: hidden;
+  padding: var(--rail-popover-padding) 0 0;
 }
 
 /* Its header in the popover's flow, which doesn't scroll, above the search. */
 .rail__popover--games > .rail__popover-header {
   position: static;
+  margin-inline: 0;
 }
 
 .game-navigation {
@@ -3694,7 +3696,7 @@ body {
 .game-navigation__search {
   flex: none;
   box-sizing: border-box;
-  width: 100%;
+  margin-inline: var(--rail-popover-padding, 0);
   padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--palette-divider);
   border-radius: var(--menu-item-corner);
@@ -3763,7 +3765,7 @@ body {
 .game-navigation__game:has(.game-navigation__pin) > [data-game-id] { min-width: 0; }
 
 .game-navigation button.game-navigation__pin {
-  width: calc(7 * var(--spacing));
+  width: calc(6 * var(--spacing));
   padding: 0;
   flex: none;
   justify-content: center;
@@ -3771,7 +3773,7 @@ body {
 
 @media (pointer: coarse) {
   .game-navigation button.game-navigation__pin {
-    width: calc(9 * var(--spacing));
+    width: calc(8 * var(--spacing));
     min-height: calc(9 * var(--spacing));
   }
 }

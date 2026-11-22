@@ -125,7 +125,7 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
               </div>
             </div>
             <div className="event-panel__watch">
-              <WatchInfo key={game.id} game={game} photo={photo?.url ?? null} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
+              <WatchInfo key={game.id} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>
                 {(game.espnUrl || links.length > 0) && <WatchLinks links={links} espnUrl={game.espnUrl} />}
               </WatchInfo>
             </div>
@@ -181,13 +181,11 @@ function WatchLinks({ links, espnUrl }: { links: StreamLink[]; espnUrl: string |
         <a key={link.url} className="game-details-tile game-details-tile--link" href={link.url} target="_blank"
           rel="noopener noreferrer nofollow" aria-label={`${link.site} (unofficial stream)`}>
           <img className="event-panel__stream-logo" src={streamEastLogoUrl} alt="" />
-          <span>Unofficial stream</span>
         </a>
       ))}
       {espnUrl && (
-        <a className="game-details-tile game-details-tile--link" href={espnUrl} target="_blank" rel="noopener noreferrer">
-          <img className="event-panel__espn-logo" src={espnLogoUrl} alt="The event on ESPN" />
-          <span>Event page</span>
+        <a className="game-details-tile game-details-tile--link" href={espnUrl} target="_blank" rel="noopener noreferrer" aria-label="The event on ESPN">
+          <img className="event-panel__espn-logo" src={espnLogoUrl} alt="ESPN" />
         </a>
       )}
     </>

@@ -3765,7 +3765,7 @@ body {
 .game-navigation__game:has(.game-navigation__pin) > [data-game-id] { min-width: 0; }
 
 .game-navigation button.game-navigation__pin {
-  width: calc(6 * var(--spacing));
+  width: calc(7 * var(--spacing));
   padding: 0;
   flex: none;
   justify-content: center;
@@ -3773,7 +3773,7 @@ body {
 
 @media (pointer: coarse) {
   .game-navigation button.game-navigation__pin {
-    width: calc(8 * var(--spacing));
+    width: calc(9 * var(--spacing));
     min-height: calc(9 * var(--spacing));
   }
 }
@@ -3818,6 +3818,7 @@ body {
 .game-navigation__matchup {
   flex: 1;
   min-width: 0;
+  font-size: calc(var(--typography-body2-font-size) - 0.25 * var(--spacing));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

@@ -38,6 +38,7 @@ function sizedTheme(): Theme {
   return themeWith((json) => {
     json.components.Cluster.radius = 14
     json.components.Cluster.glowRadius = 27
+    delete json.components.Cluster.matchPinGlow
     json.components.Cluster.outlineWidth = 2
   })
 }
@@ -56,6 +57,7 @@ describe('clusters', () => {
 
   it('fade as the status they show as says, disc, outline and count alike', () => {
     const theme = themeWith((json) => {
+      delete json.components.Cluster.fillWithGameColor
       json.components.Cluster.live.opacity = 1
       json.components.Cluster.final.opacity = 0.4
     })
@@ -122,6 +124,7 @@ describe("a cluster's color", () => {
   function colorTheme(): Theme {
     return themeWith((json) => {
       json.palette.live.main = '#ff0000'
+      delete json.components.Cluster.count.color
     })
   }
 

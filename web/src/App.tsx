@@ -8,6 +8,7 @@ import { scorerOf } from './games/justHappened'
 import type { Game } from './games/game'
 import { noneCelebrated, withCelebrated, withoutCelebrated, type Celebrated } from './celebration/celebrated'
 import { useGameSelection } from './games/useGameSelection'
+import { pinnedCards } from './games/pinnedCards'
 import type { Camera } from './globe/camera'
 import { Globe, type GlobeHandle } from './globe/Globe'
 import type { LoadingStage } from './globe/globeMap'
@@ -84,6 +85,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   // The app's hold on the globe (its camera, and the score cards the welcome tour points at), and where the camera last settled, for the zoom buttons' limits.
   const globe = useRef<GlobeHandle>(null)
   const [viewerSettings, setViewerSettings] = useState(store.load)
+  const [scoreCardPins] = useState(pinnedCards)
   // Whether a event panel's details were left open: the next panel opens them the same way, after a
   // reload too; collapsed until the viewer first opens them. During the welcome tour, its panels start
   // collapsed whatever was left, and what's done to them there isn't kept.
@@ -105,6 +107,9 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
     demo,
     setScenarioListing,
   )
+  useEffect(() => {
+    if (games && scoreCardPins.games().length) scoreCardPins.retain(new Set(games.map(game => game.id)))
+  }, [games, scoreCardPins])
   useEffect(() => store.save(viewerSettings), [store, viewerSettings])
   useEffect(() => store.saveDetailsOpen(detailsOpen), [store, detailsOpen])
   // Installing ScoreMap as an app: More's Install app, where the browser can be asked (ADR-0030).
@@ -175,6 +180,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           colors={colors}
           mapType={viewerSettings.mapType}
           cardCount={viewerSettings.cardCount}
+          scoreCardPins={scoreCardPins}
           hotIndicator={viewerSettings.hotEventIndicator}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.
           games={shownGames}
@@ -248,6 +254,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
           touring={touring}
           games={visible}
+          scoreCardPins={scoreCardPins}
           gamesReady={revealed}
           onSelectGame={(gameId) => globe.current?.pickGame(gameId)}
           feedbackContext={() =>

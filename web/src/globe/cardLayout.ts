@@ -19,6 +19,10 @@ export interface ScreenCard {
   rank?: number
   /** Whether it's the selected game's card, which is never left out for the card count. */
   selected?: boolean
+  /** A pinned card's fixed position relative to its venue. */
+  lockedOffset?: ScreenOffset
+  /** A viewer asked for this card by clicking its small pin or card cluster. */
+  revealed?: boolean
 }
 
 /** What the cards are laid out around. */
@@ -47,6 +51,8 @@ export interface CardScene {
    * card clusters. No limit, unless given.
    */
   mostCards?: number
+  /** Apply the count to the whole layout after revealing cards, including the selected card. */
+  hardCardLimit?: boolean
   /**
    * Whether the card count changed since the cards were last laid out (the viewer picked another card
    * count). On a still camera, the cards are laid out afresh, each looking for room, rather than holding
@@ -298,6 +304,8 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
         previous: shiftOf(previous.get(card.gameId), scene.venueGap),
         lookedAgo: lookedAgoOf(previous.get(card.gameId)),
         selected: card.selected,
+        revealed: card.revealed,
+        locked: card.lockedOffset && { dx: card.lockedOffset.dx, dy: card.lockedOffset.dy + scene.venueGap },
       }),
     )
   const names = (scene.names ?? []).filter((name) => nearScreen(name.x, name.y, scene))
@@ -306,7 +314,7 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
   const withRoom = boxes
     .filter((box) => shifts.has(box.gameId))
     .sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
-    .map((box) => ({ ...box, x: box.x + shifts.get(box.gameId)!.dx, y: box.y + shifts.get(box.gameId)!.dy, moved: isMoved(shifts.get(box.gameId)) }))
+    .map((box) => ({ ...box, x: box.x + shifts.get(box.gameId)!.dx, y: box.y + shifts.get(box.gameId)!.dy, moved: isMoved(shifts.get(box.gameId)), locked: Boolean(box.locked) }))
   const venues = boxes.map(({ venueX, venueY }) => ({ x: venueX, y: venueY }))
   // Only once the camera is still: handing cards round as it moves would have them swap places as it goes.
   const cameraMoving = scene.moving === true || scene.cameraMoving === true
@@ -314,6 +322,7 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
   const unmoved = new Map(boxes.map((box) => [box.gameId, box]))
   for (const [gameId, { x, y }] of centers) {
     const box = unmoved.get(gameId)!
+    if (box.locked) continue
     shifts.set(gameId, { dx: x - box.x, dy: y - box.y })
   }
   // Each trail's route last time, which it keeps unless another crosses fewer cards (see routeTrails).
@@ -407,6 +416,9 @@ interface CardBox {
   lookedAgo?: number
   /** Whether it's the selected game's card, never left out for the card count. */
   selected?: boolean
+  revealed?: boolean
+  /** The shift from where the card would sit, fixed while its position is locked. */
+  locked?: ScreenOffset
 }
 
 interface Arrangement {
@@ -532,7 +544,8 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * all look.
  */
 function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: CardScene): Arrangement {
-  const boxes = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
+  const boxes = [...cards].sort((a, b) => Number(Boolean(b.locked)) - Number(Boolean(a.locked)) ||
+    a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const looking = screen.moving
     ? boxes.reduce<CardBox | undefined>(
         (longest, box) => (box.lookedAgo !== undefined && (!longest || box.lookedAgo > longest.lookedAgo!) ? box : longest),
@@ -549,9 +562,35 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
   const shifts = new Map<string, ScreenOffset>()
   const cardClusters: Omit<CardCluster, 'status'>[] = []
 
+  const visible = (card: CardBox, x: number, y: number) =>
+    x + card.width / 2 > 0 && x - card.width / 2 < screen.width &&
+    y + card.height / 2 > 0 && y - card.height / 2 < screen.height
+  const place = (card: CardBox, shift: ScreenOffset) => {
+    const x = card.x + shift.dx
+    const y = card.y + shift.dy
+    shifts.set(card.gameId, shift)
+    placed.push({ ...card, x, y })
+    if (visible(card, x, y)) shown++
+    trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
+  }
+  const cluster = (card: CardBox) => {
+    const cardCluster = cardClusters.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= cardClusterRadius)
+    if (cardCluster) cardCluster.gameIds.push(card.gameId)
+    else cardClusters.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
+  }
+
   for (const [index, card] of boxes.entries()) {
     // Past the card count: counted in a card cluster, without looking for room.
-    const counted = !card.selected && screen.mostCards !== undefined && shown >= screen.mostCards
+    const counted = (!card.selected || screen.hardCardLimit) && screen.mostCards !== undefined && shown >= screen.mostCards
+    if (card.locked) {
+      const x = card.x + card.locked.dx
+      const y = card.y + card.locked.dy
+      const overlaps = placed.some(other => Math.abs(x - other.x) < (card.width + other.width) / 2 &&
+        Math.abs(y - other.y) < (card.height + other.height) / 2)
+      if (!counted && visible(card, x, y) && !overlaps) place(card, card.locked)
+      else cluster(card)
+      continue
+    }
     // Only what's within reach of the card can get in its way.
     const near = (x: number, y: number, halfWidth: number, halfHeight: number) =>
       Math.abs(x - card.x) < reach + card.width / 2 + halfWidth && Math.abs(y - card.y) < reach + card.height / 2 + halfHeight
@@ -579,6 +618,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     const someHeld = (see: KeepOut) => {
       for (let later = index + 1; later < boxes.length; later++) {
         const other = boxes[later]
+        if (card.revealed && !other.revealed) continue
         if (!other.previous) continue
         const x = other.x + other.previous.dx
         const y = other.y + other.previous.dy
@@ -697,7 +737,7 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     let nearest: Spot | undefined = !counted && fits(unmovedSpot, card.previous && !wasMoved ? drift : 0) ? unmovedSpot : undefined
     let clear: Spot | undefined = nearest && trailsClear(unmovedSpot) ? unmovedSpot : undefined
     // A card in a card cluster last time looks for room only when its turn comes (see above).
-    const looks = card.lookedAgo === undefined || !screen.moving || card === looking
+    const looks = card.revealed || card.lookedAgo === undefined || !screen.moving || card === looking
     if (!counted && !clear && !previous && looks) {
       markTakenSpots()
       for (const spot of spotsFor(card)) {
@@ -729,18 +769,11 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     const best = clear ?? nearest
     const shift = kept && clear !== unmovedSpot ? kept : best && { dx: best.dx, dy: best.dy }
     if (shift) {
-      shifts.set(card.gameId, shift)
-      const x = card.x + shift.dx
-      const y = card.y + shift.dy
-      placed.push({ ...card, x, y })
-      if (x + card.width / 2 > 0 && x - card.width / 2 < screen.width && y + card.height / 2 > 0 && y - card.height / 2 < screen.height) shown++
-      trails.push({ x1: x, y1: y, x2: card.venueX, y2: card.venueY })
+      place(card, shift)
       continue
     }
     lookedAgo.set(card.gameId, looks ? 0 : card.lookedAgo! + 1)
-    const cardCluster = cardClusters.find((c) => Math.hypot(c.x - card.venueX, c.y - card.venueY) <= cardClusterRadius)
-    if (cardCluster) cardCluster.gameIds.push(card.gameId)
-    else cardClusters.push({ gameIds: [card.gameId], x: card.venueX, y: card.venueY })
+    cluster(card)
   }
   return { shifts, cardClusters, lookedAgo }
 }
@@ -790,7 +823,7 @@ function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
         const ahead = (centerAfterPush(other, along) - center) * direction
         const needed = (card[along.size] + other[along.size]) / 2 + gap
         if (ahead < 0 || ahead >= needed) continue
-        if (!isMoved(was.get(other.gameId))) return
+        if (other.locked || !isMoved(was.get(other.gameId))) return
         const pushedBy = (pushes.get(other.gameId) ?? 0) + (needed - ahead) * direction
         if (Math.abs(pushedBy) > cardJump) return
         pushes.set(other.gameId, pushedBy)
@@ -807,6 +840,7 @@ function pushOnScreen(cards: readonly CardBox[], screen: CardScene): CardBox[] {
   const order = [...cards].sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   for (const along of [horizontal, vertical]) {
     for (const card of order) {
+      if (card.locked) continue
       const at = was.get(card.gameId)
       if (!isMoved(at)) continue
       const center = card[along.center] + at[along.shift]

@@ -60,7 +60,8 @@ export function Tooltips() {
       observer.observe(element, { attributeFilter: ['data-tooltip'] })
       const side = element.dataset.tooltipSide
       const prefer: TooltipPrefer = side === 'left' || side === 'right' ? side : 'above'
-      const fits = element.hasAttribute('data-tooltip-when-clipped') && !isClipped(element)
+      const clippedText = tooltipText(element)
+      const fits = clippedText && !isClipped(clippedText)
       if (!text || fits) return
       const reveal = () => setShown({ text, anchor: anchorOf(element, prefer), prefer })
       // No wait shows it at once, in the same task as the tap or focus that asked for it.
@@ -104,7 +105,8 @@ export function Tooltips() {
       const element = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-tooltip-when-clipped]') : null
       const again = element !== null && element === tapped
       tapped = null
-      if (!element || again || !isClipped(element)) return
+      const clippedText = element && tooltipText(element)
+      if (!element || again || !clippedText?.contains(event.target as Node) || !isClipped(clippedText)) return
       event.preventDefault()
       event.stopPropagation()
       show(element, 0)
@@ -157,6 +159,12 @@ export function Tooltips() {
       {shown.text}
     </div>
   )
+}
+
+/** When a whole control has a tooltip for clipped text, the attribute can name its text element. */
+function tooltipText(element: HTMLElement): HTMLElement | null {
+  const selector = element.getAttribute('data-tooltip-when-clipped')
+  return selector === null ? null : selector ? element.querySelector(selector) : element
 }
 
 /** The box a tooltip is placed by: its element's, reaching on its side to the edge marked around it, if any. */

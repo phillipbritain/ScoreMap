@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useRef, type Ref, type RefObject } from 'react'
 import type { Game } from '../games/game'
+import type { PinnedCards } from '../games/pinnedCards'
 import { panelBox } from '../panel/panelBox'
 import type { JustHappened } from '../games/justHappened'
 import type { PickedColors } from '../settings/gameColor'
@@ -25,6 +26,7 @@ interface GlobeProps {
   mapType: MapType
   /** How many score cards show at once where it's busy (see mostCards). A change lays them out afresh (see GlobeMap.setCardCount). */
   cardCount: CardCount
+  scoreCardPins?: PinnedCards
   /** Whether hot games show their indicator. A change shows or clears them in place (see GlobeMap.setHotIndicators). */
   hotIndicator: boolean
   /** The games to show, or null until the server's first snapshot has arrived (see GlobeMap.stage). */
@@ -72,14 +74,14 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount })
+  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount])
+    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins }
+  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins])
 
   useEffect(() => {
     if (!container.current) return
@@ -93,6 +95,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
         colors: latest.current.colors,
         mapType: latest.current.mapType,
         cardCount: latest.current.cardCount,
+        scoreCardPins: latest.current.scoreCardPins,
         hotIndicator: latest.current.hotIndicator,
         startCamera: latest.current.startCamera,
         onSelect: (gameId) => latest.current.onSelectGame(gameId),

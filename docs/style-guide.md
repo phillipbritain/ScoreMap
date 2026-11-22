@@ -57,7 +57,7 @@ Motion isn't part of a theme: durations, easings and the animations' shapes stay
 
 When a game's score changes, nothing on its score card moves: the card's edge glows in the game's color and fades over 1.6 seconds, and the score takes that color as it fades. When a two-sided game's score changes, the side that scored is also lit for 3 seconds, on its score card's row and in the event panel: a tint and inner glow in the game's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
 
-A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the edge of the screen, as a venue out of view has no card but the selected game's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. Cards move only as the camera moves: to keep clear of each other, to come back over their venues, or to come within 80 px of their venues where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Once it stops, every card and trail holds where it is, whatever changes on screen, until the camera moves again. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
+A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the edge of the screen, as a venue out of view has no card but the selected game's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. While the camera moves, cards can move to keep clear of each other, come back over their venues, or come within 80 px of them where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Pinning, revealing, and changing the card count can also rearrange the view while the camera is still. A pinned card holds its position relative to its venue. Its heading shows a small tilted pushpin on the right. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
 
 The loading screen's rocket, and the cut-off note's, flies up and to the right, bobbing as it goes, its flame of two layers (`components.LoadingScreen.rocket.flame.outer` around `.inner`) flickering out of step, and stars streaming past it, nearer ones bigger and quicker, fading out toward the edge of a circle around it. The user picked this, today's rocket with a new flame and stars in place of its speed lines, from two rounds prototyped on November 19, 2026, preserved on the throwaway branch `phillipbritain/rocket-loader-prototype`.
 
@@ -160,7 +160,8 @@ The dark theme names one of the palette's colors where a job is what that palett
 | --- | --- | --- |
 | `palette.<status>.main` | A game's color, by status (`live`, `upcoming`, `final`; see [The palette](#the-palette)) | `gold.500` for each |
 | `components.Pin.<status>.core.color` | A small pin's core. One that's its status's color is drawn in the game's color, dimmed by its status; any other color stays as given | Each its status's color (`live.main` and so on), so every small pin is a solid dot in its game's color |
-| `components.Cluster.fill` | The disc of a card cluster | `primary.dark` |
+| `components.Cluster.fill`, `.fillWithGameColor` | A card cluster's disc color. With `fillWithGameColor` on, it uses the same game color as its ring | `primary.dark`, on |
+| `components.Cluster.count.color` | The number on a card cluster. A theme that leaves it out uses the ring's color | Black |
 | `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
 | `components.ScoreCard.fill` | A score card's fill, tinting its glass (see [Glass](#glass)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
@@ -207,7 +208,7 @@ A game's status shows by **brightness and glow, not color** (ADR-0012). Color is
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 
-In the dark theme only score cards glow: small pins and clusters have none, so they keep out of the way of the cards. Every small pin is the same size whatever its status, 9 px across, and every venue dot 10 px: a small pin is solid, a venue dot a ring around a dot, which reads smaller than a solid dot as wide, so the pin is a pixel smaller to look the same size. Status shows by how far the game's color is dimmed (`components.Pin.<status>.dim`), mixed toward the background's paper so it stays solid, as a score card fades: Live in the game's full color; Upcoming dimmed 35% and Final 60%, on small pins, venue dots, venue clusters and trails alike.
+In the dark theme Live small pins and card clusters have a soft glow, Upcoming has a fainter glow, and Final has none. Every small pin is the same size whatever its status, 9 px across, and every venue dot 10 px: a small pin is solid, a venue dot a ring around a dot, which reads smaller than a solid dot as wide, so the pin is a pixel smaller to look the same size. Status shows by how far the game's color is dimmed (`components.Pin.<status>.dim`), mixed toward the background's paper so it stays solid, as a score card fades: Live in the game's full color; Upcoming dimmed 35% and Final 60%, on small pins, venue dots, venue clusters and trails alike.
 
 A score card fades by color, not by being see-through: its game's color, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
 
@@ -230,8 +231,8 @@ The dark theme's:
 
 | Status | Color | Pin core | Pin glow | Dim | Cluster | Card fade | Card glow |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Live | `gold.500` | `live.main`, 3px, opacity 1, 1.5px ring | none (15px reach) | 0 | 1 | 0 | 12px at 0.8 |
-| Upcoming | `gold.500` | `upcoming.main`, 3px, 1, 1.5px ring | none (9px reach) | 0.35 | 0.9 | 0.15 | 4px at 0.3 |
+| Live | `gold.500` | `live.main`, 3px, opacity 1, 1.5px ring | 15px at 0.45 | 0 | 1 | 0 | 12px at 0.8 |
+| Upcoming | `gold.500` | `upcoming.main`, 3px, 1, 1.5px ring | 9px at 0.2 | 0.35 | 0.9 | 0.15 | 4px at 0.3 |
 | Final | `gold.500` | `final.main`, 3px, 1, 1.5px ring | none | 0.6 | 0.55 | 0.45 | none |
 
 The card fades are what the cards' opacities were before cards were made solid (1 minus 1, 0.85 and 0.55), so they look as close to that as a solid card can.
@@ -355,9 +356,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.PlaceNames.<kind>.outline.width`, `.blur` | The outline around a place name's letters | 2 and 0.5; state names 1.5 and 0.5 |
 | `components.PlaceNames.city.dot.radius`, `.ring` | The dot where a named city is, in the city name's color, and the ring around it in the name's outline color | 2.25 and 0.75 |
 | `components.Cluster.radius` | How far a card cluster's disc reaches, outline and all | 8 |
-| `components.Cluster.glowRadius` | Its glow's radius | 16 |
+| `components.Cluster.glowRadius`, `.matchPinGlow` | Its glow radius. With `matchPinGlow` on, the halo extends as far beyond its disc as the small pin's halo extends beyond its edge | 16, on |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
-| `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 0 |
+| `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 1 |
 | `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue, in its game's color dimmed by its status: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 1.75 |
@@ -402,7 +403,7 @@ The user picked this look, variant D of four prototyped on November 21, 2026 wit
 | `components.EventPanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
 | `components.EventPanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
 | `components.EventPanel.size.clock.large`, `.small` | The game clock's time over the venue's photo: large on a desktop while it runs; small on a phone, and for a period, a start time or a final result in its place | 30, 22 |
-| `components.ScoreCard.size.minWidth` | A score card's narrowest. Its size is set when it's first drawn (see [Where the theme reaches](#where-the-theme-reaches)) | 64 |
+| `components.ScoreCard.size.minWidth` | A score card's base minimum width. ScoreMap gives pinnable cards three extra pixels in the dark theme to fit the header beside the pushpin | 64 |
 | `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
 | `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |

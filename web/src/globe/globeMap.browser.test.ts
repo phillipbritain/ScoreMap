@@ -7,6 +7,7 @@ import type { Game, GameStatus } from '../games/game'
 import type { GameChangeKind } from '../games/gameChange'
 import { noneJustHappened, recordJustHappened, type JustHappened } from '../games/justHappened'
 import type { PlacedGame } from '../games/placedGames'
+import { pinnedCards, type PinnedCards } from '../games/pinnedCards'
 import { applyTheme } from '../theme/applyTheme'
 import { builtInTheme } from '../theme/builtInTheme'
 import { themeWith } from '../theme/testTheme'
@@ -21,7 +22,7 @@ import { isBehindGlobe } from './horizon'
 import {
   pinSource,
 } from './pinLayers'
-import { fieldOfView, fittedZoomSettings, maxZoom, zoomAtEquator, zoomSettings } from './zoomLevels'
+import { fieldOfView, fittedZoomSettings, zoomAtEquator, zoomSettings } from './zoomLevels'
 
 // About one country on screen: a zoom the tests look closer at the cards from.
 const countryZoom = 3
@@ -138,14 +139,14 @@ afterEach(() => {
 const testZoom = { ...zoomSettings, minZoom: Math.min(zoomSettings.minZoom, 2) }
 
 /** Opens a globe on the page, 800 × 600 unless given a size, looking at the given place. */
-function openGlobe(startCamera: Camera, { width = 800, height = 600 } = {}) {
+function openGlobe(startCamera: Camera, { width = 800, height = 600, scoreCardPins }: { width?: number; height?: number; scoreCardPins?: PinnedCards } = {}) {
   container = document.createElement('div')
   container.style.cssText = `position: relative; width: ${width}px; height: ${height}px`
   document.body.append(container)
   const onSelect = vi.fn<(gameId: string) => void>()
   const onCameraMove = vi.fn<(camera: Camera) => void>()
   const onStage = vi.fn<(stage: LoadingStage) => void>()
-  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, zoomSettings: testZoom, startCamera, onSelect, onCameraMove, onStage })
+  const globe = new GlobeMap(container, { style: plainStyle, theme: builtInTheme, zoomSettings: testZoom, startCamera, onSelect, onCameraMove, onStage, scoreCardPins })
   opened.push(globe)
   // MapLibre's own map, to see what it draws; the tests drive the globe only through GlobeMap.
   const map = (globe as unknown as { map: MapLibreMap }).map
@@ -181,15 +182,6 @@ const card = (gameId: string) => container.querySelector<HTMLElement>(`.score-ca
 async function cardShown(gameId: string) {
   await vi.waitFor(() => expect(card(gameId)).not.toBeNull(), { timeout: 10_000 })
   return card(gameId)!
-}
-
-/** The camera as GlobeMap last reported it, once it reports one that passes the check. */
-async function cameraSettles(
-  onCameraMove: ReturnType<typeof vi.fn<(camera: Camera) => void>>,
-  check: (camera: Camera) => boolean,
-  timeout = 15_000,
-) {
-  await vi.waitFor(() => expect(onCameraMove.mock.calls.some(([camera]) => check(camera))).toBe(true), { timeout })
 }
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -676,28 +668,6 @@ describe('camera movement lifetime', () => {
     expect(starts).toHaveBeenCalledTimes(1)
   })
 
-  it('disposes a card-cluster retry when the globe is destroyed mid-move', async () => {
-    const { globe, map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
-    globe.show(crowdedGames())
-    const cluster = await cardClusterDrawn(map)
-    let starts = 0
-    const destroyed = new Promise<void>((resolve) => {
-      map.on('movestart', () => {
-        starts++
-        if (starts === 2) queueMicrotask(() => {
-          globe.destroy()
-          resolve()
-        })
-      })
-    })
-
-    await userEvent.click(map.getCanvas(), { position: cluster })
-    await destroyed
-    // A late idle must not resume the disposed move against a removed map.
-    expect(() => map.fire('idle')).not.toThrow()
-    expect(starts).toBe(2)
-    expect(container.querySelector('canvas')).toBeNull()
-  })
 })
 
 describe('games not placed yet', () => {
@@ -751,7 +721,7 @@ describe('games not placed yet', () => {
   })
 })
 
-describe('zooming in to card clusters', () => {
+describe('revealing score cards', () => {
   it('does not zoom in when the viewer double-clicks the globe', async () => {
     const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
     await new Promise((resolve) => map.once('load', resolve))
@@ -762,39 +732,66 @@ describe('zooming in to card clusters', () => {
     expect(map.getZoom()).toBe(2)
   })
 
-  it('zooms in to a card cluster the viewer selects until its games all have cards', async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
+  it('reveals games from a card cluster at the current camera without opening a panel', async () => {
+    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at countryZoom.
     const games = Array.from({ length: 36 }, (_, i) =>
       game(`G${i}`, { longitude: (i % 6) * 0.1, latitude: Math.floor(i / 6) * 0.1 }),
     )
     globe.show(games)
     const cardCluster = await cardClusterDrawn(map)
+    const before = new Set(globe.shownScoreCards().map(({ gameId }) => gameId))
 
     await userEvent.click(map.getCanvas(), { position: cardCluster })
 
-    await cameraSettles(onCameraMove, (camera) => camera.zoom > countryZoom + 1)
-    await vi.waitFor(async () => expect(await laidOut(map, 'cardCluster')).toEqual([]), { timeout: 20_000 })
+    await vi.waitFor(() => expect(globe.shownScoreCards().some(({ gameId }) => !before.has(gameId))).toBe(true))
+    expect(map.getCenter().toArray()).toEqual([0, 0])
+    expect(map.getZoom()).toBe(countryZoom)
+    expect(onSelect).not.toHaveBeenCalled()
   })
 
-  // Five or so zooms one after another: about 10 seconds in CI.
-  it('zooms in again while some of a card cluster’s games are still in one, as far as the globe goes', { timeout: 30_000 }, async () => {
-    const { globe, map, onCameraMove } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
-    // Two games half a degree out set how far the first zoom goes; at the venue between them,
-    // more games than there's ever room for stay in a card cluster after it.
-    const sameVenue = Array.from({ length: 40 }, (_, i) => game(`V${i}`))
-    globe.show([game('NE', { longitude: 0.5, latitude: 0.5 }), game('SW', { longitude: -0.5, latitude: -0.5 }), ...sameVenue])
-    const cardCluster = await cardClusterDrawn(map)
+  it('reveals a small pin in place of the lowest-priority visible card when the count is full', async () => {
+    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom })
+    globe.setCardCount('fewer')
+    const games = Array.from({ length: 21 }, (_, index) => {
+      const { lng: longitude, lat: latitude } = map.unproject([90 + (index % 7) * 100, 115 + Math.floor(index / 7) * 120])
+      return game(`G${index}`, { longitude, latitude, status: index === 20 ? 'Final' : index === 19 ? 'Upcoming' : 'Live' })
+    })
+    globe.show(games)
+    await pinsDrawn(map, cardlessSmallPinLayer, games[20])
+    const visible = () => globe.shownScoreCards().map(({ gameId }) => gameId)
+    expect(visible()).toHaveLength(20)
+    expect(visible()).toContain('G19')
+    const { x, y } = map.project([games[20].venue.longitude, games[20].venue.latitude])
 
-    await userEvent.click(map.getCanvas(), { position: cardCluster })
+    await userEvent.click(map.getCanvas(), { position: { x, y } })
 
-    await cameraSettles(onCameraMove, (camera) => camera.zoom === maxZoom, 25_000)
-    const zooms = onCameraMove.mock.calls.map(([camera]) => camera.zoom)
-    expect(zooms.filter((zoom) => zoom > countryZoom && zoom < maxZoom)).not.toEqual([])
+    await vi.waitFor(() => expect(visible()).toContain('G20'))
+    expect(visible()).toHaveLength(20)
+    expect(visible()).not.toContain('G19')
+    expect(map.getZoom()).toBe(countryZoom)
+    expect(onSelect).not.toHaveBeenCalled()
   })
 })
 
 describe('score cards', () => {
+  it('pins a card from its context menu without selecting the game and cleans up with the globe', async () => {
+    const pins = pinnedCards()
+    const { globe, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, { scoreCardPins: pins })
+    globe.show([game('A')])
+    const scoreCard = await cardShown('A')
+    scoreCard.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))
+    const action = document.querySelector<HTMLButtonElement>('.card-pin-menu__action')!
+    expect(action.textContent).toBe('Pin Card')
+    await userEvent.click(action)
+
+    expect(pins.games()).toEqual(['A'])
+    expect(scoreCard.hasAttribute('data-pinned')).toBe(true)
+    expect(onSelect).not.toHaveBeenCalled()
+    globe.destroy()
+    expect(document.querySelector('.card-pin-menu')).toBeNull()
+  })
+
   it('shows each change to a game straight away, however often games change', async () => {
     const { globe } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom + 1 })
     globe.show([game('A', { clock: '15:00' })])

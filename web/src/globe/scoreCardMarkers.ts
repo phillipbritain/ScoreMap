@@ -6,6 +6,7 @@ import type { PlacedGame } from '../games/placedGames'
 import { sidesTopFirst } from '../games/sides'
 import { logoFailed, shownLogo } from '../games/teamLogo'
 import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHappened'
+import type { PinnedCards } from '../games/pinnedCards'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
 import type { CardCount } from '../settings/viewerSettings'
@@ -81,6 +82,7 @@ export class ScoreCardMarkers {
   private readonly onSelect: (gameId: string) => void
   /** Which games have cards, and what becomes of them each frame (see ScoreCardScene). */
   private readonly scene: ScoreCardScene
+  private readonly scoreCardPins?: PinnedCards
   /** The card clusters as last drawn, for pulses over them (see cardLayoutDrawing). */
   private cardClustersDrawn: DrawnCardCluster[] = []
   /**
@@ -112,6 +114,7 @@ export class ScoreCardMarkers {
     onSelect: (gameId: string) => void,
     settling: GlobeSettling,
     cardCount: CardCount,
+    scoreCardPins?: PinnedCards,
   ) {
     this.map = map
     this.theme = theme
@@ -120,6 +123,7 @@ export class ScoreCardMarkers {
     this.placeNames = placeNames
     this.trails = trails
     this.onSelect = onSelect
+    this.scoreCardPins = scoreCardPins
     this.scene = scoreCardScene({
       page: this.page,
       settling,
@@ -127,6 +131,14 @@ export class ScoreCardMarkers {
       reducedMotion: () => this.reducedMotion.matches,
       laidOut: traceLayout,
     })
+    if (scoreCardPins) {
+      this.scene.setPinned(scoreCardPins.games())
+      const unsubscribe = scoreCardPins.subscribe(() => {
+        this.scene.setPinned(scoreCardPins.games())
+        this.sync()
+      })
+      map.once('remove', unsubscribe)
+    }
     // The camera moving (a pan, a zoom, a resize) moves the cards on screen: they settle afresh.
     map.on('move', this.cameraMoved)
     // Once the camera stops, the cards settle as for a still camera (see CardScene.cameraMoving).
@@ -264,6 +276,15 @@ export class ScoreCardMarkers {
 
   /** Draws a card for its game as it is now, if anything it's drawn from has changed: true if it was redrawn. */
   private draw(placed: PlacedCard, gameId: string, game: PlacedGame): boolean {
+    if (this.scoreCardPins) {
+      if (!placed.element.hasAttribute('data-pinnable')) placed.element.setAttribute('data-pinnable', '')
+      const pinned = this.scoreCardPins.games().includes(gameId)
+      if (placed.element.hasAttribute('data-pinned') !== pinned) {
+        placed.element.toggleAttribute('data-pinned', pinned)
+        if (pinned) placed.element.setAttribute('aria-description', 'Pinned score card')
+        else placed.element.removeAttribute('aria-description')
+      }
+    }
     const color = this.colorOf(game)
     const hotIndicator = this.hotIndicatorOf(game)
     const selected = gameId === this.selectedGameId
@@ -358,10 +379,11 @@ export class ScoreCardMarkers {
     return this.scene.shows(gameId)
   }
 
-  /** The games in each card cluster on screen now, those with no room first. */
-  cardClusters(): readonly (readonly string[])[] {
-    return this.scene.cardClusters()
+  reveal(gameIds: readonly string[]): void {
+    this.scene.reveal(gameIds)
+    this.sync()
   }
+
 
   /**
    * Plays an animation on a game's card, or when there's no room for its card, over the count it's

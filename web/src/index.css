@@ -3824,6 +3824,15 @@ body {
   white-space: nowrap;
 }
 
+.game-navigation__matchup-name {
+  font-weight: var(--typography-button-font-weight);
+}
+
+.game-navigation__versus {
+  color: var(--palette-text-secondary);
+  font-size: var(--typography-small-font-size);
+}
+
 .game-navigation__chevron {
   flex: none;
   color: var(--palette-text-secondary);

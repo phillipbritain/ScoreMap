@@ -17,6 +17,7 @@ interface Resolving {
 /** One setting of a theme: how to read its value from the theme's JSON. */
 interface Setting<T> {
   resolve(value: unknown, path: string, resolving: Resolving): T | undefined
+  default?: T
   /**
    * How the setting is written as a CSS custom property (see customProperties), if not as it
    * resolves: a value, or values by the end of their names.
@@ -175,6 +176,9 @@ const onOff: Setting<boolean> = {
   },
   css: (on) => (on ? '1' : '0'),
 }
+
+/** Map style switches added after the original theme settings default to off in older themes. */
+const globeSwitch = forGlobe({ ...onOff, default: false })
 
 /** A CSS font family, such as "system-ui, sans-serif". */
 const fontFamily: Setting<string> = {
@@ -450,11 +454,16 @@ const settings = {
      */
     Cluster: {
       fill: color,
+      fillWithGameColor: globeSwitch,
       radius: pixels,
       glowRadius: pixels,
+      matchPinGlow: globeSwitch,
       outlineWidth: pixels,
       glowOpacity: opacity,
-      count: { font: globeFont, size: textSize },
+      count: {
+        font: globeFont, size: textSize,
+        color: forGlobe<string | null>({ ...color, default: null }),
+      },
       hotIndicator: { size: pixels, width: pixels, opacity, glowOpacity: opacity },
       ...byStatus({ opacity }),
     },
@@ -723,6 +732,7 @@ function isSetting(schema: unknown): schema is Setting<unknown> {
  */
 function resolveAll(schema: object, value: unknown, path: string, resolving: Resolving): unknown {
   if (value === undefined) {
+    if (isSetting(schema) && 'default' in schema) return schema.default
     resolving.problems.push(`${path} is missing`)
     return undefined
   }

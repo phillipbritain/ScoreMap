@@ -82,12 +82,12 @@
     "Pin": {
       "live": {
         "core": { "color": "live.main", "radius": 3, "opacity": 1, "ring": 1.5 },
-        "glow": { "radius": 15, "opacity": 0 },
+        "glow": { "radius": 15, "opacity": 0.45 },
         "dim": 0
       },
       "upcoming": {
         "core": { "color": "upcoming.main", "radius": 3, "opacity": 1, "ring": 1.5 },
-        "glow": { "radius": 9, "opacity": 0 },
+        "glow": { "radius": 9, "opacity": 0.2 },
         "dim": 0.35
       },
       "final": {
@@ -99,11 +99,13 @@
     },
     "Cluster": {
       "fill": "primary.dark",
+      "fillWithGameColor": true,
       "radius": 8,
       "glowRadius": 16,
+      "matchPinGlow": true,
       "outlineWidth": 1.5,
-      "glowOpacity": 0,
-      "count": { "font": "Open Sans Bold", "size": "small" },
+      "glowOpacity": 1,
+      "count": { "font": "Open Sans Bold", "size": "small", "color": "#000000" },
       "hotIndicator": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },

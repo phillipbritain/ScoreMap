@@ -26,6 +26,8 @@ import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
 import type { ScreenBox } from './panelClearance'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
+import type { PinnedCards } from '../games/pinnedCards'
+import { cardPinMenu } from './cardPinMenu'
 import { drawHotIndicatorsOnDemand } from './hotIndicator'
 import {
   cardClusterLayer,
@@ -72,6 +74,7 @@ export interface GlobeMapOptions {
   mapType?: MapType
   /** How many score cards show at once where it's busy, to start with (see mostCards): Default unless given. It changes with setCardCount. */
   cardCount?: CardCount
+  scoreCardPins?: PinnedCards
   /**
    * How far out and in the globe zooms to start with: the app's own for a laptop unless given. They
    * change with setZoomLimits.
@@ -101,8 +104,8 @@ export type LoadingStage = 'waitingForGames' | 'drawing' | 'ready' | 'styleError
 /**
  * MapLibre globe with a pin at each game's venue. At every zoom, each game whose venue is on screen
  * on the side of the globe facing the viewer is a score card, as many as the card count allows (see
- * layOutCards); cards past it or with no room form card clusters, or show as small pins. Selecting a
- * card cluster zooms in until it splits.
+ * layOutCards); cards past it or with no room form card clusters, or show as small pins. Clicking a
+ * card cluster or small pin gives its games priority in the current view.
  */
 export class GlobeMap {
   private readonly map: MapLibreMap
@@ -122,6 +125,7 @@ export class GlobeMap {
   /** What the city labels are chosen by (see setCityLabelSettings). */
   private cityLabels: CityLabelSettings
   private readonly glow: GlobeGlow
+  private stopCardPinMenu?: () => void
   /** Stops fading place names and pins near the horizon (see fadeNearHorizon). */
   private readonly stopHorizonFade: () => void
   private readonly onSelect: (gameId: string) => void
@@ -147,7 +151,7 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', scoreCardPins, zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
   ) {
     this.colors = colors
     this.hotIndicator = hotIndicator
@@ -214,7 +218,9 @@ export class GlobeMap {
         (gameId) => this.onSelect(gameId),
         this.settling,
         cardCount,
+        scoreCardPins,
       )
+      if (scoreCardPins) this.stopCardPinMenu = cardPinMenu(container, scoreCardPins)
       this.moves = new CameraMoves(map, {
         game: (gameId) => this.shown.get(gameId),
         cards: this.cards,
@@ -233,8 +239,8 @@ export class GlobeMap {
       // settling always hears of a frame or idle after that event's card sync (see frameDrawn, wentIdle).
       map.on('render', this.frameDrawn)
       map.on('idle', this.wentIdle)
-      map.on('click', cardClusterLayer, this.zoomToCardClusterSelected)
-      map.on('click', cardlessSmallPinLayer, this.selectPin)
+      map.on('click', cardClusterLayer, this.clickCardCluster)
+      map.on('click', cardlessSmallPinLayer, this.clickSmallPin)
       for (const layer of [cardClusterLayer, cardlessSmallPinLayer]) {
         map.on('mouseenter', layer, this.pointAt)
         map.on('mouseleave', layer, this.stopPointing)
@@ -477,6 +483,7 @@ export class GlobeMap {
   destroy(): void {
     if (this.destroyed) return
     this.destroyed = true
+    this.stopCardPinMenu?.()
     this.moves?.destroy()
     this.mapTypeFade.destroy()
     this.map.off('error', this.initialStyleError)
@@ -535,9 +542,10 @@ export class GlobeMap {
     this.map.triggerRepaint()
   }
 
-  private readonly selectPin = (event: MapLayerMouseEvent) => {
+  private readonly clickSmallPin = (event: MapLayerMouseEvent) => {
     const gameId: unknown = event.features?.[0]?.properties?.gameId
-    if (typeof gameId === 'string') this.onSelect(gameId)
+    if (typeof gameId !== 'string') return
+    this.cards.reveal([gameId])
   }
 
   private readonly pointAt = () => {
@@ -546,11 +554,11 @@ export class GlobeMap {
 
   private readonly stopPointing = () => (this.map.getCanvas().style.cursor = '')
 
-  // Selecting a card cluster zooms in until its games split.
-  private readonly zoomToCardClusterSelected = (event: MapLayerMouseEvent) => {
+  private readonly clickCardCluster = (event: MapLayerMouseEvent) => {
     const firstGameId: unknown = event.features?.[0]?.properties?.firstGameId
     const showing = typeof firstGameId === 'string' ? this.cards.shows(firstGameId) : undefined
-    if (showing?.as === 'inCardCluster') this.moves.zoomToCardCluster(showing.cardCluster)
+    if (showing?.as !== 'inCardCluster') return
+    this.cards.reveal(showing.cardCluster)
   }
 
   /**

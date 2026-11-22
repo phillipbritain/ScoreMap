@@ -60,16 +60,20 @@ _Avoid_: Marker, dot, icon
 At any zoom, the panel a pin shows as, a little above the game's venue with a trail down to it, with the teams and the score (for a field, its top three; for a fight card, the bout on now) and a line on the game's progress, or its start time before it starts. Every game whose venue is on screen, on the side of the globe facing the viewer, has one, up to the card count; past it, or with no room, its game is in a card cluster or shows as its small pin. When cards would overlap, some are moved aside, their trails following them. A game whose venue is off screen or behind the globe has no card, but the selected game.
 _Avoid_: Tile, label, badge, card (alone, outside the globe's code)
 
+**Pinned score card**:
+A score card the viewer asks to keep in place for this visit. It holds its position relative to its venue, gets first claim on the card count, and can be pinned or unpinned from its card or the Pinned section and game rows in Events.
+_Avoid_: Pinned game, saved game
+
 **Trail**:
 The line from a score card to its game's venue, starting at a small dot in its game's color on the card's edge and ending at a ringed venue dot. Drawn as a transit map's line: across, up or down and at 45°, its one bend rounded off. It leaves its card straight out or at 45°, never along the card's edge, where it crosses the fewest other cards and trails.
 _Avoid_: Pin (for the venue dot), pointer, leader line
 
 **Cluster**:
-Games shown as one marker because there's no room to show them apart: a card cluster, with a count, or a venue cluster. It splits apart as you zoom in. A card cluster zooms in until it does when selected.
+Games shown as one marker because there's no room to show them apart: a card cluster, with a count, or a venue cluster. It splits apart as you zoom in. Clicking a card cluster brings its score cards into the current view where they fit.
 _Avoid_: Crowd, bubble, group, stack, pile
 
 **Card cluster**:
-A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most as many cards as the viewer's card count allows, for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), and the selected game's. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and selecting it zooms in to them all. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead.
+A cluster of games whose score cards have no room on screen even after nearby cards are moved aside, or that are past the card count: where it's busy, a screen shows at most as many cards as the viewer's card count allows, for the games most worth watching (those near the middle of the screen first, then hot games, other Live games, Upcoming and Final, ranked teams first), with priority for pinned cards and games the viewer asks to reveal. It depends on room for cards and that count, not on how close the pins are. A card cluster that a venue cluster, venue dot or other card cluster would overlap takes them in: it counts all their games, their trails meet at it, and clicking it gives those games priority in the current view. It always holds two or more games: a game with no room for its card that nothing else would overlap shows as its small pin instead. Clicking the small pin brings its score card back where it fits.
 _Avoid_: Crowd, cluster (when it matters that it's cards)
 
 **Card count**:
@@ -81,7 +85,7 @@ A cluster where score cards' trails meet, in place of their venue dots, which wo
 _Avoid_: Trail cluster, cluster (when it matters that it's venues)
 
 **Card layout**:
-Where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out each frame from the last so cards don't jump about, only while the camera moves: a card moves only to keep clear of others, to come back over its venue, or to come within 80 px of it. Once the camera stops, every card and trail stays where it is until it moves again, and a card keeps the size it was first drawn at. When cards are first laid out, those moved aside around a city are handed round their spots so they go round it in the same order as their venues, and their trails don't cross.
+Where each game's score card goes on screen, and which games gather into card clusters or venue clusters or show as their small pins, worked out from the last frame while the camera moves or an action changes which cards should show: a card moves only to keep clear of others, to come back over its venue, or to come within 80 px of it. With the camera still, cards and trails hold their places until the viewer pins or reveals a card or changes the card count. A card keeps the size it was first drawn at. When cards are first laid out, those moved aside around a city are handed round their spots so they go round it in the same order as their venues, and their trails don't cross.
 _Avoid_: Card placement (for the whole of it: placing is only where the cards go), arrangement
 
 **Event panel**:

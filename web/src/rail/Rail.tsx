@@ -14,6 +14,7 @@ import { Leagues } from './Leagues'
 import { More } from './More'
 import { railIcon, type RailButtonName } from './railButtons'
 import { RailIcon } from './railIcons'
+import type { PinnedCards } from '../games/pinnedCards'
 import { touchPointer } from '../welcomeTour/welcomeTour'
 import { canZoom, morePress, nextPopover, popoverLeaveDuration, type PopoverEvent, type RailPopover } from './railControls'
 
@@ -41,6 +42,7 @@ interface RailProps {
   touring?: boolean
   /** The games shown on the globe, which the Events popover lists. */
   games: readonly Game[]
+  scoreCardPins?: PinnedCards
   /** Whether the games are in yet, so the Events button can be used (not under the loading screen). */
   gamesReady: boolean
   /** Opens a game picked from the Events popover. */
@@ -74,6 +76,7 @@ export function Rail({
   onHome,
   touring = false,
   games,
+  scoreCardPins,
   gamesReady,
   onSelectGame,
   feedbackContext,
@@ -231,6 +234,7 @@ export function Rail({
           {shown === 'games' && (
             <GameNavigation
               games={games}
+              scoreCardPins={scoreCardPins}
               onSelect={(gameId) => {
                 onSelectGame(gameId)
                 // On a phone the list closes, as it and the event panel would cover the whole globe.

@@ -74,6 +74,9 @@ export interface CardsOnPage {
  * (see CardsOnPage) follow. It reports to the globe's settling, which says when to ask for a frame.
  */
 export interface ScoreCardScene {
+  /** Keeps pinned cards ahead of ordinary cards, retaining the last position of each. */
+  setPinned(gameIds: readonly string[]): void
+  reveal(gameIds: readonly string[]): void
   /**
    * Shows these games: a game gone from the board has its card, if on screen, go out, and one back
    * while its card goes out has the old card go at once, for a new one to come in. The cards settle afresh.
@@ -101,8 +104,6 @@ export interface ScoreCardScene {
   comingsOver(): void
   /** How a game shows on screen now (see cardLayout). */
   shows(gameId: string): Showing
-  /** The games in each card cluster on screen now, those with no room first. */
-  cardClusters(): readonly (readonly string[])[]
   /** Takes every card off, and forgets the layout. */
   clear(): void
 }
@@ -154,6 +155,10 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
   let cardCount = count
   /** Whether the card count changed since the cards were last laid out (see cardLayout's CardScene.mostCardsChanged). */
   let mostCardsChanged = false
+  let pins: readonly string[] = []
+  const lockedOffsets = new Map<string, ScreenOffset>()
+  let revealed = new Set<string>()
+  let revealRequested = false
 
   /**
    * Whether cards fade into view and out of it, and glide as they're moved: only once the globe is
@@ -203,9 +208,18 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       const { width, height } = page.size(gameId)
       const venue = frame.venue(lngLat)
       const game = games.get(gameId)!
-      const rank = cardRank(game, nearCenter(venue.x, venue.y, screen.width, screen.height))
       const selected = gameId === selectedGameId
-      return { gameId, status: game.status, rank, selected, venueX: venue.x, venueY: venue.y, width, height, lngLat }
+      const pinOrder = pins.indexOf(gameId)
+      let rank = cardRank(game, nearCenter(venue.x, venue.y, screen.width, screen.height))
+      const requested = revealed.has(gameId)
+      const alreadyShown = revealRequested && layout.shows(gameId).as === 'card'
+      // On an explicit reveal, keep eligible cards already showing ahead of unrelated hidden games.
+      if (pinOrder >= 0) rank = pinOrder - pins.length - 40
+      else if (revealed.size > 0 && selected) rank -= 30
+      else if (requested) rank -= 20
+      else if (alreadyShown) rank -= 10
+      const lockedOffset = lockedOffsets.get(gameId)
+      return { gameId, status: game.status, rank, selected, revealed: requested, lockedOffset, venueX: venue.x, venueY: venue.y, width, height, lngLat }
     })
     const screenCards = laidOutCards.map(({ lngLat: _lngLat, ...card }): ScreenCard => card)
     const scene: LayoutScene = {
@@ -214,9 +228,11 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       moving,
       mostCards: mostCards(screen.width, cardCount),
       mostCardsChanged,
+      hardCardLimit: revealed.size > 0,
     }
     moving = false
     mostCardsChanged = false
+    revealRequested = false
     laidOut?.({ cards: screenCards, scene })
     const changed = layout.layOut(screenCards, scene)
 
@@ -231,6 +247,7 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       card.laidOut = true
       card.inCardCluster = showing.as !== 'card'
       if (showing.as === 'card') {
+        if (pins.includes(gameId) && !lockedOffsets.has(gameId)) lockedOffsets.set(gameId, showing.offset)
         const glide = glides ? moves.placeAt(gameId, showing.offset, at) : undefined
         page.placeAt(gameId, { offset: showing.offset, moved: showing.moved, glide, inCardCluster: false })
       } else {
@@ -247,8 +264,31 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
   }
 
   return {
+    reveal(gameIds) {
+      // A card cluster can also count visible cards whose trails end at it.
+      revealed = new Set(gameIds.filter(gameId => games.has(gameId) && layout.shows(gameId).as !== 'card'))
+      if (revealed.size === 0) return
+      revealRequested = true
+      mostCardsChanged = true
+      settling.settleAfresh()
+    },
+
+    setPinned(gameIds) {
+      if (pins === gameIds) return
+      pins = gameIds
+      for (const gameId of lockedOffsets.keys()) if (!pins.includes(gameId)) lockedOffsets.delete(gameId)
+      for (const gameId of pins) {
+        if (lockedOffsets.has(gameId)) continue
+        const showing = layout.shows(gameId)
+        if (showing.as === 'card') lockedOffsets.set(gameId, showing.offset)
+      }
+      mostCardsChanged = true
+      settling.settleAfresh()
+    },
+
     showGames(shown) {
       games = new Map(shown.map((game) => [game.id, game]))
+      for (const gameId of revealed) if (!games.has(gameId)) revealed.delete(gameId)
       const { gone, back } = comings.showGames(games.keys())
       // A game back while its card was going out gets a new card, coming in: the old one goes at once.
       for (const gameId of back) removeGoingOut(gameId)
@@ -359,7 +399,6 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
     },
 
     shows: (gameId) => layout.shows(gameId),
-    cardClusters: () => layout.cardClusters(),
 
     clear() {
       for (const gameId of [...cards.keys()]) {
@@ -370,6 +409,8 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       layoutTrails = []
       layout = cardLayout()
       moves = cardMoves()
+      revealed.clear()
+      lockedOffsets.clear()
     },
   }
 }

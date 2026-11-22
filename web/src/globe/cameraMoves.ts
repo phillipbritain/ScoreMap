@@ -1,4 +1,4 @@
-import { LngLat, LngLatBounds, type EaseToOptions, type Map as MapLibreMap, type MapMovementEvent } from 'maplibre-gl'
+import { LngLat, type EaseToOptions, type Map as MapLibreMap, type MapMovementEvent } from 'maplibre-gl'
 import type { PlacedGame } from '../games/placedGames'
 import type { ScoreCardMarkers } from './scoreCardMarkers'
 import { clearCenter, type ScreenBox } from './panelClearance'
@@ -9,12 +9,10 @@ export type SelectionIntent = 'still' | 'center'
 
 interface CameraMovesOptions {
   game: (gameId: string) => PlacedGame | undefined
-  cards: Pick<ScoreCardMarkers, 'shows' | 'cardClusters'>
+  cards: Pick<ScoreCardMarkers, 'shows'>
   onPick: (gameId: string) => void
   onSelection: (gameId: string | null) => void
 }
-
-const cardClusterZoomPadding = 120
 
 /**
  * Selection intent and its camera moves. A list pick opens the panel first; select supplies its
@@ -60,13 +58,6 @@ export class CameraMoves {
     if (game) this.center(game, panel)
   }
 
-  /** Zooms to fit a card cluster, then again while any of its games still have no room. */
-  zoomToCardCluster(gameIds: readonly string[]): void {
-    if (this.destroyed) return
-    this.cancel()
-    this.zoomCluster(gameIds)
-  }
-
   /** A different camera command or changed zoom limits retires the pending retry. */
   cancel(): void {
     this.pendingPick = null
@@ -86,14 +77,14 @@ export class CameraMoves {
     if (event.cameraMoves !== this) this.cancel()
   }
 
-  /** One ease/idle/retry lifetime, shared by selected games and card clusters. */
-  private ease(options: EaseToOptions & { zoom: number }, arrived: () => boolean, again: () => void): void {
+  /** One ease and retry while centering the selected game. */
+  private ease(options: EaseToOptions & { zoom: number }, again: () => void): void {
     this.cancel()
     this.map.easeTo(options, { cameraMoves: this })
     const completed = () => {
       if (this.completion !== completed) return
       this.completion = null
-      if (this.destroyed || Math.abs(this.map.getZoom() - options.zoom) >= 0.01 || !arrived() || options.zoom >= this.map.getMaxZoom()) return
+      if (this.destroyed || Math.abs(this.map.getZoom() - options.zoom) >= 0.01 || options.zoom >= this.map.getMaxZoom()) return
       again()
     }
     this.completion = completed
@@ -107,26 +98,8 @@ export class CameraMoves {
     const center = new LngLat(game.venue.longitude, game.venue.latitude)
     const view = { height: this.map.getContainer().clientHeight, fov: this.map.getVerticalFieldOfView() }
     const zoom = Math.min(this.map.getMaxZoom(), zoomAt(centerLatitude(center.lat, offset[1], atEquator, view), atEquator))
-    this.ease({ center, offset, zoom, duration: 600 }, () => true, () => {
+    this.ease({ center, offset, zoom, duration: 600 }, () => {
       if (this.hasNoRoom(game.id)) this.center(game, panel, atEquator + 1)
-    })
-  }
-
-  private zoomCluster(gameIds: readonly string[]): void {
-    const bounds = new LngLatBounds()
-    for (const gameId of gameIds) {
-      const venue = this.options.game(gameId)?.venue
-      if (venue) bounds.extend([venue.longitude, venue.latitude])
-    }
-    if (bounds.isEmpty()) return
-    const fitted = this.map.cameraForBounds(bounds, { padding: cardClusterZoomPadding })?.zoom ?? 0
-    const zoom = Math.min(this.map.getMaxZoom(), Math.max(this.map.getZoom() + 1, fitted))
-    const center = bounds.getCenter()
-    this.ease({ center, zoom }, () => this.map.getCenter().distanceTo(center) < 1, () => {
-      const noRoom = gameIds.filter((id) => this.hasNoRoom(id))
-      const clusters = this.options.cards.cardClusters().filter((cluster) => cluster.some((id) => noRoom.includes(id)))
-      const still = [...new Set([...noRoom, ...clusters.flat()])]
-      if (still.length > 0) this.zoomCluster(still)
     })
   }
 

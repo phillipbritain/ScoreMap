@@ -91,6 +91,29 @@ function ready(scene: ScoreCardScene, settling: GlobeSettling, framePins: readon
 }
 
 describe('scoreCardScene', () => {
+  it('locks the displayed offset through camera moves and restores it when a pinned card returns to view', () => {
+    const { scene } = sceneOnPage()
+    const atVenue: CardPin[] = [{ gameId: 'A', lngLat: [0, 0] }, { gameId: 'B', lngLat: [0, 0] }]
+    scene.showGames([game('A'), game('B')])
+    framesUntilSettled(scene, atVenue)
+    const moved = scene.shows('B')
+    expect(moved).toMatchObject({ as: 'card', moved: true })
+
+    scene.setPinned(['B'])
+    scene.cameraMoved()
+    framesUntilSettled(scene, [{ gameId: 'B', lngLat: [20, 0] }])
+    expect(scene.shows('B').as).toBe('notLaidOut')
+    scene.cameraMoved()
+    const back: CardPin[] = [{ gameId: 'B', lngLat: [1, 0] }]
+    framesUntilSettled(scene, back)
+    if (moved.as !== 'card') throw new Error('Expected the moved card to have an offset')
+    expect(scene.shows('B')).toMatchObject({ as: 'card', offset: moved.offset })
+
+    scene.setPinned([])
+    framesUntilSettled(scene, back)
+    expect(scene.shows('B')).toMatchObject({ as: 'card', moved: false })
+  })
+
   describe('while the pins load', () => {
     it('keeps the cards placed where they are, spending none of the settling budget however many frames the map draws', () => {
       const { scene, page, told } = sceneOnPage()

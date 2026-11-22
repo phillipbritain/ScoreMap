@@ -5,6 +5,7 @@ import { trailCorners, type FirstLeg, type Point } from './trailRoute'
 export interface PlacedBox {
   gameId: string
   moved: boolean
+  locked?: boolean
   x: number
   y: number
   width: number
@@ -44,7 +45,7 @@ const crowdRadius = 90
 export function untangle(cards: readonly PlacedBox[], clear: KeepClear): Map<string, Point> {
   const at = new Map(cards.map((card) => [card.gameId, { x: card.x, y: card.y }]))
   for (const all of crowdsOf(cards)) {
-    const crowd = all.filter(({ moved }) => moved)
+    const crowd = all.filter(({ moved, locked }) => moved && !locked)
     if (crowd.length < 2) continue
     const middle = {
       x: crowd.reduce((sum, card) => sum + card.venueX, 0) / crowd.length,

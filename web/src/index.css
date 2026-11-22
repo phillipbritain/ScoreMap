@@ -980,9 +980,9 @@ body {
   opacity: 0;
 }
 
-/* The game whose panel is open, matching the selected small pin's ring, and not faded: picked out as
-   a hovered card is, its border bolder and its fill solid if the theme says so. */
-.score-card--selected {
+/* The selected look also gives feedback during a long press for the pinning menu. */
+.score-card--selected,
+[data-pin-press] {
   --status-card-fade: 0;
   --card-hover-ring: calc(var(--hover-card-border-width) - var(--shape-border-width-thin));
   --frost: max(var(--score-card-frost), var(--hover-card-solid));
@@ -1010,7 +1010,8 @@ body {
   display: block;
 }
 
-.score-card--selected > .score-card__trail-dot {
+.score-card--selected > .score-card__trail-dot,
+[data-pin-press] > .score-card__trail-dot {
   width: calc(2 * var(--hover-card-dot-radius));
   height: calc(2 * var(--hover-card-dot-radius));
 }
@@ -1033,6 +1034,55 @@ body {
   color: color-mix(in srgb, var(--header-text, var(--card-ink)), var(--card-surface) var(--fade));
   font-size: var(--typography-tiny-font-size);
   letter-spacing: var(--score-card-header-letter-spacing);
+}
+
+.score-card[data-pinnable] {
+  /* Leave enough room for HALFTIME beside the pin in the smallest card. */
+  min-width: calc(var(--score-card-size-min-width) + 0.75 * var(--spacing));
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.score-card[data-pinnable] .score-card__header::after {
+  content: '';
+  flex: none;
+  width: calc(2 * var(--spacing));
+  height: calc(2 * var(--spacing));
+  margin-left: auto;
+  background: currentColor;
+  clip-path: polygon(30% 0, 70% 0, 70% 16%, 62% 16%, 62% 46%, 81% 64%, 81% 74%, 55% 74%, 55% 90%, 50% 100%, 45% 90%, 45% 74%, 19% 74%, 19% 64%, 38% 46%, 38% 16%, 30% 16%);
+  transform: rotate(35deg);
+  visibility: hidden;
+}
+
+.score-card[data-pinned] .score-card__header::after {
+  visibility: visible;
+}
+
+.card-pin-menu {
+  position: fixed;
+  z-index: 5;
+  padding: calc(0.5 * var(--spacing));
+  color: var(--palette-text-primary);
+  background: var(--controls-surface);
+  border: var(--shape-border-width-thin) solid var(--palette-primary-light);
+  border-radius: calc(1.5 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
+}
+
+.card-pin-menu__action {
+  padding: calc(1.25 * var(--spacing)) calc(2 * var(--spacing));
+  border: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.card-pin-menu__action:hover,
+.card-pin-menu__action:focus-visible,
+.card-pin-menu[data-keyboard] .card-pin-menu__action:focus {
+  background: var(--palette-action-hover);
 }
 
 /* A hot game's indicator: a glowing orange outline wraps the whole edge. The card's box is masked out, so its glass stays clear. */
@@ -3626,11 +3676,13 @@ body {
   width: min(360px, calc(100vw - var(--rail-size-button) - 8 * var(--spacing)));
   max-height: min(70dvh, calc(100dvh - 6 * var(--spacing)));
   overflow: hidden;
+  padding: var(--rail-popover-padding) 0 0;
 }
 
 /* Its header in the popover's flow, which doesn't scroll, above the search. */
 .rail__popover--games > .rail__popover-header {
   position: static;
+  margin-inline: 0;
 }
 
 .game-navigation {
@@ -3644,7 +3696,7 @@ body {
 .game-navigation__search {
   flex: none;
   box-sizing: border-box;
-  width: 100%;
+  margin-inline: var(--rail-popover-padding, 0);
   padding: calc(1.5 * var(--spacing)) calc(2 * var(--spacing));
   border: var(--shape-border-width-thin) solid var(--palette-divider);
   border-radius: var(--menu-item-corner);
@@ -3705,6 +3757,37 @@ body {
 
 .game-navigation button:hover { background: var(--palette-action-hover); }
 
+.game-navigation__game:has(.game-navigation__pin) {
+  display: flex;
+  align-items: stretch;
+}
+
+.game-navigation__game:has(.game-navigation__pin) > [data-game-id] { min-width: 0; }
+
+.game-navigation button.game-navigation__pin {
+  width: calc(7 * var(--spacing));
+  padding: 0;
+  flex: none;
+  justify-content: center;
+}
+
+@media (pointer: coarse) {
+  .game-navigation button.game-navigation__pin {
+    width: calc(9 * var(--spacing));
+    min-height: calc(9 * var(--spacing));
+  }
+}
+
+.game-navigation__pin-icon {
+  display: block;
+  width: calc(3.75 * var(--spacing));
+  height: calc(3.75 * var(--spacing));
+  transform: rotate(27deg);
+}
+
+.game-navigation__pin[aria-pressed="true"] { color: var(--palette-secondary-main); }
+.game-navigation__pin[aria-pressed="true"] .game-navigation__pin-icon { fill: currentColor; }
+
 .game-navigation__logos {
   display: inline-flex;
   flex: none;
@@ -3735,6 +3818,7 @@ body {
 .game-navigation__matchup {
   flex: 1;
   min-width: 0;
+  font-size: var(--typography-caption-font-size);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

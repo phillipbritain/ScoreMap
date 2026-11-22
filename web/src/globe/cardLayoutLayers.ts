@@ -169,6 +169,9 @@ export function cardLayoutLayers(
   const { venue } = theme.components.Trail
   // Each cluster in its games' color (see clusterColor).
   const clusterPaint = clusterColor(theme)
+  // The cluster's wider disc needs the same span outside its edge as the small pin's glow.
+  const glowRadius = cluster.matchPinGlow ? byStatus(theme, ({ glow, core }) =>
+    glow.radius === 0 ? 0 : Math.max(0, glow.radius + cluster.radius - core.radius - core.ring)) : cluster.glowRadius
   return [
     {
       // A venue cluster's ring, beneath its dot, as the trail layer draws a venue dot's.
@@ -196,7 +199,7 @@ export function cardLayoutLayers(
       source: cardLayoutSource,
       filter: kindIs('cardCluster'),
       paint: {
-        'circle-radius': cluster.glowRadius,
+        'circle-radius': glowRadius,
         'circle-color': clusterPaint,
         'circle-blur': 1,
         'circle-opacity': byStatus(theme, (look) => look.glow.opacity * cluster.glowOpacity),
@@ -218,7 +221,7 @@ export function cardLayoutLayers(
       paint: {
         // As wide as cardClusterReach, outline and all: the stroke is drawn outside the radius.
         'circle-radius': cardClusterReach(theme) - cluster.outlineWidth,
-        'circle-color': cluster.fill,
+        'circle-color': cluster.fillWithGameColor ? clusterPaint : cluster.fill,
         'circle-opacity': byStatus(theme, (look) => look.clusterOpacity),
         'circle-stroke-width': cluster.outlineWidth,
         'circle-stroke-color': clusterPaint,
@@ -236,7 +239,10 @@ export function cardLayoutLayers(
         'text-size': theme.components.Cluster.count.size,
         'text-allow-overlap': true,
       },
-      paint: { 'text-color': clusterPaint, 'text-opacity': byStatus(theme, (look) => look.clusterOpacity) },
+      paint: {
+        'text-color': cluster.count.color ?? clusterPaint,
+        'text-opacity': cluster.fillWithGameColor ? 1 : byStatus(theme, (look) => look.clusterOpacity),
+      },
     },
   ]
 }

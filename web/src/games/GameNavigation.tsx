@@ -1,9 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { Game, GameTeam } from './game'
 import { gameLabel, gameMatchup, matchesSearch } from './gameLabel'
 import { moveByArrows } from '../menus/arrowKeys'
 import { sidesTopFirst } from './sides'
 import { TeamLogoImage } from './TeamLogoImage'
+import type { PinnedCards } from './pinnedCards'
+import { RailIcon } from '../rail/railIcons'
 
 /**
  * The Events popover's list (see Rail): every filtered game, independent of the camera and of which pins
@@ -15,24 +17,47 @@ import { TeamLogoImage } from './TeamLogoImage'
  */
 /** A screen with a mouse or trackpad, not only touch, whose search can take the cursor at once. */
 const finePointer = '(pointer: fine)'
+const noPinnedGames: readonly string[] = []
+const unpinnedGames = () => noPinnedGames
+const noPinSubscription = () => () => {}
 
-export function GameNavigation({ games, onSelect }: {
+export function GameNavigation({ games, scoreCardPins, onSelect }: {
   games: readonly Game[]
+  scoreCardPins?: PinnedCards
   onSelect: (gameId: string) => void
 }) {
   const search = useRef<HTMLInputElement>(null)
+  const list = useRef<HTMLUListElement>(null)
   const focusedGame = useRef<HTMLElement | null>(null)
+  const movingPin = useRef<string | null>(null)
   const [query, setQuery] = useState('')
+  const pinned = useSyncExternalStore(scoreCardPins?.subscribe ?? noPinSubscription, scoreCardPins?.games ?? unpinnedGames)
   useEffect(() => {
     if (window.matchMedia(finePointer).matches) search.current?.focus({ preventScroll: true })
   }, [])
   useLayoutEffect(() => {
+    const moved = movingPin.current
+    movingPin.current = null
+    if (moved && document.activeElement === document.body && list.current) {
+      const toggle = [...list.current.querySelectorAll<HTMLButtonElement>('[data-pin-game-id]')].find(button => button.dataset.pinGameId === moved)
+      if (toggle) {
+        toggle.focus()
+        return
+      }
+    }
     // A filter or a feed removal took away the focused game: back to the search.
     if (focusedGame.current && !focusedGame.current.isConnected && document.activeElement === document.body) {
       search.current?.focus({ preventScroll: true })
     }
   })
   const found = games.filter((game) => matchesSearch(game, query))
+  const pinnedIds = new Set(pinned)
+  const pinnedFirst = found.filter(game => pinnedIds.has(game.id))
+  const groups = byLeague(found).map(([league, games]) => ({
+    key: `league:${league}`, title: league,
+    games: games.filter(game => !pinnedIds.has(game.id)),
+  })).filter(group => group.games.length)
+  if (pinnedFirst.length) groups.unshift({ key: 'pinned', title: 'Pinned', games: pinnedFirst })
   return (
     <div
       className="game-navigation"
@@ -48,18 +73,29 @@ export function GameNavigation({ games, onSelect }: {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      <ul aria-label="Events" onFocus={(event) => { focusedGame.current = event.target }}>
-        {byLeague(found).map(([league, inLeague]) => [
-          <li key={`league:${league}`} className="game-navigation__league" role="presentation">{league}</li>,
-          ...inLeague.map((game) => (
+      <ul ref={list} aria-label="Events" onFocus={(event) => { focusedGame.current = event.target }}>
+        {groups.flatMap(({ key, title, games }) => [
+          <li key={key} className="game-navigation__league" role="presentation">{title}</li>,
+          ...games.map((game) => (
             <li key={game.id} className="game-navigation__game">
-              <button type="button" tabIndex={-1} data-game-id={game.id} aria-label={gameLabel(game)} onClick={() => onSelect(game.id)}>
+              <button type="button" tabIndex={-1} data-game-id={game.id} aria-label={gameLabel(game)}
+                data-tooltip={gameMatchup(game)} data-tooltip-side="left"
+                data-tooltip-when-clipped=".game-navigation__matchup" onClick={() => onSelect(game.id)}>
                 <Logos game={game} />
-                <span className="game-navigation__matchup" data-tooltip={gameMatchup(game)} data-tooltip-side="left" data-tooltip-when-clipped>
-                  {gameMatchup(game)}
-                </span>
+                <span className="game-navigation__matchup">{gameMatchup(game)}</span>
                 <span className="game-navigation__chevron" aria-hidden="true">›</span>
               </button>
+              {scoreCardPins && (
+                <button type="button" className="game-navigation__pin" data-pin-game-id={game.id} aria-pressed={pinnedIds.has(game.id)}
+                  aria-label={`Pin score card for ${gameMatchup(game)}`} onClick={(event) => {
+                    if (event.currentTarget.matches(':focus-visible')) movingPin.current = game.id
+                    scoreCardPins.toggle(game.id)
+                  }}>
+                  <RailIcon className="game-navigation__pin-icon">
+                    <path d="M8 4h8l-1 7 3 4v1H6v-1l3-4L8 4ZM12 16v5" />
+                  </RailIcon>
+                </button>
+              )}
             </li>
           )),
         ])}

@@ -82,7 +82,7 @@ export function GameNavigation({ games, scoreCardPins, onSelect }: {
                 data-tooltip={gameMatchup(game)} data-tooltip-side="left"
                 data-tooltip-when-clipped=".game-navigation__matchup" onClick={() => onSelect(game.id)}>
                 <Logos game={game} />
-                <span className="game-navigation__matchup">{gameMatchup(game)}</span>
+                <span className="game-navigation__matchup"><Matchup game={game} /></span>
                 <span className="game-navigation__chevron" aria-hidden="true">›</span>
               </button>
               {scoreCardPins && (
@@ -104,6 +104,35 @@ export function GameNavigation({ games, scoreCardPins, onSelect }: {
         )}
       </ul>
     </div>
+  )
+}
+
+/** Emphasize the names in a head-to-head matchup, including fight titles with a versus separator. */
+function Matchup({ game }: { game: Game }) {
+  const label = gameMatchup(game)
+  if (game.contest.kind === 'field') return label
+
+  let first: string
+  let second: string
+  let versus = 'vs'
+  if (game.contest.kind === 'sides') {
+    const [top, bottom] = sidesTopFirst(game.sport, game.contest)
+    first = top.fullName
+    second = bottom.fullName
+  } else {
+    const titleMatch = label.match(/^(.+?) (vs\.?) (.+)$/i)
+    if (!titleMatch) return label
+    first = titleMatch[1]
+    versus = titleMatch[2]
+    second = titleMatch[3]
+  }
+
+  return (
+    <>
+      <span className="game-navigation__matchup-name">{first}</span>{' '}
+      <span className="game-navigation__versus">{versus}</span>{' '}
+      <span className="game-navigation__matchup-name">{second}</span>
+    </>
   )
 }
 

@@ -31,7 +31,8 @@ resource "azapi_resource" "app" {
         secrets = [{
           name        = "feedback-github-token-kv"
           keyVaultUrl = "${azurerm_key_vault.feedback.vault_uri}secrets/feedback-github-token"
-          identity    = azurerm_user_assigned_identity.feedback.id
+          # The Container Apps API returns the secret reference with lowercase "resourcegroups".
+          identity = replace(azurerm_user_assigned_identity.feedback.id, "resourceGroups/", "resourcegroups/")
         }]
       }
       template = {

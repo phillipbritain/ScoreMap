@@ -289,7 +289,7 @@ it("leaves Escape to the rail's popovers, usable during the tour, whichever hear
   expect(event).toHaveBeenCalledExactlyOnceWith({ kind: 'closed' })
 })
 
-it.each(['click', 'Enter', 'Space'] as const)('moves from Game details to Where to watch when an event panel tab opens with %s', async (activation) => {
+it.each(['click', 'Enter', 'Space'] as const)('moves from Event details to Where to watch when an event panel tab opens with %s', async (activation) => {
   vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 503 })))
   const running = { games: null, justHappened: noneJustHappened, detailsOpen: false }
   const tour = startWelcomeTour('scoreCard', Date.now(), 'wide')
@@ -320,7 +320,7 @@ it.each(['click', 'Enter', 'Space'] as const)('moves from Game details to Where 
 
   const heading = () => container.querySelector('[role="dialog"] h3')?.textContent
   const scoring = button('Scoring')
-  expect(heading()).toBe('Game details')
+  expect(heading()).toBe('Event details')
   expect(scoring.getAttribute('aria-selected')).toBe('false')
 
   if (activation === 'click') {
@@ -329,7 +329,7 @@ it.each(['click', 'Enter', 'Space'] as const)('moves from Game details to Where 
     button('Score').focus()
     await act(() => userEvent.keyboard('{ArrowRight}'))
     expect(document.activeElement).toBe(scoring)
-    expect(heading()).toBe('Game details')
+    expect(heading()).toBe('Event details')
     await act(() => userEvent.keyboard(activation === 'Enter' ? '{Enter}' : ' '))
   }
 

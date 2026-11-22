@@ -4,7 +4,7 @@ import { middleOf } from './tourArrow'
 
 /**
  * The welcome tour (see GLOSSARY.md): how far a viewer has got through it, and the events that move it
- * on. Its steps are Welcome, Your controls, Click a score card, the event panel's three (The event panel, Game details and
+ * on. Its steps are Welcome, Your controls, Click a score card, the event panel's three (The event panel, Event details and
  * Where to watch) and All set; once finished it comes back only
  * when the viewer asks for it again, from More on the rail. Closing it, at any step, finishes it too.
  */
@@ -22,7 +22,7 @@ export type TourEvent =
   | { kind: 'done' }
   /** Click a score card → The event panel, by pressing the lit card, which opens its game's panel. */
   | { kind: 'gameOpened'; gameId: string }
-  /** Game details → Where to watch, by opening a tab in the event panel. */
+  /** Event details → Where to watch, by opening a tab in the event panel. */
   | { kind: 'detailsTabOpened' }
   /** Any step → finished, by the panel's ×, Welcome's Skip tour or Escape. */
   | { kind: 'closed' }

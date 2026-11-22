@@ -115,7 +115,7 @@ describe('noPinsMessage', () => {
   })
 
   it('says so when games exist but none match the settings', () => {
-    expect(noPinsMessage([nfl, nba], [], firstVisitSettings)).toBe('No games match your settings.')
+    expect(noPinsMessage([nfl, nba], [], firstVisitSettings)).toBe('No events match your settings.')
   })
 
   it('says there are no top events when Top Events is on and ESPN lists none of the games', () => {
@@ -123,6 +123,6 @@ describe('noPinsMessage', () => {
   })
 
   it('says so when there are no games at all', () => {
-    expect(noPinsMessage([], [], firstVisitSettings)).toBe('No games right now.')
+    expect(noPinsMessage([], [], firstVisitSettings)).toBe('No events right now.')
   })
 })

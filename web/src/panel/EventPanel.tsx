@@ -36,11 +36,11 @@ interface EventPanelProps {
   detailsOpen: boolean
   /** The viewer opened the details (a tab) or minimized them. */
   onDetailsOpenChange: (open: boolean) => void
-  /** The viewer opened a Game details tab. */
+  /** The viewer opened an event details tab. */
   onDetailsTabOpened?: () => void
   /** Whether the game is a demo's, whose details come from the demo board. */
   demo?: boolean
-  /** Whether its tabs can't be used yet: the welcome tour, until its Game details step. */
+  /** Whether its tabs can't be used yet: the welcome tour, until its Event details step. */
   tabsLocked?: boolean
   onClose: () => void
   /**
@@ -186,8 +186,8 @@ function WatchLinks({ links, espnUrl }: { links: StreamLink[]; espnUrl: string |
       ))}
       {espnUrl && (
         <a className="game-details-tile game-details-tile--link" href={espnUrl} target="_blank" rel="noopener noreferrer">
-          <img className="event-panel__espn-logo" src={espnLogoUrl} alt="The game on ESPN" />
-          <span>Game page</span>
+          <img className="event-panel__espn-logo" src={espnLogoUrl} alt="The event on ESPN" />
+          <span>Event page</span>
         </a>
       )}
     </>

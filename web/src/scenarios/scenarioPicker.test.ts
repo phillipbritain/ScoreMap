@@ -40,8 +40,8 @@ describe('the scenario pill', () => {
     expect(pillLabel(local)).toBe('Scenario: crowded')
   })
 
-  it('shows "Real games" when real games are running', () => {
-    expect(pillLabel({ ...local, running: 'real' })).toBe('Scenario: Real games')
+  it('shows "Real events" when real games are running', () => {
+    expect(pillLabel({ ...local, running: 'real' })).toBe('Scenario: Real events')
   })
 
   it('never shows when the server has no scenarios, or before it has said', () => {
@@ -51,18 +51,18 @@ describe('the scenario pill', () => {
 })
 
 describe('the scenario list', () => {
-  it('lists every scenario, then "Real games", marking the running one', () => {
+  it('lists every scenario, then "Real events", marking the running one', () => {
     expect(pickerEntries(local)).toEqual([
       { name: 'crowded', label: 'crowded', running: true },
       { name: 'edge-cases', label: 'edge-cases', running: false },
       { name: 'worldwide', label: 'worldwide', running: false },
-      { name: 'real', label: 'Real games', running: false },
+      { name: 'real', label: 'Real events', running: false },
     ])
   })
 
-  it('marks "Real games" when they are running', () => {
+  it('marks "Real events" when they are running', () => {
     expect(pickerEntries({ ...local, running: 'real' }).filter((entry) => entry.running)).toEqual([
-      { name: 'real', label: 'Real games', running: true },
+      { name: 'real', label: 'Real events', running: true },
     ])
   })
 })

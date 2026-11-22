@@ -61,7 +61,7 @@ If the identity is ever replaced, update `AZURE_CLIENT_ID` to its new client ID.
 
 ## Checking it works
 
-- Open the site and wait for pins to appear. During live games, scores should change on their own.
+- Open the site and wait for pins to appear. During live events, scores should change on their own.
 - The app's log: `az containerapp logs show -g $rg -n scoremap --follow`; Container Apps' own (pulling the image, starting, probes) with `--type system`.
 - The revisions and which one takes the traffic: `az containerapp revision list -g $rg -n scoremap -o table`.
 - CPU and memory over time, for whether 0.25 vCPU keeps up: the app's Metrics in the portal (CPU Usage, Memory Working Set Bytes), or `az monitor metrics list --resource $(az containerapp show -g $rg -n scoremap --query id -o tsv) --metric UsageNanoCores --interval PT5M`.

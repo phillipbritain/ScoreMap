@@ -28,7 +28,7 @@ export function WatchInfo({ game, photo, details, failed, onToggle, children }: 
   const networks = details?.broadcasts ?? []
   return (
     <>
-      <button type="button" className="game-details-tv" aria-label="Watch and game info" data-tooltip="Watch and game info" aria-haspopup="dialog" onClick={() => {
+      <button type="button" className="game-details-tv" aria-label="Watch and event info" data-tooltip="Watch and event info" aria-haspopup="dialog" onClick={() => {
         dialog.current?.showModal()
         onToggle(true)
       }}>
@@ -41,7 +41,7 @@ export function WatchInfo({ game, photo, details, failed, onToggle, children }: 
             <div className="game-details-section-title">{game.league}</div>
             <h2 id={title}>Where to watch</h2>
           </div>
-          <button type="button" className="game-details-dialog-close" aria-label="Close watch and game info" onClick={() => dialog.current?.close()}>
+          <button type="button" className="game-details-dialog-close" aria-label="Close watch and event info" onClick={() => dialog.current?.close()}>
             <RailIcon className="game-details-dialog-close-icon"><path d="M6 6l12 12M18 6 6 18" /></RailIcon>
           </button>
         </div>
@@ -91,7 +91,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
   failed: boolean
   /** Whether it opens with its details showing, as the last event panel's were left. */
   open: boolean
-  /** Whether its tabs (and minimize button) can't be used yet, as in the welcome tour before Game details. */
+  /** Whether its tabs (and minimize button) can't be used yet, as in the welcome tour before Event details. */
   locked?: boolean
   onToggle: (open: boolean) => void
   onTabOpened?: () => void
@@ -139,7 +139,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
       }
     }}>
       <div className="game-details-tab-bar" inert={locked}>
-        <div ref={tabList} className="game-details-tabs" role="tablist" aria-label="Game details">
+        <div ref={tabList} className="game-details-tabs" role="tablist" aria-label="Event details">
           {tabs.map((tab, index) => (
             <button key={tab} id={`${id}-tab-${tab}`} type="button" role="tab"
               aria-selected={expanded && tab === active} aria-controls={`${id}-pane`} tabIndex={tab === active ? 0 : -1}
@@ -153,8 +153,8 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
             </button>
           ))}
         </div>
-        <button type="button" className="game-details-collapse" aria-label="Minimize game details"
-          data-tooltip="Minimize game details"
+        <button type="button" className="game-details-collapse" aria-label="Minimize event details"
+          data-tooltip="Minimize event details"
           aria-controls={`${id}-pane`} onClick={collapse}>
           <RailIcon className="game-details-collapse-icon"><path d="m6 9 6 6 6-6" /></RailIcon>
         </button>
@@ -341,5 +341,5 @@ function Highlights({ videos }: { videos: GameVideo[] }) {
 
 function DetailsMessage({ details, failed, children }: { details: GameDetails | null; failed: boolean; children: string }) {
   return <p className="game-details-muted" role="status">{details
-    ? children : failed ? 'Game details are temporarily unavailable.' : 'Loading game details…'}</p>
+    ? children : failed ? 'Event details are temporarily unavailable.' : 'Loading event details…'}</p>
 }

@@ -128,7 +128,7 @@ body {
 }
 
 /* The event panel: the score and venue header, a sport-specific band when available, and the
-   collapsible game details at the foot. Only the content below the header scrolls. */
+   collapsible event details at the foot. Only the content below the header scrolls. */
 .event-panel {
   /* How far it sits above the screen's foot: none on a phone (see below). */
   --event-panel-bottom: calc(3 * var(--spacing));
@@ -533,7 +533,7 @@ body {
   text-decoration: underline;
 }
 
-/* The Watch and game info dialog uses the existing stream and ESPN logos. */
+/* The Watch and event info dialog uses the existing stream and ESPN logos. */
 .event-panel__logo-link {
   flex-shrink: 0;
   line-height: 0;
@@ -3558,7 +3558,7 @@ body {
   box-shadow: 0 0 0 200vmax var(--dim);
 }
 
-/* Ringed in the arrow's Live color, drawn just inside the hole so it stays on what's lit (Game details' tabs). */
+/* Ringed in the arrow's Live color, drawn just inside the hole so it stays on what's lit (Event details' tabs). */
 .welcome-tour__spotlight--ringed {
   outline: var(--welcome-tour-arrow-width) solid var(--palette-live-main);
   outline-offset: calc(-1 * var(--welcome-tour-arrow-width));

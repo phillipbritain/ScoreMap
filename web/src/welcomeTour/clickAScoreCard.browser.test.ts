@@ -88,7 +88,7 @@ it('says what a card opens, with nothing to press, when no card is clear of the 
   // In the middle of the page, under the panel.
   await mountStep([fakeCard('A', 'NFL · Buffalo Bills vs Kansas City Chiefs', 452, 354)])
 
-  await vi.waitFor(() => expect(document.querySelector('.welcome-tour__text')?.textContent).toContain('Each game shows as a score card'))
+  await vi.waitFor(() => expect(document.querySelector('.welcome-tour__text')?.textContent).toContain('Each event shows as a score card'))
   expect(openButton()).toBeNull()
 })
 

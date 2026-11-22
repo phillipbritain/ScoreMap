@@ -1,6 +1,6 @@
 # ScoreMap
 
-A globe showing live sports games as pins at their venues, with scores that update on their own. See issue #1 for the v1 spec, `GLOSSARY.md` for domain terms and `docs/adr/` for key decisions.
+A globe showing live sports events as pins at their venues, with scores that update on their own. See issue #1 for the v1 spec, `GLOSSARY.md` for domain terms and `docs/adr/` for key decisions.
 
 ## Layout
 
@@ -49,7 +49,7 @@ npm install -g agent-browser
 agent-browser install   # downloads its Chrome
 ```
 
-Run locally, the app shows a scenario rather than real games. The `run-scoremap` skill (`.claude/skills/run-scoremap/SKILL.md`) covers the scenarios and their controls, several runs side by side, and driving a browser on the app.
+Run locally, the app shows a scenario rather than real events. The `run-scoremap` skill (`.claude/skills/run-scoremap/SKILL.md`) covers the scenarios and their controls, several runs side by side, and driving a browser on the app.
 
 ## Configuration
 
@@ -57,7 +57,7 @@ Leagues, polling, venue lookups and corrections, scenario venues and teams, and 
 
 Which cities the globe names, and the settings for it: see [docs/city-labels.md](docs/city-labels.md).
 
-What ESPN gives for a game, what ScoreMap reads and what's there to add later: see [docs/espn-data.md](docs/espn-data.md).
+What ESPN gives for an event, what ScoreMap reads and what's there to add later: see [docs/espn-data.md](docs/espn-data.md).
 
 ## Test
 

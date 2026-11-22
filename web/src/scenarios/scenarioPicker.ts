@@ -35,7 +35,7 @@ export interface ScenarioListing {
 export const realGames = 'real'
 
 function displayName(name: string) {
-  return name === realGames ? 'Real games' : name
+  return name === realGames ? 'Real events' : name
 }
 
 /**
@@ -58,7 +58,7 @@ export interface PickerEntry {
   running: boolean
 }
 
-/** The scenario pill's list: every scenario, then "Real games". */
+/** The scenario pill's list: every scenario, then "Real events". */
 export function pickerEntries(listing: ScenarioListing): PickerEntry[] {
   return [...listing.scenarios, realGames].map((name) => ({
     name,

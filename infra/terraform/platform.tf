@@ -47,21 +47,6 @@ resource "azapi_resource" "environment" {
     }
   }
 
-  # The ARM read redacts the link key. Supply it only for writes that need it.
-  sensitive_body = var.log_analytics_key == null ? null : {
-    properties = {
-      appLogsConfiguration = {
-        logAnalyticsConfiguration = {
-          sharedKey = var.log_analytics_key
-        }
-      }
-    }
-  }
-
-  sensitive_body_version = var.log_analytics_key_version == null ? null : {
-    "properties.appLogsConfiguration.logAnalyticsConfiguration.sharedKey" = var.log_analytics_key_version
-  }
-
   lifecycle {
     prevent_destroy = true
   }
@@ -116,54 +101,7 @@ resource "azapi_resource" "mount" {
     }
   }
 
-  # The app mounts SMB with the account key. Keep it out of the persisted body.
-  sensitive_body = var.files_account_key == null ? null : {
-    properties = {
-      azureFile = {
-        accountKey = var.files_account_key
-      }
-    }
-  }
-
-  sensitive_body_version = var.files_account_key_version == null ? null : {
-    "properties.azureFile.accountKey" = var.files_account_key_version
-  }
-
   lifecycle {
     prevent_destroy = true
   }
-}
-
-variable "log_analytics_key" {
-  type      = string
-  default   = null
-  sensitive = true
-  ephemeral = true
-
-  validation {
-    condition     = var.log_analytics_key == null || var.log_analytics_key_version != null
-    error_message = "Set log_analytics_key_version whenever you supply a Log Analytics key."
-  }
-}
-
-variable "log_analytics_key_version" {
-  type    = string
-  default = null
-}
-
-variable "files_account_key" {
-  type      = string
-  default   = null
-  sensitive = true
-  ephemeral = true
-
-  validation {
-    condition     = var.files_account_key == null || var.files_account_key_version != null
-    error_message = "Set files_account_key_version whenever you supply an Azure Files key."
-  }
-}
-
-variable "files_account_key_version" {
-  type    = string
-  default = null
 }

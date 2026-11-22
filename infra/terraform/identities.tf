@@ -45,9 +45,10 @@ locals {
   role_definitions = "/subscriptions/${var.subscription_id}/providers/Microsoft.Authorization/roleDefinitions"
 }
 
+# Azure returns role scopes with lowercase "resourcegroups". AzureRM compares that segment exactly.
 resource "azurerm_role_assignment" "feedback" {
   name               = var.role_assignment_names.feedback
-  scope              = azurerm_key_vault.feedback.id
+  scope              = replace(azurerm_key_vault.feedback.id, "resourceGroups/", "resourcegroups/")
   role_definition_id = "${local.role_definitions}/4633458b-17de-408a-b874-0445c86b69e6"
   principal_id       = azurerm_user_assigned_identity.feedback.principal_id
   principal_type     = "ServicePrincipal"
@@ -55,7 +56,7 @@ resource "azurerm_role_assignment" "feedback" {
 
 resource "azurerm_role_assignment" "deploy" {
   name               = var.role_assignment_names.deploy
-  scope              = azapi_resource.app.id
+  scope              = replace(azapi_resource.app.id, "resourceGroups/", "resourcegroups/")
   role_definition_id = "${local.role_definitions}/358470bc-b998-42bd-ab17-a7e34c199c0f"
   principal_id       = azurerm_user_assigned_identity.github.principal_id
   principal_type     = "ServicePrincipal"
@@ -63,7 +64,7 @@ resource "azurerm_role_assignment" "deploy" {
 
 resource "azurerm_role_assignment" "join" {
   name               = var.role_assignment_names.join
-  scope              = azapi_resource.environment.id
+  scope              = replace(azapi_resource.environment.id, "resourceGroups/", "resourcegroups/")
   role_definition_id = "${local.role_definitions}/f3bd1b5c-91fa-40e7-afe7-0c11d331232c"
   principal_id       = azurerm_user_assigned_identity.github.principal_id
   principal_type     = "ServicePrincipal"

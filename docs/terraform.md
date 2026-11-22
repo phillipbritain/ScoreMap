@@ -42,7 +42,7 @@ $LASTEXITCODE
 
 ## Adopting the existing deployment
 
-1. Agree on the handoff window with the owner. Wait for the latest `main` deploy to complete and check that the live revision is healthy. Record its image and revision, identity IDs and role scopes, Key Vault reference, mounted share and log settings using only the needed fields from the Azure API. Check the state backend and that the production state is empty or contains only verified bindings from an interrupted adoption.
+1. Wait for the latest `main` deploy to complete and check that the live revision is healthy. Record its image and revision, identity IDs and role scopes, Key Vault reference, mounted share and log settings using only the needed fields from the Azure API. Check the state backend and that the production state is empty or contains only verified bindings from an interrupted adoption.
 2. In the initialized Terraform root, with the same Azure account and environment variables as for a plan, import the existing objects. This reads the Azure resources and writes their bindings to the backend.
 
    ```sh
@@ -57,7 +57,7 @@ $LASTEXITCODE
 
 For a change that writes the Container App, coordinate a quiet window for image deploys and wait for any running workflow to complete. Fetch the healthy revision and image before planning. If you save a reviewed plan, set `umask 077` and keep it in private scratch space. Recheck the latest configured revision, ready revision and image immediately before applying. Abort and regenerate the plan if any changed. A state lock covers Terraform operations, while the workflow serializes image deploys separately.
 
-The app definition uses a versionless Key Vault reference with the feedback managed identity. [Rotate the token in Key Vault](deploy.md#feedback-vault). The Azure Files and Log Analytics credential inputs are ephemeral and used only through the provider's write-only request body. The operator needs the corresponding Azure key access for any change that requires these inputs.
+The app definition uses a versionless Key Vault reference with the feedback managed identity. [Rotate the token in Key Vault](deploy.md#feedback-vault). Terraform reads the Log Analytics and Azure Files links through ARM, which redacts their keys. Rehearse any change that rewrites either link before applying it. When a write requires a key, use an ephemeral input and [AzAPI's write-only request body](https://registry.terraform.io/providers/Azure/azapi/2.14.0/docs/resources/resource#sensitive_body) with a non-secret version. The operator needs permission to read the corresponding Azure key for that write.
 
 ## State bootstrap
 

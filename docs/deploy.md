@@ -13,6 +13,7 @@ Everything is in `infra/main.bicep`, in the resource group `scoremap-rg` in East
 - **A file share** (`data`, in a storage account named `scoremap<hash>`) mounted at `/data`, where the venue lookups, venue photos and event venues are saved (`Venues__Saved*Path`), so they survive a new revision.
 - **A Log Analytics workspace** `scoremap-logs`, holding the app's logs for 30 days, capped at 0.15 GB a day to stay within the free 5 GB a month.
 - **The identity GitHub Actions deploys as**, `scoremap-github` (see "Deploy from GitHub Actions").
+- **A Key Vault for feedback**, with a separate managed identity that lets Container Apps read the GitHub token. The app's deployment identity has no Key Vault role.
 
 At 0.25 vCPU and 0.5 GiB, one replica always running costs about $4–5 a month, less while it's idle (no requests and almost no CPU), which Container Apps bills at a lower rate. If it struggles on a busy evening, 0.5 vCPU and 1 GiB is about $8–10: set `cpu` and `memory` in `infra/main.bicepparam` and run the template.
 
@@ -23,15 +24,14 @@ You need the Azure CLI and an Azure subscription. Sign in, register the resource
 ```sh
 rg=scoremap-rg
 az login
-for p in Microsoft.App Microsoft.OperationalInsights Microsoft.Storage; do az provider register -n $p --wait; done
+for p in Microsoft.App Microsoft.KeyVault Microsoft.OperationalInsights Microsoft.Storage; do az provider register -n $p --wait; done
 az group create --name $rg --location eastus2
 ```
 
-The template is scoped to the resource group, so a deploy needs rights on that group only. The container app needs an image that already exists, so the first image comes from GitHub Actions: run the deploy workflow on any branch (`gh workflow run deploy --ref <branch>`), which on a branch other than `main` only builds and pushes. The first push creates the package `scoremap` under your GitHub account, public like the repo; if it ever shows as private, make it public under Package settings → Change visibility, or Container Apps can't pull it. Then run the template with that image:
+The template is scoped to the resource group. Set up the [feedback vault](#feedback-vault) before the first deployment. The container app needs an image that already exists, so the first image comes from GitHub Actions: run the deploy workflow on any branch (`gh workflow run deploy --ref <branch>`), which on a branch other than `main` only builds and pushes. The first push creates the package `scoremap` under your GitHub account, public like the repo; if it ever shows as private, make it public under Package settings → Change visibility, or Container Apps can't pull it. Then run the template with that image:
 
 ```sh
 export SCOREMAP_IMAGE=ghcr.io/phillipbritain/scoremap:<commit>
-export SCOREMAP_FEEDBACK_TOKEN=<token>   # or SCOREMAP_ALLOW_NO_FEEDBACK=true to only log feedback
 az deployment group create -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
 ```
 
@@ -39,16 +39,28 @@ The outputs give the app's address (`url`) and the identity's client ID (`github
 
 ### Running the template again
 
-Running it again changes nothing unless the template changed, so change settings in the template and run it again, not in the portal: a setting changed in the portal is put back by the next run. Every run replaces the app's settings, secret and image, so pass the image that's running now, and the feedback token (a run without it fails, see [configuration.md](configuration.md#feedback)):
+The next template run reapplies the app settings in Bicep. Pass the image that's running now. Container Apps retrieves the feedback token from Key Vault using its managed identity, so the command only needs your Azure sign-in and deployment permissions.
 
 ```sh
 export SCOREMAP_IMAGE=$(az containerapp show -g $rg -n scoremap --query 'properties.template.containers[0].image' -o tsv)
-export SCOREMAP_FEEDBACK_TOKEN=<token>
 az deployment group what-if -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
 az deployment group create -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
 ```
 
 `what-if` previews the changes. It lists the role assignments' `principalId` as changed on every run, because it can't work out the identity's ID before a deploy; that one is harmless.
+
+### Feedback vault
+
+For a new environment, deploy the vault and the app's feedback identity first. The command returns the vault name.
+
+```sh
+az deployment group create -g "$rg" --name scoremap-feedback-vault \
+  --template-file infra/feedback-vault.bicep --query properties.outputs.vaultName.value -o tsv
+```
+
+In the Azure portal, grant the operator **Key Vault Secrets Officer** on this vault so they can create and rotate the token. Open the vault's **Objects → Secrets** page and create `feedback-github-token` with the [fine-grained GitHub token](configuration.md#feedback) as its value. Allow time for the new role assignments to propagate before deploying the app.
+
+To rotate the token, add a new version of that secret. Container Apps checks the versionless reference and restarts the active revision to pick up the new value, normally within 30 minutes. Verify that the Feedback form files an issue before revoking the old GitHub token. To deploy an environment with feedback only logged, explicitly pass `feedbackEnabled=false` with the main template parameters.
 
 ### App settings
 
@@ -60,7 +72,7 @@ Settings reach the server as environment variables, with `__` separating configu
 | `Venues__SavedLocationsPath` | `/data/venue-locations.json` | Where venue lookups are saved, on the file share. |
 | `Venues__SavedPhotosPath` | `/data/venue-photos.json` | Where the venue photos found are saved. |
 | `Venues__SavedEventVenuesPath` | `/data/event-venues.json` | Where NASCAR races' and golf tournaments' venues, from ESPN's core API, are saved. |
-| `Feedback__GitHubToken` | the secret `feedback-github-token` | The token feedback is filed as issues with, from `SCOREMAP_FEEDBACK_TOKEN`; left out without one, see [configuration.md](configuration.md#feedback). |
+| `Feedback__GitHubToken` | the Container Apps secret reference `feedback-github-token-kv` | The token Container Apps reads from Key Vault. |
 
 The rest (`Espn__BaseUrl`, `Nominatim__BaseUrl` and so on) keep the defaults in `appsettings.json`. The venue corrections file and the IndyCar track list ship in the image: to change one, edit it in the repo and deploy.
 

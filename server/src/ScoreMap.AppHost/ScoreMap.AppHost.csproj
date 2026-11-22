@@ -1,11 +1,14 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\ScoreMap.Server\ScoreMap.Server.csproj" />
+    <!-- Keep the server in dotnet watch's project graph for Aspire's default watch mode. -->
+    <ProjectReference Include="..\ScoreMap.Server\ScoreMap.Server.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.5" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="17.0.0" />
+    <PackageReference Include="Aspire.Hosting.Dotnet" Version="17.0.0" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="17.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -13,7 +16,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AspireUseCliBundle>true</AspireUseCliBundle>
     <UserSecretsId>443ed2de-7b32-4895-9908-303ae485cda1</UserSecretsId>
   </PropertyGroup>
 

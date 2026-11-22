@@ -48,7 +48,7 @@ builder.Services.AddSingleton<IGameFeedProvider>(sp =>
 // Venue locator, with OpenStreetMap Nominatim as its place search. The place search is a
 // singleton so its rate limit holds across the whole app.
 // In production the saved lookups are on a mounted file share, set by the Venues__Saved*Path
-// settings (infra/main.bicep), so they survive a new revision.
+// settings (docs/deploy.md), so they survive a new revision.
 builder.Services.Configure<VenueOptions>(builder.Configuration.GetSection("Venues"));
 builder.Services.Configure<NominatimOptions>(builder.Configuration.GetSection("Nominatim"));
 builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>

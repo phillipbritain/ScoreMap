@@ -195,7 +195,7 @@ public sealed class ScoreMapServer(
             builder.UseSetting("Feedback:GitHubToken", FeedbackToken);
         if (FeedbackTimeout is { } feedbackTimeout)
             builder.UseSetting("Feedback:TimeoutSeconds", feedbackTimeout.TotalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        // As in production (infra/main.bicep): each visitor's address from the proxy's X-Forwarded-For.
+        // As in production, use each visitor's address from the proxy's X-Forwarded-For.
         builder.UseSetting("FORWARDEDHEADERS_ENABLED", "true");
         builder.UseSetting("Venues:CorrectionsPath", VenueCorrectionsPath);
         builder.UseSetting("Venues:LeagueLocationsPath", LeagueVenueLocationsPath);

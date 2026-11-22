@@ -6,7 +6,7 @@ The `Dockerfile` at the repo root builds the browser app with Vite and the serve
 
 ## What it runs on
 
-Everything is in `infra/main.bicep`, in the resource group `scoremap-rg` in East US 2:
+The application infrastructure is managed in [Terraform](terraform.md), in the resource group `scoremap-rg` in East US 2:
 
 - **The container app** `scoremap`: external HTTPS ingress (http:// redirects), WebSockets, sticky sessions for SignalR, 0.25 vCPU and 0.5 GiB, minimum and maximum 1 replica. One revision is active at a time: a new revision takes the traffic once it accepts connections, and the old one keeps serving until then.
 - **The environment** `scoremap-env`, on the consumption plan: no charge for the environment itself.
@@ -15,56 +15,15 @@ Everything is in `infra/main.bicep`, in the resource group `scoremap-rg` in East
 - **The identity GitHub Actions deploys as**, `scoremap-github` (see "Deploy from GitHub Actions").
 - **A Key Vault for feedback**, with a separate managed identity that lets Container Apps read the GitHub token. The app's deployment identity has no Key Vault role.
 
-At 0.25 vCPU and 0.5 GiB, one replica always running costs about $4–5 a month, less while it's idle (no requests and almost no CPU), which Container Apps bills at a lower rate. If it struggles on a busy evening, 0.5 vCPU and 1 GiB is about $8–10: set `cpu` and `memory` in `infra/main.bicepparam` and run the template.
+The replica currently uses 0.25 vCPU and 0.5 GiB. To increase both together, edit the container's `resources` in `infra/terraform/app.tf` and follow the [Terraform change procedure](terraform.md#changing-infrastructure).
 
-## One-time setup
+## Feedback vault
 
-You need the Azure CLI and an Azure subscription. Sign in, register the resource providers the template uses (once per subscription) and create the resource group:
+The operator uses **Key Vault Secrets Officer** on the feedback vault. To rotate the [fine-grained GitHub token](configuration.md#feedback), open **Objects → Secrets** in the Azure portal and add a version of `feedback-github-token`. Container Apps checks the versionless reference and restarts the active revision to pick up the new value, normally within 30 minutes. Coordinate a Feedback form submission before revoking the old token, since the submission creates a public issue.
 
-```sh
-rg=scoremap-rg
-az login
-for p in Microsoft.App Microsoft.KeyVault Microsoft.OperationalInsights Microsoft.Storage; do az provider register -n $p --wait; done
-az group create --name $rg --location eastus2
-```
+## App settings
 
-The template is scoped to the resource group. Set up the [feedback vault](#feedback-vault) before the first deployment. The container app needs an image that already exists, so the first image comes from GitHub Actions: run the deploy workflow on any branch (`gh workflow run deploy --ref <branch>`), which on a branch other than `main` only builds and pushes. The first push creates the package `scoremap` under your GitHub account, public like the repo; if it ever shows as private, make it public under Package settings → Change visibility, or Container Apps can't pull it. Then run the template with that image:
-
-```sh
-export SCOREMAP_IMAGE=ghcr.io/phillipbritain/scoremap:<commit>
-az deployment group create -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
-```
-
-The outputs give the app's address (`url`) and the identity's client ID (`githubClientId`).
-
-### Running the template again
-
-The next template run reapplies the app settings in Bicep. Pass the image that's running now. Container Apps retrieves the feedback token from Key Vault using its managed identity, so the command only needs your Azure sign-in and deployment permissions.
-
-```sh
-export SCOREMAP_IMAGE=$(az containerapp show -g $rg -n scoremap --query 'properties.template.containers[0].image' -o tsv)
-az deployment group what-if -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
-az deployment group create -g $rg --template-file infra/main.bicep --parameters infra/main.bicepparam
-```
-
-`what-if` previews the changes. It lists the role assignments' `principalId` as changed on every run, because it can't work out the identity's ID before a deploy; that one is harmless.
-
-### Feedback vault
-
-For a new environment, deploy the vault and the app's feedback identity first. The command returns the vault name.
-
-```sh
-az deployment group create -g "$rg" --name scoremap-feedback-vault \
-  --template-file infra/feedback-vault.bicep --query properties.outputs.vaultName.value -o tsv
-```
-
-In the Azure portal, grant the operator **Key Vault Secrets Officer** on this vault so they can create and rotate the token. Open the vault's **Objects → Secrets** page and create `feedback-github-token` with the [fine-grained GitHub token](configuration.md#feedback) as its value. Allow time for the new role assignments to propagate before deploying the app.
-
-To rotate the token, add a new version of that secret. Container Apps checks the versionless reference and restarts the active revision to pick up the new value, normally within 30 minutes. Verify that the Feedback form files an issue before revoking the old GitHub token. To deploy an environment with feedback only logged, explicitly pass `feedbackEnabled=false` with the main template parameters.
-
-### App settings
-
-Settings reach the server as environment variables, with `__` separating configuration sections. They are the container's `env` in `infra/main.bicep`: add one there and run the template; one added any other way is removed by the next run. The template sets:
+Settings reach the server as environment variables, with `__` separating configuration sections. Edit the container's `env` in `infra/terraform/app.tf` to change them.
 
 | Setting | Value | Purpose |
 | --- | --- | --- |
@@ -78,27 +37,19 @@ The rest (`Espn__BaseUrl`, `Nominatim__BaseUrl` and so on) keep the defaults in 
 
 ## Custom domain
 
-Container Apps issues and renews a free certificate for the domain once its DNS points at the app. With the domain at Cloudflare, every record below must be **DNS only** (grey cloud): through Cloudflare's proxy, Azure can't see the records and won't issue the certificate. Get the values from the template's outputs (`az deployment group show -g $rg -n main --query properties.outputs`):
-
-| Type | Name | Value |
-| --- | --- | --- |
-| CNAME | the subdomain, such as `www` | `fqdn` (`scoremap.<random>.eastus2.azurecontainerapps.io`) |
-| TXT | `asuid.` and the subdomain, such as `asuid.www` | `customDomainVerificationId` |
-
-For an apex domain (`example.com` itself), use an A record to `staticIp` instead of the CNAME, a TXT record named `asuid`, and `customDomainValidation = 'HTTP'`.
-
-Then set `customDomain` in `infra/main.bicepparam` and run the template twice ("Running the template again"): first with `bindCustomDomain=false` added to the run (`--parameters infra/main.bicepparam bindCustomDomain=false`), which adds the domain to the app unbound; then as usual, which issues the certificate (a few minutes) and binds it. From then on every run keeps it.
+ScoreMap uses the Azure hostname. Adding a domain would require a Terraform change for the ingress binding and managed certificate, plus DNS verification. Container Apps issues and renews the certificate after [domain validation](https://learn.microsoft.com/en-us/azure/container-apps/custom-domains-managed-certificates).
 
 ## Deploy from GitHub Actions
 
 `.github/workflows/deploy.yml` builds and pushes the image on every push to `main`, then deploys it as a new revision and waits: the run fails unless the new revision reports Running and Healthy, takes the traffic, and answers `/api/leagues`, within 10 minutes. A revision that doesn't start leaves the old one serving. To deploy by hand, use Actions → deploy → Run workflow, or `gh workflow run deploy`. Only runs on `main` can sign in to Azure; on another branch the workflow only builds and pushes.
 
-GitHub signs in to Azure as the user-assigned managed identity `scoremap-github`, with no password stored anywhere. A federated credential tells Azure to trust GitHub's sign-in tokens for this repo's `main` branch. The identity can deploy a new revision of this one app and nothing else: Container Apps Contributor on the app, and Container Apps Operator on the environment (read it, and place a revision in it). The template creates all three. The trusted token is set by `githubSubject` in `infra/main.bicepparam`. It names the owner and repo with their IDs, which can't be reused if the repo is renamed. For another repo, get it from `gh api repos/<owner>/<repo> --jq '"repo:\(.owner.login)@\(.owner.id)/\(.name)@\(.id)"'` and add `:ref:refs/heads/main`.
+GitHub signs in to Azure as the user-assigned managed identity `scoremap-github`. Its federated credential trusts this repo's `main` branch. It has Container Apps Contributor on the app and Container Apps Operator on the environment. Terraform manages these assignments and the `github_subject` in `infra/terraform/production.tfvars`. The workflow changes the image and waits for the new revision to serve traffic.
 
-Then tell GitHub which identity, tenant, subscription and app to use, once, after the template has run:
+The following repository settings connect GitHub Actions to production. They are already configured.
 
 ```sh
 repo=phillipbritain/ScoreMap
+rg=scoremap-rg
 gh secret set AZURE_CLIENT_ID -R $repo -b "$(az identity show -g $rg -n scoremap-github --query clientId -o tsv)"
 gh secret set AZURE_TENANT_ID -R $repo -b "$(az account show --query tenantId -o tsv)"
 gh secret set AZURE_SUBSCRIPTION_ID -R $repo -b "$(az account show --query id -o tsv)"
@@ -106,7 +57,7 @@ gh variable set AZURE_RESOURCE_GROUP -R $repo -b $rg
 gh variable set AZURE_CONTAINERAPP_NAME -R $repo -b scoremap
 ```
 
-The identity keeps its client ID when the template runs again. Deleting it and creating it again gives it a new one, and `AZURE_CLIENT_ID` then needs setting again.
+If the identity is ever replaced, update `AZURE_CLIENT_ID` to its new client ID.
 
 ## Checking it works
 
@@ -119,7 +70,7 @@ The identity keeps its client ID when the template runs again. Deleting it and c
 ## If it doesn't work
 
 - **The deploy run fails waiting for the revision**: the run prints Container Apps' system log for it. A crash on start shows in the app's log for that revision: `az containerapp logs show -g $rg -n scoremap --revision <name>`.
-- **The revision can't pull the image**: the package isn't public (see "One-time setup").
-- **GitHub deploy fails at Azure login with `AADSTS700213`**: the federated credential's subject doesn't match the token. The error shows the subject GitHub sent; fix `githubSubject` in `infra/main.bicepparam` and run the template again. A run from a branch other than `main` never gets to the login, by design.
+- **The revision can't pull the image**. Check that the GHCR package is public under Package settings → Change visibility.
+- **GitHub deploy fails at Azure login with `AADSTS700213`**. Compare the reported token subject with `github_subject` in `infra/terraform/production.tfvars` and the live federated credential.
 - **The certificate isn't issued**: check the CNAME (or A) and TXT records with `dig`, and that they're DNS only in Cloudflare.
 - **Venue lookups are lost on a new revision**: check the share is mounted (`az containerapp show -g $rg -n scoremap --query properties.template.volumes`) and look for "saving failed" warnings in the app's log.

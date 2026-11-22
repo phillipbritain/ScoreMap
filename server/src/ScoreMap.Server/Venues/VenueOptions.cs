@@ -5,7 +5,7 @@ public sealed class VenueOptions
 {
     /// <summary>
     /// File the venue lookups are saved to. A relative path is relative to the content root; in
-    /// production it is on the mounted file share (infra/main.bicep).
+    /// production it is on the mounted file share (docs/deploy.md).
     /// </summary>
     public string SavedLocationsPath { get; set; } = "data/venue-locations.json";
 

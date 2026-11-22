@@ -1,0 +1,9 @@
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+*.tfvars.json
+*.azurerm.tfbackend
+!production.tfvars
+!production.azurerm.tfbackend
+crash*.log

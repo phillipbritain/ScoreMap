@@ -115,7 +115,7 @@ describe('addPlaceNames', () => {
       getZoom: () => 3,
       // A flat screen, `spread` pixels a degree, everything facing the viewer.
       project: ([longitude, latitude]: [number, number]) => ({ x: (longitude + 130) * spread, y: (50 - latitude) * spread }),
-      _camera: { transform: { isLocationOccluded: () => false } },
+      _camera: { projectedCamera: { projection: 'mercator', clippingPlane: null } },
       on: (event: string, handler: () => void) => (handlers.set(event, handler), map),
       off: () => map,
       queryRenderedFeatures: () => names.map((name) => ({ id: idOf(name), properties: { name } })),

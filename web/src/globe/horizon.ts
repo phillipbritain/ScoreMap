@@ -11,10 +11,23 @@ import { degreesApart, radians, type GlobePoint } from './geo'
 /**
  * True when a place is on the far side of the globe from the viewer, behind its horizon. MapLibre
  * hides what it draws there itself; this is for what goes over the map (score cards) or is laid out
- * around what it draws (place names). It's MapLibre's own check, the one that fades markers there.
+ * around what it draws (place names). Use the same horizon plane that MapLibre clips against.
  */
 export function isBehindGlobe(map: MapLibreMap, lngLat: LngLatLike): boolean {
-  return map._camera.transform.isLocationOccluded(LngLat.convert(lngLat))
+  const camera = map._camera.projectedCamera
+  if (camera.projection === 'globe' && camera.globeness === 0) return false
+  const plane = camera.projection === 'globe' ? camera.verticalPerspective.clippingPlane : camera.clippingPlane
+  if (!plane) return false
+
+  const { lng, lat } = LngLat.convert(lngLat)
+  const longitude = lng * radians
+  const latitude = lat * radians
+  const cosLatitude = Math.cos(latitude)
+  // MapLibre's unit sphere has north on the Y axis and longitude zero on the Z axis.
+  const x = Math.sin(longitude) * cosLatitude
+  const y = Math.sin(latitude)
+  const z = Math.cos(longitude) * cosLatitude
+  return plane[0] * x + plane[1] * y + plane[2] * z + plane[3] < 0
 }
 
 /**
@@ -30,11 +43,11 @@ export interface GlobeView {
 /** The map's view of the globe now. */
 export function globeView(map: MapLibreMap): GlobeView {
   const { lng: longitude, lat: latitude } = map.getCenter()
-  const transform = map._camera.transform
+  const { worldSize, cameraToCenterDistance } = map._camera.projectedCamera
   // MapLibre's globe radius in pixels (its getGlobeRadiusPixels), and the camera that far and the
   // center-of-view distance from the globe's center.
-  const radius = transform.worldSize / (2 * Math.PI) / Math.cos(Math.min(Math.abs(latitude), 85) * radians)
-  return { center: { longitude, latitude }, cameraDistance: 1 + transform.cameraToCenterDistance / radius }
+  const radius = worldSize / (2 * Math.PI) / Math.cos(Math.min(Math.abs(latitude), 85) * radians)
+  return { center: { longitude, latitude }, cameraDistance: 1 + cameraToCenterDistance / radius }
 }
 
 /**

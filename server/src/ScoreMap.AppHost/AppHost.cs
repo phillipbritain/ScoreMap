@@ -1,7 +1,7 @@
 // Local runs (ADR-0013): the server and the browser app (Vite), started with `aspire start`.
 var builder = DistributedApplication.CreateBuilder(args);
 
-var server = builder.AddProject<Projects.ScoreMap_Server>("server")
+var server = builder.AddDotnetProject("server", "../ScoreMap.Server/ScoreMap.Server.csproj")
     .WithHttpHealthCheck("/health");
 
 // The app also answers other devices on the network, such as a phone, at this machine's address,

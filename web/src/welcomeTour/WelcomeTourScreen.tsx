@@ -194,7 +194,7 @@ function WelcomeStep({ onChoose, leagueList, settings, onChange }: WelcomeStepPr
           <div className="welcome-tour__choices">
             <button type="button" className="welcome-tour__choice welcome-tour__choice--top-events" onClick={() => onChoose('topEvents')}>
               <strong>Top Events</strong>
-              <span>The biggest games right now, in every sport</span>
+              <span>The biggest events right now, in every sport</span>
             </button>
             <button type="button" className="welcome-tour__choice welcome-tour__choice--my-leagues" onClick={pickMyLeagues}>
               <strong>My leagues</strong>
@@ -263,7 +263,7 @@ const panelPart = (selector: string) => () => document.querySelectorAll(`.event-
 
 /**
  * The event panel's steps (see eventPanelSteps): each lights one part of the panel Click a score card
- * opened, dimming the rest of it with the globe, with no arrow but for Where to watch's, to the small TV button, and Game details' tabs ringed, as they'd otherwise blend into the panel. The panel stays usable, so the viewer
+ * opened, dimming the rest of it with the globe, with no arrow but for Where to watch's, to the small TV button, and Event details' tabs ringed, as they'd otherwise blend into the panel. The panel stays usable, so the viewer
  * can try what's lit. With no panel open (closed, or the tour picked up here after a reload), a step says
  * the same with nothing lit.
  */
@@ -272,10 +272,10 @@ const eventPanelStepParts: Record<EventPanelStepName, { heading: string; part: s
   eventPanel: {
     heading: 'The event panel',
     part: '.event-panel__score',
-    words: "ScoreMap is live: scores change here and on the game's card, as it happens. No need to refresh.",
+    words: "ScoreMap is live. Scores update here and on the event's score card as it happens. No need to refresh.",
   },
   panelTabs: {
-    heading: 'Game details',
+    heading: 'Event details',
     part: '.game-details-tabs',
     words: 'Open a tab for the score breakdowns, scoring plays, drives, player stats, and highlights.',
   },
@@ -295,7 +295,7 @@ const panelParts = Object.fromEntries(
 function EventPanelStep({ step, onNext }: { step: EventPanelStepName; onNext: () => void }) {
   const panel = useRef<HTMLElement>(null)
   const { heading, words } = eventPanelStepParts[step]
-  // Game details sits right above the tabs it lights, over the event panel; the others as All set does.
+  // Event details sits right above the tabs it lights, over the event panel; the others as All set does.
   useRightAbove(step === 'panelTabs', panel, panelParts[step])
   return (
     <>
@@ -348,7 +348,7 @@ function useRightAbove(on: boolean, panel: RefObject<HTMLElement | null>, part: 
 function AllSetStep({ onDone }: { onDone: () => void }) {
   return (
     <TourPanel heading="You're all set!" action={<TourButton onClick={onDone}>Done</TourButton>}>
-      <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the games.</p>
+      <p className="welcome-tour__text">That's the end of the tour. Click Done to finish it and explore the events.</p>
     </TourPanel>
   )
 }
@@ -419,7 +419,7 @@ function ScoreCardStep({ onOpenGame, scoreCards, gameToTry }: ScoreCardStepProps
         {/* Neither wording until the panel has been measured and a card picked (or none). */}
         {toTry === null && (
           <p className="welcome-tour__text">
-            Each game shows as a score card. Click one to open a panel with details for the event, venue,
+            Each event shows as a score card. Click one to open a panel with details for the event, venue,
             where to watch, and more
           </p>
         )}

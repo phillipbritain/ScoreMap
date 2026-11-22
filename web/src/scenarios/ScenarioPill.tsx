@@ -6,7 +6,7 @@ import { useClickAway } from '../menus/clickAway'
 
 /**
  * The scenario picker (ADR-0009): a pill naming the running scenario, opening a list of every scenario
- * plus "Real games". Picking one switches the server, and so every browser: the server then sends every
+ * plus "Real events". Picking one switches the server, and so every browser: the server then sends every
  * browser the new listing over the games hub, so each pill follows (see switchScenario).
  *
  * The open list closes on Escape and on a click away from it, but not on moving or zooming the globe

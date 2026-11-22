@@ -153,7 +153,7 @@ export function Rail({
               label="Leagues"
               popover="leagues"
               open={open}
-              note={leaguesFilterGames(settings, leagues) ? 'games filtered' : undefined}
+              note={leaguesFilterGames(settings, leagues) ? 'events filtered' : undefined}
               onClick={() => popoverEvent({ press: 'leagues' })}
             />
             <RailButton

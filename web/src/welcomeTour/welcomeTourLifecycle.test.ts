@@ -43,7 +43,7 @@ describe('welcome tour lifecycle', () => {
     })
   })
 
-  it('opens the featured game and unlocks its tabs on the Game details step', () => {
+  it('opens the featured game and unlocks its tabs on the Event details step', () => {
     const controls = welcomeTourAfter(welcome(), { kind: 'chose', choice: 'everything' })
     const tour = welcomeTourAfter(controls, { kind: 'next' })
     expect(read(tour).step).toBe('scoreCard')
@@ -61,7 +61,7 @@ describe('welcome tour lifecycle', () => {
     expect(read(welcomeTourAfter(openFeatured(), { kind: 'next' }))).toMatchObject({ step: 'panelTabs', tabsLocked: false })
   })
 
-  it('advances when a Game details tab opens during that step and keeps the tab open', () => {
+  it('advances when a tab opens during Event details and keeps the tab open', () => {
     const opened = openFeatured()
     const detailsTabOpened = { kind: 'detailsTabOpened' } as const
     expect(read(welcomeTourAfter(opened, detailsTabOpened)).step).toBe('eventPanel')

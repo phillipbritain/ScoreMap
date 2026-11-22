@@ -18,7 +18,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-it('refreshes tour Game details when the period, note, or numeric score changes', async () => {
+it('refreshes tour Event details when the period, note, or numeric score changes', async () => {
   const game = tourGames(Date.now()).find(({ id }) => id === tourGameToTry)!
   const fetchDetails = vi.fn(async (_url: string, { body }: { body: string }) => {
     const { period, note, homeScore, awayScore } = JSON.parse(body)

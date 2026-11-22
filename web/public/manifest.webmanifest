@@ -1,7 +1,7 @@
 {
   "name": "ScoreMap",
   "short_name": "ScoreMap",
-  "description": "Live sports games as pins on a globe, with scores that update on their own.",
+  "description": "Live sports events as pins on a globe, with scores that update on their own.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

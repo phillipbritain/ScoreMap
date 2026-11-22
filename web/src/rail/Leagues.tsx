@@ -42,7 +42,7 @@ export function Leagues({ leagues, settings, onChange }: LeaguesProps) {
         <ScopeOption
           checked={top}
           name="Top Events"
-          note="ESPN's most important games right now, in every sport"
+          note="ESPN's most important events right now, in every sport"
           star
           onPick={() => onChange({ ...settings, topEventsOnly: true })}
         />

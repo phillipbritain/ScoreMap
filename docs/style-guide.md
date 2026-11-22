@@ -2,17 +2,17 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors games show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors events show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## Contents
 
 The guide is long: read this list, then only the sections the task needs (`grep -n '^## ' docs/style-guide.md` gives each one's line).
 
-- [What a theme is](#what-a-theme-is): the theme's JSON shape and parts, where it reaches (CSS custom properties, the globe, switching themes), and motion: score changes, cards coming and going, a game's celebration, the first load's reveal, switching map type, reduce motion.
+- [What a theme is](#what-a-theme-is): the theme's JSON shape and parts, where it reaches (CSS custom properties, the globe, switching themes), and motion: score changes, cards coming and going, an event's celebration, the first load's reveal, switching map type, reduce motion.
 - [The theme's colors](#the-themes-colors): base colors and how their light-to-dark steps are worked out; the dark theme's colors.
 - [The palette](#the-palette): what each main color is for (`primary`, status colors, background, text), with the dark theme's values.
-- [Color jobs](#color-jobs): what a color job may name, and every part's color jobs: the globe, games on the globe, panels and controls.
-- [How a game's status shows](#how-a-games-status-shows): Live, upcoming and final by brightness and glow; the hot games indicator, glass, tooltips and hover.
+- [Color jobs](#color-jobs): what a color job may name, and every part's color jobs: the globe, events on the globe, panels and controls.
+- [How an event's status shows](#how-an-events-status-shows): Live, upcoming and final by brightness and glow; the hot event indicator, glass, tooltips and hover.
 - [Typography](#typography): the font family and each type style, and which text uses it.
 - [Spacing and shape](#spacing-and-shape): the spacing unit, corner radius and border widths; the cut corner and logo plates.
 - [Other sizes](#other-sizes): free sizes on the globe (pins, clusters, trails, halo) and on the page.
@@ -38,10 +38,10 @@ A theme is shaped as a [Material UI](https://mui.com/material-ui/customization/t
 ```
 
 - The **theme colors** (`colors`) name a few base colors. Each is worked out into steps from light to dark (see [The theme's colors](#the-themes-colors)), as MUI's own colors (`@mui/material/colors`) come in steps.
-- The **palette** says what the main colors are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; a color for each game status (`live`, `upcoming`, `final`), as MUI takes colors of a theme's own, each a `main`, `light` and `dark` shade; and the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colors (see [The palette](#the-palette)).
+- The **palette** says what the main colors are for, as MUI's does: `primary`, `secondary`, `error` and `warning`, each a `main` shade, a `light` and a `dark` one and the `contrastText` written on it; a color for each event status (`live`, `upcoming`, `final`), as MUI takes colors of a theme's own, each a `main`, `light` and `dark` shade; and the `background`, `text`, `divider` and `action.hover`. Each names a step of the theme's colors (see [The palette](#the-palette)).
 - The **typography** is one font family and the type styles, MUI's typography variants: `h6`, `subtitle1`, `body2` and so on (see [Typography](#typography)).
 - **`spacing`** is the spacing unit every space on the page is a number of, as MUI's `theme.spacing` is, and **`shape`** the corner radius every corner is a number of and the page's line widths (see [Spacing and shape](#spacing-and-shape)).
-- **`components`** has each part of ScoreMap's own look, by part, as MUI's `components` has each component's: the globe, place names, pins, clusters, trails, score cards, the event panel, the menus, the controls and the loading screen. A part that looks different by game status has a group for each (`components.Pin.live`, `components.ScoreCard.final`), as MUI's components style each color they come in (see [How a game's status shows](#how-a-games-status-shows)). A part's color jobs name a step or one of the palette's colors (`primary.dark`, `text.secondary`), so changing the palette changes every part that uses it.
+- **`components`** has each part of ScoreMap's own look, by part, as MUI's `components` has each component's: the globe, place names, pins, clusters, trails, score cards, the event panel, the menus, the controls and the loading screen. A part that looks different by event status has a group for each (`components.Pin.live`, `components.ScoreCard.final`), as MUI's components style each color they come in (see [How an event's status shows](#how-an-events-status-shows)). A part's color jobs name a step or one of the palette's colors (`primary.dark`, `text.secondary`), so changing the palette changes every part that uses it.
 
 Every setting is required, and nothing else is allowed: a theme missing a setting, or with one it doesn't know, is rejected (see [What checking rejects](#what-checking-rejects)). This is where a theme differs most from MUI's, which fills in whatever it isn't given: ScoreMap's built-in theme is the only one, so a setting left out is a mistake, not a default.
 
@@ -55,9 +55,9 @@ The code reads only the resolved theme, never the JSON:
 
 Motion isn't part of a theme: durations, easings and the animations' shapes stay in the CSS.
 
-When a game's score changes, nothing on its score card moves: the card's edge glows in the game's color and fades over 1.6 seconds, and the score takes that color as it fades. When a two-sided game's score changes, the side that scored is also lit for 3 seconds, on its score card's row and in the event panel: a tint and inner glow in the game's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
+When an event's score changes, nothing on its score card moves: the card's edge glows in the event's color and fades over 1.6 seconds, and the score takes that color as it fades. When a two-sided event's score changes, the side that scored is also lit for 3 seconds, on its score card's row and in the event panel: a tint and inner glow in the event's color, its name and score brighter and glowing, steady for two seconds and then fading. A card redrawn, or a panel opened, partway through carries on from there rather than starting over. A field or a fight card has no scorer to light.
 
-A score card comes in when its game arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its game drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the edge of the screen, as a venue out of view has no card but the selected game's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. While the camera moves, cards can move to keep clear of each other, come back over their venues, or come within 80 px of them where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Pinning, revealing, and changing the card count can also rearrange the view while the camera is still. A pinned card holds its position relative to its venue. Its heading shows a small tilted pushpin on the right. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
+A score card comes in when its event arrives on the board, or is shown again from Leagues on the rail: it drops in from a little above as it fades in, landing on its trail, its trail and venue dot fading in with it. It lifts up and away as it fades out when its event drops off after finishing or is hidden, its trail and venue dot fading with it, out of the card layout at once so it holds no room as the others move in. Each takes 300 ms (`cardComingDuration`, in `web/src/globe/cardComings.ts`, as the trails need it too). A card that comes or goes as the camera moves (its venue crossing the horizon or the edge of the screen, as a venue out of view has no card but the selected event's) fades in or out in place over the same 300 ms, its trail with it; one moving into or out of a card cluster fades out or in over 200 ms (the CSS's `[data-in-card-cluster]`). A card the card layout moves further than a few pixels (`cardMoveStep`) glides there over 300 ms, easing out, its trail's start with it (`web/src/globe/cardMoves.ts`); the small steps of a card pushed along as the globe turns follow at once. While the camera moves, cards can move to keep clear of each other, come back over their venues, or come within 80 px of them where there's room (`venueReach` in `web/src/globe/cardLayout.ts`). Pinning, revealing, and changing the card count can also rearrange the view while the camera is still. A pinned card holds its position relative to its venue. Its heading shows a small tilted pushpin on the right. A card keeps the size it was first drawn at, with room for a three-digit score, so no score, clock or selection resizes it: a clock line or a name that grows after is cut short with an ellipsis. Neither fades nor glides play until ScoreMap is ready: behind the loading screen, cards are just there.
 
 The loading screen's rocket, and the cut-off note's, flies up and to the right, bobbing as it goes, its flame of two layers (`components.LoadingScreen.rocket.flame.outer` around `.inner`) flickering out of step, and stars streaming past it, nearer ones bigger and quicker, fading out toward the edge of a circle around it. The user picked this, today's rocket with a new flame and stars in place of its speed lines, from two rounds prototyped on November 19, 2026, preserved on the throwaway branch `phillipbritain/rocket-loader-prototype`.
 
@@ -67,13 +67,13 @@ ScoreMap comes in as one on its first load. From its first paint the page is the
 
 Switching map type cross-fades. The old map stays on screen while the new one's tiles load out of sight; then the satellite imagery, which lies over the plain map's land and sea, fades in over it, or out from over it, in one go over 0.4 s, and the old map's layers go once they're covered (`web/src/globe/mapTypeFade.ts`). Tiles still missing after 4 seconds don't hold the switch up: it fades then, and they arrive as they load.
 
-A rail popover (Leagues, Display Settings, Events, More, Feedback, and the top rail's Scenario) opening slides out a little from the rail, or down from the top rail's row, as it fades in over 160 ms; closed, it slides back as it fades out over 120 ms, out of reach as it goes. The event panel opening slides up into place from below the screen's foot over 220 ms, and closed, slides back down off it over 160 ms. It doesn't fade, as the score block's glass would flash as its blur stopped seeing the globe. Picking another game while it's open changes it in place. With reduce motion a popover fades in place as it opens, the panel is there at once, and either goes at once.
+A rail popover (Leagues, Display Settings, Events, More, Feedback, and the top rail's Scenario) opening slides out a little from the rail, or down from the top rail's row, as it fades in over 160 ms; closed, it slides back as it fades out over 120 ms, out of reach as it goes. The event panel opening slides up into place from below the screen's foot over 220 ms, and closed, slides back down off it over 160 ms. It doesn't fade, as the score block's glass would flash as its blur stopped seeing the globe. Picking another event while it's open changes it in place. With reduce motion a popover fades in place as it opens, the panel is there at once, and either goes at once.
 
 On a phone, where the event panel is a bottom sheet, it can be swiped down to close as well as by its close button: a drag down from anywhere on it but its band (which scrolls) moves the panel with the finger, giving only a little upward. Let go past 30% of its height, or flicked down, it slides off the screen over 180 ms and closes; otherwise it springs back over 260 ms, overshooting slightly. There's no handle. This is variant B of the comparison preserved on the throwaway branch `phillipbritain/swipe-close-proto`, chosen by the user on November 14, 2026.
 
-A game finishing celebrates (`GLOSSARY.md`, "Celebration"; `web/src/celebration/celebration.ts`). Its score card, where it has one on screen, gets confetti in its teams' colors (the two strongest colors of each logo, else the color the game played in) and white: a small shower of 34 pieces that pop out along the card's very top edge and drift down through it, more falling in from its top over the first half of its 2.8 seconds, kept to the card (3 px past its edges at most) and moving with it, under the event panel and the rail. In an open event panel, a fireworks show plays inside the panel: six rockets go up from along its foot over 1.8 seconds, each bursting between a fifth and half of the way down it into a ring of sparks in one of those colors, lifted toward white so they glow, fading and twinkling out over 1.7 seconds. 4.2 seconds after the finish the panel closes itself, sliding down off the screen as a close does but slower, over 550 ms, easing in, and the game's score card goes out at the same moment, the card dimmed as Final throughout.
+An event finishing celebrates (`GLOSSARY.md`, "Celebration"; `web/src/celebration/celebration.ts`). Its score card, where it has one on screen, gets confetti in its teams' colors (the two strongest colors of each logo, else the color the event played in) and white: a small shower of 34 pieces that pop out along the card's very top edge and drift down through it, more falling in from its top over the first half of its 2.8 seconds, kept to the card (3 px past its edges at most) and moving with it, under the event panel and the rail. In an open event panel, a fireworks show plays inside the panel: six rockets go up from along its foot over 1.8 seconds, each bursting between a fifth and half of the way down it into a ring of sparks in one of those colors, lifted toward white so they glow, fading and twinkling out over 1.7 seconds. 4.2 seconds after the finish the panel closes itself, sliding down off the screen as a close does but slower, over 550 ms, easing in, and the event's score card goes out at the same moment, the card dimmed as Final throughout.
 
-With the device's reduce motion setting on, changes still show but nothing moves or blinks. A game finishing plays no confetti or fireworks, and its panel closing itself goes at once. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away, and one the card layout moves goes straight there without gliding. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot game's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and the stars standing still, its message is there at once with its dots steady, and it goes at once when ScoreMap is ready instead of fading, everything it hid there at once with it. A event panel let go after a swipe closes or springs back at once. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
+With the device's reduce motion setting on, changes still show but nothing moves or blinks. An event finishing plays no confetti or fireworks, and its panel closing itself goes at once. A score's glow fades in place without shrinking. A score card coming in or going out fades in place, without dropping in or lifting away, and one the card layout moves goes straight there without gliding. The side that scored stays lit, steady, for its 3 seconds, then goes at once. A hot event's flames stay, standing still. Every pulse over a small pin or a cluster is a still ring that fades in and out in place without growing. The loading screen's rocket fades in and out in place instead of flying, its flame steady and the stars standing still, its message is there at once with its dots steady, and it goes at once when ScoreMap is ready instead of fading, everything it hid there at once with it. An event panel let go after a swipe closes or springs back at once. Camera moves jump instead of easing: MapLibre does this for any camera move not marked `essential`, so none is.
 
 ## The theme's colors
 
@@ -114,8 +114,8 @@ The **palette** says what the theme's main colors are for, shaped as MUI's palet
 | Setting | What it's for | Dark theme |
 | --- | --- | --- |
 | `palette.primary` | The globe and every surface: `main`, `light`, `dark`, and `contrastText`, text on `main` | `navy.500`, `navy.300`, `navy.700`; `offWhite.500` |
-| `palette.secondary` | The accent: gold, as every game is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card count" and "Card colors" headings (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
-| `palette.live`, `.upcoming`, `.final` | A game's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and the line over its open tab. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How a game's status shows](#how-a-games-status-shows)) | `gold.500`, `.300`, `.700` for each |
+| `palette.secondary` | The accent: gold, as every event is today. The statuses' colors name gold's steps themselves; a league chip that's on names it (`main` for its outline and glow, `light` for its text), as does Display Settings' "Display venue photo on Event Panel" (`main` when on, with a knob in `contrastText`) and Display Settings' "Card count" and "Card colors" headings (`main`) | `gold.500`, `gold.300`, `gold.700`; `navy.800` |
+| `palette.live`, `.upcoming`, `.final` | An event's color, by status, unless the viewer picked one for its sport or league: its small pin's ring and glow, its score card's outline, header and glow, its trail, a cluster's outline, glow and count, its pulse, and the event panel's top edge and the line over its open tab. Text written on it is `text.primary` or `background.paper`, whichever reads better, so a status has no `contrastText` (see [How an event's status shows](#how-an-events-status-shows)) | `gold.500`, `.300`, `.700` for each |
 | `palette.error`, `palette.warning` | Errors and warnings: the Feedback panel's error, and its counter past the limit, in `error.light`; nothing uses `warning` yet (league colors are the viewer's, in Display Settings on the rail) | `red` and `orange`, at 500, 300 and 700; `offWhite.500` and `navy.800` |
 | `palette.background.default` | The page behind everything | `navy.900` |
 | `palette.background.paper` | The surfaces on it: the event panel, the menus and the controls | `navy.800` |
@@ -154,18 +154,18 @@ The dark theme names one of the palette's colors where a job is what that palett
 | `components.Sky.color` | The sky around the globe | `background.default` |
 | `components.Sky.stars.white`, `.cool`, `.warm` | The scattering of stars in the sky | `offWhite.500`, `navy.100`, `gold.100` |
 
-### Games on the globe
+### Events on the globe
 
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
-| `palette.<status>.main` | A game's color, by status (`live`, `upcoming`, `final`; see [The palette](#the-palette)) | `gold.500` for each |
-| `components.Pin.<status>.core.color` | A small pin's core. One that's its status's color is drawn in the game's color, dimmed by its status; any other color stays as given | Each its status's color (`live.main` and so on), so every small pin is a solid dot in its game's color |
-| `components.Cluster.fill`, `.fillWithGameColor` | A card cluster's disc color. With `fillWithGameColor` on, it uses the same game color as its ring | `primary.dark`, on |
+| `palette.<status>.main` | An event's color, by status (`live`, `upcoming`, `final`; see [The palette](#the-palette)) | `gold.500` for each |
+| `components.Pin.<status>.core.color` | A small pin's core. One that's its status's color is drawn in the event's color, dimmed by its status; any other color stays as given | Each its status's color (`live.main` and so on), so every small pin is a solid dot in its event's color |
+| `components.Cluster.fill`, `.fillWithGameColor` | A card cluster's disc color. With `fillWithGameColor` on, it uses the same event color as its ring | `primary.dark`, on |
 | `components.Cluster.count.color` | The number on a card cluster. A theme that leaves it out uses the ring's color | Black |
-| `components.Selection.color` | The selected game's pin ring and score card outline | `offWhite.500` |
+| `components.Selection.color` | The selected event's pin ring and score card outline | `offWhite.500` |
 | `components.ScoreCard.fill` | A score card's fill, tinting its glass (see [Glass](#glass)) | `primary.dark` |
 | `components.ScoreCard.text` | A score card's text | `text.primary` |
-| `components.ScoreCard.shadow` | The drop shadow a starting game's score card settles with | `background.default` |
+| `components.ScoreCard.shadow` | The drop shadow a starting event's score card settles with | `background.default` |
 
 ### Panels and controls
 
@@ -173,7 +173,7 @@ Beside the palette's background, text, divider and hover:
 
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
-| `components.Controls.surface` | The "No games right now." message | `background.paper` |
+| `components.Controls.surface` | The "No events right now." message | `background.paper` |
 | `components.Controls.shadow.color` | Their drop shadow | `transparent` |
 | `components.Controls.on.fill`, `.text` | A speed key that's on, and the Feedback panel's Submit | `offWhite.500`, `navy.800` |
 | `components.EventPanel.surface.top`, `.bottom` | The event panel (on a desktop, its venue part and band), shading from top to bottom | `background.paper`, `background.paper` (solid) |
@@ -186,7 +186,7 @@ Beside the palette's background, text, divider and hover:
 | `components.Rail.outline` | The thin outline round the rail's popovers, lighter than the globe's land and sea so a popover stands off the globe under it, on the plain map and the satellite map alike, at desktop size and as a phone's sheet | `primary.light` |
 | `components.Tooltip.surface`, `.outline` | A tooltip (see [Tooltips](#tooltips)), a step lighter than the panels it may sit over, and its thin outline, which sets it off from them | `navy.700`, `navy.500` |
 | `components.Rail.shadow.color` | Their drop shadow | `transparent` |
-| `components.Rail.open` | A rail button's icon while its popover is open; the count on the Events button and its ring; the dot on the Leagues button while games are filtered; and the ring round the map showing in Display Settings' Map type | `secondary.main` (gold) |
+| `components.Rail.open` | A rail button's icon while its popover is open; the count on the Events button and its ring; the dot on the Leagues button while events are filtered; and the ring round the map showing in Display Settings' Map type | `secondary.main` (gold) |
 | `components.Rail.count` | The count of leagues that are on, after a sport's name and on the "All leagues" chip (in `Rail.on.text` while a sport's are all on) | `text.secondary` |
 | `components.Rail.hint` | The hint beside "All leagues" | `text.secondary` |
 | `components.Rail.chip.outline` | A league chip's outline, and "Reset colors"' | `primary.main` |
@@ -198,19 +198,19 @@ Beside the palette's background, text, divider and hover:
 | `components.LoadingScreen.message` | The message under the loading screen's rocket | `text.primary` |
 | `components.LoadingScreen.glow.color` | The glow around the loading screen's message, and the dots of its closing ellipsis | `secondary.main` |
 
-A league that's on is lit in gold, as a game is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
+A league that's on is lit in gold, as an event is, rather than filled in off-white: a white chip stood out against the dark theme. A lit speed key and the selection stay off-white; a rail button whose popover is open is gold.
 
-## How a game's status shows
+## How an event's status shows
 
-A game's status shows by **brightness and glow, not color** (ADR-0012). Color is the strongest signal on a map, so it's kept to stand for a game's sport or league, in a color the viewer picks in Display Settings on the rail (ADR-0017). With none picked, the dark theme gives every game the one gold. Disrupted games (postponed, suspended or canceled) aren't shown, so have no look (ADR-0021).
+An event's status shows by **brightness and glow, not color** (ADR-0012). Color is the strongest signal on a map, so it's kept to stand for an event's sport or league, in a color the viewer picks in Display Settings on the rail (ADR-0017). With none picked, the dark theme gives every event the one gold. Disrupted events (postponed, suspended or canceled) aren't shown, so have no look (ADR-0021).
 
 - **Live** glows widest and its small pin has a bright core.
 - **Upcoming** glows less and is a little dimmer.
 - **Final** has no glow and fades.
 
-In the dark theme Live small pins and card clusters have a soft glow, Upcoming has a fainter glow, and Final has none. Every small pin is the same size whatever its status, 9 px across, and every venue dot 10 px: a small pin is solid, a venue dot a ring around a dot, which reads smaller than a solid dot as wide, so the pin is a pixel smaller to look the same size. Status shows by how far the game's color is dimmed (`components.Pin.<status>.dim`), mixed toward the background's paper so it stays solid, as a score card fades: Live in the game's full color; Upcoming dimmed 35% and Final 60%, on small pins, venue dots, venue clusters and trails alike.
+In the dark theme Live small pins and card clusters have a soft glow, Upcoming has a fainter glow, and Final has none. Every small pin is the same size whatever its status, 9 px across, and every venue dot 10 px: a small pin is solid, a venue dot a ring around a dot, which reads smaller than a solid dot as wide, so the pin is a pixel smaller to look the same size. Status shows by how far the event's color is dimmed (`components.Pin.<status>.dim`), mixed toward the background's paper so it stays solid, as a score card fades: Live in the event's full color; Upcoming dimmed 35% and Final 60%, on small pins, venue dots, venue clusters and trails alike.
 
-A score card fades by color, not by being see-through: its game's color, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
+A score card fades by color, not by being see-through: its event's color, text and logos are mixed into its fill. A card of clear glass (see [Glass](#glass)) fades the same way, keeping its status look.
 
 Each status still has its own color in the palette, though all three are the same gold, so a theme that shows status its own way (a light theme, where glows barely show) can change them without a new setting. A color the viewer picks takes the place of its status's, and text written on it (a tennis set in the event panel's band) is the theme's main text or its paper surface, whichever stands out from it more.
 
@@ -218,13 +218,13 @@ A status's color is the palette's; the rest of its look is each component's own,
 
 | Setting | What it is |
 | --- | --- |
-| `palette.<status>` | The game's color, and the text written on it (see [The palette](#the-palette)) |
+| `palette.<status>` | The event's color, and the text written on it (see [The palette](#the-palette)) |
 | `components.Pin.<status>.core.color`, `.radius`, `.opacity` | A small pin's bright core: its color, radius in pixels and opacity |
-| `components.Pin.<status>.core.ring` | The width of the ring of the game's color around the core, in pixels (0 is no ring) |
+| `components.Pin.<status>.core.ring` | The width of the ring of the event's color around the core, in pixels (0 is no ring) |
 | `components.Pin.<status>.glow.radius`, `.opacity` | The soft glow around a small pin: its radius out to where it's faded to nothing, and its opacity at the middle (radius 0 or opacity 0 is no glow). The radius also sets the room a small pin keeps clear of place names, glow or not |
-| `components.Pin.<status>.dim` | How far the game's color is dimmed toward `palette.background.paper`, from 0 (not at all) to 1 (all the way), on its small pin, venue dot or venue cluster, and trail. A color the theme gives other than as #rrggbb isn't dimmed |
+| `components.Pin.<status>.dim` | How far the event's color is dimmed toward `palette.background.paper`, from 0 (not at all) to 1 (all the way), on its small pin, venue dot or venue cluster, and trail. A color the theme gives other than as #rrggbb isn't dimmed |
 | `components.Cluster.<status>.opacity` | How opaque a card cluster showing as this status is: its disc, outline and count alike. A venue cluster dims instead, as a venue dot does (`Pin.<status>.dim`) |
-| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its game's color (its outline, header, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected game's card doesn't fade |
+| `components.ScoreCard.<status>.fade` | How far its score cards fade, from 0 (not at all) to 1 (all the way, a blank card). A card stays solid: its event's color (its outline, header, pointer and glow), its text and its logos are mixed this far into the card's fill. The selected event's card doesn't fade |
 | `components.ScoreCard.<status>.glow.radius`, `.opacity` | How far and how strongly its score cards glow in its color (radius 0 is no glow). The CSS works out the rest from these: an inner glow 1.25 times as far at a third of the opacity |
 
 The dark theme's:
@@ -239,20 +239,20 @@ The card fades are what the cards' opacities were before cards were made solid (
 
 How status reaches the rest of the globe:
 
-- **Clusters** show as the most prominent status among their games (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme it's 0 and the pins don't glow, so no cluster does. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the game color its games share, or the accent (`palette.live.main`) when their colors differ; a venue cluster's is dimmed by the status it shows as.
-- **Pulses** play in the game's color, over its small pin, score card or cluster alike. A score and a start play the same pulse: one small ring over a small pin or a cluster, and the card's edge lit over a score card, which doesn't move (a pop there made cards jump). A finish plays none; it celebrates instead (see [Where the theme reaches](#where-the-theme-reaches)).
-- **The selected game** is outlined in `components.Selection.color`, off-white, apart from the gold of every other game, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
-- **Glow means a game.** Panels and controls have no glow: in the dark theme the event panel's glow has opacity 0, and their drop shadows are `transparent`, so they cast none (see [Glass](#glass)).
+- **Clusters** show as the most prominent status among their events (Live, then Upcoming, then Final). A pin or card cluster glows as strongly as `components.Cluster.glowOpacity` times its status's pin glow opacity, so a cluster of a status whose pins don't glow doesn't either. In the dark theme it's 0 and the pins don't glow, so no cluster does. A cluster's color (outline, glow and count; a venue cluster's dot and ring) is the event color its events share, or the accent (`palette.live.main`) when their colors differ; a venue cluster's is dimmed by the status it shows as.
+- **Pulses** play in the event's color, over its small pin, score card or cluster alike. A score and a start play the same pulse: one small ring over a small pin or a cluster, and the card's edge lit over a score card, which doesn't move (a pop there made cards jump). A finish plays none; it celebrates instead (see [Where the theme reaches](#where-the-theme-reaches)).
+- **The selected event** is outlined in `components.Selection.color`, off-white, apart from the gold of every other event, and its score card and trail are picked out as a hovered one's (see [Hover](#hover)).
+- **Glow means an event.** Panels and controls have no glow: in the dark theme the event panel's glow has opacity 0, and their drop shadows are `transparent`, so they cast none (see [Glass](#glass)).
 
-### The hot games indicator
+### The hot event indicator
 
-With "Hot event indicator" on in Display Settings (on unless the viewer switches it off), a hot game (see [`GLOSSARY.md`](../GLOSSARY.md)) shows its indicator, a glowing orange outline around its whole edge, gone as soon as it stops being hot. Switched off, no card, pin or cluster shows it, though hot games are still the first to get a card. The chosen look is E for cards and option 14, Gentle crawl, for pins and clusters, from the local throwaway branch `prototype-flame-looks`.
+With "Hot event indicator" on in Display Settings (on unless the viewer switches it off), a hot event (see [`GLOSSARY.md`](../GLOSSARY.md)) shows its indicator, a glowing orange outline around its whole edge, gone as soon as it stops being hot. Switched off, no card, pin or cluster shows it, though hot events are still the first to get a card. The chosen look is E for cards and option 14, Gentle crawl, for pins and clusters, from the local throwaway branch `prototype-flame-looks`.
 
 - A **score card** has a glowing outline around all four sides, with warm highlights crawling around it once every 2.4 seconds and a lightly flickering glow. The card's box is cut out of the effect, so none of it shows through its glass.
 - A **small pin** has a thin glowing outline around its core and ring, with a steady soft glow. Its highlight turns slowly, once every 7.68 seconds.
-- A **card cluster** holding a hot game has the same slowly moving outline around its disc, as faded as the cluster. A **venue cluster** has none, as its games' cards are on screen, indicators and all.
+- A **card cluster** holding a hot event has the same slowly moving outline around its disc, as faded as the cluster. A **venue cluster** has none, as its events' cards are on screen, indicators and all.
 
-The indicator is in **its own colors** (red, orange and white-hot), wherever it shows, so hot games look the same across leagues: the one place color doesn't say league (ADR-0012). With reduce motion on, every indicator's outline and glow stays visible and still; changing that setting while the app runs stops or resumes the motion.
+The indicator is in **its own colors** (red, orange and white-hot), wherever it shows, so hot events look the same across leagues: the one place color doesn't say league (ADR-0012). With reduce motion on, every indicator's outline and glow stays visible and still; changing that setting while the app runs stops or resumes the motion.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
@@ -285,7 +285,7 @@ Tooltips are drawn by the page, not the browser, whose own can't be styled: anyt
 
 ### Hover
 
-While the pointer is on a score card, its game is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the game's color, and the dot on the card where the trail meets it is bigger. Its settings are `components.Hover`: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), `venue.radius` and `.glow.radius`, `.opacity`, and `cardDot.radius`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected game's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another game, returns it to normal.
+While the pointer is on a score card, its event is picked out: the card's border is bolder, and so are its trail and the venue dot the trail ends at, the dot lit in a glow of the event's color, and the dot on the card where the trail meets it is bigger. Its settings are `components.Hover`: `card.borderWidth` and `card.solid` (whether a card frosts over fully, as if its frost were 1, written to CSS as `1` or `0`), `trail.width` and `.opacity` (the hovered trail's own, in place of the trail's opacity; the venue dot's ring takes the width too), `venue.radius` and `.glow.radius`, `.opacity`, and `cardDot.radius`. The bolder border is drawn as a ring around the card, so a hovered card keeps its size and never moves. The card eases into its hover look, or changes at once with reduce motion on; the trail and dot change at once. The selected event's card and trail keep this look for as long as it's selected, so it shows on touch screens too, where a tap selects; selection's outline is drawn around it as well. Deselecting it, or selecting another event, returns it to normal.
 
 ## Typography
 
@@ -325,7 +325,7 @@ Each component's corners are a number of corner radii, or `"pill"`, round enough
 | `components.EventPanel.corner` | The event panel's | 2 (8px) |
 | `components.Menu.corner` | A menu's: the rail's groups, buttons and popovers (More's rows too), the Feedback panel's text box, a tooltip | 2 (8px) |
 | `components.MenuItem.corner` | An item's in a menu | 1.5 (6px) |
-| `components.Controls.message.corner` | A message's, such as "No games right now." | 2 (8px) |
+| `components.Controls.message.corner` | A message's, such as "No events right now." | 2 (8px) |
 | `components.Controls.corner` | A control's: a speed key, league chips, "Reset colors", the Feedback panel's buttons | `pill` |
 
 The **cut corner** cuts off the event panel's bottom left corner, like a broadcast graphic, for a more angular theme: `components.EventPanel.cutCorner.on` (`true` or `false`) and `.size`, how far along each side, in spacing units. It's beveled (CSS `corner-shape`) rather than clipped, which would stop the score block's glass seeing the globe, and only on a desktop. The dark theme has it off (size 4, unused). The panel's top right corner is square, where the close button's tab rises from it, and on a phone (640px wide or less) every corner is.
@@ -359,35 +359,35 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 | `components.Cluster.glowRadius`, `.matchPinGlow` | Its glow radius. With `matchPinGlow` on, the halo extends as far beyond its disc as the small pin's halo extends beyond its edge | 16, on |
 | `components.Cluster.outlineWidth` | A cluster's outline | 1.5 |
 | `components.Cluster.glowOpacity` | A cluster's glow, as a share of its status's pin glow opacity (0 to 1) | 1 |
-| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue, in its game's color dimmed by its status: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
+| `components.Trail.width`, `.opacity` | A moved score card's trail back to its venue, in its event's color dimmed by its status: its width, and how opaque it is, below 1 letting the map show through | 1.25, 0.63 |
 | `components.Trail.glow.width`, `.blur`, `.opacity` | The soft glow along a trail | 4, 3, 0.25 |
 | `components.Trail.venue.radius` | The dot at the trail's venue | 1.75 |
 | `components.Trail.venue.ring.radius`, `.width` | The ring around that dot. A venue cluster is the same dot and ring. The ring is drawn outside its radius, so a venue dot reaches 5 px | 4, 1 |
-| `components.Trail.cardDot.radius` | The dot in its game's color on a score card's edge where its trail meets it, so it's plain which card a trail is | 2 |
+| `components.Trail.cardDot.radius` | The dot in its event's color on a score card's edge where its trail meets it, so it's plain which card a trail is | 2 |
 | `components.Selection.width` | The selected pin's ring and score card's outline. The ring reaches as far out whatever its width | 2 |
 | `components.Hover.trail.width`, `.opacity` | A hovered card's trail, and its venue dot ring's width (see [Hover](#hover)) | 2.5, 1 |
 | `components.Hover.venue.radius` | A hovered card's venue dot | 2.5 |
-| `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its game's color | 12, 0.6 |
+| `components.Hover.venue.glow.radius`, `.opacity` | The glow around that dot, in its event's color | 12, 0.6 |
 | `components.Hover.cardDot.radius` | A hovered card's dot where its trail meets it | 2.75 |
 | `components.Pulse.size.pin`, `.cluster` | How wide a pulse's ring starts, over a small pin and over a cluster | 16, 23 |
 | `components.Pulse.ring` | How thick a pulse's ring is | 3 |
 
 ### On the page
 
-The event panel opens with its score, venue and bottom tab bar. The league sits above the scores. The game clock is over the venue's photo: on desktop at its top left, its time in big type under the period in words ("2nd Quarter", see `web/src/panel/panelClock.ts`) and a red dot while it runs; on a phone, smaller, beside the venue. Long names use an ellipsis with the full text on hover or tap. The TV icon opens **Where to watch**: a tile for each broadcast network, a logo tile for each link (StreamEast and ESPN), and the venue over its photo, linking to the map, with the start time. The close button sits in the panel’s upper-right corner.
+The event panel opens with its score, venue and bottom tab bar. The league sits above the scores. The event clock is over the venue's photo: on desktop at its top left, its time in big type under the period in words ("2nd Quarter", see `web/src/panel/panelClock.ts`) and a red dot while it runs; on a phone, smaller, beside the venue. Long names use an ellipsis with the full text on hover or tap. The TV icon opens **Where to watch**: a tile for each broadcast network, a logo tile for each link (StreamEast and ESPN), and the venue over its photo, linking to the map, with the start time. The close button sits in the panel’s upper-right corner.
 
 On desktop the score block is glass (see [Glass](#glass)), with the venue photo cropped to the area beside its slanted edge. On narrow screens, the photo is behind the score and venue rows, with the same crop while another part of the panel changes height. The photo uses `components.EventPanel.photo.opacity`; a faint glow fills its place when there is no photo. A field’s whole leaderboard is in the score block, a line each, scrolling within its two-line height. A band below the header holds tennis sets or a fight card’s bouts. The panel edge uses `text.primary` at 18%, and when a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)).
 
-Selecting a tab slides its content up above the tab bar over 220 ms. The down chevron collapses it. The tab bar stays at the foot of the panel, a dock of the tabs' names, the open one marked by a line in the game's color along its top; the details and sport-specific band can scroll when space is tight. The tabs' contents have no titles. The score by period sits on its own card in the middle of its pane, without logos, the period being played and the leading side's total in the game's color; it fits nine innings and the total on a phone, upright or on its side, and anything wider scrolls inside the card. Player stats show each category once, both teams side by side (one over the other on a narrow panel). With reduced motion, opening and collapsing are immediate, and the clock's dot doesn't pulse.
+Selecting a tab slides its content up above the tab bar over 220 ms. The down chevron collapses it. The tab bar stays at the foot of the panel, a dock of the tabs' names, the open one marked by a line in the event's color along its top; the details and sport-specific band can scroll when space is tight. The tabs' contents have no titles. The score by period sits on its own card in the middle of its pane, without logos, the period being played and the leading side's total in the event's color; it fits nine innings and the total on a phone, upright or on its side, and anything wider scrolls inside the card. Player stats show each category once, both teams side by side (one over the other on a narrow panel). With reduced motion, opening and collapsing are immediate, and the clock's dot doesn't pulse.
 
 The user picked this look, variant D of four prototyped on November 21, 2026 with their tweaks, preserved on the throwaway branch `phillipbritain/game-panel-polish-prototype`.
 
 | Setting | What it is | Dark theme |
 | --- | --- | --- |
 | `components.EventPanel.shadow`, `components.Rail.shadow`, `components.Controls.shadow` | A drop shadow: `{ x, y, blur, color }`, how far it falls across and down, how far it blurs, and its color | none (`transparent`, blur 0) |
-| `components.EventPanel.glow.y`, `.blur`, `.opacity` | The glow in the game's color along the event panel's top | 0, 0, 0 (none) |
+| `components.EventPanel.glow.y`, `.blur`, `.opacity` | The glow in the event's color along the event panel's top | 0, 0, 0 (none) |
 | `components.Hover.card.borderWidth`, `.solid` | A hovered score card's border width, and whether it frosts over fully (see [Hover](#hover)) | 2.5, on |
-| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its game's color, 0 to 1, at a frost of 1: the tint clears with the card's glass (see [Glass](#glass)). The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
+| `components.ScoreCard.header.tint` | How strongly a score card's header is tinted with its event's color, 0 to 1, at a frost of 1: the tint clears with the card's glass (see [Glass](#glass)). The header's text is the card's text or its fill, whichever reads better on the tint | 0.28 |
 | `components.ScoreCard.header.letterSpacing` | How far apart the letters of a score card's header line are spaced, in ems | 0.06 |
 | `components.Controls.off.opacity` | How opaque a speed key that's off, a rail button that can't be used (zoom at its limit) and "Reset colors" with no colors to reset are, 0 to 1 (a speed key that's on, or under the pointer, is opaque) | 0.6 |
 | `components.LoadingScreen.dim.opacity` | How opaque the cut-off note's dim is over the globe, 0 to 1 (the loading screen is solid) | 0.6 |
@@ -402,11 +402,11 @@ The user picked this look, variant D of four prototyped on November 21, 2026 wit
 | `components.EventPanel.size.logo` | A team's logo | 28 |
 | `components.EventPanel.size.close.width`, `.height` | The close button, in the panel's top right corner | 30, 26 |
 | `components.EventPanel.size.scoreWidth` | A team's score box at its narrowest, in ems of its digits: wide enough for three, so a score of 100 moves nothing. A longer score (cricket's "170/6") widens every row's box alike | 2.6 |
-| `components.EventPanel.size.clock.large`, `.small` | The game clock's time over the venue's photo: large on a desktop while it runs; small on a phone, and for a period, a start time or a final result in its place | 30, 22 |
+| `components.EventPanel.size.clock.large`, `.small` | The event clock's time over the venue's photo: large on a desktop while it runs; small on a phone, and for a period, a start time or a final result in its place | 30, 22 |
 | `components.ScoreCard.size.minWidth` | A score card's base minimum width. ScoreMap gives pinnable cards three extra pixels in the dark theme to fit the header beside the pushpin | 64 |
 | `components.ScoreCard.size.logo` | A team's logo on a score card | 12 |
 | `components.ScoreCard.size.venueGap` | How far above its venue a score card sits, and how near it may come when moved aside, its trail between (the globe places cards by this) | 16 |
-| `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for a game (its outline included; the globe lays cards out by this) | 4 |
+| `components.ScoreCard.size.nameClearance` | How far score cards keep clear of the letters of a city named for an event (its outline included; the globe lays cards out by this) | 4 |
 | `components.Rail.size.button`, `.icon` | A button on the rail, and its icon | 36, 18 |
 | `components.Rail.size.mapType` | Each map's picture in Display Settings' Map type, square: a tile of the satellite map's imagery, and the plain map drawn small in the globe's land, sea, coastline and border colors | 64 |
 | `components.Rail.size.width`, `.allLeagues` | A popover's width (on a phone, all the width left of the rail) and the Feedback panel's, the "All leagues" chip's height | 320, 32 |
@@ -481,7 +481,7 @@ Some of the look is in code on purpose, as behavior or layout rather than a them
 - layout: line heights, percentages, and slots sized in lines (`lh`, such as the event panel's room for two lines of a venue);
 - score card and pin footprints, card layout distances (`cardLayout.ts`), how far the selected pin's ring reaches, and where a city's name sits from its dot (`cityNameOffset` in `placeNames.ts`, 1 em) and where it wraps (as the base map style has them);
 - that a glow on the globe (a small pin's or a card cluster's) fades out all the way to its edge (`circle-blur: 1`): how far it reaches and how strongly it glows are the theme's;
-- the hot indicator's drawing: its gradients, and its highlights' pace (see [The hot games indicator](#the-hot-games-indicator));
+- the hot indicator's drawing: its gradients, and its highlights' pace (see [The hot event indicator](#the-hot-event-indicator));
 - icons' drawings: their shapes and line widths, in the units of their own `viewBox`, which the CSS sizes to the theme's sizes;
 - which kinds of place are named in capitals (states and countries);
 - that a text box is at least 16px on a touch screen, so Safari on an iPhone doesn't zoom the page in on focusing it;

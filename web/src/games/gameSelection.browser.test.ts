@@ -305,7 +305,7 @@ const details: GameDetails = {
 }
 
 async function clickTv() {
-  const button = container.querySelector<HTMLButtonElement>('button[aria-label="Watch and game info"]')!
+  const button = container.querySelector<HTMLButtonElement>('button[aria-label="Watch and event info"]')!
   await act(async () => button.click())
 }
 
@@ -338,7 +338,7 @@ it('loads details on opening a tab and collapses them without closing the game',
   expect(video.target).toBe('_blank')
   expect(fetchDetails).toHaveBeenCalledTimes(1)
 
-  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Minimize game details"]')!
+  const collapse = container.querySelector<HTMLButtonElement>('button[aria-label="Minimize event details"]')!
   await act(async () => collapse.click())
   expect(pane().closest('[inert]')).not.toBeNull()
   expect(document.activeElement).toBe(tab('Videos'))

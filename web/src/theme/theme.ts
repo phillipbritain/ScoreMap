@@ -597,7 +597,7 @@ const settings = {
       size: { button: pixels, icon: pixels, width: pixels, allLeagues: pixels, countWidth: ems, mapType: pixels },
     },
     /**
-     * The scenario pill, the speed keys, the scenario clock and the "No games right now." message: their
+     * The scenario pill, the speed keys, the scenario clock and the "No events right now." message: their
      * surface and drop shadow, a speed key that's on, and how opaque one that's off is. A control's
      * corners (the scenario pill and clock, the speed keys, league chips) and the message's. Its size: a
      * speed key and its icon. They're solid, not glass (ADR-0023).

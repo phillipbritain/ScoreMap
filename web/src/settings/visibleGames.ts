@@ -30,8 +30,8 @@ export function noPinsMessage(
   settings: ViewerSettings,
 ): string | null {
   if (games === null || visible.length > 0) return null
-  if (games.length === 0) return 'No games right now.'
+  if (games.length === 0) return 'No events right now.'
   return settings.topEventsOnly && !games.some((game) => game.topEvent)
     ? 'No top events right now.'
-    : 'No games match your settings.'
+    : 'No events match your settings.'
 }

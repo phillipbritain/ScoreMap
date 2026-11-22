@@ -31,7 +31,7 @@ interface TourPointerProps {
    * of the event panel, so the room doesn't take in the panel's parts beside it.
    */
   flush?: boolean
-  /** Whether the spotlight is ringed in the theme's Live color, to call attention to a target that would otherwise blend in (Game details' tabs). */
+  /** Whether the spotlight is ringed in the theme's Live color, to call attention to a target that would otherwise blend in (Event details' tabs). */
   ringed?: boolean
 }
 

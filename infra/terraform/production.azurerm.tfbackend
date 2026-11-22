@@ -1,0 +1,3 @@
+storage_account_name = "scoremaptfstate6e8a"
+container_name       = "tfstate"
+key                  = "scoremap/production.tfstate"

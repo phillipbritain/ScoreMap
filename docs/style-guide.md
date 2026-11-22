@@ -309,6 +309,8 @@ The page's text is one font family, `typography.fontFamily`, in **type styles**,
 
 Text on the globe is drawn in other fonts (see [Text on the globe](#text-on-the-globe)), but its sizes are type styles' sizes.
 
+In the Events list, matchup names use `caption` at `button` weight, with a smaller `vs` in `small` size and `text.secondary`. Event titles without a matchup use plain `caption`. This was variant D of the comparison preserved on `phillipbritain/event-list-text-prototype` at `28dfa88`.
+
 ## Spacing and shape
 
 - **`spacing`**: the spacing unit, in pixels: every padding, margin and gap on the page is a number of them, as MUI's `theme.spacing(n)` gives one. The CSS writes `calc(3 * var(--spacing))`. Cards stay tight on a unit or less and panels roomy on more, from the same unit. The dark theme's is 4, so its spaces are 1, 2, 3, 4, 6, 8, 12, 16, 24 and 32 pixels (a quarter of a unit to 8).

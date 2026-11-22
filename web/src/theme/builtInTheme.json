@@ -155,6 +155,11 @@
       "corner": 2,
       "cutCorner": { "on": false, "size": 4 },
       "logo": { "plate": { "fill": "offWhite.500", "padding": 1, "corner": 1 } },
+      "watch": {
+        "backdrop": { "blur": 2, "opacity": 0.46 },
+        "tile": { "size": 112, "tint": 0.06, "outline": 0.1 },
+        "logo": { "width": 90, "height": 24 }
+      },
       "size": {
         "width": 900,
         "height": 128,

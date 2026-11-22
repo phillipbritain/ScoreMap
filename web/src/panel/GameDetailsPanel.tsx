@@ -1,65 +1,57 @@
-import { useId, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
-import type { Game, GameSides, GameTeam, GameVenue } from '../games/game'
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import type { Game, GameSides, GameTeam } from '../games/game'
 import { sidesTopFirst } from '../games/sides'
 import { TeamLogoImage } from '../games/TeamLogoImage'
 import { RailIcon } from '../rail/railIcons'
-import { mapsSearchUrl, venuePlace } from './venuePlace'
+import { anchorWatchDialog, isWatchBackdrop } from './watchDialog'
 import type { GameDetails, GameDrive, GameScoringPlay, GameStatTeam, GameVideo } from './gameDetails'
 import './gameDetailsPanel.css'
 
 type DetailTab = 'Score' | 'Scoring' | 'Drives' | 'Stats' | 'Videos'
 
-/**
- * The TV button, and the Where to watch dialog it opens: a tile for each network showing the game, its
- * links (children, each a tile), and the venue over its photo (photo, when shown), linking to the map,
- * with when the game starts.
- */
-export function WatchInfo({ game, photo, details, failed, onToggle, children }: {
-  game: Game
-  /** The venue's photo as the panel shows it; none when there isn't one or photos are switched off. */
-  photo: string | null
+/** The TV button and its dialog with broadcast networks and watch links. */
+export function WatchInfo({ details, failed, onToggle, children }: {
   details: GameDetails | null
   failed: boolean
   onToggle: (open: boolean) => void
   children: ReactNode
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
-  const title = useId()
+  const pressedBackdrop = useRef(false)
   const networks = details?.broadcasts ?? []
+  useLayoutEffect(() => {
+    if (dialog.current) return anchorWatchDialog(dialog.current)
+  }, [])
+
   return (
     <>
-      <button type="button" className="game-details-tv" aria-label="Watch and event info" data-tooltip="Watch and event info" aria-haspopup="dialog" onClick={() => {
-        dialog.current?.showModal()
-        onToggle(true)
-      }}>
+      <button type="button" className="game-details-tv" aria-label="Watch and event info" data-tooltip="Watch and event info"
+        aria-haspopup="dialog" onClick={(event) => {
+          // Pointer dismissal doesn't return focus to the trigger. Keyboard dismissal does.
+          if (event.detail > 0) event.currentTarget.blur()
+          dialog.current?.showModal()
+          onToggle(true)
+        }}>
         <TvIcon className="game-details-tv-icon" />
       </button>
-      <dialog ref={dialog} className="game-details-dialog" aria-labelledby={title} onClose={() => onToggle(false)}
-        onKeyDown={(event) => { if (event.key === 'Escape') event.stopPropagation() }}>
-        <div className="game-details-dialog-heading">
-          <div>
-            <div className="game-details-section-title">{game.league}</div>
-            <h2 id={title}>Where to watch</h2>
-          </div>
-          <button type="button" className="game-details-dialog-close" aria-label="Close watch and event info" onClick={() => dialog.current?.close()}>
-            <RailIcon className="game-details-dialog-close-icon"><path d="M6 6l12 12M18 6 6 18" /></RailIcon>
-          </button>
-        </div>
+      <dialog ref={dialog} className="game-details-dialog" aria-label="Where to watch" onClose={() => onToggle(false)}
+        onKeyDown={(event) => { if (event.key === 'Escape') event.stopPropagation() }}
+        onPointerDown={(event) => { pressedBackdrop.current = event.button === 0 && isWatchBackdrop(event) }}
+        onClick={(event) => {
+          if (pressedBackdrop.current && isWatchBackdrop(event)) event.currentTarget.close()
+          pressedBackdrop.current = false
+        }}>
+        <button type="button" className="game-details-dialog-close" aria-label="Close watch and event info" onClick={() => dialog.current?.close()}>×</button>
         <div className="game-details-tiles">
-          {networks.length
-            ? networks.map((network) => (
-                <div key={network} className="game-details-tile">
-                  <TvIcon className="game-details-tile-icon" /><strong>{network}</strong><span>TV</span>
-                </div>
-              ))
-            : (
-                <div className="game-details-tile">
-                  <TvIcon className="game-details-tile-icon" />
-                  <DetailsMessage details={details} failed={failed}>No broadcast network listed.</DetailsMessage>
-                </div>
-              )}
+          <div className="game-details-tile">
+            <div className="game-details-tv-label"><TvIcon className="game-details-tile-icon" /><span>TV</span></div>
+            {networks.length ? (
+              <ul className="game-details-networks" aria-label="Broadcast networks">
+                {networks.map((network) => <li key={network}>{network}</li>)}
+              </ul>
+            ) : <DetailsMessage details={details} failed={failed}>No broadcast network listed.</DetailsMessage>}
+          </div>
           {children}
-          <VenueTile venue={game.venue} photo={photo} startTime={game.startTime} />
         </div>
       </dialog>
     </>
@@ -68,21 +60,6 @@ export function WatchInfo({ game, photo, details, failed, onToggle, children }: 
 
 function TvIcon({ className }: { className: string }) {
   return <RailIcon className={className}><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></RailIcon>
-}
-
-/** The venue's tile, the width of the dialog, over its photo: its name and place, and when the game starts. */
-function VenueTile({ venue, photo, startTime }: { venue: GameVenue; photo: string | null; startTime: string }) {
-  const place = venuePlace(venue)
-  const start = new Date(startTime).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-  return (
-    <a className="game-details-tile game-details-tile--venue" href={mapsSearchUrl([venue.name, place].filter(Boolean).join(', '))}
-      target="_blank" rel="noopener noreferrer" style={photo ? { '--game-details-venue-photo': `url("${photo}")` } as CSSProperties : undefined}>
-      <RailIcon className="game-details-tile-icon"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></RailIcon>
-      <strong>{venue.name ?? 'Unknown venue'}</strong>
-      {place && <span>{place}</span>}
-      <span>{start}</span>
-    </a>
-  )
 }
 
 export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle, onTabOpened }: {

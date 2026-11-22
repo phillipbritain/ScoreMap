@@ -564,6 +564,7 @@ body {
    would cover keeps clear of it (see .event-panel__venue, and on a phone .event-panel__league). A welcome
    tour panel's × is the same, in its own top right corner. */
 .event-panel__close,
+.game-details-dialog-close,
 .welcome-tour__close,
 .rail__popover-close {
   position: absolute;
@@ -585,6 +586,7 @@ body {
 }
 
 .event-panel__close:hover,
+.game-details-dialog-close:hover,
 .welcome-tour__close:hover,
 .rail__popover-close:hover {
   color: var(--palette-text-primary);

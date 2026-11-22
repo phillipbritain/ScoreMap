@@ -142,7 +142,7 @@
   color: var(--palette-text-secondary);
 }
 
-/* A category's name (Passing, Batting) and the league over the Where to watch dialog's title. */
+/* A category's name (Passing, Batting). */
 .game-details-section-title {
   margin: 0 0 var(--spacing);
   color: var(--palette-text-secondary);
@@ -425,89 +425,81 @@
   font-size: var(--typography-caption-font-size);
 }
 
-/* The Where to watch dialog: a tile for each network, each link and the venue. */
+/* Where to watch fits its broadcast tile and available links, centered over the event panel. */
 .game-details-dialog {
+  --watch-dialog-inline-padding: calc(5 * var(--spacing));
+  position: fixed;
+  inset: var(--watch-dialog-top, 0) auto auto var(--watch-dialog-left, 0);
   box-sizing: border-box;
-  width: min(460px, calc(100% - 6 * var(--spacing)));
+  margin: 0;
+  width: max-content;
+  max-width: min(
+    calc(3 * var(--event-panel-watch-tile-size) + 2 * var(--watch-dialog-inline-padding) + 4 * var(--spacing) + 2 * var(--shape-border-width-thin)),
+    calc(100% - 6 * var(--spacing))
+  );
   max-height: 80dvh;
   overflow: auto;
   touch-action: pan-x pan-y;
-  padding: calc(5 * var(--spacing));
-  border: 1px solid color-mix(in srgb, var(--palette-text-primary) 14%, transparent);
-  border-radius: calc(4 * var(--shape-border-radius));
+  padding: calc(var(--event-panel-size-close-height) + var(--spacing)) var(--watch-dialog-inline-padding) calc(5 * var(--spacing));
+  border: var(--shape-border-width-thin) solid color-mix(in srgb, var(--palette-text-primary) 14%, transparent);
+  border-radius: var(--event-panel-corner);
   background: var(--event-panel-surface-bottom);
   color: var(--palette-text-primary);
-  text-align: left;
+  text-align: center;
   text-shadow: none;
   box-shadow: 0 24px 60px color-mix(in srgb, var(--palette-background-default) 80%, transparent);
 }
 
 .game-details-dialog::backdrop {
-  background: color-mix(in srgb, var(--palette-background-default) 60%, transparent);
-  backdrop-filter: blur(6px);
+  background: color-mix(in srgb, var(--palette-background-default) calc(var(--event-panel-watch-backdrop-opacity) * 100%), transparent);
+  backdrop-filter: blur(var(--event-panel-watch-backdrop-blur));
 }
 
-.game-details-dialog-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(3 * var(--spacing));
-  margin-bottom: calc(4 * var(--spacing));
+/* A touch browser can retain hover on the backdrop's opening click. */
+.game-details-tv:has(+ .game-details-dialog[open]) {
+  background: var(--event-panel-surface-bottom);
+  outline: none;
 }
 
-.game-details-dialog-heading .game-details-section-title {
-  margin-bottom: 2px;
-}
-
-.game-details-dialog h2 {
-  margin: 0;
-  font-size: var(--typography-h6-font-size);
-  font-weight: 800;
-}
-
-.game-details-dialog-close {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--palette-text-primary) 10%, transparent);
+.game-details-dialog .game-details-dialog-close:focus-visible {
+  outline: none;
   color: var(--palette-text-primary);
-  cursor: pointer;
-}
-
-.game-details-dialog-close:hover {
-  background: color-mix(in srgb, var(--palette-text-primary) 18%, transparent);
-}
-
-.game-details-dialog-close-icon {
-  width: 16px;
-  height: 16px;
 }
 
 .game-details-tiles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: calc(2 * var(--spacing));
 }
 
 .game-details-tile {
   display: grid;
+  box-sizing: border-box;
+  flex: 0 1 auto;
+  width: var(--event-panel-watch-tile-size);
+  max-width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
   align-content: center;
-  justify-items: start;
+  justify-items: center;
   gap: var(--spacing);
-  min-height: 84px;
-  padding: calc(3 * var(--spacing)) calc(3.5 * var(--spacing));
-  border-radius: calc(3.5 * var(--shape-border-radius));
-  background: color-mix(in srgb, var(--palette-text-primary) 6%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--palette-text-primary) 10%, transparent);
+  padding: calc(2 * var(--spacing));
+  border-radius: var(--event-panel-corner);
+  background: color-mix(in srgb, var(--palette-text-primary) calc(var(--event-panel-watch-tile-tint) * 100%), transparent);
+  box-shadow: inset 0 0 0 var(--shape-border-width-thin) color-mix(in srgb, var(--palette-text-primary) calc(var(--event-panel-watch-tile-outline) * 100%), transparent);
   color: var(--palette-text-primary);
   text-decoration: none;
+  overflow-wrap: anywhere;
 }
 
-.game-details-tile span,
+.game-details-tv-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing);
+}
+
+.game-details-tv-label span,
 .game-details-tile p {
   margin: 0;
   color: var(--palette-text-secondary);
@@ -515,54 +507,59 @@
 }
 
 .game-details-tile-icon {
-  width: 22px;
-  height: 22px;
+  width: var(--rail-size-icon);
+  height: var(--rail-size-icon);
   color: var(--game-color);
 }
 
-/* A link's tile: its site's logo on a logo plate. */
-.game-details-tile--link {
-  justify-items: center;
-  background: var(--event-panel-logo-plate-fill);
-}
-
-.game-details-tile--link span {
-  color: var(--event-panel-score-block-top);
+.game-details-networks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: var(--typography-subtitle1-font-weight);
 }
 
 .game-details-tile--link img {
-  max-width: 90px;
-  max-height: 24px;
+  width: 100%;
+  max-width: var(--event-panel-watch-logo-width);
+  height: var(--event-panel-watch-logo-height);
+  object-fit: contain;
 }
 
 .game-details-tile--link .event-panel__stream-logo {
   border-radius: var(--shape-border-radius);
 }
 
+/* Lift the red in the supplied ESPN wordmark for a dark tile. */
+.game-details-tile--link .event-panel__espn-logo {
+  filter: saturate(.68) brightness(1.45);
+}
+
 a.game-details-tile:hover {
   filter: brightness(1.08);
 }
 
-.game-details-tile:focus-visible,
-.game-details-dialog-close:focus-visible {
-  outline: 2px solid var(--game-color);
-  outline-offset: 2px;
-}
-
-/* The venue's tile, the dialog's width, its photo fading in from the right. */
-.game-details-tile--venue {
-  grid-column: 1 / -1;
-  min-height: 96px;
-  background:
-    linear-gradient(90deg,
-      var(--event-panel-surface-bottom) 35%,
-      color-mix(in srgb, var(--event-panel-surface-bottom) 55%, transparent) 65%,
-      color-mix(in srgb, var(--event-panel-surface-bottom) 20%, transparent)),
-    var(--game-details-venue-photo, none) center / cover,
-    color-mix(in srgb, var(--palette-text-primary) 6%, transparent);
+.game-details-tile:focus-visible {
+  outline: var(--shape-border-width-medium) solid var(--game-color);
+  outline-offset: var(--shape-border-width-medium);
 }
 
 @media (max-width: 960px) and (orientation: portrait), (max-width: 960px) and (min-height: 501px) {
+  .game-details-dialog {
+    --watch-dialog-inline-padding: calc(4.5 * var(--spacing));
+    max-width: 100%;
+    padding-block-end: calc(4 * var(--spacing));
+  }
+
+  /* Keep three tiles in a row when there is room for their padding and two gaps. */
+  .game-details-tiles:has(> :nth-child(3)) .game-details-tile {
+    width: clamp(
+      calc(22 * var(--spacing)),
+      calc((100vw - 2 * var(--watch-dialog-inline-padding) - 2 * var(--shape-border-width-thin) - 4 * var(--spacing)) / 3),
+      var(--event-panel-watch-tile-size)
+    );
+  }
+
   /* The tabs' room set outright, not left to the sheet's grid: Safari on an iPhone can briefly measure
      the last row at its least while the globe moves, and the tabs would jump up. */
   .game-details {

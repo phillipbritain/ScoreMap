@@ -560,6 +560,11 @@ const settings = {
       corner,
       cutCorner: { on: onOff, size: spaces },
       logo: { plate: logoPlate },
+      watch: {
+        backdrop: { blur: pixels, opacity },
+        tile: { size: pixels, tint: opacity, outline: opacity },
+        logo: { width: pixels, height: pixels },
+      },
       size: {
         width: pixels,
         height: pixels,

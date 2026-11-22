@@ -273,10 +273,8 @@ it("links the panel to a game's StreamEast stream and ESPN page, and has no link
     streamLinks: [{ site: 'StreamEast', url: 'https://streameast.test/nfl/game/1' }],
     espnUrl: 'https://www.espn.com/nfl/game/_/gameId/1',
   }
-  // The game's own links; the venue's tile links to the map whatever the game has.
-  const links = () => [...document.querySelectorAll<HTMLAnchorElement>('dialog[open] a')].map((a) => a.href)
-    .filter((href) => !href.startsWith('https://www.google.com/maps'))
-  vi.stubGlobal('fetch', vi.fn(async () => Response.json(details)))
+  const links = () => [...container.querySelectorAll<HTMLAnchorElement>('dialog[open] a')].map((a) => a.href)
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ...details, broadcasts: ['ESPN2', 'FOX'] })))
   await show([game('N'), linked])
 
   await open('N')
@@ -288,8 +286,39 @@ it("links the panel to a game's StreamEast stream and ESPN page, and has no link
   expect(links()).toEqual([])
   await clickTv()
   expect(links()).toEqual(['https://streameast.test/nfl/game/1', 'https://www.espn.com/nfl/game/_/gameId/1'])
-  expect(container.querySelector('dialog[open]')?.textContent).toContain('ESPN2')
-  expect(document.querySelector<HTMLAnchorElement>('dialog[open] a[href^="https://www.google.com/maps"]')).not.toBeNull()
+  expect([...container.querySelectorAll('dialog[open] ul')].map((list) => [...list.children].map((network) => network.textContent)))
+    .toEqual([['ESPN2', 'FOX']])
+})
+
+it('dismisses the TV dialog on a backdrop click and restores trigger focus only after keyboard opening', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json(details)))
+  await show([game('A')])
+  await open('A')
+  const trigger = container.querySelector<HTMLButtonElement>('.game-details-tv')!
+  const dialog = container.querySelector<HTMLDialogElement>('.game-details-dialog')!
+  const press = async (x: number, y: number) => {
+    const position = { bubbles: true, clientX: x, clientY: y }
+    await act(async () => {
+      dialog.dispatchEvent(new PointerEvent('pointerdown', position))
+      dialog.dispatchEvent(new MouseEvent('click', position))
+    })
+  }
+
+  await act(() => userEvent.click(trigger))
+  expect(dialog.open).toBe(true)
+  expect(dialog.contains(document.activeElement)).toBe(true)
+  const { left, top } = dialog.getBoundingClientRect()
+  await press(left + 2, top + 2)
+  expect(dialog.open).toBe(true)
+  await press(left - 2, top - 2)
+  expect(dialog.open).toBe(false)
+  expect(document.activeElement).not.toBe(trigger)
+  expect(container.querySelector('.event-panel')).not.toBeNull()
+
+  trigger.focus()
+  await userEvent.keyboard('{Enter}{Escape}')
+  expect(dialog.open).toBe(false)
+  expect(document.activeElement).toBe(trigger)
 })
 
 

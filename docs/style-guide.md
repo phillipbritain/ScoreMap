@@ -376,7 +376,9 @@ Sizes that aren't a type style's, a number of spacing units or of corner radii a
 
 ### On the page
 
-The event panel opens with its score, venue and bottom tab bar. The league sits above the scores. The event clock is over the venue's photo: on desktop at its top left, its time in big type under the period in words ("2nd Quarter", see `web/src/panel/panelClock.ts`) and a red dot while it runs; on a phone, smaller, beside the venue. Long names use an ellipsis with the full text on hover or tap. The TV icon opens **Where to watch**: a tile for each broadcast network, a logo tile for each link (StreamEast and ESPN), and the venue over its photo, linking to the map, with the start time. The close button sits in the panel’s upper-right corner.
+The event panel opens with its score, venue and bottom tab bar. The league sits above the scores. The event clock is over the venue's photo: on desktop at its top left, its time in big type under the period in words ("2nd Quarter", see `web/src/panel/panelClock.ts`) and a red dot while it runs; on a phone, smaller, beside the venue. Long names use an ellipsis with the full text on hover or tap. The close button sits in the panel’s upper-right corner.
+
+The TV icon opens **Where to watch**, centered over the event panel. One tile lists the broadcast networks. Logo-only tiles open the event on ESPN and its StreamEast stream when available. The dialog fits the tiles it shows. Close it with the ×, Escape, or a click or tap outside it. The viewer chose the navy tiles and the original tile size from the comparison on the throwaway branch `phillipbritain/tv-panel-prototype`.
 
 On desktop the score block is glass (see [Glass](#glass)), with the venue photo cropped to the area beside its slanted edge. On narrow screens, the photo is behind the score and venue rows, with the same crop while another part of the panel changes height. The photo uses `components.EventPanel.photo.opacity`; a faint glow fills its place when there is no photo. A field’s whole leaderboard is in the score block, a line each, scrolling within its two-line height. A band below the header holds tennis sets or a fight card’s bouts. The panel edge uses `text.primary` at 18%, and when a team scores, its row lights up (see [Where the theme reaches](#where-the-theme-reaches)).
 
@@ -398,6 +400,9 @@ The user picked this look, variant D of four prototyped on November 21, 2026 wit
 | `components.WelcomeTour.choice.topEvents`, `.myLeagues`, `.everything` | The outline of each of Welcome's choices, a color of its own so the three tell apart; it stays on hover, which lights the choice behind | `gold.500`, `navy.300`, `#6dbb8a` (a green outside the theme's colors) |
 | `components.Sky.stars.size.small`, `.large` | The stars in the sky around the globe, small and large | 1, 1.5 |
 | `components.EventPanel.photo.opacity` | How opaque the venue's photo is behind the venue (on a phone, behind the header), 0 to 1 | 0.4 |
+| `components.EventPanel.watch.backdrop.blur`, `.opacity` | How far the area behind the watch dialog blurs and how strongly it dims | 2, 0.46 |
+| `components.EventPanel.watch.tile.size`, `.tint`, `.outline` | A watch tile's width and height when there's room, and how much of the text color is used for its fill and edge | 112, 0.06, 0.1 |
+| `components.EventPanel.watch.logo.width`, `.height` | The largest a watch link's logo can be | 90, 24 |
 | `components.EventPanel.size.width` | The event panel's width at most | 900 |
 | `components.EventPanel.size.height` | The score and venue header’s minimum height on desktop | 128 |
 | `components.EventPanel.size.scoreBlock`, `.slant` | The score block's maximum width (also capped at 42% of the desktop panel), and how far its right edge slants | 504, 16 |

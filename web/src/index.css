@@ -1741,8 +1741,9 @@ body {
   cursor: default;
 }
 
-/* A popover's button, while its popover is open, in the theme's open color (gold). */
-.rail__button[aria-expanded='true'] {
+/* An open popover's button and active Orbit use the theme's open color (gold). */
+.rail__button[aria-expanded='true'],
+.rail__button[aria-pressed='true'] {
   color: var(--rail-open);
 }
 

@@ -84,6 +84,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
   const [loadingScreenGone, setLoadingScreenGone] = useState(false)
   // The app's hold on the globe (its camera, and the score cards the welcome tour points at), and where the camera last settled, for the zoom buttons' limits.
   const globe = useRef<GlobeHandle>(null)
+  const [orbiting, setOrbiting] = useState(false)
   const [viewerSettings, setViewerSettings] = useState(store.load)
   const [scoreCardPins] = useState(pinnedCards)
   // Whether a event panel's details were left open: the next panel opens them the same way, after a
@@ -194,6 +195,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             setCameraNow(moved)
           }}
           onStage={setStage}
+          onOrbitChange={setOrbiting}
           inert={touring}
         />
         {/* Over the globe until it's ready, hiding it. The bottom stack and the rail come after it, out
@@ -252,6 +254,16 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           onZoomIn={() => globe.current?.zoomIn()}
           onZoomOut={() => globe.current?.zoomOut()}
           onHome={() => globe.current?.flyTo(homeCamera(viewerPlace(), zoom))}
+          orbit={{
+            active: orbiting,
+            toggle: () => {
+              if (orbiting) globe.current?.stopOrbit()
+              else {
+                if (selectedGame) closeGame({ restoreFocus: false })
+                globe.current?.startOrbit()
+              }
+            },
+          }}
           touring={touring}
           games={visible}
           scoreCardPins={scoreCardPins}
@@ -268,6 +280,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             })
           }
           onTourAgain={() => {
+            globe.current?.stopOrbit()
             const target = tour.restart()
             globe.current?.flyTo(target)
           }}

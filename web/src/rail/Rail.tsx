@@ -35,6 +35,7 @@ interface RailProps {
   onZoomOut: () => void
   /** Flies the camera back to the viewer's region, at the start zoom (see homeCamera). */
   onHome: () => void
+  orbit?: { active: boolean; toggle: () => void }
   /**
    * Whether the welcome tour shows: only More, its popover and the Feedback panel can be used then, lifted
    * above the tour (see .rail--touring); the rest of the rail can't.
@@ -74,6 +75,7 @@ export function Rail({
   onZoomIn,
   onZoomOut,
   onHome,
+  orbit,
   touring = false,
   games,
   scoreCardPins,
@@ -166,6 +168,17 @@ export function Rail({
             />
           </div>
           <div className="rail__group" inert={touring}>
+            {orbit && (
+              <RailButton
+                label="Orbit"
+                pressed={orbit.active}
+                disabled={!camera}
+                onClick={() => {
+                  setOpen(null)
+                  orbit.toggle()
+                }}
+              />
+            )}
             <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
           </div>
           <div className="rail__group rail__group--more">
@@ -286,6 +299,7 @@ export function RailButton({
   disabled,
   popover,
   open,
+  pressed,
   badge,
   note,
   tooltipSide = 'left',
@@ -295,6 +309,7 @@ export function RailButton({
   disabled?: boolean
   popover?: string
   open?: string | null
+  pressed?: boolean
   badge?: number
   /** Why its corner shows a dot, as words for its name and tooltip; no dot without one. */
   note?: string
@@ -308,11 +323,12 @@ export function RailButton({
       type="button"
       className="rail__button"
       aria-label={badge === undefined ? name : `${name} (${badge})`}
-      data-tooltip={name}
+      data-tooltip={pressed === undefined ? name : pressed ? `Stop ${name}` : `Start ${name}`}
       data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
       aria-expanded={popover ? open === popover : undefined}
+      aria-pressed={pressed}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).

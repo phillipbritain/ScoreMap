@@ -3818,7 +3818,7 @@ body {
 .game-navigation__matchup {
   flex: 1;
   min-width: 0;
-  font-size: calc(var(--typography-body2-font-size) - 0.25 * var(--spacing));
+  font-size: var(--typography-caption-font-size);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

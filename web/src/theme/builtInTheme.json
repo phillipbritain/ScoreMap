@@ -55,7 +55,7 @@
       "city": {
         "color": "navy.200",
         "outline": { "color": "navy.800", "width": 2, "blur": 0.5 },
-        "font": "Open Sans Semibold",
+        "font": "Noto Sans Regular",
         "size": { "4": "caption", "7": "body2", "11": "h6" },
         "letterSpacing": 0,
         "dot": { "radius": 2.25, "ring": 0.75 }
@@ -63,14 +63,14 @@
       "state": {
         "color": "navy.200",
         "outline": { "color": "navy.800", "width": 1.5, "blur": 0.5 },
-        "font": "Open Sans Semibold",
+        "font": "Noto Sans Regular",
         "size": { "3": "footnote", "8": "body2" },
         "letterSpacing": 0.18
       },
       "country": {
         "color": "navy.200",
         "outline": { "color": "navy.800", "width": 2, "blur": 0.5 },
-        "font": "Open Sans Bold",
+        "font": "Noto Sans Bold",
         "size": { "1": "footnote", "4": "body1" },
         "letterSpacing": 0.12
       }
@@ -105,7 +105,7 @@
       "matchPinGlow": true,
       "outlineWidth": 1.5,
       "glowOpacity": 1,
-      "count": { "font": "Open Sans Bold", "size": "small", "color": "#000000" },
+      "count": { "font": "Noto Sans Bold", "size": "small", "color": "#000000" },
       "hotIndicator": { "size": 7.2, "width": 1.5, "opacity": 0.9, "glowOpacity": 0.4 },
       "live": { "opacity": 1 },
       "upcoming": { "opacity": 0.9 },

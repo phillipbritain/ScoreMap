@@ -473,8 +473,8 @@ let measuring: CanvasRenderingContext2D | null | undefined
 
 /**
  * A line's width in a CSS font of `size` pixels, in pixels (see MeasureText). The map writes its fonts
- * from its own glyphs, which the page doesn't have; the browser's fallback sans-serif measures a little
- * wider than Open Sans, which errs on the side of room. A line is as wide as its font is big, so it's
+ * from its own glyphs, which the page doesn't have; the browser measures with a fallback sans-serif if that
+ * font isn’t installed locally. A line is as wide as its font is big, so it's
  * measured at one size and kept, as the same names are measured every frame while the globe moves:
  * on the globe the zoom, and so the size, shifts a little with every move.
  */

@@ -224,11 +224,11 @@ describe('resolveTheme', () => {
 
   it('gives globe text a font of the map’s font server, with the CSS family and weight to measure it by', () => {
     const json = themeJson()
-    json.components.PlaceNames.city.font = 'Open Sans Semibold'
-    json.components.PlaceNames.state.font = 'Metropolis Light Italic'
+    json.components.PlaceNames.city.font = 'Noto Sans Bold'
+    json.components.PlaceNames.state.font = 'Noto Sans Italic'
     const theme = resolved(json)
-    expect(theme.components.PlaceNames.city.font).toEqual({ name: 'Open Sans Semibold', family: 'Open Sans', weight: 600, style: 'normal' })
-    expect(theme.components.PlaceNames.state.font).toEqual({ name: 'Metropolis Light Italic', family: 'Metropolis', weight: 300, style: 'italic' })
+    expect(theme.components.PlaceNames.city.font).toEqual({ name: 'Noto Sans Bold', family: 'Noto Sans', weight: 700, style: 'normal' })
+    expect(theme.components.PlaceNames.state.font).toEqual({ name: 'Noto Sans Italic', family: 'Noto Sans', weight: 400, style: 'italic' })
   })
 
   it('rejects a globe font the map’s font server doesn’t have', () => {
@@ -236,7 +236,7 @@ describe('resolveTheme', () => {
     json.components.PlaceNames.city.font = 'Comic Sans Regular'
     expect(resolveTheme(json)).toEqual({
       ok: false,
-      problems: ['components.PlaceNames.city.font is "Comic Sans Regular", a font fonts.openmaptiles.org doesn’t have (ADR-0006)'],
+      problems: ['components.PlaceNames.city.font is "Comic Sans Regular", a font OpenFreeMap’s Liberty style doesn’t use (ADR-0006)'],
     })
   })
 

@@ -80,7 +80,7 @@ const shown = (value: unknown) => JSON.stringify(value) ?? String(value)
 const globeFont: Setting<GlobeFont> = {
   resolve(value, path, { problems }) {
     const found = globeFonts.get(String(value))
-    if (!found) problems.push(`${path} is "${String(value)}", a font fonts.openmaptiles.org doesn’t have (ADR-0006)`)
+    if (!found) problems.push(`${path} is "${String(value)}", a font OpenFreeMap’s Liberty style doesn’t use (ADR-0006)`)
     return found
   },
 }

@@ -2,7 +2,7 @@
 
 How ScoreMap's look is made, so a theme can be made or changed without reading the code. It describes the theme as built: the settings in [`web/src/theme/theme.ts`](../web/src/theme/theme.ts) and the built-in dark theme, [`web/src/theme/builtInTheme.json`](../web/src/theme/builtInTheme.json). When they and this guide disagree, the code is right and this guide is stale.
 
-The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors events show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from fonts.openmaptiles.org), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
+The decisions behind it: [ADR-0011](adr/0011-themes-as-checked-json-with-a-palette.md) (themes as checked JSON, with colors worked out in OKLCH), [ADR-0014](adr/0014-themes-shaped-like-mui.md) (a theme shaped as MUI's is), [ADR-0012](adr/0012-color-for-league-status-by-glow.md) (color will stand for league; status shows by brightness and glow), [ADR-0017](adr/0017-viewers-pick-the-colors.md) (viewers pick the colors events show in) [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md) (the globe's fonts come from OpenFreeMap), [ADR-0018](adr/0018-surfaces-are-glass.md) (the original glass treatment, which score cards keep) and [ADR-0023](adr/0023-solid-backgrounds-for-panels.md) (solid backgrounds for everything else). The words **theme**, **theme colors**, **palette**, **color job** and **type style** are the glossary's ([`GLOSSARY.md`](../GLOSSARY.md)).
 
 ## Contents
 
@@ -424,20 +424,14 @@ The user picked this look, variant D of four prototyped on November 21, 2026 wit
 
 ## Text on the globe
 
-The globe's text (place names and the count on a pin or card cluster) is drawn by MapLibre from the map's font server, fonts.openmaptiles.org, not from the page's fonts (ADR-0006). A globe font is given by the name the server knows it by, and must be one it has: for a font it lacks, the server answers with a web page rather than an error and the text falls back to a browser font, so checking rejects any other. The fonts it has (listed in `globeFonts`, `web/src/theme/globeFonts.ts`, checked in October 2026):
-
-- **Open Sans**: Light, Light Italic, Regular, Italic, Semibold, Semibold Italic, Bold, Bold Italic, Extra Bold;
-- **Klokantech Noto Sans**: Regular, Italic, Bold (it has no plain "Noto Sans");
-- **Metropolis**: Thin, Extra Light, Light, Regular, Medium, Semi Bold, Bold, Extra Bold, Black, each also Italic.
-
-Each is written in full, family and variant: `"Open Sans Semibold"`, `"Metropolis Black Italic"`.
+MapLibre draws place names and cluster counts with glyphs from OpenFreeMap’s Liberty style. Theme settings accept the font names Liberty uses, listed in [ADR-0006](adr/0006-map-fonts-from-openmaptiles.md).
 
 | Setting | Which text | Dark theme |
 | --- | --- | --- |
-| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Open Sans Semibold`, state `Open Sans Semibold`, country `Open Sans Bold` |
+| `components.PlaceNames.<kind>.font` | A kind of place's name | city `Noto Sans Regular`, state `Noto Sans Regular`, country `Noto Sans Bold` |
 | `components.PlaceNames.<kind>.size` | Its size by zoom: a type style, whose size it takes, at each of some zoom levels (`{ "4": "caption", "11": "h6" }`), growing evenly between them | city `caption` at zoom 4, `body2` at 7, `h6` at 11; state `footnote` at 3 to `body2` at 8; country `footnote` at 1 to `body1` at 4 |
 | `components.PlaceNames.<kind>.letterSpacing` | How far apart its letters are spaced, in ems. State and country names are always in capitals, which want more | city 0, state 0.18, country 0.12 |
-| `components.Cluster.count.font` | The count on a pin or card cluster | `Open Sans Bold` |
+| `components.Cluster.count.font` | The count on a pin or card cluster | `Noto Sans Bold` |
 | `components.Cluster.count.size` | Its size, a type style's | `small` |
 
 ## What checking rejects
@@ -454,7 +448,7 @@ A theme is checked when it's resolved, and every problem is listed, not just the
 - an on or off setting that isn't `true` or `false`, or a font family that's empty;
 - a size by zoom with no zoom levels, or with a zoom level that isn't a number;
 - a dash pattern that isn't two or more lengths from 0 up, or a halo size's share of the globe that isn't a number from 0 up;
-- a globe font fonts.openmaptiles.org doesn't have.
+- a globe font outside the supported OpenFreeMap set.
 
 It doesn't check how a theme looks: whether text reads against its surface, or whether the statuses can be told apart. That's for looking at it running (see [Making or changing a theme](#making-or-changing-a-theme)).
 

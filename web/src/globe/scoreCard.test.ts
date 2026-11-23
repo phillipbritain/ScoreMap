@@ -120,11 +120,15 @@ describe('scoreCard', () => {
       })
     })
 
-    it("shows an entrant's own logo, a NASCAR car's number badge, in place of their flag", () => {
-      const badge = 'https://cf.nascar.com/data/images/carbadges/1/5.png'
-      const [larson, ...rest] = (talladega.contest as GameField).entries
-      const badged: Game = { ...talladega, contest: { kind: 'field', entries: [{ ...larson, logoUrl: badge }, ...rest] } }
-      expect(scoreCard(badged)).toMatchObject({ rows: [{ logoUrl: badge }, { logoUrl: usa }, { logoUrl: usa }] })
+    it("uses a bundled NASCAR badge and falls back to the flag for an unbundled number", () => {
+      const [larson, byron, blaney] = (talladega.contest as GameField).entries
+      const badged: Game = {
+        ...talladega,
+        contest: { kind: 'field', entries: [{ ...larson, carNumber: '5' }, { ...byron, carNumber: '000' }, blaney] },
+      }
+      expect(scoreCard(badged)).toMatchObject({
+        rows: [{ logoUrl: expect.stringMatching(/^\/.*\/5\.png(?:\?|$)/) }, { logoUrl: usa }, { logoUrl: usa }],
+      })
     })
 
     it("shows a golf tournament's top three by name with their scores to par, without their places", () => {

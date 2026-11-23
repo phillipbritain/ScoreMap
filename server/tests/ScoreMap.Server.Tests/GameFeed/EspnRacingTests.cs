@@ -58,7 +58,7 @@ public sealed class EspnRacingTests : IDisposable
         Assert.Equal(Enumerable.Range(1, 40), field.Entries.Select(entrant => entrant.Position));
         Assert.Equal(
             new ProviderEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png",
-                LogoUrl: "https://cf.nascar.com/data/images/carbadges/1/5.png"),
+                CarNumber: "5"),
             field.Entries[0]);
         Assert.Equal("W. Byron", field.Entries[1].ShortName);
     }
@@ -145,7 +145,7 @@ public sealed class EspnRacingTests : IDisposable
     }
 
     [Fact]
-    public async Task A_drivers_logo_is_their_cars_number_badge_from_the_core_api_asked_for_once_per_race()
+    public async Task Car_numbers_come_from_the_core_api_once_per_race()
     {
         var handler = Talladega();
         var provider = ProviderOver(handler);
@@ -154,8 +154,8 @@ public sealed class EspnRacingTests : IDisposable
         var game = Assert.Single(await provider.FetchScoreboardAsync(Nascar, CancellationToken.None));
 
         var field = Assert.IsType<ProviderField>(game.Contest);
-        Assert.Equal(["https://cf.nascar.com/data/images/carbadges/1/5.png", "https://cf.nascar.com/data/images/carbadges/1/24.png"],
-            field.Entries.Take(2).Select(entrant => entrant.LogoUrl));
+        Assert.Equal(["5", "24"],
+            field.Entries.Take(2).Select(entrant => entrant.CarNumber));
         // One for the venue, one for the car numbers, and none on the next poll.
         Assert.Equal(2, handler.Requests.Count(request => request.RequestUri!.AbsoluteUri.StartsWith(CoreEvent, StringComparison.Ordinal)));
     }
@@ -171,9 +171,9 @@ public sealed class EspnRacingTests : IDisposable
         var retried = Assert.Single(await ProviderOver(Talladega()).FetchScoreboardAsync(Nascar, CancellationToken.None));
 
         var leader = Assert.IsType<ProviderField>(game.Contest).Entries[0];
-        Assert.Null(leader.LogoUrl);
+        Assert.Null(leader.CarNumber);
         Assert.Equal("https://a.espncdn.com/i/teamlogos/countries/500/usa.png", leader.FlagUrl);
-        Assert.Equal("https://cf.nascar.com/data/images/carbadges/1/5.png", Assert.IsType<ProviderField>(retried.Contest).Entries[0].LogoUrl);
+        Assert.Equal("5", Assert.IsType<ProviderField>(retried.Contest).Entries[0].CarNumber);
     }
 
     [Fact]

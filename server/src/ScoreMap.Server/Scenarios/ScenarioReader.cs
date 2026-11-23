@@ -162,7 +162,7 @@ public static partial class ScenarioReader
         return ProviderField.TiedByScore(entry.Field.Select((entrant, i) =>
             entrant is null || string.IsNullOrWhiteSpace(entrant.Name) || string.IsNullOrWhiteSpace(entrant.ShortName)
                 ? throw new InvalidDataException($"has entrant {i + 1} with no name or short name")
-                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag, entrant.Score, entrant.Thru, NascarCarBadge.Url(entrant.Car))));
+                : new ProviderEntrant(i + 1, entrant.Name, entrant.ShortName, entrant.Flag, entrant.Score, entrant.Thru, CarNumber: NascarCarNumber.Parse(entrant.Car))));
     }
 
     /// <summary>

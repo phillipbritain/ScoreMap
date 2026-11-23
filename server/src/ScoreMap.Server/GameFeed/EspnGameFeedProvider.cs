@@ -67,7 +67,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
         {
             if ((golf ? ToTournament(e, leagueKey) : ToFieldGame(e, leagueKey)) is not { } fieldGame)
                 return [];
-            // A NASCAR driver's logo is their car's number badge, once the race lists its field.
+            // Read NASCAR car numbers once the race lists its field.
             if (league == NascarCup && fieldGame.Contest is ProviderField { Entries.Count: > 0 })
                 fieldGame = ToFieldGame(e, leagueKey, await CarNumbersAsync(league, fieldGame.Id, cancellationToken))!;
             if (league == IndyCar)
@@ -285,7 +285,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
     /// lap and field are the race's, its id the event's. Its period is the current lap, and its note the
     /// event's name. Its venue is the event's <c>circuit</c> (F1); NASCAR's scoreboard gives none (see
     /// <see cref="EventVenueAsync"/>), and nor does IndyCar's (see <see cref="TrackList"/>). A driver with a
-    /// number in <paramref name="carNumbers"/> (by their id) has their car's badge as their logo.
+    /// number in <paramref name="carNumbers"/> (by their id) carries it for the browser to match to a badge.
     /// </summary>
     private static ProviderGame? ToFieldGame(Event e, string leagueKey, IReadOnlyDictionary<string, string>? carNumbers = null)
     {
@@ -304,7 +304,7 @@ public sealed partial class EspnGameFeedProvider(HttpClient http, TimeProvider c
             .OrderBy(c => c.Order)
             .Select(c => new ProviderEntrant(c.Order!.Value, c.Athlete!.DisplayName!.Trim(),
                 NullIfBlank(c.Athlete.ShortName) ?? c.Athlete.DisplayName.Trim(), c.Athlete.Flag?.Href,
-                LogoUrl: c.Id is not null && carNumbers?.GetValueOrDefault(c.Id) is { } car ? NascarCarBadge.Url(car) : null))
+                CarNumber: c.Id is not null ? NascarCarNumber.Parse(carNumbers?.GetValueOrDefault(c.Id)) : null))
             .ToList();
         return new ProviderGame(
             e.Id,

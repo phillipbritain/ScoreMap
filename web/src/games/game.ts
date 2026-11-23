@@ -115,8 +115,7 @@ export interface GameField {
 /**
  * One of a field: their position (1 for the leader, shared by those tied on score), name, short name
  * ("K. Larson") and their country's flag. In golf, their score to par ("-12", "E", "+3"); null in racing.
- * Their own logo where they have one, shown in place of their flag (see entrantImage): in NASCAR, their
- * car's number in its team's lettering.
+ * Their own logo where they have one. NASCAR entrants carry a car number for the bundled badge.
  */
 export interface GameEntrant {
   position: number
@@ -125,10 +124,20 @@ export interface GameEntrant {
   flagUrl: string | null
   score: string | null
   logoUrl: string | null
+  carNumber?: string | null
 }
 
-/** The image an entrant shows as: their own logo, else their country's flag; null for neither. */
-export const entrantImage = ({ logoUrl, flagUrl }: GameEntrant): string | null => logoUrl ?? flagUrl
+const nascarCupBadges = import.meta.glob<string>('./nascarCupBadges/*.png', {
+  eager: true,
+  query: '?url&no-inline',
+  import: 'default',
+})
+
+/** A bundled car badge, an entrant’s logo, or their country’s flag. */
+export function entrantImage({ carNumber, logoUrl, flagUrl }: GameEntrant): string | null {
+  const badge = carNumber && nascarCupBadges[`./nascarCupBadges/${carNumber}.png`]
+  return badge || (logoUrl ?? flagUrl)
+}
 
 /** An entrant's position as a leaderboard writes it: "2", or "T2" when they share it with another. */
 export function positionText({ position }: GameEntrant, { entries }: GameField): string {

@@ -8,6 +8,7 @@ import {
   withLeagueColor,
   withSportColor,
   withoutColors,
+  type CardPositionPriority,
   type League,
   type ViewerSettings,
 } from '../settings/viewerSettings'
@@ -24,12 +25,17 @@ interface DisplaySettingsProps {
   accent: string
 }
 
+const positionOptions: ReadonlyArray<{ value: CardPositionPriority; label: string }> = [
+  { value: 'venue', label: 'Venue proximity' },
+  { value: 'fewer-adjustments', label: 'Fewer shifts' },
+]
+
 /**
  * The rail's Display Settings popover: an "Only show live events" switch, which hides every Upcoming game
  * (ADR-0029), and a "Display venue photo on Event Panel" switch for the event panel's photo, a "Hot event indicator" switch for the
  * indicator on hot games' score cards, pins and clusters, then, under "Map type", the
  * plain map and satellite imagery to pick between (see MapTypes), then, under "Card count", Fewer, Default and More side by side,
- * the one picked lit (see CardCount), then, under "Card colors", each sport, then its leagues, by name, with a swatch of
+ * the one picked lit (see CardCount), followed by the score card position priority. Under "Card colors", each sport, then its leagues, by name, with a swatch of
  * its games' color, which opens a grid of the colors there are to pick (see pickableColors) under its
  * row, and a control to clear it; a league with no color of its own shows its sport's, marked as
  * taken from the sport. One grid is open at a time. "Reset colors" clears every color.
@@ -72,6 +78,7 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
   const photos = settings.venuePhotos
   const mapTypeHeading = useId()
   const countHeading = useId()
+  const priorityHeading = useId()
   const colorsHeading = useId()
   return (
     <>
@@ -91,7 +98,7 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
       <h3 id={countHeading} className="display-section">
         Card count
       </h3>
-      <div className="card-counts" role="group" aria-labelledby={countHeading}>
+      <div className="display-options" role="group" aria-labelledby={countHeading}>
         {cardCounts.map((count) => (
           <button
             key={count}
@@ -101,6 +108,22 @@ export function DisplaySettings({ leagues, settings, onChange, accent }: Display
             onClick={() => onChange({ ...settings, cardCount: count })}
           >
             {cardCountNames[count]}
+          </button>
+        ))}
+      </div>
+      <h3 id={priorityHeading} className="display-section">
+        Card placement priority
+      </h3>
+      <div className="display-options" role="group" aria-labelledby={priorityHeading}>
+        {positionOptions.map(({ value, label }) => (
+          <button
+            key={value}
+            type="button"
+            className="rail-chip"
+            aria-pressed={settings.cardPositionPriority === value}
+            onClick={() => onChange({ ...settings, cardPositionPriority: value })}
+          >
+            {label}
           </button>
         ))}
       </div>

@@ -36,6 +36,8 @@ export interface ViewerSettings {
   chosenConferences: Readonly<Record<string, readonly string[]>>
   /** How many score cards the globe shows at once where it's busy (see CardCount): Default unless the viewer picked another in Display Settings. */
   cardCount: CardCount
+  /** What to prioritize when laying out score cards as the globe moves. */
+  cardPositionPriority: CardPositionPriority
   /** Whether hot games show their indicator (a glowing orange outline), on their score cards, small pins and clusters: on unless the viewer switched them off in Display Settings. */
   hotEventIndicator: boolean
 }
@@ -54,6 +56,12 @@ export function isCardCount(value: unknown): value is CardCount {
 
 /** Each card count's name, as Display Settings lists it. */
 export const cardCountNames: Record<CardCount, string> = { fewer: 'Fewer', default: 'Default', more: 'More' }
+
+export type CardPositionPriority = 'venue' | 'fewer-adjustments'
+
+export function isCardPositionPriority(value: unknown): value is CardPositionPriority {
+  return value === 'venue' || value === 'fewer-adjustments'
+}
 
 /**
  * The globe's map types: the plain map of borders and place names in the theme's colors, or
@@ -78,6 +86,7 @@ export const firstVisitSettings: ViewerSettings = {
   venuePhotos: true,
   chosenConferences: {},
   cardCount: 'default',
+  cardPositionPriority: 'venue',
   hotEventIndicator: true,
 }
 

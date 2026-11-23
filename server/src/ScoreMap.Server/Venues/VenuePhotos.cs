@@ -22,9 +22,9 @@ public sealed class VenuePhotos
     /// answers found the old way are dropped and each venue is searched for again: 1 preferred ESPN's
     /// outside ("day") photo, 2 its inside ("interior") one, 3 spelled a credit's license the American way,
     /// 4 drops poor photos (small, or satellite and aerial views) and prefers Wikidata's inside ones, and 5
-    /// takes another league's ESPN photo of the venue when the game's league has none.
+    /// takes another league's ESPN photo of the venue when the game's league has none. 6 uses only ESPN.
     /// </summary>
-    private const int SavedFileVersion = 5;
+    private const int SavedFileVersion = 6;
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { WriteIndented = true };
 

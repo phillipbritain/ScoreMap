@@ -114,13 +114,13 @@ public class VenuePhotoTests
     }
 
     [Fact]
-    public async Task Photos_saved_before_poor_photos_were_dropped_are_searched_for_again()
+    public async Task Photos_saved_before_the_switch_to_espn_only_are_searched_for_again()
     {
-        // A file as saved before poor photos (small, or from the air) were dropped: version 3, its photo a satellite view.
+        // A version 5 file with a Commons photo from the old fallback.
         var savedPhotos = Path.Combine(Path.GetTempPath(), $"scoremap-photos-{Guid.NewGuid():N}.json");
         await File.WriteAllTextAsync(savedPhotos, """
-            {"version":3,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://photos.test/arrowhead-satellite.png",
-              "credit":{"author":"NASA World Wind","license":"Public domain","licenseUrl":null,"sourceUrl":"https://photos.test/page"}}}}
+            {"version":5,"photos":{"GEHA Field at Arrowhead Stadium, Kansas City":{"url":"https://upload.wikimedia.org/arrowhead.jpg",
+              "credit":{"author":"Photographer","license":"CC BY-SA","licenseUrl":null,"sourceUrl":"https://photos.test/page"}}}}
             """, TestContext.Current.CancellationToken);
         try
         {

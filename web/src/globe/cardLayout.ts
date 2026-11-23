@@ -1,5 +1,5 @@
 import type { GameStatus } from '../games/game'
-import type { CardCount } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority } from '../settings/viewerSettings'
 import { cardJump } from './cardJump'
 import type { ScreenBox } from './cityNameBox'
 import { routeTrails, untangle, type TrailExit } from './crowdTrails'
@@ -46,6 +46,8 @@ export interface CardScene {
    * they were while it's still (see layOutCards); trails keep their routes as it goes (see routeTrails).
    */
   cameraMoving?: boolean
+  /** How to choose a spot for a score card, defaulting to proximity to its venue. */
+  cardPositionPriority?: CardPositionPriority
   /**
    * The most cards with room at once (see mostCards): the rest, least worth watching, are counted in
    * card clusters. No limit, unless given.
@@ -314,7 +316,13 @@ function placeCards(cards: readonly ScreenCard[], scene: CardScene, previous: Re
   const withRoom = boxes
     .filter((box) => shifts.has(box.gameId))
     .sort((a, b) => a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
-    .map((box) => ({ ...box, x: box.x + shifts.get(box.gameId)!.dx, y: box.y + shifts.get(box.gameId)!.dy, moved: isMoved(shifts.get(box.gameId)), locked: Boolean(box.locked) }))
+    .map((box) => ({
+      ...box,
+      x: box.x + shifts.get(box.gameId)!.dx,
+      y: box.y + shifts.get(box.gameId)!.dy,
+      moved: isMoved(shifts.get(box.gameId)),
+      locked: Boolean(box.locked || (scene.cardPositionPriority === 'fewer-adjustments' && box.previous)),
+    }))
   const venues = boxes.map(({ venueX, venueY }) => ({ x: venueX, y: venueY }))
   // Only once the camera is still: handing cards round as it moves would have them swap places as it goes.
   const cameraMoving = scene.moving === true || scene.cameraMoving === true
@@ -544,6 +552,7 @@ function trailLength({ width, height, x, y, venueX, venueY }: Omit<CardBox, 'gam
  * all look.
  */
 function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen: CardScene): Arrangement {
+  const fewerAdjustments = screen.cardPositionPriority === 'fewer-adjustments'
   const boxes = [...cards].sort((a, b) => Number(Boolean(b.locked)) - Number(Boolean(a.locked)) ||
     a.rank - b.rank || (a.gameId < b.gameId ? -1 : a.gameId > b.gameId ? 1 : 0))
   const looking = screen.moving
@@ -727,10 +736,25 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
       return clearOf.cards.every((other) => !crosses(own, other.x, other.y, other.width / 2 + gap, other.height / 2 + gap))
     }
 
-    // Where a moved card was last time will do while it fits, give or take the drift, trails or not,
-    // so a trail edging across a card doesn't send it elsewhere.
-    const wasMoved = isMoved(card.previous)
-    const previous = !counted && wasMoved && fits(card.previous!, drift) ? card.previous : undefined
+    const oldSpot = card.previous
+    const wasMoved = isMoved(oldSpot)
+    const previous = !counted && wasMoved && fits(oldSpot, drift) ? oldSpot : undefined
+    if (fewerAdjustments && !counted && oldSpot) {
+      if (previous || (!wasMoved && fits(oldSpot, drift))) {
+        place(card, oldSpot)
+        continue
+      }
+      // The old position no longer fits. Minimize how far the card moves using the same places and
+      // clearance checks as the usual venue-first search.
+      markTakenSpots()
+      const closest = closestTo(oldSpot, spotsFor(card), spotFits, fits(unmovedSpot) ? unmovedSpot : undefined)
+      if (closest) place(card, closest)
+      else {
+        lookedAgo.set(card.gameId, 0)
+        cluster(card)
+      }
+      continue
+    }
 
     // Where it would sit, if that's clear (give or take the drift, if it sat there last time); or else
     // the nearest spot clear of trails, while it's little further than the nearest spot at all.
@@ -776,6 +800,23 @@ function arrange(cards: readonly CardBox[], names: readonly ScreenBox[], screen:
     cluster(card)
   }
   return { shifts, cardClusters, lookedAgo }
+}
+
+function closestTo(
+  previous: ScreenOffset,
+  candidates: readonly Spot[],
+  fits: (offset: ScreenOffset) => boolean,
+  closest: ScreenOffset | undefined,
+): ScreenOffset | undefined {
+  const distanceSquared = ({ dx, dy }: ScreenOffset) => (dx - previous.dx) ** 2 + (dy - previous.dy) ** 2
+  let bestDistance = closest ? distanceSquared(closest) : Infinity
+  for (const candidate of candidates) {
+    const distance = distanceSquared(candidate)
+    if (distance >= bestDistance || !fits(candidate)) continue
+    bestDistance = distance
+    closest = candidate
+  }
+  return closest
 }
 
 /** One way across the screen: where a card is along it, how far it was moved, and how big it is. */

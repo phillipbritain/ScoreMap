@@ -59,9 +59,10 @@ export function useGameSelection(games: readonly Game[], selection?: GameSelecti
     }
   }, [selectedGameId, setSelectedGameId])
 
-  const closeGame = useCallback(() => {
+  const closeGame = useCallback(({ restoreFocus = true } = {}) => {
     setSelectedGameId(null)
-    returnFocus()
+    if (restoreFocus) returnFocus()
+    else origin.current = null
   }, [returnFocus, setSelectedGameId])
 
   return { selectedGame, panel, selectGame, closeGame }

@@ -11,7 +11,7 @@ import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
-import type { CardCount, MapType } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
@@ -25,6 +25,7 @@ import { traceLayouts } from './layoutTrace'
 import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
 import type { ScreenBox } from './panelClearance'
+import { Orbit } from './orbit'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import type { PinnedCards } from '../games/pinnedCards'
 import { cardPinMenu } from './cardPinMenu'
@@ -74,6 +75,7 @@ export interface GlobeMapOptions {
   mapType?: MapType
   /** How many score cards show at once where it's busy, to start with (see mostCards): Default unless given. It changes with setCardCount. */
   cardCount?: CardCount
+  cardPositionPriority?: CardPositionPriority
   scoreCardPins?: PinnedCards
   /**
    * How far out and in the globe zooms to start with: the app's own for a laptop unless given. They
@@ -86,6 +88,7 @@ export interface GlobeMapOptions {
   onSelect: (gameId: string) => void
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
+  onOrbitChange?: (active: boolean) => void
   /**
    * Called each time the stage moves on (see stage): to drawing, then to ready, or an initial style error. Until
    * ready, the globe takes no keyboard input (the loading screen's dim takes the pointer's and touch).
@@ -141,6 +144,7 @@ export class GlobeMap {
   private pins: PinSource | null = null
   private selectedGameId: string | null = null
   private readonly moves: CameraMoves
+  private readonly orbit: Orbit
   /** The furthest in the globe zooms (see fittedZoomSettings), which changes with setZoomLimits. */
   private maxZoom: number
   private destroyed = false
@@ -151,7 +155,7 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', scoreCardPins, zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', cardPositionPriority = 'venue', scoreCardPins, zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onOrbitChange, onStage }: GlobeMapOptions,
   ) {
     this.colors = colors
     this.hotIndicator = hotIndicator
@@ -215,9 +219,13 @@ export class GlobeMap {
         this.hotIndicatorOf,
         this.names,
         this.trails,
-        (gameId) => this.onSelect(gameId),
+        (gameId) => {
+          this.stopOrbit()
+          this.onSelect(gameId)
+        },
         this.settling,
         cardCount,
+        cardPositionPriority,
         scoreCardPins,
       )
       if (scoreCardPins) this.stopCardPinMenu = cardPinMenu(container, scoreCardPins)
@@ -232,6 +240,13 @@ export class GlobeMap {
           this.pins?.select(gameId)
         },
       })
+      this.orbit = new Orbit(
+        map,
+        () => Array.from(this.shown.values(), (game) => game.venue),
+        (active) => onOrbitChange?.(active),
+      )
+      container.addEventListener('pointerdown', this.stopOrbit, true)
+      container.addEventListener('wheel', this.stopOrbit, { capture: true, passive: true })
       drawHotIndicatorsOnDemand(map)
 
       map.on('style.load', this.addPins)
@@ -298,6 +313,7 @@ export class GlobeMap {
 
   /** Picks a game from the Games list, opening its panel before centering it above the panel. */
   pickGame(gameId: string, panel: ScreenBox | null): void {
+    this.stopOrbit()
     this.moves.pickGame(gameId, panel)
   }
 
@@ -363,6 +379,10 @@ export class GlobeMap {
   setCardCount(count: CardCount): void {
     this.unsettle()
     this.cards.setCardCount(count)
+  }
+
+  setCardPositionPriority(priority: CardPositionPriority): void {
+    this.cards.setCardPositionPriority(priority)
   }
 
   /** Shows each game in these colors from now on (see gameColor): its pin, score card, trail and pulses. */
@@ -460,12 +480,14 @@ export class GlobeMap {
 
   /** Zooms in one step, as MapLibre's own zoom button does (the rail's zoom in). */
   zoomIn(): void {
+    this.stopOrbit()
     this.moves.cancel()
     this.map.zoomIn()
   }
 
   /** Zooms out one step, as MapLibre's own zoom button does (the rail's zoom out). */
   zoomOut(): void {
+    this.stopOrbit()
     this.moves.cancel()
     this.map.zoomOut()
   }
@@ -475,9 +497,17 @@ export class GlobeMap {
    * selected.
    */
   flyTo(camera: Camera): void {
+    this.stopOrbit()
     this.moves.cancel()
     this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
   }
+
+  startOrbit(): void {
+    this.moves.cancel()
+    this.orbit.start()
+  }
+
+  readonly stopOrbit = (): void => this.orbit.stop()
 
   /** Removes the globe from the page, with everything it listens to. */
   destroy(): void {
@@ -485,6 +515,9 @@ export class GlobeMap {
     this.destroyed = true
     this.stopCardPinMenu?.()
     this.moves?.destroy()
+    this.orbit?.destroy()
+    this.map.getContainer().removeEventListener('pointerdown', this.stopOrbit, true)
+    this.map.getContainer().removeEventListener('wheel', this.stopOrbit, true)
     this.mapTypeFade.destroy()
     this.map.off('error', this.initialStyleError)
     window.removeEventListener('pagehide', this.saveCamera)

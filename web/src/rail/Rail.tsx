@@ -35,6 +35,7 @@ interface RailProps {
   onZoomOut: () => void
   /** Flies the camera back to the viewer's region, at the start zoom (see homeCamera). */
   onHome: () => void
+  orbit?: { active: boolean; toggle: () => void }
   /**
    * Whether the welcome tour shows: only More, its popover and the Feedback panel can be used then, lifted
    * above the tour (see .rail--touring); the rest of the rail can't.
@@ -74,6 +75,7 @@ export function Rail({
   onZoomIn,
   onZoomOut,
   onHome,
+  orbit,
   touring = false,
   games,
   scoreCardPins,
@@ -174,6 +176,7 @@ export function Rail({
               popover="more"
               // Lit while the Feedback panel it opened shows, as that's its own.
               open={open === 'feedback' ? 'more' : open}
+              note={orbit?.active ? 'Orbit on' : undefined}
               onClick={() => popoverEvent(morePress(open))}
             />
           </div>
@@ -213,6 +216,14 @@ export function Rail({
           {shown === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {shown === 'more' && (
             <More
+              orbit={orbit && !touring && camera ? {
+                active: orbit.active,
+                toggle: (fromKeyboard) => {
+                  setOpen(null)
+                  orbit.toggle()
+                  if (fromKeyboard) rail.current?.querySelector<HTMLElement>('[data-popover-button="more"]')?.focus()
+                },
+              } : undefined}
               onInstall={
                 onInstall &&
                 (() => {

@@ -4,7 +4,7 @@ import type { PinnedCards } from '../games/pinnedCards'
 import { panelBox } from '../panel/panelBox'
 import type { JustHappened } from '../games/justHappened'
 import type { PickedColors } from '../settings/gameColor'
-import type { CardCount, MapType } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
@@ -26,6 +26,7 @@ interface GlobeProps {
   mapType: MapType
   /** How many score cards show at once where it's busy (see mostCards). A change lays them out afresh (see GlobeMap.setCardCount). */
   cardCount: CardCount
+  cardPositionPriority: CardPositionPriority
   scoreCardPins?: PinnedCards
   /** Whether hot games show their indicator. A change shows or clears them in place (see GlobeMap.setHotIndicators). */
   hotIndicator: boolean
@@ -49,6 +50,7 @@ interface GlobeProps {
   startCamera: Camera
   /** Called when the camera settles somewhere new, so it can be saved for the next visit. */
   onCameraMove: (camera: Camera) => void
+  onOrbitChange?: (active: boolean) => void
   /** Called each time the globe's initial load moves on a stage (see GlobeMap.stage). */
   onStage: (stage: LoadingStage) => void
   /**
@@ -67,6 +69,8 @@ export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
+  startOrbit: () => void
+  stopOrbit: () => void
   /** Opens a game picked from the Games list and centers it clear of its panel (see GlobeMap.pickGame). */
   pickGame: (gameId: string) => void
   /** The score cards a viewer can see now, none before the globe is made (see GlobeMap.shownScoreCards). */
@@ -74,14 +78,14 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onOrbitChange, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins })
+  const latest = useRef({ onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins }
-  }, [onSelectGame, onCameraMove, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins])
+    latest.current = { onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins }
+  }, [onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins])
 
   useEffect(() => {
     if (!container.current) return
@@ -95,11 +99,13 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
         colors: latest.current.colors,
         mapType: latest.current.mapType,
         cardCount: latest.current.cardCount,
+        cardPositionPriority: latest.current.cardPositionPriority,
         scoreCardPins: latest.current.scoreCardPins,
         hotIndicator: latest.current.hotIndicator,
         startCamera: latest.current.startCamera,
         onSelect: (gameId) => latest.current.onSelectGame(gameId),
         onCameraMove: (camera) => latest.current.onCameraMove(camera),
+        onOrbitChange: (active) => latest.current.onOrbitChange?.(active),
         onStage: (stage) => {
           if (stage === 'styleError') {
             globe.current?.destroy()
@@ -125,6 +131,8 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
       zoomIn: () => globe.current?.zoomIn(),
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
+      startOrbit: () => globe.current?.startOrbit(),
+      stopOrbit: () => globe.current?.stopOrbit(),
       pickGame: (gameId) => globe.current?.pickGame(gameId, panel.current && panelBox(panel.current)),
       shownScoreCards: () => globe.current?.shownScoreCards() ?? [],
     }),
@@ -137,6 +145,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
   useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
   useEffect(() => globe.current?.setCardCount(cardCount), [cardCount])
+  useEffect(() => globe.current?.setCardPositionPriority(cardPositionPriority), [cardPositionPriority])
   useEffect(() => globe.current?.setHotIndicators(hotIndicator), [hotIndicator])
   // In this order, so a game picked from the Games list is among the games shown when the globe centers
   // it above the panel. The panel opens in the same render, so it's on the page by now, though only

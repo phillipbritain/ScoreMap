@@ -84,13 +84,13 @@ describe('cityNameLook', () => {
         ...builtInTheme.components,
         PlaceNames: {
           ...builtInTheme.components.PlaceNames,
-          city: { ...builtInTheme.components.PlaceNames.city, font: font('Metropolis Light') },
+          city: { ...builtInTheme.components.PlaceNames.city, font: font('Noto Sans Bold') },
         },
       },
     }
-    expect(layout('city_names', theme)['text-font']).toEqual(['Metropolis Light'])
-    expect(layout('city_names_game', theme)['text-font']).toEqual(['Metropolis Light'])
-    expect(cityNameLook(5, theme).font).toMatch(/^normal 300 [\d.]+px "Metropolis", sans-serif$/)
+    expect(layout('city_names', theme)['text-font']).toEqual(['Noto Sans Bold'])
+    expect(layout('city_names_game', theme)['text-font']).toEqual(['Noto Sans Bold'])
+    expect(cityNameLook(5, theme).font).toMatch(/^normal 700 [\d.]+px "Noto Sans", sans-serif$/)
   })
 })
 

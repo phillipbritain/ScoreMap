@@ -7,7 +7,7 @@ import {
 import type { StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it, vi } from 'vitest'
 import { builtInTheme } from '../theme/builtInTheme'
-import { globeFonts, glyphsUrl } from '../theme/globeFonts'
+import { globeFonts } from '../theme/globeFonts'
 import type { Theme } from '../theme/theme'
 import { globeStyle, showStateLines } from './globeStyle'
 import { layerChanges } from './restyle'
@@ -15,7 +15,7 @@ import type { ListedCity } from './cityLabels'
 import { cityDotImage, cityNameFeatures, cityNameSource, firstPlaceNameLayer, stateNameSource } from './placeNames'
 
 function base(layers: StyleSpecification['layers']): StyleSpecification {
-  return { version: 8, sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
+  return { version: 8, glyphs: 'https://example.test/fonts/{fontstack}/{range}.pbf', sources: { openmaptiles: { type: 'vector', url: 'https://example.test' } }, layers }
 }
 
 const tiles = { source: 'openmaptiles' } as const
@@ -63,12 +63,12 @@ const theme: Theme = {
         ...builtInTheme.components.PlaceNames.city,
         color: '#100001',
         outline: outline('#200001', 2.5, 0.25),
-        font: font('Open Sans Light'),
+        font: font('Noto Sans Italic'),
         letterSpacing: 0.03,
         dot: { radius: 1.75, ring: 0.5 },
       },
-      state: { ...builtInTheme.components.PlaceNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Metropolis Regular'), letterSpacing: 0.3 },
-      country: { ...builtInTheme.components.PlaceNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Klokantech Noto Sans Bold'), letterSpacing: 0.2 },
+      state: { ...builtInTheme.components.PlaceNames.state, color: '#100003', outline: outline('#200003', 1.5, 0), font: font('Noto Sans Regular'), letterSpacing: 0.3 },
+      country: { ...builtInTheme.components.PlaceNames.country, color: '#100004', outline: outline('#200004', 1, 1), font: font('Noto Sans Bold'), letterSpacing: 0.2 },
     },
   },
 }
@@ -339,7 +339,7 @@ describe('globeStyle', () => {
   })
 
   it("writes each kind of place name in the theme's color, outline (its color, width and blur) and font, from the map's font server", () => {
-    expect(style().glyphs).toBe(glyphsUrl)
+    expect(style().glyphs).toBe(liberty.glyphs)
     const kinds = {
       city_names: 'city',
       city_names_game: 'city',

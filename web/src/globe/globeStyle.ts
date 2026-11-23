@@ -8,7 +8,6 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl'
 import type { MapType } from '../settings/viewerSettings'
-import { glyphsUrl } from '../theme/globeFonts'
 import { zoomStops, type Theme } from '../theme/theme'
 import { cityNameSource, cityNameSourceSpec, placeNameLayers, stateNameSource, stateNameSourceSpec } from './placeNames'
 import stateLinesUrl from './stateLines.json?url'
@@ -84,7 +83,6 @@ export function globeStyle(base: StyleSpecification, theme: Theme, mapType: MapT
 
   return {
     ...base,
-    glyphs: glyphsUrl,
     // MapLibre's own atmosphere is lit from one side; the globe gets an even halo instead (globeGlow.ts).
     sky: { 'atmosphere-blend': 0 },
     sources: {

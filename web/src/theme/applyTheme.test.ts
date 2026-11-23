@@ -47,9 +47,9 @@ describe('applyTheme', () => {
   })
 
   it('writes a globe font as its CSS family, weight and style', () => {
-    const properties = propertiesOf(themeWith((json) => (json.components.PlaceNames.state.font = 'Metropolis Light Italic')))
-    expect(properties.get('--place-names-state-font-family')).toBe('Metropolis')
-    expect(properties.get('--place-names-state-font-weight')).toBe('300')
+    const properties = propertiesOf(themeWith((json) => (json.components.PlaceNames.state.font = 'Noto Sans Italic')))
+    expect(properties.get('--place-names-state-font-family')).toBe('Noto Sans')
+    expect(properties.get('--place-names-state-font-weight')).toBe('400')
     expect(properties.get('--place-names-state-font-style')).toBe('italic')
   })
 

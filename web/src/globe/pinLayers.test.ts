@@ -15,7 +15,7 @@ const pins: PinSet = { source: 'pins', prefix: '', only: ['==', ['get', 'kind'],
 /** The built-in theme, with cluster counts in another font and size. */
 function testTheme(): Theme {
   return themeWith((json) => {
-    json.components.Cluster.count = { font: 'Metropolis Semi Bold', size: 'body1' }
+    json.components.Cluster.count = { font: 'Noto Sans Regular', size: 'body1' }
     json.typography.body1.fontSize = 16
   })
 }
@@ -202,6 +202,6 @@ describe('the selected pin', () => {
 
 describe('card cluster counts', () => {
   it("are written in the theme's font and size", () => {
-    expect(countLayout(cardLayoutLayers(testTheme()), 'card-cluster-counts')).toMatchObject({ 'text-font': ['Metropolis Semi Bold'], 'text-size': 16 })
+    expect(countLayout(cardLayoutLayers(testTheme()), 'card-cluster-counts')).toMatchObject({ 'text-font': ['Noto Sans Regular'], 'text-size': 16 })
   })
 })

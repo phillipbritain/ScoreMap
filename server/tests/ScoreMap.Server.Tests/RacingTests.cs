@@ -30,10 +30,15 @@ public class RacingTests
     };
 
     [Fact]
-    public async Task A_live_race_has_its_field_in_order_and_its_progress_line_is_the_lap()
+    public async Task A_live_race_sends_its_field_car_numbers_and_lap()
     {
         await using var server = new ScoreMapServer();
-        server.Feed.SetScoreboard(Nascar, Race(server, InProgress, 189, "Kyle Larson", "William Byron", "Ryan Blaney"));
+        var race = Race(server, InProgress, 189, "Kyle Larson", "William Byron", "Ryan Blaney");
+        var entrants = Assert.IsType<ProviderField>(race.Contest).Entries;
+        server.Feed.SetScoreboard(Nascar, race with
+        {
+            Contest = new ProviderField([entrants[0] with { CarNumber = "5" }, .. entrants.Skip(1)]),
+        });
         await using var client = await server.ConnectClientAsync();
 
         var game = Assert.Single(await client.NextSnapshotAsync());
@@ -44,7 +49,7 @@ public class RacingTests
         Assert.False(game.Hot);
         var field = Assert.IsType<GameField>(game.Contest);
         Assert.Equal(
-            [new GameEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"),
+            [new GameEntrant(1, "Kyle Larson", "K. Larson", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png", CarNumber: "5"),
              new GameEntrant(2, "William Byron", "W. Byron", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png"),
              new GameEntrant(3, "Ryan Blaney", "R. Blaney", "https://a.espncdn.com/i/teamlogos/countries/500/usa.png")],
             field.Entries);

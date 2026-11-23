@@ -26,13 +26,13 @@ describe('layerChanges', () => {
   })
 
   it('sets a layout property too, such as a cluster count’s font', () => {
-    const bolder = themeWith((json) => (json.components.Cluster.count.font = 'Open Sans Extra Bold'))
-    const changes = layerChanges(layersIn(builtInTheme), layersIn(bolder))
+    const regular = themeWith((json) => (json.components.Cluster.count.font = 'Noto Sans Regular'))
+    const changes = layerChanges(layersIn(builtInTheme), layersIn(regular))
     expect(changes).toContainEqual({
       layer: 'card-cluster-counts',
       kind: 'layout',
       property: 'text-font',
-      value: ['Open Sans Extra Bold'],
+      value: ['Noto Sans Regular'],
     })
     expect(changes.every((change) => change.kind === 'layout' && change.property === 'text-font')).toBe(true)
   })

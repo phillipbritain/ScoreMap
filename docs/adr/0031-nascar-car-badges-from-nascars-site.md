@@ -1,12 +1,7 @@
-# NASCAR car badges from NASCAR's site
+# Bundle official NASCAR Cup Series car badges
 
-A NASCAR driver showed as their country's flag, nearly always the US's, where viewers know them by their car's number in its team's lettering. ESPN has no such image, but NASCAR's own site does: `https://cf.nascar.com/data/images/carbadges/1/{number}.png`, the Cup Series being series 1, a small transparent image of the number as the team letters it (78×70). So a NASCAR driver's logo is that badge, shown in place of their flag in the game panel and on the score card. The car number comes from ESPN's core API event, which the server already asks for each race's venue (ADR-0020): one request per race once its field is listed, kept in memory, not one a driver.
+ScoreMap shows NASCAR Cup drivers with their car numbers in the team lettering. The badges originally loaded from NASCAR’s image server. With redistribution permission, ScoreMap now bundles the official PNGs and serves them with the browser app. This keeps the badges available during a NASCAR CDN outage and lets ScoreMap deliver them over the same connection as the rest of the app.
 
-We weighed ESPN's driver headshots (`a.espncdn.com/i/headshots/rpm/players/full/{id}.png`, no request at all), which are faces, not what NASCAR's viewers know a car by, and drawing the number ourselves on a plate, which loses the team's lettering, the reason for the change. We also looked at gaps to the leader for racing's score chips, which the core API gives only one driver a request (about 40 a poll in NASCAR), and left them out.
+ESPN supplies car numbers for live races, and scenarios carry them in the `car` field. The browser selects the bundled badge by number and uses the driver’s flag when there is no matching badge. Other racing series continue to show flags.
 
-## Consequences
-
-- NASCAR's image server is a second unofficial source beside ESPN's, used under ADR-0001's terms: it could move or stop without notice, and a badge that fails to load leaves the plate empty, as a missing flag does.
-- A badge is by car number, so it shows the car's current lettering.
-- Only the Cup Series has badges; F1 and IndyCar keep flags.
-- Scenarios give a NASCAR driver's car number as `car`, so their races show badges too.
+The initial bundle covers the numbers in NASCAR’s [2026 Cup schedule](https://cf.nascar.com/cacher/2026/1/race_list_basic.json) weekend feeds and ScoreMap’s scenarios. To refresh it, replace the PNGs in [the bundled badge directory](../../web/src/games/nascarCupBadges/) from NASCAR’s `https://cf.nascar.com/data/images/carbadges/1/{number}.png` source. Keep the official digits in each filename, including any leading zero.

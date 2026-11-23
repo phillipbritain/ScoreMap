@@ -325,7 +325,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         Assert.True(field.Entries.Count > 10, "a field longer than the event panel's score block shows");
         Assert.Equal(Enumerable.Range(1, field.Entries.Count), field.Entries.Select(entrant => entrant.Position));
         Assert.Equal("Los Angeles Memorial Coliseum", live.Venue.Name);
-        Assert.All(field.Entries, entrant => Assert.StartsWith("https://cf.nascar.com/data/images/carbadges/1/", entrant.LogoUrl));
+        Assert.All(field.Entries, entrant => Assert.Matches("^[0-9]{1,3}$", entrant.CarNumber ?? ""));
         var upcoming = Assert.Single(races, g => g.Status == GameStatus.Upcoming);
         Assert.Empty(Assert.IsType<GameField>(upcoming.Contest).Entries);
         Assert.NotNull(upcoming.Note);

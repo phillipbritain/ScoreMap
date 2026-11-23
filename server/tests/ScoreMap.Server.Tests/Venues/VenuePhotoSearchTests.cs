@@ -1,6 +1,3 @@
-using System.Text.Json;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Time.Testing;
 using ScoreMap.Server.GameFeed;
 using ScoreMap.Server.Games;
 using ScoreMap.Server.Scenarios;
@@ -11,8 +8,7 @@ using static ScoreMap.Server.Tests.Support.StubHttpHandler;
 namespace ScoreMap.Server.Tests.Venues;
 
 /// <summary>
-/// The venue photo search, against canned answers shaped like ESPN's core API, Nominatim,
-/// Wikidata and Wikimedia Commons (spot-checked on 2026-10-06).
+/// The venue photo search against canned answers shaped like ESPN’s core API.
 /// </summary>
 public class VenuePhotoSearchTests
 {
@@ -21,12 +17,6 @@ public class VenuePhotoSearchTests
 
     private const string EspnBankOfAmerica = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/venues/3628";
     private const string EspnEmirates = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/eng.1/venues/2267";
-    private const string Nominatim = "https://nominatim.test/search?q=Emirates%20Stadium%2C%20London&";
-    private const string WikidataClaims = "https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=Q163995&property=P18&format=json";
-    private const string WikidataInteriorClaims = "https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=Q163995&property=P5775&format=json";
-    private const string CommonsInfo = "https://commons.wikimedia.org/w/api.php?action=query&titles=File%3ALondon%20Emirates%20Stadium%20arsenal.jpg&";
-    private const string CommonsQuery = "https://commons.wikimedia.org/w/api.php?action=query&titles=File%3A";
-
     private const string BankOfAmericaImages = """
         {"id":"3628","fullName":"Bank of America Stadium","images":[
           {"href":"https://a.espncdn.com/i/venues/nfl/day/interior/3628.jpg","width":2000,"height":1125,"rel":["full","day","interior"]},
@@ -34,41 +24,6 @@ public class VenuePhotoSearchTests
         """;
 
     private const string NoImages = """{"id":"2267","fullName":"Emirates Stadium","images":[]}""";
-
-    private const string EmiratesPlace = """
-        [{"lat":"51.5550404","lon":"-0.1083997","extratags":{"sport":"soccer","wikidata":"Q163995"}}]
-        """;
-
-    private const string EmiratesImageClaim = """
-        {"claims":{"P18":[{"mainsnak":{"snaktype":"value","property":"P18",
-          "datavalue":{"value":"London Emirates Stadium arsenal.jpg","type":"string"}},"type":"statement","rank":"normal"}]}}
-        """;
-
-    private const string EmiratesImageInfo = """
-        {"batchcomplete":true,"query":{"pages":[{"pageid":124370055,"ns":6,"title":"File:London Emirates Stadium arsenal.jpg",
-          "imageinfo":[{"width":3888,"height":2592,"mime":"image/jpeg",
-            "thumburl":"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/London_Emirates_Stadium_arsenal.jpg/960px-London_Emirates_Stadium_arsenal.jpg",
-            "thumbwidth":720,"thumbheight":539,
-            "url":"https://upload.wikimedia.org/wikipedia/commons/2/29/London_Emirates_Stadium_arsenal.jpg",
-            "descriptionurl":"https://commons.wikimedia.org/wiki/File:London_Emirates_Stadium_arsenal.jpg",
-            "extmetadata":{
-              "Artist":{"value":"<a href=\"//commons.wikimedia.org/wiki/User:Arne_mueseler\" title=\"User:Arne mueseler\">Arne Müseler</a> &amp; friends","source":"commons-desc-page"},
-              "LicenseShortName":{"value":"CC BY-SA 3.0 de","source":"commons-desc-page"},
-              "LicenseUrl":{"value":"https://creativecommons.org/licenses/by-sa/3.0/de/deed.en","source":"commons-desc-page"}}}]}]}}
-        """;
-
-    private static readonly VenuePhoto EmiratesPhoto = new(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/London_Emirates_Stadium_arsenal.jpg/960px-London_Emirates_Stadium_arsenal.jpg",
-        new PhotoCredit("Arne Müseler & friends", "CC BY-SA 3.0 de",
-            "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
-            "https://commons.wikimedia.org/wiki/File:London_Emirates_Stadium_arsenal.jpg"));
-
-    private static VenuePhotoSearch Search(StubHttpHandler handler) => new(
-        new HttpClient(handler),
-        new NominatimPlaceSearch(
-            new HttpClient(handler) { BaseAddress = new Uri("https://nominatim.test/") },
-            new FakeTimeProvider(),
-            Options.Create(new NominatimOptions())));
 
     // Soldier Field, as the venue list has it: ESPN's id and city for it in the NFL and in MLS.
     private static readonly VenueLeagueCatalog SoldierFieldCatalog = new(
@@ -89,13 +44,8 @@ public class VenuePhotoSearchTests
         """;
     private static readonly ProviderVenue SoldierFieldMls = new("Soldier Field", "Chicago, Illinois", null, "USA", "1452");
 
-    private static VenuePhotoSearch Search(StubHttpHandler handler, VenueLeagueCatalog catalog) => new(
-        new HttpClient(handler),
-        new NominatimPlaceSearch(
-            new HttpClient(handler) { BaseAddress = new Uri("https://nominatim.test/") },
-            new FakeTimeProvider(),
-            Options.Create(new NominatimOptions())),
-        catalog);
+    private static VenuePhotoSearch Search(StubHttpHandler handler, VenueLeagueCatalog? catalog = null) =>
+        new(new HttpClient(handler), catalog);
 
     [Fact]
     public async Task Takes_another_leagues_espn_photo_of_the_venue_when_the_games_league_has_none()
@@ -122,17 +72,15 @@ public class VenuePhotoSearchTests
     }
 
     [Fact]
-    public async Task Asks_commons_only_when_no_league_at_the_venue_has_a_good_espn_photo()
+    public async Task Finds_no_photo_when_neither_league_has_a_suitable_espn_image()
     {
         var handler = Serving((EspnSoldierFieldMls, """{"id":"1452","images":[]}"""),
-            (EspnSoldierFieldNfl, """{"id":"3933","images":[{"href":"https://a.espncdn.com/i/venues/nfl/day/3933.jpg","width":500,"rel":["full","day"]}]}"""),
-            ("https://nominatim.test/", "[]"));
+            (EspnSoldierFieldNfl, """{"id":"3933","images":[{"href":"https://a.espncdn.com/i/venues/nfl/day/3933.jpg","width":500,"rel":["full","day"]}]}"""));
 
         var photo = await Search(handler, SoldierFieldCatalog).SearchAsync("soccer/usa.1", SoldierFieldMls, CancellationToken.None);
 
         Assert.Null(photo);
-        Assert.Equal([EspnSoldierFieldMls, EspnSoldierFieldNfl], handler.Requests.Take(2).Select(r => r.RequestUri!.AbsoluteUri));
-        Assert.StartsWith("https://nominatim.test/", handler.Requests[2].RequestUri!.AbsoluteUri);
+        Assert.Equal([EspnSoldierFieldMls, EspnSoldierFieldNfl], handler.Requests.Select(r => r.RequestUri!.AbsoluteUri));
     }
 
     [Theory]
@@ -178,198 +126,37 @@ public class VenuePhotoSearchTests
     [Fact]
     public async Task Asks_espn_for_the_venue_in_the_games_sport_and_league()
     {
-        var handler = Serving(("https://nominatim.test/", "[]"));
+        var handler = StubHttpHandler.Returning("{}");
         var venue = new ProviderVenue("Palazzo dello Sport", "Rome", "Italy", null, "3282");
 
         await Search(handler).SearchAsync("basketball/mens-college-basketball?groups=50", venue, CancellationToken.None);
 
         Assert.Equal("https://sports.core.api.espn.com/v2/sports/basketball/leagues/mens-college-basketball/venues/3282",
-            handler.Requests[0].RequestUri!.AbsoluteUri);
+            Assert.Single(handler.Requests).RequestUri!.AbsoluteUri);
     }
 
     [Fact]
-    public async Task Falls_back_to_the_wikidata_image_with_its_commons_credit_when_espn_has_no_photo()
+    public async Task Finds_no_photo_for_a_venue_without_espn_images()
     {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace), (WikidataClaims, EmiratesImageClaim),
-            (CommonsInfo, EmiratesImageInfo));
-
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal(EmiratesPhoto, photo);
-        Assert.All(handler.Requests, r => Assert.Contains("ScoreMap", r.Headers.UserAgent.ToString()));
-    }
-
-    [Fact]
-    public async Task Falls_back_to_wikidata_when_espn_doesnt_know_the_venue_or_the_venue_has_no_id()
-    {
-        var handler = Serving((Nominatim, EmiratesPlace), (WikidataClaims, EmiratesImageClaim), (CommonsInfo, EmiratesImageInfo));
-
-        Assert.Equal(EmiratesPhoto, await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None));
-        Assert.Equal(EmiratesPhoto, await Search(handler).SearchAsync("soccer/eng.1", Emirates with { Id = null }, CancellationToken.None));
-    }
-
-    [Theory]
-    [InlineData("[]", EmiratesImageClaim)]
-    [InlineData("""[{"lat":"51.5","lon":"-0.1","extratags":{}}]""", EmiratesImageClaim)]
-    [InlineData(EmiratesPlace, """{"claims":{}}""")]
-    public async Task Finds_no_photo_when_the_venue_has_no_wikidata_item_or_the_item_has_no_image(string place, string claims)
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, place), (WikidataClaims, claims), (CommonsInfo, EmiratesImageInfo));
+        var handler = Serving((EspnEmirates, NoImages));
 
         Assert.Null(await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None));
-    }
-
-    /// <summary>A Wikidata answer giving the files for an image property, in order.</summary>
-    private static string ImageClaims(string property, params string[] files) => JsonSerializer.Serialize(new
-    {
-        claims = new Dictionary<string, object[]>
-        {
-            [property] = files.Select(f => (object)new { mainsnak = new { datavalue = new { value = f, type = "string" } } }).ToArray(),
-        },
-    });
-
-    /// <summary>A Commons answer for a file: its size, type, description and categories.</summary>
-    private static string ImageInfo(string file, int width, string mime = "image/jpeg", string description = "", string categories = "")
-    {
-        var name = file.Replace(' ', '_');
-        return JsonSerializer.Serialize(new
-        {
-            query = new
-            {
-                pages = new[]
-                {
-                    new
-                    {
-                        title = $"File:{file}",
-                        imageinfo = new[]
-                        {
-                            new
-                            {
-                                width, height = width * 3 / 4, mime,
-                                thumburl = $"https://upload.wikimedia.org/thumb/{name}/720px-{name}",
-                                descriptionurl = $"https://commons.wikimedia.org/wiki/File:{name}",
-                                extmetadata = new Dictionary<string, object>
-                                {
-                                    ["Artist"] = new { value = "A. Photographer" },
-                                    ["LicenseShortName"] = new { value = "CC BY 4.0" },
-                                    ["ImageDescription"] = new { value = description },
-                                    ["Categories"] = new { value = categories },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    private static (string, string) Commons(string file, string info) => ($"{CommonsQuery}{Uri.EscapeDataString(file)}&", info);
-
-    private static string? Url(VenuePhoto? photo) => photo?.Url;
-
-    public static TheoryData<string, string> PoorImages => new()
-    {
-        // The Landers Center's Wikidata image, as Commons gives it.
-        { "Landers Center.png", ImageInfo("Landers Center.png", 418, "image/png", "Satellite View",
-            "CC-Zero|Landers Center|PD World Wind|Satellite pictures of structures") },
-        { "Emirates Stadium satellite.jpg", ImageInfo("Emirates Stadium satellite.jpg", 2000, description: "Satellite view") },
-        { "Emirates Stadium.jpg", ImageInfo("Emirates Stadium.jpg", 3000, categories: "Aerial photographs of Emirates Stadium") },
-        { "Emirates from a drone.jpg", ImageInfo("Emirates from a drone.jpg", 3000) },
-        { "Emirates Stadium small.jpg", ImageInfo("Emirates Stadium small.jpg", 640) },
-        { "Emirates Stadium plan.svg", ImageInfo("Emirates Stadium plan.svg", 3000, "image/svg+xml") },
-    };
-
-    [Theory]
-    [MemberData(nameof(PoorImages))]
-    public async Task Finds_no_photo_when_the_only_image_is_small_not_a_photo_or_taken_from_the_air(string file, string info)
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace), (WikidataClaims, ImageClaims("P18", file)),
-            Commons(file, info));
-
-        Assert.Null(await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None));
+        Assert.Equal(EspnEmirates, Assert.Single(handler.Requests).RequestUri!.AbsoluteUri);
     }
 
     [Fact]
-    public async Task Keeps_a_photo_from_high_up_in_the_stands()
+    public async Task Skips_a_venue_without_an_espn_id()
     {
-        // Yankee Stadium's Wikidata image, from the upper deck, is filed under "… from above" too.
-        const string file = "Yankee Stadium upper deck 2010.jpg";
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace), (WikidataClaims, ImageClaims("P18", file)),
-            Commons(file, ImageInfo(file, 2154, categories: "Interior of Yankee Stadium|Views of the Bronx, New York City from above")));
+        var handler = StubHttpHandler.Returning("{}");
 
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal("https://upload.wikimedia.org/thumb/Yankee_Stadium_upper_deck_2010.jpg/720px-Yankee_Stadium_upper_deck_2010.jpg", Url(photo));
+        Assert.Null(await Search(handler).SearchAsync("soccer/eng.1", Emirates with { Id = null }, CancellationToken.None));
+        Assert.Empty(handler.Requests);
     }
 
     [Fact]
-    public async Task Keeps_a_large_enough_photo_whatever_its_format()
+    public async Task An_espn_error_fails_the_search_instead_of_caching_a_miss()
     {
-        // Welsh-Ryan Arena's Wikidata image is a PNG photo from inside, 750 pixels wide.
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace),
-            (WikidataClaims, ImageClaims("P18", "Emirates Stadium.png")),
-            Commons("Emirates Stadium.png", ImageInfo("Emirates Stadium.png", 750, "image/png", categories: "Interiors of indoor arenas")));
-
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal("https://upload.wikimedia.org/thumb/Emirates_Stadium.png/720px-Emirates_Stadium.png", Url(photo));
-    }
-
-    [Fact]
-    public async Task Skips_espns_photo_when_it_is_too_small_for_the_panel()
-    {
-        var handler = Serving((EspnEmirates, """
-            {"id":"2267","images":[{"href":"https://a.espncdn.com/i/venues/soccer/day/2267.jpg","width":400,"height":225,"rel":["full","day"]}]}
-            """), (Nominatim, EmiratesPlace), (WikidataClaims, EmiratesImageClaim), (CommonsInfo, EmiratesImageInfo));
-
-        Assert.Equal(EmiratesPhoto, await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task Skips_a_poor_wikidata_image_for_a_good_one()
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace),
-            (WikidataClaims, ImageClaims("P18", "Emirates satellite.png", "Emirates bowl.jpg")),
-            Commons("Emirates satellite.png", ImageInfo("Emirates satellite.png", 418, "image/png", "Satellite View")),
-            Commons("Emirates bowl.jpg", ImageInfo("Emirates bowl.jpg", 2400)));
-
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal("https://upload.wikimedia.org/thumb/Emirates_bowl.jpg/720px-Emirates_bowl.jpg", Url(photo));
-    }
-
-    [Fact]
-    public async Task Prefers_the_wikidata_image_from_inside_the_venue_over_its_main_image()
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace),
-            (WikidataClaims, ImageClaims("P18", "Emirates outside.jpg")),
-            (WikidataInteriorClaims, ImageClaims("P5775", "Emirates inside.jpg")),
-            Commons("Emirates outside.jpg", ImageInfo("Emirates outside.jpg", 2400)),
-            Commons("Emirates inside.jpg", ImageInfo("Emirates inside.jpg", 2400)));
-
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal("https://upload.wikimedia.org/thumb/Emirates_inside.jpg/720px-Emirates_inside.jpg", Url(photo));
-    }
-
-    [Fact]
-    public async Task Uses_the_main_wikidata_image_when_the_inside_one_is_poor()
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace),
-            (WikidataClaims, ImageClaims("P18", "Emirates outside.jpg")),
-            (WikidataInteriorClaims, ImageClaims("P5775", "Emirates inside.jpg")),
-            Commons("Emirates outside.jpg", ImageInfo("Emirates outside.jpg", 2400)),
-            Commons("Emirates inside.jpg", ImageInfo("Emirates inside.jpg", 500)));
-
-        var photo = await Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None);
-
-        Assert.Equal("https://upload.wikimedia.org/thumb/Emirates_outside.jpg/720px-Emirates_outside.jpg", Url(photo));
-    }
-
-    [Fact]
-    public async Task A_failing_source_fails_the_search_rather_than_finding_no_photo()
-    {
-        var handler = Serving((EspnEmirates, NoImages), (Nominatim, EmiratesPlace), (WikidataClaims, ServerError));
+        var handler = Serving((EspnEmirates, ServerError));
 
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             Search(handler).SearchAsync("soccer/eng.1", Emirates, CancellationToken.None));

@@ -1,5 +1,9 @@
 # No credit shown for venue photos
 
+ScoreMap now uses ESPN alone for venue photos. Its cross-league lookup fills some gaps, and venues without a suitable photo use the panel’s plain header. This removes the Wikidata and Wikimedia Commons dependencies and their image attribution requirements. See [venue configuration](../configuration.md#venues) for the current lookup behavior.
+
+## Previous decision
+
 The game panel shows each venue's photo: ESPN's own where it has one, or else the venue's Wikidata image from Wikimedia Commons (see [configuration](../configuration.md)). Until November 2026 the panel showed a Commons photo's credit, its author and license, over the photo on hover. In November 2026 the game panel's layout changed (the photo now fills the panel behind the venue and its watch links), and the owner chose to show no credit at all, as ScoreMap is a hobby app.
 
 Most Commons photos are under CC BY or CC BY-SA, whose licenses ask for the credit whatever the use, non-commercial included; only public-domain and CC0 photos don't. So with no credit shown, ScoreMap falls short of those licenses' attribution term, as it does EOX's for the satellite map (ADR-0022). The owner made this choice knowing that. The CC 4.0 licenses accept the credit "in any reasonable manner", so a small button that shows it, or a page listing every photo's credit, would also have met them; they were offered and not taken.

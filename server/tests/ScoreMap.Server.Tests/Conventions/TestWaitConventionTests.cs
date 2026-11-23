@@ -19,7 +19,7 @@ public partial class TestWaitConventionTests
         ["tests/ScoreMap.Server.Tests/Scenarios/ScenarioSwitchingTests.cs"] = 3,
         ["tests/ScoreMap.Server.Tests/Scenarios/ScenarioTests.cs"] = 2,
         ["tests/ScoreMap.Server.Tests/SnapshotTests.cs"] = 1,
-        ["tests/ScoreMap.Server.Tests/Venues/NominatimPlaceSearchTests.cs"] = 2,
+        ["tests/ScoreMap.Server.Tests/Venues/NominatimPlaceSearchTests.cs"] = 1,
     };
 
     [Fact]

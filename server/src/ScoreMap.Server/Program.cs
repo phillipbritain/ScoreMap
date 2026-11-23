@@ -59,15 +59,13 @@ builder.Services.AddHttpClient(nameof(NominatimPlaceSearch), (sp, client) =>
 {
     PooledConnectionLifetime = TimeSpan.FromMinutes(5),
 });
-builder.Services.AddSingleton(sp => new NominatimPlaceSearch(
+builder.Services.AddSingleton<IPlaceSearch>(sp => new NominatimPlaceSearch(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(NominatimPlaceSearch)),
     sp.GetRequiredService<TimeProvider>(),
     sp.GetRequiredService<IOptions<NominatimOptions>>()));
-builder.Services.AddSingleton<IPlaceSearch>(sp => sp.GetRequiredService<NominatimPlaceSearch>());
 builder.Services.AddSingleton<VenueLocator>();
 
-// Venue photos for the event panel: ESPN's, else Wikidata's from Wikimedia Commons. The Wikidata
-// item comes from Nominatim, through the same place search so its rate limit covers both.
+// Venue photos for the event panel come from ESPN.
 builder.Services.AddHttpClient(nameof(VenuePhotoSearch), client => client.Timeout = TimeSpan.FromSeconds(10))
     .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
     {
@@ -85,7 +83,6 @@ builder.Services.AddSingleton(sp =>
 });
 builder.Services.AddSingleton<IVenuePhotoSearch>(sp => new VenuePhotoSearch(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(VenuePhotoSearch)),
-    sp.GetRequiredService<NominatimPlaceSearch>(),
     sp.GetRequiredService<VenueLeagueCatalog>()));
 builder.Services.AddSingleton<VenuePhotos>();
 

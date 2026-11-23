@@ -29,6 +29,7 @@ describe('settingsStore', () => {
       venuePhotos: false,
       chosenConferences: { 'NCAA Football': ['SEC', 'ACC'] },
       cardCount: 'fewer' as const,
+      cardPositionPriority: 'fewer-adjustments' as const,
       hotEventIndicator: false,
     }
 
@@ -138,6 +139,13 @@ describe('settingsStore', () => {
     expect(settingsStore(() => storage).load()).toEqual({ ...firstVisitSettings, hiddenLeagues: ['NBA'] })
   })
 
+  it.each([undefined, 'unknown'])('defaults score card priority to proximity for a saved value of %s', (cardPositionPriority) => {
+    const storage = memoryStorage()
+    storage.setItem('scoremap.settings', JSON.stringify({ cardPositionPriority }))
+
+    expect(settingsStore(() => storage).load().cardPositionPriority).toBe('venue')
+  })
+
   it.each([['sparse'], [25], [null]])('shows Default card count for a saved one it doesn\'t know (%j)', (cardCount) => {
     const storage = memoryStorage()
     storage.setItem('scoremap.settings', JSON.stringify({ hiddenLeagues: ['NBA'], cardCount }))
@@ -177,6 +185,7 @@ describe('settingsStore', () => {
       venuePhotos: true,
       chosenConferences: {},
       cardCount: 'default',
+      cardPositionPriority: 'venue',
       hotEventIndicator: true,
     })
   })
@@ -195,6 +204,7 @@ describe('settingsStore', () => {
       venuePhotos: true,
       chosenConferences: {},
       cardCount: 'default',
+      cardPositionPriority: 'venue',
       hotEventIndicator: true,
     })
   })
@@ -294,6 +304,7 @@ describe('settingsStore', () => {
         venuePhotos: true,
         chosenConferences: {},
         cardCount: 'default',
+        cardPositionPriority: 'venue',
         hotEventIndicator: true,
       })
     },

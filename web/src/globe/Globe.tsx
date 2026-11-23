@@ -4,7 +4,7 @@ import type { PinnedCards } from '../games/pinnedCards'
 import { panelBox } from '../panel/panelBox'
 import type { JustHappened } from '../games/justHappened'
 import type { PickedColors } from '../settings/gameColor'
-import type { CardCount, MapType } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import type { Camera } from './camera'
 import type { CityLabelSettings } from './cityLabels'
@@ -26,6 +26,7 @@ interface GlobeProps {
   mapType: MapType
   /** How many score cards show at once where it's busy (see mostCards). A change lays them out afresh (see GlobeMap.setCardCount). */
   cardCount: CardCount
+  cardPositionPriority: CardPositionPriority
   scoreCardPins?: PinnedCards
   /** Whether hot games show their indicator. A change shows or clears them in place (see GlobeMap.setHotIndicators). */
   hotIndicator: boolean
@@ -77,14 +78,14 @@ export interface GlobeHandle {
 }
 
 /** The globe with the games' pins on it (see GlobeMap), kept in step with the app's state. */
-export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onOrbitChange, onStage, inert = false, ref }: GlobeProps) {
+export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins, games, justHappened, selectedGameId, panel, onSelectGame, startCamera, onCameraMove, onOrbitChange, onStage, inert = false, ref }: GlobeProps) {
   const container = useRef<HTMLDivElement>(null)
   const globe = useRef<GlobeMap | null>(null)
-  const latest = useRef({ onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins })
+  const latest = useRef({ onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins })
 
   useEffect(() => {
-    latest.current = { onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins }
-  }, [onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, scoreCardPins])
+    latest.current = { onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins }
+  }, [onSelectGame, onCameraMove, onOrbitChange, onStage, startCamera, theme, cityLabels, zoomSettings, colors, hotIndicator, mapType, cardCount, cardPositionPriority, scoreCardPins])
 
   useEffect(() => {
     if (!container.current) return
@@ -98,6 +99,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
         colors: latest.current.colors,
         mapType: latest.current.mapType,
         cardCount: latest.current.cardCount,
+        cardPositionPriority: latest.current.cardPositionPriority,
         scoreCardPins: latest.current.scoreCardPins,
         hotIndicator: latest.current.hotIndicator,
         startCamera: latest.current.startCamera,
@@ -143,6 +145,7 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
   useEffect(() => globe.current?.setColors(colors), [colors])
   useEffect(() => globe.current?.setMapType(mapType), [mapType])
   useEffect(() => globe.current?.setCardCount(cardCount), [cardCount])
+  useEffect(() => globe.current?.setCardPositionPriority(cardPositionPriority), [cardPositionPriority])
   useEffect(() => globe.current?.setHotIndicators(hotIndicator), [hotIndicator])
   // In this order, so a game picked from the Games list is among the games shown when the globe centers
   // it above the panel. The panel opens in the same render, so it's on the page by now, though only

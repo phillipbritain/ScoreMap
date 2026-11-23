@@ -181,6 +181,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
           colors={colors}
           mapType={viewerSettings.mapType}
           cardCount={viewerSettings.cardCount}
+          cardPositionPriority={viewerSettings.cardPositionPriority}
           scoreCardPins={scoreCardPins}
           hotIndicator={viewerSettings.hotEventIndicator}
           // Nothing until the first snapshot, so the globe can tell it apart from a snapshot of no games.

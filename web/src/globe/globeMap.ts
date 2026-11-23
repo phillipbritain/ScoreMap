@@ -11,7 +11,7 @@ import type { Game } from '../games/game'
 import { placedGames, type PlacedGame } from '../games/placedGames'
 import { changeSince, lastNumber, noneJustHappened, type JustHappened } from '../games/justHappened'
 import { gameColor, type PickedColors } from '../settings/gameColor'
-import type { CardCount, MapType } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority, MapType } from '../settings/viewerSettings'
 import type { Theme } from '../theme/theme'
 import { addBlankImage } from './blankImage'
 import type { Camera } from './camera'
@@ -75,6 +75,7 @@ export interface GlobeMapOptions {
   mapType?: MapType
   /** How many score cards show at once where it's busy, to start with (see mostCards): Default unless given. It changes with setCardCount. */
   cardCount?: CardCount
+  cardPositionPriority?: CardPositionPriority
   scoreCardPins?: PinnedCards
   /**
    * How far out and in the globe zooms to start with: the app's own for a laptop unless given. They
@@ -154,7 +155,7 @@ export class GlobeMap {
 
   constructor(
     container: HTMLElement,
-    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', scoreCardPins, zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onOrbitChange, onStage }: GlobeMapOptions,
+    { style, theme, cityLabels = cityLabelSettings, colors = noColors, hotIndicator = true, mapType = 'plain', cardCount = 'default', cardPositionPriority = 'venue', scoreCardPins, zoomSettings = appZoomSettings, startCamera, onSelect, onCameraMove, onOrbitChange, onStage }: GlobeMapOptions,
   ) {
     this.colors = colors
     this.hotIndicator = hotIndicator
@@ -224,6 +225,7 @@ export class GlobeMap {
         },
         this.settling,
         cardCount,
+        cardPositionPriority,
         scoreCardPins,
       )
       if (scoreCardPins) this.stopCardPinMenu = cardPinMenu(container, scoreCardPins)
@@ -377,6 +379,10 @@ export class GlobeMap {
   setCardCount(count: CardCount): void {
     this.unsettle()
     this.cards.setCardCount(count)
+  }
+
+  setCardPositionPriority(priority: CardPositionPriority): void {
+    this.cards.setCardPositionPriority(priority)
   }
 
   /** Shows each game in these colors from now on (see gameColor): its pin, score card, trail and pulses. */

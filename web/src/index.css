@@ -1743,9 +1743,8 @@ body {
   cursor: default;
 }
 
-/* An open popover's button and active Orbit use the theme's open color (gold). */
-.rail__button[aria-expanded='true'],
-.rail__button[aria-pressed='true'] {
+/* A popover's button, while its popover is open, in the theme's open color (gold). */
+.rail__button[aria-expanded='true'] {
   color: var(--rail-open);
 }
 
@@ -2319,35 +2318,35 @@ body {
   outline-offset: var(--shape-border-width-medium);
 }
 
-/* Display Settings: "Card count", its three levels joined as one toggle button group, as MUI's
-   ToggleButtonGroup: chips sharing their borders, cornered only at the group's ends, the one picked lit as
-   a league chip that's on is. */
-.card-counts {
+/* Display Settings choices share their borders, with corners at the group's ends and the selected
+   choice lit like a league chip. */
+.display-options {
   display: flex;
   margin-bottom: calc(4 * var(--spacing));
 }
 
-.card-counts .rail-chip {
+.display-options .rail-chip {
   flex: 1;
   border-radius: 0;
+  white-space: normal;
 }
 
-.card-counts .rail-chip + .rail-chip {
+.display-options .rail-chip + .rail-chip {
   margin-left: calc(-1 * var(--shape-border-width-thin));
 }
 
-.card-counts .rail-chip:first-child {
+.display-options .rail-chip:first-child {
   border-radius: var(--controls-corner) 0 0 var(--controls-corner);
 }
 
-.card-counts .rail-chip:last-child {
+.display-options .rail-chip:last-child {
   border-radius: 0 var(--controls-corner) var(--controls-corner) 0;
 }
 
 /* The lit one, and the one under the pointer, draw their whole outline over their neighbors' shared edges. */
-.card-counts .rail-chip[aria-pressed='true'],
-.card-counts .rail-chip:hover,
-.card-counts .rail-chip:focus-visible {
+.display-options .rail-chip[aria-pressed='true'],
+.display-options .rail-chip:hover,
+.display-options .rail-chip:focus-visible {
   position: relative;
   z-index: 1;
 }

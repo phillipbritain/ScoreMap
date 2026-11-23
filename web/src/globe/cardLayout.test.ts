@@ -515,6 +515,20 @@ describe('layOutCards', () => {
       expect(shiftsOf(layout).get('b')).toEqual({ dx: 0, dy: 0 })
     })
 
+    it('holds a fitting offset and makes the shortest move when a city label blocks it', () => {
+      const previous = lastTime({ b: { dx: 0, dy: 160 } })
+      const showing = [card('b', mx, my)]
+      const fewerAdjustments: CardScene = { ...turning, cardPositionPriority: 'fewer-adjustments' }
+      const held = layOutCards(showing, fewerAdjustments, previous)
+      expect(shiftsOf(held).get('b')).toEqual({ dx: 0, dy: 160 })
+
+      const names = [{ x: mx, y: my + 160, width: 80, height: 24 }]
+      const moved = layOutCards(showing, { ...fewerAdjustments, names }, held.cards)
+      const shift = shiftsOf(moved).get('b')!
+      expect(Math.hypot(shift.dx, shift.dy - 160)).toBeLessThanOrEqual(48)
+      expect(overlaps(boxesOf(showing, moved)[0], names[0])).toBe(false)
+    })
+
     it('moves a card from where it was once that has no room', () => {
       const below = { dx: 0, dy: 80 }
       const blocking = { x: mx, y: my + 80, width: 80, height: 24 }

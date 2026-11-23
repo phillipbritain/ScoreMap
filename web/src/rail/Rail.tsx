@@ -168,17 +168,6 @@ export function Rail({
             />
           </div>
           <div className="rail__group" inert={touring}>
-            {orbit && (
-              <RailButton
-                label="Orbit"
-                pressed={orbit.active}
-                disabled={!camera}
-                onClick={() => {
-                  setOpen(null)
-                  orbit.toggle()
-                }}
-              />
-            )}
             <RailButton label="Display Settings" popover="display" open={open} onClick={() => popoverEvent({ press: 'display' })} />
           </div>
           <div className="rail__group rail__group--more">
@@ -187,6 +176,7 @@ export function Rail({
               popover="more"
               // Lit while the Feedback panel it opened shows, as that's its own.
               open={open === 'feedback' ? 'more' : open}
+              note={orbit?.active ? 'Orbit on' : undefined}
               onClick={() => popoverEvent(morePress(open))}
             />
           </div>
@@ -226,6 +216,14 @@ export function Rail({
           {shown === 'leagues' && <Leagues leagues={leagues} settings={settings} onChange={onChange} />}
           {shown === 'more' && (
             <More
+              orbit={orbit && !touring && camera ? {
+                active: orbit.active,
+                toggle: (fromKeyboard) => {
+                  setOpen(null)
+                  orbit.toggle()
+                  if (fromKeyboard) rail.current?.querySelector<HTMLElement>('[data-popover-button="more"]')?.focus()
+                },
+              } : undefined}
               onInstall={
                 onInstall &&
                 (() => {
@@ -299,7 +297,6 @@ export function RailButton({
   disabled,
   popover,
   open,
-  pressed,
   badge,
   note,
   tooltipSide = 'left',
@@ -309,7 +306,6 @@ export function RailButton({
   disabled?: boolean
   popover?: string
   open?: string | null
-  pressed?: boolean
   badge?: number
   /** Why its corner shows a dot, as words for its name and tooltip; no dot without one. */
   note?: string
@@ -323,12 +319,11 @@ export function RailButton({
       type="button"
       className="rail__button"
       aria-label={badge === undefined ? name : `${name} (${badge})`}
-      data-tooltip={pressed === undefined ? name : pressed ? `Stop ${name}` : `Start ${name}`}
+      data-tooltip={name}
       data-tooltip-side={tooltipSide === 'left' ? 'left' : undefined}
       disabled={disabled}
       aria-haspopup={popover ? 'dialog' : undefined}
       aria-expanded={popover ? open === popover : undefined}
-      aria-pressed={pressed}
       aria-controls={popover && open === popover ? `${tooltipSide === 'left' ? 'rail' : 'top-rail'}-popover` : undefined}
       data-popover-button={popover}
       // Where keyboard focus goes back to from a game (see focusGameNavigation).

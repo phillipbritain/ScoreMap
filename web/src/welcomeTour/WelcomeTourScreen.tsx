@@ -222,8 +222,7 @@ const railButtonWords: Record<LiveRailButtonName, string> = {
   Leagues: 'Leagues: Select which sports, leagues, and conferences you want to see',
   'Display Settings': 'Display Settings: the map, satellite or plain, and colors for each sport and league',
   Events: 'Events: find any event and go to it',
-  Orbit: 'Orbit: slowly pan between regions with events',
-  More: 'More: send feedback, or see this tour again',
+  More: 'More: start Orbit, send feedback, or see this tour again',
 }
 
 /** The rail's groups of buttons, which Your controls lights. */

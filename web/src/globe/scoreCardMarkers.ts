@@ -9,7 +9,7 @@ import { noneJustHappened, scorerOf, type JustHappened } from '../games/justHapp
 import type { PinnedCards } from '../games/pinnedCards'
 import { spotlightElapsed, type Scorer } from '../games/scorers'
 import { statusKey, type Theme } from '../theme/theme'
-import type { CardCount } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority } from '../settings/viewerSettings'
 import { cardPins } from './cardPins'
 import type { CardLayout, Showing, VenueSizes } from './cardLayout'
 import { cardClusterReach, cardLayoutDrawing, cardLayoutSource, type CardOnGlobe, type DrawnCardCluster } from './cardLayoutLayers'
@@ -114,6 +114,7 @@ export class ScoreCardMarkers {
     onSelect: (gameId: string) => void,
     settling: GlobeSettling,
     cardCount: CardCount,
+    cardPositionPriority: CardPositionPriority,
     scoreCardPins?: PinnedCards,
   ) {
     this.map = map
@@ -128,6 +129,7 @@ export class ScoreCardMarkers {
       page: this.page,
       settling,
       cardCount,
+      cardPositionPriority,
       reducedMotion: () => this.reducedMotion.matches,
       laidOut: traceLayout,
     })
@@ -149,6 +151,10 @@ export class ScoreCardMarkers {
   /** Shows as many cards at once as this card count allows (see mostCards), laid out afresh. */
   setCardCount(count: CardCount): void {
     if (this.scene.setCardCount(count)) this.sync()
+  }
+
+  setCardPositionPriority(priority: CardPositionPriority): void {
+    this.scene.setCardPositionPriority(priority)
   }
 
   /** Highlights the selected game's card and its trail, if it has them. */

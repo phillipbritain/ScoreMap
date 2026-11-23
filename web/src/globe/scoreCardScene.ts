@@ -1,5 +1,5 @@
 import type { PlacedGame } from '../games/placedGames'
-import type { CardCount } from '../settings/viewerSettings'
+import type { CardCount, CardPositionPriority } from '../settings/viewerSettings'
 import { cardComings, type CardComing } from './cardComings'
 import { cardMoves, type CardMove } from './cardMoves'
 import type { CardPin } from './cardPins'
@@ -86,6 +86,8 @@ export interface ScoreCardScene {
   select(gameId: string | null): void
   /** Shows as many cards at once as this card count allows (see mostCards), laid out afresh. False if it was that count already. */
   setCardCount(count: CardCount): boolean
+  /** Which placement strategy to use the next time the cards need laying out. */
+  setCardPositionPriority(priority: CardPositionPriority): void
   /** The cards were restyled, so they're laid out afresh: held where they were, they would overlap. */
   restyled(): void
   /** The camera has moved: the cards settle afresh, laid out as for a moving camera. */
@@ -121,6 +123,7 @@ export interface ScoreCardSceneOptions {
   /** The globe's settling, told each frame's result and each change from outside (see GlobeSettling). */
   settling: GlobeSettling
   cardCount: CardCount
+  cardPositionPriority?: CardPositionPriority
   /** Whether the viewer asks for less motion: cards then go straight where they're moved. */
   reducedMotion: () => boolean
   /** The time now, as `performance.now()` gives it. */
@@ -130,7 +133,7 @@ export interface ScoreCardSceneOptions {
 }
 
 /** The score cards' scene (see ScoreCardScene). */
-export function scoreCardScene({ page, settling, cardCount: count, reducedMotion, now = () => performance.now(), laidOut }: ScoreCardSceneOptions): ScoreCardScene {
+export function scoreCardScene({ page, settling, cardCount: count, cardPositionPriority: priority = 'venue', reducedMotion, now = () => performance.now(), laidOut }: ScoreCardSceneOptions): ScoreCardScene {
   const cards = new Map<string, Card>()
   let games = new Map<string, PlacedGame>()
   let selectedGameId: string | null = null
@@ -153,6 +156,7 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
   /** Whether the camera has moved since the cards were last laid out (see cardLayout's CardScene.moving). */
   let moving = false
   let cardCount = count
+  let cardPositionPriority = priority
   /** Whether the card count changed since the cards were last laid out (see cardLayout's CardScene.mostCardsChanged). */
   let mostCardsChanged = false
   let pins: readonly string[] = []
@@ -227,6 +231,7 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       ...frame.layoutScene(),
       moving,
       mostCards: mostCards(screen.width, cardCount),
+      cardPositionPriority,
       mostCardsChanged,
       hardCardLimit: revealed.size > 0,
     }
@@ -312,6 +317,10 @@ export function scoreCardScene({ page, settling, cardCount: count, reducedMotion
       mostCardsChanged = true
       settling.settleAfresh()
       return true
+    },
+
+    setCardPositionPriority(next) {
+      cardPositionPriority = next
     },
 
     restyled() {

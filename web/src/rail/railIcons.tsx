@@ -30,6 +30,15 @@ export function HomeIcon() {
   return <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
 }
 
+export function OrbitIcon() {
+  return (
+    <>
+      <circle cx="12" cy="12" r="5" />
+      <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-40 12 12)" />
+    </>
+  )
+}
+
 /** Leagues: a ball with a basketball's seams, for sports in general. */
 export function LeaguesIcon() {
   return (

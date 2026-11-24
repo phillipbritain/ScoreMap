@@ -91,6 +91,39 @@ public class EspnGameDetailsTests
     }
 
     [Fact]
+    public async Task ESPN_details_return_direct_media_for_eligible_clips_and_keep_expired_clips_as_links()
+    {
+        const string summary = """
+            {"videos":[
+              {"headline":"Eligible clip","originalPublishDate":"2025-01-01T12:00:00Z",
+               "thumbnail":"https://a.espncdn.com/clip.jpg","links":{
+                 "web":{"href":"https://www.espn.com/video/clip/_/id/1"},
+                 "source":{"href":"https://espnmedia-cdn.akamaized.net/espn/media/clip.mp4"}}},
+              {"headline":"Expired clip","timeRestrictions":{"expirationDate":"1999-01-01T00:00:00Z"},"links":{
+                 "web":{"href":"https://www.espn.com/video/clip/_/id/2"},
+                 "source":{"href":"https://espnmedia-cdn.akamaized.net/espn/media/old.mp4"}}}
+            ]}
+            """;
+        var provider = Provider(StubHttpHandler.Returning(summary));
+
+        var details = await provider.FetchGameDetailsAsync(Football, "1", TestContext.Current.CancellationToken);
+
+        Assert.NotNull(details);
+        Assert.Collection(details.Videos,
+            video =>
+            {
+                Assert.Equal(new VideoPlayback("mp4", "https://espnmedia-cdn.akamaized.net/espn/media/clip.mp4"), video.Playback);
+                Assert.Equal(new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero), video.PublishedAt);
+                Assert.Equal("https://a.espncdn.com/clip.jpg", video.ThumbnailUrl);
+            },
+            video =>
+            {
+                Assert.Equal("https://www.espn.com/video/clip/_/id/2", video.Url);
+                Assert.Null(video.Playback);
+            });
+    }
+
+    [Fact]
     public async Task Feed_error_does_not_break_the_scoreboard_or_reuse_another_games_details()
     {
         var handler = StubHttpHandler.Serving(

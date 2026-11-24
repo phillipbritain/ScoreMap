@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
@@ -42,7 +43,7 @@ public sealed partial class EspnGameFeedProvider
             try
             {
                 var summary = await http.GetFromJsonAsync<Summary>($"{key.League}/summary?event={key.Game}");
-                details = summary is null ? null : ToGameDetails(summary, league);
+                details = summary is null ? null : ToGameDetails(summary, league, clock.GetUtcNow());
             }
             catch (Exception error) when (error is HttpRequestException or JsonException or OperationCanceledException)
             {
@@ -66,7 +67,11 @@ public sealed partial class EspnGameFeedProvider
         }
     }
 
-    private static GameDetails ToGameDetails(Summary summary, League league)
+    private static DateTimeOffset? ParseDate(string? value) =>
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var date) ? date : null;
+
+    private static GameDetails ToGameDetails(Summary summary, League league, DateTimeOffset now)
     {
         var competition = summary.Header?.Competitions?.FirstOrDefault();
         var competitors = competition?.Competitors ?? [];
@@ -89,7 +94,10 @@ public sealed partial class EspnGameFeedProvider
                     drive.OffensivePlays, drive.Yards, drive.TimeElapsed?.DisplayValue, drive.Start?.Text, drive.End?.Text)).ToList() : [],
             ToPlayerStats(summary.Boxscore),
             (summary.Videos ?? []).Where(video => !string.IsNullOrWhiteSpace(video.Headline) && IsEspnVideo(VideoUrl(video)))
-                .Select(video => new GameVideo(video.Headline!, VideoUrl(video)!, video.Duration))
+                .Select(video => new GameVideo(video.Headline!, VideoUrl(video)!, video.Duration, ParseDate(video.OriginalPublishDate),
+                    EspnAsset(video.Thumbnail, "espnmedia-cdn.akamaized.net", "/espn/media/", ".jpg", ".jpeg", ".png", ".webp")
+                        ?? EspnAsset(video.Thumbnail, "a.espncdn.com", "/", ".jpg", ".jpeg", ".png", ".webp"),
+                    EspnPlayback(video, now)))
                 .DistinctBy(video => video.Url).ToList(),
             (competition?.Broadcasts ?? []).Concat(summary.Broadcasts ?? [])
                 .Where(broadcast => !string.Equals(broadcast.Type?.ShortName, "Radio", StringComparison.OrdinalIgnoreCase))
@@ -135,7 +143,28 @@ public sealed partial class EspnGameFeedProvider
     private static string? VideoUrl(SummaryVideo video) => video.Links?.Web?.Href ?? video.Links?.Web?.Self?.Href;
 
     private static bool IsEspnVideo(string? value) => Uri.TryCreate(value, UriKind.Absolute, out var url)
-        && url.Scheme == Uri.UriSchemeHttps && url.Host is "www.espn.com" or "espn.com";
+        && url.Scheme == Uri.UriSchemeHttps && url.IsDefaultPort && url.UserInfo.Length == 0 && url.Host is "www.espn.com" or "espn.com";
+
+    private static VideoPlayback? EspnPlayback(SummaryVideo video, DateTimeOffset now)
+    {
+        if (video.GeoRestrictions is { ValueKind: not (JsonValueKind.Null or JsonValueKind.Undefined) }
+            || video.TimeRestrictions is { } dates &&
+                (dates.EmbargoDate is not null && (ParseDate(dates.EmbargoDate) is not { } start || now < start)
+                    || dates.ExpirationDate is not null && (ParseDate(dates.ExpirationDate) is not { } end || now >= end))
+            || video.DeviceRestrictions is { } devices && (devices.Type != "whitelist"
+                || devices.Devices is not { } allowed || !new[] { "desktop", "handset", "tablet", "ipad" }.All(allowed.Contains)))
+            return null;
+
+        if (EspnAsset(video.Links?.Source?.Href, "espnmedia-cdn.akamaized.net", "/espn/media/", ".mp4") is { } mp4)
+            return new("mp4", mp4);
+        return EspnAsset(video.Links?.Source?.Hls?.Href, "cmp-espn.media.dssott.com", "/opp/hls/espn/", ".m3u8") is { } hls
+            ? new("hls", hls) : null;
+    }
+
+    private static string? EspnAsset(string? value, string host, string prefix, params string[] extensions) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var url) && url.Scheme == Uri.UriSchemeHttps && url.Host == host
+        && url.IsDefaultPort && url.UserInfo.Length == 0 && url.AbsolutePath.StartsWith(prefix, StringComparison.Ordinal)
+        && extensions.Any(extension => url.AbsolutePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) ? url.AbsoluteUri : null;
 
     private sealed record Summary(SummaryHeader? Header, List<Play>? ScoringPlays, List<Play>? Plays,
         SummaryDrives? Drives, SummaryBoxscore? Boxscore, List<SummaryVideo>? Videos, List<SummaryBroadcast>? Broadcasts);
@@ -153,7 +182,11 @@ public sealed partial class EspnGameFeedProvider
     private sealed record SummaryStatTeam(Team? Team, List<SummaryStatSection>? Statistics);
     private sealed record SummaryStatSection(string? Name, string? Text, List<string>? Labels, List<SummaryStatPlayer>? Athletes);
     private sealed record SummaryStatPlayer(Athlete? Athlete, List<string>? Stats);
-    private sealed record SummaryVideo(string? Headline, int? Duration, SummaryVideoLinks? Links);
-    private sealed record SummaryVideoLinks(SummaryWebLink? Web);
+    private sealed record SummaryVideo(string? Headline, int? Duration, SummaryVideoLinks? Links, string? Thumbnail,
+        string? OriginalPublishDate, JsonElement? GeoRestrictions, SummaryVideoDates? TimeRestrictions, SummaryVideoDevices? DeviceRestrictions);
+    private sealed record SummaryVideoDates(string? EmbargoDate, string? ExpirationDate);
+    private sealed record SummaryVideoDevices(string? Type, List<string>? Devices);
+    private sealed record SummaryVideoLinks(SummaryWebLink? Web, SummaryVideoSource? Source);
+    private sealed record SummaryVideoSource(string? Href, Link? Hls);
     private sealed record SummaryWebLink(string? Href, Link? Self);
 }

@@ -34,4 +34,7 @@ public sealed record GameDrive(string Team, string? Outcome, bool Scored, int? P
 public sealed record GameStatTeam(string Team, IReadOnlyList<GameStatSection> Sections);
 public sealed record GameStatSection(string Name, IReadOnlyList<string> Columns, IReadOnlyList<GameStatPlayer> Players);
 public sealed record GameStatPlayer(string Name, IReadOnlyList<string> Values);
-public sealed record GameVideo(string Title, string Url, int? Duration);
+public sealed record GameVideo(string Title, string Url, int? Duration, DateTimeOffset? PublishedAt = null,
+    string? ThumbnailUrl = null, VideoPlayback? Playback = null);
+
+public sealed record VideoPlayback(string Kind, string Url);

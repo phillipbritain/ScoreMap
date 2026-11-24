@@ -42,4 +42,12 @@ export interface GameVideo {
   title: string
   url: string
   duration: number | null
+  thumbnailUrl?: string | null
+  publishedAt?: string | null
+  playback?: VideoPlayback | null
+}
+
+export interface VideoPlayback {
+  kind: 'mp4' | 'hls'
+  url: string
 }

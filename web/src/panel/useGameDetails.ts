@@ -21,12 +21,13 @@ function tourDetailsBody({ id, league, status, period, note, contest, tourPlay }
 }
 
 /**
- * The selected game's details, refreshed while it's Live: a game on the board by its id, a demo's game
+ * The selected game's details, refreshed while it's Live or its Final Videos are open: a game on the board by its id, a demo's game
  * on the demo board, and a tour game by sending the facts its details are made from.
  */
-export function useGameDetails(game: Game, enabled: boolean, demo = false) {
+export function useGameDetails(game: Game, enabled: boolean, demo = false, showingVideos = false) {
   const { id, league, status } = game
   const body = isTourGame(game) ? tourDetailsBody(game) : null
+  const refreshWhileOpen = status === 'Live' || (status === 'Final' && showingVideos && !demo && body === null)
   const key = new URLSearchParams({ id, league, ...(demo && body === null ? { demo: 'true' } : {}) }).toString()
   const [result, setResult] = useState<{ key: string; data: GameDetails | null; failed: boolean } | null>(null)
 
@@ -53,7 +54,7 @@ export function useGameDetails(game: Game, enabled: boolean, demo = false) {
           setResult((before) => ({ key, data: before?.key === key ? before.data : null, failed: true }))
         }
       } finally {
-        if (!controller.signal.aborted && status === 'Live') timer = setTimeout(() => void refresh(), refreshInterval)
+        if (!controller.signal.aborted && refreshWhileOpen) timer = setTimeout(() => void refresh(), refreshInterval)
       }
     }
 
@@ -62,7 +63,7 @@ export function useGameDetails(game: Game, enabled: boolean, demo = false) {
       controller.abort()
       clearTimeout(timer)
     }
-  }, [enabled, key, status, body])
+  }, [enabled, key, status, body, refreshWhileOpen])
 
   const shown = result?.key === key ? result : null
   return { data: shown?.data ?? null, failed: shown?.failed ?? false }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
 import { boutLine, shownBout } from '../games/bouts'
 import { entrantImage, positionText, type Game, type GameBout, type GameBoutSide, type GameEntrant, type GameField, type GameTeam } from '../games/game'
 import { mapsSearchUrl, venuePlace } from './venuePlace'
@@ -59,9 +59,11 @@ interface EventPanelProps {
 export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, onDetailsTabOpened, demo = false, tabsLocked = false, onClose, leaving = false, ref }: EventPanelProps) {
   // Its details open as the last panel's were left.
   const [shown, setShown] = useState({ gameId: game.id, details: detailsOpen, watch: false })
+  const [videoGame, setVideoGame] = useState<string | null>(null)
+  const onVideosVisibility = useCallback((visible: boolean) => setVideoGame(visible ? game.id : null), [game.id])
   if (shown.gameId !== game.id) setShown({ gameId: game.id, details: detailsOpen, watch: false })
   const showingDetails = !leaving && shown.gameId === game.id && (shown.details || shown.watch)
-  const { data: details, failed } = useGameDetails(game, showingDetails, demo)
+  const { data: details, failed } = useGameDetails(game, showingDetails, demo, videoGame === game.id)
   const { venue } = game
   const place = venuePlace(venue)
   // A tennis match's venue is its tournament, which its note already names, so it shows the court and city on one line.
@@ -135,6 +137,7 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
         <GameBand game={game} />
         <GameDetailsPanel key={game.id} game={game} details={details} failed={failed} open={detailsOpen} locked={tabsLocked}
           onTabOpened={onDetailsTabOpened}
+          onVideosVisibility={onVideosVisibility}
           onToggle={(details) => {
             setShown((current) => ({ ...current, details }))
             onDetailsOpenChange(details)

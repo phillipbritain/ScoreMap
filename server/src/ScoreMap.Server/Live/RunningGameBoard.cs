@@ -69,6 +69,8 @@ public sealed partial class RunningGameBoard : BackgroundService
     public IReadOnlyList<Game> Games => _board.Games;
     public IReadOnlyList<League> Leagues => _board.Leagues;
 
+    public bool IsRealGameBoard => _switcher is null || _switcher.Running == ScenarioSwitcher.RealGames;
+
     /// <summary>
     /// The details of game <paramref name="id"/> in <paramref name="league"/> from the board's feed, for the
     /// event panel. Only the board's own games are looked up.

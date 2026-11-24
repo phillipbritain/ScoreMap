@@ -1,6 +1,7 @@
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, expect, it, vi } from 'vitest'
+import type { Game } from '../games/game'
 import type { TourGame } from '../welcomeTour/tourGame'
 import { tourGames, tourGameToTry } from '../welcomeTour/tourGames'
 import { tourPlayStart, tourPlayTick } from '../welcomeTour/tourPlay'
@@ -16,6 +17,35 @@ afterEach(async () => {
   root = undefined
   document.body.replaceChildren()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
+
+it('refreshes a Final event as long as its Videos tab is open', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+  const { tourPlay: _tourPlay, ...example } = tourGames(Date.now())[0]
+  const game: Game = { ...example, status: 'Final' }
+  const fetchDetails = vi.fn(async () => Response.json({ videos: [] }))
+  vi.stubGlobal('fetch', fetchDetails)
+  function Details({ showingVideos }: { showingVideos: boolean }) {
+    useGameDetails(game, true, false, showingVideos)
+    return null
+  }
+  const container = document.createElement('div')
+  document.body.append(container)
+  const mounted = createRoot(container)
+  root = mounted
+  const show = (showingVideos: boolean) => act(() => mounted.render(createElement(Details, { showingVideos })))
+  const tick = () => act(() => vi.advanceTimersByTimeAsync(20_000))
+
+  await show(false)
+  await tick()
+  expect(fetchDetails).toHaveBeenCalledTimes(1)
+  await show(true)
+  await tick()
+  expect(fetchDetails).toHaveBeenCalledTimes(3)
+  await show(false)
+  await tick()
+  expect(fetchDetails).toHaveBeenCalledTimes(4)
 })
 
 it('refreshes tour Event details when the period, note, or numeric score changes', async () => {

@@ -1,10 +1,11 @@
-import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { Game, GameSides, GameTeam } from '../games/game'
 import { sidesTopFirst } from '../games/sides'
 import { TeamLogoImage } from '../games/TeamLogoImage'
 import { RailIcon } from '../rail/railIcons'
 import { anchorWatchDialog, isWatchBackdrop } from './watchDialog'
-import type { GameDetails, GameDrive, GameScoringPlay, GameStatTeam, GameVideo } from './gameDetails'
+import type { GameDetails, GameDrive, GameScoringPlay, GameStatTeam } from './gameDetails'
+import { GameVideos } from './GameVideos'
 import './gameDetailsPanel.css'
 
 type DetailTab = 'Score' | 'Scoring' | 'Drives' | 'Stats' | 'Videos'
@@ -62,7 +63,7 @@ function TvIcon({ className }: { className: string }) {
   return <RailIcon className={className}><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></RailIcon>
 }
 
-export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle, onTabOpened }: {
+export function GameDetailsPanel({ game, details, failed, open, locked = false, onToggle, onTabOpened, onVideosVisibility }: {
   game: Game
   details: GameDetails | null
   failed: boolean
@@ -72,6 +73,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
   locked?: boolean
   onToggle: (open: boolean) => void
   onTabOpened?: () => void
+  onVideosVisibility?: (visible: boolean) => void
 }) {
   const contest = game.contest.kind === 'sides' ? game.contest : null
   const periodSport = ['Football', 'Basketball', 'Baseball', 'Hockey'].includes(game.sport)
@@ -86,6 +88,13 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
   const tabList = useRef<HTMLDivElement>(null)
   const id = useId()
   const active = tabs.includes(selected) ? selected : tabs[0]
+  const showingVideos = expanded && active === 'Videos' && !locked
+  useEffect(() => onVideosVisibility?.(showingVideos), [onVideosVisibility, showingVideos])
+  const videos = details?.videos.length
+    ? <GameVideos videos={details.videos} />
+    : details || failed
+      ? <DetailsMessage details={details} failed={failed}>No videos available.</DetailsMessage>
+      : <VideoRowsPlaceholder />
 
   function collapse() {
     tabList.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')?.focus()
@@ -138,7 +147,8 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
       </div>
       <div className="game-details-reveal" inert={!expanded}>
         <div className="game-details-reveal-inner">
-          <div key={active} className="game-details-pane" data-panel-scroll role="tabpanel" tabIndex={0}
+          <div key={active} className="game-details-pane" data-panel-scroll data-tab={active} role="tabpanel"
+            tabIndex={active === 'Videos' ? -1 : 0}
             id={`${id}-pane`} aria-labelledby={`${id}-tab-${active}`}>
             {active === 'Score' && (contest && details?.periodScores.length
               ? <LineScore game={game} contest={contest} details={details} />
@@ -150,9 +160,7 @@ export function GameDetailsPanel({ game, details, failed, open, locked = false, 
             {active === 'Stats' && (details?.stats.length
               ? <PlayerStats game={game} teams={details.stats} />
               : <DetailsMessage details={details} failed={failed}>No player stats available.</DetailsMessage>)}
-            {active === 'Videos' && (details?.videos.length
-              ? <Highlights videos={details.videos} />
-              : <DetailsMessage details={details} failed={failed}>No videos available.</DetailsMessage>)}
+            {active === 'Videos' && videos}
           </div>
         </div>
       </div>
@@ -299,20 +307,17 @@ function StatTable({ name, columns, players }: { name: string; columns: string[]
   )
 }
 
-function Highlights({ videos }: { videos: GameVideo[] }) {
+function VideoRowsPlaceholder() {
   return (
-    <ul className="game-details-list">
-      {videos.map(({ title, url, duration }) => (
-        <li key={url}>
-          <a className="game-details-video" href={url} target="_blank" rel="noopener noreferrer">
-            <span className="game-details-video-thumb" aria-hidden="true"><RailIcon className="game-details-video-play"><path d="m9 7 8 5-8 5z" /></RailIcon></span>
-            <strong>{title}</strong>
-            <span className="game-details-muted">ESPN{duration !== null
-              && ` · ${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, '0')}`}</span>
-          </a>
-        </li>
+    <div className="game-details-list" role="status" aria-label="Loading videos">
+      {[0, 1].map((row) => (
+        <div className="game-details-video game-details-video-placeholder" key={row} aria-hidden="true">
+          <span className="game-details-video-thumb" />
+          <span className="game-details-video-placeholder-title" />
+          <span className="game-details-video-placeholder-source" />
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }
 

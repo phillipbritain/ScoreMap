@@ -133,9 +133,13 @@
 
 .game-details-tabs button:focus-visible,
 .game-details-collapse:focus-visible,
-.game-details-pane:focus-visible {
+.game-details-pane:not([data-tab='Videos']):focus-visible {
   outline: 2px solid var(--game-color);
   outline-offset: -2px;
+}
+
+.game-details-pane[data-tab='Videos']:focus {
+  outline: none;
 }
 
 .game-details-muted {
@@ -425,6 +429,36 @@
   font-size: var(--typography-caption-font-size);
 }
 
+.game-details-video-placeholder > span {
+  background: var(--palette-divider);
+}
+
+.game-details-video-placeholder-title,
+.game-details-video-placeholder-source {
+  border-radius: var(--shape-border-radius);
+}
+
+.game-details-video-placeholder-title {
+  width: 70%;
+  height: 0.75em;
+}
+
+.game-details-video-placeholder-source {
+  width: 30%;
+  height: 0.5em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-details-video-reveal {
+    animation: game-details-video-appear 160ms ease-out;
+  }
+}
+
+@keyframes game-details-video-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Where to watch fits its broadcast tile and available links, centered over the event panel. */
 .game-details-dialog {
   --watch-dialog-inline-padding: calc(5 * var(--spacing));
@@ -459,11 +493,6 @@
 .game-details-tv:has(+ .game-details-dialog[open]) {
   background: var(--event-panel-surface-bottom);
   outline: none;
-}
-
-.game-details-dialog .game-details-dialog-close:focus-visible {
-  outline: none;
-  color: var(--palette-text-primary);
 }
 
 .game-details-tiles {

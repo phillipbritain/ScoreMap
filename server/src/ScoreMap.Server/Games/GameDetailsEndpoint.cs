@@ -16,6 +16,7 @@ public static class GameDetailsEndpoint
     /// </summary>
     public static WebApplication MapGameDetails(this WebApplication app)
     {
+        var espnDirect = app.Configuration.GetValue("Highlights:EspnDirect", true);
         app.MapGet("/api/game-details", async (string id, string league, bool? demo, RunningGameBoard board,
             DemoBoard demos, IOptions<List<League>> leagues, CancellationToken cancellationToken) =>
         {
@@ -25,12 +26,10 @@ public static class GameDetailsEndpoint
                 return Results.NotFound();
 
             var (lookup, details) = await games.FetchGameDetailsAsync(configured, id, cancellationToken);
-            return lookup switch
-            {
-                DetailsLookup.Found => Results.Ok(details),
-                DetailsLookup.NotOnBoard => Results.NotFound(),
-                _ => Results.StatusCode(StatusCodes.Status502BadGateway),
-            };
+            if (lookup == DetailsLookup.NotOnBoard) return Results.NotFound();
+            if (details is null) return Results.StatusCode(StatusCodes.Status502BadGateway);
+            if (espnDirect && demo != true && board.IsRealGameBoard) return Results.Ok(details);
+            return Results.Ok(details with { Videos = details.Videos.Select(video => video with { Playback = null }).ToArray() });
         });
 
         // The welcome tour's games are made up in the browser, so it sends the facts the details need.

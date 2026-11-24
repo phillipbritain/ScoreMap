@@ -594,6 +594,7 @@ body {
   padding: 0;
   border: none;
   background: none;
+  outline: none;
   color: var(--palette-text-secondary);
   font-family: var(--typography-font-family);
   font-size: var(--typography-h6-font-size);
@@ -3881,7 +3882,7 @@ body {
 }
 
 .score-card:focus-visible,
-.event-panel button:focus-visible,
+.event-panel button:focus-visible:not(:where(.event-panel__close, .game-details-dialog-close)),
 .event-panel a:focus-visible {
   outline: var(--shape-border-width-medium) solid var(--palette-text-primary);
   outline-offset: var(--spacing);

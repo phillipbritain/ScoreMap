@@ -15,11 +15,11 @@ export interface ZoomSettings {
    * Never further out than minZoom.
    */
   startZoom: number
-  /** The furthest in on the plain map: a city, some ten kilometers across. */
+  /** The furthest in on the plain map, where buildings are shown in 3D. */
   maxZoom: number
   /**
-   * The furthest in on the satellite map, which has more to see close in: a neighborhood. Past about
-   * 14 the imagery's pixels (10 m) only grow.
+   * The furthest in on the satellite map, where buildings are shown over imagery. Past about 14
+   * the imagery's pixels (10 m) only grow.
    */
   satelliteMaxZoom: number
 }
@@ -61,7 +61,7 @@ export const laptopView = { width: 1280, height: minZoomView }
  * of the view's shorter side, in any view. A zoom is a scale in pixels, so a start zoom would fill a
  * phone far more than a laptop: a view whose shorter side is under minZoomView starts further out
  * (and Home is as far out), in proportion, at the same size of globe on screen as on a laptop. The
- * furthest in stays as it is: a city on a phone.
+ * furthest in stays as it is.
  */
 export function fittedZoomSettings(settings: Omit<ZoomSettings, 'minZoom'>, view: { width: number; height: number }): ZoomSettings {
   // A view with no size yet (a hidden page) is fitted as a laptop's.

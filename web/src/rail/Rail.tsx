@@ -58,7 +58,7 @@ interface RailProps {
 
 /**
  * The rail: a column of icon buttons at the top right of the globe, in four groups: zoom in, zoom
- * out and Home, which move the camera, left out on a touchscreen (see shownRailButtons); Leagues and Events
+ * out and Home, which move the camera, with only Home on a touchscreen (see shownRailButtons); Leagues and Events
  * (with its count of games on it); Display Settings (the map type among them); and More (installing the app, sending feedback, the welcome tour again), whose Send feedback opens
  * the Feedback panel in its place. Each of the last four opens a popover to the left of the rail: one at a time, closed by
  * its button, Escape or a click away from it, but not by moving or zooming the globe; on a phone, the
@@ -85,7 +85,7 @@ export function Rail({
   onTourAgain,
   onInstall,
 }: RailProps) {
-  // A touchscreen pinches to zoom and drags the globe, so it has no camera buttons (see shownRailButtons).
+  // A touchscreen pinches to zoom, so the camera group only needs Home.
   const [touch] = useState(() => window.matchMedia(touchPointer).matches)
   const zoom = camera ? canZoom(camera, zoomSettings) : { in: false, out: false }
   const [open, setOpen] = useState<RailPopover | null>(null)
@@ -143,13 +143,15 @@ export function Rail({
         {/* Scrolls on a screen too short for the buttons (see .rail__buttons-inner). */}
         <div className="rail__buttons-inner">
           {/* Zooming keeps menus open, as zooming the globe itself does (see useClickAway). */}
-          {!touch && (
-            <div className="rail__group" data-keeps-popovers inert={touring}>
-              <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
-              <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
-              <RailButton label="Home" disabled={!camera} onClick={onHome} />
-            </div>
-          )}
+          <div className="rail__group" data-keeps-popovers inert={touring}>
+            {!touch && (
+              <>
+                <RailButton label="Zoom in" disabled={!zoom.in} onClick={onZoomIn} />
+                <RailButton label="Zoom out" disabled={!zoom.out} onClick={onZoomOut} />
+              </>
+            )}
+            <RailButton label="Home" disabled={!camera} onClick={onHome} />
+          </div>
           <div className="rail__group" inert={touring}>
             <RailButton
               label="Leagues"

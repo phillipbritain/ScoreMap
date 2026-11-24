@@ -4,7 +4,7 @@ import {
   type ExpressionSpecification,
   type FilterSpecification,
 } from '@maplibre/maplibre-gl-style-spec'
-import type { StyleSpecification } from 'maplibre-gl'
+import type { LineLayerSpecification, StyleSpecification } from 'maplibre-gl'
 import { describe, expect, it, vi } from 'vitest'
 import { builtInTheme } from '../theme/builtInTheme'
 import { globeFonts } from '../theme/globeFonts'
@@ -52,6 +52,7 @@ const theme: Theme = {
     Globe: {
       surface: '#000001',
       sea: '#000006',
+      streetDetail: builtInTheme.components.Globe.streetDetail,
       coastlines: { color: '#000002', width: { '1': 0.5, '9': 2 } },
       countryBorders: { color: '#000003', width: { '2': 0.7, '6': 1.5 } },
       stateLines: { color: '#000004', width: { '4': 0.4, '7': 1.1 } },
@@ -83,23 +84,29 @@ const paint = (id: string) => layer(id)?.paint as Record<string, unknown>
 const layout = (id: string) => layer(id)?.layout as Record<string, unknown>
 
 /** What a zoom-dependent paint value is at a zoom level, as MapLibre works it out. */
-function atZoom(value: unknown, zoom: number): number {
+function atZoom(value: unknown, zoom: number, roadClass?: string): number {
   const parsed = createExpression(value as ExpressionSpecification, 'test')
   if (parsed.result !== 'success') throw new Error(parsed.value.map((e) => e.message).join('; '))
-  return parsed.value.evaluate({ zoom }) as number
+  return parsed.value.evaluate({ zoom }, roadClass === undefined ? undefined : { type: 2, properties: { class: roadClass } }) as number
 }
 
 describe('globeStyle', () => {
-  it("keeps only the lines and state and country names, dropping roads, land cover, points of interest and the base style's cities, towns and villages for its own city names", () => {
+  it("keeps the borders and regional names, adds street detail, and replaces the base style's local labels", () => {
     expect(style().layers.map((l) => l.id)).toEqual([
       'background',
       'state-lines',
+      'built-up-areas',
       'sea',
+      'local-water',
+      'building-footprints',
+      'main-roads',
+      'local-streets',
       'satellite',
       'state-lines-satellite',
       'coastline',
       'boundary_2',
       'boundary_disputed',
+      '3d-buildings',
       'state_abbreviations',
       'label_state',
       'label_country_1',
@@ -129,11 +136,13 @@ describe('globeStyle', () => {
     expect(visibility('satellite', 'sea')).toBe('none')
   })
 
-  it('keeps the borders, state lines and place names on the satellite map as on the plain map', () => {
+  it('shares borders, buildings and place names between the two map types', () => {
     const ids = (mapType: 'plain' | 'satellite') => globeStyle(liberty, theme, mapType).layers.map((l) => l.id)
     expect(ids('satellite')).toEqual(ids('plain'))
     const kept = (mapType: 'plain' | 'satellite') =>
-      globeStyle(liberty, theme, mapType).layers.filter((l) => !['state-lines', 'sea', 'satellite', 'state-lines-satellite', 'coastline'].includes(l.id))
+      globeStyle(liberty, theme, mapType).layers.filter((l) =>
+        !['state-lines', 'built-up-areas', 'sea', 'local-water', 'building-footprints', 'main-roads', 'local-streets', 'satellite', 'state-lines-satellite', 'coastline'].includes(l.id),
+      )
     expect(kept('satellite')).toEqual(kept('plain'))
   })
 
@@ -141,11 +150,47 @@ describe('globeStyle', () => {
     const toSatellite = layerChanges(globeStyle(liberty, theme, 'plain').layers, globeStyle(liberty, theme, 'satellite').layers)
     expect(toSatellite).toEqual([
       { layer: 'state-lines', kind: 'layout', property: 'visibility', value: 'none' },
+      { layer: 'built-up-areas', kind: 'layout', property: 'visibility', value: 'none' },
       { layer: 'sea', kind: 'layout', property: 'visibility', value: 'none' },
+      { layer: 'local-water', kind: 'layout', property: 'visibility', value: 'none' },
+      { layer: 'building-footprints', kind: 'layout', property: 'visibility', value: 'none' },
+      { layer: 'main-roads', kind: 'layout', property: 'visibility', value: 'none' },
+      { layer: 'local-streets', kind: 'layout', property: 'visibility', value: 'none' },
       { layer: 'satellite', kind: 'layout', property: 'visibility', value: 'visible' },
       { layer: 'state-lines-satellite', kind: 'layout', property: 'visibility', value: 'visible' },
       { layer: 'coastline', kind: 'layout', property: 'visibility', value: 'none' },
     ])
+  })
+
+  it('draws each close-up road in just one layer from the existing vector source', () => {
+    const roads = style().layers.filter((layer): layer is LineLayerSpecification =>
+      layer.type === 'line' && layer['source-layer'] === 'transportation',
+    )
+    const roadLayers = roads.map(({ id, source, filter }) => {
+      expect(source).toBe('openmaptiles')
+      return { id, accepts: featureFilter(filter, id).filter }
+    })
+    const layersFor = (roadClass: string) =>
+      roadLayers
+        .filter(({ accepts }) => accepts({ zoom: 16 }, { type: 2, properties: { class: roadClass } } as never))
+        .map(({ id }) => id)
+
+    for (const roadClass of ['motorway', 'trunk', 'primary', 'secondary', 'tertiary']) expect(layersFor(roadClass)).toEqual(['main-roads'])
+    for (const roadClass of ['minor', 'service', 'street', 'living_street']) expect(layersFor(roadClass)).toEqual(['local-streets'])
+  })
+
+  it('starts newly available road classes transparent while roads already in view remain visible', () => {
+    const roads = paint('main-roads')['line-opacity']
+    expect(atZoom(roads, 9, 'motorway')).toBeGreaterThan(0)
+    expect(atZoom(roads, 9, 'secondary')).toBe(0)
+    expect(atZoom(roads, 10, 'secondary')).toBeGreaterThan(0)
+    expect(atZoom(roads, 12, 'tertiary')).toBe(0)
+    expect(atZoom(roads, 13, 'tertiary')).toBeGreaterThan(0)
+    const streets = paint('local-streets')['line-opacity']
+    expect(atZoom(streets, 12, 'minor')).toBe(0)
+    expect(atZoom(streets, 13, 'minor')).toBeGreaterThan(0)
+    expect(atZoom(streets, 13, 'service')).toBe(0)
+    expect(atZoom(streets, 14, 'service')).toBeGreaterThan(0)
   })
 
   it("draws the land in the theme's globe surface and the sea in its sea color, with coastlines from the water edges", () => {

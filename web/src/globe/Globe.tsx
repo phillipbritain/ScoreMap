@@ -69,6 +69,7 @@ export interface GlobeHandle {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (camera: Camera) => void
+  zoomToVenue: (gameId: string) => void
   startOrbit: () => void
   stopOrbit: () => void
   /** Opens a game picked from the Games list and centers it clear of its panel (see GlobeMap.pickGame). */
@@ -131,6 +132,9 @@ export function Globe({ theme, cityLabels, zoomSettings, colors, hotIndicator, m
       zoomIn: () => globe.current?.zoomIn(),
       zoomOut: () => globe.current?.zoomOut(),
       flyTo: (camera) => globe.current?.flyTo(camera),
+      zoomToVenue: (gameId) => {
+        if (panel.current) globe.current?.zoomToVenue(gameId, panelBox(panel.current))
+      },
       startOrbit: () => globe.current?.startOrbit(),
       stopOrbit: () => globe.current?.stopOrbit(),
       pickGame: (gameId) => globe.current?.pickGame(gameId, panel.current && panelBox(panel.current)),

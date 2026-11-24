@@ -511,6 +511,24 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Prototype control, shown with ?venueZoomProto. */
+.event-panel__venue-zoom-prototype {
+  min-height: calc(8 * var(--spacing));
+  margin-top: var(--spacing);
+  padding-inline: calc(2 * var(--spacing));
+  border: var(--shape-border-width-thin) solid var(--palette-primary-light);
+  border-radius: var(--shape-border-radius);
+  background: var(--controls-surface);
+  color: var(--palette-text-primary);
+  font: inherit;
+  font-size: var(--typography-caption-font-size);
+  cursor: pointer;
+}
+
+.event-panel__venue-zoom-prototype:hover {
+  background: var(--palette-action-hover);
+}
+
 /* The TV button sits at the foot of the venue details, beside the venue. */
 .event-panel__watch {
   grid-row: 2;
@@ -1073,12 +1091,20 @@ body {
 }
 
 .card-pin-menu__action {
+  display: block;
+  width: 100%;
   padding: calc(1.25 * var(--spacing)) calc(2 * var(--spacing));
   border: 0;
   font: inherit;
   color: inherit;
+  text-align: left;
+  white-space: nowrap;
   background: transparent;
   cursor: pointer;
+}
+
+.card-pin-menu__action + .card-pin-menu__action {
+  border-top: var(--shape-border-width-thin) solid var(--palette-divider);
 }
 
 .card-pin-menu__action:hover,

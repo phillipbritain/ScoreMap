@@ -3,6 +3,7 @@ import {
   setWorkerUrl,
   type LayerSpecification,
   type MapLayerMouseEvent,
+  type MapMouseEvent,
   type StyleSpecification,
 } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
@@ -24,7 +25,7 @@ import { fadeNearHorizon } from './horizon'
 import { traceLayouts } from './layoutTrace'
 import { mapTypeFade } from './mapTypeFade'
 import { globeSettling, type GlobeSettling } from './globeSettling'
-import type { ScreenBox } from './panelClearance'
+import { clearCenter, type ScreenBox } from './panelClearance'
 import { Orbit } from './orbit'
 import { pinAnimation, type PinAnimation } from './pinAnimation'
 import type { PinnedCards } from '../games/pinnedCards'
@@ -44,10 +45,14 @@ import { applyLayerChanges, layerChanges, type LayerChange } from './restyle'
 import { addPlaceNames, cityNameSource, firstPlaceNameLayer, gameCityNameLayer, type PlaceNames } from './placeNames'
 import { ScoreCardMarkers, type ShownScoreCard } from './scoreCardMarkers'
 import { trailLayer, type TrailLayer } from './trailLayer'
+import { fullBuildingHeightZoom, pitchAtZoom } from './streetZoom'
+import { constrainDoubleClickZoom, zoomGestureDistance } from './zoomGestures'
 import { zoomSettings as appZoomSettings, type ZoomSettings } from './zoomLevels'
 
 // MapLibre's default worker path doesn't survive Vite's bundling.
 setWorkerUrl(workerUrl)
+
+const venueFlightDuration = 700
 
 /**
  * The map style the globe draws its pins over: a base style to load from a URL and make over in the
@@ -152,6 +157,8 @@ export class GlobeMap {
   private readonly settling: GlobeSettling
   /** A change of map type under way, the new map fading in over the old (see setMapType). */
   private readonly mapTypeFade = mapTypeFade()
+  private stopConstrainingDoubleClickZoom?: () => void
+  private lastRightClick: { time: number; point: MapMouseEvent['point'] } | undefined
 
   constructor(
     container: HTMLElement,
@@ -175,11 +182,10 @@ export class GlobeMap {
       // they turn with the globe, so names gone over the horizon were still written at its edge.
       // They pop in and out (score cards fade).
       fadeDuration: 0,
-      // A double click while turning the globe is more often a slip than a wish to zoom in.
-      doubleClickZoom: false,
-      // The globe is only turned and zoomed, never rotated or tilted: north stays up.
+      // North stays up, and zoom sets the tilt on the app's map.
       dragRotate: false,
       touchPitch: false,
+      transformCameraUpdate: 'url' in style ? ({ zoom }) => ({ pitch: pitchAtZoom(zoom) }) : undefined,
     })
     this.map = map
     this.theme = theme
@@ -228,7 +234,7 @@ export class GlobeMap {
         cardPositionPriority,
         scoreCardPins,
       )
-      if (scoreCardPins) this.stopCardPinMenu = cardPinMenu(container, scoreCardPins)
+      if (scoreCardPins) this.stopCardPinMenu = cardPinMenu(container, scoreCardPins, this.zoomToVenue)
       this.moves = new CameraMoves(map, {
         game: (gameId) => this.shown.get(gameId),
         cards: this.cards,
@@ -254,6 +260,8 @@ export class GlobeMap {
       // settling always hears of a frame or idle after that event's card sync (see frameDrawn, wentIdle).
       map.on('render', this.frameDrawn)
       map.on('idle', this.wentIdle)
+      this.stopConstrainingDoubleClickZoom = constrainDoubleClickZoom(map)
+      map.on('contextmenu', this.rightClick)
       map.on('click', cardClusterLayer, this.clickCardCluster)
       map.on('click', cardlessSmallPinLayer, this.clickSmallPin)
       for (const layer of [cardClusterLayer, cardlessSmallPinLayer]) {
@@ -492,14 +500,52 @@ export class GlobeMap {
     this.map.zoomOut()
   }
 
+  /** Browsers only fire dblclick for the primary button. MapLibre reports secondary clicks as context menus. */
+  private readonly rightClick = ({ originalEvent, point, lngLat }: MapMouseEvent): void => {
+    if (originalEvent.button !== 2 || originalEvent.target !== this.map.getCanvas()) return
+    const time = originalEvent.timeStamp
+    const previous = this.lastRightClick
+    if (!previous || time - previous.time > 500 || previous.point.dist(point) > zoomGestureDistance) {
+      this.lastRightClick = { time, point }
+      return
+    }
+    this.lastRightClick = undefined
+    this.stopOrbit()
+    this.moves.cancel()
+    // A click in the sky has no map location to hold still.
+    const around = this.map.project(lngLat).dist(point) <= 1 ? lngLat : undefined
+    this.map.easeTo({ zoom: this.map.getZoom() - 1, around, duration: 300 })
+  }
+
   /**
    * Flies the camera there (the rail's Home). Only the camera moves: the selected game stays
    * selected.
    */
-  flyTo(camera: Camera): void {
+  flyTo(camera: Camera, { panel, duration }: { panel?: ScreenBox; duration?: number } = {}): void {
     this.stopOrbit()
     this.moves.cancel()
-    this.map.flyTo({ center: [camera.longitude, camera.latitude], zoom: camera.zoom })
+    const { longitude, latitude, zoom } = camera
+    if (!panel) {
+      this.map.flyTo({ center: [longitude, latitude], zoom, duration })
+      return
+    }
+    const view = this.map.getCanvas().getBoundingClientRect()
+    const { x, y } = clearCenter(view, panel)
+    this.map.flyTo({
+      center: [longitude, latitude],
+      zoom,
+      duration,
+      offset: [x - (view.left + view.width / 2), y - (view.top + view.height / 2)],
+      pitch: pitchAtZoom(zoom),
+    })
+  }
+
+  readonly zoomToVenue = (gameId: string, panel?: ScreenBox): void => {
+    const venue = this.shown.get(gameId)?.venue
+    if (!venue) return
+    const { latitude, longitude } = venue
+    const zoom = panel ? this.map.getMaxZoom() : Math.max(this.map.getZoom(), fullBuildingHeightZoom)
+    this.flyTo({ latitude, longitude, zoom }, { panel, duration: venueFlightDuration })
   }
 
   startOrbit(): void {
@@ -514,6 +560,7 @@ export class GlobeMap {
     if (this.destroyed) return
     this.destroyed = true
     this.stopCardPinMenu?.()
+    this.stopConstrainingDoubleClickZoom?.()
     this.moves?.destroy()
     this.orbit?.destroy()
     this.map.getContainer().removeEventListener('pointerdown', this.stopOrbit, true)

@@ -4,8 +4,8 @@ import { shownRailButtons } from './railButtons'
 describe('shownRailButtons', () => {
   const names = (touch: boolean) => shownRailButtons(touch).map(({ name }) => name)
 
-  it('leaves out the camera buttons on a touchscreen, which pinches to zoom', () => {
-    expect(names(true)).toEqual(['Leagues', 'Events', 'Display Settings', 'More'])
+  it('keeps Home and leaves out the zoom buttons on a touchscreen', () => {
+    expect(names(true)).toEqual(['Home', 'Leagues', 'Events', 'Display Settings', 'More'])
   })
 
   it('shows every button with a mouse', () => {

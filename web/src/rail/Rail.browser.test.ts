@@ -1,8 +1,10 @@
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
+import type { Camera } from '../globe/camera'
 import { zoomSettings } from '../globe/zoomLevels'
 import { firstVisitSettings } from '../settings/viewerSettings'
+import { touchPointer } from '../welcomeTour/welcomeTour'
 import { Rail } from './Rail'
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
@@ -13,18 +15,19 @@ afterEach(async () => {
   document.body.replaceChildren()
 })
 
-async function mountRail(touring: boolean) {
+async function mountRail(touring: boolean, camera: Camera | null = null) {
   const onTourAgain = vi.fn()
+  const onHome = vi.fn()
   const container = document.createElement('div')
   document.body.append(container)
   root = createRoot(container)
   await act(() => root!.render(createElement(Rail, {
-    leagues: [], settings: firstVisitSettings, onChange: vi.fn(), accent: '#fff', camera: null, zoomSettings,
-    onZoomIn: vi.fn(), onZoomOut: vi.fn(), onHome: vi.fn(), touring, games: [], gamesReady: true,
+    leagues: [], settings: firstVisitSettings, onChange: vi.fn(), accent: '#fff', camera, zoomSettings,
+    onZoomIn: vi.fn(), onZoomOut: vi.fn(), onHome, touring, games: [], gamesReady: true,
     onSelectGame: vi.fn(),
     feedbackContext: () => { throw new Error('not sent') }, onTourAgain,
   })))
-  return { onTourAgain }
+  return { onTourAgain, onHome }
 }
 
 const button = (label: string) => document.querySelector<HTMLButtonElement>(`.rail [aria-label^="${label}"]`)!
@@ -53,6 +56,18 @@ it("keeps More, its popover and the Feedback panel usable during the welcome tou
 it('leaves every button usable once the tour is over', async () => {
   await mountRail(false)
   for (const label of ['Zoom in', 'Leagues', 'Events', 'More']) expect(usable(button(label)), label).toBe(true)
+})
+
+it('offers Home on a touchscreen with only gesture-based manual zoom', async () => {
+  const matchMedia = window.matchMedia.bind(window)
+  const touch = vi.spyOn(window, 'matchMedia').mockImplementation(query => matchMedia(query === touchPointer ? '(min-width: 0px)' : query))
+  onTestFinished(() => { touch.mockRestore() })
+  const { onHome } = await mountRail(false, { longitude: 0, latitude: 0, zoom: 16 })
+
+  expect(button('Zoom in')).toBeNull()
+  expect(button('Zoom out')).toBeNull()
+  await act(() => button('Home').click())
+  expect(onHome).toHaveBeenCalledOnce()
 })
 
 it('gives Leagues, Display Settings and Events a close button that closes them, and none to More', async () => {

@@ -16,16 +16,12 @@ export const railButtons = [
 ] as const
 
 /**
- * The rail's buttons a touchscreen shows (see touchPointer): all but Zoom in, Zoom out and Home, as a
- * finger pinches to zoom and drags the globe, which leaves the rail short enough on a phone for the event
- * panel to fit under it. Elsewhere, all of them. The welcome tour's Your controls lists the same.
+ * The rail's buttons a touchscreen shows (see touchPointer). Home is available everywhere, and a
+ * touchscreen pinches to zoom. The welcome tour's Your controls lists the same buttons.
  */
 export function shownRailButtons(touch: boolean): readonly (typeof railButtons)[number][] {
-  return touch ? railButtons.filter(({ name }) => !(cameraButtons as readonly string[]).includes(name)) : railButtons
+  return touch ? railButtons.filter(({ name }) => name !== 'Zoom in' && name !== 'Zoom out') : railButtons
 }
-
-/** The rail's buttons that move the camera, which a touchscreen leaves out (see shownRailButtons). */
-const cameraButtons = ['Zoom in', 'Zoom out', 'Home'] as const
 
 /**
  * The local-run tools' buttons, on the top rail on local runs only: Scenario, opening the scenario

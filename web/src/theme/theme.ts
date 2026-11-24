@@ -411,6 +411,7 @@ const settings = {
     Globe: {
       surface: color,
       sea: color,
+      streetDetail: { builtUpAreas: color, buildingFootprints: color, mainRoads: color, localStreets: color },
       coastlines: globeLine,
       countryBorders: globeLine,
       stateLines: globeLine,

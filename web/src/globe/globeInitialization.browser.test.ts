@@ -26,17 +26,17 @@ const baseStyle: StyleSpecification = {
 let root: Root | undefined
 let container: HTMLDivElement
 
-function open() {
+function open(startZoom = 2) {
   applyTheme(document.documentElement, builtInTheme)
   container = document.createElement('div')
   container.style.cssText = 'position: relative; width: 800px; height: 600px'
   document.body.append(container)
   root = createRoot(container)
-  root.render(createElement(LoadingGlobe))
+  root.render(createElement(LoadingGlobe, { startZoom }))
 }
 
 // Hosts the production components at their public stage/retry seam, as App does.
-function LoadingGlobe() {
+function LoadingGlobe({ startZoom }: { startZoom: number }) {
   const [stage, setStage] = useState<LoadingStage>('waitingForGames')
   const [attempt, setAttempt] = useState(0)
   const [gone, setGone] = useState(false)
@@ -50,7 +50,7 @@ function LoadingGlobe() {
       cardPositionPriority: 'venue',
       games: [], justHappened: noneJustHappened, selectedGameId: null,
       panel: { current: null }, onSelectGame: () => {},
-      startCamera: { longitude: 0, latitude: 0, zoom: 2 },
+      startCamera: { longitude: 0, latitude: 0, zoom: startZoom },
       onCameraMove: () => {}, onStage: setStage,
     }),
     !gone && createElement(LoadingScreen, {
@@ -158,6 +158,25 @@ it('keeps a usable globe ready after an individual tile error', async () => {
   expect(retry()).toBeNull()
 })
 
+it('restores the tilt at street zoom and updates it as the viewer zooms', async () => {
+  styleService(async () => Response.json(baseStyle))
+  open(17)
+  await vi.waitFor(ready, { timeout: 15_000 })
+  const { map } = window.scoremap!
+  const style = map.getLayer('3d-buildings')
+  expect(map.getZoom()).toBe(17)
+  expect(map.getPitch()).toBeGreaterThan(0)
+
+  const end = map.once('moveend')
+  map.zoomTo(14, { duration: 200 })
+  await end
+  expect(map.getPitch()).toBe(0)
+
+  map.jumpTo({ zoom: 16 })
+  expect(map.getPitch()).toBeGreaterThan(0)
+  expect(map.getLayer('3d-buildings')).toBe(style)
+})
+
 it('aborts a pending initial style request on unmount and can initialize on the next mount', async () => {
   let pending: Request | undefined
   let recovered = false
@@ -176,7 +195,7 @@ it('aborts a pending initial style request on unmount and can initialize on the 
   expect(container.querySelector('canvas.maplibregl-canvas')).toBeNull()
   recovered = true
   root = createRoot(container)
-  root.render(createElement(LoadingGlobe))
+  root.render(createElement(LoadingGlobe, { startZoom: 2 }))
   await vi.waitFor(ready, { timeout: 10_000 })
 })
 

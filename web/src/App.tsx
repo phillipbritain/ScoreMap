@@ -44,6 +44,9 @@ import { useWelcomeTour } from './welcomeTour/welcomeTourLifecycle'
 // The width below which the page takes its phone layout, as index.css has it.
 const phoneLayout = '(max-width: 640px)'
 
+// Prototype: try a venue zoom button by opening the local app with ?venueZoomProto.
+const venueZoomPrototype = import.meta.env.DEV && new URLSearchParams(window.location.search).has('venueZoomProto')
+
 const savedStore = settingsStore(() => window.localStorage)
 const demoStore = unsavedSettingsStore()
 // Kept in a demo too: the hint is about this browser, not the viewer's settings.
@@ -240,6 +243,7 @@ export default function App({ theme: startTheme, demo = false }: AppProps) {
             onDetailsTabOpened={panelLeaving ? undefined : tour.onDetailsTabOpened}
             tabsLocked={tour.tabsLocked}
             demo={demo}
+            onZoomToVenue={venueZoomPrototype && !touring && !panelLeaving ? () => globe.current?.zoomToVenue(panelGame.id) : undefined}
             onClose={closeGame}
             leaving={panelLeaving}
           />

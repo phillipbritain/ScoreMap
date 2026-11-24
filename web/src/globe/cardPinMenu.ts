@@ -1,14 +1,10 @@
 import type { PinnedCards } from '../games/pinnedCards'
 
-/** Right-click, long-press, and keyboard access to the pin action for this globe's score cards. */
-export function cardPinMenu(container: HTMLElement, pins: PinnedCards): () => void {
+/** Right-click, long-press, and keyboard access to this globe's score-card actions. */
+export function cardPinMenu(container: HTMLElement, pins: PinnedCards, zoomToVenue: (gameId: string) => void): () => void {
   const menu = document.createElement('div')
   menu.className = 'card-pin-menu'
   menu.hidden = true
-  const action = document.createElement('button')
-  action.className = 'card-pin-menu__action'
-  action.type = 'button'
-  menu.append(action)
   document.body.append(menu)
   const controller = new AbortController()
   const capture = { capture: true, signal: controller.signal }
@@ -33,12 +29,27 @@ export function cardPinMenu(container: HTMLElement, pins: PinnedCards): () => vo
     origin?.removeAttribute('data-pin-press')
     origin = undefined
   }
+  const addAction = (label: string, run: (gameId: string) => void) => {
+    const button = document.createElement('button')
+    button.className = 'card-pin-menu__action'
+    button.type = 'button'
+    button.textContent = label
+    button.addEventListener('click', () => {
+      const gameId = origin?.dataset.gameId
+      close(true)
+      if (gameId) run(gameId)
+    })
+    menu.append(button)
+    return button
+  }
+  const pinAction = addAction('Pin Card', gameId => pins.toggle(gameId))
+  addAction('Zoom to venue', zoomToVenue)
   const placeAbove = (card: HTMLElement) => {
     const box = card.getBoundingClientRect()
     const left = box.left + (box.width - menu.offsetWidth) / 2
     const top = box.top - menu.offsetHeight - 4
     menu.style.left = `${Math.max(4, Math.min(left, innerWidth - menu.offsetWidth - 4))}px`
-    menu.style.top = `${Math.max(4, top)}px`
+    menu.style.top = `${top >= 4 ? top : Math.max(4, Math.min(box.bottom + 4, innerHeight - menu.offsetHeight - 4))}px`
   }
   const followCard = () => {
     if (!origin?.checkVisibility({ visibilityProperty: true }) || origin.closest('[inert]')) {
@@ -51,12 +62,12 @@ export function cardPinMenu(container: HTMLElement, pins: PinnedCards): () => vo
   const open = (card: HTMLElement, fromKeyboard = false) => {
     if (origin && origin !== card) close()
     origin = card
-    action.textContent = pins.games().includes(card.dataset.gameId!) ? 'Unpin Card' : 'Pin Card'
+    pinAction.textContent = pins.games().includes(card.dataset.gameId!) ? 'Unpin Card' : 'Pin Card'
     menu.toggleAttribute('data-keyboard', fromKeyboard)
     menu.hidden = false
     cancelAnimationFrame(menuFrame)
     followCard()
-    if (fromKeyboard) action.focus({ preventScroll: true })
+    if (fromKeyboard) pinAction.focus({ preventScroll: true })
   }
   const completeHold = () => {
     if (!hold) return
@@ -64,11 +75,6 @@ export function cardPinMenu(container: HTMLElement, pins: PinnedCards): () => vo
     if (card.isConnected) open(card)
     cancelHold()
   }
-  action.addEventListener('click', () => {
-    const gameId = origin?.dataset.gameId
-    close(true)
-    if (gameId) pins.toggle(gameId)
-  })
   document.addEventListener('contextmenu', event => {
     const card = cardAt(event)
     if (!card) return

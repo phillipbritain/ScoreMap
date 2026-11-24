@@ -19,6 +19,7 @@ import { GlobeMap, type LoadingStage } from './globeMap'
 import { hotIndicatorImage } from './hotIndicator'
 import { trailLayerId, type TrailLayer, type TrailOnScreen } from './trailLayer'
 import { isBehindGlobe } from './horizon'
+import { fullBuildingHeightZoom } from './streetZoom'
 import {
   pinSource,
 } from './pinLayers'
@@ -279,6 +280,37 @@ describe('score cards', () => {
     expect(channels(getComputedStyle(live).color).slice(0, 3).map(Math.round)).toEqual(hexChannels(look.text))
     expect(between(getComputedStyle(final).color, look.text, look.fill)).toBe(true)
     expect(between(getComputedStyle(final).borderTopColor, palette.final.main, look.fill)).toBe(true)
+  })
+
+  it.each(['right-click', 'long press'])('zooms to the card’s venue from its %s menu', async (gesture) => {
+    const pins = pinnedCards()
+    const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, { scoreCardPins: pins })
+    const longitude = 12
+    const latitude = 8
+    globe.show([game('A', { longitude, latitude })])
+    const scoreCard = await cardShown('A')
+
+    if (gesture === 'right-click') {
+      scoreCard.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))
+    } else {
+      scoreCard.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', isPrimary: true, pointerId: 1 }))
+    }
+    const menu = document.querySelector<HTMLElement>('.card-pin-menu')!
+    await vi.waitFor(() => expect(menu.hidden).toBe(false))
+    if (gesture === 'long press') {
+      scoreCard.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch', isPrimary: true, pointerId: 1 }))
+    }
+    const zoomAction = [...menu.querySelectorAll('button')].find(button => button.textContent === 'Zoom to venue')!
+    const end = map.once('moveend')
+    await userEvent.click(zoomAction)
+    await end
+
+    expect(map.getZoom()).toBeCloseTo(fullBuildingHeightZoom)
+    expect(map.getCenter().lng).toBeCloseTo(longitude)
+    expect(map.getCenter().lat).toBeCloseTo(latitude)
+    expect(menu.hidden).toBe(true)
+    expect(pins.games()).toEqual([])
+    expect(onSelect).not.toHaveBeenCalled()
   })
 })
 
@@ -721,17 +753,66 @@ describe('games not placed yet', () => {
   })
 })
 
-describe('revealing score cards', () => {
-  it('does not zoom in when the viewer double-clicks the globe', async () => {
-    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: 2 })
+describe('zoom gestures', () => {
+  it('zooms in when the viewer double-clicks the globe', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom })
     await new Promise((resolve) => map.once('load', resolve))
 
-    await userEvent.dblClick(map.getCanvas(), { position: { x: 300, y: 200 } })
-    await pause(500)
+    await userEvent.dblClick(map.getCanvas(), { position: { x: 400, y: 300 } })
 
-    expect(map.getZoom()).toBe(2)
+    await vi.waitFor(() => expect(map.getZoom()).toBeCloseTo(countryZoom + 1))
   })
 
+  it('ignores a double-click that spans more than 12 pixels', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom })
+    await new Promise((resolve) => map.once('load', resolve))
+    const canvas = map.getCanvas()
+    const { left, top } = canvas.getBoundingClientRect()
+    const fire = (type: string, x: number) =>
+      canvas.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: left + x, clientY: top + 300, button: 0 }))
+    fire('click', 400)
+    fire('click', 420)
+    fire('dblclick', 420)
+
+    expect(map.isZooming()).toBe(false)
+    expect(map.getZoom()).toBe(countryZoom)
+  })
+
+  it('zooms in when the viewer double-taps the globe', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom })
+    await new Promise((resolve) => map.once('load', resolve))
+    const canvas = map.getCanvas()
+    const { left, top } = canvas.getBoundingClientRect()
+    const tap = (x: number) => {
+      const touch = new Touch({ identifier: 0, target: canvas, clientX: left + x, clientY: top + 300 })
+      canvas.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [touch], changedTouches: [touch] }))
+      canvas.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, changedTouches: [touch] }))
+    }
+    tap(400)
+    tap(420)
+    expect(map.isZooming()).toBe(false)
+    expect(map.getZoom()).toBe(countryZoom)
+
+    tap(430)
+    await vi.waitFor(() => expect(map.getZoom()).toBeCloseTo(countryZoom + 1))
+  })
+
+  it('zooms out on two nearby right-clicks and ignores a single right-click', async () => {
+    const { map } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom })
+    await new Promise((resolve) => map.once('load', resolve))
+    const canvas = map.getCanvas()
+    const position = { x: 400, y: 300 }
+
+    await userEvent.click(canvas, { button: 'right', position })
+    expect(map.isZooming()).toBe(false)
+    expect(map.getZoom()).toBe(countryZoom)
+    await userEvent.dblClick(canvas, { button: 'right', position: { x: 500, y: 300 } })
+
+    await vi.waitFor(() => expect(map.getZoom()).toBeCloseTo(countryZoom - 1))
+  })
+})
+
+describe('revealing score cards', () => {
   it('reveals games from a card cluster at the current camera without opening a panel', async () => {
     const { globe, map, onSelect } = openGlobe({ longitude: 0, latitude: 0, zoom: countryZoom }, smallGlobe)
     // A grid of games a tenth of a degree apart: far too close for their cards to fit at countryZoom.

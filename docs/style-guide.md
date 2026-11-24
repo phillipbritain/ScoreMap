@@ -67,6 +67,14 @@ ScoreMap comes in as one on its first load. From its first paint the page is the
 
 Switching map type cross-fades. The old map stays on screen while the new one's tiles load out of sight; then the satellite imagery, which lies over the plain map's land and sea, fades in over it, or out from over it, in one go over 0.4 s, and the old map's layers go once they're covered (`web/src/globe/mapTypeFade.ts`). Tiles still missing after 4 seconds don't hold the switch up: it fades then, and they arrive as they load.
 
+On the plain map, built-up areas and major roads fade in from zoom 7. Secondary roads start fading in at zoom 9, tertiary and local roads at zoom 12, and service roads and building footprints at zoom 13. From zoom 15 to 16, both map types tilt and buildings rise to their mapped heights. The plain map adds local water and fades the footprints out as the buildings rise. The satellite map shows the 3D buildings over its imagery. These details come from the same vector tiles as the borders. Zooming out reverses the transition.
+
+A score card's menu opens with a right-click, long press, or the keyboard's context-menu shortcut. Alongside Pin Card or Unpin Card, Zoom to venue flies straight to the venue at street level.
+
+Double-click or double-tap the map to zoom in one step. Double-right-click the map to zoom out one step. In each case the clicks or taps must be within 12 screen pixels of each other.
+
+Home on the rail returns the globe to the first-visit view for the viewer's region. It's available on both desktop and touchscreens.
+
 A rail popover (Leagues, Display Settings, Events, More, Feedback, and the top rail's Scenario) opening slides out a little from the rail, or down from the top rail's row, as it fades in over 160 ms; closed, it slides back as it fades out over 120 ms, out of reach as it goes. The event panel opening slides up into place from below the screen's foot over 220 ms, and closed, slides back down off it over 160 ms. It doesn't fade, as the score block's glass would flash as its blur stopped seeing the globe. Picking another event while it's open changes it in place. With reduce motion a popover fades in place as it opens, the panel is there at once, and either goes at once.
 
 On a phone, where the event panel is a bottom sheet, it can be swiped down to close as well as by its close button: a drag down from anywhere on it but its band (which scrolls) moves the panel with the finger, giving only a little upward. Let go past 30% of its height, or flicked down, it slides off the screen over 180 ms and closes; otherwise it springs back over 260 ms, overshooting slightly. There's no handle. This is variant B of the comparison preserved on the throwaway branch `phillipbritain/swipe-close-proto`, chosen by the user on November 14, 2026.
@@ -142,7 +150,8 @@ The dark theme names one of the palette's colors where a job is what that palett
 | Setting | What it colors | Dark theme |
 | --- | --- | --- |
 | `components.Globe.surface` | The globe's land, a step darker than `primary.main` so the globe reads behind score cards | `navy.600` |
-| `components.Globe.sea` | The sea: oceans and lakes, darker than the land so the coast stands out (rivers stay the land's color; the satellite map shows its own) | `#071a3c`, given directly, between `navy.700` and `navy.800` |
+| `components.Globe.sea` | Oceans and lakes, plus local water at street zoom | `#071a3c`, given directly, between `navy.700` and `navy.800` |
+| `components.Globe.streetDetail` | Built-up areas, building footprints, main roads and local streets on the plain map | `#536482`, `#8ca3ba`, `#91a3bc`, and `#788ca5` |
 | `components.Globe.coastlines.color` | The edges of the sea (lakes and rivers aren't outlined) | `navy.200` |
 | `components.Globe.countryBorders.color` | Country borders | `navy.200` |
 | `components.Globe.stateLines.color` | State and province lines, the United States' and Canada's only (ADR-0026) | `navy.300` |

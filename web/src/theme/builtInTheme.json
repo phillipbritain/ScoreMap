@@ -42,6 +42,12 @@
     "Globe": {
       "surface": "navy.600",
       "sea": "#071a3c",
+      "streetDetail": {
+        "builtUpAreas": "#536482",
+        "buildingFootprints": "#8ca3ba",
+        "mainRoads": "#91a3bc",
+        "localStreets": "#788ca5"
+      },
       "coastlines": { "color": "navy.200", "width": { "2": 0.9, "8": 1.6 } },
       "countryBorders": { "color": "navy.200", "width": { "2": 0.9, "8": 1.8 } },
       "stateLines": { "color": "navy.300", "width": { "3": 0.6, "8": 1.2 } },

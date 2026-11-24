@@ -147,8 +147,4 @@ describe('zoomForMapType', () => {
   it('zooms further in on the satellite map, the rest as on the plain map', () => {
     expect(zoomForMapType(limits, 'satellite')).toEqual({ ...limits, maxZoom: 15 })
   })
-
-  it('lets the satellite map zoom in further than the plain map', () => {
-    expect(zoomSettings.satelliteMaxZoom).toBeGreaterThan(zoomSettings.maxZoom)
-  })
 })

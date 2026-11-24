@@ -42,6 +42,7 @@ interface EventPanelProps {
   demo?: boolean
   /** Whether its tabs can't be used yet: the welcome tour, until its Event details step. */
   tabsLocked?: boolean
+  onZoomToVenue?: () => void
   onClose: () => void
   /**
    * Whether the panel is on its way out, closed (see .event-panel--leaving): it can't be used meanwhile.
@@ -56,7 +57,7 @@ interface EventPanelProps {
  * The selected game's score and venue above a collapsible details pane. Venue photos stay
  * anchored to the header; the details and any sport-specific band scroll on short screens.
  */
-export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, onDetailsTabOpened, demo = false, tabsLocked = false, onClose, leaving = false, ref }: EventPanelProps) {
+export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, detailsOpen, onDetailsOpenChange, onDetailsTabOpened, demo = false, tabsLocked = false, onZoomToVenue, onClose, leaving = false, ref }: EventPanelProps) {
   // Its details open as the last panel's were left.
   const [shown, setShown] = useState({ gameId: game.id, details: detailsOpen, watch: false })
   const [videoGame, setVideoGame] = useState<string | null>(null)
@@ -125,6 +126,11 @@ export function EventPanel({ game, scorer, color, textOnColor, venuePhotos, deta
               <div className="event-panel__muted event-panel__place" data-tooltip={placeLine || undefined} data-tooltip-when-clipped>
                 {placeLine && <MapsLink query={placeLine}>{placeLine}</MapsLink>}
               </div>
+              {onZoomToVenue && venue.latitude !== null && venue.longitude !== null && (
+                <button type="button" className="event-panel__venue-zoom-prototype" onClick={onZoomToVenue}>
+                  Zoom to venue
+                </button>
+              )}
             </div>
             <div className="event-panel__watch">
               <WatchInfo key={game.id} details={details} failed={failed} onToggle={(watch) => setShown((current) => ({ ...current, watch }))}>

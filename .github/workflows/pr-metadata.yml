@@ -1,4 +1,4 @@
-# Checks a pull request's title and description for a Claude coauthor trailer, which a squash merge
+# Checks a pull request's title and description for an AI tool coauthor trailer, which a squash merge
 # could carry into main (the commits themselves: ci.yml's web job). Its own workflow, and cheap, so
 # a title/description edit reruns only this, not ci.yml's full run. It also runs on each push, so
 # every new commit gets a result. The rule is the one in scripts/check-commit-attribution.mjs.

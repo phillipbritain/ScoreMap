@@ -1,6 +1,12 @@
 # Browser automation
 
-How to drive a browser on a local run, for checking a change or taking screenshots: the way agents do it, and anyone else can. Find the run's `$web` URL first ([running-locally.md](running-locally.md#use-the-run-thats-there)). Install agent-browser and its Chrome once per machine, as the README says.
+How to drive a browser on a local run, for checking a change or taking screenshots: the way agents do it, and anyone else can. Find the run's `$web` URL first ([running-locally.md](running-locally.md#use-the-run-thats-there)). Install agent-browser and its Chrome once per machine:
+
+```sh
+npm install -g agent-browser
+agent-browser install   # downloads its Chrome
+```
+
 
 With agent-browser, in a session of your own (`export AGENT_BROWSER_SESSION=scoremap-<task>`), and `npm run page` (in `web/`) for anything that reads or moves the page. Use it rather than `agent-browser eval`: `npm run page` runs its script in the page for you, and some agents' shells refuse commands containing `eval`. It uses the same session, from `AGENT_BROWSER_SESSION`, and runs from PowerShell or Git Bash.
 

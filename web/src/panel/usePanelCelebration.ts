@@ -31,7 +31,9 @@ export function usePanelCelebration(game: Game | null, panel: RefObject<HTMLElem
   const status = game?.status ?? null
   // The game's color as it played: a Final game takes Final's.
   const color = useRef<string | null>(null)
-  if (status !== 'Final') color.current = gameColor
+  useEffect(() => {
+    if (status !== 'Final') color.current = gameColor
+  }, [gameColor, status])
 
   useEffect(() => {
     const before = seen.current

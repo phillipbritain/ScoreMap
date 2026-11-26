@@ -8,22 +8,15 @@ The app is still being shaped, so keep the process light:
 
 - **A small change** (a tweak, a fix, or a feature touching a few files) is built directly on one branch with one PR: no ticket split, integration branch or subagent worktrees. It needs no issue: where one would help, suggest it, and the user decides whether to work in place or file it for later. `/implement-spec` is for features with several parts.
 - **Tests cover behavior** in the core logic: card layout, scenarios, polling, the ESPN feed and the game board. No test asserts a choice of look (#141); how it looks is checked by eye (`docs/style-guide.md`).
-- **Browser verification** may use agent-opened workspace tabs. Close those tabs when verification is complete, leaving the user's existing tabs open.
 - **While working**, keep the loop **tight**: after each edit, run types, lint and the unit tests (seconds) from `web/` as `npx tsc -b`, `npm run lint` and `npm test` (the unit project only), and the server tests (`dotnet test server/ScoreMap.slnx -c Release`) for a change in `server/`. A change to how something looks goes straight back to the user, who sees it at once in their run through Vite; take screenshots only when asked, or when a change's working can't be told any other way.
 - **Before a PR**, run the browser tests (`npm run test:browser`) once (minutes) if `web/src/globe/` or `web/scripts/page/` changed, with the output saved to a file. Two full runs at once are fine for one agent (both pass at normal speed on an M1 Pro); if a long-pan test times out on a busier machine, rerun just that test by name (`npx vitest run --project browser <file> -t "<name>"`). Any other failure in the full run is the change's until the full suite passes with the change reverted. CI runs lint, types and every test on each PR, and must pass before a merge; fix any failure before asking for one.
-- **A retro or review** proposes a new check, script or tool only when the same mistake has cost real time more than once; otherwise it notes the mistake.
-- **Spelling is American** (color, behavior, center) in code, docs and on screen; names and outside data (ESPN, venues, places) keep theirs.
-- **Docs change** when behavior or a decision changes, not for every tweak. Each fact lives in one place: the README for setup and pointers, `docs/configuration.md` for configuration, the `run-scoremap` skill for scenarios and driving the app.
+- **Each fact lives in one place**: the README for setup and pointers, `docs/configuration.md` for configuration, the `run-scoremap` skill for scenarios and driving the app.
 
 ## Agent skills
 
 ### Pull requests
 
-Commit work on a branch created from `origin/main` (a clone's own `main` can be stale), named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): GitHub's ruleset blocks pushes to `main` for everyone, and the user merges every pull request: never merge one yourself. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
-
-Commits and pull requests credit no AI tool: no AI author or committer, and no `Co-Authored-By` trailer naming one (turn off your tool's own commit credit). CI's commit attribution check fails the PR, and with force pushes blocked, one such commit means a new branch and PR.
-
-Waiting for CI, watch the run for the pushed commit: `gh run list --commit $(git rev-parse HEAD)`, then `gh run watch <id> --exit-status` (`--branch <b> --limit 1` straight after a push can return the previous run, green for the old commit). When no run appears, check `gh pr view --json mergeable`: GitHub starts no CI on a conflicting PR.
+The user's global agent instructions cover branches, merging, AI credit and waiting for CI. Here, a worktree's own `worktree-<issue>-…` branch counts as named for its issue, and the required checks are `web`, `server` and `attribution`.
 
 Working an issue, move its card on the project board: to **In progress** when starting work, and to **In review** when opening its pull request (the commands are in `docs/agents/issue-tracker.md`).
 

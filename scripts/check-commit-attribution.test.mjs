@@ -45,6 +45,24 @@ test('checks actual git history and squash-message input without counting existi
   })
   assert.equal(check('HEAD^', 'HEAD').status, 1, 'catches committer metadata')
 
+  git('checkout', '-q', '--detach', clean)
+  const otherTools = [
+    'Copilot <175728472+Copilot@users.noreply.github.com>',
+    'Cursor Agent <cursoragent@cursor.com>',
+    'chatgpt-codex-connector[bot] <199175422+chatgpt-codex-connector[bot]@users.noreply.github.com>',
+    'gemini-code-assist[bot] <176961590+gemini-code-assist[bot]@users.noreply.github.com>',
+  ]
+  for (const tool of otherTools) {
+    const credited = commit(`Tool work\n\nCo-authored-by: ${tool}`)
+    assert.equal(check('HEAD^', credited).status, 1, `rejects a coauthor trailer for ${tool}`)
+  }
+  git('commit', '--allow-empty', '--author=Copilot <175728472+Copilot@users.noreply.github.com>', '-m', 'Tool authored')
+  assert.equal(check('HEAD^', 'HEAD').status, 1, 'catches another tool as the author')
+  const human = commit('Pair work\n\nCo-authored-by: Ada Lovelace <ada@example.com>')
+  assert.equal(check('HEAD^', human).status, 0, 'allows a human coauthor')
+  const mention = commit('Turn off Copilot and Cursor suggestions in the editor settings')
+  assert.equal(check('HEAD^', mention).status, 0, 'allows tools named outside a trailer')
+
   const event = join(cwd, 'event.json')
   writeFileSync(event, JSON.stringify({ pull_request: { title: 'Clean title',
     body: 'Description\n\nCo-authored-by: Claude <noreply@anthropic.com>' } }))

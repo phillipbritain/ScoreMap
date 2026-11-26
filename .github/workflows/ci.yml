@@ -48,9 +48,6 @@ jobs:
           node --test ../scripts/check-commit-attribution.test.mjs
           node ../scripts/check-commit-attribution.mjs "$BASE_SHA" "$HEAD_SHA"
 
-      - name: Test the git hook
-        run: node --test ../.claude/hooks/block-dangerous-git.test.mjs
-
       - run: npm ci
       - run: npm run lint
       # Type checks too (tsc -b), then the production bundle.

@@ -19,9 +19,9 @@ The app is still being shaped, so keep the process light:
 
 ### Pull requests
 
-Commit work on a branch created from `origin/main` (a clone's own `main` can be stale), named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): pushes to `main` are blocked, and the user merges every pull request. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
+Commit work on a branch created from `origin/main` (a clone's own `main` can be stale), named for its issue when it has one (a worktree's own `worktree-<issue>-…` branch counts): GitHub's ruleset blocks pushes to `main` for everyone, and the user merges every pull request: never merge one yourself. GitHub deletes a pull request's branch when it's merged (the repo's "delete branch on merge" setting), so after a merge delete only the local branch; don't offer to delete the remote one.
 
-Commits carry no `Co-Authored-By` trailer or Claude author: CI's commit attribution check fails the PR, and with force pushes blocked, one such commit means a new branch and PR.
+Commits and pull requests credit no AI tool: no AI author or committer, and no `Co-Authored-By` trailer naming one (turn off your tool's own commit credit). CI's commit attribution check fails the PR, and with force pushes blocked, one such commit means a new branch and PR.
 
 Waiting for CI, watch the run for the pushed commit: `gh run list --commit $(git rev-parse HEAD)`, then `gh run watch <id> --exit-status` (`--branch <b> --limit 1` straight after a push can return the previous run, green for the old commit). When no run appears, check `gh pr view --json mergeable`: GitHub starts no CI on a conflicting PR.
 

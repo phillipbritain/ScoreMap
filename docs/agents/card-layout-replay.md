@@ -11,11 +11,11 @@ Capture a pan one of two ways, then replay it.
    CARD_TRACE="$CLAUDE_JOB_DIR/tmp/trace.json" npx vitest run --project browser scripts/captureCardTrace.browser.test.ts
    ```
 
-2. **Or capture a real drag** from a dev run, for games as the app shows them. Start a dev run (`aspire start`, see the run-scoremap skill), and take its web URL from `aspire describe`. `npm run page -- pan` (dev runs only) waits for the globe to be ready, turns to the camera, waits for it to settle, pans a few pixels a frame as a slow drag would, and saves the pan's frames. Each `--by` is a step of the pan, `<x>,<y>,<frames>`, in order, up to 300 frames in all (as many as the page keeps); anything left out pans over Los Angeles, east then north:
+2. **Or capture a real drag** from a dev run, for games as the app shows them. Start a dev run (`aspire start`, see `docs/running-locally.md`), and take its web URL from `aspire describe`. `npm run page -- pan` (dev runs only) waits for the globe to be ready, turns to the camera, waits for it to settle, pans a few pixels a frame as a slow drag would, and saves the pan's frames. Each `--by` is a step of the pan, `<x>,<y>,<frames>`, in order, up to 300 frames in all (as many as the page keeps); anything left out pans over Los Angeles, east then north:
 
    ```sh
    cd web
-   agent-browser set viewport 1280 800 > /tmp/ab.txt 2>&1   # the session's first command: output to a file (run-scoremap)
+   agent-browser set viewport 1280 800 > /tmp/ab.txt 2>&1   # the session's first command: output to a file (docs/browser-automation.md)
    agent-browser open "$web"   # the run's web URL
    npm run page -- pan "$CLAUDE_JOB_DIR/tmp/trace.json" --center 8,51.5 --zoom 5 --by -4,0,250
    ```

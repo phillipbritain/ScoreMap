@@ -1,55 +1,8 @@
-# Domain Docs
+# Domain docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+ScoreMap has one domain context: one `GLOSSARY.md` at the repo root, and its decisions in `docs/adr/`.
 
-## Before exploring, read these
-
-- **`GLOSSARY.md`** at the repo root, or
-- **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
-
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
-
-## File structure
-
-Single-context repo (most repos):
-
-```
-/
-├── GLOSSARY.md
-├── docs/adr/
-│   ├── 0001-event-sourced-orders.md
-│   └── 0002-postgres-for-write-model.md
-└── src/
-```
-
-Multi-context repo (presence of `GLOSSARY-MAP.md` at the root):
-
-```
-/
-├── GLOSSARY-MAP.md
-├── docs/adr/                          ← system-wide decisions
-└── src/
-    ├── ordering/
-    │   ├── GLOSSARY.md
-    │   └── docs/adr/                  ← context-specific decisions
-    └── billing/
-        ├── GLOSSARY.md
-        └── docs/adr/
-```
-
-## Use the glossary's vocabulary
-
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
-
-If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
-
-## ADRs record decisions
-
-An accepted ADR stays as written; details that change later belong in the code and docs. When the decision itself changes, write a new ADR that supersedes the old one, and set the old one's status to `superseded by ADR-NNNN` (the domain-modeling skill's `ADR-FORMAT.md`).
-
-## Flag ADR conflicts
-
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
-
-> _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
+- **Before working in an area**, read the glossary's terms for it and the ADRs that touch it.
+- **Use the glossary's terms** when naming a domain concept, in an issue title, a proposal, a test name or code, and not the synonyms it lists under _Avoid_. A concept it doesn't have yet is either new language to reconsider or a gap to add (the domain-modeling skill).
+- **An accepted ADR stays as written**: details that change later belong in the code and docs. When the decision itself changes, a new ADR supersedes it, and the old one's status becomes `superseded by ADR-NNNN`.
+- **Say so when work contradicts an ADR**, rather than overriding it quietly: _Contradicts ADR-0021 (mostly games happening now), but worth reopening because…_

@@ -36,15 +36,9 @@ gh project item-edit --project-id PVT_kwHOAiInZM4Bn2N0 --id "$ITEM" --field-id P
 
 `item-add` returns the existing card when the issue is already on the board, so it is safe to run every time. It needs the `project` scope on `gh`; on a scope error, ask the user to run `gh auth refresh -h github.com -s project`.
 
-## Pull requests as a triage surface
+## Pull requests
 
-**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
-
-When set to `yes`, PRs run through the same labels and states as issues, using the `gh pr` equivalents:
-
-- **Read a PR**: `gh pr view <number> --comments` and `gh pr diff <number>` for the diff.
-- **List external PRs for triage**: `gh pr list --state open --json number,title,body,labels,author,authorAssociation,comments` then keep only `authorAssociation` of `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, or `NONE` (drop `OWNER`/`MEMBER`/`COLLABORATOR`).
-- **Comment / label / close**: `gh pr comment`, `gh pr edit --add-label`/`--remove-label`, `gh pr close`.
+Outside pull requests aren't treated as feature requests: triage covers issues only.
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 

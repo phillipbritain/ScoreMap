@@ -6,7 +6,7 @@ public static class GameListEndpoint
 {
     /// <summary>
     /// The games on the running board as plain text, one line per game, for an agent driving a local run
-    /// (the run-scoremap skill): <c>GET /api/games</c>, with <c>?league=</c> keeping the leagues whose name
+    /// (docs/scenarios.md): <c>GET /api/games</c>, with <c>?league=</c> keeping the leagues whose name
     /// contains it (any case: "ncaa" keeps every college league). In Development only; elsewhere it's not found.
     /// </summary>
     public static WebApplication MapGameList(this WebApplication app)

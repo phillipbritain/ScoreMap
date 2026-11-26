@@ -1,6 +1,6 @@
 # ScoreMap
 
-A globe showing live sports events as pins at their venues, with scores that update on their own. See issue #1 for the v1 spec, `GLOSSARY.md` for domain terms and `docs/adr/` for key decisions.
+A globe showing live sports events as pins at their venues, with scores that update on their own. Domain terms are in `GLOSSARY.md`, key decisions in `docs/adr/`, and the rest of the docs are listed under [Docs](#docs).
 
 ## Layout
 
@@ -12,7 +12,7 @@ A globe showing live sports events as pins at their venues, with scores that upd
 
 ## Prerequisites
 
-- .NET SDK 10
+- .NET SDK 11
 - Node.js 24
 - The Aspire CLI, to run locally
 
@@ -42,22 +42,7 @@ aspire stop       # when you're done
 
 A run is also open to other devices on your network, such as a phone: open `http://<this machine's address>:5173` there. The first time, Windows asks whether to let `dcp` (Aspire's proxy) through the firewall: allow it on private networks, with the network itself set to Private. To keep a run to this machine only, start it with `OpenToNetwork=false` in the environment (`$env:OpenToNetwork='false'; aspire start` in PowerShell).
 
-To drive a browser on the app as an agent does (the `run-scoremap` skill), install agent-browser and its Chrome once per machine:
-
-```sh
-npm install -g agent-browser
-agent-browser install   # downloads its Chrome
-```
-
-Run locally, the app shows a scenario rather than real events. The `run-scoremap` skill (`.claude/skills/run-scoremap/SKILL.md`) covers the scenarios and their controls, several runs side by side, and driving a browser on the app.
-
-## Configuration
-
-Leagues, polling, venue lookups and corrections, scenario venues and teams, and watch and stream links: see [docs/configuration.md](docs/configuration.md).
-
-Which cities the globe names, and the settings for it: see [docs/city-labels.md](docs/city-labels.md).
-
-What ESPN gives for an event, what ScoreMap reads and what's there to add later: see [docs/espn-data.md](docs/espn-data.md).
+Run locally, the app shows a scenario (made-up events) rather than real ones: see [docs/scenarios.md](docs/scenarios.md).
 
 ## Test
 
@@ -70,6 +55,19 @@ npm --prefix web run test:browser   # the globe map's tests, in headless Chromiu
 ```
 
 CI (`.github/workflows/ci.yml`) runs all of these on every pull request.
+
+## Docs
+
+- [Running locally](docs/running-locally.md): using a run that's going, several runs side by side, fixing a broken run, stopping one.
+- [Scenarios](docs/scenarios.md): the made-up events a local run shows, and their controls.
+- [Browser automation](docs/browser-automation.md): driving a browser on a local run, as agents do.
+- [Configuration](docs/configuration.md): leagues, polling, venue lookups and corrections, scenario venues and teams, watch and stream links.
+- [City labels](docs/city-labels.md): which cities the globe names, and the settings for it.
+- [ESPN data](docs/espn-data.md): what ESPN gives for an event, what ScoreMap reads and what's there to add later.
+- [Style guide](docs/style-guide.md): the theme, its colors, type and sizes.
+- [Deploying](docs/deploy.md) and [infrastructure](docs/terraform.md).
+- [Coding standards](CODING_STANDARDS.md): what a reviewer checks.
+- `AGENTS.md`: how coding agents work here; `docs/agents/` holds the notes they read for issues, labels, domain docs and a few tasks.
 
 ## Deploy
 

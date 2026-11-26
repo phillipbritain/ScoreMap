@@ -467,14 +467,14 @@ The built-in theme has a test (`web/src/theme/theme.test.ts`), so a broken theme
 
 ScoreMap has one theme, built in, so making a theme today means changing `web/src/theme/builtInTheme.json`.
 
-To try a change, edit the JSON on a local run: Vite reloads the page with it, on the page and on the globe alike. To see the loading screen, which shows once a page, use the `slow-initial-load` scenario (the `run-scoremap` skill), which holds it up for 15 seconds with its slow message.
+To try a change, edit the JSON on a local run: Vite reloads the page with it, on the page and on the globe alike. To see the loading screen, which shows once a page, use the `slow-initial-load` scenario ([scenarios](scenarios.md)), which holds it up for 15 seconds with its slow message.
 
 1. **Colors first.** Choose the base colors and look at their worked-out steps (`paletteSteps` in `web/src/theme/palette.ts` works them out). Hand-set a step only where the worked-out one looks off.
 2. **Then the palette:** which steps are the primary and secondary colors, each status's color, the background, the text, the divider and hover.
 3. **Point every color job at one of the palette's colors or a step**, using the tables above. Keep a color given directly for a true one-off.
 4. **Set the typography, spacing, shape, and each component's sizes, fonts and looks by status.** Status shows by glow and brightness: if the theme's glows don't show (a light theme), give status its own way through the statuses' colors and the pins', clusters' and score cards' opacities and cores.
 5. **Run the tests** (`npm test` in `web/`). Checking reports what's wrong with the theme (see [What checking rejects](#what-checking-rejects)). No test holds the theme's choices, so a different look changes no test.
-6. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios (the `run-scoremap` skill), on the globe zoomed out and in, with the event panel and the rail's popovers open, and on a phone-sized window.
+6. **Look at it running.** How the app looks isn't tested automatically: check it in the `worldwide`, `crowded` and `edge-cases` scenarios ([scenarios](scenarios.md)), on the globe zoomed out and in, with the event panel and the rail's popovers open, and on a phone-sized window.
 
 ### Adding a setting
 

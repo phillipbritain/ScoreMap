@@ -8,4 +8,4 @@ ScoreMap's notes for the `prototype` skill's UI branch. Where they differ from t
 - **Show the user the current default.** A variant choice saved in `localStorage` outlives a changed default, so key saved choices by version, or keep the choice in the URL alone.
 - **Name the URL param for the prototype**, such as `?pickerProto=`, so prototypes built side by side keep apart.
 - **Reload the page after editing a prototype's module.** Vite's hot update keeps listeners added once on mount and module-level variant state from the old code, so a variant can look dead, or the switcher and the app disagree.
-- **See every variant yourself before reporting**, at 1280x800 and at 390x844, on a run of your own: the run-scoremap skill covers starting one and driving a browser on it.
+- **See every variant yourself before reporting**, at 1280x800 and at 390x844, on a run of your own: `docs/running-locally.md` covers starting one, and `docs/browser-automation.md` driving a browser on it.

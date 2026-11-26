@@ -1,3 +1,7 @@
+---
+status: superseded in part by ADR-0033 (runs side by side)
+---
+
 # Aspire for local runs: one run per clone or worktree, side by side
 
 ScoreMap runs locally through a stock .NET Aspire setup (#102): an AppHost (`server/src/ScoreMap.AppHost`) that declares the server project and the browser app (`AddViteApp`, with `WithReference(server)` so Vite's proxy gets the server's URL), and the ServiceDefaults project the server calls `AddServiceDefaults()` from. `aspire start` starts a run in the background, `aspire ps` lists the runs on the machine, `aspire describe` gives a run's URLs, and `aspire stop` stops one (`--all` stops every one). It replaced `scripts/dev.ps1`, which started the server and Vite on fixed ports (5147 and 5173), so only one run could go on the machine at a time: a second clone or git worktree, such as another agent session's, couldn't start its own. With Aspire's isolated mode (`aspire start --isolated`), a further run gets random ports, so any number of clones and worktrees each run at once, each with its own server and so its own scenario, speed and logs, and each shown in its own dashboard. The rule throughout is Aspire as its docs and templates set it up, with nothing custom: no wrapper script and no build folders of our own.

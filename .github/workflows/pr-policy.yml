@@ -1,0 +1,26 @@
+# Checks on the pull request itself rather than its code: attribution fails one whose commits,
+# title or description credit an AI tool (see phillipbritain/actions). Its own workflow, and cheap,
+# so a title/description edit reruns only this, not ci.yml's full run.
+name: pr-policy
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened]
+
+# A newer edit or push replaces a check still running on the old one, without touching ci.yml's.
+concurrency:
+  group: pr-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: phillipbritain/actions/attribution@v2

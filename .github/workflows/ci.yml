@@ -2,11 +2,11 @@
 # tests in Node, then the globe map's tests in headless Chromium, see ADR-0008), and the server's
 # tests (which include the convention tests in server/tests/.../Conventions). GitHub runs it on the
 # pull request merged into main. The default-branch ruleset requires an up-to-date branch plus green
-# web/server/no-ai-credit checks, so another merge makes an older PR update and recheck before it can merge.
+# web/server/attribution checks, so another merge makes an older PR update and recheck before it can merge.
 name: ci
 
 # Not on `edited`: a title/description edit would start a run that cancels the one testing the
-# push. The PR's title and description are checked by no-ai-credit.yml instead. So retargeting a
+# push. The PR's title and description are checked by pr-policy.yml instead. So retargeting a
 # PR into main (also `edited`) runs nothing here: push again after retargeting.
 on:
   pull_request:

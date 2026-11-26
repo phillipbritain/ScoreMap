@@ -16,7 +16,7 @@ The app is still being shaped, so keep the process light:
 
 ### Pull requests
 
-The user's global agent instructions cover branches, merging, AI credit and waiting for CI. Here, a worktree's own `worktree-<issue>-…` branch counts as named for its issue, and the required checks are `web`, `server` and `no-ai-credit`.
+The user's global agent instructions cover branches, merging, AI credit and waiting for CI. Here, a worktree's own `worktree-<issue>-…` branch counts as named for its issue, and the required checks are `web`, `server` and `attribution`.
 
 Working an issue, move its card on the project board: to **In progress** when starting work, and to **In review** when opening its pull request (the commands are in `docs/agents/issue-tracker.md`).
 

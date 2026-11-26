@@ -1,0 +1,26 @@
+# Fails a pull request whose commits, title or description credit an AI tool (see
+# phillipbritain/actions). Its own workflow, and cheap, so a title/description edit reruns only
+# this, not ci.yml's full run.
+name: no-ai-credit
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened]
+
+# A newer edit or push replaces a check still running on the old one, without touching ci.yml's.
+concurrency:
+  group: no-ai-credit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  no-ai-credit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: phillipbritain/actions/no-ai-credit@v1

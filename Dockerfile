@@ -3,7 +3,7 @@
 # .github/workflows/deploy.yml, and run on Azure Container Apps (docs/deploy.md, ADR-0024).
 # Build it locally with: docker build --build-arg COMMIT=$(git rev-parse HEAD) -t scoremap .
 
-FROM node:24-bookworm-slim AS web
+FROM node:25-bookworm-slim AS web
 WORKDIR /src/web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci --no-audit --no-fund

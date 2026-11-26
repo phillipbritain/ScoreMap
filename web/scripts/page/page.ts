@@ -1,6 +1,6 @@
 // Drives the dev run's page open in agent-browser, for what would otherwise take an `eval`: resets
 // it to the start view, waits for it to be ready or settled, turns its camera, reads a value from it, screenshots it,
-// pans it for a card trace, touches it as a finger does. See the run-scoremap skill and docs/agents/card-layout-replay.md.
+// pans it for a card trace, touches it as a finger does. See docs/browser-automation.md and docs/agents/card-layout-replay.md.
 //
 //   npm run page -- reset <web URL> [--toured]      (in web/) --toured: with the welcome tour finished
 //   npm run page -- ready

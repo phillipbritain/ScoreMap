@@ -12,7 +12,7 @@ namespace ScoreMap.Server.Tests.Scenarios;
 
 /// <summary>
 /// The scenario files that ship in the repo, run as the owner runs them locally: each shows what
-/// its description in the run-scoremap skill says.
+/// its description in docs/scenarios.md says.
 /// </summary>
 public class ShippedScenarioTests(ITestOutputHelper output)
 {
@@ -169,7 +169,7 @@ public class ShippedScenarioTests(ITestOutputHelper output)
         await using var client = await server.ConnectClientAsync();
         await client.NextSnapshotAsync();
 
-        // At 1×, worldwide scores within half a minute (see the run-scoremap skill).
+        // At 1×, worldwide scores within half a minute (see docs/scenarios.md).
         await AdvanceUntilAsync(server, client, "a score change", c => c.Kind == GameChangeKind.ScoreChanged, within: TimeSpan.FromSeconds(30));
     }
 
